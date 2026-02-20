@@ -1,0 +1,68 @@
+/**
+ * User query functions - separated to avoid circular dependencies
+ * This file should NOT import from session.server.ts or any files that import from session.server.ts
+ */
+
+import type { SubscriptionStatus } from "@prisma/client"
+
+import { prisma } from "@/lib/db"
+
+export const getUserById = async (id: string) => {
+  const user = await prisma.user.findUnique({
+    where: { id },
+  })
+  return user
+}
+
+export const getUserByName = async (username: string) => {
+  const user = await prisma.user.findFirst({
+    where: {
+      username: {
+        equals: username,
+        mode: "insensitive",
+      },
+    },
+  })
+  return user
+}
+
+export const getUserByEmail = async (email: string) => {
+  const user = await prisma.user.findUnique({
+    where: { email },
+  })
+  return user
+}
+
+export const getAllUsers = async () => {
+  const users = await prisma.user.findMany()
+  return users
+}
+
+/**
+ * Find users by subscription status. For admin filtering and gating.
+ */
+export const getUsersBySubscriptionStatus = async (status: SubscriptionStatus) => {
+  return prisma.user.findMany({
+    where: { subscriptionStatus: status },
+    orderBy: { createdAt: "desc" },
+  })
+}
+
+/**
+ * Find users by early adopter flag. For admin and reporting (e.g. first 100 free users).
+ */
+export const getUsersByEarlyAdopter = async (isEarlyAdopter: boolean) => {
+  return prisma.user.findMany({
+    where: { isEarlyAdopter },
+    orderBy: { createdAt: "desc" },
+  })
+}
+
+/**
+ * Find a user by their Stripe subscription ID. For webhook lookups and subscription management.
+ */
+export const getUserBySubscriptionId = async (subscriptionId: string) => {
+  return prisma.user.findFirst({
+    where: { subscriptionId },
+  })
+}

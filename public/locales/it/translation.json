@@ -1,0 +1,882 @@
+{
+  "404": {
+    "heading": "Un po' perso",
+    "subheading": "La pagina che cerchi non esiste.",
+    "homeLink": "Torna alla home"
+  },
+  "common": {
+    "loading": "Caricamento...",
+    "loadingMore": "Caricamento...",
+    "noMore": "Niente più {{itemName}} da caricare.",
+    "allLoaded": "Tutte le {{itemName}} caricate.",
+    "loadMore": "Carica più {{itemName}}",
+    "search": "Cerca",
+    "searchError": "Errore di ricerca: {{error}}",
+    "noResultsFound": "Nessun risultato trovato",
+    "edit": "Modifica",
+    "cancel": "Annulla",
+    "delete": "Elimina",
+    "approve": "Approva",
+    "reject": "Rifiuta",
+    "remove": "Rimuovi",
+    "add": "Aggiungi"
+  },
+  "admin": {
+    "navigation": {
+      "createHouse": "Crea casa",
+      "createPerfume": "Crea profumo",
+      "dataQuality": "Qualità dati",
+      "userManagement": "Gestione utenti",
+      "securityMonitor": "Monitor sicurezza",
+      "performanceAdmin": "Admin prestazioni",
+      "errorAnalytics": "Analisi errori",
+      "pendingSubmissions": "Invii in sospeso"
+    }
+  },
+  "pendingSubmissions": {
+    "meta": {
+      "title": "Invii in sospeso - Admin - Shadow and Sillage",
+      "description": "Esamina e approva le submission di profumi e case in sospeso."
+    },
+    "heading": "Invii in sospeso",
+    "subheading": "Esamina e approva le submission degli utenti",
+    "filters": {
+      "pending": "In sospeso",
+      "approved": "Approvato",
+      "rejected": "Rifiutato",
+      "all": "Tutti"
+    },
+    "empty": "Nessuna submission trovata",
+    "showDetails": "Mostra dettagli",
+    "hideDetails": "Nascondi dettagli",
+    "details": "Dettagli submission",
+    "adminNotes": "Note dell'amministratore",
+    "notesPlaceholder": "Note opzionali...",
+    "approve": "Approva",
+    "approving": "Approvazione...",
+    "reject": "Rifiuta",
+    "rejecting": "Rifiuto in corso..."
+  },
+  "aboutUs": {
+    "meta": {
+      "title": "Chi siamo - Shadow and Sillage",
+      "description": "Scopri la storia di Shadow and Sillage."
+    },
+    "heading": "Chi siamo",
+    "subheading": "I fondatori di Shadow and Sillage",
+    "content": {
+      "subheading": "Due collezionisti alla ricerca di un profumo raro",
+      "one": "La città dorme, ma nel buio una coppia veglia sotto una lampada. I flaconi in fila come sospetti — vetro ambrato, etichette sbiadite, sussurri di altre vite. Siamo Brian e Amanda, la coppia dietro Shadow and Sillage.",
+      "two": "È iniziato in modo semplice — troppi profumi da ricordare, troppe storie da non perdere. Abbiamo preso appunti, su fogli, poi in un registro, infine in questo archivio. Ciò che serviva a tenere traccia della collezione è diventato un luogo per chi insegue ricordi attraverso il profumo.",
+      "three": "Questo speakeasy del profumo vive di curiosità. Ogni nuovo annuncio è una pista, ogni recensione un indizio. Il database cresce in silenzio, una casa e un profumo alla volta. Potreste chiamarla ossessione; noi la chiamiamo devozione.",
+      "four": "Abbiamo costruito questo luogo per romantici e detective del profumo — chi trova memoria in una nota di base o gioia in una scintilla di aldeide. Se noti un flacone mancante, segnalalo con i moduli sul sito. Seguiremo la pista e lo aggiungeremo al dossier.",
+      "five": "La porta è sempre aperta. Entrate dalla pioggia, appendete il cappotto, restate un po'. In Shadow and Sillage ogni profumo ha una storia, e ogni storia merita di essere trovata."
+    }
+  },
+  "alerts": {
+    "heading": "Le mie notifiche",
+    "subheading": "Gestisci notifiche e preferenze",
+    "filters": {
+      "pending": "In sospeso",
+      "approved": "Approvato",
+      "rejected": "Rifiutato",
+      "all": "Tutti"
+    },
+    "alert": "notifica",
+    "alerts": "notifiche",
+    "unread": "non letto",
+    "dismissing": "Rimozione...",
+    "dismissAll": "Rimuovi tutte",
+    "viewTradingPost": "Vedi il mercato",
+    "noAlerts": "Nessuna notifica al momento.",
+    "noAlertsDescription": "Riceverai notifiche quando articoli della tua wishlist saranno disponibili o quando qualcuno è interessato ai tuoi decant.",
+    "alertPreferences": "Preferenze notifiche",
+    "alertPreferencesDescription": "Configura come e quando ricevere le notifiche.",
+    "alertTypes": "Tipi di notifica",
+    "wishlistAlerts": "Notifiche wishlist",
+    "decantAlerts": "Notifiche interesse decant",
+    "emailNotifications": "Notifiche email",
+    "emailWishlistAlerts": "Notifiche wishlist per email",
+    "emailDecantAlerts": "Notifiche decant per email",
+    "alertLimits": "Limiti notifiche",
+    "maxAlerts": "Numero massimo di notifiche da tenere",
+    "maxAlertsDescription": "Le notifiche più vecchie saranno rimosse automaticamente al raggiungimento del limite",
+    "maxAlertsOptions": {
+      "5": "5 notifiche",
+      "10": "10 notifiche",
+      "20": "20 notifiche",
+      "50": "50 notifiche"
+    },
+    "savePreferences": "Salva preferenze",
+    "savingPreferences": "Salvataggio..."
+  },
+  "allHouses": {
+    "meta": {
+      "title": "Dietro il flacone - Shadow and Sillage",
+      "description": "Esplora tutte le case di profumeria nel nostro database."
+    },
+    "heading": "Dietro il flacone",
+    "subheading": "Non fanno solo profumi, lasciano il segno.",
+    "filters": {
+      "houseType": "Filtra per tipo:",
+      "sortBy": "Ordina per:"
+    },
+    "houseTypes": {
+      "all": "Tutti",
+      "niche": "Niche",
+      "designer": "Designer",
+      "indie": "Indie",
+      "celebrity": "Celebrità",
+      "drugstore": "Profumeria"
+    },
+    "sortOptions": {
+      "created-desc": "Prima i più recenti",
+      "created-asc": "Prima i più vecchi",
+      "name-asc": "Nome A-Z",
+      "name-desc": "Nome Z-A",
+      "type-asc": "Tipo"
+    }
+  },
+  "allPerfumes": {
+    "meta": {
+      "title": "La volta - Shadow and Sillage",
+      "description": "Scopri tutti i profumi nel nostro database."
+    },
+    "heading": "La volta",
+    "subheading": "Ogni flacone racconta una storia. Alcuni sussurrano, altri urlano."
+  },
+  "auth": {
+    "heading": "Bentornato",
+    "subheading": "Accedi al tuo account. Se non ne hai uno,",
+    "createAccount": "Clicca qui per crearne uno",
+    "passwordRequirements": "Requisiti password:",
+    "termsAndConditions": "Accetto i: ",
+    "termsAndConditionsLink": "termini e condizioni",
+    "passwordRequirementsList": {
+      "8characters": "Almeno 8 caratteri",
+      "uppercase": "Lettere maiuscole e minuscole",
+      "number": "Almeno un numero",
+      "special": "Almeno un carattere speciale",
+      "spaces": "Nessuno spazio",
+      "different": "Diverso dalla password attuale"
+    },
+    "signIn": {
+      "title": "Accedi - Shadow and Sillage",
+      "description": "Accedi per gestire il profilo e la collezione."
+    },
+    "signUp": {
+      "title": "Registrati - Shadow and Sillage",
+      "description": "Crea un account per gestire profilo e collezione."
+    }
+  },
+  "subscribe": {
+    "heading": "Iscriviti",
+    "subheading": "Unisciti a Shadow and Sillage con un abbonamento a pagamento",
+    "limitTitle": "Limite 100 primi utenti",
+    "limitCopy": "Offriamo 100 iscrizioni gratuite ai primi membri. Il limite è stato raggiunto.",
+    "paymentRequired": "Per creare un account ora è richiesto un abbonamento. Completa il pagamento qui sotto.",
+    "cta": "Continua al pagamento"
+  },
+  "subscribeSuccess": {
+    "heading": "Pagamento riuscito",
+    "subheading": "Il tuo abbonamento è attivo",
+    "messageTitle": "Grazie",
+    "messageBody": "Il pagamento è andato a buon fine. Completa la registrazione con l'email usata.",
+    "cta": "Continua alla registrazione"
+  },
+  "components": {
+    "dataDisplaySection": {
+      "heading": "Seleziona una lettera per sfogliare {{itemName}}",
+      "subheading": "Clicca su una lettera per vedere i {{itemName}} che iniziano con quella lettera"
+    },
+    "modal": {
+      "close": "Chiudi finestra"
+    },
+    "search": {
+      "placeholder": "Cerca profumi o case...",
+      "button": "Cerca",
+      "ariaLabel": "Seleziona tipo di ricerca"
+    },
+    "filter": {
+      "heading": "Filtra per tipo",
+      "clearFilters": "Cancella filtri",
+      "applyFilters": "Applica filtri"
+    },
+    "sort": {
+      "heading": "Ordina per",
+      "options": {
+        "nameAsc": "Nome A-Z",
+        "nameDesc": "Nome Z-A",
+        "createdAsc": "Prima i più vecchi",
+        "createdDesc": "Prima i più recenti"
+      }
+    }
+  },
+  "contactTrader": {
+    "title": "Contatta il venditore",
+    "itemTitle": "Richiedi informazioni",
+    "heading": "Contatta il venditore",
+    "subheading": "Contatta {{traderName}} per uno scambio.",
+    "itemSubheading": "Contatta il venditore riguardo {{perfumeName}}{{perfumeHouse}}.",
+    "itemSubject": "Richiesta su {{perfumeName}}{{perfumeHouse}}",
+    "itemMessageTemplate": "Sono interessato a {{perfumeName}}{{perfumeHouse}} ({{amount}} ml).",
+    "button": "Contatta il venditore",
+    "inquireButton": "Richiedi info su questo articolo",
+    "subjectLabel": "Oggetto (opzionale)",
+    "subjectPlaceholder": "Inserisci oggetto...",
+    "messageLabel": "Messaggio",
+    "messagePlaceholder": "Inserisci il messaggio...",
+    "messageHelp": "Il tuo messaggio al venditore (10-5.000 caratteri)",
+    "sending": "Invio...",
+    "sendButton": "Invia messaggio",
+    "success": "Messaggio inviato!",
+    "error": "Invio fallito",
+    "name": "Nome",
+    "namePlaceholder": "Inserisci il tuo nome",
+    "email": "Email",
+    "emailPlaceholder": "Inserisci la tua email",
+    "submit": "Invia",
+    "submitLoading": "Invio in corso...",
+    "submitSuccess": "Messaggio inviato con successo",
+    "submitError": "Si è verificato un errore. Riprova."
+  },
+  "dataQuality": {
+    "heading": "Dashboard qualità dati",
+    "subheading": "Monitora la qualità dei dati nel database."
+  },
+  "sortOptions": {
+    "created-desc": "Prima i più recenti",
+    "created-asc": "Prima i più vecchi",
+    "name-asc": "Nome A-Z",
+    "name-desc": "Nome Z-A",
+    "type-asc": "Tipo"
+  },
+  "createHouse": {
+    "meta": {
+      "title": "Crea casa - Shadow and Sillage",
+      "description": "Crea una nuova casa nel nostro database."
+    },
+    "heading": "Crea casa di profumeria",
+    "subheading": "Compila i campi per creare una nuova casa.",
+    "name": "Nome",
+    "namePlaceholder": "Nome della casa",
+    "type": "Tipo",
+    "typePlaceholder": "Seleziona il tipo di casa",
+    "description": "Descrizione",
+    "descriptionPlaceholder": "Breve descrizione della casa",
+    "submitButton": "Crea casa"
+  },
+  "createPerfume": {
+    "meta": {
+      "title": "Crea profumo - Shadow and Sillage",
+      "description": "Crea un nuovo profumo nel database."
+    },
+    "heading": "Crea profumo",
+    "subheading": "Compila i campi per creare un nuovo profumo.",
+    "name": "Nome",
+    "namePlaceholder": "Nome del profumo",
+    "house": "Casa di profumeria",
+    "housePlaceholder": "Seleziona la casa",
+    "notes": "Note",
+    "notesPlaceholder": "Note del profumo",
+    "submitButton": "Crea profumo"
+  },
+  "forms": {
+    "submit": "Invia",
+    "cancel": "Annulla",
+    "loading": "Caricamento...",
+    "error": "Si è verificato un errore. Riprova.",
+    "email": "Email",
+    "emailPlaceholder": "Inserisci la tua email",
+    "password": "Password",
+    "passwordPlaceholder": "Inserisci la password",
+    "passwordMatch": "Conferma password",
+    "passwordMatchPlaceholder": "Conferma la tua password",
+    "emailLabel": "Indirizzo email",
+    "passwordLabel": "Password",
+    "passwordMatchLabel": "Conferma password"
+  },
+  "home": {
+    "meta": {
+      "title": "Shadow and Sillage - Database profumi",
+      "description": "Esplora un database di profumi e case."
+    },
+    "radio": {
+      "houses": "Case di profumeria",
+      "perfumes": "Profumi"
+    },
+    "heading": "Shadow & Sillage",
+    "description": "Un database di profumi e case.",
+    "subheading": "Per collezionisti di profumi e segreti.",
+    "searchType": {
+      "perfume-house": "Case di profumeria",
+      "perfume": "Profumi"
+    },
+    "stats": {
+      "users": "Utenti",
+      "houses": "Case",
+      "perfumes": "Profumi"
+    }
+  },
+  "howItWorks": {
+    "meta": {
+      "title": "Come funziona - Shadow and Sillage",
+      "description": "Scopri come funziona Shadow and Sillage."
+    },
+    "heading": "Il gioco dei flaconi e della fiducia",
+    "subheading": "Elenchi, scopri, scambi — tutto nella discrezione.",
+    "section1": {
+      "title": "Passo uno: accendi la miccia — Crea un account",
+      "content": "La storia inizia quando esci dalla nebbia. Creare un account apre la porta a tutto ciò che Shadow and Sillage offre — un luogo dove collezionisti e sognatori si incrociano. Con un account puoi valutare e recensire profumi, condividere impressioni, elencare decant e salvare i preferiti. Chi preferisce restare nell'ombra può ancora esplorare il sito, ma l'esperienza completa è per chi entra nel cerchio.",
+      "content2": "I primi 100 membri hanno l'account gratuito. Le tue informazioni restano tue. Non le vendiamo, scambiamo né cediamo. Ciò che avviene nell'ombra resta lì."
+    },
+    "section2": {
+      "title": "Passo due: elenca i decant — condividi il profumo",
+      "content": "Ogni flacone racconta una storia; alcuni sono fatti per essere condivisi. Elencando i decant offri più di qualche millilitro — inviti un altro collezionista nella tua storia. Descrivi il profumo, il suo carattere. Condividere ti lega a una comunità che conosce il linguaggio del profumo.",
+      "content2": "Ogni annuncio è curato con attenzione — non gestiamo scambi né pagamenti, ma ti diamo il palco per realizzarli in sicurezza e trasparenza."
+    },
+    "section3": {
+      "title": "Passo tre: costruisci la wishlist — insegui quello che ti è sfuggito",
+      "content": "Ognuno ha quel profumo — la nota sfuggente che resta in memoria. La wishlist è dove il desiderio prende forma. Aggiungi i preferiti, quelli amati, persi o sognati. Quando qualcuno elenca ciò che cerchi, sarai il primo a saperlo.",
+      "content2": "Considerala il tuo diario olfattivo — una mappa di desiderio e scoperta. Col tempo diventa un ritratto di gusti, umori e momenti che ti restano dentro."
+    },
+    "section4": {
+      "title": "Passo quattro: fai lo scambio — lo scambio silenzioso",
+      "content": "Quando due collezionisti si incontrano sotto la luce della curiosità, inizia uno scambio. Vi mettete in contatto, fate l'offerta. Noi restiamo fuori — niente intermediari, niente percentuali. Ciò che passa tra voi e il vostro partner resta vostro.",
+      "content2": "Forniamo il luogo d'incontro, il silenzio e la fiducia. Ogni accordo si basa sul rispetto dell'arte del profumo e di chi la tiene viva. Il resto — emozione, rischio, soddisfazione — spetta a voi."
+    },
+    "section5": {
+      "title": "La scia che lasciamo",
+      "content": "Shadow and Sillage non è solo una piattaforma — è una comunità di collezionisti, romantici e detective del profumo per cui il profumo è memoria in forma liquida. Ogni valutazione, wishlist e scambio aggiunge un filo al tessuto. Non inseguiamo tendenze, non vendiamo segreti. Costruiamo uno spazio dove passione e privacy convivono. Alla fine, ciò che resta non è solo la fragranza — è il legame che crea."
+    }
+  },
+  "contactUs": {
+    "meta": {
+      "title": "Contatti e FAQ - Shadow and Sillage",
+      "description": "Mettiti in contatto con Shadow and Sillage o consulta le domande frequenti."
+    },
+    "heading": "Contatti",
+    "subheading": "Domande, suggerimenti o vuoi solo salutare? Siamo qui.",
+    "contact": {
+      "title": "Contattaci",
+      "description": "Hai una domanda su un profumo, vuoi segnalare un flacone mancante o semplicemente scriverci? Scrivici all'email qui sotto, ti risponderemo al più presto.",
+      "emailLabel": "Email:",
+      "email": "contact@shadowandsillage.com"
+    },
+    "faq": {
+      "title": "Domande frequenti",
+      "question1": "Come aggiungo un profumo o una casa mancante?",
+      "answer1": "Se noti un profumo o una casa mancante nel database, puoi inviarli con i pulsanti sotto. Un admin esaminerà l'invio prima dell'aggiunta. Cerchiamo sempre di ampliare la collezione.",
+      "submitPerfumeButton": "Invia profumo mancante",
+      "submitHouseButton": "Invia casa mancante",
+      "question2": "Come funziona il sistema di scambio?",
+      "answer2": "Shadow and Sillage offre una piattaforma per collegare collezionisti e scambi. Non gestiamo transazioni né pagamenti — sono concordati tra voi e il partner. Forniamo lo spazio e gli strumenti per connessioni sicure e trasparenti.",
+      "question3": "I miei dati sono al sicuro?",
+      "answer3": "Assolutamente. Prendiamo sul serio la privacy. Non vendiamo, scambiamo né condividiamo i tuoi dati. Restano tuoi.",
+      "question4": "Come creo un account?",
+      "answer4": "Creare un account è gratuito e facile. Clicca su « Accedi » nella navigazione, poi « Registrati ». I primi 100 membri hanno iscrizione gratuita.",
+      "question5": "Posso recensire profumi senza account?",
+      "answer5": "Puoi navigare e cercare senza account, ma per valutare, recensire, elencare decant o gestire la wishlist serve un account. È gratuito e dà accesso all'esperienza completa.",
+      "question6": "E se trovo un errore nel database?",
+      "answer6": "Apprezziamo la tua attenzione! Se trovi un errore — refuso, informazione errata o duplicato — segnalacelo via email. Lo correggeremo."
+    },
+    "modal": {
+      "perfume": {
+        "title": "Invia profumo mancante",
+        "description": "Compila il modulo sotto per inviare un profumo mancante. Un admin esaminerà l'invio prima dell'aggiunta.",
+        "namePlaceholder": "Nome del profumo",
+        "descriptionPlaceholder": "Descrizione",
+        "imagePlaceholder": "URL immagine",
+        "houseLabel": "Casa di profumeria",
+        "topNotes": "Note di testa",
+        "heartNotes": "Note di cuore",
+        "baseNotes": "Note di base"
+      },
+      "house": {
+        "title": "Invia casa mancante",
+        "description": "Compila il modulo per inviare una casa mancante. Un admin esaminerà l'invio.",
+        "namePlaceholder": "Nome della casa",
+        "descriptionPlaceholder": "Descrizione",
+        "imagePlaceholder": "URL immagine",
+        "websitePlaceholder": "URL sito",
+        "emailPlaceholder": "Email",
+        "phonePlaceholder": "Telefono",
+        "addressPlaceholder": "Indirizzo",
+        "countryPlaceholder": "Paese",
+        "foundedPlaceholder": "Anno di fondazione"
+      },
+      "submitButton": "Invia per revisione",
+      "cancelButton": "Annulla"
+    }
+  },
+  "securityMonitor": {
+    "heading": "Monitor sicurezza",
+    "subheading": "Così dormi sonni tranquilli"
+  },
+  "myScents": {
+    "meta": {
+      "title": "My Scents - Shadow and Sillage",
+      "description": "Gestisci la tua collezione di profumi."
+    },
+    "collection": {
+      "heading": "La mia collezione",
+      "itemsCount": "{{count}} articoli nella tua collezione",
+      "empty": {
+        "heading": "La tua collezione è vuota.",
+        "subheading": "Inizia ad aggiungere profumi!"
+      }
+    },
+    "listItem": {
+      "destashed": "Destockato",
+      "name": "Nome",
+      "pointOfPurchase": "Punto di acquisto",
+      "price": "Prezzo",
+      "removeButton": "Rimuovi dalla collezione",
+      "removing": "Rimozione...",
+      "total": "Totale",
+      "type": "Tipo",
+      "viewDetails": "Visualizza / Modifica",
+      "viewComments": "I miei commenti",
+      "setDestashed": "Destockare profumo",
+      "decantOptionsTitle": "Opzioni decant",
+      "decantOptionsDescriptionOne": "Il decantaggio permette di condividere parte del profumo.",
+      "decantOptionsDescriptionTwo": "Imposta quantità, prezzo e preferenze sotto.",
+      "decantOptionsAmountLabel": "Quantità da destockare",
+      "decantOptionsAmountPlaceholder": "Quantità (0-{{amount}} ml)",
+      "decantOptionsPriceLabel": "Prezzo ($/ml, opzionale)",
+      "decantOptionsTradePreferencesLabel": "Preferenze di scambio",
+      "decantOptionsTradePreferencesDescription": "Scegli le preferenze sotto.",
+      "decantOptionsTradePreferencesCash": "Solo contanti",
+      "decantOptionsTradePreferencesTrade": "Solo scambio",
+      "decantOptionsTradePreferencesBoth": "Contanti o scambio",
+      "decantOptionsTradePreferencesOnlyTrades": "Solo scambi (nessun contante)",
+      "decantOptionsTradePreferencesAcceptBoth": "Accetta contanti e scambi",
+      "removeFromTradingPost": "Rimuovi dal mercato",
+      "confirmDeStash": "Conferma destock",
+      "decantOptionsPriceError": "Il prezzo deve essere positivo",
+      "decantOptionsAmountError": "La quantità deve essere positiva",
+      "decantOptionsAmountErrorExceedsAvailableAmount": "La quantità non può superare la disponibilità",
+      "decantOptionsExceedsOwned": "Non puoi destockare più di {{owned}} ml",
+      "createNewDecant": "Crea nuova voce decant",
+      "updateExistingDecant": "Aggiorna decant esistente",
+      "createNewDecantDescription": "Crea una nuova voce invece di aggiornare quella attuale.",
+      "manageDestashes": "Gestisci destock"
+    },
+    "destashManager": {
+      "title": "Gestione destock",
+      "description": "Crea e gestisci più destock per questo profumo.",
+      "addNew": "Aggiungi destock",
+      "createNew": "Crea nuovo destock",
+      "editDestash": "Modifica destock",
+      "cancel": "Annulla",
+      "saveChanges": "Salva modifiche",
+      "createDestash": "Crea destock",
+      "edit": "Modifica",
+      "delete": "Elimina",
+      "amount": "Quantità",
+      "price": "Prezzo",
+      "tradePreference": "Preferenza di scambio",
+      "tradeOnly": "Solo scambio",
+      "yes": "Sì",
+      "noDestashes": "Nessun destock. Clicca « Aggiungi » per crearne uno.",
+      "confirmDelete": "Eliminare questo destock? Azione irreversibile."
+    },
+    "heading": "I miei profumi",
+    "subheading": "Gestisci la tua collezione di profumi.",
+    "itemsInCollection": "articoli nella collezione",
+    "addButton": "Aggiungi alla collezione",
+    "removeButton": "Rimuovi dalla collezione",
+    "modal": {
+      "typeLabel": "Tipo di profumo",
+      "title": "I miei profumi",
+      "selectedPerfume": "Profumo selezionato",
+      "description": "Qui puoi gestire i tuoi profumi preferiti.",
+      "createButton": "Crea nuovo profumo",
+      "amountLabel": "Quantità",
+      "amountPlaceholder": "Quantità di profumo",
+      "submitButton": "Aggiungi alla collezione",
+      "placeOfPurchasePlaceholder": "Luogo di acquisto",
+      "placeOfPurchase": "Luogo di acquisto",
+      "priceLabel": "Prezzo di acquisto",
+      "pricePlaceholder": "Prezzo del profumo"
+    },
+    "comments": {
+      "heading": "Commenti",
+      "subheading": "Condividi le tue opinioni su {{perfumeName}}.",
+      "addCommentPlaceholder": "Aggiungi un commento...",
+      "addCommentButton": "Aggiungi commento",
+      "deleteComment": "Elimina commento",
+      "makePublic": "Rendi pubblico",
+      "makePrivate": "Rendi privato",
+      "noComments": "Nessun commento. Sii il primo!"
+    },
+    "search": {
+      "placeholder": "Cerca i tuoi profumi...",
+      "noResults": "Nessun profumo trovato",
+      "tryDifferent": "Prova un altro termine"
+    }
+  },
+  "navigation": {
+    "menu": "Menu",
+    "logo": " Shadow and Sillage",
+    "login": "Accedi",
+    "loggingIn": "Accesso in corso...",
+    "houses": "Dietro il flacone",
+    "perfumes": "La volta",
+    "available": "Il mercato",
+    "admin": "Il profilo",
+    "logout": "Esci",
+    "signIn": "Accedi",
+    "about": "Informazioni",
+    "aboutUs": "Chi siamo",
+    "howWeWork": "Come funziona",
+    "contactUs": "Contatti",
+    "home": "Home",
+    "search": "Cerca"
+  },
+  "password": {
+    "excellentPasswordStrength": "Ottima solidità della password!",
+    "passwordMeetsAllRequirements": "La password soddisfa tutti i requisiti",
+    "changePassword": "Cambia password",
+    "currentPassword": "Password attuale",
+    "enterCurrentPassword": "Inserisci la password attuale",
+    "newPassword": "Nuova password",
+    "enterNewPassword": "Inserisci la nuova password",
+    "confirmNewPassword": "Conferma nuova password",
+    "confirmNewPasswordPlaceholder": "Conferma la nuova password",
+    "passwordsMatch": "Le password coincidono",
+    "passwordsDoNotMatch": "Le password non coincidono",
+    "error": "Errore",
+    "success": "Successo",
+    "passwordRequirements": "Requisiti password",
+    "updatePasswordToKeepAccountSecure": "Aggiorna la password per mantenere l'account sicuro",
+    "requirements": {
+      "8characters": "Almeno 8 caratteri",
+      "uppercase": "Lettere maiuscole e minuscole",
+      "number": "Almeno un numero",
+      "special": "Almeno un carattere speciale",
+      "spaces": "Nessuno spazio",
+      "different": "Diverso dalla password attuale"
+    },
+    "clear": "Cancella",
+    "changingPassword": "Cambio password..."
+  },
+  "profile": {
+    "heading": "Il profilo",
+    "subheading": "Cosa conservi. Cosa cerchi. Cosa lasci.",
+    "userInfo": "Informazioni utente",
+    "email": "Email",
+    "emailPlaceholder": "Inserisci la tua email",
+    "password": "Password",
+    "passwordPlaceholder": "Inserisci la password",
+    "role": "Ruolo",
+    "name": "Nome",
+    "notFound": "Profilo utente non trovato",
+    "updateProfile": "Aggiorna profilo",
+    "profileUpdatedSuccessfully": "Profilo aggiornato!",
+    "navigation": {
+      "wishlist": "La mia wishlist",
+      "myScents": "I miei profumi",
+      "changePassword": "Cambia password"
+    }
+  },
+  "singleHouse": {
+    "meta": {
+      "title": "Dettagli casa - Shadow and Sillage",
+      "description": "Esplora i dettagli di una casa."
+    },
+    "loadingPerfumes": "Caricamento profumi...",
+    "noPerfumes": "Nessun profumo per questa casa.",
+    "errorLoadingPerfumes": "Errore caricamento profumi.",
+    "notFound": "Casa non trovata",
+    "perfumes": "Profumi",
+    "summaryCard": {
+      "totalPerfumeCount": "Totale profumi",
+      "backToHouses": "Torna a {{selectedLetter}}",
+      "ariaLabel": "Torna alle case che iniziano con {{selectedLetter}}",
+      "backToHousesLabel": "Torna alle case"
+    },
+    "perfumeBottleAltText": "Flacone {{name}}",
+    "deleteModal": {
+      "heading": "Eliminare questa casa?",
+      "description": "Perderai tutti i profumi e la cronologia associati."
+    }
+  },
+  "singlePerfume": {
+    "meta": {
+      "title": "Dettagli profumo - Shadow and Sillage",
+      "description": "Scopri i dettagli di un profumo."
+    },
+    "subheading": "Di: ",
+    "notes": {
+      "opening": "Note di testa",
+      "mid": "Note di cuore",
+      "end": "Note di base",
+      "general": "Note generali"
+    },
+    "icons": {
+      "addButton": "Aggiungi alla wishlist",
+      "inWishlist": "Nella tua wishlist",
+      "cancelButton": "Annulla",
+      "editButton": "Modifica profumo",
+      "deleteButton": "Elimina profumo",
+      "makePublic": "Rendi pubblico (mostra sul profilo)",
+      "makePrivate": "Rendi privato (nascondi dal profilo)"
+    },
+    "dangerModal": {
+      "heading": "Eliminare questo profumo?",
+      "description": "Perderai tutta la cronologia e le voci nello scambio."
+    },
+    "rating": {
+      "RateThisPerfume": "Valuta questo profumo",
+      "CommunityRatings": "Valutazioni comunità",
+      "selectRating": "Seleziona la tua valutazione",
+      "loginToRate": "Accedi per valutare questo profumo",
+      "communityAverage": "Media comunità",
+      "totalRatings": "{{count}} voto{{count !== 1 ? 'i' : ''}}",
+      "notYetRated": "Non ancora valutato",
+      "categories": {
+        "longevity": "Longevità",
+        "sillage": "Stela",
+        "gender": "Genere",
+        "priceValue": "Prezzo/qualità",
+        "overall": "Valutazione complessiva"
+      },
+      "labels": {
+        "longevity": {
+          "1": "Ombra fugace",
+          "2": "Incontro breve",
+          "3": "Presenza costante",
+          "4": "Mistero persistente",
+          "5": "Ossessione eterna"
+        },
+        "sillage": {
+          "1": "Segreto sussurrato",
+          "2": "Intrigo sottile",
+          "3": "Dichiarazione audace",
+          "4": "Aura dominante",
+          "5": "Dominio della stanza"
+        },
+        "gender": {
+          "1": "Distintamente femminile",
+          "2": "Eleganza femminile",
+          "3": "Unisex misterioso",
+          "4": "Mistica sobria",
+          "5": "Distintamente maschile"
+        },
+        "priceValue": {
+          "1": "Furto",
+          "2": "Prezzo alto",
+          "3": "Prezzo equo",
+          "4": "Investimento intelligente",
+          "5": "Tesoro rubato"
+        },
+        "overall": {
+          "1": "Disprezzo",
+          "2": "Scarto",
+          "3": "Tollerabile",
+          "4": "Ammiro",
+          "5": "Ossessionato"
+        }
+      }
+    },
+    "review": {
+      "failedToCreateReview": "Creazione recensione fallita",
+      "heading": "Recensioni",
+      "subheading": "Condividi le tue opinioni su {{perfumeName}}.",
+      "addReviewButton": "Aggiungi recensione",
+      "noReviews": "Nessuna recensione. Sii il primo!",
+      "editFunctionalityWillBeImplemented": "Modifica in arrivo",
+      "deleteReviewConfirmation": "Eliminare questa recensione?",
+      "failedToDeleteReview": "Eliminazione fallita",
+      "failedToModerateReview": "Moderazione fallita",
+      "failedToUpdateReview": "Aggiornamento fallito",
+      "writeReview": "Scrivi recensione",
+      "addReviewPlaceholder": "Condividi le tue opinioni su questo profumo...",
+      "cancel": "Annulla",
+      "submitting": "Invio in corso...",
+      "submitReview": "Invia recensione",
+      "updateReview": "Aggiorna recensione",
+      "writeYourReview": "Scrivi la tua recensione",
+      "editYourReview": "Modifica la tua recensione",
+      "yourReview": "La tua recensione",
+      "loadMoreReviews": "Carica altre recensioni",
+      "dangerModal": {
+        "heading": "Rimuovere questa recensione?",
+        "description": "Non potrai recuperarla."
+      }
+    }
+  },
+  "termsAndConditions": {
+    "heading": "Termini e condizioni",
+    "subheading": "Shadow and Sillage",
+    "gist": {
+      "heading": "IL SENSO",
+      "contentOne": "Shadow and Sillage è una piattaforma indipendente per amanti del profumo — un luogo per condividere recensioni, imparare e connettersi con altri collezionisti. Gli utenti possono elencare profumi e campioni per lo scambio; le transazioni restano strettamente tra privati.",
+      "contentTwo": "Non gestiamo pagamenti, non verifichiamo l'autenticità e non mediiamo dispute. Considerateci il bar fumoso dove ci si presenta, non il broker dell'affare."
+    },
+    "tradingAndListing": {
+      "heading": "SCAMBI E ANNUNCI",
+      "contentOne": "Scambi e scambi sono interamente a tuo rischio.",
+      "contentTwo": "I profumi contraffatti sono severamente vietati.",
+      "contentThree": "I profumi decantati sono consentiti se autentici e descritti correttamente.",
+      "contentFour": "Qualsiasi tentativo di frode, falsa dichiarazione o vendita di beni rubati comporterà la rimozione permanente del account e possibile segnalazione alle autorità.",
+      "contentFive": "Gli utenti devono descrivere gli articoli con verità — se elenchi un flacone vintage, dillo; se l'etichetta è a metà, fa parte della storia."
+    },
+    "accountsAndConduct": {
+      "heading": "ACCOUNT E CONDOTTA",
+      "contentOne": "Serve un account per pubblicare recensioni, note o scambi. Navigazione e ricerca sono aperte a tutti.",
+      "contentTwo": "Siate civili: niente molestie, spam, dibattiti politici o religiosi, né contenuti illegali.",
+      "contentThree": "È una comunità di profumo, non un palco né un campo di battaglia. Trattate gli altri con il rispetto che avreste in una profumeria di fascia alta."
+    },
+    "reviewsAndNotes": {
+      "heading": "RECENSIONI E NOTE",
+      "contentOne": "Gli utenti possono inviare recensioni o note per aiutare gli altri nel loro percorso olfattivo.",
+      "contentTwo": "Tutti i contenuti passano da una moderazione per restare pertinenti, equi e in tema. Ci riserviamo il diritto di rimuovere o modificare contenuti che violano queste regole.",
+      "contentThree": "Pubblicando, concedi a Shadow and Sillage il diritto non esclusivo di mostrare testi e immagini sul sito. Conservi la piena proprietà del tuo lavoro."
+    },
+    "noGuarantee": {
+      "heading": "NESSUNA GARANZIA",
+      "contentOne": "Ci sforziamo di mantenere il sito in ordine, ma non promettiamo un servizio ininterrotto. Possiamo sospendere, modificare o rimuovere funzionalità senza preavviso."
+    },
+    "liability": {
+      "heading": "LIMITAZIONE DI RESPONSABILITÀ",
+      "contentOne": "Shadow and Sillage e i suoi operatori non sono responsabili di perdite, danni o dispute derivanti da scambi, comunicazioni o annunci degli utenti.",
+      "contentTwo": "Se un affare va male, è tra le parti. La piattaforma prepara solo il palco — il dramma è vostro."
+    },
+    "privacy": {
+      "heading": "INFORMATIVA SULLA PRIVACY",
+      "contentOne": "Rispettiamo la tua privacy come un profumiere custodisce una formula segreta. Ecco come trattiamo i tuoi dati:",
+      "contentList": {
+        "one": "Informazioni raccolte: possiamo raccogliere dati di account (nome utente, email, preferenze) per personalizzare l'esperienza e migliorare il sito.",
+        "two": "Uso dei dati: solo uso interno — raccomandazioni, miglioramenti, prevenzione frodi. Mai venduti, mai condivisi con inserzionisti.",
+        "three": "Cookie: come molti siti, usiamo cookie per ricordare la sessione e tenerti connesso.",
+        "four": "Sicurezza: adottiamo misure ragionevoli per proteggere i dati, ma nessun sistema è impenetrabile. Proteggi le credenziali come il tuo flacone preferito.",
+        "five": "Contatto: per domande, richieste dati o segnalazione di attività sospette, scrivici a [INSERT CONTACT EMAIL HERE]."
+      }
+    },
+    "changes": {
+      "heading": "MODIFICHE ALLA POLICY",
+      "contentOne": "We may revise these Terms and this Privacy Policy from time to time. Updates will be posted on this page with a new “last updated” date. Continuing to use the site after changes means you accept them — the way one accepts that the night always carries a hint of mystery."
+    },
+    "closing": {
+      "heading": "PAROLE FINALI",
+      "contentOne": "Shadow and Sillage esiste per celebrare arte, scienza e storie del profumo. Usalo con saggezza, scambia con equità — fida del tuo naso, non delle promesse di uno sconosciuto."
+    }
+  },
+  "tradingPost": {
+    "meta": {
+      "title": "Il mercato - Shadow and Sillage",
+      "description": "Sfoglia i profumi in scambio dai membri."
+    },
+    "heading": "Il mercato",
+    "subheading": "Ogni flacone ha un passato. Ogni scambio lascia una traccia.",
+    "count": "profumi disponibili",
+    "empty": "Nessun profumo in scambio al momento.",
+    "availableFrom": "Disponibile da",
+    "search": {
+      "placeholder": "Cerca profumi disponibili...",
+      "noResults": "Nessun profumo trovato",
+      "tryDifferent": "Prova un altro termine"
+    }
+  },
+  "traderProfile": {
+    "meta": {
+      "title": "Profilo venditore - Shadow and Sillage",
+      "description": "Profilo di {{traderName}}"
+    },
+    "heading": "Venditore {{traderName}}",
+    "subheading": "Profilo di {{traderName}}",
+    "itemsAvailable": "Articoli da scambiare",
+    "itemsAvailableSummary": "{{traderName}} ha questi articoli da scambiare:",
+    "itemsSearchingFor": "È in cerca di",
+    "itemsSummary": "{{traderName}} cerca i seguenti profumi:",
+    "noItemsAvailable": "Nessun articolo disponibile.",
+    "noItemsSearchingFor": "Nessuna ricerca.",
+    "amount": "Quantità disponibile",
+    "price": "Prezzo",
+    "tradePrice": "Prezzo di scambio",
+    "preference": "Preferenza",
+    "tradeOnly": "Solo scambio",
+    "comments": "Commenti del venditore",
+    "noPublicComments": "Nessun commento pubblico.",
+    "preferences": {
+      "cash": "Solo contanti",
+      "trade": "Solo scambio",
+      "both": "Contanti o scambio"
+    },
+    "feedback": {
+      "title": "Feedback venditore",
+      "subtitle": "Costruisci fiducia con valutazioni e commenti.",
+      "reviewCount_one": "{{count}} recensione",
+      "reviewCount_other": "{{count}} recensioni",
+      "badgeLabel": "Venditore affidabile",
+      "noRatings": "Nessuna valutazione",
+      "loading": "Caricamento feedback...",
+      "error": "Impossibile caricare il feedback.",
+      "noComments": "Nessun commento feedback.",
+      "anonymousReviewer": "Recensore anonimo",
+      "selfReviewNotice": "Non puoi lasciare feedback sul tuo profilo.",
+      "ratingLabel": "La tua valutazione",
+      "ratingHint": "Valuta da 1 (da migliorare) a 5 (eccellente).",
+      "selectRating": "Seleziona valutazione",
+      "commentLabel": "Il tuo commento",
+      "commentPlaceholder": "Racconta la tua esperienza di scambio con questo membro.",
+      "commentHint": "I commenti aiutano gli altri a decidere di chi fidarsi.",
+      "submitButton": "Invia feedback",
+      "updateButton": "Aggiorna feedback",
+      "deleteButton": "Rimuovi feedback",
+      "loginPrompt": "Accedi per lasciare feedback.",
+      "validation": {
+        "ratingRequired": "La valutazione è obbligatoria."
+      }
+    }
+  },
+  "userAdmin": {
+    "meta": {
+      "title": "Admin utenti - Shadow and Sillage",
+      "description": "Gestisci account e utilizzo dati"
+    },
+    "heading": "Gestione utenti",
+    "subheading": "Gestisci account e permessi",
+    "users": "Utenti",
+    "userCount": "Attualmente abbiamo {{count}} utenti",
+    "manageUsers": "Gestisci gli utenti",
+    "table": {
+      "user": "Utente",
+      "role": "Ruolo",
+      "dataRecords": "Record dati",
+      "joined": "Iscritto il",
+      "actions": "Azioni",
+      "softDelete": "Eliminazione soft",
+      "delete": "Elimina",
+      "currentUser": "Utente corrente",
+      "admin": "Admin",
+      "deleted": "Eliminato"
+    }
+  },
+  "wishlist": {
+    "meta": {
+      "title": "Wishlist - Shadow and Sillage",
+      "description": "Gestisci la tua wishlist di profumi."
+    },
+    "empty": {
+      "heading": "La tua wishlist è vuota.",
+      "subheading": "Inizia ad aggiungere profumi alla wishlist!"
+    },
+    "heading": "La mia wishlist",
+    "subheading": "Gestisci la tua wishlist di profumi.",
+    "itemsInWishlist": "articoli nella wishlist",
+    "addButton": "Aggiungi alla wishlist",
+    "removeButton": "Rimuovi dalla wishlist",
+    "itemCard": {
+      "visibility": "Visibilità",
+      "public": "Pubblico",
+      "private": "Privato",
+      "available": "🎉 DISPONIBILE NEL MERCATO! 🎉",
+      "addedOn": "Aggiunto il",
+      "availableMessage": "Questo articolo apparirà sul tuo profilo",
+      "unavailableMessage": "Questo articolo è privato e non apparirà sul tuo profilo"
+    }
+  }
+}

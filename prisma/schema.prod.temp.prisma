@@ -1,0 +1,42 @@
+// Temporary schema - adds isApproved without unique constraint
+// This avoids the "data loss" warning
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Copy of the UserPerfumeReview model with isApproved but NO unique constraint
+model UserPerfumeReview {
+  id         String   @id @default(cuid())
+  userId     String
+  perfumeId  String
+  review     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  isApproved Boolean  @default(true)
+  perfume    Perfume  @relation(fields: [perfumeId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+  
+  // NO unique constraint yet - will add after confirming no duplicates
+  @@index([perfumeId, createdAt], name: "idx_review_perfume_created")
+}
+
+// Include minimal models needed for relations
+model User {
+  id                    String                 @id @default(cuid())
+  email                 String                 @unique
+  password              String
+  UserPerfumeReview     UserPerfumeReview[]
+}
+
+model Perfume {
+  id                    String                 @id @default(cuid())
+  name                  String
+  slug                  String                 @unique
+  userPerfumeReview     UserPerfumeReview[]
+}
