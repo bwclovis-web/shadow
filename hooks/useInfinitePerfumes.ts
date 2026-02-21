@@ -4,7 +4,16 @@ import {
   getMorePerfumes,
   getPerfumesByLetter,
   queryKeys,
-} from "~/lib/queries/perfumes"
+} from "@/lib/queries/perfumes"
+
+const STALE_TIME_5_MIN = 5 * 60 * 1000
+
+const getNextPageParam =
+  (pageSize: number) =>
+  (lastPage: { meta?: { hasMore?: boolean; skip?: number; take?: number } }) =>
+    lastPage.meta?.hasMore
+      ? (lastPage.meta.skip ?? 0) + (lastPage.meta.take ?? pageSize)
+      : undefined
 
 interface UseInfinitePerfumesByLetterOptions {
   letter: string | null
@@ -37,32 +46,19 @@ interface UseInfinitePerfumesByHouseOptions {
  * const perfumes = data?.pages.flatMap(page => page.perfumes) || []
  * ```
  */
-export function useInfinitePerfumesByLetter(options: UseInfinitePerfumesByLetterOptions) {
-  const {
-    letter,
-    houseType = "all",
-    pageSize = 16,
-    initialData,
-  } = options
+export const useInfinitePerfumesByLetter = (
+  options: UseInfinitePerfumesByLetterOptions
+) => {
+  const { letter, houseType = "all", pageSize = 16, initialData } = options
 
   return useInfiniteQuery({
-    // Use infinite-specific query key without pagination params
     queryKey: queryKeys.perfumes.byLetterInfinite(letter || "", houseType),
-    queryFn: ({ pageParam }) => {
-      const skip = pageParam as number
-      return getPerfumesByLetter(letter!, houseType, skip, pageSize)
-    },
+    queryFn: ({ pageParam }) =>
+      getPerfumesByLetter(letter!, houseType, pageParam as number, pageSize),
     enabled: !!letter && /^[A-Za-z]$/.test(letter),
     initialPageParam: 0,
-    getNextPageParam: lastPage => {
-      // Check if there's more data based on metadata
-      if (lastPage.meta?.hasMore) {
-        // Return the next skip value (current skip + take)
-        return (lastPage.meta.skip || 0) + (lastPage.meta.take || pageSize)
-      }
-      return undefined // No more pages
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    getNextPageParam: getNextPageParam(pageSize),
+    staleTime: STALE_TIME_5_MIN,
     // Use placeholderData for non-SSR scenarios or when you want stale-while-revalidate behavior
     placeholderData: initialData
       ? {
@@ -103,36 +99,20 @@ export function useInfinitePerfumesByLetter(options: UseInfinitePerfumesByLetter
  * const perfumes = data?.pages.flatMap(page => page.perfumes) || []
  * ```
  */
-export function useInfinitePerfumesByHouse(options: UseInfinitePerfumesByHouseOptions) {
-  const {
-    houseSlug,
-    pageSize = 9,
-    initialData,
-    initialTotalCount,
-  } = options
-  const derivedInitialTotal =
-    typeof initialTotalCount === "number"
-      ? initialTotalCount
-      : initialData?.length ?? 0
+export const useInfinitePerfumesByHouse = (
+  options: UseInfinitePerfumesByHouseOptions
+) => {
+  const { houseSlug, pageSize = 9, initialData, initialTotalCount } = options
+  const derivedInitialTotal = initialTotalCount ?? initialData?.length ?? 0
 
   return useInfiniteQuery({
-    // Use infinite-specific query key without pagination params
     queryKey: queryKeys.perfumes.byHouseInfinite(houseSlug),
-    queryFn: ({ pageParam }) => {
-      const skip = pageParam as number
-      return getMorePerfumes(houseSlug, { skip, take: pageSize })
-    },
+    queryFn: ({ pageParam }) =>
+      getMorePerfumes(houseSlug, { skip: pageParam as number, take: pageSize }),
     enabled: !!houseSlug,
     initialPageParam: 0,
-    getNextPageParam: lastPage => {
-      // Check if there's more data based on metadata
-      if (lastPage.meta?.hasMore) {
-        // Return the next skip value (current skip + take)
-        return (lastPage.meta.skip || 0) + (lastPage.meta.take || pageSize)
-      }
-      return undefined // No more pages
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    getNextPageParam: getNextPageParam(pageSize),
+    staleTime: STALE_TIME_5_MIN,
     // Use placeholderData for non-SSR scenarios or when you want stale-while-revalidate behavior
     placeholderData: initialData
       ? {

@@ -1,4 +1,4 @@
-import { HeroHeader } from "~/components/Molecules/HeroHeader"
+import { HeroHeader } from "@/components/Molecules/HeroHeader"
 interface PerfumeHouseHeroProps {
   name: string
   image?: string | null

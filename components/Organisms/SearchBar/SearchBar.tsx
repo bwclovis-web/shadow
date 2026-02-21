@@ -143,7 +143,7 @@ export default function SearchBar({
             {isLoading && (
               <li className="p-2 text-noir-gold-100 text-center">
                 <span className="animate-pulse">
-                  {mounted ? t("common.loading") : "common.loading"}
+                  {mounted ? tCommon("loading") : "Loading..."}
                 </span>
               </li>
             )}

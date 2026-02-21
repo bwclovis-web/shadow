@@ -1,9 +1,8 @@
 import type { ReactNode } from "react"
+import Image from "next/image"
 
-import { OptimizedImage } from "~/components/Atoms/OptimizedImage"
-import { validImageRegex } from "~/utils/styleUtils"
-import houseBanner from "../../../images/house-soon.webp"
-import bottleBanner from "../../../images/single-bottle.webp"
+import { styleMerge, validImageRegex } from "@/utils/styleUtils"
+
 interface HeroHeaderProps {
   title: string
   image?: string | null
@@ -20,7 +19,7 @@ interface HeroHeaderProps {
   imageWidth?: number
   imageHeight?: number
   imageQuality?: number
-  priority?: boolean,
+  priority?: boolean
   type?: string
 }
 
@@ -52,45 +51,34 @@ const HeroHeader = ({
   imageQuality = 85,
   priority = true,
 }: HeroHeaderProps) => {
+  const imageSrc =
+    image && !validImageRegex.test(image)
+      ? image
+      : type === "house"
+        ? "/images/house-soon.webp"
+        : "/images/single-bottle.webp"
+
   const computedViewTransitionName =
     viewTransitionName ??
     (transitionKey !== undefined ? `hero-image-${transitionKey}` : undefined)
 
   return (
     <header
-      className={`${DEFAULT_HEADER_CLASSES} ${heightClassName} ${headerClassName}`.trim()}
+      className={styleMerge(DEFAULT_HEADER_CLASSES, heightClassName, headerClassName)}
     >
-      {image && !validImageRegex.test(image) ? (
-          <OptimizedImage
-            src={image}
-            alt={imageAlt ?? title}
-            priority={priority}
-            width={imageWidth}
-            height={imageHeight}
-            quality={imageQuality}
-            className={imageClassName}
-            sizes={sizes}
-            viewTransitionName={computedViewTransitionName}
-            placeholder="blur"
-          />
-      ) : (
-        <OptimizedImage
-          src={type === "house" ? houseBanner : bottleBanner}
-          alt={imageAlt ?? title}
-          priority={priority}
-          width={imageWidth}
-          height={imageHeight}
-          quality={imageQuality}
-          className={imageClassName}
-          sizes={sizes}
-          viewTransitionName={computedViewTransitionName}
-          placeholder="blur"
-        />
-      )}
+      <Image
+        src={imageSrc}
+        alt={imageAlt ?? title}
+        priority={priority}
+        width={imageWidth}
+        height={imageHeight}
+        quality={imageQuality}
+        className={imageClassName}
+        sizes={sizes}
+        style={{ viewTransitionName: computedViewTransitionName } as React.CSSProperties}
+      />
 
-      <div
-        className={`${DEFAULT_BODY_CLASSES} ${bodyClassName}`.trim()}
-      >
+      <div className={styleMerge(DEFAULT_BODY_CLASSES, bodyClassName)}>
         {children ?? <h1 className={titleClassName}>{title}</h1>}
       </div>
     </header>
@@ -98,5 +86,3 @@ const HeroHeader = ({
 }
 
 export default HeroHeader
-
-

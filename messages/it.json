@@ -22,7 +22,7 @@
     "add": "Aggiungi",
     "previous": "Precedente",
     "next": "Successivo",
-    "pageOf": "Pagina {{current}} di {{total}}"
+    "pageOf": "Pagina {current} di {total}"
   },
   "admin": {
     "navigation": {
@@ -599,7 +599,7 @@
       "ariaLabel": "Torna alle case che iniziano con {{selectedLetter}}",
       "backToHousesLabel": "Torna alle case"
     },
-    "perfumeBottleAltText": "Flacone {{name}}",
+    "perfumeBottleAltText": "Flacone {name}",
     "deleteModal": {
       "heading": "Eliminare questa casa?",
       "description": "Perderai tutti i profumi e la cronologia associati."

@@ -18,7 +18,7 @@
     "adding": "Adding...",
     "previous": "Previous",
     "next": "Next",
-    "pageOf": "Page {{current}} of {{total}}"
+    "pageOf": "Page {current} of {total}"
   },
   "admin": {
     "navigation": {
@@ -643,7 +643,7 @@
       "ariaLabel": "Back to houses starting with {{selectedLetter}}",
       "backToHousesLabel": "Back to houses"
     },
-    "perfumeBottleAltText": "{{name}} Perfume Bottle",
+    "perfumeBottleAltText": "{name} Perfume Bottle",
     "deleteModal": {
       "heading": "Are you sure you want to delete this perfume house?",
       "description": "Once deleted, you will lose all perfumes and history associated with this house."

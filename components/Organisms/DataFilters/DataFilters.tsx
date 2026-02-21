@@ -58,7 +58,7 @@ const DataFilters = ({
               className="flex-wrap"
               selectId={`${searchType}-type`}
               defaultId={selectedType}
-              label={t("components.filter.heading")}
+              label={t("filter.heading")}
             />
           )}
 

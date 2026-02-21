@@ -22,7 +22,7 @@
     "add": "Ajouter",
     "previous": "Précédent",
     "next": "Suivant",
-    "pageOf": "Page {{current}} sur {{total}}"
+    "pageOf": "Page {current} sur {total}"
   },
   "admin": {
     "navigation": {
@@ -599,7 +599,7 @@
       "ariaLabel": "Retour aux maisons commençant par {{selectedLetter}}",
       "backToHousesLabel": "Retour aux maisons"
     },
-    "perfumeBottleAltText": "Flacon {{name}}",
+    "perfumeBottleAltText": "Flacon {name}",
     "deleteModal": {
       "heading": "Supprimer cette maison ?",
       "description": "Vous perdrez tous les parfums et l'historique associés."

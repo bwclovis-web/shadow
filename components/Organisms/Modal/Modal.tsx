@@ -1,6 +1,5 @@
 import { type VariantProps } from "class-variance-authority"
 import {
-  type FC,
   type HTMLProps,
   type ReactNode,
   useEffect,
@@ -11,10 +10,13 @@ import {
 import { createPortal } from "react-dom"
 import { IoMdCloseCircle } from "react-icons/io"
 
-import { useSessionStore } from "~/stores/sessionStore"
-import { styleMerge } from "~/utils/styleUtils"
+import { useSessionStore } from "@/hooks/sessionStore"
+import { styleMerge } from "@/utils/styleUtils"
 
 import { modalBackgroundVariant, modalContentVariant } from "./modal-variants"
+
+const CLOSE_DELAY_MS = 60
+const ANIMATE_DELAY_MS = 140
 
 interface ModalProps
   extends HTMLProps<HTMLDivElement>,
@@ -29,21 +31,17 @@ const Modal = ({
   innerType,
   animateStart,
   ref,
-}:ModalProps) => {
+}: ModalProps) => {
   const [mounted, setMounted] = useState(false)
   const [animate, setAnimate] = useState(false)
   const modalRef = useRef<HTMLDivElement>(null)
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const { closeModal, modalOpen } = useSessionStore()
 
-  const handleClick = () => {
+  const handleClose = () => {
     setAnimate(false)
-    if (closeTimeoutRef.current) {
-      clearTimeout(closeTimeoutRef.current)
-    }
-    closeTimeoutRef.current = setTimeout(() => {
-      closeModal()
-    }, 60)
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current)
+    closeTimeoutRef.current = setTimeout(closeModal, CLOSE_DELAY_MS)
   }
 
   useLayoutEffect(() => {
@@ -56,12 +54,9 @@ const Modal = ({
     }
   }, [])
 
-  // Add animation effect only
   useEffect(() => {
     if (mounted) {
-      const timeoutId = setTimeout(() => {
-        setAnimate(true)
-      }, 140)
+      const timeoutId = setTimeout(() => setAnimate(true), ANIMATE_DELAY_MS)
       return () => clearTimeout(timeoutId)
     }
   }, [mounted])
@@ -70,7 +65,7 @@ const Modal = ({
     <div
       ref={ref}
       id="modalContainer"
-      className="fixed inset-0 z-[9999] flex justify-center items-center isolate"
+      className="fixed inset-0 z-9999 flex justify-center items-center isolate"
       style={{ willChange: "opacity" }}
     >
       {modalOpen && (
@@ -82,12 +77,11 @@ const Modal = ({
             }))}
           tabIndex={0}
           role="button"
-          onClick={() => handleClick()}
+          onClick={handleClose}
           onKeyDown={evt => {
             if (evt.key === "Enter" || evt.key === " ") {
               evt.preventDefault()
-              setAnimate(true)
-              closeModal()
+              handleClose()
             }
           }}
           style={{ willChange: "opacity" }}
@@ -105,7 +99,7 @@ const Modal = ({
         <button
           type="button"
           className="absolute top-5 right-5 max-w-max cursor-pointer z-20"
-          onClick={() => handleClick()}
+          onClick={handleClose}
         >
           <IoMdCloseCircle
             size={34}

@@ -1,4 +1,4 @@
-import { Button } from "~/components/Atoms/Button"
+import { Button } from "@/components/Atoms/Button"
 interface DangerModalProps {
   heading: string
   description: string

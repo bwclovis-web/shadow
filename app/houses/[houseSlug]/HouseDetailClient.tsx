@@ -1,15 +1,23 @@
 "use client"
 
 import { useEffect } from "react"
+import dynamic from "next/dynamic"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
 import {
-  PerfumeHouseAdminActions,
   PerfumeHouseHero,
   PerfumeHousePerfumeList,
   PerfumeHouseSummaryCard,
 } from "@/components/Containers/PerfumeHouse"
+
+const PerfumeHouseAdminActions = dynamic(
+  () =>
+    import("@/components/Containers/PerfumeHouse").then((mod) => ({
+      default: mod.PerfumeHouseAdminActions,
+    })),
+  { ssr: false }
+)
 import DangerModal from "@/components/Organisms/DangerModal"
 import Modal from "@/components/Organisms/Modal"
 import { useHouse } from "@/hooks/useHouse"
@@ -22,16 +30,15 @@ import {
 } from "@/hooks/usePaginatedNavigation"
 import { useScrollToDataList } from "@/hooks/useScrollToDataList"
 import { useDeleteHouse } from "@/lib/mutations/houses"
-import { useSessionStore } from "@/stores/sessionStore"
+import { useSessionStore } from "@/hooks/sessionStore"
 
-const HOUSES_LIST = "/houses"
-const ROUTE_PATH = "/houses"
+const HOUSES_BASE_PATH = "/houses"
 
-function getInitialPerfumeData(house: {
+const getInitialPerfumeData = (house: {
   perfumes?: unknown[]
   perfumeCount?: number
   _count?: { perfumes?: number }
-}) {
+}) => {
   const perfumes = (house.perfumes || []) as unknown[]
   const count =
     typeof house?.perfumeCount === "number"
@@ -39,6 +46,18 @@ function getInitialPerfumeData(house: {
       : house?._count?.perfumes ?? perfumes.length ?? 0
 
   return { perfumes, count }
+}
+
+const buildHouseDetailPath = (
+  slug: string,
+  page?: number,
+  letter?: string | null
+): string => {
+  const params = new URLSearchParams()
+  if (letter) params.set("letter", letter)
+  if (page && page > 1) params.set("pg", page.toString())
+  const query = params.toString()
+  return query ? `${HOUSES_BASE_PATH}/${slug}?${query}` : `${HOUSES_BASE_PATH}/${slug}`
 }
 
 interface HouseDetailClientProps {
@@ -59,8 +78,8 @@ export default function HouseDetailClient({
   const searchParams = useSearchParams()
 
   const { data: perfumeHouse } = useHouse(
-    initialPerfumeHouse.slug,
-    initialPerfumeHouse
+    initialPerfumeHouse?.slug ?? "",
+    initialPerfumeHouse ?? undefined
   )
 
   const { modalOpen, toggleModal, modalId, closeModal } = useSessionStore()
@@ -88,6 +107,10 @@ export default function HouseDetailClient({
   const currentPage =
     Number.isNaN(pageFromUrl) || pageFromUrl < 1 ? 1 : pageFromUrl
 
+  const initialPerfumeData = initialPerfumeHouse
+    ? getInitialPerfumeData(initialPerfumeHouse)
+    : { perfumes: [] as unknown[], count: 0 }
+
   const {
     data,
     isLoading,
@@ -96,10 +119,10 @@ export default function HouseDetailClient({
     fetchNextPage,
     error,
   } = useInfinitePerfumesByHouse({
-    houseSlug: perfumeHouse?.slug ?? initialPerfumeHouse.slug,
+    houseSlug: perfumeHouse?.slug ?? initialPerfumeHouse?.slug ?? "",
     pageSize,
-    initialData: getInitialPerfumeData(initialPerfumeHouse).perfumes as any[],
-    initialTotalCount: getInitialPerfumeData(initialPerfumeHouse).count,
+    initialData: initialPerfumeData.perfumes as any[],
+    initialTotalCount: initialPerfumeData.count,
   })
 
   const {
@@ -119,37 +142,32 @@ export default function HouseDetailClient({
       page?.meta?.totalCount ?? page?._count?.perfumes ?? page?.count,
   })
 
+  const houseSlug = (perfumeHouse ?? initialPerfumeHouse)?.slug ?? ""
+
   const { handleNextPage, handlePrevPage } = usePaginatedNavigation({
     currentPage: pagination.currentPage,
     hasNextPage: pagination.hasNextPage,
     hasPrevPage: pagination.hasPrevPage,
     navigate,
-    buildPath: (page) =>
-      page <= 1
-        ? `${ROUTE_PATH}/${(perfumeHouse ?? initialPerfumeHouse).slug}${selectedLetter ? `?letter=${selectedLetter}` : ""}`
-        : `${ROUTE_PATH}/${(perfumeHouse ?? initialPerfumeHouse).slug}?pg=${page}${selectedLetter ? `&letter=${selectedLetter}` : ""}`,
+    buildPath: (page) => buildHouseDetailPath(houseSlug, page, selectedLetter),
   })
 
   useEffect(() => {
-    const slug = (perfumeHouse ?? initialPerfumeHouse).slug
     if (pagination.totalPages > 0 && currentPage > pagination.totalPages) {
-      const target =
-        pagination.totalPages === 1
-          ? `${ROUTE_PATH}/${slug}${selectedLetter ? `?letter=${selectedLetter}` : ""}`
-          : `${ROUTE_PATH}/${slug}?pg=${pagination.totalPages}${selectedLetter ? `&letter=${selectedLetter}` : ""}`
-      router.replace(target, { scroll: false })
-    }
-
-    if (pagination.totalCount === 0 && currentPage !== 1) {
       router.replace(
-        `${ROUTE_PATH}/${slug}${selectedLetter ? `?letter=${selectedLetter}` : ""}`,
+        buildHouseDetailPath(houseSlug, pagination.totalPages, selectedLetter),
         { scroll: false }
       )
     }
+
+    if (pagination.totalCount === 0 && currentPage !== 1) {
+      router.replace(buildHouseDetailPath(houseSlug, undefined, selectedLetter), {
+        scroll: false,
+      })
+    }
   }, [
     currentPage,
-    perfumeHouse?.slug,
-    initialPerfumeHouse.slug,
+    houseSlug,
     router,
     pagination.totalCount,
     pagination.totalPages,
@@ -176,7 +194,7 @@ export default function HouseDetailClient({
       {
         onSuccess: () => {
           closeModal()
-          router.push(HOUSES_LIST)
+          router.push(HOUSES_BASE_PATH)
         },
         onError: (err) => {
           console.error("Failed to delete house:", err)
@@ -191,12 +209,10 @@ export default function HouseDetailClient({
     toggleModal(buttonRef as React.RefObject<HTMLButtonElement>, "delete-perfume-house-item")
   }
 
-  const handleBackClick = () => {
-    router.push(
-      selectedLetter ? `/houses?letter=${selectedLetter}` : HOUSES_LIST,
-      { scroll: false }
-    )
-  }
+  const backPath =
+    selectedLetter
+      ? `${HOUSES_BASE_PATH}?letter=${selectedLetter}`
+      : HOUSES_BASE_PATH
 
   if (!perfumeHouse && !initialPerfumeHouse) {
     return <div className="p-4">{t("notFound")}</div>
@@ -204,7 +220,7 @@ export default function HouseDetailClient({
 
   const house = perfumeHouse ?? initialPerfumeHouse
   const totalPerfumeCount =
-    pagination.totalCount || getInitialPerfumeData(initialPerfumeHouse).count || 0
+    pagination.totalCount || initialPerfumeData.count || 0
   const listError =
     error instanceof Error ? error : error ? new Error(String(error)) : null
 
@@ -224,21 +240,23 @@ export default function HouseDetailClient({
           name={house.name}
           image={house.image}
           transitionKey={house.id}
+          type="house"
         />
 
         <div className="flex flex-col gap-10 lg:gap-20 mx-auto max-w-6xl inner-container">
-          <PerfumeHouseAdminActions
-            isAdmin={user?.role === "admin"}
-            houseName={house.name}
-            houseSlug={house.slug}
-            onDeleteClick={handleDeleteClick}
-          />
+          {user?.role === "admin" && (
+            <PerfumeHouseAdminActions
+              houseName={house.name}
+              houseSlug={house.slug}
+              onDeleteClick={handleDeleteClick}
+            />
+          )}
 
           <PerfumeHouseSummaryCard
             perfumeHouse={house}
             totalPerfumeCount={totalPerfumeCount}
             selectedLetter={selectedLetter}
-            onBackClick={handleBackClick}
+            backPath={backPath}
           />
 
           <PerfumeHousePerfumeList

@@ -10,7 +10,21 @@ const nextConfig: NextConfig = {
   images: {
     formats: ['image/webp', 'image/avif'],
     remotePatterns: [
-      // Add any external image domains if needed
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'galehayman.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'sites.create-cdn.net',
+        pathname: '/**',
+      },
     ],
   },
 }

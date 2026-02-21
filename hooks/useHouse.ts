@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 
-import { getHouseBySlug, queryKeys } from "~/lib/queries/houses"
+import { getHouseBySlug, queryKeys } from "@/lib/queries/houses"
 
 /**
  * Hook to fetch a single house by slug with hydration from loader data.

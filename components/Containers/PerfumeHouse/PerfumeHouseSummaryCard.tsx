@@ -1,21 +1,34 @@
-import { Button } from "~/components/Atoms/Button"
-import PerfumeHouseAddressBlock from "~/components/Containers/PerfumeHouse/AddressBlock/PerfumeHouseAddressBlock"
+"use client"
+
+import PerfumeHouseAddressBlock from "@/components/Containers/PerfumeHouse/AddressBlock/PerfumeHouseAddressBlock"
+import { VooDooLink } from "@/components/Atoms/Button"
 import { useTranslations } from "next-intl"
+
+interface PerfumeHouseSummary {
+  description?: string | null
+  type: string
+  address?: string | null
+  country?: string | null
+  email?: string | null
+  phone?: string | null
+  website?: string | null
+}
+
 interface PerfumeHouseSummaryCardProps {
-  perfumeHouse: any
+  perfumeHouse: PerfumeHouseSummary
   totalPerfumeCount: number
   selectedLetter?: string | null
-  onBackClick: () => void
+  backPath: string
 }
 
 const PerfumeHouseSummaryCard = ({
   perfumeHouse,
   totalPerfumeCount,
   selectedLetter,
-  onBackClick,
+  backPath,
 }: PerfumeHouseSummaryCardProps) => {
   const t = useTranslations("singleHouse.summaryCard")
-  return(
+  return (
     <div className="noir-border relative bg-white/5 text-noir-gold-500">
       <PerfumeHouseAddressBlock perfumeHouse={perfumeHouse} />
       {perfumeHouse.description && (
@@ -33,23 +46,22 @@ const PerfumeHouseSummaryCard = ({
         </span>
       </div>
       <span className="tag absolute">{perfumeHouse.type}</span>
-      <Button
-        onClick={onBackClick}
+      <VooDooLink
+        url={backPath}
         variant="primary"
         background="gold"
         size="sm"
         className="gap-2 max-w-max ml-2 mb-2 mt-2"
         aria-label={
           selectedLetter
-            ? t("ariaLabel", { selectedLetter: selectedLetter || "Houses" })
+            ? t("ariaLabel", { selectedLetter })
             : t("backToHousesLabel")
         }
       >
-        ← {t("backToHouses", { selectedLetter: selectedLetter || "Houses" })}
-      </Button>
+        ← {selectedLetter ? t("backToHouses", { selectedLetter }) : t("backToHousesLabel")}
+      </VooDooLink>
     </div>
-  )}
+  )
+}
 
 export default PerfumeHouseSummaryCard
-
-

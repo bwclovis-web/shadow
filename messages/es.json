@@ -22,7 +22,7 @@
     "add": "Agregar",
     "previous": "Anterior",
     "next": "Siguiente",
-    "pageOf": "Página {{current}} de {{total}}"
+    "pageOf": "Página {current} de {total}"
   },
   "admin": {
     "navigation": {
@@ -604,7 +604,7 @@
       "ariaLabel": "Volver a casas que comienzan con {{selectedLetter}}",
       "backToHousesLabel": "Volver a casas"
     },
-    "perfumeBottleAltText": "Botella de perfume {{name}}",
+    "perfumeBottleAltText": "Botella de perfume {name}",
     "deleteModal": {
       "heading": "¿Estás seguro de que deseas eliminar esta casa de perfumes?",
       "description": "Una vez eliminada, perderás todos los perfumes e historial asociados con esta casa."

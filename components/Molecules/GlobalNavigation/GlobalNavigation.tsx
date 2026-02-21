@@ -61,7 +61,7 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
 
   return (
     <header
-      className="fixed z-30 w-full h-auto bg-noir-dark/60 backdrop-blur-md"
+      className="fixed z-30 w-full h-auto bg-noir-dark/60 backdrop-blur-md top-0"
       data-sticky-header="global-navigation"
     >
       <div className="flex justify-end items-center px-30 bg-noir-black/60 backdrop-blur-md w-full gap-4">

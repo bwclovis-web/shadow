@@ -58,7 +58,7 @@ const useHouseFilters = (t: ReturnType<typeof useTranslations<"allHouses">>) => 
     {
       id: "indie",
       value: "indie",
-      label: t("allHouses.houseTypes.indie"),
+      label: t("houseTypes.indie"),
       name: "houseType",
       defaultChecked: false,
     },
