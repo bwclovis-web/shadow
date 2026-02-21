@@ -189,8 +189,8 @@
   },
   "components": {
     "dataDisplaySection": {
-      "heading": "Seleziona una lettera per sfogliare {{itemName}}",
-      "subheading": "Clicca su una lettera per vedere i {{itemName}} che iniziano con quella lettera"
+      "heading": "Seleziona una lettera per sfogliare {itemName}",
+      "subheading": "Clicca su una lettera per vedere i {itemName} che iniziano con quella lettera"
     },
     "modal": {
       "close": "Chiudi finestra"

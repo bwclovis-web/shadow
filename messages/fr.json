@@ -189,8 +189,8 @@
   },
   "components": {
     "dataDisplaySection": {
-      "heading": "Choisissez une lettre pour parcourir les {{itemName}}",
-      "subheading": "Cliquez sur une lettre pour voir les {{itemName}} commençant par cette lettre"
+      "heading": "Choisissez une lettre pour parcourir les {itemName}",
+      "subheading": "Cliquez sur une lettre pour voir les {itemName} commençant par cette lettre"
     },
     "modal": {
       "close": "Fermer la fenêtre"
