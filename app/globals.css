@@ -29,12 +29,10 @@ html {
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950 min-h-screen dark:text-noir-light font-sans text-base leading-7;
-  /* Performance optimizations */
+  @apply dark:bg-gray-950 min-h-screen dark:text-noir-light font-sans text-base leading-7;
   text-rendering: optimizeSpeed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Touch: allow document scroll and remove 300ms tap delay; avoid capturing on non-scroll containers */
   touch-action: manipulation;
   -webkit-overflow-scrolling: touch;
 

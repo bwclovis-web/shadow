@@ -1,0 +1,20 @@
+---
+description: Avoid premature and unnecessary optimization
+alwaysApply: true
+---
+
+# Avoid Premature Optimization
+
+Prefer clear, maintainable code over micro-optimizations until there is evidence of a real performance problem.
+
+## Guidelines
+
+- Use `useMemo`, `useCallback`, or `React.memo` only when really needed
+- Don't add them "just in case" or for cheap computations (small arrays, simple object creation, basic arithmetic)
+- Add them only when:
+  - You have measured a performance issue (profiler, benchmarks)
+  - The computation is demonstrably expensive (large data, heavy transforms)
+  - The optimization clearly addresses that issue
+  - The benefit outweighs the added complexity
+- Simpler code is easier to reason about and maintain
+- Premature optimizations add complexity and can introduce bugs

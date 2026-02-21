@@ -38,7 +38,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={`${inter.variable} ${limelight.variable}`}>
-      <body className={inter.className}>
+      <body className={`${inter.className} bg-noir-dark`}>
         <GlobalNavigation user={user} />
         <Providers>{children}</Providers>
       </body>

@@ -2,43 +2,30 @@ import { useEffect, useState } from "react"
 
 /**
  * Custom hook for matching media queries
- * 
+ *
  * @param query - Media query string (e.g., "(min-width: 768px)")
  * @returns Boolean indicating if the media query matches
  */
-// Use a constant initial value so server and first client render match (avoids hydration mismatch).
-const getInitialMatches = () => false
-
 export const useMediaQuery = (query: string): boolean => {
-  const [matches, setMatches] = useState(getInitialMatches)
+  const [matches, setMatches] = useState(false)
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return
-    }
+    const mql = window.matchMedia(query)
+    setMatches(mql.matches)
 
-    const mediaQuery = window.matchMedia(query)
-    // Set actual value after mount so hydration matches (initial is always false).
-    setMatches(mediaQuery.matches)
-
-    // Create event listener
-    const handler = (event: MediaQueryListEvent) => {
-      setMatches(event.matches)
-    }
-
-    // Modern browsers support addEventListener
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", handler)
-      return () => mediaQuery.removeEventListener("change", handler)
-    } else {
-      // Fallback for older browsers
-      mediaQuery.addListener(handler)
-      return () => mediaQuery.removeListener(handler)
-    }
+    const handler = (e: MediaQueryListEvent) => setMatches(e.matches)
+    mql.addEventListener("change", handler)
+    return () => mql.removeEventListener("change", handler)
   }, [query])
 
   return matches
 }
+
+const TABLET = "(min-width: 768px)"
+const DESKTOP = "(min-width: 1024px)"
+
+const getPageSize = (isTablet: boolean, isDesktop: boolean): number =>
+  isDesktop ? 16 : isTablet ? 8 : 6
 
 /**
  * Hook to get responsive page size based on Tailwind breakpoints
@@ -46,23 +33,31 @@ export const useMediaQuery = (query: string): boolean => {
  * - Tablet (768px to < 1024px): 8 items
  * - Desktop (1024px+): 16 items
  *
- * Note: On first render (and during SSR) both media queries are false for
- * hydration safety, so the initial value is 6 until the client runs and
- * matchMedia is evaluated.
+ * Uses a single effect and state so one re-render when crossing breakpoints.
+ * Initial value is 6 for hydration safety until matchMedia runs on the client.
  *
  * @returns Page size based on current screen size
  */
 export const useResponsivePageSize = (): number => {
-  const isTablet = useMediaQuery("(min-width: 768px)")
-  const isDesktop = useMediaQuery("(min-width: 1024px)")
+  const [pageSize, setPageSize] = useState(6)
 
-  if (isDesktop) {
-    return 16
-  }
-  if (isTablet) {
-    return 8
-  }
-  return 6
+  useEffect(() => {
+    const mqTablet = window.matchMedia(TABLET)
+    const mqDesktop = window.matchMedia(DESKTOP)
+
+    const update = () =>
+      setPageSize(getPageSize(mqTablet.matches, mqDesktop.matches))
+
+    update()
+    mqTablet.addEventListener("change", update)
+    mqDesktop.addEventListener("change", update)
+    return () => {
+      mqTablet.removeEventListener("change", update)
+      mqDesktop.removeEventListener("change", update)
+    }
+  }, [])
+
+  return pageSize
 }
 
 export default useMediaQuery

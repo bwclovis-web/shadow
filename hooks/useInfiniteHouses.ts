@@ -3,22 +3,25 @@ import { useInfiniteQuery } from "@tanstack/react-query"
 import {
   getHousesByLetterPaginated,
   queryKeys,
-} from "~/lib/queries/houses"
+} from "@/lib/queries/houses"
+
+const LETTER_REGEX = /^[A-Za-z]$/
+const STALE_TIME_MS = 5 * 60 * 1000
 
 interface UseInfiniteHousesOptions {
   letter: string | null
   houseType?: string
   pageSize?: number
-  initialData?: any[]
+  initialData?: unknown[]
 }
 
 /**
  * Hook to fetch houses by letter with infinite scroll pagination.
  * Replaces useInfiniteScrollHouses with TanStack Query useInfiniteQuery.
- * 
+ *
  * @param options - Configuration options
  * @returns Infinite query result with pages, hasNextPage, fetchNextPage, etc.
- * 
+ *
  * @example
  * ```tsx
  * const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteHouses({
@@ -29,7 +32,7 @@ interface UseInfiniteHousesOptions {
  * const houses = data?.pages.flatMap(page => page.houses) || []
  * ```
  */
-export function useInfiniteHouses(options: UseInfiniteHousesOptions) {
+export const useInfiniteHouses = (options: UseInfiniteHousesOptions) => {
   const {
     letter,
     houseType = "all",
@@ -37,25 +40,19 @@ export function useInfiniteHouses(options: UseInfiniteHousesOptions) {
     initialData,
   } = options
 
+  const isLetterValid = !!letter && LETTER_REGEX.test(letter)
+
   return useInfiniteQuery({
-    // Use infinite-specific query key without pagination params
-    queryKey: queryKeys.houses.byLetterInfinite(letter || "", houseType),
-    queryFn: ({ pageParam }) => {
-      const skip = pageParam as number
-      return getHousesByLetterPaginated(letter!, houseType, skip, pageSize)
-    },
-    enabled: !!letter && /^[A-Za-z]$/.test(letter),
+    queryKey: queryKeys.houses.byLetterInfinite(letter ?? "", houseType),
+    queryFn: ({ pageParam }) =>
+      getHousesByLetterPaginated(letter!, houseType, pageParam as number, pageSize),
+    enabled: isLetterValid,
     initialPageParam: 0,
-    getNextPageParam: lastPage => {
-      // Check if there's more data based on metadata
-      if (lastPage.meta?.hasMore) {
-        // Return the next skip value (current skip + take)
-        return (lastPage.meta.skip || 0) + (lastPage.meta.take || pageSize)
-      }
-      return undefined // No more pages
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    // Use placeholderData for non-SSR scenarios or when you want stale-while-revalidate behavior
+    getNextPageParam: (lastPage) =>
+      lastPage.meta?.hasMore
+        ? (lastPage.meta.skip ?? 0) + (lastPage.meta.take ?? pageSize)
+        : undefined,
+    staleTime: STALE_TIME_MS,
     placeholderData: initialData
       ? {
           pages: [
@@ -64,7 +61,7 @@ export function useInfiniteHouses(options: UseInfiniteHousesOptions) {
               houses: initialData,
               count: initialData.length,
               meta: {
-                letter: letter || "",
+                letter: letter ?? "",
                 houseType,
                 skip: 0,
                 take: pageSize,

@@ -19,7 +19,10 @@
     "approve": "Aprobar",
     "reject": "Rechazar",
     "remove": "Quitar",
-    "add": "Agregar"
+    "add": "Agregar",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "pageOf": "Página {{current}} de {{total}}"
   },
   "admin": {
     "navigation": {

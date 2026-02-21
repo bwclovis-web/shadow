@@ -1,9 +1,9 @@
-import { Button } from "~/components/Atoms/Button/Button"
+import { Button } from "@/components/Atoms/Button/Button"
 import {
   prefetchHousesByLetter,
   prefetchPerfumesByLetter,
-} from "~/lib/utils/prefetch"
-import { getAlphabetLetters } from "~/utils/sortUtils"
+} from "@/lib/utils/prefetch"
+import { getAlphabetLetters } from "@/utils/sortUtils"
 
 interface AlphabeticalNavProps {
   selectedLetter: string | null

@@ -1,12 +1,20 @@
-import type { RefObject } from "react"
 import { useTranslation } from "react-i18next"
 
-import { Button } from "~/components/Atoms/Button"
+import { Button } from "@/components/Atoms/Button/Button"
 
 import LinkCard from "../LinkCard/LinkCard"
 
+type DisplayItem = {
+  id: string
+  name: string
+  slug: string
+  image?: string
+  type?: string
+  perfumeHouse?: { name: string }
+}
+
 interface DataDisplaySectionProps {
-  data: any[]
+  data: DisplayItem[]
   isLoading: boolean
   type: "house" | "perfume"
   selectedLetter: string | null
@@ -17,25 +25,25 @@ interface DataDisplaySectionProps {
     hasNextPage: boolean
     hasPrevPage: boolean
   }
-  onPageChange?: (page: number) => void
   onNextPage?: () => void
   onPrevPage?: () => void
 }
 
-// React Compiler automatically optimizes this component - no manual memo/useMemo needed
-function DataDisplaySection({
+const itemNameByType = (type: "house" | "perfume") =>
+  type === "house" ? "houses" : "perfumes"
+
+const DataDisplaySection = ({
   data,
   isLoading,
   type,
   selectedLetter,
   sourcePage,
   pagination,
-  onPageChange,
   onNextPage,
   onPrevPage,
-}: DataDisplaySectionProps) {
+}: DataDisplaySectionProps) => {
   const { t } = useTranslation()
-  const itemName = type === "house" ? "houses" : "perfumes"
+  const itemName = itemNameByType(type)
 
   if (!selectedLetter && data.length === 0) {
     return (
@@ -50,18 +58,19 @@ function DataDisplaySection({
     )
   }
 
+  const showPagination =
+    pagination && pagination.totalPages > 1
+
   return (
     <div className="inner-container my-6" id="data-list">
-      <ul className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-4 auto-rows-fr">
-        {isLoading ? (
-          <div className="col-span-full text-center py-8">
-            <div className="text-noir-gold">
-              {t("common.loading", { itemName })} for letter "{selectedLetter}
-              "...
-            </div>
-          </div>
-        ) : (
-          data.map((item: any) => (
+      {isLoading ? (
+        <div className="text-center py-8 text-noir-gold">
+          {t("common.loading", { itemName })} for letter &quot;{selectedLetter}
+          &quot;
+        </div>
+      ) : (
+        <ul className="grid grid-cols-1 gap-6 md:grid-cols-2 2xl:grid-cols-4 auto-rows-fr">
+          {data.map((item) => (
             <li key={item.id} className="h-full">
               <LinkCard
                 data={item}
@@ -70,12 +79,11 @@ function DataDisplaySection({
                 sourcePage={sourcePage}
               />
             </li>
-          ))
-        )}
-      </ul>
+          ))}
+        </ul>
+      )}
 
-      {/* Pagination Controls */}
-      {pagination && pagination.totalPages > 1 && (
+      {showPagination && pagination && (
         <div className="flex justify-center items-center space-x-4 mt-8">
           {pagination.hasPrevPage && (
             <Button
@@ -83,12 +91,15 @@ function DataDisplaySection({
               variant="secondary"
               size="sm"
             >
-              Previous
+              {t("common.previous")}
             </Button>
           )}
 
           <span className="text-noir-gold/80">
-            Page {pagination.currentPage} of {pagination.totalPages}
+            {t("common.pageOf", {
+              current: pagination.currentPage,
+              total: pagination.totalPages,
+            })}
           </span>
 
           {pagination.hasNextPage && (
@@ -97,7 +108,7 @@ function DataDisplaySection({
               variant="secondary"
               size="sm"
             >
-              Next
+              {t("common.next")}
             </Button>
           )}
         </div>

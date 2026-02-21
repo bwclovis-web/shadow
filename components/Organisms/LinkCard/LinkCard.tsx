@@ -1,11 +1,11 @@
-import { NavLink } from "react-router"
+import Link from "next/link"
 
-import { OptimizedImage } from "~/components/Atoms/OptimizedImage"
-import { ROUTE_PATH as PERFUME_PATH } from "~/routes/perfume"
-import { ROUTE_PATH as PERFUME_HOUSE } from "~/routes/perfume-house"
-import houseBanner from "../../../images/house-soon.webp"
-import bottleBanner from "../../../images/single-bottle.webp"
-import { validImageRegex } from "~/utils/styleUtils"
+import { HOUSE_DETAIL_PATH, PERFUME_PATH } from "@/constants/routes"
+import houseBanner from "@/images/house-soon.webp"
+import bottleBanner from "@/images/single-bottle.webp"
+import { validImageRegex } from "@/utils/styleUtils"
+import Image from "next/image"
+
 interface LinkCardProps {
   data: {
     id: string
@@ -30,15 +30,15 @@ const LinkCard = ({
   selectedLetter,
   sourcePage,
 }: LinkCardProps) => {
-  const url = type === "house" ? PERFUME_HOUSE : PERFUME_PATH
- 
+  const basePath = type === "house" ? HOUSE_DETAIL_PATH : PERFUME_PATH
+  const href = selectedLetter
+    ? `${basePath}/${data.slug}?letter=${selectedLetter}`
+    : `${basePath}/${data.slug}`
+
   return (
     <div className="relative w-full h-full group noir-border overflow-hidden transition-all duration-300 ease-in-out bg-noir-dark/70 backdrop-blur-sm">
-      <NavLink
-        to={`${url}/${data.slug}`}
-        state={selectedLetter ? { selectedLetter, sourcePage } : { sourcePage }}
-        viewTransition
-        prefetch="intent"
+      <Link
+        href={href}
         className="p-4 flex flex-col overflow-hidden justify-between items-center group transition-all duration-300 ease-in-out"
       >
         <div className="text-center">
@@ -56,7 +56,7 @@ const LinkCard = ({
         </div>
         <div className="relative rounded-lg">
           {data.image && !validImageRegex.test(data.image) ? (
-            <OptimizedImage
+            <Image
               src={data.image}
               alt={data.name}
               width={300}
@@ -67,12 +67,11 @@ const LinkCard = ({
             transition-all duration-500 ease-in-out scale-120 h-full aspect-square
             filter grayscale-100 group-hover:grayscale-0 group-hover:scale-100 group-hover:mask-radial-from-30% group-hover:mask-radial-to-100%"
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
-              viewTransitionName={`perfume-image-${data.id}`}
-              placeholder="blur"
+              style={{ viewTransitionName: `perfume-image-${data.id}` } as React.CSSProperties}
             />
           ) : (
-            <OptimizedImage
-              src={type === "house" ? houseBanner : bottleBanner}
+            <Image
+              src={type === "house" ? "/images/house-soon.webp" : "/images/single-bottle.webp"}
               alt={data.name}
               width={300}
               height={400}
@@ -82,12 +81,11 @@ const LinkCard = ({
             transition-all duration-500 ease-in-out scale-120 h-full aspect-square
             filter grayscale-100 group-hover:grayscale-0 group-hover:scale-100 group-hover:mask-radial-from-30% group-hover:mask-radial-to-100%"
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
-              viewTransitionName={`perfume-image-${data.id}`}
-              placeholder="blur"
+              style={{ viewTransitionName: `perfume-image-${data.id}` } as React.CSSProperties}
             />
           )}
         </div>
-      </NavLink>
+      </Link>
       {children && (
         <div className="absolute bottom-0 left-0 right-0 bg-noir-dark/80 p-2 border-t border-noir-gold">
           {children}

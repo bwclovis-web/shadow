@@ -1,17 +1,22 @@
 import { useCallback, useEffect } from "react"
-import type { NavigateFunction } from "react-router"
 
-const DEFAULT_NAVIGATE_OPTIONS = { preventScrollReset: true } as const
+const DEFAULT_NAVIGATE_OPTIONS = { replace: false, preventScrollReset: true } as const
 
 type BuildPathFn = (page: number) => string
+
+/** Compatible with Next.js router.push/replace and React Router navigate */
+export type NavigateFn = (
+  to: string,
+  opts?: { replace?: boolean; preventScrollReset?: boolean }
+) => void
 
 interface UsePaginatedNavigationOptions {
   currentPage: number
   hasNextPage: boolean
   hasPrevPage: boolean
-  navigate: NavigateFunction
+  navigate: NavigateFn
   buildPath: BuildPathFn
-  navigateOptions?: Parameters<NavigateFunction>[1]
+  navigateOptions?: { replace?: boolean; preventScrollReset?: boolean }
 }
 
 interface UsePaginatedNavigationResult {

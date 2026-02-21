@@ -1,0 +1,294 @@
+"use client"
+
+import { useMemo, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useTranslation } from "react-i18next"
+
+import AlphabeticalNav from "@/components/Organisms/AlphabeticalNav"
+import DataDisplaySection from "@/components/Organisms/DataDisplaySection"
+import DataFilters from "@/components/Organisms/DataFilters"
+import TitleBanner from "@/components/Organisms/TitleBanner"
+import { useInfiniteHouses } from "@/hooks/useInfiniteHouses"
+import { useInfinitePagination } from "@/hooks/useInfinitePagination"
+import { useResponsivePageSize } from "@/hooks/useMediaQuery"
+import {
+  usePaginatedNavigation,
+  usePreserveScrollPosition,
+} from "@/hooks/usePaginatedNavigation"
+import { useScrollToDataList } from "@/hooks/useScrollToDataList"
+import { useSyncPaginationUrl } from "@/hooks/useSyncPaginationUrl"
+import {
+  getDefaultSortOptions,
+  sortItems,
+  type SortOption,
+} from "@/utils/sortUtils"
+
+export const ROUTE_PATH = "/houses"
+
+const BANNER_IMAGE = "/images/behind-bottle.webp"
+
+interface AllHousesClientProps {
+  heading: string
+  subheading: string
+}
+
+const useHouseFilters = (t: ReturnType<typeof useTranslation>["t"]) => {
+  const houseTypeOptions = [
+    {
+      id: "all",
+      value: "all",
+      label: t("allHouses.houseTypes.all"),
+      name: "houseType",
+      defaultChecked: true,
+    },
+    {
+      id: "niche",
+      value: "niche",
+      label: t("allHouses.houseTypes.niche"),
+      name: "houseType",
+      defaultChecked: false,
+    },
+    {
+      id: "designer",
+      value: "designer",
+      label: t("allHouses.houseTypes.designer"),
+      name: "houseType",
+      defaultChecked: false,
+    },
+    {
+      id: "indie",
+      value: "indie",
+      label: t("allHouses.houseTypes.indie"),
+      name: "houseType",
+      defaultChecked: false,
+    },
+    {
+      id: "celebrity",
+      value: "celebrity",
+      label: t("allHouses.houseTypes.celebrity"),
+      name: "houseType",
+      defaultChecked: false,
+    },
+    {
+      id: "drugstore",
+      value: "drugstore",
+      label: t("allHouses.houseTypes.drugstore"),
+      name: "houseType",
+      defaultChecked: false,
+    },
+  ]
+
+  const sortOptions = getDefaultSortOptions(t)
+
+  return { houseTypeOptions, sortOptions }
+}
+
+const useHouseHandlers = (
+  setSelectedHouseType: (houseType: string) => void,
+  setSelectedSort: (sort: SortOption) => void
+) => {
+  const handleHouseTypeChange = (evt: { target: { value: string } }) => {
+    setSelectedHouseType(evt.target.value)
+  }
+
+  const handleSortChange = (evt: { target: { value: string } }) => {
+    setSelectedSort(evt.target.value as SortOption)
+  }
+
+  return { handleHouseTypeChange, handleSortChange }
+}
+
+const useHousesData = (
+  letterFromUrl: string | null,
+  selectedHouseType: string,
+  currentPage: number,
+  pageSize: number
+) => {
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    error,
+  } = useInfiniteHouses({
+    letter: letterFromUrl,
+    houseType: selectedHouseType,
+    pageSize,
+  })
+
+  const { items: houses, pagination, loading } = useInfinitePagination({
+    pages: data?.pages,
+    currentPage,
+    pageSize,
+    isLoading,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    extractItems: (page) => (page as { houses?: unknown[] }).houses ?? [],
+    extractTotalCount: (page) =>
+      (page as { meta?: { totalCount?: number }; count?: number })?.meta
+        ?.totalCount ??
+      (page as { count?: number })?.count,
+  })
+
+  return { houses, pagination, loading, error, data }
+}
+
+const buildHousesPath = (
+  letter: string | null,
+  page: number
+): string => {
+  const params = new URLSearchParams()
+  if (letter) params.set("letter", letter.toLowerCase())
+  if (page > 1) params.set("pg", page.toString())
+  const query = params.toString()
+  return query ? `${ROUTE_PATH}?${query}` : ROUTE_PATH
+}
+
+const AllHousesClient = ({ heading, subheading }: AllHousesClientProps) => {
+  const { t } = useTranslation()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const [selectedHouseType, setSelectedHouseType] = useState("all")
+  const [selectedSort, setSelectedSort] = useState<SortOption>("created-desc")
+
+  const pageSize = useResponsivePageSize()
+
+  const letterParam = searchParams.get("letter")
+  const letterFromUrl =
+    letterParam && /^[A-Za-z]$/.test(letterParam)
+      ? letterParam.toUpperCase()
+      : null
+
+  const pageFromUrl = Math.max(1, parseInt(searchParams.get("pg") ?? "1", 10))
+
+  const filters = useHouseFilters(t)
+  const handlers = useHouseHandlers(setSelectedHouseType, setSelectedSort)
+
+  const { houses, pagination, loading, error } = useHousesData(
+    letterFromUrl,
+    selectedHouseType,
+    pageFromUrl,
+    pageSize
+  )
+
+  const normalizedHouses = useMemo(
+    () =>
+      houses.map((house) => ({
+        ...house,
+        createdAt:
+          house.createdAt ?? house.updatedAt ?? new Date(0),
+      })),
+    [houses]
+  )
+
+  const sortedHouses = useMemo(
+    () => sortItems(normalizedHouses, selectedSort),
+    [normalizedHouses, selectedSort]
+  )
+
+  const buildPath = useMemo(
+    () => (page: number) => buildHousesPath(letterFromUrl, page),
+    [letterFromUrl]
+  )
+
+  const navigate = useMemo(
+    () => (to: string, opts?: { replace?: boolean; preventScrollReset?: boolean }) => {
+      router[opts?.replace ? "replace" : "push"](to, {
+        scroll: !opts?.preventScrollReset,
+      })
+    },
+    [router]
+  )
+
+  const { handleNextPage, handlePrevPage } = usePaginatedNavigation({
+    currentPage: pagination.currentPage,
+    hasNextPage: pagination.hasNextPage,
+    hasPrevPage: pagination.hasPrevPage,
+    navigate,
+    buildPath,
+  })
+
+  usePreserveScrollPosition(loading)
+
+  useSyncPaginationUrl({
+    currentPage: pagination.currentPage,
+    pageFromUrl,
+    letter: letterFromUrl,
+    basePath: ROUTE_PATH,
+  })
+
+  const handleLetterClick = (letter: string | null) => {
+    const path = buildHousesPath(letter, 1)
+    router.push(path, { scroll: false })
+  }
+
+  useScrollToDataList({
+    trigger: letterFromUrl,
+    enabled: !!letterFromUrl,
+    isLoading: loading,
+    hasData: houses.length > 0,
+    additionalOffset: 32,
+  })
+  useScrollToDataList({
+    trigger: pagination.currentPage,
+    enabled: !!letterFromUrl && !!pagination.currentPage,
+    isLoading: loading,
+    hasData: houses.length > 0,
+    additionalOffset: 32,
+    skipInitialScroll: true,
+  })
+
+  if (error) {
+    return (
+      <div>
+        Error loading houses:{" "}
+        {error instanceof Error ? error.message : "Unknown error"}
+      </div>
+    )
+  }
+
+  return (
+    <section>
+      <TitleBanner
+        image={BANNER_IMAGE}
+        heading={heading}
+        subheading={subheading}
+      />
+
+      <DataFilters
+        searchType="perfume-house"
+        sortOptions={filters.sortOptions}
+        typeOptions={filters.houseTypeOptions}
+        selectedSort={selectedSort}
+        selectedType={selectedHouseType}
+        onSortChange={handlers.handleSortChange}
+        onTypeChange={handlers.handleHouseTypeChange}
+        className="mb-8"
+      />
+
+      <AlphabeticalNav
+        selectedLetter={letterFromUrl}
+        onLetterSelect={handleLetterClick}
+        prefetchType="houses"
+        houseType={selectedHouseType}
+        className="mb-8"
+      />
+
+      <DataDisplaySection
+        data={sortedHouses}
+        isLoading={loading}
+        type="house"
+        selectedLetter={letterFromUrl}
+        sourcePage="houses"
+        pagination={pagination}
+        onNextPage={handleNextPage}
+        onPrevPage={handlePrevPage}
+      />
+    </section>
+  )
+}
+
+export default AllHousesClient

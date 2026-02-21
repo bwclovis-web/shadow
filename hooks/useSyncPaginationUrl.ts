@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import { useNavigate, useSearchParams } from "react-router"
+import { useRouter, useSearchParams } from "next/navigation"
 
 interface UseSyncPaginationUrlOptions {
   currentPage: number
@@ -8,14 +8,14 @@ interface UseSyncPaginationUrlOptions {
   basePath: string
 }
 
-export function useSyncPaginationUrl({
+export const useSyncPaginationUrl = ({
   currentPage,
   pageFromUrl,
   letter,
   basePath,
-}: UseSyncPaginationUrlOptions) {
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+}: UseSyncPaginationUrlOptions) => {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const previousLetterRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -28,23 +28,22 @@ export function useSyncPaginationUrl({
     }
 
     if (letter && currentPage !== pageFromUrl) {
-      const newSearchParams = new URLSearchParams(searchParams)
+      const newSearchParams = new URLSearchParams(searchParams.toString())
+      newSearchParams.set("letter", letter.toLowerCase())
       if (currentPage === 1) {
         newSearchParams.delete("pg")
       } else {
         newSearchParams.set("pg", currentPage.toString())
       }
-      navigate(
-        `${basePath}/${letter}${newSearchParams.toString() ? `?${newSearchParams.toString()}` : ""}`,
-        { replace: true, preventScrollReset: true }
-      )
+      const query = newSearchParams.toString()
+      router.replace(`${basePath}?${query}`, { scroll: false })
     }
   }, [
     currentPage,
     pageFromUrl,
     letter,
     basePath,
-    navigate,
+    router,
     searchParams,
   ])
 }

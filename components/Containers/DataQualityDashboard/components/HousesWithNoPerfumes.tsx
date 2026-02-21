@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { NavLink } from "react-router"
 
-import { ROUTE_PATH as PERFUME_HOUSE } from "~/routes/perfume-house"
+import { HOUSE_DETAIL_PATH } from "@/constants/routes"
 import { createUrlSlug } from "~/utils/slug"
 
 import { type DataQualityStats } from "../utils/chartDataUtils"
@@ -157,7 +157,7 @@ const HousesWithNoPerfumes = ({ stats }: HousesWithNoPerfumesProps) => {
               >
                 <td className="px-4 py-3 text-sm font-medium text-gray-900">
                   <NavLink
-                    to={`${PERFUME_HOUSE}/${createUrlSlug(house.name)}`}
+                    to={`${HOUSE_DETAIL_PATH}/${createUrlSlug(house.name)}`}
                     className="text-purple-700 hover:text-purple-900 hover:underline"
                   >
                     {house.name}

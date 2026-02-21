@@ -14,7 +14,10 @@
     "approve": "Approve",
     "reject": "Reject",
     "remove": "Remove",
-    "add": "Add"
+    "add": "Add",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{current}} of {{total}}"
   },
   "admin": {
     "navigation": {

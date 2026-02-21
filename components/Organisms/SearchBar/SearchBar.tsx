@@ -92,7 +92,7 @@ export default function SearchBar({
   const RenderLink = ({ item }: { item: any }) => {
     const routePath =
       searchType === "perfume-house"
-        ? `/perfume-house/${item.slug}`
+        ? `/houses/${item.slug}`
         : `/perfume/${item.slug}`
 
     return (

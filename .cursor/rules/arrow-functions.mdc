@@ -1,0 +1,37 @@
+---
+description: Prefer arrow functions over function declarations
+globs: **/*.{ts,tsx,js,jsx}
+alwaysApply: true
+---
+
+# Arrow Functions
+
+Use arrow functions as the default for function definitions.
+
+## Examples
+
+```typescript
+// ❌ function declaration
+function isValidLetter(letter: string): boolean {
+  return !!letter && /^[A-Za-z]$/.test(letter)
+}
+
+export async function fetchData(): Promise<void> {
+  await doSomething()
+}
+
+// ✅ arrow function
+const isValidLetter = (letter: string): boolean =>
+  !!letter && /^[A-Za-z]$/.test(letter)
+
+export const fetchData = async (): Promise<void> => {
+  await doSomething()
+}
+```
+
+## Guidelines
+
+- Use `const name = (args) =>` for functions
+- Prefer expression form (`=> value`) when the body is a single return
+- Use block form (`=> { ... }`) for multi-statement bodies
+- Apply to both regular functions and exported functions
