@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { MdDelete, MdDeleteForever, MdEdit } from "react-icons/md"
 
 import { Button } from "~/components/Atoms/Button"
@@ -17,18 +17,20 @@ interface DestashItemProps {
 }
 
 const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
-  const { t } = useTranslation()
+  const tListItem = useTranslations("myScents.listItem")
+  const tDestash = useTranslations("myScents.destashManager")
+  const tComments = useTranslations("myScents.comments")
   const { modalOpen, toggleModal, modalId } = useSessionStore()
   const { uniqueModalId, addComment, comments, toggleCommentVisibility, deleteComment } = usePerfumeComments({ userPerfume: destash })
 
   const getTradePreferenceLabel = (preference: "cash" | "trade" | "both") => {
     switch (preference) {
       case "cash":
-        return t("myScents.listItem.decantOptionsTradePreferencesCash")
+        return tListItem("decantOptionsTradePreferencesCash")
       case "trade":
-        return t("myScents.listItem.decantOptionsTradePreferencesTrade")
+        return tListItem("decantOptionsTradePreferencesTrade")
       case "both":
-        return t("myScents.listItem.decantOptionsTradePreferencesBoth")
+        return tListItem("decantOptionsTradePreferencesBoth")
       default:
         return preference
     }
@@ -56,7 +58,7 @@ const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
           <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <p className="text-sm text-noir-gold-500 font-medium">
-                {t("myScents.destashManager.amount")}
+                {tDestash("amount")}
               </p>
               <p className="text-lg text-noir-gold-100">
                 {destash.available} ml
@@ -65,7 +67,7 @@ const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
             {destash.tradePrice && (
               <div>
                 <p className="text-sm text-noir-gold-500 font-medium">
-                  {t("myScents.destashManager.price")}
+                  {tDestash("price")}
                 </p>
                 <p className="text-lg text-noir-gold-100">
                   ${destash.tradePrice}
@@ -74,7 +76,7 @@ const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
             )}
             <div>
               <p className="text-sm text-noir-gold-500 font-medium">
-                {t("myScents.destashManager.tradePreference")}
+                {tDestash("tradePreference")}
               </p>
               <p className="text-lg text-noir-gold-100">
                 {getTradePreferenceLabel(destash.tradePreference as "cash" | "trade" | "both")}
@@ -83,10 +85,10 @@ const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
             {destash.tradeOnly && (
               <div>
                 <p className="text-sm text-noir-gold-500 font-medium">
-                  {t("myScents.destashManager.tradeOnly")}
+                  {tDestash("tradeOnly")}
                 </p>
                 <p className="text-lg text-noir-gold-100">
-                  {t("myScents.destashManager.yes")}
+                  {tDestash("yes")}
                 </p>
               </div>
             )}
@@ -101,7 +103,7 @@ const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
               size="sm"
               className="w-full md:w-auto"
             >
-              {t("myScents.comments.addCommentButton", "Add Comment")}
+              {tComments("addCommentButton")}
             </Button>
             <Button
               onClick={onEdit}
@@ -110,7 +112,7 @@ const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
               leftIcon={<MdEdit size={16} />}
               className="w-full md:w-auto flex items-center justify-between gap-2"
             >
-              {t("myScents.destashManager.edit")}
+              {tDestash("edit")}
             </Button>
             <Button
               onClick={() => {
@@ -123,7 +125,7 @@ const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
               leftIcon={<MdDelete size={16} />}
               className="w-full md:w-auto"
             >
-              {t("myScents.destashManager.delete")}
+              {tDestash("delete")}
             </Button>
           </div>
         </div>
@@ -132,7 +134,7 @@ const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
         {comments.length > 0 && (
           <div className="border-t border-noir-gold/20 p-4 bg-noir-black/30">
             <h4 className="text-sm font-semibold text-noir-gold-300 mb-2">
-              {t("myScents.comments.heading", "Comments")} ({comments.length})
+              {tComments("heading")} ({comments.length})
             </h4>
             <div className="space-y-2">
               {comments.map(comment => (
@@ -145,8 +147,8 @@ const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
                     <div className="flex items-center gap-2">
                       <VooDooCheck
                         checked={comment.isPublic}
-                        labelChecked={t("myScents.comments.makePublic", "Make this comment public")}
-                        labelUnchecked={t("myScents.comments.makePrivate", "Make this comment private")}
+                        labelChecked={tComments("makePublic")}
+                        labelUnchecked={tComments("makePrivate")}
                         onChange={() => toggleCommentVisibility(comment.id, comment.isPublic)}
                       />
                       <Button
@@ -156,7 +158,7 @@ const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
                         className="flex"
                       >
                         <span className="text-white/90 font-bold text-sm">
-                          {t("myScents.comments.deleteComment")}
+                          {tComments("deleteComment")}
                         </span>
                         <MdDeleteForever size={20} fill="white" />
                       </Button>

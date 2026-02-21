@@ -1,5 +1,5 @@
 import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import {  MdAdd } from "react-icons/md"
 import { useFetcher } from "react-router"
 
@@ -22,7 +22,7 @@ const DestashManager = ({
   userPerfumes,
   setUserPerfumes,
 }: DestashManagerProps) => {
-  const { t } = useTranslation()
+  const t = useTranslations("myScents.destashManager")
   const fetcher = useFetcher()
   const { addToFormData } = useCSRF()
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -182,7 +182,7 @@ const DestashManager = ({
     <div className="p-4 space-y-4">
       <div className="flex flex-col md:flex-row gap-2 md:gap-0 justify-between items-center">
         <h3 className="!text-noir-dark text-xl font-semibold">
-          {t("myScents.destashManager.title")}
+          {t("title")}
         </h3>
         {!isCreating && !editingId && (
           <Button
@@ -191,13 +191,13 @@ const DestashManager = ({
             size="sm"
             leftIcon={<MdAdd size={18} />}
           >
-            {t("myScents.destashManager.addNew")}
+            {t("addNew")}
           </Button>
         )}
       </div>
 
       <p className="text-sm text-noir-gold-dark">
-        {t("myScents.destashManager.description")}
+        {t("description")}
       </p>
 
       {/* List of existing destashes */}
@@ -205,7 +205,7 @@ const DestashManager = ({
         <div className="space-y-3">
           {destashes.length === 0 ? (
             <p className="text-noir-gold-300 italic text-center py-4">
-              {t("myScents.destashManager.noDestashes")}
+              {t("noDestashes")}
             </p>
           ) : (
             destashes.map(destash => (
@@ -226,11 +226,11 @@ const DestashManager = ({
           <div className="flex justify-between items-center mb-4">
             <h4 className="text-lg font-semibold text-noir-dark">
               {isCreating
-                ? t("myScents.destashManager.createNew")
-                : t("myScents.destashManager.editDestash")}
+                ? t("createNew")
+                : t("editDestash")}
             </h4>
             <Button onClick={handleCancel} variant="secondary" size="sm">
-              {t("myScents.destashManager.cancel")}
+              {t("cancel")}
             </Button>
           </div>
           {editingDestash && (

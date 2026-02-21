@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import { useCSRF } from "~/hooks/useCSRF"
 import type { UserPerfumeI } from "~/types"
@@ -16,7 +16,7 @@ interface UsePerfumeCommentsOptions {
 }
 
 export const usePerfumeComments = ({ userPerfume, onCommentAdded, onCommentSuccess }: UsePerfumeCommentsOptions) => {
-  const { t } = useTranslation()
+  const t = useTranslations("myScents.comments")
   const { submitForm } = useCSRF()
   const [comments, setComments] = useState<Comment[]>([])
 
@@ -100,7 +100,7 @@ export const usePerfumeComments = ({ userPerfume, onCommentAdded, onCommentSucce
       console.error("Error submitting comment:", error)
       // Remove the temporary comment on error
       setComments(prev => prev.filter(c => c.id !== tempComment.id))
-      alert(t("comments.error", "Error submitting comment. Please try again."))
+      alert(t("error"))
       return { success: false, error: "Error submitting comment" }
     }
 
@@ -110,7 +110,7 @@ export const usePerfumeComments = ({ userPerfume, onCommentAdded, onCommentSucce
       console.error("Error parsing response:", jsonError)
       // Remove the temporary comment on error
       setComments(prev => prev.filter(c => c.id !== tempComment.id))
-      alert(t("comments.error", "Error processing response. Please try again."))
+      alert(t("error"))
       return { success: false, error: "Error processing response" }
     }
 
@@ -142,7 +142,7 @@ export const usePerfumeComments = ({ userPerfume, onCommentAdded, onCommentSucce
       console.error("Failed to add comment:", result.error)
       // Remove the temporary comment on error
       setComments(prev => prev.filter(c => c.id !== tempComment.id))
-      alert(`${t("comments.failed", "Failed to add comment")}: ${result.error}`)
+      alert(`${t("failed")}: ${result.error}`)
       return { success: false, error: result.error }
     }
   }
@@ -228,7 +228,7 @@ export const usePerfumeComments = ({ userPerfume, onCommentAdded, onCommentSucce
     if (error) {
       console.error("Error deleting comment:", error)
       setComments(originalComments)
-      alert(t("comments.deleteError", "Error deleting comment"))
+      alert(t("deleteError"))
       return { success: false, error: "Error deleting comment" }
     }
 
@@ -237,7 +237,7 @@ export const usePerfumeComments = ({ userPerfume, onCommentAdded, onCommentSucce
     if (jsonError || !result.success) {
       console.error("Failed to delete comment:", jsonError || result.error)
       setComments(originalComments)
-      alert(`${t("comments.deleteFailed", "Failed to delete comment")}: ${
+      alert(`${t("deleteFailed")}: ${
           result?.error || "Unknown error"
         }`)
       return { success: false, error: jsonError || result.error }

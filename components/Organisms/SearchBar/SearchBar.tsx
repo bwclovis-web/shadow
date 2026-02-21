@@ -12,7 +12,7 @@ import {
   useState,
 } from "react"
 import { createPortal } from "react-dom"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
 import { useMounted } from "@/hooks/useMounted"
@@ -42,7 +42,8 @@ export default function SearchBar({
     width: 0,
   })
   const inputRef = useRef<HTMLInputElement>(null)
-  const { t } = useTranslation()
+  const tCommon = useTranslations("common")
+  const tHome = useTranslations("home")
   const mounted = useMounted()
 
   const searchFunction = useCallback(
@@ -110,7 +111,7 @@ export default function SearchBar({
     <div className="relative w-full">
       <form className="flex gap-2" onSubmit={evt => evt.preventDefault()}>
         <label htmlFor="search" className="sr-only">
-          {mounted ? t("common.search") : "common.search"}
+          {mounted ? tCommon("search") : "Search"}
         </label>
         <input
           ref={inputRef}
@@ -122,8 +123,8 @@ export default function SearchBar({
           placeholder={
             placeholder ||
             (mounted
-              ? `${t("common.search")} ${t(`home.searchType.${searchType}`)}`
-              : `common.search home.searchType.${searchType}`)
+              ? `${tCommon("search")} ${tHome(`searchType.${searchType}`)}`
+              : "Search")
           }
           onKeyUp={handleKeyUp}
           className={styleMerge(searchbarVariants({ className, variant }))}
@@ -150,8 +151,8 @@ export default function SearchBar({
               <li className="p-2 text-red-400 text-center">
                 <span>
                   {mounted
-                    ? t("common.searchError", { error })
-                    : "common.searchError"}
+                    ? tCommon("searchError", { error })
+                    : "Search error"}
                 </span>
               </li>
             )}
@@ -182,8 +183,8 @@ export default function SearchBar({
                 <li className="p-2 text-noir-gold-100 text-center">
                   <span>
                     {mounted
-                      ? t("common.noResultsFound")
-                      : "common.noResultsFound"}
+                      ? tCommon("noResultsFound")
+                      : "No results found"}
                   </span>
                 </li>
               )}

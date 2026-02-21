@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { MdDeleteForever } from "react-icons/md"
 
 import { Button } from "~/components/Atoms/Button"
@@ -26,9 +26,9 @@ const PerfumeComments = ({ userPerfume }: PerfumeCommentsProps) => {
 
   return (
     <div className="mt1 p-4 rounded-b-md bg-noir-dark/80">
-      <h3 className="text-lg font-semibold">{t("myScents.comments.heading")}</h3>
+      <h3 className="text-lg font-semibold">{t("heading")}</h3>
       <p className="text-sm mb-2 text-noir-gold-500">
-        {t("myScents.comments.subheading", {
+        {t("subheading", {
           perfumeName: userPerfume.perfume.name,
         })}
       </p>
@@ -47,11 +47,8 @@ const PerfumeComments = ({ userPerfume }: PerfumeCommentsProps) => {
                 <div className="flex items-center gap-2">
                   <VooDooCheck
                     checked={comment.isPublic}
-                    labelChecked={t("myScents.comments.makePublic", "Make this comment public")}
-                    labelUnchecked={t(
-                      "myScents.comments.makePrivate",
-                      "Make this comment private"
-                    )}
+                    labelChecked={t("makePublic")}
+                    labelUnchecked={t("makePrivate")}
                     onChange={() => handleTogglePublic(comment.id, comment.isPublic)}
                   />
                   <Button
@@ -61,7 +58,7 @@ const PerfumeComments = ({ userPerfume }: PerfumeCommentsProps) => {
                     size="sm"
                     leftIcon={<MdDeleteForever size={20} fill="white" />}
                   >
-                      {t("myScents.comments.deleteComment")}
+                      {t("deleteComment")}
                   </Button>
                 </div>
               </div>
@@ -70,7 +67,7 @@ const PerfumeComments = ({ userPerfume }: PerfumeCommentsProps) => {
         </ul>
       ) : (
         <p className="text-sm text-noir-gold-500 mb-2">
-          {t("myScents.comments.noComments")}
+          {t("noComments")}
         </p>
       )}
       <Button
@@ -81,7 +78,7 @@ const PerfumeComments = ({ userPerfume }: PerfumeCommentsProps) => {
         }}
         size={"sm"}
       >
-        {t("myScents.comments.addCommentButton")}
+        {t("addCommentButton")}
       </Button>
     </div>
   )

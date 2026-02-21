@@ -1,6 +1,6 @@
 import type { FormEvent } from "react"
 import { useState } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import { Button } from "~/components/Atoms/Button/Button"
 import VooDooCheck from "~/components/Atoms/VooDooCheck/VooDooCheck"
@@ -9,7 +9,7 @@ import type { CommentsModalProps } from "~/types/comments"
 import { sanitizeString } from "~/utils/validation"
 
 const CommentsModal = ({ perfume, onCommentAdded, addComment }: CommentsModalProps) => {
-  const { t } = useTranslation()
+  const t = useTranslations("myScents.comments")
   const { toggleModal, modalId } = useSessionStore()
   const [isPublic, setIsPublic] = useState(true) // Default to public
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -55,19 +55,16 @@ const CommentsModal = ({ perfume, onCommentAdded, addComment }: CommentsModalPro
 
   return (
     <div className="p-4">
-      <h2>{t("comments.title", "Comments")}</h2>
+      <h2>{t("title")}</h2>
       <p className="mb-4 text-xl text-noir-gold-100">
-        {t(
-          "comments.description",
-          "This is where you can add your personal comments about the scents."
-        )}
+        {t("description")}
       </p>
       <form className="space-y-3" onSubmit={handleSubmit}>
         <label
           htmlFor="comment"
           className="block text-md font-medium text-noir-gold-500"
         >
-          {t("comments.addLabel", "Add a comment:")}
+          {t("addLabel")}
         </label>
         <textarea
           id="comment"
@@ -84,15 +81,15 @@ const CommentsModal = ({ perfume, onCommentAdded, addComment }: CommentsModalPro
             id="isPublic"
             checked={isPublic}
             onChange={() => setIsPublic(!isPublic)}
-            labelChecked={t("comments.makePublic", "Make this comment public")}
-            labelUnchecked={t("comments.makePrivate", "Make this comment private")}
+            labelChecked={t("makePublic")}
+            labelUnchecked={t("makePrivate")}
           />
         </div>
 
         <Button type="submit" className="btn" disabled={isSubmitting}>
           {isSubmitting
-            ? t("comments.submitting", "Submitting...")
-            : t("comments.submit", "Submit")}
+            ? t("submitting")
+            : t("submit")}
         </Button>
       </form>
     </div>

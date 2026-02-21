@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { NavLink } from "react-router"
 
 import { mainNavigation } from "~/data/navigation"
@@ -12,16 +12,14 @@ interface NavigationLinksProps {
     id?: string
     role?: string
   } | null
-  isClientReady: boolean
   onNavClick: () => void
 }
 
-const NavigationLinks  = ({
+const NavigationLinks = ({
   user,
-  isClientReady,
   onNavClick,
 }: NavigationLinksProps) => {
-  const { t, ready } = useTranslation()
+  const t = useTranslations("navigation")
 
   return (
     <nav className="flex-1 px-4 pb-4">
@@ -38,12 +36,11 @@ const NavigationLinks  = ({
               className={({ isActive }) => styleMerge(
                   "block text-noir-gold hover:text-noir-light font-semibold text-lg py-4 px-4 border border-transparent transition-colors duration-400 rounded-lg mobile-touch-target hover:bg-noir-black/30",
                   isActive &&
-                    isClientReady &&
                     "text-noir-light bg-noir-black/30 border-noir-light/90"
                 )
               }
             >
-              {ready && isClientReady ? t("navigation." + item.key) : item.label}
+              {t(item.key)}
             </NavLink>
           </li>
         ))}

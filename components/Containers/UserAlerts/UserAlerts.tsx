@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { Link } from "react-router"
 
 import { Button } from "~/components/Atoms/Button/Button"
@@ -24,7 +24,7 @@ export const UserAlerts = ({
   initialPreferences,
   initialUnreadCount = 0,
 }: UserAlertsProps) => {
-  const { t } = useTranslation()
+  const t = useTranslations("alerts")
   const [alerts, setAlerts] = useState<UserAlert[]>(initialAlerts)
   const [preferences, setPreferences] = useState<UserAlertPreferences | null>(initialPreferences || null)
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount)
@@ -167,7 +167,7 @@ export const UserAlerts = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold mb-2  text-noir-gold">{t("alerts.heading")}</h2>
+        <h2 className="text-2xl font-bold mb-2  text-noir-gold">{t("heading")}</h2>
         <AlertBell
           unreadCount={unreadCount}
           userId={userId}
@@ -179,7 +179,7 @@ export const UserAlerts = ({
 
       <div className="noir-border p-4 relative">
         <VooDooDetails
-          summary={`${t("alerts.heading", "My Alerts")} ${
+          summary={`${t("heading")} ${
             unreadCount > 0 ? `(${unreadCount} new)` : ""
           }`}
           className="text-start text-noir-gold"
@@ -188,8 +188,8 @@ export const UserAlerts = ({
           <div className="space-y-4 p-4">
             <div className="flex flex-wrap gap-2 justify-between items-center">
               <div className="text-sm text-noir-gold-100">
-                {alerts.length} {alerts.length === 1 ? t("alerts.alert", "alert") : t("alerts.alerts", "alerts")} •{" "}
-                {unreadCount} {t("alerts.unread", "unread")}
+                {alerts.length} {alerts.length === 1 ? t("alert") : t("alerts")} •{" "}
+                {unreadCount} {t("unread")}
               </div>
               <div className="flex gap-2">
                 {alerts.length > 0 && (
@@ -199,12 +199,12 @@ export const UserAlerts = ({
                     onClick={handleDismissAll}
                     disabled={isLoading}
                   >
-                    {isLoading ? t("alerts.dismissing", "Dismissing...") : t("alerts.dismissAll", "Dismiss All")}
+                    {isLoading ? t("dismissing") : t("dismissAll")}
                   </Button>
                 )}
                 <Link to="/the-exchange">
                   <Button variant="primary" size="sm">
-                    {t("alerts.viewTradingPost", "View Trading Post")}
+                    {t("viewTradingPost")}
                   </Button>
                 </Link>
               </div>
@@ -213,12 +213,9 @@ export const UserAlerts = ({
             {/* Alert List */}
             {alerts.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                <p className="text-noir-gold text-lg">{t("alerts.noAlerts", "No alerts at the moment.")}</p>
+                <p className="text-noir-gold text-lg">{t("noAlerts")}</p>
                 <p className="text-sm mt-2 text-noir-gold-100">
-                  {t(
-                    "alerts.noAlertsDescription",
-                    "You'll receive alerts when items from your wishlist become available or when someone shows interest in your decants."
-                  )}
+                  {t("noAlertsDescription")}
                 </p>
               </div>
             ) : (

@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { GiTrade } from "react-icons/gi"
 
 import VooDooDetails from "~/components/Atoms/VooDooDetails"
@@ -7,17 +7,16 @@ import ContactItemButton from "~/components/Containers/TraderProfile/ContactItem
 
 import TradersComments from "./TradersComments"
 
-const getTradeLabel = (preference: string) => {
-  const { t } = useTranslation()
+const getTradeLabel = (t: ReturnType<typeof useTranslations>, preference: string) => {
   switch (preference) {
     case "cash":
-      return t("traderProfile.preferences.cash")
+      return t("preferences.cash")
     case "trade":
-      return t("traderProfile.preferences.trade")
+      return t("preferences.trade")
     case "both":
-      return t("traderProfile.preferences.both")
+      return t("preferences.both")
     default:
-      return t("traderProfile.preferences.cash")
+      return t("preferences.cash")
   }
 }
 
@@ -33,19 +32,17 @@ const PerfumeHeader = ({ userPerfume }: { userPerfume: UserPerfumeI }) => (
   </>
 )
 
-const PriceInfo = ({ userPerfume }: { userPerfume: UserPerfumeI }) => {
-  const { t } = useTranslation()
+const PriceInfo = ({ userPerfume, t }: { userPerfume: UserPerfumeI; t: ReturnType<typeof useTranslations> }) => {
   return (
     <p className="text-md text-noir-gold-100 mt-4">
-      {t("traderProfile.amount")}:{" "}
+      {t("amount")}:{" "}
       <span className="text-noir-gold-500">{userPerfume.available || "0"}ml</span>
     </p>
   )
 }
 
 // Helper component for trade information
-const TradeInfo = ({ userPerfume }: { userPerfume: UserPerfumeI }) => {
-  const { t } = useTranslation()
+const TradeInfo = ({ userPerfume, t }: { userPerfume: UserPerfumeI; t: ReturnType<typeof useTranslations> }) => {
   const tradePreference = userPerfume.tradePreference || "cash"
   // Don't show price if tradeOnly is true
   const showPrice = !userPerfume.tradeOnly && (tradePreference === "cash" || tradePreference === "both") && userPerfume.price
@@ -55,27 +52,27 @@ const TradeInfo = ({ userPerfume }: { userPerfume: UserPerfumeI }) => {
     <div className="text-sm text-noir-gold-300 space-y-1">
       {showPrice && (
         <p className="font-medium text-noir-gold-100">
-          {t("traderProfile.price")}:
+          {t("price")}:
           <span className="text-noir-gold-500"> ${userPerfume.price}/ml</span>
         </p>
       )}
       {showTradePrice && (
         <p className="font-medium text-noir-gold-100">
-          {t("traderProfile.tradePrice")}:
+          {t("tradePrice")}:
           <span className="text-noir-gold-500"> ${userPerfume.tradePrice}/ml</span>
         </p>
       )}
       <p className="text-noir-gold-100">
-        {t("traderProfile.preference")}:
+        {t("preference")}:
         <span className="text-noir-gold-500">
           {" "}
-          {getTradeLabel(tradePreference)}
+          {getTradeLabel(t, tradePreference)}
         </span>
       </p>
       {userPerfume.tradeOnly && (
         <div className="text-gold-noir font-medium flex gap-2 items-center">
           <GiTrade size={20} className="fill-noir-gold-100" />{" "}
-          <span className="text-noir-gold-500">{t("traderProfile.tradeOnly")}</span>
+          <span className="text-noir-gold-500">{t("tradeOnly")}</span>
         </div>
       )}
     </div>
@@ -83,8 +80,7 @@ const TradeInfo = ({ userPerfume }: { userPerfume: UserPerfumeI }) => {
 }
 
 // Comments component
-const CommentsSection = ({ userPerfume }: { userPerfume: UserPerfumeI }) => {
-  const { t } = useTranslation()
+const CommentsSection = ({ userPerfume, t }: { userPerfume: UserPerfumeI; t: ReturnType<typeof useTranslations> }) => {
   const publicComments =
     userPerfume?.comments?.filter(comment => comment.isPublic) || []
 
@@ -93,17 +89,14 @@ const CommentsSection = ({ userPerfume }: { userPerfume: UserPerfumeI }) => {
       {publicComments.length > 0 ? (
         <VooDooDetails
           name="comments"
-          summary={`${t("traderProfile.comments")} (${publicComments.length})`}
+          summary={`${t("comments")} (${publicComments.length})`}
           className="text-noir-gold mt-2"
         >
           <TradersComments comments={publicComments} />
         </VooDooDetails>
       ) : (
         <div className="mt-2 text-xs text-noir-gold-500 italic">
-          {t(
-            "traderProfile.noPublicComments",
-            "No public comments available for this item."
-          )}
+          {t("noPublicComments")}
         </div>
       )}
     </>
@@ -122,15 +115,17 @@ interface ItemsToTradeProps {
   viewerId?: string | null
 }
 
-const ItemsToTrade = ({ userPerfume, trader, viewerId }: ItemsToTradeProps) => (
+const ItemsToTrade = ({ userPerfume, trader, viewerId }: ItemsToTradeProps) => {
+  const t = useTranslations("traderProfile")
+  return (
   <li
     key={userPerfume.id}
     className="mb-4 border bg-noir-gold/20 border-noir-gold rounded p-2"
   >
     <PerfumeHeader userPerfume={userPerfume} />
-    <PriceInfo userPerfume={userPerfume} />
-    <TradeInfo userPerfume={userPerfume} />
-    <CommentsSection userPerfume={userPerfume} />
+    <PriceInfo userPerfume={userPerfume} t={t} />
+    <TradeInfo userPerfume={userPerfume} t={t} />
+    <CommentsSection userPerfume={userPerfume} t={t} />
     {trader && (
       <ContactItemButton
         traderId={trader.id}
@@ -140,6 +135,7 @@ const ItemsToTrade = ({ userPerfume, trader, viewerId }: ItemsToTradeProps) => (
       />
     )}
   </li>
-)
+  )
+}
 
 export default ItemsToTrade

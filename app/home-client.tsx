@@ -1,7 +1,7 @@
 "use client"
 
 import { type ChangeEvent, useEffect, useRef, useState } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import Select from "@/components/Atoms/Select"
 import SearchBar from "@/components/Organisms/SearchBar"
@@ -17,7 +17,8 @@ interface HomeClientProps {
 export default function HomeClient({ features, counts }: HomeClientProps) {
   const [searchType, setSearchType] = useState<"perfume-house" | "perfume">("perfume")
   const container = useRef<HTMLDivElement>(null)
-  const { t } = useTranslation()
+  const tHome = useTranslations("home")
+  const tComponents = useTranslations("components.search")
   const mounted = useMounted()
 
   // Lazy load GSAP animations after component mounts
@@ -66,13 +67,13 @@ export default function HomeClient({ features, counts }: HomeClientProps) {
   const data = [
     {
       id: "perfume-house",
-      name: mounted ? t("home.radio.houses") : "home.radio.houses",
-      label: mounted ? t("home.radio.houses") : "home.radio.houses",
+      name: mounted ? tHome("radio.houses") : "home.radio.houses",
+      label: mounted ? tHome("radio.houses") : "home.radio.houses",
     },
     {
       id: "perfume",
-      name: mounted ? t("home.radio.perfumes") : "home.radio.perfumes",
-      label: mounted ? t("home.radio.perfumes") : "home.radio.perfumes",
+      name: mounted ? tHome("radio.perfumes") : "home.radio.perfumes",
+      label: mounted ? tHome("radio.perfumes") : "home.radio.perfumes",
     },
   ]
 
@@ -95,10 +96,10 @@ export default function HomeClient({ features, counts }: HomeClientProps) {
         <section className="text-noir-gold relative z-10 flex flex-col items-center gap-4 pt-40 md:pt-0">
           <div className="text-shadow-lg/90 text-shadow-noir-black text-center">
             <h1 className="hero-title">
-              {mounted ? t("home.heading") : "home.heading"}
+              {mounted ? tHome("heading") : "home.heading"}
             </h1>
             <p className="subtitle opacity-0">
-              {mounted ? t("home.subheading") : "home.subheading"}
+              {mounted ? tHome("subheading") : "home.subheading"}
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-6 md:gap-8 mt-4 mb-6">
@@ -108,7 +109,7 @@ export default function HomeClient({ features, counts }: HomeClientProps) {
               </div>
               <div className="text-sm md:text-base text-noir-gold/80">
                 {mounted
-                  ? t("home.stats.users", { count: counts.users })
+                  ? tHome("stats.users")
                   : "home.stats.users"}
               </div>
             </div>
@@ -118,7 +119,7 @@ export default function HomeClient({ features, counts }: HomeClientProps) {
               </div>
               <div className="text-sm md:text-base text-noir-gold/80">
                 {mounted
-                  ? t("home.stats.houses", { count: counts.houses })
+                  ? tHome("stats.houses")
                   : "home.stats.houses"}
               </div>
             </div>
@@ -128,7 +129,7 @@ export default function HomeClient({ features, counts }: HomeClientProps) {
               </div>
               <div className="text-sm md:text-base text-noir-gold/80">
                 {mounted
-                  ? t("home.stats.perfumes", { count: counts.perfumes })
+                  ? tHome("stats.perfumes")
                   : "home.stats.perfumes"}
               </div>
             </div>
@@ -141,7 +142,7 @@ export default function HomeClient({ features, counts }: HomeClientProps) {
               selectId="search-type"
               selectData={data}
               ariaLabel={
-                mounted ? t("components.search.ariaLabel") : "components.search.ariaLabel"
+                mounted ? tComponents("ariaLabel") : "components.search.ariaLabel"
               }
             />
             <SearchBar

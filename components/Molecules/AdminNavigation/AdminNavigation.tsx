@@ -4,7 +4,7 @@ import { type VariantProps } from "class-variance-authority"
 import { type HTMLProps } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import { adminNavigation, profileNavigation } from "@/data/navigation"
 import { styleMerge } from "@/utils/styleUtils"
@@ -26,7 +26,8 @@ const linkActive =
   "text-noir-dark text-shadow-none bg-noir-gold/80 border-2 border-noir-gold"
 
 const AdminNavigation = ({ className, user, onNavClick }: AdminNavigationProps) => {
-  const { t } = useTranslation()
+  const tAdmin = useTranslations("admin")
+  const tProfile = useTranslations("profile")
   const pathname = usePathname()
   const isAdmin = user?.role === "admin" || user?.role === "editor"
 
@@ -73,7 +74,7 @@ const AdminNavigation = ({ className, user, onNavClick }: AdminNavigationProps) 
                 )}
               >
                 <span className="pl-2" suppressHydrationWarning>
-                  {t("profile.navigation." + item.key)}
+                  {tProfile("navigation." + item.key)}
                 </span>
               </Link>
             </li>

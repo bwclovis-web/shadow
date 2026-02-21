@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import { useCreateOrUpdateRating } from "~/lib/mutations/ratings"
 
@@ -46,7 +46,7 @@ export const useRatingSystem = ({
   onError,
   onSuccess,
 }: UseRatingSystemOptions): UseRatingSystemReturn => {
-  const { t } = useTranslation()
+  const t = useTranslations("singlePerfume.rating.categories")
   const { handleError } = useErrorHandler()
 
   const [currentRatings, setCurrentRatings] = useState<RatingData | null>(initialRatings)
@@ -118,14 +118,14 @@ export const useRatingSystem = ({
   }, [initialRatings])
 
   const categories: Array<{ key: keyof RatingData; label: string }> = [
-    { key: "longevity", label: t("singlePerfume.rating.categories.longevity") },
-    { key: "sillage", label: t("singlePerfume.rating.categories.sillage") },
-    { key: "gender", label: t("singlePerfume.rating.categories.gender") },
+    { key: "longevity", label: t("longevity") },
+    { key: "sillage", label: t("sillage") },
+    { key: "gender", label: t("gender") },
     {
       key: "priceValue",
-      label: t("singlePerfume.rating.categories.priceValue"),
+      label: t("priceValue"),
     },
-    { key: "overall", label: t("singlePerfume.rating.categories.overall") },
+    { key: "overall", label: t("overall") },
   ]
 
   return {

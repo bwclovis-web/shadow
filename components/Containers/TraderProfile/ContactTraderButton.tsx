@@ -1,5 +1,5 @@
 import { useRef, useState } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import { Button } from "~/components/Atoms/Button/Button"
 import ContactTraderModal from "~/components/Containers/Forms/ContactTraderModal"
@@ -25,7 +25,7 @@ const ContactTraderButton = ({
   trader,
   viewerId,
 }: ContactTraderButtonProps) => {
-  const { t } = useTranslation()
+  const t = useTranslations("contactTrader")
   const { modalOpen, toggleModal, modalId, closeModal } = useSessionStore()
   const modalTrigger = useRef<HTMLButtonElement>(null)
   const { prepareApiRequest } = useCSRF()
@@ -92,7 +92,7 @@ const ContactTraderButton = ({
         }}
         ref={modalTrigger}
       >
-        {t("contactTrader.button", "Contact Trader")}
+        {t("button")}
       </Button>
 
       {modalOpen && modalId === "contact-trader" && (

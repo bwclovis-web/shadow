@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 const RatingLabel = ({
   showLabel,
@@ -9,7 +9,7 @@ const RatingLabel = ({
   currentValue: number
   category: "longevity" | "sillage" | "gender" | "priceValue" | "overall"
 }) => {
-  const { t } = useTranslation()
+  const t = useTranslations("singlePerfume.rating")
   if (!showLabel) {
     return null
   }
@@ -17,8 +17,8 @@ const RatingLabel = ({
   return (
     <span className="text-xs text-noir-gold-500 font-medium">
       {currentValue > 0
-        ? t(`singlePerfume.rating.labels.${category}.${currentValue}`)
-        : t("singlePerfume.rating.selectRating")}
+        ? t(`labels.${category}.${currentValue}`)
+        : t("selectRating")}
     </span>
   )
 }

@@ -1,38 +1,37 @@
-import { type ChangeEvent, useEffect, useState } from "react"
-import { useTranslation } from "react-i18next"
+"use client"
+
+import { type ChangeEvent, useTransition } from "react"
+import { useLocale } from "next-intl"
+import { useRouter } from "next/navigation"
 
 import Select from "@/components/Atoms/Select/Select"
+import { setLocale } from "@/lib/actions/locale"
+
+const languageOptions = [
+  { id: "en", label: "English", name: "en" },
+  { id: "es", label: "Español", name: "es" },
+  { id: "fr", label: "Français", name: "fr" },
+  { id: "it", label: "Italiano", name: "it" },
+]
 
 const LanguageSwitcher = () => {
-  const { i18n } = useTranslation()
-  // Use local state to track selected language for immediate UI updates
-  const [selectedLanguage, setSelectedLanguage] = useState(i18n.language)
-
-  // Sync local state with i18n.language when it changes (e.g., from external sources)
-  useEffect(() => {
-    setSelectedLanguage(i18n.language)
-  }, [i18n.language])
-
-  const languageOptions = [
-    { id: "en", label: "English", name: "en" },
-    { id: "es", label: "Español", name: "es" },
-    { id: "fr", label: "Français", name: "fr" },
-    { id: "it", label: "Italiano", name: "it" },
-  ]
+  const locale = useLocale()
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
 
   const handleLanguageChange = (evt: ChangeEvent<HTMLSelectElement>) => {
-    const newLanguage = evt.target.value
-    // Update local state immediately for responsive UI
-    setSelectedLanguage(newLanguage)
-    // Change the actual language
-    i18n.changeLanguage(newLanguage)
+    const newLocale = evt.target.value
+    startTransition(async () => {
+      await setLocale(newLocale)
+      router.refresh()
+    })
   }
 
   return (
     <Select
       selectId="language-switcher"
       selectData={languageOptions}
-      defaultId={selectedLanguage}
+      defaultId={locale}
       action={handleLanguageChange}
       ariaLabel="Select Language"
       size="compact"

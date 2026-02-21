@@ -1,0 +1,937 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "loadingMore": "Loading more...",
+    "noMore": "No more {{itemName}} to load.",
+    "allLoaded": "All {{itemName}} loaded.",
+    "loadMore": "Load More {{itemName}}",
+    "search": "Search",
+    "searchError": "Search error: {{error}}",
+    "noResultsFound": "No results found",
+    "edit": "Edit",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "approve": "Approve",
+    "reject": "Reject",
+    "remove": "Remove",
+    "add": "Add",
+    "adding": "Adding...",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{current}} of {{total}}"
+  },
+  "admin": {
+    "navigation": {
+      "createHouse": "Create House",
+      "createPerfume": "Create Perfume",
+      "dataQuality": "Data Quality",
+      "userManagement": "User Management",
+      "securityMonitor": "Security Monitor",
+      "performanceAdmin": "Performance Admin",
+      "errorAnalytics": "Error Analytics",
+      "pendingSubmissions": "Pending Submissions"
+    }
+  },
+  "pendingSubmissions": {
+    "meta": {
+      "title": "Pending Submissions - Admin - Shadow and Sillage",
+      "description": "Review and approve pending perfume and perfume house submissions."
+    },
+    "heading": "Pending Submissions",
+    "subheading": "Review and approve user submissions",
+    "filters": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "all": "All"
+    },
+    "empty": "No submissions found",
+    "showDetails": "Show Details",
+    "hideDetails": "Hide Details",
+    "details": "Submission Details",
+    "adminNotes": "Admin Notes",
+    "notesPlaceholder": "Optional notes...",
+    "approve": "Approve",
+    "approving": "Approving...",
+    "reject": "Reject",
+    "rejecting": "Rejecting..."
+  },
+  "aboutUs": {
+    "meta": {
+      "title": "About Us - Shadow and Sillage",
+      "description": "Learn about the story behind Shadow and Sillage."
+    },
+    "heading": "About Us",
+    "subheading": "About the founders of Shadow And Sillage",
+    "content": {
+      "subheading": "Two collectors chasing the scent of something rare",
+      "one": "The city sleeps, but somewhere in the dark, a couple sits beneath the warm hum of a desk lamp. Bottles line the shelves like suspects waiting to be questioned — amber glass, faded labels, whispers of other lives. That’s where you’ll find us: Brian and Amanda, the husband-and-wife team behind Shadow and Sillage.",
+      "two": "It started simply enough - one perfume too many to remember, one story too good to lose. We began keeping notes, first on scraps of paper, then in a ledger, and finally in this growing archive. What began as a way to track our collection became something larger: a gathering place for others who chase memories through scent.",
+      "three": "This little speakeasy of fragrance runs on curiosity. Every new listing is a lead, every review a clue. The database grows quietly in the background, one house and one scent at a time, as we piece together the strange and beautiful puzzle of perfume. You might call it obsession; we call it devotion.",
+      "four": "We built this place for the romantics and the detectives of scent — the ones who can find memory in a base note or joy in a single spark of aldehyde. If you notice a bottle missing from our shelves, you can send word through the forms scattered around the site. We’ll take the tip, follow the trail, and add it to the case file.",
+      "five": "The door’s always open. Step in from the rain, hang your coat, and stay awhile. In Shadow and Sillage, every scent has a story, and every story deserves to be found."
+    }
+  },
+  "alerts":{
+    "heading": "My Alerts",
+    "subheading": "Manage your alerts and preferences",
+    "filters": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "all": "All"
+    },
+    "alert": "alert",
+    "alerts": "alerts",
+    "unread": "unread",
+    "dismissing": "Dismissing...",
+    "dismissAll": "Dismiss All",
+    "viewTradingPost": "View Trading Post",
+    "noAlerts": "No alerts at the moment.",
+    "noAlertsDescription": "You'll receive alerts when items from your wishlist become available or when someone shows interest in your decants.",
+    "alertPreferences": "Alert Preferences",
+    "alertPreferencesDescription": "Configure how and when you receive alerts.",
+    "alertTypes": "Alert Types",
+    "wishlistAlerts": "Wishlist Alerts",
+    "decantAlerts": "Decant Interest Alerts",
+    "emailNotifications": "Email Notifications",
+    "emailWishlistAlerts": "Email Wishlist Alerts",
+    "emailDecantAlerts": "Email Decant Alerts",
+    "alertLimits": "Alert Limits",
+    "maxAlerts": "Maximum Alerts to Keep",
+    "maxAlertsDescription": "Older alerts will be automatically dismissed when this limit is reached",
+    "maxAlertsOptions": {
+      "5": "5 alerts",
+      "10": "10 alerts",
+      "20": "20 alerts",
+      "50": "50 alerts"
+    },
+    "savePreferences": "Save Preferences",
+    "savingPreferences": "Saving..."
+  },
+  "allHouses": {
+    "meta": {
+      "title": "Behind the Bottle - Shadow and Sillage",
+      "description": "Explore all the perfume houses available in our database."
+    },
+    "heading": "Behind the Bottle",
+    "subheading": "They don't just make perfume, they leave a mark.",
+    "filters": {
+      "houseType": "Filter by Type:",
+      "sortBy": "Sort by:"
+    },
+    "houseTypes": {
+      "all": "All",
+      "niche": "Niche",
+      "designer": "Designer",
+      "indie": "Indie",
+      "celebrity": "Celebrity",
+      "drugstore": "Drugstore"
+    },
+    "sortOptions": {
+      "created-desc": "Newest First",
+      "created-asc": "Oldest First",
+      "name-asc": "Name A-Z",
+      "name-desc": "Name Z-A",
+      "type-asc": "Type"
+    }
+  },
+  "allPerfumes": {
+    "meta": {
+      "title": "The Vault - Shadow and Sillage",
+      "description": "Discover all the perfumes available in our database."
+    },
+    "heading": "The Vault",
+    "subheading": "Every bottle tells a story. Some whisper. Some scream."
+  },
+  "auth": {
+    "heading": "Welcome Back",
+    "subheading": "Log in to your account here. If you do not have one,",
+    "createAccount": "Click here to create",
+    "passwordRequirements": "Password Requirements:",
+    "termsAndConditions": "I accept the: ",
+    "termsAndConditionsLink": "terms and conditions",
+    "passwordRequirementsList": {
+      "8characters": "At least 8 characters long",
+      "uppercase": "Contains uppercase and lowercase letters",
+      "number": "Contains at least one number",
+      "special": "Contains at least one special character",
+      "spaces": "No spaces allowed",
+      "different": "Different from your current password"
+    },
+    "signIn": {
+      "title": "Sign In - Shadow and Sillage",
+      "description": "Sign in to your account to access your profile and manage your collection."
+    },
+    "signUp": {
+      "title": "Sign Up - Shadow and Sillage",
+      "description": "Create an account to access your profile and manage your collection."
+    }
+  },
+  "subscribe": {
+    "heading": "Subscribe",
+    "subheading": "Join Shadow and Sillage with a paid subscription",
+    "limitTitle": "100-user early adopter limit",
+    "limitCopy": "We offer free signups to our first 100 members as early adopters. That limit has been reached.",
+    "paymentRequired": "To create an account now, a paid subscription is required. Complete checkout below and you’ll be able to sign up right after.",
+    "cta": "Continue to payment"
+  },
+  "subscribeSuccess": {
+    "heading": "Payment successful",
+    "subheading": "Your subscription is active",
+    "messageTitle": "Thank you",
+    "messageBody": "Your payment was successful. Complete sign up below to create your account with the email you used at checkout.",
+    "cta": "Continue to sign up"
+  },
+  "components": {
+    "dataDisplaySection": {
+      "heading": "Select a letter to browse {{itemName}}",
+      "subheading": "Click on any letter above to see {{itemName}} starting with that letter"
+    },
+    "modal": {
+      "close": "Close Modal"
+    },
+    "search": {
+      "placeholder": "Search for perfumes or houses...",
+      "button": "Search",
+      "ariaLabel": "Select search type"
+    },
+    "filter": {
+      "heading": "Filter By Type",
+      "clearFilters": "Clear Filters",
+      "applyFilters": "Apply Filters"
+    },
+    "sort": {
+      "heading": "Sort By",
+      "options": {
+        "nameAsc": "Name A-Z",
+        "nameDesc": "Name Z-A",
+        "createdAsc": "Oldest First",
+        "createdDesc": "Newest First"
+      }
+    }
+  },
+  "contactTrader": {
+    "title": "Contact Trader",
+    "itemTitle": "Inquire About Item",
+    "heading": "Contact Trader",
+    "subheading": "Contact {{traderName}} to inquire about trading.",
+    "itemSubheading": "Contact the trader about {{perfumeName}}{{perfumeHouse}}.",
+    "itemSubject": "Inquiry about {{perfumeName}}{{perfumeHouse}}",
+    "itemMessageTemplate": "I'm interested in {{perfumeName}}{{perfumeHouse}} ({{amount}}ml).",
+    "button": "Contact Trader",
+    "inquireButton": "Inquire About This Item",
+    "subjectLabel": "Subject (optional)",
+    "subjectPlaceholder": "Enter subject...",
+    "messageLabel": "Message",
+    "messagePlaceholder": "Enter your message...",
+    "messageHelp": "Your message to the trader (10-5,000 characters)",
+    "sending": "Sending...",
+    "sendButton": "Send Message",
+    "success": "Message sent successfully!",
+    "error": "Failed to send message",
+    "name": "Name",
+    "namePlaceholder": "Enter your name",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "submit": "Submit",
+    "submitLoading": "Submitting...",
+    "submitSuccess": "Message sent successfully",
+    "submitError": "An error occurred. Please try again."
+  },
+  "dataQuality": {
+    "heading": "Data Quality Dashboard",
+    "subheading": "Monitor the quality of the data in our database."
+  },
+  "sortOptions": {
+    "created-desc": "Newest First",
+    "created-asc": "Oldest First",
+    "name-asc": "Name A-Z",
+    "name-desc": "Name Z-A",
+    "type-asc": "Type"
+  },
+  "createHouse": {
+    "meta": {
+      "title": "Create Perfume House - Shadow and Sillage",
+      "description": "Create a new perfume house in our database."
+    },
+    "heading": "Create Perfume House",
+    "subheading": "Fill in the details to create a new perfume house.",
+    "name": "Name",
+    "namePlaceholder": "Enter the name of the perfume house",
+    "type": "Type",
+    "typePlaceholder": "Select the type of perfume house",
+    "description": "Description",
+    "descriptionPlaceholder": "Enter a brief description of the perfume house",
+    "submitButton": "Create House"
+  },
+  "createPerfume": {
+    "meta": {
+      "title": "Create Perfume - Shadow and Sillage",
+      "description": "Create a new perfume in our database."
+    },
+    "heading": "Create Perfume",
+    "subheading": "Fill in the details to create a new perfume.",
+    "name": "Name",
+    "namePlaceholder": "Enter the name of the perfume",
+    "house": "Perfume House",
+    "housePlaceholder": "Select the perfume house",
+    "notes": "Notes",
+    "notesPlaceholder": "Enter the notes of the perfume",
+    "submitButton": "Create Perfume"
+  },
+  "forms": {
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "error": "An error occurred. Please try again.",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "passwordMatch": "Confirm Password",
+    "passwordMatchPlaceholder": "Confirm your password",
+    "emailLabel": "Email Address",
+    "passwordLabel": "Password",
+    "passwordMatchLabel": "Confirm Password"
+  },
+  "home": {
+    "meta": {
+      "title": "Shadow and Sillage - Perfume Database",
+      "description": "Explore a comprehensive database of perfumes and their houses."
+    },
+    "radio": {
+      "houses": "Perfume Houses",
+      "perfumes": "Perfumes"
+    },
+    "heading": "Shadow & Sillage",
+    "description": "A comprehensive database of perfumes and their houses.",
+    "subheading": "For Collectors of Perfume and Secrets.",
+    "searchType": {
+      "perfume-house": "Perfume Houses",
+      "perfume": "Perfumes"
+    },
+    "stats": {
+      "users": "Users",
+      "houses": "Houses",
+      "perfumes": "Perfumes"
+    }
+  },
+  "howItWorks":{
+    "meta": {
+      "title": "How It Works - Shadow and Sillage",
+      "description": "Learn how Shadow and Sillage works."
+    },
+    "heading": "The Game of Bottles and Trust",
+    "subheading": "You list, you discover, you trade — all in the quiet glow of discretion.",
+    "section1": {
+      "title": "Step One: Light Your Match — Create an Account",
+      "content": "The story begins when you decide to step out of the fog. Creating an account opens the door to everything Shadow and Sillage has to offer — a place where collectors and dreamers cross paths. With an account, you can rate and review perfumes, share your impressions, list your own decants, and save favorites to return to later. Those who prefer to stay in the shadows may still wander and search the site, but the full experience belongs to those who join the inner circle.",
+      "content2": "Accounts are free for the first 100 members, a nod to the early few who saw the potential in the scent of mystery. And rest assured — your information stays yours. We don’t sell it, trade it, or pass it along. What happens in the shadows stays there."
+    },
+    "section2": {
+      "title": "Step Two: List Your Decants — Share the Scent",
+      "content": "Every bottle tells a story, but some are meant to be shared. When you list your decants, you’re offering more than a few milliliters — you’re inviting another collector into your narrative. Describe your perfume, note its character, and let others discover its charm. Maybe it’s something rare, maybe it’s something familiar. Either way, the act of sharing connects you to a community that knows the language of scent better than words ever could.",
+      "content2": "Each listing is handled with care — we don’t touch the trades or the payments, but we give you the stage to make them happen safely and transparently."
+    },
+    "section3": {
+      "title": "Step Three: Build Your Wishlist — Chase the One That Got Away",
+      "content": "Everyone has that one perfume — the elusive note that lingers in memory long after it’s gone. Your wishlist is where longing takes form. Add your favorites, the ones you’ve loved, lost, or longed for, and keep them close. When someone lists what you’re after, you’ll be the first to catch wind of it.",
+      "content2": "Think of it as your personal scent journal — a map of desire and discovery. Over time, it becomes a portrait of taste, mood, and moments that still haunt you."
+    },
+    "section4": {
+      "title": "Step Four: Make the Trade — The Quiet Exchange",
+      "content": "When two collectors meet under the faint light of curiosity, a trade begins. You reach out, make your offer, and strike your deal. We stay out of the transaction — no middlemen, no cut, no interference. What passes between you and your trading partner stays yours alone.",
+      "content2": "We provide the meeting place, the silence, and the trust. Every deal made here is built on respect for the art of perfume and the people who keep that art alive. The rest — the thrill, the risk, the satisfaction — is entirely up to you."
+    },
+    "section5": {
+      "title": "The Sillage We Leave Behind",
+      "content": "Shadow and Sillage isn't just a platform — it's a gathering of collectors, romantics, and scent detectives who believe perfume is memory in liquid form. Every rating, wishlist, and trade adds another thread to the tapestry of this community. We don't chase trends, and we don't sell secrets. We build a space where passion and privacy share the same breath. In the end, what lingers isn't just the fragrance — it's the connection it creates."
+    }
+  },
+  "contactUs": {
+    "meta": {
+      "title": "Contact Us & FAQ - Shadow and Sillage",
+      "description": "Get in touch with Shadow and Sillage or find answers to frequently asked questions."
+    },
+    "heading": "Contact Us",
+    "subheading": "Questions, suggestions, or just want to say hello? We're here.",
+    "contact": {
+      "title": "Get In Touch",
+      "description": "Have a question about a perfume, want to suggest a missing bottle, or just want to connect? We'd love to hear from you. Reach out through the email below, and we'll get back to you as soon as we can.",
+      "emailLabel": "Email:",
+      "email": "contact@shadowandsillage.com"
+    },
+    "faq": {
+      "title": "Frequently Asked Questions",
+      "question1": "How do I add a missing perfume or perfume house?",
+      "answer1": "If you notice a perfume or perfume house missing from our database, you can submit it using the buttons below. Your submission will be reviewed by an admin before being added to the database. We're always looking to expand our collection and appreciate your help in making Shadow and Sillage more complete.",
+      "submitPerfumeButton": "Submit Missing Perfume",
+      "submitHouseButton": "Submit Missing Perfume House",
+      "question2": "How does the trading system work?",
+      "answer2": "Shadow and Sillage provides a platform for collectors to connect and trade. We don't handle transactions or payments directly — those are arranged between you and your trading partner. We simply provide the space and tools to make those connections happen safely and transparently.",
+      "question3": "Is my personal information safe?",
+      "answer3": "Absolutely. We take privacy seriously. We don't sell, trade, or share your personal information. Your data stays yours, and what happens in the shadows stays there.",
+      "question4": "How do I create an account?",
+      "answer4": "Creating an account is free and easy. Simply click the 'Sign In' button in the navigation, then choose 'Sign Up' to create your account. Accounts are free for the first 100 members, and we keep it that way to honor our early supporters.",
+      "question5": "Can I review perfumes without an account?",
+      "answer5": "You can browse and search the site without an account, but to rate, review, list decants, or build your wishlist, you'll need to create an account. It's free and gives you access to the full Shadow and Sillage experience.",
+      "question6": "What if I find an error in the database?",
+      "answer6": "We appreciate your attention to detail! If you spot an error — whether it's a misspelling, incorrect information, or a duplicate entry — please let us know via email. We'll review it and make corrections as needed."
+    },
+    "modal": {
+      "perfume": {
+        "title": "Submit Missing Perfume",
+        "description": "Fill out the form below to submit a perfume that's missing from our database. Your submission will be reviewed by an admin before being added.",
+        "namePlaceholder": "Perfume Name",
+        "descriptionPlaceholder": "Description",
+        "imagePlaceholder": "Image URL",
+        "houseLabel": "Perfume House",
+        "topNotes": "Top Notes",
+        "heartNotes": "Heart Notes",
+        "baseNotes": "Base Notes"
+      },
+      "house": {
+        "title": "Submit Missing Perfume House",
+        "description": "Fill out the form below to submit a perfume house that's missing from our database. Your submission will be reviewed by an admin before being added.",
+        "namePlaceholder": "Perfume House Name",
+        "descriptionPlaceholder": "Description",
+        "imagePlaceholder": "Image URL",
+        "websitePlaceholder": "Website URL",
+        "emailPlaceholder": "Email",
+        "phonePlaceholder": "Phone",
+        "addressPlaceholder": "Address",
+        "countryPlaceholder": "Country",
+        "foundedPlaceholder": "Year Founded"
+      },
+      "submitButton": "Submit for Review",
+      "cancelButton": "Cancel",
+      "submissionSuccess": "Your submission has been received and will be reviewed by an admin."
+    }
+  },
+  "securityMonitor": {
+    "heading": "Security Monitor",
+    "subheading": "So you sleep safe at night"
+  },
+  "myScents": {
+    "meta": {
+      "title": "My Scents - Shadow and Sillage",
+      "description": "Manage your personal collection of perfumes."
+    },
+    "collection": {
+      "heading": "My Perfume Collection",
+      "itemsCount": "{{count}} items in your collection",
+      "empty": {
+        "heading": "Your collection is empty.",
+        "subheading": "Start adding perfumes to your collection!"
+      }
+    },
+    "listItem": {
+      "destashed": "DeStashed",
+      "name": "Name",
+      "pointOfPurchase": "Point of Purchase",
+      "price": "Price",
+      "removeButton": "Remove from Collection",
+      "removing": "Removing from Collection...",
+      "total": "Total",
+      "type": "Type",
+      "viewDetails": "View / Edit details",
+      "viewComments": "View My Comments",
+      "setDestashed": "De-stash Perfume",
+      "decantOptionsTitle": "Decant Options",
+      "decantOptionsDescriptionOne": "Decanting allows you to share or transfer a portion of your fragrance to another bottle.",
+      "decantOptionsDescriptionTwo": "Set your amount, price, and trade preferences below.",
+      "decantOptionsAmountLabel": "Amount to De-stash",
+      "decantOptionsAmountPlaceholder": "Enter amount (0-{{amount}}ml)",
+      "decantOptionsPriceLabel": "Price ($ per ml, optional)",
+      "decantOptionsTradePreferencesLabel": "Trade Preferences",
+      "decantOptionsTradePreferencesDescription": "Choose your trade preferences below.",
+      "decantOptionsTradePreferencesCash": "Cash Only",
+      "decantOptionsTradePreferencesTrade": "Trade Only",
+      "decantOptionsTradePreferencesBoth": "Cash or Trade",
+      "decantOptionsTradePreferencesOnlyTrades": "Only accept trades (no cash offers)",
+      "decantOptionsTradePreferencesAcceptBoth": "Accept both cash and trade offers",
+      "removeFromTradingPost": "Remove from Trading Post",
+      "confirmDeStash": "Confirm De-Stash",
+      "decantOptionsPriceError": "Price must be a positive number",
+      "decantOptionsAmountError": "Amount must be a positive number",
+      "decantOptionsAmountErrorExceedsAvailableAmount": "Amount cannot exceed available amount",
+      "decantOptionsExceedsOwned": "Cannot destash more than you own ({{owned}} ml)",
+      "createNewDecant": "Create as new decant entry",
+      "updateExistingDecant": "Update existing decant",
+      "createNewDecantDescription": "This will create a separate new decant entry instead of updating the current one.",
+      "manageDestashes": "Manage Destashes"
+    },
+    "destashManager": {
+      "title": "Destash Management",
+      "description": "Create, edit, and manage multiple destashes for this perfume. Each destash can have its own amount, price, and trade preferences.",
+      "addNew": "Add New Destash",
+      "createNew": "Create New Destash",
+      "editDestash": "Edit Destash",
+      "cancel": "Cancel",
+      "saveChanges": "Save Changes",
+      "createDestash": "Create Destash",
+      "edit": "Edit",
+      "delete": "Delete",
+      "amount": "Amount",
+      "price": "Price",
+      "tradePreference": "Trade Preference",
+      "tradeOnly": "Trade Only",
+      "yes": "Yes",
+      "noDestashes": "No destashes yet. Click 'Add New Destash' to create one.",
+      "confirmDelete": "Are you sure you want to delete this destash? This action cannot be undone."
+    },
+    "heading": "My Scents",
+    "subheading": "Manage your personal collection of perfumes.",
+    "itemsInCollection": "items in Collection",
+    "addButton": "Add to Collection",
+    "removeButton": "Remove from Collection",
+    "modal": {
+      "typeLabel": "Perfume Type",
+      "title": "My Scents",
+      "selectedPerfume": "Selected Perfume",
+      "description": "This is where you can manage your favorite scents.",
+      "createButton": "Create New Perfume",
+      "amountLabel": "Amount",
+      "amountPlaceholder": "Enter the amount of perfume",
+      "submitButton": "Add to Collection",
+      "placeOfPurchasePlaceholder": "Enter the place of purchase",
+      "placeOfPurchase": "Place of Purchase",
+      "priceLabel": "Purchase Price",
+      "pricePlaceholder": "Enter the price of the perfume"
+    },
+    "comments": {
+      "heading": "Comments",
+      "subheading": "Share your thoughts about {{perfumeName}}.",
+      "addCommentPlaceholder": "Add a comment...",
+      "addCommentButton": "Add Comment",
+      "deleteComment": "Delete Comment",
+      "makePublic": "Make public",
+      "makePrivate": "Make private",
+      "noComments": "No comments yet. Be the first to share your thoughts!",
+      "error": "Error submitting comment. Please try again.",
+      "failed": "Failed to add comment",
+      "deleteError": "Error deleting comment",
+      "deleteFailed": "Failed to delete comment",
+      "title": "Comments",
+      "description": "This is where you can add your personal comments about the scents.",
+      "addLabel": "Add a comment:",
+      "submitting": "Submitting...",
+      "submit": "Submit"
+    },
+    "search": {
+      "placeholder": "Search your perfumes...",
+      "noResults": "No perfumes found",
+      "tryDifferent": "Try a different search term"
+    }
+  },
+  "navigation": {
+    "menu": "Menu",
+    "logo": " Shadow and Sillage",
+    "login": "Log In",
+    "loggingIn": "Logging in...",
+    "houses": "Behind the Bottle",
+    "perfumes": "The Vault",
+    "available": "The Exchange",
+    "admin": "The Profile",
+    "logout": "Log Out",
+    "signIn": "Sign In",
+    "about": "About",
+    "aboutUs": "About Us",
+    "howWeWork": "How We Work",
+    "contactUs": "Contact Us",
+    "home": "Home",
+    "search": "Search"
+  },
+  "password": {
+    "excellentPasswordStrength": "Excellent password strength!",
+    "passwordMeetsAllRequirements": "Password meets all requirements",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "enterCurrentPassword": "Enter your current password",
+    "newPassword": "New Password",
+    "enterNewPassword": "Enter your new password",
+    "confirmNewPassword": "Confirm New Password",
+    "confirmNewPasswordPlaceholder": "Confirm your new password",
+    "passwordsMatch": "Passwords match",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "error": "Error",
+    "success": "Success",
+    "passwordRequirements": "Password Requirements",
+    "updatePasswordToKeepAccountSecure": "Update your password to keep your account secure",
+    "requirements": {
+      "8characters": "At least 8 characters long",
+      "uppercase": "Contains uppercase and lowercase letters",
+      "number": "Contains at least one number",
+      "special": "Contains at least one special character",
+      "spaces": "No spaces allowed",
+        "different": "Different from your current password"
+      },
+      "clear": "Clear",
+      "changingPassword": "Changing Password..."
+  },
+  "profile": {
+    "heading": "The Profile",
+    "subheading": "What you keep. What you chase. What you leave behind.",
+    "userInfo": "User Information",
+    "email": "Email",
+    "emailPlaceholder": "Enter your email",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "role": "Role",
+    "name": "Name",
+    "notFound": "User profile not found",
+    "updateProfile": "Update Profile",
+    "profileUpdatedSuccessfully": "Profile updated successfully!",
+    "scentPreferencesHint": "Personalize perfume recommendations",
+    "scentQuizLink": "Scent preferences quiz",
+    "navigation": {
+      "wishlist": "My Wishlist",
+      "myScents": "My Scents",
+      "changePassword": "Change Password"
+    }
+  },
+  "quiz": {
+    "success": {
+      "heading": "You're all set!",
+      "subheading": "We'll use your preferences to recommend perfumes you'll love.",
+      "cta": "Go to home"
+    },
+    "notePreferences": {
+      "heading": "Note Preferences",
+      "subheading": "Pick 3–{{max}} note families you like (e.g. floral, woody, citrus).",
+      "cta": "Next"
+    },
+    "avoidNotes": {
+      "heading": "Avoid Notes",
+      "subheading": "Pick 3–{{max}} note families you don't like (e.g. floral, woody, citrus).",
+      "cta": "Next"
+    },
+    "seasonPreferences": {
+      "heading": "Season Preferences",
+      "subheading": "Pick 3–{{max}} seasons you like (e.g. spring, summer, fall, winter).",
+      "cta": "Next"
+    },
+    "browsingStyle": {
+      "heading": "Browsing Style",
+      "subheading": "Pick your browsing style.",
+      "cta": "Next"
+    },
+    "welcome": {
+      "heading": "Welcome to the Scent Quiz",
+      "subheading": "Answer a few quick questions about the notes and styles you like.",
+      "cta": "Start quiz"
+    }
+  },
+  "recommendations": {
+    "recommendedForYou": "Recommended for you"
+  },
+  "singleHouse": {
+    "meta": {
+      "title": "Perfume House Details - Shadow and Sillage",
+      "description": "Explore the details of a specific perfume house."
+    },
+    "loadingPerfumes": "Loading perfumes...",
+    "noPerfumes": "No perfumes are currently listed for this house.",
+    "errorLoadingPerfumes": "Error loading perfumes.",
+    "notFound": "Perfume house not found",
+    "perfumes": "Perfumes",
+    
+    "summaryCard": {
+      "totalPerfumeCount": "Total perfumes",
+      "backToHouses": "Back to {{selectedLetter}}",
+      "ariaLabel": "Back to houses starting with {{selectedLetter}}",
+      "backToHousesLabel": "Back to houses"
+    },
+    "perfumeBottleAltText": "{{name}} Perfume Bottle",
+    "deleteModal": {
+      "heading": "Are you sure you want to delete this perfume house?",
+      "description": "Once deleted, you will lose all perfumes and history associated with this house."
+    }
+  },
+  "singlePerfume": {
+    "meta": {
+      "title": "Perfume Details - Shadow and Sillage",
+      "description": "Discover the details of a specific perfume."
+    },
+    "similarPerfumes": "Similar perfumes",
+    "subheading": "By: ",
+    "notes": {
+      "opening": "Opening Notes",
+      "mid": "Mid Notes",
+      "end": "End Notes",
+      "general": "General Notes"
+    },
+    "icons": {
+      "addButton": "Add to Wishlist",
+      "inWishlist": "In your wishlist",
+      "cancelButton": "Cancel",
+      "editButton": "Edit Perfume",
+      "deleteButton": "Delete Perfume",
+      "makePublic": "Make public (show on trader profile)",
+      "makePrivate": "Make private (hide from trader profile)"
+    },
+    "dangerModal": {
+      "heading": "Are you sure you want to delete this perfume?",
+      "description": "Once deleted, you will lose all history, notes and entries in the exchange."
+    },
+    "rating": {
+      "RateThisPerfume": "Rate This Perfume",
+      "CommunityRatings": "Community Ratings",
+      "selectRating": "Select your rating",
+      "loginToRate": "Please log in to rate this perfume",
+      "communityAverage": "Community Average",
+      "totalRatings": "{{count}} vote{{count !== 1 ? 's' : ''}}",
+      "notYetRated": "Not yet rated",
+      "categories": {
+        "longevity": "Longevity",
+        "sillage": "Sillage",
+        "gender": "Gender Appeal",
+        "priceValue": "Price Value",
+        "overall": "Overall Rating"
+      },
+      "labels": {
+        "longevity": {
+          "1": "Fleeting Shadow",
+          "2": "Brief Encounter",
+          "3": "Steady Presence",
+          "4": "Lingering Mystery",
+          "5": "Eternal Obsession"
+        },
+        "sillage": {
+          "1": "Whispered Secret",
+          "2": "Subtle Intrigue",
+          "3": "Bold Statement",
+          "4": "Commanding Aura",
+          "5": "Room Domination"
+        },
+        "gender": {
+          "1": "Distinctly Feminine",
+          "2": "Ladylike Edge",
+          "3": "Mysterious Unisex",
+          "4": "Suited Mystique",
+          "5": "Distinctly Masculine"
+        },
+        "priceValue": {
+          "1": "Highway Robbery",
+          "2": "Steep Price",
+          "3": "Fair Deal",
+          "4": "Smart Investment",
+          "5": "Stolen Treasure"
+        },
+        "overall": {
+          "1": "Despise",
+          "2": "Dismiss",
+          "3": "Tolerable",
+          "4": "Admire",
+          "5": "Obsessed"
+        }
+      }
+    },
+    "review": {
+      "failedToCreateReview": "Failed to create review",
+      "heading": "Reviews",
+      "subheading": "Share your thoughts about {{perfumeName}}.",
+      "addReviewButton": "Add Review",
+      "noReviews": "No reviews yet. Be the first to share your thoughts!",
+      "editFunctionalityWillBeImplemented": "Edit functionality will be implemented",
+      "deleteReviewConfirmation": "Are you sure you want to delete this review?",
+      "failedToDeleteReview": "Failed to delete review",
+      "failedToModerateReview": "Failed to moderate review",
+      "failedToUpdateReview": "Failed to update review",
+      "writeReview": "Write Review",
+      "addReviewPlaceholder": "Share your thoughts about this perfume...",
+      "cancel": "Cancel",
+      "submitting": "Submitting...",
+      "submitReview": "Submit Review",
+      "updateReview": "Update Review",
+      "writeYourReview": "Write Your Review",
+      "editYourReview": "Edit Your Review",
+      "yourReview": "Your Review",
+      "loadMoreReviews": "Load More Reviews",
+      "failedToLoadReviews": "Failed to load reviews",
+      "dangerModal":{
+        "heading": "Are you sure you want to remove this review?",
+        "description": "Once removed, you will not be able to recover it."
+      }
+    }
+    
+  },
+  "termsAndConditions": {
+    "heading": "Terms and Conditions",
+    "subheading": "Shadow and Sillage",
+    "gist": {
+      "heading": "THE GIST",
+      "contentOne": "Shadow and Sillage is an independent platform devoted to perfume lovers — a place to share reviews, learn, and connect with other collectors. Users may list perfumes and samples for trade, but the dealings themselves are strictly between private individuals.",
+      "contentTwo": "We do not handle payments, do not verify authenticity, and will not mediate disputes. Think of us as the smoke-filled bar where introductions are made, not the broker of the deal."
+    },
+    "tradingAndListing": {
+      "heading": "TRADING AND LISTING",
+      "contentOne": "Trades and exchanges are entirely at your own risk.",
+      "contentTwo": "Counterfeit perfumes are strictly prohibited.",
+      "contentThree": "Split (decanted) perfumes are permitted, provided they are genuine and accurately described.",
+      "contentFour": "Any attempt to defraud, misrepresent, or sell stolen goods will result in permanent account removal and possible reporting to relevant authorities.",
+      "contentFive": "Users must describe items truthfully — if you’re listing a vintage bottle, say so; if the label’s half gone, that’s part of its story."
+    },
+    "accountsAndConduct": {
+      "heading": "ACCOUNTS AND USER CONDUCT",
+      "contentOne": "You’ll need an account to post reviews, notes, or trades. Browsing and searching are open to everyone.",
+      "contentTwo": "Keep it civil: no harassment, spam, political or religious debates, or illegal content.",
+      "contentThree": "This is a perfume community, not a soapbox or battleground. Treat others with the respect you’d show in a high-end fragrance boutique."
+    },
+    "reviewsAndNotes": {
+      "heading": "REVIEWS AND NOTES",
+      "contentOne": "Users may submit perfume reviews or leave notes on discussions to help others navigate their scent journeys.",
+      "contentTwo": "All content goes through a moderation process to ensure it’s relevant, fair, and on-topic. We reserve the right to remove or edit submissions that break these rules or drift into unrelated territory.",
+      "contentThree": "By posting, you grant Shadow and Sillage the non-exclusive right to display your words and images on the site and in related features (such as listings or community highlights). You retain full ownership of your work."
+    },
+    "noGuarantee": {
+      "heading": "NO GUARANTEES",
+      "contentOne": "We strive to keep the site polished and running, but we make no promises of uninterrupted service. We may suspend, modify, or remove features without warning — sometimes even good things must fade to make room for the new."
+    },
+    "liability": {
+      "heading": "LIMITATION OF LIABILITY",
+      "contentOne": "Shadow and Sillage and its operators are not responsible for any loss, damage, or dispute arising from user trades, communications, or listings.",
+      "contentTwo": "If a deal goes sour, it’s between the parties involved. The platform merely sets the stage — the drama belongs to you."
+    },
+    "privacy": {
+      "heading": "PRIVACY POLICY",
+      "contentOne": "We respect your privacy as much as a perfumer guards a secret formula. Here’s how we handle your data:",
+      "contentList": {
+        "one": "Information Collected: We may collect basic account information (such as username, email, and preferences) to help personalize your experience and improve the site.",
+        "two": "Use of Data: Data is used internally only — for recommendations, feature improvements, and fraud prevention. It is never sold, never shared with advertisers, and never used for resale or marketing beyond this site.",
+        "three": "Cookies: Like many websites, we use cookies to remember your session and keep you logged in.",
+        "four": "Security: We take reasonable steps to protect your data, but no system is impenetrable. Handle your account credentials as carefully as you’d handle your favorite perfume bottle.",
+        "five": "Contact: For questions, data requests, or to report suspicious activity, reach us at [INSERT CONTACT EMAIL HERE]."
+      }
+    },
+    "changes": {
+      "heading": "CHANGES TO THIS POLICY",
+      "contentOne": "We may revise these Terms and this Privacy Policy from time to time. Updates will be posted on this page with a new “last updated” date. Continuing to use the site after changes means you accept them — the way one accepts that the night always carries a hint of mystery."
+    },
+    "closing": {
+      "heading": "CLOSING WORDS",
+      "contentOne": "Shadow and Sillage exists to celebrate the art, science, and stories behind scent. Use it wisely, trade fairly, and remember — trust your nose, not a stranger’s promises."
+    }
+  },
+  "tradingPost": {
+    "meta": {
+      "title": "The Exchange - Shadow and Sillage",
+      "description": "Browse perfumes available for trade from our community members."
+    },
+    "heading": "The Exchange",
+    "subheading": "Every bottle has a past. Every trade leaves a trace.",
+    "count": "perfumes available",
+    "empty": "No perfumes are currently available for trade.",
+    "availableFrom": "Available from",
+    "search": {
+      "placeholder": "Search available perfumes...",
+      "noResults": "No perfumes found",
+      "tryDifferent": "Try a different search term"
+    }
+  },
+  "traderProfile": {
+    "meta": {
+      "title": "Trader Profile - Shadow and Sillage",
+      "description": "Trader Profile of {{traderName}}"
+    },
+    "heading": "Trader {{traderName}}",
+    "subheading": "Trader Profile of {{traderName}}",
+    "itemsAvailable": "Items To  Trade",
+    "itemsAvailableSummary": "{{traderName}} has the following items to trade:",
+    "itemsSearchingFor": "Is Seeking Out",
+    "itemsSummary": "{{traderName}} is looking for the following perfumes:",
+    "noItemsAvailable": "No items available for trading.",
+    "noItemsSearchingFor": "No items searching for.",
+    "amount": "Amount Available",
+    "price": "Price",
+    "tradePrice": "Trade Price",
+    "preference": "Preference",
+    "tradeOnly": "Trade Only Item",
+    "comments": "Traders Comments",
+    "noPublicComments": "No public comments available for this item.",
+    "preferences": {
+      "cash": "Cash Only",
+      "trade": "Trade Only",
+      "both": "Cash or Trade"
+    },
+    "feedback": {
+      "title": "Trader Feedback",
+      "subtitle": "Build trust with ratings and comments from the community.",
+      "reviewCount_one": "{{count}} review",
+      "reviewCount_other": "{{count}} reviews",
+      "badgeLabel": "Trusted Trader",
+      "noRatings": "No ratings yet",
+      "loading": "Loading feedback...",
+      "error": "We couldn't load trader feedback right now.",
+      "noComments": "No feedback comments yet.",
+      "anonymousReviewer": "Anonymous reviewer",
+      "selfReviewNotice": "You cannot leave feedback on your own profile.",
+      "ratingLabel": "Your rating",
+      "ratingHint": "Score trades from 1 (needs improvement) to 5 (excellent).",
+      "selectRating": "Select rating",
+      "commentLabel": "Your comment",
+      "commentPlaceholder": "Share details about your experience trading with this member.",
+      "commentHint": "Comments are optional and help other members decide who to trust.",
+      "submitButton": "Submit feedback",
+      "updateButton": "Update feedback",
+      "deleteButton": "Remove feedback",
+      "loginPrompt": "Sign in to leave feedback and help build community trust.",
+      "validation": {
+        "ratingRequired": "Rating is required before submitting."
+      }
+    }
+  },
+  "userAdmin": {
+    "meta": {
+      "title": "User Admin - Shadow and Sillage",
+      "description": "Manage user accounts and view their data usage"
+    },
+    "heading": "User Management",
+    "subheading": "Manage user accounts and permissions",
+    "users": "Users",
+    "userCount": "Currently we have {{count}} users",
+    "manageUsers": "Manage Our Current Users",
+    "table": {
+      "user": "User",
+      "role": "Role",
+      "dataRecords": "Data Records",
+      "joined": "Joined",
+      "actions": "Actions",
+      "softDelete": "Soft Delete",
+      "delete": "Delete",
+      "currentUser": "Current User",
+      "admin": "Admin",
+      "deleted": "Deleted"
+    }
+  },
+  "wishlist": {
+    "meta": {
+      "title": "Wishlist - Shadow and Sillage",
+      "description": "Manage your wishlist of perfumes."
+    },
+    "empty": {
+      "heading": "Your wishlist is empty.",
+      "subheading": "Start adding perfumes to your wishlist!"
+    },
+    "heading": "My Wishlist",
+    "subheading": "Manage your wishlist of perfumes.",
+    "itemsInWishlist": "items in Wishlist",
+    "addButton": "Add to Wishlist",
+    "removeButton": "Remove from Wishlist",
+    "itemCard": {
+      "visibility": "Visibility",
+      "public": "Public",
+      "private": "Private",
+      "available": "🎉 AVAILABLE IN TRADING POST! 🎉",
+      "addedOn": "Added on",
+      "availableMessage": "This item will appear on your trader profile",
+      "unavailableMessage": "This item is private and will not appear on your trader profile"
+    }
+  },
+  "404": {
+    "heading": "Looking a bit lost",
+    "subheading": "The page you are looking for does not exist.",
+    "homeLink": "Head back home"
+  }
+}

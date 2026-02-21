@@ -1,6 +1,6 @@
 import { getFormProps, useForm } from "@conform-to/react"
 import { useRef } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { Form } from "react-router"
 
 import { Button } from "~/components/Atoms/Button"
@@ -18,7 +18,7 @@ interface MyScentsModalProps {
 
 const MyScentsModal = ({ perfume }: MyScentsModalProps) => {
   const { modalData } = useSessionStore()
-  const { t } = useTranslation()
+  const t = useTranslations("myScents.modal")
 
   const priceInputRef = useRef<HTMLInputElement>(null)
   const placeInputRef = useRef<HTMLInputElement>(null)
@@ -40,9 +40,9 @@ const MyScentsModal = ({ perfume }: MyScentsModalProps) => {
     <div className="w-full p-6">
       <div className="flex flex-col items-start justify-between mb-4">
         <div>
-          <h2> {t("myScents.modal.title")}</h2>
+          <h2> {t("title")}</h2>
           <p className="text-xl text-noir-gold-100">
-            {t("myScents.modal.description")}
+            {t("description")}
           </p>
         </div>
         {modalData === "create" && !perfume && (
@@ -64,7 +64,7 @@ const MyScentsModal = ({ perfume }: MyScentsModalProps) => {
         >
           <fieldset>
             <legend className="text-xl font-semibold text-noir-gold tracking-wide">
-              {t("myScents.modal.selectedPerfume")}
+              {t("selectedPerfume")}
             </legend>
             <p className="text-noir-gold-100 mb-4 font-semibold">
               {selectedPerfume.name}
@@ -83,7 +83,7 @@ const MyScentsModal = ({ perfume }: MyScentsModalProps) => {
                     })
                   }}
                   formatValue={value => value.toFixed(1)}
-                  label={t("myScents.modal.amountLabel")}
+                  label={t("amountLabel")}
                   showManualInput={true}
                   inputPlaceholder="Enter amount (0-10ml)"
                 />
@@ -93,14 +93,14 @@ const MyScentsModal = ({ perfume }: MyScentsModalProps) => {
                   selectData={perfumeTypes}
                   name="type"
                   size="default"
-                  label={t("myScents.modal.typeLabel")}
+                  label={t("typeLabel")}
                   selectId={""}
                 />
                 <Input
                   inputType="number"
                   name="price"
                   shading={true}
-                  label={t("myScents.modal.priceLabel")}
+                  label={t("priceLabel")}
                   value={perfumeData.price}
                   inputRef={priceInputRef}
                   onChange={event => {
@@ -111,12 +111,12 @@ const MyScentsModal = ({ perfume }: MyScentsModalProps) => {
                     })
                   }}
                   className="mt-4 w-full"
-                  placeholder={t("myScents.modal.pricePlaceholder")}
+                  placeholder={t("pricePlaceholder")}
                 />
                 <Input
                   inputType="text"
                   name="placeOfPurchase"
-                  label={t("myScents.modal.placeOfPurchase")}
+                  label={t("placeOfPurchase")}
                   value={perfumeData.placeOfPurchase}
                   inputRef={placeInputRef}
                   shading={true}
@@ -128,13 +128,13 @@ const MyScentsModal = ({ perfume }: MyScentsModalProps) => {
                     })
                   }}
                   className="mt-4 w-full"
-                  placeholder={t("myScents.modal.placeOfPurchasePlaceholder")}
+                  placeholder={t("placeOfPurchasePlaceholder")}
                 />
               </div>
             </div>
           </fieldset>
           <Button type="submit" className="mt-6">
-            {t("myScents.modal.submitButton")}
+            {t("submitButton")}
           </Button>
         </Form>
       )}

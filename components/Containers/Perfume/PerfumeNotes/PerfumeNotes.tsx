@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 interface PerfumeNote {
   id: string
@@ -21,7 +21,7 @@ const renderSingleNotesList = (notes: PerfumeNote[], t: any) => {
   <div className="p-4 bg-noir-dark text-noir-gold-100 flex gap-4">
     <div className="flex flex-col items-start gap-2">
       <span className="font-medium  tracking-wide pb-1 text-2xl text-noir-gold">
-        {t("singlePerfume.notes.general")}:{" "}
+        {t("general")}:{" "}
       </span>
       <ul className="flex font-semibold capitalize flex-wrap ">
         {sortedNotes.map((note, idx) => (
@@ -64,7 +64,7 @@ const renderCategorizedNotes = ({
       {hasOpen && (
         <div className="flex flex-col items-start gap-1 border-r-4 md:border-r-noir-gold pr-4">
           <span className="font-medium tracking-wide pb-1 text-2xl text-noir-gold">
-            {t("singlePerfume.notes.opening")}
+            {t("opening")}
           </span>
           <ul className="flex capitalize flex-wrap mb-2.5">
             {sortedOpen.map((note, idx) => (
@@ -79,7 +79,7 @@ const renderCategorizedNotes = ({
       {hasHeart && (
         <div className="flex flex-col items-start border-r-2 md:border-r-noir-gold-100 pr-4 last-of-type:border-r-0">
           <span className="font-medium tracking-wide pb-1 text-2xl text-noir-gold">
-            {t("singlePerfume.notes.mid")}
+            {t("mid")}
           </span>
           <ul className="flex font-semibold capitalize flex-wrap mb-2">
             {sortedHeart.map((note, idx) => (
@@ -94,7 +94,7 @@ const renderCategorizedNotes = ({
       {hasClose && (
         <div className="flex flex-col items-start border-r-2 md:border-r-noir-gold-100 pr-4 last-of-type:border-r-0">
           <span className="font-medium tracking-wide pb-1 text-2xl text-noir-gold">
-            {t("singlePerfume.notes.end")}{" "}
+            {t("end")}{" "}
           </span>
           <ul className="flex  font-semibold capitalize flex-wrap">
             {sortedClose.map((note, idx) => (
@@ -128,7 +128,7 @@ const PerfumeNotes = ({
   perfumeNotesHeart,
   perfumeNotesClose,
 }: PerfumeNotesProps) => {
-  const { t } = useTranslation()
+  const t = useTranslations("singlePerfume.notes")
   const { hasOpen, hasHeart, hasClose, noteTypesCount } = useNotesLogic(
     perfumeNotesOpen,
     perfumeNotesHeart,

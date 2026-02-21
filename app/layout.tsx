@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 import { Inter, Limelight } from 'next/font/google'
+import { cookies } from 'next/headers'
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale, getMessages } from 'next-intl/server'
 import './globals.css'
 import { Providers } from './providers'
-import { cookies } from "next/headers"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import GlobalNavigation from '@/components/Molecules/GlobalNavigation/GlobalNavigation'
 
@@ -31,16 +33,20 @@ export default async function RootLayout({
     .getAll()
     .map((c) => `${c.name}=${c.value}`)
     .join("; ")
-    const session = await getSessionFromCookieHeader(cookieHeader, {
-      includeUser: true,
-    })
+  const session = await getSessionFromCookieHeader(cookieHeader, {
+    includeUser: true,
+  })
   const user = session?.user ?? null
+  const locale = await getLocale()
+  const messages = await getMessages()
 
   return (
-    <html lang="en" className={`${inter.variable} ${limelight.variable}`}>
+    <html lang={locale} className={`${inter.variable} ${limelight.variable}`}>
       <body className={`${inter.className} bg-noir-dark`}>
-        <GlobalNavigation user={user} />
-        <Providers>{children}</Providers>
+        <NextIntlClientProvider messages={messages}>
+          <GlobalNavigation user={user} />
+          <Providers>{children}</Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   )

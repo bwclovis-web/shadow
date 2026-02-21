@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import AlphabeticalNav from "@/components/Organisms/AlphabeticalNav"
 import DataDisplaySection from "@/components/Organisms/DataDisplaySection"
@@ -55,10 +55,10 @@ export default function HousesListClient() {
     <section className="relative z-10 my-4">
       <div className="inner-container">
         <h1 className="font-headline text-noir-gold text-center text-3xl md:text-4xl mb-4">
-          {t("navigation.houses")}
+          {tNav("houses")}
         </h1>
         <p className="text-noir-gold/80 text-center mb-8">
-          {t("components.dataDisplaySection.heading", { itemName: "houses" })}
+          {tDataDisplay("heading", { itemName: "houses" })}
         </p>
       </div>
 

@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { BsHeartFill } from "react-icons/bs"
 
 import { OptimizedImage } from "~/components/Atoms/OptimizedImage"
@@ -31,13 +31,13 @@ interface ItemsSearchingForProps {
 }
 
 const ItemsSearchingFor = ({ wishlistItems }: ItemsSearchingForProps) => {
-  const { t } = useTranslation()
+  const t = useTranslations("traderProfile")
 
   if (wishlistItems.length === 0) {
     return (
       <div className="mt-6 px-2">
         <p className="text-noir-gold-100 italic">
-          {t("traderProfile.noItemsSearchingFor")}
+          {t("noItemsSearchingFor")}
         </p>
       </div>
     )

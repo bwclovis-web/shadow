@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { AiFillHome } from "react-icons/ai"
 import { LuSearch } from "react-icons/lu"
 import { NavLink } from "react-router"
@@ -8,7 +8,7 @@ interface QuickActionsProps {
 }
 
 const QuickActions = ({ onNavClick }: QuickActionsProps) => {
-  const { t } = useTranslation()
+  const t = useTranslations("navigation")
   return (
   <div className="p-4 border-t border-noir-light/20">
     <div className="grid grid-cols-2 gap-3">
@@ -18,7 +18,7 @@ const QuickActions = ({ onNavClick }: QuickActionsProps) => {
         className="flex flex-col items-center gap-2 text-noir-gold hover:text-noir-light p-3 rounded-lg hover:bg-noir-black/30 mobile-touch-target transition-colors duration-200"
       >
         <AiFillHome size={20} />
-        <span className="text-sm font-medium">{t("navigation.home")}</span>
+        <span className="text-sm font-medium">{t("home")}</span>
       </NavLink>
       <button
         onClick={() => {
@@ -32,7 +32,7 @@ const QuickActions = ({ onNavClick }: QuickActionsProps) => {
         className="flex cursor-pointer flex-col items-center gap-2 text-noir-gold hover:text-noir-light p-3 rounded-lg hover:bg-noir-black/30 mobile-touch-target transition-colors duration-200"
       >
         <LuSearch size={20} />
-        <span className="text-sm font-medium">{t("navigation.search")}</span>
+        <span className="text-sm font-medium">{t("search")}</span>
       </button>
       </div>
     </div>

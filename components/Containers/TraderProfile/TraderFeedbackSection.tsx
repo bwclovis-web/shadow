@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useMemo, useState } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { FaStar } from "react-icons/fa"
 import { Button } from "~/components/Atoms/Button"
 
@@ -21,7 +21,7 @@ const TraderFeedbackSection = ({
   viewerId,
   initialData,
 }: TraderFeedbackSectionProps) => {
-  const { t } = useTranslation()
+  const t = useTranslations("traderProfile.feedback")
 
   const { data, isLoading, isError, error } = useTraderFeedback(
     traderId,
@@ -52,9 +52,9 @@ const TraderFeedbackSection = ({
 
   useEffect(() => {
     if (submitMutation.isError) {
-      setFormError(submitMutation.error?.message || t("traderProfile.feedback.error"))
+      setFormError(submitMutation.error?.message || t("error"))
     } else if (deleteMutation.isError) {
-      setFormError(deleteMutation.error?.message || t("traderProfile.feedback.error"))
+      setFormError(deleteMutation.error?.message || t("error"))
     } else {
       setFormError(null)
     }
@@ -72,7 +72,7 @@ const TraderFeedbackSection = ({
 
   const averageDisplay = useMemo(() => {
     if (!hasRatings) {
-      return t("traderProfile.feedback.noRatings")
+      return t("noRatings")
     }
     return Number(data?.summary?.averageRating ?? 0).toFixed(1)
   }, [data?.summary?.averageRating, hasRatings, t])
@@ -84,7 +84,7 @@ const TraderFeedbackSection = ({
     () => [
       {
         id: 0,
-        label: t("traderProfile.feedback.selectRating"),
+        label: t("selectRating"),
         name: "select-rating",
       },
       ...Array.from(TRADER_FEEDBACK_RATING_OPTIONS)
@@ -101,7 +101,7 @@ const TraderFeedbackSection = ({
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!rating) {
-      setFormError(t("traderProfile.feedback.validation.ratingRequired"))
+      setFormError(t("validation.ratingRequired"))
       return
     }
     submitFeedback({
@@ -123,9 +123,9 @@ const TraderFeedbackSection = ({
     <section className="noir-border relative w-full p-4 space-y-6 bg-noir-black/40">
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h2>{t("traderProfile.feedback.title")}</h2>
+          <h2>{t("title")}</h2>
           <p className="text-noir-gold-100">
-            {t("traderProfile.feedback.subtitle")}
+            {t("subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -138,11 +138,11 @@ const TraderFeedbackSection = ({
             <span className="text-sm text-noir-gold-100">{averageDisplay}</span>
           )}
           <div className="text-sm text-noir-gold-500">
-            {t("traderProfile.feedback.reviewCount", { count: totalReviews })}
+            {t("reviewCount", { count: totalReviews })}
           </div>
           {data?.summary?.badgeEligible && (
             <span className="inline-flex items-center px-3 py-1 text-xs font-semibold uppercase tracking-wide bg-noir-gold text-noir-black rounded-full">
-              {t("traderProfile.feedback.badgeLabel")}
+              {t("badgeLabel")}
             </span>
           )}
         </div>
@@ -150,13 +150,13 @@ const TraderFeedbackSection = ({
 
       {isLoading && (
         <p className="text-noir-gold-500 text-sm">
-          {t("traderProfile.feedback.loading")}
+          {t("loading")}
         </p>
       )}
 
       {isError && (
         <p className="text-noir-gold-500 text-sm">
-          {error?.message || t("traderProfile.feedback.error")}
+          {error?.message || t("error")}
         </p>
       )}
 
@@ -173,7 +173,7 @@ const TraderFeedbackSection = ({
                     <div className="flex items-center justify-between gap-4 flex-wrap">
                       <div className="font-medium text-noir-gold">
                         {formatUserName(commentEntry.reviewer) ||
-                          t("traderProfile.feedback.anonymousReviewer")}
+                          t("anonymousReviewer")}
                       </div>
                       <div className="flex items-center gap-2 text-noir-gold-500 text-sm">
                         {renderStars(commentEntry.rating)}
@@ -193,7 +193,7 @@ const TraderFeedbackSection = ({
               </ul>
             ) : (
               <p className="text-noir-gold-500 text-sm">
-                {t("traderProfile.feedback.noComments")}
+                {t("noComments")}
               </p>
             )}
           </div>
@@ -202,33 +202,33 @@ const TraderFeedbackSection = ({
             {viewerId ? (
               isViewerTrader ? (
                 <p className="text-noir-gold-500 text-sm">
-                  {t("traderProfile.feedback.selfReviewNotice")}
+                  {t("selfReviewNotice")}
                 </p>
               ) : (
                 <form className="space-y-4" onSubmit={handleSubmit}>
                   <div>
                     <label htmlFor="feedback-rating" className="block text-noir-gold-100 text-sm font-medium mb-2">
-                      {t("traderProfile.feedback.ratingLabel")}
+                      {t("ratingLabel")}
                     </label>
                     <div className="flex items-center gap-3">
                       <Select
                         selectId="feedback-rating"
                         selectData={ratingSelectOptions}
-                        ariaLabel={t("traderProfile.feedback.ratingLabel")}
+                        ariaLabel={t("ratingLabel")}
                         value={rating}
                         disabled={isMutating}
                         action={event => setRating(Number(event.target.value))}
                         className="!w-auto"
                       />
                       <span className="text-noir-gold text-sm">
-                        {t("traderProfile.feedback.ratingHint")}
+                        {t("ratingHint")}
                       </span>
                     </div>
                   </div>
 
                   <div>
                     <label htmlFor="feedback-comment" className="block text-noir-gold-100 text-sm font-medium mb-2">
-                      {t("traderProfile.feedback.commentLabel")}
+                      {t("commentLabel")}
                     </label>
                     <textarea
                       id="feedback-comment"
@@ -238,10 +238,10 @@ const TraderFeedbackSection = ({
                       disabled={isMutating}
                       onChange={event => setComment(event.target.value)}
                       maxLength={1000}
-                      placeholder={t("traderProfile.feedback.commentPlaceholder")}
+                      placeholder={t("commentPlaceholder")}
                     />
                     <p className="text-xs text-noir-gold-100 mt-1">
-                      {t("traderProfile.feedback.commentHint")}
+                      {t("commentHint")}
                     </p>
                   </div>
 
@@ -256,8 +256,8 @@ const TraderFeedbackSection = ({
                       variant="primary"
                     >
                       {hasViewerFeedback
-                        ? t("traderProfile.feedback.updateButton")
-                        : t("traderProfile.feedback.submitButton")}
+                        ? t("updateButton")
+                        : t("submitButton")}
                     </Button>
 
                     {hasViewerFeedback && (
@@ -266,7 +266,7 @@ const TraderFeedbackSection = ({
                         onClick={handleDelete}
                         disabled={isMutating}
                       >
-                        {t("traderProfile.feedback.deleteButton")}
+                        {t("deleteButton")}
                       </Button>
                     )}
                   </div>
@@ -274,7 +274,7 @@ const TraderFeedbackSection = ({
               )
             ) : (
               <p className="text-noir-gold-500 text-sm">
-                {t("traderProfile.feedback.loginPrompt")}
+                {t("loginPrompt")}
               </p>
             )}
           </div>

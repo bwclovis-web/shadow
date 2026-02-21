@@ -1,6 +1,6 @@
 import { cx } from "class-variance-authority"
 import { useRef } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { MdLibraryAdd } from "react-icons/md"
 
 import { Button } from "~/components/Atoms/Button"
@@ -23,7 +23,7 @@ const AddToCollectionModal = ({
 }: AddToCollectionModalProps) => {
   const { modalOpen, toggleModal, modalId } = useSessionStore()
   const modalTrigger = useRef<HTMLButtonElement>(null)
-  const { t } = useTranslation()
+  const t = useTranslations("myScents")
   const ButtonClasses = cx({
     [`z-50 ${className}`]: true,
   })
@@ -41,11 +41,11 @@ const AddToCollectionModal = ({
         >
           {type === "icon" ? (
             <div className="flex items-center justify-between gap-2">
-              <span className=" text-sm">{t("myScents.addButton")}</span>
+              <span className=" text-sm">{t("addButton")}</span>
               <MdLibraryAdd size={20} />
             </div>
           ) : (
-            <p>{t("myScents.addButton")}</p>
+            <p>{t("addButton")}</p>
           )}
         </Button>
       </div>

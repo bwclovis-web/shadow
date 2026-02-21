@@ -1,11 +1,11 @@
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { RiLogoutBoxRLine } from "react-icons/ri"
 
 import { Button } from "@/components/Atoms/Button/Button"
 //import { clearCacheOnLogout } from "@/utils/cacheManagement"
 
 const LogoutButton = () => {
-  const { t } = useTranslation()
+  const t = useTranslations("navigation")
   
   const handleSubmit = () => {
     // Clear cache before logout redirect
@@ -19,7 +19,7 @@ const LogoutButton = () => {
       <Button
         variant="icon"
         type="submit"
-        aria-label={t("navigation.logout")}
+        aria-label={t("logout")}
         className="bg-noir-light hover:bg-noir-dark hover:text-noir-light rounded-full p-2 transition-colors duration-300 text-noir-black"
       >
         <RiLogoutBoxRLine size={20} />

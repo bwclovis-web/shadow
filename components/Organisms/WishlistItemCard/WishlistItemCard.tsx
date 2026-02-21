@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { IoMdCloseCircle } from "react-icons/io"
 import { Form, NavLink } from "react-router"
 
@@ -29,7 +29,7 @@ const WishlistItemCard = ({
   availableAmount,
 }: WishlistItemCardProps) => {
   const [isPublic, setIsPublic] = useState(item.isPublic)
-  const { t } = useTranslation()
+  const t = useTranslations("wishlist.itemCard")
   
   // Use TanStack Query mutation for wishlist visibility
   const toggleWishlist = useToggleWishlist()
@@ -72,7 +72,7 @@ const WishlistItemCard = ({
 
       {isAvailable && (
         <div className="bg-noir-light text-noir-dark text-xs font-bold px-3 py-1 text-center animate-pulse">
-          {t("wishlist.itemCard.available")}
+          {t("available")}
         </div>
       )}
       <OptimizedImage
@@ -121,19 +121,19 @@ const WishlistItemCard = ({
               <span
                 className={styleMerge(wishlistVisibilityVariants({ isAvailable }))}
               >
-                {t("wishlist.itemCard.visibility")}:
+                {t("visibility")}:
               </span>
               <VooDooCheck
                 checked={isPublic}
                 onChange={handleVisibilityToggle}
-                labelChecked={t("wishlist.itemCard.public")}
-                labelUnchecked={t("wishlist.itemCard.private")}
+                labelChecked={t("public")}
+                labelUnchecked={t("private")}
               />
             </div>
             <p className={styleMerge(wishlistVisibilityVariants({ isAvailable }))}>
               {isPublic
-                ? t("wishlist.itemCard.availableMessage")
-                : t("wishlist.itemCard.unavailableMessage")}
+                ? t("availableMessage")
+                : t("unavailableMessage")}
             </p>
           </div>
         </div>

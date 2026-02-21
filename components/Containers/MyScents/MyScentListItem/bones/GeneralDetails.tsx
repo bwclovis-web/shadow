@@ -1,5 +1,5 @@
 import { useRef } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { MdDeleteForever } from "react-icons/md"
 import { useFetcher, useNavigate } from "react-router"
 import { Button } from "~/components/Atoms/Button"
@@ -11,7 +11,7 @@ import { useSessionStore } from "~/stores/sessionStore"
 import { formatPrice } from "~/utils/numberUtils"
 
 const GeneralDetails = ({ userPerfume }: { userPerfume: any }) => {
-  const { t } = useTranslation()
+  const t = useTranslations("myScents.listItem")
   const { modalOpen, toggleModal, modalId, closeModal } = useSessionStore()
   const navigate = useNavigate()
   const removeButtonRef = useRef<HTMLButtonElement>(null)
@@ -24,7 +24,7 @@ const GeneralDetails = ({ userPerfume }: { userPerfume: any }) => {
     <div className="flex flex-col md:flex-row gap-2 md:gap-10 mt-6 justify-between md:items-center px-2">
       {userPerfume.placeOfPurchase && (
         <p className="font-medium flex flex-col justify-start items-start">
-          <span className="text-lg text-noir-gold">{t("myScents.listItem.pointOfPurchase")}</span>
+          <span className="text-lg text-noir-gold">{t("pointOfPurchase")}</span>
           <span className="text-2xl text-noir-gold-100 capitalize">
             {userPerfume.placeOfPurchase}
           </span>
@@ -34,7 +34,7 @@ const GeneralDetails = ({ userPerfume }: { userPerfume: any }) => {
         {userPerfume.price && (
           <p className="flex flex-col items-start justify-start">
             <span className="text-lg font-medium text-noir-gold">
-              {t("myScents.listItem.price")}
+              {t("price")}
             </span>
             <span className="text-2xl text-noir-gold-100">
               {formatPrice(userPerfume.price)}
@@ -42,7 +42,7 @@ const GeneralDetails = ({ userPerfume }: { userPerfume: any }) => {
           </p>
         )}
         <p className="flex flex-col items-start justify-start">
-          <span className="text-lg font-medium text-noir-gold">{t("myScents.listItem.type")}</span>
+          <span className="text-lg font-medium text-noir-gold">{t("type")}</span>
           <span className="text-2xl text-noir-gold-100">
             {getPerfumeTypeLabel(userPerfume.type)}
           </span>
@@ -61,8 +61,8 @@ const GeneralDetails = ({ userPerfume }: { userPerfume: any }) => {
       >
         <span className="text-white/90 font-bold text-sm">
           {isSubmitting
-            ? t("myScents.listItem.removing")
-            : t("myScents.listItem.removeButton")}
+            ? t("removing")
+            : t("removeButton")}
         </span>
       </Button>
     </div>

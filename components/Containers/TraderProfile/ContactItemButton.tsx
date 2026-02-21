@@ -1,5 +1,5 @@
 import { useRef, useState } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import { Button } from "~/components/Atoms/Button/Button"
 import ContactTraderModal from "~/components/Containers/Forms/ContactTraderModal"
@@ -28,7 +28,7 @@ const ContactItemButton = ({
   userPerfume,
   viewerId,
 }: ContactItemButtonProps) => {
-  const { t } = useTranslation()
+  const t = useTranslations("contactTrader")
   const { modalOpen, toggleModal, modalId, closeModal } = useSessionStore()
   const modalTrigger = useRef<HTMLButtonElement>(null)
   const { prepareApiRequest } = useCSRF()
@@ -60,10 +60,10 @@ const ContactItemButton = ({
   }
 
   // Generate a pre-filled subject line
-  const itemSubject = t("contactTrader.itemSubject", {
+  const itemSubject = t("itemSubject", {
     perfumeName: itemInfo.perfumeName,
     perfumeHouse: itemInfo.perfumeHouse ? ` by ${itemInfo.perfumeHouse}` : "",
-  }) || `Inquiry about ${itemInfo.perfumeName}${itemInfo.perfumeHouse ? ` by ${itemInfo.perfumeHouse}` : ""}`
+  })
 
   const handleSubmit = async (formData: FormData) => {
     setIsSubmitting(true)
@@ -113,7 +113,7 @@ const ContactItemButton = ({
         }}
         ref={modalTrigger}
       >
-        {t("contactTrader.inquireButton", "Inquire About This Item")}
+        {t("inquireButton")}
       </Button>
 
       {modalOpen && modalId === itemModalId && (

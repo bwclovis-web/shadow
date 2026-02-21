@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button/Button"
 
@@ -42,17 +42,18 @@ const DataDisplaySection = ({
   onNextPage,
   onPrevPage,
 }: DataDisplaySectionProps) => {
-  const { t } = useTranslation()
+  const tDataDisplay = useTranslations("components.dataDisplaySection")
+  const tCommon = useTranslations("common")
   const itemName = itemNameByType(type)
 
   if (!selectedLetter && data.length === 0) {
     return (
       <div className="inner-container my-6 text-center py-12">
         <h2 className="text-xl text-noir-gold mb-4">
-          {t("components.dataDisplaySection.heading", { itemName })}
+          {tDataDisplay("heading", { itemName })}
         </h2>
         <p className="text-noir-gold/80">
-          {t("components.dataDisplaySection.subheading", { itemName })}
+          {tDataDisplay("subheading", { itemName })}
         </p>
       </div>
     )
@@ -65,7 +66,7 @@ const DataDisplaySection = ({
     <div className="inner-container my-6" id="data-list">
       {isLoading ? (
         <div className="text-center py-8 text-noir-gold">
-          {t("common.loading", { itemName })} for letter &quot;{selectedLetter}
+          {tCommon("loading")} for letter &quot;{selectedLetter}
           &quot;
         </div>
       ) : (
@@ -96,7 +97,7 @@ const DataDisplaySection = ({
           )}
 
           <span className="text-noir-gold/80">
-            {t("common.pageOf", {
+            {tCommon("pageOf", {
               current: pagination.currentPage,
               total: pagination.totalPages,
             })}
@@ -108,7 +109,7 @@ const DataDisplaySection = ({
               variant="secondary"
               size="sm"
             >
-              {t("common.next")}
+              {tCommon("next")}
             </Button>
           )}
         </div>

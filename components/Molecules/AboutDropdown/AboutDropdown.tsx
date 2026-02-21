@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { FaChevronDown } from "react-icons/fa"
 
 import { styleMerge } from "@/utils/styleUtils"
@@ -19,18 +19,13 @@ const AboutDropdown = ({
   variant = "desktop",
   onNavClick,
 }: AboutDropdownProps) => {
-  const { t, ready } = useTranslation()
+  const t = useTranslations("navigation")
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
-  const [isClientReady, setIsClientReady] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const isActive = (path: string) =>
     pathname === path || pathname.startsWith(path + "/")
-
-  useEffect(() => {
-    setIsClientReady(true)
-  }, [])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -51,17 +46,17 @@ const AboutDropdown = ({
   const aboutItems = [
     {
       id: "how-we-work",
-      label: ready && isClientReady ? t("navigation.howWeWork") : "How We Work",
+      label: t("howWeWork"),
       path: "/how-we-work",
     },
     {
       id: "about-us",
-      label: ready && isClientReady ? t("navigation.aboutUs") : "About Us",
+      label: t("aboutUs"),
       path: "/about-us",
     },
     {
       id: "contact-us",
-      label: ready && isClientReady ? t("navigation.contactUs") : "Contact Us",
+      label: t("contactUs"),
       path: "/contact-us",
     },
   ]
@@ -93,7 +88,7 @@ const AboutDropdown = ({
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
-        {ready && isClientReady ? t("navigation.about") : "About"}
+        {t("about")}
         <FaChevronDown
           className={`transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""

@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import ContactTraderForm from "./ContactTraderForm"
 
@@ -31,32 +31,24 @@ const ContactTraderModal = ({
   itemInfo,
   itemSubject,
 }: ContactTraderModalProps) => {
-  const { t } = useTranslation()
+  const t = useTranslations("contactTrader")
 
   const title = itemInfo
-    ? t("contactTrader.itemTitle", "Inquire About Item")
-    : t("contactTrader.title", "Contact Trader")
+    ? t("itemTitle")
+    : t("title")
 
   const heading = itemInfo
-    ? t("contactTrader.itemTitle", "Inquire About Item")
-    : t("contactTrader.heading", "Contact Trader")
+    ? t("itemTitle")
+    : t("heading")
 
   const subheading = itemInfo
-    ? t(
-        "contactTrader.itemSubheading",
-        {
-          perfumeName: itemInfo.perfumeName,
-          perfumeHouse: itemInfo.perfumeHouse ? ` by ${itemInfo.perfumeHouse}` : "",
-        },
-        `Contact the trader about ${itemInfo.perfumeName}${itemInfo.perfumeHouse ? ` by ${itemInfo.perfumeHouse}` : ""}.`
-      )
+    ? t("itemSubheading", {
+        perfumeName: itemInfo.perfumeName,
+        perfumeHouse: itemInfo.perfumeHouse ? ` by ${itemInfo.perfumeHouse}` : "",
+      })
     : recipientName
-      ? t(
-          "contactTrader.subheading",
-          { traderName: recipientName },
-          `Contact ${recipientName} to inquire about trading.`
-        )
-      : t("contactTrader.subheading", "Contact the trader to inquire about the item.")
+      ? t("subheading", { traderName: recipientName })
+      : t("subheading")
 
   return (
     <div className="w-full p-6">

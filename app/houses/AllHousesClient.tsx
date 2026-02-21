@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import AlphabeticalNav from "@/components/Organisms/AlphabeticalNav"
 import DataDisplaySection from "@/components/Organisms/DataDisplaySection"
@@ -32,26 +32,26 @@ interface AllHousesClientProps {
   subheading: string
 }
 
-const useHouseFilters = (t: ReturnType<typeof useTranslation>["t"]) => {
+const useHouseFilters = (t: ReturnType<typeof useTranslations<"allHouses">>) => {
   const houseTypeOptions = [
     {
       id: "all",
       value: "all",
-      label: t("allHouses.houseTypes.all"),
+      label: t("houseTypes.all"),
       name: "houseType",
       defaultChecked: true,
     },
     {
       id: "niche",
       value: "niche",
-      label: t("allHouses.houseTypes.niche"),
+      label: t("houseTypes.niche"),
       name: "houseType",
       defaultChecked: false,
     },
     {
       id: "designer",
       value: "designer",
-      label: t("allHouses.houseTypes.designer"),
+      label: t("houseTypes.designer"),
       name: "houseType",
       defaultChecked: false,
     },
@@ -65,14 +65,14 @@ const useHouseFilters = (t: ReturnType<typeof useTranslation>["t"]) => {
     {
       id: "celebrity",
       value: "celebrity",
-      label: t("allHouses.houseTypes.celebrity"),
+      label: t("houseTypes.celebrity"),
       name: "houseType",
       defaultChecked: false,
     },
     {
       id: "drugstore",
       value: "drugstore",
-      label: t("allHouses.houseTypes.drugstore"),
+      label: t("houseTypes.drugstore"),
       name: "houseType",
       defaultChecked: false,
     },
@@ -147,7 +147,7 @@ const buildHousesPath = (
 }
 
 const AllHousesClient = ({ heading, subheading }: AllHousesClientProps) => {
-  const { t } = useTranslation()
+  const t = useTranslations("allHouses")
   const router = useRouter()
   const searchParams = useSearchParams()
 

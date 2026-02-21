@@ -2,7 +2,7 @@ import { getFormProps, getInputProps, useForm } from "@conform-to/react"
 import { getZodConstraint, parseWithZod } from "@conform-to/zod"
 import { useEffect, useRef, useState } from "react"
 import { Form, useActionData } from "react-router"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import { Button } from "~/components/Atoms/Button/Button"
 import FormField from "~/components/Atoms/FormField/FormField"
@@ -41,7 +41,7 @@ const ContactTraderForm = ({
   itemInfo,
   itemSubject,
 }: ContactTraderFormProps) => {
-  const { t } = useTranslation()
+  const t = useTranslations("contactTrader")
   const actionData = useActionData()
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const [serverError, setServerError] = useState<string | null>(null)
@@ -56,14 +56,14 @@ const ContactTraderForm = ({
     if (result) {
       // Handle API response format (from createSuccessResponse/createErrorResponse)
       if (result.success === false) {
-        const errorMsg = result.error || result.message || t("contactTrader.error", "Failed to send message")
+        const errorMsg = result.error || result.message || t("error", "Failed to send message")
         setServerError(errorMsg)
         setSuccessMessage(null)
         setIsSubmitting(false)
       } else if (result.success === true || result.status === "success") {
         const successMsg = result.data?.message ||
           result.message ||
-          t("contactTrader.success", "Message sent successfully!")
+          t("success")
         setSuccessMessage(successMsg)
         setServerError(null)
         setIsSubmitting(false)
@@ -97,7 +97,7 @@ const ContactTraderForm = ({
       recipientId,
       subject: itemSubject || "",
       message: itemInfo
-        ? t("contactTrader.itemMessageTemplate", {
+        ? t("itemMessageTemplate", {
             perfumeName: itemInfo.perfumeName,
             perfumeHouse: itemInfo.perfumeHouse ? ` by ${itemInfo.perfumeHouse}` : "",
             amount: itemInfo.amount || "0",
@@ -119,7 +119,7 @@ const ContactTraderForm = ({
         // Success handling is done via lastResult in useEffect
       } catch (error) {
         setServerError(
-          error instanceof Error ? error.message : t("contactTrader.error", "Failed to send message")
+          error instanceof Error ? error.message : t("error")
         )
         setIsSubmitting(false)
       }
@@ -141,8 +141,8 @@ const ContactTraderForm = ({
         inputType="text"
         inputId="subject"
         action={subject}
-        label={t("contactTrader.subjectLabel", "Subject (optional)")}
-        placeholder={t("contactTrader.subjectPlaceholder", "Enter subject...")}
+        label={t("subjectLabel")}
+        placeholder={t("subjectPlaceholder")}
         maxLength={200}
         shading={true}
         disabled={isSubmitting}
@@ -150,13 +150,10 @@ const ContactTraderForm = ({
 
       {/* Message field */}
       <FormField
-        label={t("contactTrader.messageLabel", "Message")}
+        label={t("messageLabel")}
         error={message.errors?.[0]}
         required
-        helpText={t(
-          "contactTrader.messageHelp",
-          "Your message to the trader (10-5,000 characters)"
-        )}
+        helpText={t("messageHelp")}
       >
         <textarea
           name={message.name}
@@ -164,10 +161,10 @@ const ContactTraderForm = ({
           defaultValue={message.initialValue}
           ref={textareaRef}
           rows={6}
-          placeholder={t("contactTrader.messagePlaceholder", "Enter your message...")}
+          placeholder={t("messagePlaceholder")}
           minLength={10}
           maxLength={5000}
-          aria-label={t("contactTrader.messageLabel", "Message")}
+          aria-label={t("messageLabel")}
           aria-invalid={message.errors ? true : undefined}
           aria-describedby={message.errors ? `${message.id}-error` : undefined}
           className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:cursor-not-allowed resize-y"
@@ -200,8 +197,8 @@ const ContactTraderForm = ({
           className="min-w-[120px]"
         >
           {isSubmitting
-            ? t("contactTrader.sending", "Sending...")
-            : t("contactTrader.sendButton", "Send Message")}
+            ? t("sending")
+            : t("sendButton")}
         </Button>
       </div>
     </form>

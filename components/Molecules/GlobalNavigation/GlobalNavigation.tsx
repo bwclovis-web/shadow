@@ -5,7 +5,7 @@ import type { HTMLProps } from "react"
 import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { FaUser } from "react-icons/fa6"
 
 import LanguageSwitcher from "@/components/Organisms/LanguageSwitcher/LanguageSwitcher"
@@ -36,7 +36,7 @@ const navLinkActiveAdmin =
   "text-noir-light bg-noir-gold rounded-full border-noir-light/90"
 
 function GlobalNavigationContent({ user }: GlobalNavigationProps) {
-  const { t, ready } = useTranslation()
+  const t = useTranslations("navigation")
   const pathname = usePathname()
   const [isClientReady, setIsClientReady] = useState(false)
 
@@ -51,8 +51,7 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
         : clearTimeout(id as ReturnType<typeof setTimeout>)
   }, [])
 
-  const logoText =
-    ready && isClientReady ? t("navigation.logo") : " Shadow and Sillage"
+  const logoText = isClientReady ? t("logo") : " Shadow and Sillage"
 
   const isActive = (href: string, exact?: boolean) => {
     if (!isClientReady) return false
@@ -113,9 +112,7 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
                   isActive(item.path) && navLinkActive
                 )}
               >
-                {ready && isClientReady
-                  ? t("navigation." + item.key)
-                  : item.label}
+                {isClientReady ? t(item.key) : item.label}
               </Link>
             </li>
           ))}
@@ -129,7 +126,7 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
                   isActive(ADMIN_PATH) && navLinkActiveAdmin
                 )}
               >
-                {ready && isClientReady ? t("navigation.admin") : "Admin"}
+                {isClientReady ? t("admin") : "Admin"}
               </Link>
             </li>
           )}

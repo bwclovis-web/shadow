@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { NavLink } from "react-router"
 
 import { OptimizedImage } from "~/components/Atoms/OptimizedImage"
@@ -15,14 +15,15 @@ interface RecommendedForYouProps {
 }
 
 export default function RecommendedForYou({ perfumes, limit = PERFUME_LIMIT }: RecommendedForYouProps) {
-  const { t } = useTranslation()
+  const tRecommendations = useTranslations("recommendations")
+  const tSingleHouse = useTranslations("singleHouse")
   const list = (perfumes ?? []).slice(0, limit)
   if (list.length === 0) return null
 
   return (
     <div className="w-full max-w-6xl mx-auto">
       <h2 className="text-center mb-4 text-noir-gold-500">
-        {t("recommendations.recommendedForYou", { defaultValue: "Recommended for you" })}
+        {tRecommendations("recommendedForYou")}
       </h2>
       <ul className="grid grid-cols-1 md:grid-cols-3 gap-4 p-2">
         {list.map((similar, index) => (
@@ -40,10 +41,7 @@ export default function RecommendedForYou({ perfumes, limit = PERFUME_LIMIT }: R
                 src={
                   (!validImageRegex.test(similar.image ?? "") ? similar.image : null) ?? bottleBanner
                 }
-                alt={t("singlePerfume.perfumeBottleAltText", {
-                  defaultValue: "Perfume Bottle {{name}}",
-                  name: similar.name,
-                })}
+                alt={tSingleHouse("perfumeBottleAltText", { name: similar.name })}
                 priority={index < 3}
                 width={128}
                 height={128}

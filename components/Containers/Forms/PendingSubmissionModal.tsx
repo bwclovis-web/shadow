@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import type { SubmissionResult } from "@conform-to/react"
 
 import PerfumeForm from "~/components/Containers/Forms/PerfumeForm"
@@ -16,7 +16,7 @@ interface PendingSubmissionModalProps {
 
 const PendingSubmissionModal = ({ submissionType }: PendingSubmissionModalProps) => {
   const { modalOpen, modalId, closeModal } = useSessionStore()
-  const { t } = useTranslation()
+  const t = useTranslations("contactUs.modal")
   const { addToFormData, addToHeaders } = useCSRF()
   const MODAL_ID = `pending-submission-${submissionType}`
   const isPerfume = submissionType === "perfume"
@@ -87,7 +87,7 @@ const PendingSubmissionModal = ({ submissionType }: PendingSubmissionModalProps)
       }
 
       // Success!
-      setSuccessMessage(t("contactUs.submissionModal.successMessage"))
+      setSuccessMessage(t("submissionSuccess"))
       // Set success result in conform-to format
       setLastResult({
         status: "success" as const,
@@ -116,13 +116,13 @@ const PendingSubmissionModal = ({ submissionType }: PendingSubmissionModalProps)
       <div className="p-6 max-h-[50vh] overflow-y-auto">
         <h2 className="text-2xl font-bold text-noir-gold mb-4">
           {isPerfume
-            ? t("contactUs.modal.perfume.title")
-            : t("contactUs.modal.house.title")}
+            ? t("perfume.title")
+            : t("house.title")}
         </h2>
         <p className="text-noir-light mb-6">
           {isPerfume
-            ? t("contactUs.modal.perfume.description")
-            : t("contactUs.modal.house.description")}
+            ? t("perfume.description")
+            : t("house.description")}
         </p>
 
         {successMessage && (
@@ -141,7 +141,7 @@ const PendingSubmissionModal = ({ submissionType }: PendingSubmissionModalProps)
             lastResult={lastResult}
             data={null}
             onSubmit={handleSubmit}
-            submitButtonText={t("contactUs.modal.submitButton")}
+            submitButtonText={t("submitButton")}
             className="p-0 border-0 bg-transparent"
             hideImage={true}
             hideNotes={false}
@@ -153,7 +153,7 @@ const PendingSubmissionModal = ({ submissionType }: PendingSubmissionModalProps)
             lastResult={lastResult}
             data={null}
             onSubmit={handleSubmit}
-            submitButtonText={t("contactUs.modal.submitButton")}
+            submitButtonText={t("submitButton")}
             className="p-0 mt-0 border-0 bg-transparent"
             hideImage={true}
           />
@@ -166,7 +166,7 @@ const PendingSubmissionModal = ({ submissionType }: PendingSubmissionModalProps)
             onClick={closeModal}
             className="max-w-max"
           >
-            {t("contactUs.modal.cancelButton")}
+            {t("cancelButton")}
           </Button>
         </div>
       </div>

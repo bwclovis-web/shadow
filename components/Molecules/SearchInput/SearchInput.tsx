@@ -1,5 +1,5 @@
 import { type ChangeEvent, useRef } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { LuSearch, LuX } from "react-icons/lu"
 
 import { styleMerge } from "~/utils/styleUtils"
@@ -17,7 +17,7 @@ const SearchInput = ({
   placeholder,
   className,
 }: SearchInputProps) => {
-  const { t } = useTranslation()
+  const t = useTranslations("common")
   const inputRef = useRef<HTMLInputElement>(null)
 
   const handleChange = (evt: ChangeEvent<HTMLInputElement>) => {
@@ -36,7 +36,7 @@ const SearchInput = ({
           type="text"
           value={value}
           onChange={handleChange}
-          placeholder={placeholder || t("common.search") || "Search..."}
+          placeholder={placeholder || t("search")}
           className="w-full bg-noir-black/90 px-2 pl-10 pr-4 py-2 transition-all duration-300 text-noir-gold-100 border border-noir-gold rounded-sm font-semibold outline-none focus:outline-none focus:ring-2 focus:ring-noir-gold/50 focus:bg-noir-dark"
         />
         {value && (

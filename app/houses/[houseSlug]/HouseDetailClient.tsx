@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import {
   PerfumeHouseAdminActions,
@@ -54,7 +54,7 @@ export default function HouseDetailClient({
   user,
   initialSearchParams,
 }: HouseDetailClientProps) {
-  const { t } = useTranslation()
+  const t = useTranslations("singleHouse")
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -199,7 +199,7 @@ export default function HouseDetailClient({
   }
 
   if (!perfumeHouse && !initialPerfumeHouse) {
-    return <div className="p-4">{t("singleHouse.notFound")}</div>
+    return <div className="p-4">{t("notFound")}</div>
   }
 
   const house = perfumeHouse ?? initialPerfumeHouse
@@ -213,8 +213,8 @@ export default function HouseDetailClient({
       {modalOpen && modalId === "delete-perfume-house-item" && (
         <Modal innerType="dark" animateStart="top">
           <DangerModal
-            heading={t("singleHouse.deleteModal.heading")}
-            description={t("singleHouse.deleteModal.description")}
+            heading={t("deleteModal.heading")}
+            description={t("deleteModal.description")}
             action={handleDelete}
           />
         </Modal>

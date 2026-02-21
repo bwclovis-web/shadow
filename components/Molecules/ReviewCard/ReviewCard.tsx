@@ -8,7 +8,7 @@ import { sanitizeReviewHtml } from "~/utils/sanitize"
 import { styleMerge } from "~/utils/styleUtils"
 import { useSessionStore } from "~/stores/sessionStore"
 import DangerModal from "~/components/Organisms/DangerModal"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { useRef } from "react"
 interface ReviewCardProps {
   review: {
@@ -42,7 +42,8 @@ const ReviewCard = ({
   onModerate,
   showModerationActions = false,
 }: ReviewCardProps) => {
-  const { t } = useTranslation()
+  const tCommon = useTranslations("common")
+  const tReview = useTranslations("singlePerfume.review")
   const isOwner = currentUserId === review.user.id
   const canModerate = currentUserRole === "admin" || currentUserRole === "editor"
   const canEdit = isOwner || canModerate
@@ -77,8 +78,8 @@ const ReviewCard = ({
     {modalOpen && modalId && onDelete && modalId === deleteModalId && (
       <Modal innerType="dark" animateStart="top">
         <DangerModal
-          heading={t("singlePerfume.review.dangerModal.heading")}
-          description={t("singlePerfume.review.dangerModal.description")}
+          heading={tReview("dangerModal.heading")}
+          description={tReview("dangerModal.description")}
           action={() => onDelete(review.id)}
         />
       </Modal>
@@ -116,7 +117,7 @@ const ReviewCard = ({
                 size="sm"
                 className="flex items-center justify-between gap-2"
               >
-                <span>{t("common.edit")}</span>
+                <span>{tCommon("edit")}</span>
                 <GrEdit size={22} />
               </Button>
             )}
@@ -128,7 +129,7 @@ const ReviewCard = ({
                 size="sm"
                 className="flex items-center justify-between gap-2"
               >
-                <span>{t("common.delete")}</span>
+                <span>{tCommon("delete")}</span>
                 <MdDeleteForever size={22} />
               </Button>
             )}
@@ -138,13 +139,13 @@ const ReviewCard = ({
                   onClick={() => onModerate(review.id, true)}
                   className="text-xs text-green-600 hover:text-green-800 hover:underline"
                 >
-                  {t("common.approve")}
+                  {tCommon("approve")}
                 </button>
                 <button
                   onClick={() => onModerate(review.id, false)}
                   className="text-xs text-orange-600 hover:text-orange-800 hover:underline"
                 >
-                  {t("common.reject")}
+                  {tCommon("reject")}
                 </button>
               </div>
             )}

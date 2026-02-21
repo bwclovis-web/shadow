@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { FaChevronDown } from "react-icons/fa"
 import { NavLink } from "react-router"
 
@@ -20,16 +20,13 @@ const AdminDropdown = ({
   user,
   onNavClick,
 }: AdminDropdownProps) => {
-  const { t, ready } = useTranslation()
+  const tNav = useTranslations("navigation")
+  const tAdmin = useTranslations("admin")
+  const tProfile = useTranslations("profile")
   const [isOpen, setIsOpen] = useState(false)
-  const [isClientReady, setIsClientReady] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const isAdmin = user?.role === "admin" || user?.role === "editor"
-
-  useEffect(() => {
-    setIsClientReady(true)
-  }, [])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -81,7 +78,7 @@ const AdminDropdown = ({
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
-        {ready && isClientReady ? t("navigation.admin") : "Admin"}
+        {tNav("admin")}
         <FaChevronDown
           className={`transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
@@ -108,9 +105,7 @@ const AdminDropdown = ({
                       )
                     }
                   >
-                    {ready && isClientReady
-                      ? t("admin.navigation." + item.key)
-                      : item.label}
+                    {tAdmin("navigation." + item.key)}
                   </NavLink>
                 </li>
               ))}
@@ -134,9 +129,7 @@ const AdminDropdown = ({
                     )
                   }
                 >
-                  {ready && isClientReady
-                    ? t("profile.navigation." + item.key)
-                    : item.label}
+                  {tProfile("navigation." + item.key)}
                 </NavLink>
               </li>
             ))}

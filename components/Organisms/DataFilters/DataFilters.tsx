@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import Select from "@/components/Atoms/Select/Select"
 import SearchBar from "@/components/Organisms/SearchBar/SearchBar"
@@ -34,7 +34,7 @@ const DataFilters = ({
   onTypeChange,
   className,
 }: DataFiltersProps) => {
-  const { t } = useTranslation()
+  const t = useTranslations("components")
 
   const showTypeFilter = typeOptions != null && onTypeChange != null
 
@@ -68,7 +68,7 @@ const DataFilters = ({
             className="flex-wrap"
             selectId={`${searchType}-sort`}
             defaultId={selectedSort}
-            label={t("components.sort.heading")}
+            label={t("sort.heading")}
           />
         </div>
       </div>

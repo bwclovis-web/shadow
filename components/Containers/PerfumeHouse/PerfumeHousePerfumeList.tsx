@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { NavLink } from "react-router"
 
 import { Button } from "~/components/Atoms/Button"
@@ -33,19 +33,15 @@ const PerfumeHousePerfumeList = ({
   selectedLetter,
   queryError,
 }: PerfumeHousePerfumeListProps) => {
-  const { t } = useTranslation()
+  const tSingleHouse = useTranslations("singleHouse")
 
   return (
     <div id="data-list" className="rounded-b-lg w-full relative overflow-x-hidden style-scroll">
-      <h2 className="text-center mb-4">{t("perfumeHouse.perfumes", {
-        defaultValue: "Perfumes",
-      })}</h2>
+      <h2 className="text-center mb-4">{tSingleHouse("perfumes")}</h2>
 
       {loading && perfumes.length === 0 ? (
         <div className="text-center py-6 min-h-[320px] flex items-center justify-center" aria-busy="true">
-          {t("singleHouse.loadingPerfumes", {
-            defaultValue: "Loading perfumes...",
-          })}
+          {tSingleHouse("loadingPerfumes")}
         </div>
       ) : perfumes.length > 0 ? (
         <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 p-2 pb-4 gap-4">
@@ -63,10 +59,7 @@ const PerfumeHousePerfumeList = ({
                 </h3>
                   <OptimizedImage
                     src={!validImageRegex.test(perfume.image) ? perfume.image : bottleBanner}
-                    alt={t("singlePerfume.perfumeBottleAltText", {
-                      defaultValue: "Perfume Bottle {{name}}",
-                      name: perfume.name,
-                    })}
+                    alt={tSingleHouse("perfumeBottleAltText", { name: perfume.name })}
                     priority={index < 6}
                     width={192}
                     height={192}
@@ -82,17 +75,13 @@ const PerfumeHousePerfumeList = ({
         </ul>
       ) : (
         <div className="text-center py-6">
-          {t("singleHouse.noPerfumes", {
-            defaultValue: "No perfumes are currently listed for this house.",
-          })}
+          {tSingleHouse("noPerfumes")}
         </div>
       )}
 
       {queryError && (
         <div className="text-center text-red-400 py-4" role="alert">
-          {t("singleHouse.errorLoadingPerfumes", {
-            defaultValue: "Error loading perfumes.",
-          })}
+          {tSingleHouse("errorLoadingPerfumes")}
         </div>
       )}
 

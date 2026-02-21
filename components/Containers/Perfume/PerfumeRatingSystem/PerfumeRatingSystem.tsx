@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import NoirRating from "~/components/Organisms/NoirRating"
 import { useRatingSystem } from "~/hooks"
@@ -32,7 +32,7 @@ const PerfumeRatingSystem = ({
   averageRatings: initialAverageRatings = null,
   readonly = false,
 }: PerfumeRatingSystemProps) => {
-  const { t } = useTranslation()
+  const t = useTranslations("singlePerfume.rating")
   const [averageRatings, setAverageRatings] = useState(initialAverageRatings)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
@@ -80,13 +80,13 @@ const PerfumeRatingSystem = ({
     <div className="bg-noir-dark/20 rounded-lg p-6">
       <h2 className="text-xl font-bold text-noir-gold mb-1 text-center">
         {isInteractive
-          ? t("singlePerfume.rating.RateThisPerfume")
-          : t("singlePerfume.rating.CommunityRatings")}
+          ? t("RateThisPerfume")
+          : t("CommunityRatings")}
       </h2>
 
       {!isLoggedIn && (
         <p className="text-sm text-noir-gold-500 mb-4 text-center">
-          {t("singlePerfume.rating.loginToRate")}
+          {t("loginToRate")}
         </p>
       )}
 
@@ -105,15 +105,13 @@ const PerfumeRatingSystem = ({
               <div className="text-xs text-noir-gold-100 text-center">
                 {averageRatings && averageRatings[key] ? (
                   <>
-                    {t("singlePerfume.rating.communityAverage")}:{" "}
+                    {t("communityAverage")}:{" "}
                     {averageRatings[key]?.toFixed(1)}/5
                     {averageRatings.totalRatings > 0 && (
                       <>
                         <span className="ml-1">
                           ({averageRatings.totalRatings}{" "}
-                          {averageRatings.totalRatings === 1
-                            ? t("singlePerfume.rating.vote")
-                            : t("singlePerfume.rating.votes")}
+                          {t("totalRatings", { count: averageRatings.totalRatings })}
                           )
                         </span>
                         {isRefreshing && <span className="ml-1">…</span>}
@@ -122,7 +120,7 @@ const PerfumeRatingSystem = ({
                   </>
                 ) : (
                   <span className="text-noir-gold-100">
-                    {t("singlePerfume.rating.notYetRated")}
+                    {t("notYetRated")}
                   </span>
                 )}
               </div>

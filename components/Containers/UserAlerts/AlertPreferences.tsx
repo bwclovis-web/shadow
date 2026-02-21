@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 import { BsBell, BsEnvelope, BsGear, BsX } from "react-icons/bs"
 
 import { Button } from "~/components/Atoms/Button/Button"
@@ -42,7 +42,8 @@ export const AlertPreferences = ({
   preferences,
   onPreferencesChange,
 }: AlertPreferencesProps) => {
-  const { t } = useTranslation()
+  const t = useTranslations("alerts")
+  const tCommon = useTranslations("common")
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   
@@ -101,7 +102,7 @@ export const AlertPreferences = ({
 
   return (
     <VooDooDetails
-      summary={t("alerts.alertPreferences", "Alert Preferences")}
+      summary={t("alertPreferences")}
       className="justify-around text-noir-gold"
       name="alert-preferences"
     >
@@ -109,15 +110,12 @@ export const AlertPreferences = ({
         {isEditing ? (
           <div className="space-y-4">
             <div className="text-sm text-noir-gold-100 mb-4">
-              {t(
-                "alerts.alertPreferencesDescription",
-                "Configure how and when you receive alerts."
-              )}
+              {t("alertPreferencesDescription")}
             </div>
             <div className="space-y-3">
               <h4 className="font-medium text-noir-gold flex items-center gap-2">
                 <BsBell className="h-4 w-4" />
-                {t("alerts.alertTypes", "Alert Types")}
+                {t("alertTypes")}
               </h4>
 
               <div className="space-y-2 ml-6">
@@ -125,16 +123,16 @@ export const AlertPreferences = ({
                   id="wishlist-alerts"
                   checked={editState.wishlistAlertsEnabled}
                   onChange={() => togglePreference("wishlistAlertsEnabled")}
-                  labelChecked={t("alerts.wishlistAlerts", "Wishlist Alerts")}
-                  labelUnchecked={t("alerts.wishlistAlerts", "Wishlist Alerts")}
+                  labelChecked={t("wishlistAlerts")}
+                  labelUnchecked={t("wishlistAlerts")}
                 />
 
                 <VooDooCheck
                   id="decant-alerts"
                   checked={editState.decantAlertsEnabled}
                   onChange={() => togglePreference("decantAlertsEnabled")}
-                  labelChecked={t("alerts.decantAlerts", "Decant Interest Alerts")}
-                  labelUnchecked={t("alerts.decantAlerts", "Decant Interest Alerts")}
+                  labelChecked={t("decantAlerts")}
+                  labelUnchecked={t("decantAlerts")}
                 />
               </div>
             </div>
@@ -142,7 +140,7 @@ export const AlertPreferences = ({
             <div className="space-y-3">
               <h4 className="font-medium text-noir-gold flex items-center gap-2">
                 <BsEnvelope className="h-4 w-4" />
-                {t("alerts.emailNotifications", "Email Notifications")}
+                {t("emailNotifications")}
               </h4>
 
               <div className="space-y-2 ml-6">
@@ -150,35 +148,32 @@ export const AlertPreferences = ({
                   id="email-wishlist-alerts"
                   checked={editState.emailWishlistAlerts}
                   onChange={() => togglePreference("emailWishlistAlerts")}
-                  labelChecked={t("alerts.emailWishlistAlerts", "Email Wishlist Alerts")}
-                  labelUnchecked={t("alerts.emailWishlistAlerts", "Email Wishlist Alerts")}
+                  labelChecked={t("emailWishlistAlerts")}
+                  labelUnchecked={t("emailWishlistAlerts")}
                 />
 
                 <VooDooCheck
                   id="email-decant-alerts"
                   checked={editState.emailDecantAlerts}
                   onChange={() => togglePreference("emailDecantAlerts")}
-                  labelChecked={t("alerts.emailDecantAlerts", "Email Decant Alerts")}
-                  labelUnchecked={t("alerts.emailDecantAlerts", "Email Decant Alerts")}
+                  labelChecked={t("emailDecantAlerts")}
+                  labelUnchecked={t("emailDecantAlerts")}
                 />
               </div>
             </div>
 
             <div className="space-y-3">
               <h4 className="font-medium text-noir-gold-100">
-                {t("alerts.alertLimits", "Alert Limits")}
+                {t("alertLimits")}
               </h4>
 
               <div className="ml-6">
                 <label className="block" htmlFor="max-alerts">
                   <div className="font-medium text-noir-gold-100 mb-1">
-                    {t("alerts.maxAlerts", "Maximum Alerts to Keep")}
+                    {t("maxAlerts")}
                   </div>
                   <div className="text-sm text-noir-gold-100 mb-2">
-                    {t(
-                      "alerts.maxAlertsDescription",
-                      "Older alerts will be automatically dismissed when this limit is reached"
-                    )}
+                    {t("maxAlertsDescription")}
                   </div>
                   <select
                     id="max-alerts"
@@ -187,10 +182,10 @@ export const AlertPreferences = ({
                     disabled={isSaving}
                     className="rounded border-noir-gold-100 text-noir-gold-100 focus:ring-noir-gold-100 focus:border-noir-gold-100 disabled:opacity-50"
                   >
-                    <option value={5}>{t("alerts.maxAlertsOptions.5", "5 alerts")}</option>
-                    <option value={10}>{t("alerts.maxAlertsOptions.10", "10 alerts")}</option>
-                    <option value={20}>{t("alerts.maxAlertsOptions.20", "20 alerts")}</option>
-                    <option value={50}>{t("alerts.maxAlertsOptions.50", "50 alerts")}</option>
+                    <option value={5}>{t("maxAlertsOptions.5")}</option>
+                    <option value={10}>{t("maxAlertsOptions.10")}</option>
+                    <option value={20}>{t("maxAlertsOptions.20")}</option>
+                    <option value={50}>{t("maxAlertsOptions.50")}</option>
                   </select>
                 </label>
               </div>
@@ -203,7 +198,7 @@ export const AlertPreferences = ({
                 onClick={handleSave}
                 disabled={isSaving}
               >
-                {isSaving ? t("alerts.savingPreferences", "Saving...") : t("alerts.savePreferences", "Save Preferences")}
+                {isSaving ? t("savingPreferences") : t("savePreferences")}
               </Button>
               <Button
                 variant="secondary"
@@ -212,7 +207,7 @@ export const AlertPreferences = ({
                 disabled={isSaving}
                 leftIcon={<BsX className="h-4 w-4" />}
               >
-                {t("common.cancel", "Cancel")}
+                {tCommon("cancel")}
               </Button>
             </div>
           </div>
@@ -231,7 +226,7 @@ export const AlertPreferences = ({
                 onClick={handleEdit}
                 leftIcon={<BsGear className="h-4 w-4" />}
               >
-                {t("common.edit", "Edit")}
+                {tCommon("edit")}
               </Button>
             </div>
 
@@ -239,20 +234,20 @@ export const AlertPreferences = ({
               <div className="space-y-3">
                 <h4 className="font-medium text-noir-gold flex items-center gap-2">
                   <BsBell className="h-4 w-4" />
-                  {t("alerts.alertTypes", "Alert Types")}
+                  {t("alertTypes")}
                 </h4>
 
                 <div className="space-y-2 ml-6">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-noir-gold-100">
-                      {t("alerts.wishlistAlerts", "Wishlist Alerts")}
+                      {t("wishlistAlerts")}
                     </span>
                     <StatusBadge enabled={preferences.wishlistAlertsEnabled} />
                   </div>
 
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-noir-gold-100">
-                      {t("alerts.decantAlerts", "Decant Interest Alerts")}
+                      {t("decantAlerts")}
                     </span>
                     <StatusBadge enabled={preferences.decantAlertsEnabled} />
                   </div>
@@ -262,27 +257,27 @@ export const AlertPreferences = ({
               <div className="space-y-3">
                 <h4 className="font-medium text-noir-gold flex items-center gap-2">
                   <BsEnvelope className="h-4 w-4" />
-                  {t("alerts.emailNotifications", "Email Notifications")}
+                  {t("emailNotifications")}
                 </h4>
 
                 <div className="space-y-2 ml-6">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-noir-gold-100">
-                      {t("alerts.emailWishlistAlerts", "Email Wishlist Alerts")}
+                      {t("emailWishlistAlerts")}
                     </span>
                     <StatusBadge enabled={preferences.emailWishlistAlerts} />
                   </div>
 
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-noir-gold-100">
-                      {t("alerts.emailDecantAlerts", "Email Decant Alerts")}
+                      {t("emailDecantAlerts")}
                     </span>
                     <StatusBadge enabled={preferences.emailDecantAlerts} />
                   </div>
 
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-noir-gold-100">
-                      {t("alerts.maxAlerts", "Max Alerts")}
+                      {t("maxAlerts")}
                     </span>
                     <StatusBadge value={preferences.maxAlerts} />
                   </div>

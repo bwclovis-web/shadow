@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 import { Button } from "~/components/Atoms/Button"
 import RichTextEditor from "~/components/Atoms/RichTextEditor"
@@ -55,7 +55,7 @@ const ReviewSection = ({
   initialReviewsData,
   pageSize,
 }: ReviewSectionProps) => {
-  const { t } = useTranslation()
+  const t = useTranslations("singlePerfume.review")
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [reviewContent, setReviewContent] = useState("")
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null)
@@ -130,7 +130,7 @@ const ReviewSection = ({
         console.error("Failed to fetch reviews", error)
         alert(error instanceof Error
             ? error.message
-            : t("singlePerfume.review.failedToLoadReviews"))
+            : t("failedToLoadReviews"))
       } finally {
         setIsLoadingMore(false)
       }
@@ -171,7 +171,7 @@ fetchLimit, perfumeId, t, updateReviewsState
 
   const handleCreateReview = async () => {
     if (containsDangerousReviewHtml(reviewContent)) {
-      alert(t("singlePerfume.review.failedToCreateReview"))
+      alert(t("failedToCreateReview"))
       return
     }
 
@@ -194,7 +194,7 @@ fetchLimit, perfumeId, t, updateReviewsState
         const errorPayload = await response.json().catch(() => ({}))
         throw new Error(errorPayload.error ||
             errorPayload.message ||
-            t("singlePerfume.review.failedToCreateReview"))
+            t("failedToCreateReview"))
       }
 
       const result = await response.json()
@@ -206,7 +206,7 @@ fetchLimit, perfumeId, t, updateReviewsState
       console.error("Failed to create review", error)
       alert(error instanceof Error
           ? error.message
-          : t("singlePerfume.review.failedToCreateReview"))
+          : t("failedToCreateReview"))
     } finally {
       setIsSubmittingReview(false)
     }
@@ -235,7 +235,7 @@ fetchLimit, perfumeId, t, updateReviewsState
     }
 
     if (containsDangerousReviewHtml(reviewContent)) {
-      alert(t("singlePerfume.review.failedToUpdateReview"))
+      alert(t("failedToUpdateReview"))
       return
     }
 
@@ -277,7 +277,7 @@ fetchLimit, perfumeId, t, updateReviewsState
         const errorPayload = await response.json().catch(() => ({}))
         throw new Error(errorPayload.error ||
             errorPayload.message ||
-            t("singlePerfume.review.failedToUpdateReview"))
+            t("failedToUpdateReview"))
       }
 
       const result = await response.json()
@@ -294,7 +294,7 @@ fetchLimit, perfumeId, t, updateReviewsState
       console.error("Failed to update review", error)
       alert(error instanceof Error
           ? error.message
-          : t("singlePerfume.review.failedToUpdateReview"))
+          : t("failedToUpdateReview"))
     } finally {
       setIsSubmittingReview(false)
     }
@@ -318,7 +318,7 @@ fetchLimit, perfumeId, t, updateReviewsState
         const errorPayload = await response.json().catch(() => ({}))
         throw new Error(errorPayload.error ||
             errorPayload.message ||
-            t("singlePerfume.review.failedToDeleteReview"))
+            t("failedToDeleteReview"))
       }
 
       if (isUserReview) {
@@ -330,7 +330,7 @@ fetchLimit, perfumeId, t, updateReviewsState
       console.error("Failed to delete review", error)
       alert(error instanceof Error
           ? error.message
-          : t("singlePerfume.review.failedToDeleteReview"))
+          : t("failedToDeleteReview"))
     }
   }
 
@@ -345,16 +345,16 @@ fetchLimit, perfumeId, t, updateReviewsState
     const [error, response] = await safeAsync(() => submitForm("/api/reviews", formData))
 
     if (error) {
-      console.error(t("singlePerfume.review.failedToModerateReview"), error)
-      alert(t("singlePerfume.review.failedToModerateReview"))
+      console.error(t("failedToModerateReview"), error)
+      alert(t("failedToModerateReview"))
       return
     }
 
     const [jsonError, result] = await safeAsync(() => response.json())
 
     if (jsonError || !result.success) {
-      console.error(t("singlePerfume.review.failedToModerateReview"), jsonError)
-      alert(result?.error || t("singlePerfume.review.failedToModerateReview"))
+      console.error(t("failedToModerateReview"), jsonError)
+      alert(result?.error || t("failedToModerateReview"))
       return
     }
 
@@ -366,11 +366,11 @@ fetchLimit, perfumeId, t, updateReviewsState
     <div className="space-y-4">
       <div className="flex items-center justify-between bg-noir-dark rounded-lg p-4">
         <h2 className="text-xl font-semibold">
-          {t("singlePerfume.review.heading")} ({reviews.length})
+          {t("heading")} ({reviews.length})
         </h2>
         {canCreateReview && !userReview && (
           <Button onClick={() => setShowReviewForm(true)}>
-            {t("singlePerfume.review.writeReview")}
+            {t("writeReview")}
           </Button>
         )}
       </div>
@@ -380,13 +380,13 @@ fetchLimit, perfumeId, t, updateReviewsState
         <div className="border border-noir-gold bg-noir-dark rounded-lg p-4 space-y-4">
           <h3 className="text-lg font-medium text-gray-900">
             {editingReviewId 
-              ? t("singlePerfume.review.editYourReview")
-              : t("singlePerfume.review.writeYourReview")}
+              ? t("editYourReview")
+              : t("writeYourReview")}
           </h3>
           <RichTextEditor
             value={reviewContent}
             onChange={setReviewContent}
-            placeholder={t("singlePerfume.review.addReviewPlaceholder")}
+            placeholder={t("addReviewPlaceholder")}
             maxLength={2000}
           />
           <div className="flex justify-end space-x-2">
@@ -396,17 +396,17 @@ fetchLimit, perfumeId, t, updateReviewsState
               className="px-4 py-2 bg-noir-gold text-noir-black rounded-md hover:bg-noir-gold/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isSubmittingReview
-                ? t("singlePerfume.review.submitting")
+                ? t("submitting")
                 : editingReviewId
-                  ? t("singlePerfume.review.updateReview")
-                  : t("singlePerfume.review.submitReview")}
+                  ? t("updateReview")
+                  : t("submitReview")}
             </Button>
             <Button 
               onClick={handleCancelEdit}
               variant="secondary"
               disabled={isSubmittingReview}
             >
-              {t("singlePerfume.review.cancel")}
+              {t("cancel")}
             </Button>
           </div>
         </div>
@@ -416,7 +416,7 @@ fetchLimit, perfumeId, t, updateReviewsState
       {userReview && (
         <div className="space-y-2">
           <h3 className="text-lg font-medium text-gray-900">
-            {t("singlePerfume.review.yourReview")}
+            {t("yourReview")}
           </h3>
           <ReviewCard
             review={userReview}
@@ -454,14 +454,14 @@ fetchLimit, perfumeId, t, updateReviewsState
                 className="px-4 py-2 text-noir-gold hover:text-noir-gold/80 transition-colors disabled:opacity-60"
                 disabled={isLoadingMore}
               >
-                {t("singlePerfume.review.loadMoreReviews")}
+                {t("loadMoreReviews")}
               </button>
             </div>
           )}
         </div>
       ) : (
         <div className="text-center text-lg py-8 text-noir-gold">
-          <p>{t("singlePerfume.review.noReviews")}</p>
+          <p>{t("noReviews")}</p>
         </div>
       )}
     </div>

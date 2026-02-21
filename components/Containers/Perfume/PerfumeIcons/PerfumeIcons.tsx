@@ -10,7 +10,7 @@ import DangerModal from "~/components/Organisms/DangerModal"
 import Modal from "~/components/Organisms/Modal"
 import { useToggleWishlist } from "~/lib/mutations/wishlist"
 import { useSessionStore } from "~/stores/sessionStore"
-import { useTranslation } from "react-i18next"
+import { useTranslations } from "next-intl"
 
 interface Perfume {
   id: string
@@ -35,7 +35,9 @@ const PerfumeIcons = ({
   const { modalOpen, toggleModal, modalId } = useSessionStore()
   const [isPublic, setIsPublic] = useState(false)
   const [showWishlistForm, setShowWishlistForm] = useState(false)
-  const { t } = useTranslation()
+  const tCommon = useTranslations("common")
+  const tIcons = useTranslations("singlePerfume")
+  const tWishlist = useTranslations("wishlist.itemCard")
   
   // Use TanStack Query mutation for wishlist
   const toggleWishlist = useToggleWishlist()
@@ -90,8 +92,8 @@ const PerfumeIcons = ({
     {modalOpen && modalId === "delete-perfume-item" && (
         <Modal innerType="dark" animateStart="top">
           <DangerModal
-          heading={t("singlePerfume.dangerModal.heading")}
-          description={t("singlePerfume.dangerModal.description")}
+          heading={tIcons("dangerModal.heading")}
+          description={tIcons("dangerModal.description")}
           action={handleDelete} />
         </Modal>
       )}    
@@ -103,18 +105,18 @@ const PerfumeIcons = ({
           background="gold"
           size={"sm"}
           disabled={toggleWishlist.isPending}
-          aria-label={`${inWishlist ? t("common.remove") : t("common.add")} ${perfume.name} ${
+          aria-label={`${inWishlist ? tCommon("remove") : tCommon("add")} ${perfume.name} ${
             inWishlist ? "from" : "to"
           } wishlist`}
         >
           {inWishlist ? (
             <div className="flex items-center justify-between gap-2">
-              <span>{t("singlePerfume.icons.inWishlist")}</span>
+              <span>{tIcons("icons.inWishlist")}</span>
               <BsHeartFill size={20} />
             </div>
           ) : (
             <div className="flex items-center justify-between gap-2">
-              <span>{t("singlePerfume.icons.addButton")}</span>
+              <span>{tIcons("icons.addButton")}</span>
               <BsHearts size={20} />
             </div>
           )}
@@ -126,8 +128,8 @@ const PerfumeIcons = ({
               id={`public-${perfume.id}`}
               checked={isPublic}
               onChange={() => setIsPublic(!isPublic)}
-              labelChecked={t("wishlist.itemCard.public")}
-              labelUnchecked={t("wishlist.itemCard.private")}
+              labelChecked={tWishlist("public")}
+              labelUnchecked={tWishlist("private")}
             />
           </div>
           <div className="flex gap-2">
@@ -138,7 +140,7 @@ const PerfumeIcons = ({
               size={"sm"}
               disabled={toggleWishlist.isPending}
             >
-              {toggleWishlist.isPending ? t("common.adding") : t("singlePerfume.icons.addButton")}
+              {toggleWishlist.isPending ? tCommon("adding") : tIcons("icons.addButton")}
             </Button>
             <Button
               onClick={() => setShowWishlistForm(false)}
@@ -146,7 +148,7 @@ const PerfumeIcons = ({
               background="gold"
               size={"sm"}
             >
-              {t("common.cancel")}
+              {tCommon("cancel")}
             </Button>
           </div>
         </div>
@@ -166,7 +168,7 @@ const PerfumeIcons = ({
               className="flex items-center justify-between gap-2"
               url={`/admin/perfume/${perfume.slug}/edit`}
             >
-              <span>{t("singlePerfume.icons.editButton")}</span>
+              <span>{tIcons("icons.editButton")}</span>
               <GrEdit size={22} />
             </VooDooLink>
             <Button
@@ -180,7 +182,7 @@ const PerfumeIcons = ({
               background={"gold"}
               size={"sm"}
             >
-              <span>{t("singlePerfume.icons.deleteButton")}</span>
+              <span>{tIcons("icons.deleteButton")}</span>
               <MdDeleteForever size={22} />
             </Button>
           </div>

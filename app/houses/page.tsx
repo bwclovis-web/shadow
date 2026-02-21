@@ -1,36 +1,24 @@
 import type { Metadata } from "next"
-import { cookies } from "next/headers"
-
-import { getServerI18n } from "@/lib/i18n/server"
+import { getTranslations } from "next-intl/server"
 
 import AllHousesClient from "./AllHousesClient"
 
 export const ROUTE_PATH = "/houses"
 
 export const generateMetadata = async (): Promise<Metadata> => {
-  const cookieStore = await cookies()
-  const locale =
-    cookieStore.get("i18next")?.value ??
-    cookieStore.get("i18nextLng")?.value ??
-    "en"
-  const i18n = await getServerI18n(locale)
+  const t = await getTranslations("allHouses.meta")
   return {
-    title: i18n.t("allHouses.meta.title"),
-    description: i18n.t("allHouses.meta.description"),
+    title: t("title"),
+    description: t("description"),
   }
 }
 
 const HousesPage = async () => {
-  const cookieStore = await cookies()
-  const locale =
-    cookieStore.get("i18next")?.value ??
-    cookieStore.get("i18nextLng")?.value ??
-    "en"
-  const i18n = await getServerI18n(locale)
+  const t = await getTranslations("allHouses")
   return (
     <AllHousesClient
-      heading={i18n.t("allHouses.heading")}
-      subheading={i18n.t("allHouses.subheading")}
+      heading={t("heading")}
+      subheading={t("subheading")}
     />
   )
 }
