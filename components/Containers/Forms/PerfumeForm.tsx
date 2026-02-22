@@ -1,36 +1,36 @@
+"use client"
+
 import { getFormProps, useForm } from "@conform-to/react"
+import type { SubmissionResult } from "@conform-to/react"
 import { getZodConstraint, parseWithZod } from "@conform-to/zod"
 import { useEffect, useRef, useState } from "react"
-import { Form, useSubmit } from "react-router"
 
-import { Button } from "~/components/Atoms/Button/Button"
-import FormField from "~/components/Atoms/FormField/FormField"
-import HouseTypeahead from "~/components/Molecules/HouseTypeahead/HouseTypeahead"
-import Input from "~/components/Atoms/Input/Input"
-import { CSRFToken } from "~/components/Molecules/CSRFToken"
-import TagSearch from "~/components/Organisms/TagSearch/TagSearch"
-import { FORM_TYPES } from "~/utils/constants"
-import { CreatePerfumeSchema } from "~/utils/formValidationSchemas"
+import { Button } from "@/components/Atoms/Button/Button"
+import FormField from "@/components/Atoms/FormField/FormField"
+import HouseTypeahead from "@/components/Molecules/HouseTypeahead/HouseTypeahead"
+import Input from "@/components/Atoms/Input/Input"
+import { CSRFToken } from "@/components/Molecules/CSRFToken"
+import TagSearch from "@/components/Organisms/TagSearch/TagSearch"
+import { FORM_TYPES } from "@/constants/general"
+import { CreatePerfumeSchema } from "@/utils/validation/formValidationSchemas"
 
-// Type for perfume data used in the form
+type NoteItem = { id: string; name: string }
+
 type PerfumeFormData = {
   id?: string
   name?: string
   description?: string | null
   image?: string | null
   perfumeHouseId?: string | null
-  perfumeHouse?: {
-    id: string
-    name: string
-  } | null
-  perfumeNotesOpen?: Array<{ id: string; name: string }>
-  perfumeNotesHeart?: Array<{ id: string; name: string }>
-  perfumeNotesClose?: Array<{ id: string; name: string }>
+  perfumeHouse?: { id: string; name: string } | null
+  perfumeNotesOpen?: NoteItem[]
+  perfumeNotesHeart?: NoteItem[]
+  perfumeNotesClose?: NoteItem[]
 }
 
 interface PerfumeFormProps {
   formType: (typeof FORM_TYPES)[keyof typeof FORM_TYPES]
-  lastResult: any
+  lastResult: SubmissionResult | null
   data?: PerfumeFormData | null
   onSubmit?: (formData: FormData) => Promise<void> | void
   submitButtonText?: string
@@ -38,8 +38,10 @@ interface PerfumeFormProps {
   hideImage?: boolean
   hideNotes?: boolean
   allowCreateNotes?: boolean
+  /** For traditional form POST when onSubmit is not provided (e.g. Next.js server action URL) */
+  action?: string
 }
-/* eslint-disable complexity */
+
 const PerfumeForm = ({
   formType,
   lastResult,
@@ -50,130 +52,62 @@ const PerfumeForm = ({
   hideImage = false,
   hideNotes = false,
   allowCreateNotes = true,
+  action,
 }: PerfumeFormProps) => {
   const inputRef = useRef<HTMLInputElement | null>(null)
-  const submit = useSubmit()
-  const [topNotes, setTopNotes] = useState<any[]>(data?.perfumeNotesOpen || [])
-  const [heartNotes, setHeartNotes] = useState<any[]>(data?.perfumeNotesHeart || [])
-  const [baseNotes, setBaseNotes] = useState<any[]>(data?.perfumeNotesClose || [])
+  const [topNotes, setTopNotes] = useState<NoteItem[]>(data?.perfumeNotesOpen ?? [])
+  const [heartNotes, setHeartNotes] = useState<NoteItem[]>(data?.perfumeNotesHeart ?? [])
+  const [baseNotes, setBaseNotes] = useState<NoteItem[]>(data?.perfumeNotesClose ?? [])
   const [serverError, setServerError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    // Handle conform-to SubmissionResult format
-    if (lastResult && lastResult.status === "error") {
-      // If it's a conform-to error, the form fields will show the errors automatically
-      // Only set serverError for non-field-specific errors
-      if (typeof lastResult.error === "string") {
-        setServerError(lastResult.error)
-      }
+    if (lastResult?.status === "error" && typeof lastResult.error === "string") {
+      setServerError(lastResult.error)
     }
   }, [lastResult])
 
-  // Update state when data changes (e.g., when editing an existing perfume)
   useEffect(() => {
-    if (data?.perfumeNotesOpen) {
-      setTopNotes(data.perfumeNotesOpen)
-    }
-    if (data?.perfumeNotesHeart) {
-      setHeartNotes(data.perfumeNotesHeart)
-    }
-    if (data?.perfumeNotesClose) {
-      setBaseNotes(data.perfumeNotesClose)
-    }
-  }, [data])
-
-
-  // Dynamically update hidden inputs when note states change
-  useEffect(() => {
-    if (hideNotes) {
-      // Don't add note inputs if notes are hidden
-      return
-    }
-
-    const formElement = document.getElementById(formType)
-    if (!formElement) {
-      console.error("Form element not found with id:", formType)
-      return
-    }
-
-    // Remove existing note inputs
-    const existingInputs = formElement.querySelectorAll('input[name^="notes"]')
-    existingInputs.forEach(input => input.remove())
-
-    // Add current note states as hidden inputs
-    topNotes.forEach(note => {
-      if (!note.id) {
-        console.warn("Note missing id:", note)
-        return
-      }
-      const input = document.createElement("input")
-      input.type = "hidden"
-      input.name = "notesTop"
-      input.value = note.id
-      formElement.appendChild(input)
-    })
-
-    heartNotes.forEach(note => {
-      if (!note.id) {
-        console.warn("Note missing id:", note)
-        return
-      }
-      const input = document.createElement("input")
-      input.type = "hidden"
-      input.name = "notesHeart"
-      input.value = note.id
-      formElement.appendChild(input)
-    })
-
-    baseNotes.forEach(note => {
-      if (!note.id) {
-        console.warn("Note missing id:", note)
-        return
-      }
-      const input = document.createElement("input")
-      input.type = "hidden"
-      input.name = "notesBase"
-      input.value = note.id
-      formElement.appendChild(input)
-    })
-  }, [
-topNotes, heartNotes, baseNotes, formType, hideNotes
-])
+    if (data?.perfumeNotesOpen) setTopNotes(data.perfumeNotesOpen)
+    if (data?.perfumeNotesHeart) setHeartNotes(data.perfumeNotesHeart)
+    if (data?.perfumeNotesClose) setBaseNotes(data.perfumeNotesClose)
+  }, [data?.perfumeNotesOpen, data?.perfumeNotesHeart, data?.perfumeNotesClose])
 
   const [form, { name, description, image, house }] = useForm({
     id: formType,
-    lastResult: lastResult || null,
+    lastResult: lastResult ?? undefined,
     constraint: getZodConstraint(CreatePerfumeSchema),
-    onValidate({ formData }) {
-      return parseWithZod(formData, { schema: CreatePerfumeSchema })
-    },
+    onValidate: ({ formData }) =>
+      parseWithZod(formData, { schema: CreatePerfumeSchema }),
   })
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    if (onSubmit) {
-      event.preventDefault()
-      setServerError(null)
-      setSuccessMessage(null)
-
-      const formData = new FormData(event.currentTarget)
-      try {
-        await onSubmit(formData)
-        setSuccessMessage("Your submission has been received!")
-      } catch (error) {
-        setServerError(
-          error instanceof Error ? error.message : "Failed to submit request"
-        )
-      }
+    if (!onSubmit) return
+    event.preventDefault()
+    setServerError(null)
+    setSuccessMessage(null)
+    const formData = new FormData(event.currentTarget)
+    try {
+      await onSubmit(formData)
+      setSuccessMessage("Your submission has been received!")
+    } catch (error) {
+      setServerError(
+        error instanceof Error ? error.message : "Failed to submit request"
+      )
     }
   }
 
+  const formClassName =
+    className ??
+    "p-6 rounded-md noir-border max-w-6xl mx-auto bg-noir-dark/10 flex flex-col gap-3"
+
   return (
-    <Form
-      method={onSubmit ? undefined : "POST"}
+    <form
+      method={onSubmit ? undefined : "post"}
+      action={onSubmit ? undefined : action}
       {...getFormProps(form)}
       onSubmit={onSubmit ? handleSubmit : undefined}
-      className={className || "p-6 rounded-md noir-border max-w-6xl mx-auto bg-noir-dark/10 flex flex-col gap-3"}
+      className={formClassName}
     >
       <FormField label="Name" error={name?.errors?.[0]} required>
         <Input
@@ -182,7 +116,7 @@ topNotes, heartNotes, baseNotes, formType, hideNotes
           shading={true}
           ref={inputRef}
           inputId="name"
-          defaultValue={data?.name || ""}
+          defaultValue={data?.name ?? ""}
         />
       </FormField>
       <FormField label="Description" error={description?.errors?.[0]}>
@@ -192,7 +126,7 @@ topNotes, heartNotes, baseNotes, formType, hideNotes
           action={description}
           inputId="description"
           shading={true}
-          defaultValue={data?.description || ""}
+          defaultValue={data?.description ?? ""}
         />
       </FormField>
       {!hideImage && (
@@ -203,7 +137,7 @@ topNotes, heartNotes, baseNotes, formType, hideNotes
             inputRef={inputRef}
             action={image}
             inputId="image"
-            defaultValue={data?.image || ""}
+            defaultValue={data?.image ?? ""}
           />
         </FormField>
       )}
@@ -211,11 +145,11 @@ topNotes, heartNotes, baseNotes, formType, hideNotes
         <HouseTypeahead
           name="house"
           label="Perfume House"
-          defaultId={data?.perfumeHouseId || undefined}
+          defaultId={data?.perfumeHouseId ?? undefined}
           defaultName={data?.perfumeHouse?.name}
         />
-        {house.errors && (
-          <div className="text-red-400 text-sm mt-1">{house.errors}</div>
+        {house.errors?.[0] != null && (
+          <div className="text-red-400 text-sm mt-1">{house.errors[0]}</div>
         )}
       </div>
       {!hideNotes && (
@@ -223,47 +157,84 @@ topNotes, heartNotes, baseNotes, formType, hideNotes
           <TagSearch
             name="notesTop"
             label="Top Notes"
-            onChange={setTopNotes as any}
-            data={data?.perfumeNotesOpen as any}
+            onChange={setTopNotes}
+            data={data?.perfumeNotesOpen}
             allowCreate={allowCreateNotes}
           />
-
           <TagSearch
             name="notesHeart"
             label="Heart Notes"
-            onChange={setHeartNotes as any}
-            data={data?.perfumeNotesHeart as any}
+            onChange={setHeartNotes}
+            data={data?.perfumeNotesHeart}
             allowCreate={allowCreateNotes}
           />
-
           <TagSearch
             name="notesBase"
             label="Base Notes"
-            onChange={setBaseNotes as any}
-            data={data?.perfumeNotesClose as any}
+            onChange={setBaseNotes}
+            data={data?.perfumeNotesClose}
             allowCreate={allowCreateNotes}
           />
         </div>
       )}
+      {!hideNotes && (
+        <>
+          {topNotes.map(
+            (note) =>
+              note.id && (
+                <input
+                  key={`top-${note.id}`}
+                  type="hidden"
+                  name="notesTop"
+                  value={note.id}
+                />
+              )
+          )}
+          {heartNotes.map(
+            (note) =>
+              note.id && (
+                <input
+                  key={`heart-${note.id}`}
+                  type="hidden"
+                  name="notesHeart"
+                  value={note.id}
+                />
+              )
+          )}
+          {baseNotes.map(
+            (note) =>
+              note.id && (
+                <input
+                  key={`base-${note.id}`}
+                  type="hidden"
+                  name="notesBase"
+                  value={note.id}
+                />
+              )
+          )}
+        </>
+      )}
       <CSRFToken />
-      {data?.id && <input type="hidden" name="perfumeId" value={data.id} />}
-      {successMessage && (
+      {data?.id != null && (
+        <input type="hidden" name="perfumeId" value={data.id} />
+      )}
+      {successMessage != null && (
         <div className="bg-green-500 text-white text-lg font-semibold px-4 py-3 rounded-lg">
           {successMessage}
         </div>
       )}
-      {serverError && (
+      {serverError != null && (
         <div className="bg-red-500 text-lg font-semibold px-3 py-2 max-w-max rounded-2xl border-2 text-white">
           {serverError}
         </div>
       )}
       <Button type="submit" className="max-w-max">
-        {submitButtonText ||
+        {submitButtonText ??
           (formType === FORM_TYPES.CREATE_PERFUME_FORM
             ? "Create Perfume"
             : "Update Perfume")}
       </Button>
-    </Form>
+    </form>
   )
 }
 

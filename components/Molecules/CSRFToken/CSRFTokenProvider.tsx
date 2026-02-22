@@ -1,6 +1,6 @@
 import { createContext, type ReactNode, useContext } from "react"
 
-import { useCSRF } from "~/hooks/useCSRF"
+import { useCSRF } from "@/hooks/useCSRF"
 
 interface CSRFTokenContextType {
   csrfToken: string | null

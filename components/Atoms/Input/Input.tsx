@@ -2,7 +2,7 @@ import { type FieldMetadata, getInputProps } from "@conform-to/react"
 import { type VariantProps } from "class-variance-authority"
 import { forwardRef, type HTMLProps, type RefObject } from "react"
 
-import { styleMerge } from "~/utils/styleUtils"
+import { styleMerge } from "@/utils/styleUtils"
 
 import { inputVariants } from "./input-variants"
 
@@ -21,6 +21,13 @@ interface InputProps
   autoComplete?: string
 }
 
+const resolveAutoComplete = (
+  inputType: InputProps["inputType"],
+  autoComplete?: string
+): string | undefined =>
+  autoComplete ??
+  (inputType === "password" ? "current-password" : inputType === "email" ? "email" : undefined)
+
 const Input = forwardRef<HTMLInputElement, InputProps>(
   (
     {
@@ -38,30 +45,19 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     },
     ref
   ) => {
+    const resolvedAutoComplete = resolveAutoComplete(inputType, autoComplete)
     const inputProps = action
       ? {
           ...getInputProps(action, { ariaAttributes: true, type: inputType }),
-          id: inputId || action.id,
+          id: inputId ?? action.id,
           placeholder,
-          autoComplete:
-            autoComplete ||
-            (inputType === "password"
-              ? "current-password"
-              : inputType === "email"
-              ? "email"
-              : undefined),
+          autoComplete: resolvedAutoComplete,
         }
       : {
           id: inputId,
           type: inputType,
           placeholder,
-          autoComplete:
-            autoComplete ||
-            (inputType === "password"
-              ? "current-password"
-              : inputType === "email"
-              ? "email"
-              : undefined),
+          autoComplete: resolvedAutoComplete,
         }
 
     const setRef = (el: HTMLInputElement | null) => {
@@ -75,7 +71,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         ref={setRef}
         name={action?.name}
         defaultValue={defaultValue ?? ""}
-        aria-invalid={actionData?.errors?.[action?.name || ""] ? true : undefined}
+        aria-invalid={actionData?.errors?.[action?.name ?? ""] ? true : undefined}
         className={styleMerge(inputVariants({ shading }), className)}
         data-testid="Input"
         {...inputProps}

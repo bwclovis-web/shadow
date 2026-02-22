@@ -1,47 +1,54 @@
 import { type VariantProps } from "class-variance-authority"
+import type { ChangeEvent } from "react"
 import { type FC, type HTMLProps, useCallback, useEffect, useState } from "react"
 
-import { Button } from "~/components/Atoms/Button/Button"
-import Input from "~/components/Atoms/Input/Input"
-import { useDebouncedSearch } from "~/hooks/useDebouncedSearch"
-import { highlightSearchTerm } from "~/utils/highlightSearchTerm"
-import { styleMerge } from "~/utils/styleUtils"
+import { Button } from "@/components/Atoms/Button/Button"
+import Input from "@/components/Atoms/Input/Input"
+import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
+import type { Tag } from "@/lib/queries/tags"
+import { highlightSearchTerm } from "@/utils/highlightSearchTerm"
+import { styleMerge } from "@/utils/styleUtils"
 
 import CreateTagButton from "./Partials/CreateTagButton"
-import TagList from "./Partials/TagList"
+import { TagList } from "./Partials/TagList"
 import { tagSearchVariants } from "./tagsearch-variants"
+
+const TAG_SEARCH_API = "/api/getTag"
+
+const dropdownItemClasses =
+  "p-2 hover:bg-noir-gray hover:text-noir-light cursor-pointer last-of-type:rounded-b-md"
 
 interface TagSearchProps
   extends Omit<HTMLProps<HTMLDivElement>, "onChange" | "data">,
     VariantProps<typeof tagSearchVariants> {
-  onChange?: Function
+  onChange?: (tags: Tag[]) => void
   label?: string
-  data?: any[]
+  data?: Tag[]
   allowCreate?: boolean
 }
 
-const TagSearch: FC<TagSearchProps> = ({ className, onChange, label, data, allowCreate = true }) => {
+const TagSearch: FC<TagSearchProps> = ({
+  className,
+  onChange,
+  label,
+  data,
+  allowCreate = true,
+}) => {
   const initialTags = Array.isArray(data) ? data : []
-  const [selectedTags, setSelectedTags] = useState<any[]>(initialTags)
+  const [selectedTags, setSelectedTags] = useState<Tag[]>(initialTags)
 
-  // Sync internal state with parent data when it changes
   useEffect(() => {
     if (Array.isArray(data)) {
       setSelectedTags(data)
     }
   }, [data])
 
-  // Create search function for the debounced hook
   const searchFunction = useCallback(async (query: string) => {
-    const url = "/api/getTag"
-    const res = await fetch(`${url}?tag=${encodeURIComponent(query)}`)
-    if (!res.ok) {
-      throw new Error("Tag search request failed")
-    }
-    return await res.json()
+    const res = await fetch(`${TAG_SEARCH_API}?tag=${encodeURIComponent(query)}`)
+    if (!res.ok) throw new Error("Tag search request failed")
+    return (await res.json()) as Tag[]
   }, [])
 
-  // Use debounced search hook
   const {
     searchValue: inputValue,
     setSearchValue: setInputValue,
@@ -51,18 +58,18 @@ const TagSearch: FC<TagSearchProps> = ({ className, onChange, label, data, allow
     clearResults,
   } = useDebouncedSearch(searchFunction, { delay: 300, minLength: 1 })
 
-  const openDropdown =
+  const showDropdown =
     results.length > 0 ||
     isLoading ||
-    error ||
+    !!error ||
     (inputValue.length >= 1 && results.length === 0)
 
-  const handleItemClick = (item: any) => {
-    if (!selectedTags.find(t => t.id === item.id)) {
-      const newTags = [...selectedTags, item]
-      setSelectedTags(newTags)
-      onChange?.(newTags)
-    }
+  const handleItemClick = (item: Tag | { id: string; name?: string }) => {
+    if (selectedTags.some(t => t.id === item.id)) return
+    const tag: Tag = { id: item.id, name: item.name ?? "" }
+    const newTags = [...selectedTags, tag]
+    setSelectedTags(newTags)
+    onChange?.(newTags)
     clearResults()
   }
 
@@ -72,6 +79,12 @@ const TagSearch: FC<TagSearchProps> = ({ className, onChange, label, data, allow
     onChange?.(newTags)
   }
 
+  const handleInputChange = (evt: ChangeEvent<HTMLInputElement>) => {
+    setInputValue(evt.target.value)
+  }
+
+  const searchLabel = label ? `${label} search` : "Search"
+
   return (
     <div
       className={styleMerge(tagSearchVariants({ className }))}
@@ -79,21 +92,16 @@ const TagSearch: FC<TagSearchProps> = ({ className, onChange, label, data, allow
     >
       <div className="flex flex-col mb-6">
         <label htmlFor="tag-search" className="block-label">
-          {`${label} search`}
+          {searchLabel}
         </label>
         <Input
-          shading={true}
-          type="text"
+          shading
           autoComplete="off"
           id="tag-search"
           value={inputValue}
-          onChange={evt => {
-            setInputValue((evt.target as HTMLInputElement).value)
-          }}
-          inputType={""}
-          inputRef={null as any}
+          onChange={handleInputChange}
         />
-        {openDropdown && (
+        {showDropdown && (
           <ul className="bg-white rounded-b-md w-full absolute z-10">
             {isLoading && (
               <li className="p-2 text-center">
@@ -107,14 +115,8 @@ const TagSearch: FC<TagSearchProps> = ({ className, onChange, label, data, allow
             )}
             {!isLoading &&
               !error &&
-              results.map((item: any) => (
-                <li
-                  key={item.id}
-                  className={
-                    "p-2 hover:bg-noir-gray hover:text-noir-light " +
-                    "cursor-pointer last-of-type:rounded-b-md"
-                  }
-                >
+              results.map((item: Tag) => (
+                <li key={item.id} className={dropdownItemClasses}>
                   <Button
                     className="block w-full h-full"
                     type="button"
@@ -133,12 +135,7 @@ const TagSearch: FC<TagSearchProps> = ({ className, onChange, label, data, allow
                 </li>
               )}
             {allowCreate && (
-              <li
-                className={
-                  "p-2 hover:bg-noir-gray hover:text-noir-light " +
-                  "cursor-pointer last-of-type:rounded-b-md"
-                }
-              >
+              <li className={dropdownItemClasses}>
                 <CreateTagButton
                   action={handleItemClick}
                   setOpenDropdown={() => clearResults()}
@@ -156,4 +153,5 @@ const TagSearch: FC<TagSearchProps> = ({ className, onChange, label, data, allow
     </div>
   )
 }
+
 export default TagSearch

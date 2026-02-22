@@ -1,10 +1,10 @@
 import type { FieldMetadata } from "@conform-to/react"
-import type { FC, RefObject } from "react"
+import type { RefObject } from "react"
 
-import FormField from "~/components/Atoms/FormField/FormField"
-import Input from "~/components/Atoms/Input/Input"
-import Select from "~/components/Atoms/Select/Select"
-import countryData from "~/data/countryList.json"
+import FormField from "@/components/Atoms/FormField/FormField"
+import Input from "@/components/Atoms/Input/Input"
+import Select from "@/components/Atoms/Select/Select"
+import countryData from "@/data/countryList.json"
 
 interface AddressFieldsetProps {
   inputRef: RefObject<HTMLInputElement | null>
@@ -15,9 +15,17 @@ interface AddressFieldsetProps {
     country: string
   }
 }
-const AddressFieldset: FC<AddressFieldsetProps> = ({ inputRef, address, country, data }) => (
+
+const AddressFieldset = ({
+  inputRef,
+  address,
+  country,
+  data,
+}: AddressFieldsetProps) => (
   <fieldset className="flex gap-2">
-    <legend className="text-3xl text-noir-gold-100 font-bold mb-2">Address</legend>
+    <legend className="text-3xl text-noir-gold-100 font-bold mb-2">
+      Address
+    </legend>
     <div className="grid grid-cols-2 w-full gap-2">
       <FormField label="Address" error={address?.errors?.[0]}>
         <Input

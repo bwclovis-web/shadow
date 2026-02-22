@@ -1,0 +1,97 @@
+[
+  {
+    "id": "United States",
+    "name": "United States",
+    "label": "United States",
+    "code": "US"
+  },
+  {
+    "id": "Afghanistan",
+    "name": "Afghanistan",
+    "label": "Afghanistan",
+    "code": "AF"
+  },
+  {
+    "id": "Australia",
+    "name": "Australia",
+    "label": "Australia",
+    "code": "AU"
+  },
+  { "id": "Austria", "name": "Austria", "label": "Austria", "code": "AT" },
+  { "id": "Canada", "name": "Canada", "label": "Canada", "code": "CA" },
+  { "id": "China", "name": "China", "label": "China", "code": "CN" },
+  {
+    "id": "Costa Rica",
+    "name": "Costa Rica",
+    "label": "Costa Rica",
+    "code": "CR"
+  },
+  { "id": "Denmark", "name": "Denmark", "label": "Denmark", "code": "DK" },
+  { "id": "Egypt", "name": "Egypt", "label": "Egypt", "code": "EG" },
+  { "id": "France", "name": "France", "label": "France", "code": "FR" },
+  { "id": "Germany", "name": "Germany", "label": "Germany", "code": "DE" },
+  { "id": "Greece", "name": "Greece", "label": "Greece", "code": "GR" },
+  {
+    "id": "Greenland",
+    "name": "Greenland",
+    "label": "Greenland",
+    "code": "GL"
+  },
+  {
+    "id": "Hong Kong",
+    "name": "Hong Kong",
+    "label": "Hong Kong",
+    "code": "HK"
+  },
+  { "id": "Hungary", "name": "Hungary", "label": "Hungary", "code": "HU" },
+  { "id": "Iceland", "name": "Iceland", "label": "Iceland", "code": "IS" },
+  { "id": "India", "name": "India", "label": "India", "code": "IN" },
+  {
+    "id": "Indonesia",
+    "name": "Indonesia",
+    "label": "Indonesia",
+    "code": "ID"
+  },
+  { "id": "Ireland", "name": "Ireland", "label": "Ireland", "code": "IE" },
+  { "id": "Israel", "name": "Israel", "label": "Israel", "code": "IL" },
+  { "id": "Italy", "name": "Italy", "label": "Italy", "code": "IT" },
+  { "id": "Jamaica", "name": "Jamaica", "label": "Jamaica", "code": "JM" },
+  { "id": "Japan", "name": "Japan", "label": "Japan", "code": "JP" },
+  {
+    "id": "Madagascar",
+    "name": "Madagascar",
+    "label": "Madagascar",
+    "code": "MG"
+  },
+  { "id": "Mexico", "name": "Mexico", "label": "Mexico", "code": "MX" },
+  {
+    "id": "Netherlands",
+    "name": "Netherlands",
+    "label": "Netherlands",
+    "code": "NL"
+  },
+  { "id": "Pakistan", "name": "Pakistan", "label": "Pakistan", "code": "PK" },
+  { "id": "Spain", "name": "Spain", "label": "Spain", "code": "ES" },
+  { "id": "Sweden", "name": "Sweden", "label": "Sweden", "code": "SE" },
+  {
+    "id": "Switzerland",
+    "name": "Switzerland",
+    "label": "Switzerland",
+    "code": "CH"
+  },
+  { "id": "Thailand", "name": "Thailand", "label": "Thailand", "code": "TH" },
+  { "id": "Turkey", "name": "Turkey", "label": "Turkey", "code": "TR" },
+  { "id": "Ukraine", "name": "Ukraine", "label": "Ukraine", "code": "UA" },
+  {
+    "id": "United Arab Emirates",
+    "name": "United Arab Emirates",
+    "label": "United Arab Emirates",
+    "code": "AE"
+  },
+  {
+    "id": "United Kingdom",
+    "name": "United Kingdom",
+    "label": "United Kingdom",
+    "code": "GB"
+  }
+]

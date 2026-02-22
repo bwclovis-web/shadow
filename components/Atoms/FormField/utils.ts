@@ -34,14 +34,14 @@ export const getFieldStateClasses = ({
 
 export const getAriaDescribedBy = (
   error?: string,
-  helpText?: string,
+  helpTextId?: string,
   success?: string,
   warning?: string,
   info?: string
 ): string | undefined => {
   const ids = [
     error && "error-message",
-    helpText && "help-text",
+    helpTextId,
     success && "success-message",
     warning && "warning-message",
     info && "info-message",

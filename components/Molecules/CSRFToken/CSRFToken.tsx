@@ -1,4 +1,4 @@
-import { useCSRF } from "~/hooks/useCSRF"
+import { useCSRF } from "@/hooks/useCSRF"
 
 interface CSRFTokenProps {
   name?: string

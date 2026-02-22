@@ -1,4 +1,10 @@
-import { cloneElement, forwardRef, type ReactElement, type ReactNode } from "react"
+import {
+  cloneElement,
+  forwardRef,
+  useId,
+  type ReactElement,
+  type ReactNode,
+} from "react"
 
 import ValidationMessage from "../ValidationMessage/ValidationMessage"
 import FormFieldLabel from "./FormFieldLabel"
@@ -21,7 +27,15 @@ export interface FormFieldProps {
   showValidationIcon?: boolean
 }
 
-const FormField = forwardRef<HTMLDivElement, FormFieldProps>((
+type ChildProps = {
+  className?: string
+  disabled?: boolean
+  "aria-invalid"?: boolean
+  "aria-describedby"?: string
+}
+
+const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
+  (
     {
       label,
       error,
@@ -39,31 +53,30 @@ const FormField = forwardRef<HTMLDivElement, FormFieldProps>((
     },
     ref
   ) => {
-    const hasError = !!error
-    const hasSuccess = !!success
-    const hasWarning = !!warning
-    const hasInfo = !!info
-
-    const fieldStateClasses = getFieldStateClasses({
-      hasError,
-      hasSuccess,
-      hasWarning,
-      hasInfo,
+    const helpTextId = useId()
+    const state = {
+      hasError: !!error,
+      hasSuccess: !!success,
+      hasWarning: !!warning,
+      hasInfo: !!info,
       disabled,
-    })
-
-    const ariaDescribedBy = 
-      getAriaDescribedBy(error, helpText, success, warning, info)
-
+    }
+    const fieldStateClasses = getFieldStateClasses(state)
+    const ariaDescribedBy = getAriaDescribedBy(
+      error,
+      helpText ? helpTextId : undefined,
+      success,
+      warning,
+      info
+    )
     const shouldShowValidationIcon =
-      showValidationIcon && (hasError || hasSuccess || hasWarning || hasInfo)
+      showValidationIcon &&
+      (state.hasError || state.hasSuccess || state.hasWarning || state.hasInfo)
 
-    const childElement = children as ReactElement<{
-      className?: string
-      disabled?: boolean
-      "aria-invalid"?: boolean
-      "aria-describedby"?: string
-    }>
+    const childElement = children as ReactElement<ChildProps>
+    const mergedClassName = [childElement.props.className, fieldStateClasses]
+      .filter(Boolean)
+      .join(" ")
 
     return (
       <div ref={ref} className={`space-y-1 ${className}`}>
@@ -76,22 +89,26 @@ const FormField = forwardRef<HTMLDivElement, FormFieldProps>((
 
         <div className={`relative ${fieldClassName}`}>
           {cloneElement(childElement, {
-            className: `${childElement.props.className || ""} ${fieldStateClasses}`,
+            className: mergedClassName,
             disabled,
-            "aria-invalid": hasError,
+            "aria-invalid": state.hasError,
             "aria-describedby": ariaDescribedBy,
           })}
 
           {shouldShowValidationIcon && (
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              <ValidationIcon 
-                error={error} success={success} warning={warning} info={info} />
+              <ValidationIcon
+                error={error}
+                success={success}
+                warning={warning}
+                info={info}
+              />
             </div>
           )}
         </div>
 
         {helpText && (
-          <p id="help-text" className="text-sm text-noir-gold-500">
+          <p id={helpTextId} className="text-sm text-noir-gold-500">
             {helpText}
           </p>
         )}
@@ -105,7 +122,8 @@ const FormField = forwardRef<HTMLDivElement, FormFieldProps>((
         />
       </div>
     )
-  })
+  }
+)
 
 FormField.displayName = "FormField"
 

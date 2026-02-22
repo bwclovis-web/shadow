@@ -1,7 +1,7 @@
-import type { FC, RefObject } from "react"
+import type { RefObject } from "react"
 
-import FormField from "~/components/Atoms/FormField/FormField"
-import Input from "~/components/Atoms/Input/Input"
+import FormField from "@/components/Atoms/FormField/FormField"
+import Input from "@/components/Atoms/Input/Input"
 
 interface ContactFieldsetProps {
   inputRef: RefObject<HTMLInputElement | null>
@@ -16,7 +16,8 @@ interface ContactFieldsetProps {
     website: any
   }
 }
-const ContactFieldset: FC<ContactFieldsetProps> = ({ inputRef, data, actions }) => (
+
+const ContactFieldset = ({ inputRef, data, actions }: ContactFieldsetProps) => (
   <fieldset className="grid  grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 ">
     <legend className="text-3xl text-noir-gold-100 font-bold mb-2">Contact</legend>
     <FormField label="Phone" error={actions.phone?.errors?.[0]}>

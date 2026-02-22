@@ -1,7 +1,7 @@
-import FormField from "~/components/Atoms/FormField/FormField"
-import Input from "~/components/Atoms/Input/Input"
-import Select from "~/components/Atoms/Select/Select"
-import { houseTypes } from "~/data/SelectTypes"
+import FormField from "@/components/Atoms/FormField/FormField"  
+import Input from "@/components/Atoms/Input/Input"
+import Select from "@/components/Atoms/Select/Select"
+import { houseTypes } from "@/data/SelectTypes"
 const InfoFieldset = ({ data, actions, hideImage = false }) => (
   <fieldset className="flex flex-col gap-2">
     <legend className="text-3xl text-noir-gold-100 font-bold mb-2">Info</legend>

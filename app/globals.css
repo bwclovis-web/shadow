@@ -29,7 +29,7 @@ html {
 
 html,
 body {
-  @apply dark:bg-gray-950 min-h-screen dark:text-noir-light font-sans text-base leading-7;
+  @apply dark:bg-gray-950 min-h-screen dark:text-noir-light font-sans text-base leading-7 bg-noir-black;
   text-rendering: optimizeSpeed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

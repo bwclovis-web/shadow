@@ -1,21 +1,24 @@
-import { Button } from "~/components/Atoms/Button/Button"
+import { Button } from "@/components/Atoms/Button/Button"
+
+type TagItem = { id: string; name: string }
 
 interface TagListProps {
-  selectedTags: any[]
+  selectedTags: TagItem[]
   label?: string
-   
   onRemoveTag?: (tagId: string) => void
 }
 
-const TagList = ({ selectedTags, label, onRemoveTag }: TagListProps) => (
+const listItemClasses =
+  "flex items-center gap-1 p-2 hover:bg-noir-gray hover:text-noir-light cursor-pointer last-of-type:rounded-b-md whitespace-nowrap"
+
+export const TagList = ({ selectedTags, label, onRemoveTag }: TagListProps) => (
   <div className="flex flex-col gap-2 h-20 absolute bottom-0 w-full">
-    <label htmlFor="tag-search" className="block-label">{`Current ${label}`}</label>
-    <ul className="bg-white flex rounded-b-md w-full h-full overflow-x-auto">
-      {selectedTags.map((item: any) => (
-        <li
-          key={item.id}
-          className="flex items-center gap-1 p-2 hover:bg-noir-gray hover:text-noir-light cursor-pointer last-of-type:rounded-b-md whitespace-nowrap"
-        >
+    <span className="block-label" aria-hidden>
+      {label ? `Current ${label}` : "Selected tags"}
+    </span>
+    <ul className="bg-white flex rounded-b-md w-full h-full overflow-x-auto" role="list">
+      {selectedTags.map(item => (
+        <li key={item.id} className={listItemClasses}>
           <span>{item.name}</span>
           {onRemoveTag && (
             <Button
@@ -32,5 +35,3 @@ const TagList = ({ selectedTags, label, onRemoveTag }: TagListProps) => (
     </ul>
   </div>
 )
-
-export default TagList

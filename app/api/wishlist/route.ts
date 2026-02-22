@@ -8,7 +8,7 @@ import { processDecantInterestAlerts } from "@/utils/alert-processors"
 import { authenticateUser } from "@/utils/server/auth.server"
 import { ErrorHandler } from "@/utils/errorHandling"
 import { validationError } from "@/utils/errorHandling.patterns"
-import { WishlistActionSchema } from "@/utils/formValidationSchemas"
+import { WishlistActionSchema } from "@/utils/validation/formValidationSchemas"
 import { validateFormData } from "@/utils/validation"
 
 export async function POST(request: NextRequest) {

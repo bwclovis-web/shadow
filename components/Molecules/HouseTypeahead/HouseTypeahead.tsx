@@ -8,7 +8,12 @@ import {
 } from "react"
 import { createPortal } from "react-dom"
 
-import { styleMerge } from "~/utils/styleUtils"
+import { styleMerge } from "@/utils/styleUtils"
+
+interface PerfumeHouseOption {
+  id: string
+  name: string
+}
 
 interface HouseTypeaheadProps {
   label?: string
@@ -25,9 +30,9 @@ const HouseTypeahead = ({
   defaultName,
   className,
 }: HouseTypeaheadProps) => {
-  const [results, setResults] = useState<any[]>([])
-  const [searchValue, setSearchValue] = useState(defaultName || "")
-  const [selectedId, setSelectedId] = useState(defaultId || "")
+  const [results, setResults] = useState<PerfumeHouseOption[]>([])
+  const [searchValue, setSearchValue] = useState(defaultName ?? "")
+  const [selectedId, setSelectedId] = useState(defaultId ?? "")
   const [dropdownPosition, setDropdownPosition] = useState({
     top: 0,
     left: 0,
@@ -35,6 +40,7 @@ const HouseTypeahead = ({
   })
   const [showDropdown, setShowDropdown] = useState(false)
   const inputId = useId()
+  const dropdownId = `${inputId}-listbox`
   const wrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -46,7 +52,6 @@ const HouseTypeahead = ({
     }
   }, [defaultName, defaultId])
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
@@ -54,11 +59,8 @@ const HouseTypeahead = ({
         setResults([])
       }
     }
-
     document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
+    return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
   const handleSearch = async (query: string) => {
@@ -67,14 +69,12 @@ const HouseTypeahead = ({
       setShowDropdown(false)
       return
     }
-
     try {
       const res = await fetch(`/api/perfume-houses?name=${encodeURIComponent(query)}`)
       const data = await res.json()
-      // Search results loaded
-      setResults(data)
-
-      if (data.length > 0) {
+      const list = Array.isArray(data) ? data : []
+      setResults(list)
+      if (list.length > 0) {
         const input = document.getElementById(inputId) as HTMLInputElement
         if (input) {
           const rect = input.getBoundingClientRect()
@@ -111,7 +111,7 @@ const HouseTypeahead = ({
     await handleSearch(query)
   }
 
-  const handleSelect = (item: any) => {
+  const handleSelect = (item: PerfumeHouseOption) => {
     setSearchValue(item.name)
     setSelectedId(item.id)
     setShowDropdown(false)
@@ -132,6 +132,9 @@ const HouseTypeahead = ({
         type="text"
         id={inputId}
         autoComplete="off"
+        aria-expanded={showDropdown}
+        aria-haspopup="listbox"
+        aria-controls={dropdownId}
         onChange={handleChange}
         value={searchValue}
         placeholder="Search for a perfume house..."
@@ -142,7 +145,6 @@ const HouseTypeahead = ({
             ? "border-green-500/50"
             : "border-noir-gold/30 focus:border-noir-gold"
         )}
-        
       />
       <input type="hidden" name={name} value={selectedId} />
       {selectedId && <p className="text-xs text-green-400 mt-1">✓ House selected</p>}
@@ -151,16 +153,19 @@ const HouseTypeahead = ({
         showDropdown &&
         createPortal(
           <ul
-            className="bg-noir-dark rounded-b-md border-l-8 border-b-8 absolute border-r-8 border-noir-gold/80 border-double z-[99999] max-h-52 overflow-y-auto shadow-2xl"
+            id={dropdownId}
+            role="listbox"
+            className="bg-noir-dark rounded-b-md border-l-8 border-b-8 absolute border-r-8 border-noir-gold/80 border-double z-99999 max-h-52 overflow-y-auto shadow-2xl"
             style={{
               top: dropdownPosition.top,
               left: dropdownPosition.left,
               width: dropdownPosition.width,
             }}
           >
-            {results.map((item: any) => (
+            {results.map((item) => (
               <li
                 key={item.id}
+                role="option"
                 className="p-2 text-noir-gold-100 hover:bg-noir-gold hover:text-noir-black font-semibold cursor-pointer last-of-type:rounded-b-md transition-colors"
               >
                 <button
