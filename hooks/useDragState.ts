@@ -1,6 +1,6 @@
-import React, { useCallback, useRef } from "react"
+import React, { useCallback, useRef, useState } from "react"
 
-import { sliderAnimations } from "~/utils/rangeSliderUtils"
+import { sliderAnimations } from "@/utils/rangeSliderUtils"
 
 interface UseDragStateOptions {
   onValueChange: (value: number) => void
@@ -14,6 +14,7 @@ export const useDragState = ({
   thumbRef,
 }: UseDragStateOptions) => {
   const isDraggingRef = useRef(false)
+  const [isDragging, setIsDragging] = useState(false)
 
   const handleMouseMove = useCallback(
     (event: Event) => {
@@ -49,12 +50,12 @@ export const useDragState = ({
       return
     }
     isDraggingRef.current = false
+    setIsDragging(false)
     if (thumbRef.current) {
       sliderAnimations.animateScale(thumbRef.current, 1.2)
     }
     document.removeEventListener("mousemove", handleMouseMove)
     document.removeEventListener("mouseup", handleMouseUp)
-    // Clean up touch events as well
     document.removeEventListener("touchmove", handleTouchMove)
     document.removeEventListener("touchend", handleMouseUp)
     document.removeEventListener("touchcancel", handleMouseUp)
@@ -63,6 +64,7 @@ export const useDragState = ({
   const startDragging = useCallback(
     (clientX: number) => {
       isDraggingRef.current = true
+      setIsDragging(true)
 
       const newValue = calculateValue(clientX)
       onValueChange(newValue)
@@ -73,10 +75,7 @@ export const useDragState = ({
 
       document.addEventListener("mousemove", handleMouseMove)
       document.addEventListener("mouseup", handleMouseUp)
-      // Add touch event listeners
-      document.addEventListener("touchmove", handleTouchMove, {
-        passive: false,
-      })
+      document.addEventListener("touchmove", handleTouchMove, { passive: false })
       document.addEventListener("touchend", handleMouseUp)
       document.addEventListener("touchcancel", handleMouseUp)
     },
@@ -91,7 +90,7 @@ export const useDragState = ({
   )
 
   return {
-    isDragging: isDraggingRef.current,
+    isDragging,
     startDragging,
   }
 }

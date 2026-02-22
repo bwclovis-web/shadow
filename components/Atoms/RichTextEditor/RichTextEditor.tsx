@@ -1,13 +1,36 @@
-import { type FormEvent, useEffect, useRef, useState } from "react"
-import { type KeyboardEvent } from "react"
 import {
-  type DetailedHTMLProps,
-  type HTMLAttributes,
-  type StyleHTMLAttributes,
+  type FormEvent,
+  type KeyboardEvent,
+  useEffect,
+  useRef,
+  useState,
 } from "react"
 
-import { sanitizeReviewHtml } from "~/utils/sanitize"
-import { styleMerge } from "~/utils/styleUtils"
+import { sanitizeReviewHtml } from "@/utils/sanitize"
+import { styleMerge } from "@/utils/styleUtils"
+
+const FORMAT_BUTTONS = [
+  { command: "bold", icon: "B", title: "Bold" },
+  { command: "italic", icon: "I", title: "Italic" },
+  { command: "underline", icon: "U", title: "Underline" },
+  { command: "insertUnorderedList", icon: "•", title: "Bullet List" },
+  { command: "insertOrderedList", icon: "1.", title: "Numbered List" },
+] as const
+
+const KEYS_ALLOWED_AT_MAX_LENGTH = new Set([
+  "Backspace",
+  "Delete",
+  "ArrowLeft",
+  "ArrowRight",
+  "ArrowUp",
+  "ArrowDown",
+])
+
+const getTextLength = (html: string) => {
+  const temp = document.createElement("div")
+  temp.innerHTML = html
+  return temp.textContent?.length || 0
+}
 
 interface RichTextEditorProps {
   value?: string
@@ -40,78 +63,54 @@ const RichTextEditor = ({
     }
   }, [value])
 
-  const getTextLength = (html: string) => {
-    const temp = document.createElement("div")
-    temp.innerHTML = html
-    return temp.textContent?.length || 0
+  const syncContentAndNotify = () => {
+    if (!editorRef.current || !onChange) return null
+    const raw = editorRef.current.innerHTML
+    const content = sanitizeReviewHtml(raw)
+    if (content !== raw && editorRef.current.innerHTML !== content) {
+      editorRef.current.innerHTML = content
+    }
+    const textLength = getTextLength(content)
+    setCurrentLength(textLength)
+    return { content, textLength }
   }
 
   const handleInput = (evt: FormEvent<HTMLDivElement>) => {
-    if (editorRef.current && onChange) {
-      const raw = editorRef.current.innerHTML
-      const content = sanitizeReviewHtml(raw)
-      // If sanitization removed something (e.g. script), keep editor in sync
-      if (content !== raw && editorRef.current.innerHTML !== content) {
-        editorRef.current.innerHTML = content
-      }
-      const textLength = getTextLength(content)
-
-      if (textLength <= maxLength) {
-        setCurrentLength(textLength)
-        onChange(content)
-      } else {
-        evt.preventDefault()
-        editorRef.current.innerHTML = sanitizeReviewHtml(value)
+    const result = syncContentAndNotify()
+    if (!result) return
+    const { content, textLength } = result
+    if (textLength <= maxLength) {
+      onChange?.(content)
+    } else {
+      evt.preventDefault()
+      if (editorRef.current) {
+        const reverted = sanitizeReviewHtml(value)
+        editorRef.current.innerHTML = reverted
+        setCurrentLength(getTextLength(reverted))
       }
     }
   }
 
   const handleKeyDown = (evt: KeyboardEvent<HTMLDivElement>) => {
-    // Allow normal typing, but prevent if we're at the limit
-    if (editorRef.current) {
-      const currentLength = getTextLength(editorRef.current.innerHTML)
-      if (
-        currentLength >= maxLength &&
-        evt.key !== "Backspace" &&
-        evt.key !== "Delete" &&
-        evt.key !== "ArrowLeft" &&
-        evt.key !== "ArrowRight" &&
-        evt.key !== "ArrowUp" &&
-        evt.key !== "ArrowDown"
-      ) {
-        evt.preventDefault()
-      }
+    if (!editorRef.current) return
+    const len = getTextLength(editorRef.current.innerHTML)
+    if (len >= maxLength && !KEYS_ALLOWED_AT_MAX_LENGTH.has(evt.key)) {
+      evt.preventDefault()
     }
   }
 
   const execCommand = (command: string, value?: string) => {
     document.execCommand(command, false, value)
     editorRef.current?.focus()
-    if (editorRef.current && onChange) {
-      const raw = editorRef.current.innerHTML
-      const content = sanitizeReviewHtml(raw)
-      if (content !== raw && editorRef.current.innerHTML !== content) {
-        editorRef.current.innerHTML = content
-      }
-      const textLength = getTextLength(content)
-      setCurrentLength(textLength)
-      onChange(content)
-    }
+    const result = syncContentAndNotify()
+    if (result) onChange?.(result.content)
   }
-
-  const formatButtons = [
-    { command: "bold", icon: "B", title: "Bold" },
-    { command: "italic", icon: "I", title: "Italic" },
-    { command: "underline", icon: "U", title: "Underline" },
-    { command: "insertUnorderedList", icon: "•", title: "Bullet List" },
-    { command: "insertOrderedList", icon: "1.", title: "Numbered List" },
-  ]
 
   return (
     <div className={styleMerge("rich-text-editor", className)}>
       {/* Toolbar */}
       <div className="flex flex-wrap gap-1 p-2 border-b border-gray-300 bg-noir-gold-100 rounded-t-md">
-        {formatButtons.map(button => (
+        {FORMAT_BUTTONS.map(button => (
           <button
             key={button.command}
             type="button"

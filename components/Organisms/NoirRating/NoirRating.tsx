@@ -1,5 +1,4 @@
- 
-import { useEffect, useState } from "react"
+ import { useState } from "react"
 
 import RatingLabel from "./RatingLabel"
 import StarRating from "./StarRating"
@@ -22,15 +21,11 @@ const NoirRating = ({
   showLabel = true,
 }: NoirRatingProps) => {
   const [hoverValue, setHoverValue] = useState<number | null>(null)
-  const [displayValue, setDisplayValue] = useState(value || 0)
+  const [displayValue, setDisplayValue] = useState(value ?? 0)
+
   const isInteractive = !readonly && Boolean(onChange)
-
-  // Update display value when prop value changes
-  useEffect(() => {
-    setDisplayValue(value || 0)
-  }, [value])
-
-  const currentValue = hoverValue || displayValue
+  const baseValue = value !== undefined && value !== null ? value : displayValue
+  const currentValue = hoverValue ?? baseValue
 
   const handleChange = (rating: number) => {
     setDisplayValue(rating)

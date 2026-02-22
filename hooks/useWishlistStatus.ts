@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 
-import { getWishlist, queryKeys } from "~/lib/queries/user"
+import { getWishlist, queryKeys } from "@/lib/queries/user"
 
 /**
  * Hook to check if a perfume is in the user's wishlist.
@@ -17,8 +17,8 @@ import { getWishlist, queryKeys } from "~/lib/queries/user"
  * const { data: isInWishlist, isLoading } = useWishlistStatus(perfumeId, userId)
  * ```
  */
-export function useWishlistStatus(perfumeId: string, userId: string) {
-  return useQuery({
+export const useWishlistStatus = (perfumeId: string, userId: string) =>
+  useQuery({
     queryKey: [...queryKeys.user.wishlist(userId), "status", perfumeId],
     queryFn: async () => {
       if (!userId || !perfumeId) {
@@ -33,9 +33,7 @@ export function useWishlistStatus(perfumeId: string, userId: string) {
       return wishlistItems.some((item: any) => item.perfumeId === perfumeId || item.perfume?.id === perfumeId)
     },
     enabled: !!perfumeId && !!userId,
-    staleTime: 1 * 60 * 1000, // 1 minute (wishlist status can change)
-    // Use cached wishlist data if available
-    select: data => data ?? false,
+    staleTime: 60 * 1000, // 1 minute (wishlist status can change)
+    select: (data) => data ?? false, // Always return boolean for consumers
   })
-}
 

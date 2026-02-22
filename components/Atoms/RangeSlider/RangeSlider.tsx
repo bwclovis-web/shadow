@@ -1,9 +1,8 @@
- 
-import { type VariantProps } from "class-variance-authority"
-import { type HTMLAttributes, useCallback, useEffect, useState } from "react"
+ import { type VariantProps } from "class-variance-authority"
+import { type HTMLAttributes, useEffect, useState } from "react"
 
-import { useRangeSlider } from "~/hooks/useRangeSlider"
-import { styleMerge } from "~/utils/styleUtils"
+import { useRangeSlider } from "@/hooks/useRangeSlider"
+import { styleMerge } from "@/utils/styleUtils"
 
 import {
   rangeSliderFillVariants,
@@ -11,6 +10,18 @@ import {
   rangeSliderVariants,
   rangeSliderWrapVariants,
 } from "./rangeSlider-variants"
+
+const formatDisplay = (value: number, formatValue?: (value: number) => string) =>
+  formatValue ? formatValue(value) : value.toString()
+
+const thumbBaseClasses =
+  "absolute top-1/2 w-8 h-8 -translate-y-1/2 -translate-x-1/2 flex items-center justify-center cursor-pointer transition-colors z-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+const thumbKnobClasses =
+  "w-5 h-5 bg-white border-2 border-noir-gold rounded-full shadow-md"
+const focusRingClasses =
+  "absolute top-1/2 w-6 h-6 -translate-y-1/2 -translate-x-1/2 border-2 border-transparent rounded-full transition-all pointer-events-none"
+const inputBaseClasses =
+  "w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-300"
 
 interface RangeSliderProps
   extends Omit<HTMLAttributes<HTMLDivElement>, "onChange">,
@@ -63,58 +74,41 @@ const RangeSlider = ({
     disabled,
   })
 
-  // Manual input state
-  const [inputValue, setInputValue] = useState(formatValue ? formatValue(internalValue) : internalValue.toString())
+  const [inputValue, setInputValue] = useState(() =>
+    formatDisplay(internalValue, formatValue)
+  )
   const [isInputFocused, setIsInputFocused] = useState(false)
 
-  const updateInputValue = useCallback(() => {
-    if (!isInputFocused) {
-      setInputValue(formatValue ? formatValue(internalValue) : internalValue.toString())
-    }
-  }, [formatValue, internalValue, isInputFocused])
-
-  // Update input value when internal value changes
   useEffect(() => {
-    updateInputValue()
-  }, [updateInputValue])
+    if (!isInputFocused) {
+      setInputValue(formatDisplay(internalValue, formatValue))
+    }
+  }, [internalValue, isInputFocused, formatValue])
 
-  // Handle manual input changes
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = event.target.value
-    setInputValue(newValue)
+    setInputValue(event.target.value)
   }
 
-  // Handle manual input blur/enter - validate and update slider
   const handleInputBlur = () => {
     setIsInputFocused(false)
     const numericValue = parseFloat(inputValue)
 
     if (!isNaN(numericValue)) {
-      // Clamp value to min/max bounds
       const clampedValue = Math.min(Math.max(numericValue, min), max)
-      // Round to step precision
       const steppedValue = Math.round(clampedValue / step) * step
-
       if (steppedValue !== internalValue) {
         onChange?.(steppedValue)
       }
-      setInputValue(formatValue ? formatValue(steppedValue) : steppedValue.toString())
+      setInputValue(formatDisplay(steppedValue, formatValue))
     } else {
-      // Reset to current value if invalid
-      setInputValue(formatValue ? formatValue(internalValue) : internalValue.toString())
+      setInputValue(formatDisplay(internalValue, formatValue))
     }
   }
 
-  // Handle manual input focus
-  const handleInputFocus = () => {
-    setIsInputFocused(true)
-  }
+  const handleInputFocus = () => setIsInputFocused(true)
 
-  // Handle Enter key in input
   const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      event.currentTarget.blur()
-    }
+    if (event.key === "Enter") event.currentTarget.blur()
   }
 
   return (
@@ -123,7 +117,7 @@ const RangeSlider = ({
         <div className="flex justify-between items-center text-md">
           <span>{label}</span>
           <span className="font-medium">
-            {formatValue ? formatValue(internalValue) : internalValue + "ml"}
+            {formatValue ? formatValue(internalValue) : `${internalValue}ml`}
           </span>
         </div>
       )}
@@ -158,33 +152,29 @@ const RangeSlider = ({
           role="button"
           tabIndex={disabled ? -1 : 0}
           aria-label={`Slider thumb, current value: ${internalValue}`}
-          className={`
-            absolute top-1/2 w-8 h-8 -translate-y-1/2 -translate-x-1/2
-            flex items-center justify-center
-            cursor-pointer transition-colors z-10
-            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-            ${disabled ? "opacity-50 cursor-not-allowed" : ""}
-          `}
+          className={styleMerge(
+            thumbBaseClasses,
+            disabled && "opacity-50 cursor-not-allowed"
+          )}
           onMouseDown={handleMouseDown}
           onTouchStart={handleTouchStart}
           onKeyDown={handleKeyDown}
           style={{ left: `${percentage}%` }}
         >
           <div
-            className={`
-            w-5 h-5 bg-white border-2 border-noir-gold rounded-full shadow-md
-            ${disabled ? "border-gray-400" : "hover:border-noir-gold-100"}
-            ${isDragging ? "border-noir-gold" : ""}
-          `}
-          ></div>
+            className={styleMerge(
+              thumbKnobClasses,
+              disabled ? "border-gray-400" : "hover:border-noir-gold-100",
+              isDragging && "border-noir-gold"
+            )}
+          />
         </div>
 
         <div
-          className={`
-            absolute top-1/2 w-6 h-6 -translate-y-1/2 -translate-x-1/2
-            border-2 border-transparent rounded-full transition-all pointer-events-none
-            ${isDragging ? "border-blue-400 scale-150" : ""}
-          `}
+          className={styleMerge(
+            focusRingClasses,
+            isDragging && "border-blue-400 scale-150"
+          )}
           style={{ left: `${percentage}%` }}
         />
       </div>
@@ -204,16 +194,12 @@ const RangeSlider = ({
             min={min}
             max={max}
             step={step}
-            className={`
-              w-full px-3 py-2 text-sm border rounded-md
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-              ${
-                disabled
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-white text-gray-900"
-              }
-              border-gray-300
-            `}
+            className={styleMerge(
+              inputBaseClasses,
+              disabled
+                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                : "bg-white text-gray-900"
+            )}
           />
         </div>
       )}

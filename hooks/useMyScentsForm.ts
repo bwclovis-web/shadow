@@ -1,18 +1,7 @@
-// NOTE: This hook could be refactored to use a more structured approach
-// Potential improvements:
-// 1. Use useReducer instead of multiple useState calls for better state management
-// 2. Extract form validation logic into a separate utility
-// 3. Add TypeScript strict types for form data
-// 4. Consider using a form library like react-hook-form or formik for complex validation
-// 5. Add error handling and loading states
-// Current implementation is functional but could be more maintainable for larger forms
-
-import React from "react"
 import { useCallback, useEffect, useState } from "react"
-import { useSubmit } from "react-router"
 
-import { useCSRF } from "~/hooks/useCSRF"
-import type { UserPerfumeI } from "~/types"
+import { useCSRF } from "@/hooks/useCSRF"
+import type { UserPerfumeI } from "@/types"
 
 // Helper functions to get initial state values
 function getInitialPerfumeState(initialPerfume?: UserPerfumeI) {
@@ -26,10 +15,11 @@ const getInitialPerfumeData = (initialPerfume?: UserPerfumeI) => ({
   type: initialPerfume?.type || "",
 })
 
+const MY_SCENTS_API = "/api/user-perfumes"
+
 // Custom hook to manage perfume form state
-export function useMyScentsForm(initialPerfume?: UserPerfumeI) {
-  const submit = useSubmit()
-  const { addToFormData } = useCSRF()
+export const useMyScentsForm = (initialPerfume?: UserPerfumeI) => {
+  const { submitForm } = useCSRF()
 
   // Initialize state with helper functions
   const [selectedPerfume, setSelectedPerfume] = useState<UserPerfumeI | null>(getInitialPerfumeState(initialPerfume))
@@ -52,37 +42,30 @@ export function useMyScentsForm(initialPerfume?: UserPerfumeI) {
     })
   }, [])
 
-  // Create form data
   const createFormData = useCallback(() => {
-    if (!selectedPerfume) {
-      return null
-    }
-
+    if (!selectedPerfume) return null
+    const perfumeId =
+      "perfumeId" in selectedPerfume && selectedPerfume.perfumeId
+        ? selectedPerfume.perfumeId
+        : selectedPerfume.id
     const formData = new FormData()
-    formData.append("perfumeId", selectedPerfume.id)
+    formData.append("perfumeId", perfumeId)
     formData.append("amount", perfumeData.amount)
     formData.append("price", perfumeData.price)
     formData.append("placeOfPurchase", perfumeData.placeOfPurchase)
     formData.append("action", "add")
-
     return formData
   }, [selectedPerfume, perfumeData])
 
-  // Submit the form
   const handleAddPerfume = useCallback(
-    (evt: React.FormEvent) => {
+    async (evt: React.FormEvent) => {
       evt.preventDefault()
-
       const formData = createFormData()
-      if (!formData) {
-        return
-      }
-
-      addToFormData(formData)
-      submit(formData, { method: "post", action: "/admin/my-scents" })
-      resetForm()
+      if (!formData) return
+      const response = await submitForm(MY_SCENTS_API, formData)
+      if (response.ok) resetForm()
     },
-    [createFormData, addToFormData, resetForm, submit]
+    [createFormData, resetForm, submitForm]
   )
 
   // Update state when perfume changes

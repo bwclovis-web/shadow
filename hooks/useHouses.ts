@@ -1,23 +1,23 @@
 import { useQuery } from "@tanstack/react-query"
 
-import { type HouseFilters, housesQueryOptions } from "~/lib/queries/houses"
+import { type HouseFilters, housesQueryOptions } from "@/lib/queries/houses"
 
 /**
  * Hook to fetch houses with filtering and sorting.
  * Replaces useHousesWithLocalCache with TanStack Query.
  * Uses queryOptions factory for better type safety and consistency.
- * 
+ *
  * @param filters - Filter and sorting options
  * @param options - Additional query options (select, refetchOnMount, etc.)
  * @returns Query result with data, isLoading, error, etc.
- * 
+ *
  * @example
  * ```tsx
  * const { data: houses, isLoading, error } = useHouses({
  *   houseType: 'niche',
  *   sortBy: 'name-asc'
  * })
- * 
+ *
  * // With select to extract only names
  * const { data: houseNames } = useHouses(
  *   { houseType: 'niche' },
@@ -25,17 +25,16 @@ import { type HouseFilters, housesQueryOptions } from "~/lib/queries/houses"
  * )
  * ```
  */
-export function useHouses(
+export const useHouses = (
   filters: HouseFilters = {},
   options?: {
-    select?: (data: any) => any
+    select?: (data: unknown) => unknown
     refetchOnMount?: boolean | "always"
     enabled?: boolean
   }
-) {
-  return useQuery({
+) =>
+  useQuery({
     ...housesQueryOptions(filters),
     ...options,
   })
-}
 

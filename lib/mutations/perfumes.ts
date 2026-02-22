@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import { queryKeys as houseQueryKeys } from "~/lib/queries/houses"
-import { queryKeys } from "~/lib/queries/perfumes"
-import { queryKeys as dataQualityQueryKeys } from "~/lib/queries/dataQuality"
+import { queryKeys as houseQueryKeys } from "@/lib/queries/houses"
+import { queryKeys } from "@/lib/queries/perfumes"
+import { queryKeys as dataQualityQueryKeys } from "@/lib/queries/dataQuality"
 
 export interface DeletePerfumeParams {
   perfumeId: string
@@ -14,10 +14,7 @@ export interface DeletePerfumeResponse {
   error?: string
 }
 
-/**
- * Delete a perfume mutation function.
- */
-async function deletePerfume(params: DeletePerfumeParams): Promise<DeletePerfumeResponse> {
+const deletePerfume = async (params: DeletePerfumeParams): Promise<DeletePerfumeResponse> => {
   const { perfumeId } = params
 
   const response = await fetch(`/api/deletePerfume?id=${perfumeId}`, {
@@ -32,7 +29,6 @@ async function deletePerfume(params: DeletePerfumeParams): Promise<DeletePerfume
 
   const result = await response.json()
 
-  // API returns array, so we'll handle that
   return {
     success: Array.isArray(result) ? result.length > 0 : !!result,
   }
@@ -40,14 +36,14 @@ async function deletePerfume(params: DeletePerfumeParams): Promise<DeletePerfume
 
 /**
  * Hook to delete a perfume with optimistic updates.
- * 
+ *
  * @example
  * ```tsx
  * const deletePerfume = useDeletePerfume()
  * deletePerfume.mutate({ perfumeId: "123" })
  * ```
  */
-export function useDeletePerfume() {
+export const useDeletePerfume = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -66,9 +62,7 @@ export function useDeletePerfume() {
 
       // Optimistically remove perfume from cache
       queryClient.setQueryData(queryKeys.perfumes.all, (old: any) => {
-        if (!old) {
- return old 
-}
+        if (!old) return old
 
         // Handle different query structures
         if (Array.isArray(old)) {
@@ -98,28 +92,14 @@ export function useDeletePerfume() {
       }
     },
     onSuccess: async () => {
-      // Invalidate all perfume queries
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.perfumes.all,
-      })
-
-      // Invalidate house queries (houses show perfume counts)
-      await queryClient.invalidateQueries({
-        queryKey: houseQueryKeys.houses.all,
-      })
-
-      // Invalidate and refetch all data quality queries immediately
-      // This ensures deleted houses are removed from the dashboard right away
-      await queryClient.invalidateQueries({
-        queryKey: dataQualityQueryKeys.dataQuality.all,
-        refetchType: "active", // Refetch active queries (currently mounted/visible)
-      })
-      
-      // Also explicitly refetch if dashboard is active
-      // This ensures immediate update if the dashboard is open
-      queryClient.refetchQueries({
-        queryKey: dataQualityQueryKeys.dataQuality.all,
-      })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.perfumes.all }),
+        queryClient.invalidateQueries({ queryKey: houseQueryKeys.houses.all }),
+        queryClient.invalidateQueries({
+          queryKey: dataQualityQueryKeys.dataQuality.all,
+          refetchType: "active",
+        }),
+      ])
     },
   })
 }

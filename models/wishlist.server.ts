@@ -1,5 +1,5 @@
-import { prisma } from "~/db.server"
-import { updateScentProfileFromBehavior } from "~/models/scent-profile.server"
+import { prisma } from "@/lib/db"
+import { updateScentProfileFromBehavior } from "@/models/scent-profile.server"
 
 export const addToWishlist = async (
   userId: string,
@@ -71,14 +71,10 @@ export const updateWishlistVisibility = async (
 }
 
 export const isInWishlist = async (userId: string, perfumeId: string) => {
-  const item = await prisma.userPerfumeWishlist.findFirst({
-    where: {
-      userId,
-      perfumeId,
-    },
+  const count = await prisma.userPerfumeWishlist.count({
+    where: { userId, perfumeId },
   })
-
-  return !!item
+  return count > 0
 }
 
 export const getUserWishlist = async (userId: string) => {
@@ -113,38 +109,39 @@ export const getUserWishlist = async (userId: string) => {
     },
   })
 
-  // Fetch available perfumes with user info for all wishlist items
   const perfumeIds = wishlist.map(item => item.perfumeId)
-  const availablePerfumes = await prisma.userPerfume.findMany({
-    where: {
-      perfumeId: { in: perfumeIds },
-      available: { not: "0" },
-    },
-    select: {
-      id: true,
-      perfumeId: true,
-      available: true,
-      userId: true,
-      user: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          username: true,
-          email: true,
-        },
-      },
-    },
-  })
+  const availablePerfumes =
+    perfumeIds.length === 0
+      ? []
+      : await prisma.userPerfume.findMany({
+          where: {
+            perfumeId: { in: perfumeIds },
+            available: { not: "0" },
+          },
+          select: {
+            id: true,
+            perfumeId: true,
+            available: true,
+            userId: true,
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                username: true,
+                email: true,
+              },
+            },
+          },
+        })
 
-  // Group available perfumes by perfumeId
-  const availableMap = new Map<string, typeof availablePerfumes>()
-  availablePerfumes.forEach(up => {
-    if (!availableMap.has(up.perfumeId)) {
-      availableMap.set(up.perfumeId, [])
-    }
-    availableMap.get(up.perfumeId)!.push(up)
-  })
+  type AvailableItem = (typeof availablePerfumes)[number]
+  const availableMap = new Map<string, AvailableItem[]>()
+  for (const up of availablePerfumes) {
+    const list = availableMap.get(up.perfumeId)
+    if (list) list.push(up)
+    else availableMap.set(up.perfumeId, [up])
+  }
 
   // Combine wishlist items with available user perfumes
   return wishlist.map(item => ({

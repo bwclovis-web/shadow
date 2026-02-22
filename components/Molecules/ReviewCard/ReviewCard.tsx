@@ -1,15 +1,16 @@
+import { useRef } from "react"
 import { formatDistanceToNow } from "date-fns"
 import { GrEdit } from "react-icons/gr"
 import { MdDeleteForever } from "react-icons/md"
-
-import { Button } from "~/components/Atoms/Button"
-import Modal from "~/components/Organisms/Modal"
-import { sanitizeReviewHtml } from "~/utils/sanitize"
-import { styleMerge } from "~/utils/styleUtils"
-import { useSessionStore } from "~/stores/sessionStore"
-import DangerModal from "~/components/Organisms/DangerModal"
 import { useTranslations } from "next-intl"
-import { useRef } from "react"
+
+import { Button } from "@/components/Atoms/Button"
+import Modal from "@/components/Organisms/Modal"
+import DangerModal from "@/components/Organisms/DangerModal"
+import { sanitizeReviewHtml } from "@/utils/sanitize"
+import { styleMerge } from "@/utils/styleUtils"
+import { useSessionStore } from "@/hooks/sessionStore"
+
 interface ReviewCardProps {
   review: {
     id: string
@@ -51,31 +52,26 @@ const ReviewCard = ({
   const { modalOpen, modalId, toggleModal } = useSessionStore()
   const removeButtonRef = useRef<HTMLButtonElement>(null)
   const deleteModalId = `delete-review-item-${review.id}`
-  const getDisplayName = () => {
-    if (review.user.username) {
-      return review.user.username
-    }
-    if (review.user.firstName && review.user.lastName) {
-      return `${review.user.firstName} ${review.user.lastName}`
-    }
-    if (review.user.firstName) {
-      return review.user.firstName
-    }
-    // Show email as fallback
-    return review.user.email
-  }
+  const showDeleteModal =
+    Boolean(modalOpen && modalId && onDelete) && modalId === deleteModalId
 
-  const formatDate = (dateString: string) => {
+  const displayName =
+    review.user.username ||
+    (review.user.firstName && review.user.lastName
+      ? `${review.user.firstName} ${review.user.lastName}`
+      : review.user.firstName || review.user.email)
+
+  const formattedDate = (() => {
     try {
-      return formatDistanceToNow(new Date(dateString), { addSuffix: true })
+      return formatDistanceToNow(new Date(review.createdAt), { addSuffix: true })
     } catch {
       return "Recently"
     }
-  }
+  })()
 
   return (
     <>
-    {modalOpen && modalId && onDelete && modalId === deleteModalId && (
+    {showDeleteModal && onDelete && (
       <Modal innerType="dark" animateStart="top">
         <DangerModal
           heading={tReview("dangerModal.heading")}
@@ -95,14 +91,12 @@ const ReviewCard = ({
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-noir-gold rounded-full flex items-center justify-center border border-noir-light">
             <span className="text-noir-dark text-sm font-semibold">
-              {getDisplayName().charAt(0).toUpperCase()}
+              {displayName.charAt(0).toUpperCase()}
             </span>
           </div>
           <div>
-            <p className="text-sm font-medium text-noir-gold">{getDisplayName()}</p>
-            <p className="text-xs text-noir-gold-100">
-              {formatDate(review.createdAt)}
-            </p>
+            <p className="text-sm font-medium text-noir-gold">{displayName}</p>
+            <p className="text-xs text-noir-gold-100">{formattedDate}</p>
           </div>
         </div>
 

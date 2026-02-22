@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useTranslations } from "next-intl"
 
-import { useCSRF } from "~/hooks/useCSRF"
-import type { UserPerfumeI } from "~/types"
-import type { Comment } from "~/types/comments"
-import { createTemporaryComment } from "~/utils/comment-utils"
-import { assertExists } from "~/utils/errorHandling.patterns"
-import { safeAsync } from "~/utils/errorHandling.patterns"
-import { commentSchemas, sanitizeString } from "~/utils/validation"
+import { useCSRF } from "@/hooks/useCSRF"
+import type { UserPerfumeI } from "@/types"
+import type { Comment } from "@/types/comments"
+import { createTemporaryComment } from "@/utils/comment-utils"
+import { assertExists } from "@/utils/errorHandling.patterns"
+import { safeAsync } from "@/utils/errorHandling.patterns"
+import { commentSchemas, sanitizeString } from "@/utils/validation"
 
 interface UsePerfumeCommentsOptions {
   userPerfume: UserPerfumeI
@@ -22,8 +22,14 @@ export const usePerfumeComments = ({ userPerfume, onCommentAdded, onCommentSucce
 
   // Initialize comments from userPerfume
   // Also watch for changes to userPerfume.id to handle when switching between destashes
-  // Use JSON.stringify to ensure we detect changes even if array reference is the same
-  const commentsKey = userPerfume.comments ? JSON.stringify(userPerfume.comments.map(c => c.id).sort()) : 'empty'
+  const commentsKey = useMemo(
+    () =>
+      userPerfume.comments
+        ? JSON.stringify(userPerfume.comments.map(c => c.id).sort())
+        : "empty",
+    [userPerfume.comments]
+  )
+
   useEffect(() => {
     if (userPerfume.comments) {
       // Filter comments to only include those for this specific userPerfumeId
@@ -77,10 +83,10 @@ export const usePerfumeComments = ({ userPerfume, onCommentAdded, onCommentSucce
     // Add temporary comment to UI immediately
     const tempComment = createTemporaryComment(sanitizedComment, isPublic, userPerfumeId)
     setComments(prev => [tempComment, ...prev])
-    
-    if (onCommentAdded) {
-      onCommentAdded(tempComment)
-    }
+    onCommentAdded?.(tempComment)
+
+    const removeTempComment = (): void =>
+      setComments(prev => prev.filter(c => c.id !== tempComment.id))
 
     // Create form data with validated data
     const formData = new FormData()
@@ -98,8 +104,7 @@ export const usePerfumeComments = ({ userPerfume, onCommentAdded, onCommentSucce
 
     if (error) {
       console.error("Error submitting comment:", error)
-      // Remove the temporary comment on error
-      setComments(prev => prev.filter(c => c.id !== tempComment.id))
+      removeTempComment()
       alert(t("error"))
       return { success: false, error: "Error submitting comment" }
     }
@@ -108,40 +113,23 @@ export const usePerfumeComments = ({ userPerfume, onCommentAdded, onCommentSucce
 
     if (jsonError) {
       console.error("Error parsing response:", jsonError)
-      // Remove the temporary comment on error
-      setComments(prev => prev.filter(c => c.id !== tempComment.id))
+      removeTempComment()
       alert(t("error"))
       return { success: false, error: "Error processing response" }
     }
 
     if (result.success) {
-      // Replace temporary comment with real comment from server
       if (result.userComment) {
-        setComments(prev => prev.map(c => 
-          c.id === tempComment.id 
-            ? {
-                id: result.userComment.id,
-                userId: result.userComment.userId,
-                perfumeId: result.userComment.perfumeId,
-                userPerfumeId: result.userComment.userPerfumeId,
-                comment: result.userComment.comment,
-                isPublic: result.userComment.isPublic,
-                createdAt: result.userComment.createdAt,
-                updatedAt: result.userComment.updatedAt,
-              }
-            : c
-        ))
+        const serverComment = result.userComment as Comment
+        setComments(prev =>
+          prev.map(c => (c.id === tempComment.id ? serverComment : c))
+        )
       }
-      
-      // Trigger revalidation callback if provided
-      if (onCommentSuccess) {
-        onCommentSuccess()
-      }
+      onCommentSuccess?.()
       return { success: true }
     } else {
       console.error("Failed to add comment:", result.error)
-      // Remove the temporary comment on error
-      setComments(prev => prev.filter(c => c.id !== tempComment.id))
+      removeTempComment()
       alert(`${t("failed")}: ${result.error}`)
       return { success: false, error: result.error }
     }
@@ -150,20 +138,31 @@ export const usePerfumeComments = ({ userPerfume, onCommentAdded, onCommentSucce
   /**
    * Toggle comment visibility (public/private)
    */
-  const toggleCommentVisibility = async (commentId: string, currentIsPublic: boolean) => {
-    // Don't allow toggling temporary comments
-    if (commentId.startsWith('temp-')) {
-      console.warn('Cannot toggle visibility of temporary comment. Please wait for it to save.')
-      return { success: false, error: 'Comment is still being saved' }
+  const toggleCommentVisibility = async (
+    commentId: string,
+    currentIsPublic: boolean
+  ) => {
+    if (commentId.startsWith("temp-")) {
+      console.warn(
+        "Cannot toggle visibility of temporary comment. Please wait for it to save."
+      )
+      return { success: false, error: "Comment is still being saved" }
     }
 
-    // Optimistically update UI
-    setComments(prevComments => prevComments.map(comment => comment.id === commentId
-          ? { ...comment, isPublic: !currentIsPublic }
-          : comment))
+    setComments(prev =>
+      prev.map(c =>
+        c.id === commentId ? { ...c, isPublic: !currentIsPublic } : c
+      )
+    )
+
+    const revertVisibility = (): void =>
+      setComments(prev =>
+        prev.map(c =>
+          c.id === commentId ? { ...c, isPublic: currentIsPublic } : c
+        )
+      )
 
     const { perfumeId, userPerfumeId } = getIds()
-
     const formData = new FormData()
     formData.append("action", "toggle-comment-visibility")
     formData.append("commentId", commentId)
@@ -171,15 +170,13 @@ export const usePerfumeComments = ({ userPerfume, onCommentAdded, onCommentSucce
     formData.append("userPerfumeId", userPerfumeId)
     formData.append("isPublic", (!currentIsPublic).toString())
 
-    // Use safeAsync for error handling
-    const [error, response] = await safeAsync(() => submitForm("/api/user-perfumes", formData))
+    const [error, response] = await safeAsync(() =>
+      submitForm("/api/user-perfumes", formData)
+    )
 
     if (error) {
       console.error("Error toggling comment visibility:", error)
-      // Revert the UI change on error
-      setComments(prevComments => prevComments.map(comment => comment.id === commentId
-            ? { ...comment, isPublic: currentIsPublic }
-            : comment))
+      revertVisibility()
       return { success: false, error: "Error toggling comment visibility" }
     }
 
@@ -190,10 +187,7 @@ export const usePerfumeComments = ({ userPerfume, onCommentAdded, onCommentSucce
         "Failed to toggle comment visibility:",
         jsonError || result.error
       )
-      // Revert the UI change on error
-      setComments(prevComments => prevComments.map(comment => comment.id === commentId
-            ? { ...comment, isPublic: currentIsPublic }
-            : comment))
+      revertVisibility()
       return { success: false, error: jsonError || result.error }
     }
 
@@ -204,10 +198,11 @@ export const usePerfumeComments = ({ userPerfume, onCommentAdded, onCommentSucce
    * Delete a comment
    */
   const deleteComment = async (commentId: string) => {
-    // Don't allow deleting temporary comments
-    if (commentId.startsWith('temp-')) {
-      console.warn('Cannot delete temporary comment. Please wait for it to save.')
-      return { success: false, error: 'Comment is still being saved' }
+    if (commentId.startsWith("temp-")) {
+      console.warn(
+        "Cannot delete temporary comment. Please wait for it to save."
+      )
+      return { success: false, error: "Comment is still being saved" }
     }
 
     const originalComments = [...comments]
@@ -237,9 +232,7 @@ export const usePerfumeComments = ({ userPerfume, onCommentAdded, onCommentSucce
     if (jsonError || !result.success) {
       console.error("Failed to delete comment:", jsonError || result.error)
       setComments(originalComments)
-      alert(`${t("deleteFailed")}: ${
-          result?.error || "Unknown error"
-        }`)
+      alert(`${t("deleteFailed")}: ${result?.error ?? "Unknown error"}`)
       return { success: false, error: jsonError || result.error }
     }
 

@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 
-import { useCreateOrUpdateRating } from "~/lib/mutations/ratings"
+import { type RatingCategory, useCreateOrUpdateRating } from "@/lib/mutations/ratings"
 
 import { useErrorHandler } from "./useErrorHandler"
 
@@ -50,36 +50,34 @@ export const useRatingSystem = ({
   const { handleError } = useErrorHandler()
 
   const [currentRatings, setCurrentRatings] = useState<RatingData | null>(initialRatings)
-  
-  // Use TanStack Query mutation for ratings
+  const ratingsRef = useRef(currentRatings)
+  ratingsRef.current = currentRatings
+
   const saveRating = useCreateOrUpdateRating()
 
   const isLoggedIn = Boolean(userId) && userId !== "anonymous"
   const isInteractive = isLoggedIn && !readonly
 
-  // Update ratings when initial ratings change
   useEffect(() => {
     setCurrentRatings(initialRatings)
   }, [initialRatings])
 
   const handleRatingChange = useCallback(
-    async (category: keyof RatingData, rating: number) => {
+    (category: keyof RatingData, rating: number) => {
       if (!isInteractive || !userId || userId === "anonymous") {
         return
       }
 
-      // Optimistic update - update local state immediately
-      const previousRatings = currentRatings
+      const previousRatings = ratingsRef.current
       setCurrentRatings(prev => ({
         ...prev,
         [category]: rating,
       }))
 
-      // Use mutation with optimistic average updates
       saveRating.mutate(
         {
           perfumeId,
-          category: category as any,
+          category: category as RatingCategory,
           rating,
         },
         {
@@ -87,7 +85,6 @@ export const useRatingSystem = ({
             onSuccess?.({ ...previousRatings, [category]: rating } as RatingData)
           },
           onError: error => {
-            // Revert on error
             setCurrentRatings(previousRatings)
             const errorMessage =
               error instanceof Error
@@ -101,16 +98,7 @@ export const useRatingSystem = ({
         }
       )
     },
-    [
-      isInteractive,
-      userId,
-      perfumeId,
-      currentRatings,
-      saveRating,
-      onError,
-      onSuccess,
-      handleError,
-    ]
+    [isInteractive, userId, perfumeId, saveRating, onError, onSuccess, handleError]
   )
 
   const resetRatings = useCallback(() => {

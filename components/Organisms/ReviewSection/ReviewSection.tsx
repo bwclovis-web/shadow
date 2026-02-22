@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 
-import { Button } from "~/components/Atoms/Button"
-import RichTextEditor from "~/components/Atoms/RichTextEditor"
-import ReviewCard from "~/components/Molecules/ReviewCard"
-import { useCSRF } from "~/hooks/useCSRF"
-import { safeAsync } from "~/utils/errorHandling.patterns"
-import { containsDangerousReviewHtml, sanitizeReviewHtml } from "~/utils/sanitize"
+import { Button } from "@/components/Atoms/Button"
+import RichTextEditor from "@/components/Atoms/RichTextEditor"
+import ReviewCard from "@/components/Molecules/ReviewCard"
+import { useCSRF } from "@/hooks/useCSRF"
+import { safeAsync } from "@/utils/errorHandling.patterns"
+import { containsDangerousReviewHtml, sanitizeReviewHtml } from "@/utils/sanitize"
 
 interface Review {
   id: string
@@ -76,71 +76,51 @@ const ReviewSection = ({
   const reviews = reviewsState?.reviews ?? []
   const hasMore = reviewsState?.pagination?.hasNextPage ?? false
   const currentPage = reviewsState?.pagination?.page ?? 1
-  const fetchLimit = useMemo(() => reviewsState?.pagination?.limit ?? pageSize, [pageSize, reviewsState])
+  const fetchLimit = reviewsState?.pagination?.limit ?? pageSize
+  const showModerationActions =
+    currentUserRole === "admin" || currentUserRole === "editor"
 
-  const updateReviewsState = useCallback(
-    (nextData: Review[], pagination: ReviewsPagination) => {
-      setReviewsState(prev => {
-        if (!prev || pagination.page === 1) {
-          return { reviews: nextData, pagination }
-        }
-
-        const existingIds = new Set(prev.reviews.map(review => review.id))
-        const merged = [...prev.reviews]
-
-        nextData.forEach(review => {
-          if (!existingIds.has(review.id)) {
-            merged.push(review)
-          }
-        })
-
-        return {
-          reviews: merged,
-          pagination,
-        }
-      })
-    },
-    []
-  )
-
-  const fetchReviews = useCallback(
-    async (pageToLoad: number, append = false) => {
-      try {
-        if (append) {
-          setIsLoadingMore(true)
-        }
-
-        const params = new URLSearchParams({
-          perfumeId,
-          page: pageToLoad.toString(),
-          limit: fetchLimit.toString(),
-          isApproved: "true",
-        })
-
-        const response = await fetch(`/api/reviews?${params}`)
-
-        if (!response.ok) {
-          const errorPayload = await response.json().catch(() => ({}))
-          throw new Error(errorPayload.message || "Failed to fetch reviews")
-        }
-
-        const payload = await response.json()
-        updateReviewsState(payload.reviews || [], payload.pagination)
-      } catch (error) {
-        console.error("Failed to fetch reviews", error)
-        alert(error instanceof Error
-            ? error.message
-            : t("failedToLoadReviews"))
-      } finally {
-        setIsLoadingMore(false)
+  const updateReviewsState = (nextData: Review[], pagination: ReviewsPagination) => {
+    setReviewsState(prev => {
+      if (!prev || pagination.page === 1) {
+        return { reviews: nextData, pagination }
       }
-    },
-    [
-fetchLimit, perfumeId, t, updateReviewsState
-]
-  )
+      const existingIds = new Set(prev.reviews.map(review => review.id))
+      const merged = [...prev.reviews]
+      nextData.forEach(review => {
+        if (!existingIds.has(review.id)) merged.push(review)
+      })
+      return { reviews: merged, pagination }
+    })
+  }
 
-  const refreshReviews = useCallback(async () => fetchReviews(1, false), [fetchReviews])
+  const fetchReviews = async (pageToLoad: number, append = false) => {
+    try {
+      if (append) setIsLoadingMore(true)
+      const params = new URLSearchParams({
+        perfumeId,
+        page: pageToLoad.toString(),
+        limit: fetchLimit.toString(),
+        isApproved: "true",
+      })
+      const response = await fetch(`/api/reviews?${params}`)
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}))
+        throw new Error(errorPayload.message || "Failed to fetch reviews")
+      }
+      const payload = await response.json()
+      updateReviewsState(payload.reviews || [], payload.pagination)
+    } catch (error) {
+      console.error("Failed to fetch reviews", error)
+      alert(
+        error instanceof Error ? error.message : t("failedToLoadReviews")
+      )
+    } finally {
+      setIsLoadingMore(false)
+    }
+  }
+
+  const refreshReviews = async () => fetchReviews(1, false)
 
   const handleLoadMore = () => {
     if (hasMore && !isLoadingMore) {
@@ -148,26 +128,18 @@ fetchLimit, perfumeId, t, updateReviewsState
     }
   }
 
-  // Helper to update a review in state (for optimistic updates)
-  const updateReviewInState = useCallback((reviewId: string, updatedReview: Review) => {
+  const updateReviewInState = (reviewId: string, updatedReview: Review) => {
     setReviewsState(prev => {
       if (!prev) return prev
-      
-      const updatedReviews = prev.reviews.map(review =>
-        review.id === reviewId ? updatedReview : review
-      )
-      
       return {
         ...prev,
-        reviews: updatedReviews,
+        reviews: prev.reviews.map(review =>
+          review.id === reviewId ? updatedReview : review
+        ),
       }
     })
-    
-    // Also update userReview if it's the one being edited
-    if (userReview?.id === reviewId) {
-      setUserReview(updatedReview)
-    }
-  }, [userReview])
+    if (userReview?.id === reviewId) setUserReview(updatedReview)
+  }
 
   const handleCreateReview = async () => {
     if (containsDangerousReviewHtml(reviewContent)) {
@@ -245,10 +217,10 @@ fetchLimit, perfumeId, t, updateReviewsState
       return
     }
 
-    // Find the original review for optimistic update
-    const originalReview = userReview?.id === editingReviewId 
-      ? userReview 
-      : reviews.find(r => r.id === editingReviewId)
+    const originalReview =
+      userReview?.id === editingReviewId
+        ? userReview
+        : reviews.find(r => r.id === editingReviewId)
 
     if (!originalReview) {
       console.error("Review not found for update")
@@ -335,8 +307,6 @@ fetchLimit, perfumeId, t, updateReviewsState
   }
 
   const handleModerateReview = async (reviewId: string, isApproved: boolean) => {
-    // For moderation, we still use the old pattern since there's no mutation yet
-    // TODO: Create useModerateReview mutation with optimistic updates
     const formData = new FormData()
     formData.append("_action", "moderate")
     formData.append("reviewId", reviewId)
@@ -440,9 +410,7 @@ fetchLimit, perfumeId, t, updateReviewsState
               onEdit={handleEditReview}
               onDelete={handleDeleteReview}
               onModerate={handleModerateReview}
-              showModerationActions={
-                currentUserRole === "admin" || currentUserRole === "editor"
-              }
+              showModerationActions={showModerationActions}
             />
           ))}
 

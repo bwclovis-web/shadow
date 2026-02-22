@@ -1,17 +1,19 @@
+"use client"
+
 import { getFormProps, useForm } from "@conform-to/react"
 import { useRef } from "react"
 import { useTranslations } from "next-intl"
-import { Form } from "react-router"
 
-import { Button } from "~/components/Atoms/Button"
-import Input from "~/components/Atoms/Input"
-import RangeSlider from "~/components/Atoms/RangeSlider"
-import Select from "~/components/Atoms/Select"
-import SearchBar from "~/components/Organisms/SearchBar"
-import { perfumeTypes } from "~/data/SelectTypes"
-import { useMyScentsForm } from "~/hooks/useMyScentsForm"
-import { useSessionStore } from "~/stores/sessionStore"
-import type { UserPerfumeI } from "~/types"
+import { Button } from "@/components/Atoms/Button"
+import Input from "@/components/Atoms/Input"
+import RangeSlider from "@/components/Atoms/RangeSlider"
+import Select from "@/components/Atoms/Select"
+import SearchBar from "@/components/Organisms/SearchBar"
+import { perfumeTypes } from "@/data/SelectTypes"
+import { useMyScentsForm } from "@/hooks/useMyScentsForm"
+import { useSessionStore } from "@/hooks/sessionStore"
+import type { UserPerfumeI } from "@/types"
+
 interface MyScentsModalProps {
   perfume?: UserPerfumeI
 }
@@ -27,7 +29,6 @@ const MyScentsModal = ({ perfume }: MyScentsModalProps) => {
     id: "perfume-form",
   })
 
-  // Custom hook calls last
   const {
     selectedPerfume,
     perfumeData,
@@ -40,24 +41,21 @@ const MyScentsModal = ({ perfume }: MyScentsModalProps) => {
     <div className="w-full p-6">
       <div className="flex flex-col items-start justify-between mb-4">
         <div>
-          <h2> {t("title")}</h2>
-          <p className="text-xl text-noir-gold-100">
-            {t("description")}
-          </p>
+          <h2>{t("title")}</h2>
+          <p className="text-xl text-noir-gold-100">{t("description")}</p>
         </div>
-        {modalData === "create" && !perfume && (
+        {modalData?.action === "create" && !perfume && (
           <SearchBar
             variant="animated"
             searchType="perfume"
             className="mt-4"
-            action={(item: any) => handleClick(item as UserPerfumeI)}
+            action={(item: UserPerfumeI) => handleClick(item)}
           />
         )}
       </div>
 
       {selectedPerfume && (
-        <Form
-          method="POST"
+        <form
           className="mt-4 pb-10 md:pb-0"
           {...getFormProps(form)}
           onSubmit={handleAddPerfume}
@@ -67,7 +65,9 @@ const MyScentsModal = ({ perfume }: MyScentsModalProps) => {
               {t("selectedPerfume")}
             </legend>
             <p className="text-noir-gold-100 mb-4 font-semibold">
-              {selectedPerfume.name}
+              {"perfume" in selectedPerfume
+                ? selectedPerfume.perfume?.name
+                : (selectedPerfume as { name?: string }).name ?? ""}
             </p>
             <div className="flex flex-col md:flex-row items-start justify-between gap-6">
               <div className="w-full md:w-1/2 noir-border relative p-4">
@@ -94,7 +94,15 @@ const MyScentsModal = ({ perfume }: MyScentsModalProps) => {
                   name="type"
                   size="default"
                   label={t("typeLabel")}
-                  selectId={""}
+                  selectId="type"
+                  value={perfumeData.type}
+                  action={evt => {
+                    const target = evt.target
+                    setPerfumeData({
+                      ...perfumeData,
+                      type: target.value,
+                    })
+                  }}
                 />
                 <Input
                   inputType="number"
@@ -136,7 +144,7 @@ const MyScentsModal = ({ perfume }: MyScentsModalProps) => {
           <Button type="submit" className="mt-6">
             {t("submitButton")}
           </Button>
-        </Form>
+        </form>
       )}
     </div>
   )

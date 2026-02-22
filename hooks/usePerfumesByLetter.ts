@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import {
   getPerfumesByLetter,
   queryKeys,
-} from "~/lib/queries/perfumes"
+} from "@/lib/queries/perfumes"
 
 /**
  * Hook to fetch perfumes by letter and house type.
@@ -22,13 +22,13 @@ import {
  * const totalCount = data?.count || 0
  * ```
  */
-export function usePerfumesByLetter(
+export const usePerfumesByLetter = (
   letter: string | null,
   houseType: string = "all",
   skip: number = 0,
   take: number = 16
-) {
-  return useQuery({
+) =>
+  useQuery({
     queryKey: queryKeys.perfumes.byLetterPaginated(
       letter || "",
       houseType,
@@ -39,5 +39,4 @@ export function usePerfumesByLetter(
     enabled: !!letter && /^[A-Za-z]$/.test(letter), // Only run if letter is valid
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
-}
 

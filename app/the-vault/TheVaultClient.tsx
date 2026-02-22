@@ -25,6 +25,7 @@ import {
 
 const ROUTE_PATH = "/the-vault"
 const BANNER_IMAGE = "/images/vault.webp"
+const SINGLE_LETTER_REGEX = /^[A-Za-z]$/
 
 type PerfumeFromApi = {
   id: string
@@ -37,6 +38,11 @@ type PerfumeFromApi = {
   perfumeHouse?: { name: string }
 }
 
+const parseLetterFromParam = (param: unknown): string | null => {
+  if (typeof param !== "string" || !SINGLE_LETTER_REGEX.test(param)) return null
+  return param.toUpperCase()
+}
+
 const TheVaultClient = () => {
   const t = useTranslations("allPerfumes")
   const tSort = useTranslations("sortOptions")
@@ -47,10 +53,7 @@ const TheVaultClient = () => {
   const [selectedSort, setSelectedSort] = useState<SortOption>("created-desc")
 
   const pageSize = useResponsivePageSize()
-  const letterFromUrl =
-    (params?.letter as string) && /^[A-Za-z]$/i.test(params.letter as string)
-      ? (params.letter as string).toUpperCase()
-      : null
+  const letterFromUrl = parseLetterFromParam(params?.letter)
   const pageFromUrl = Math.max(1, parseInt(searchParams.get("pg") ?? "1", 10))
 
   const sortOptions = getDefaultSortOptions((key: string) =>

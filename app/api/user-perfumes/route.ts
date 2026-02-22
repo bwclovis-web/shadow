@@ -55,7 +55,15 @@ export async function POST(request: NextRequest) {
     let result: unknown
     switch (actionType) {
       case "add": {
-        result = await addUserPerfume({ userId: user.id, perfumeId, amount })
+        const price = formData.get("price") as string | undefined
+        const placeOfPurchase = formData.get("placeOfPurchase") as string | undefined
+        result = await addUserPerfume({
+          userId: user.id,
+          perfumeId,
+          amount,
+          price,
+          placeOfPurchase,
+        })
         if (amount && parseFloat(amount) > 0) {
           try {
             await processWishlistAvailabilityAlerts(perfumeId, user.id)

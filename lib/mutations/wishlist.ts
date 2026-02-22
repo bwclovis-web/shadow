@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import { queryKeys as perfumeQueryKeys } from "~/lib/queries/perfumes"
-import { queryKeys } from "~/lib/queries/user"
+import { queryKeys as perfumeQueryKeys } from "@/lib/queries/perfumes"
+import { queryKeys, type WishlistResponse as WishlistCache } from "@/lib/queries/user"
 
 export interface WishlistActionParams {
   perfumeId: string
@@ -12,21 +12,27 @@ export interface WishlistActionParams {
 export interface WishlistResponse {
   success: boolean
   message?: string
-  data?: any
+  data?: unknown
   error?: string
 }
 
-/**
- * Mutation function to perform wishlist actions (add, remove, updateVisibility).
- */
-async function wishlistAction(params: WishlistActionParams): Promise<WishlistResponse> {
+type WishlistItem = { perfumeId?: string; perfume?: { id: string } }
+
+const isInWishlist = (items: WishlistItem[], perfumeId: string) =>
+  items.some(
+    item => item.perfumeId === perfumeId || item.perfume?.id === perfumeId
+  )
+
+const wishlistAction = async (
+  params: WishlistActionParams
+): Promise<WishlistResponse> => {
   const { perfumeId, action, isPublic } = params
 
   const formData = new FormData()
   formData.append("perfumeId", perfumeId)
   formData.append("action", action)
   if (isPublic !== undefined) {
-    formData.append("isPublic", isPublic.toString())
+    formData.append("isPublic", String(isPublic))
   }
 
   const response = await fetch("/api/wishlist", {
@@ -36,91 +42,75 @@ async function wishlistAction(params: WishlistActionParams): Promise<WishlistRes
   })
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    throw new Error(errorData.error || errorData.message || `Failed to ${action} from wishlist`)
+    const errorData = await response.json().catch(() => ({})) as {
+      error?: string
+      message?: string
+    }
+    throw new Error(
+      errorData.error ?? errorData.message ?? `Failed to ${action} from wishlist`
+    )
   }
 
-  return await response.json()
+  return response.json()
 }
 
 /**
  * Hook to toggle wishlist status (add/remove) with optimistic updates.
- * 
+ *
  * @example
  * ```tsx
  * const toggleWishlist = useToggleWishlist()
- * 
+ *
  * // Add to wishlist
  * toggleWishlist.mutate({ perfumeId: "123", action: "add", isPublic: false })
- * 
+ *
  * // Remove from wishlist
  * toggleWishlist.mutate({ perfumeId: "123", action: "remove" })
  * ```
  */
-export function useToggleWishlist() {
+export const useToggleWishlist = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: wishlistAction,
     onMutate: async variables => {
-      // Cancel outgoing refetches to avoid overwriting optimistic update
-      const { perfumeId } = variables
+      const { perfumeId, action } = variables
+      const wishlistKey = queryKeys.user.wishlist("current")
+      const perfumeKey = perfumeQueryKeys.perfumes.detail(perfumeId)
 
-      // Cancel any outgoing refetches for wishlist and perfume queries
       await Promise.all([
-        queryClient.cancelQueries({ queryKey: queryKeys.user.wishlist("current") }),
-        queryClient.cancelQueries({
-          queryKey: perfumeQueryKeys.perfumes.detail(perfumeId),
-        }),
+        queryClient.cancelQueries({ queryKey: wishlistKey }),
+        queryClient.cancelQueries({ queryKey: perfumeKey }),
       ])
 
-      // Snapshot previous values for rollback
-      const previousWishlist = queryClient.getQueryData(queryKeys.user.wishlist("current"))
-      const previousPerfume = queryClient.getQueryData(perfumeQueryKeys.perfumes.detail(perfumeId))
+      const previousWishlist = queryClient.getQueryData(wishlistKey)
+      const previousPerfume = queryClient.getQueryData(perfumeKey)
 
-      // Optimistically update wishlist
-      if (variables.action === "add" || variables.action === "remove") {
-        queryClient.setQueryData(
-          queryKeys.user.wishlist("current"),
-          (old: any) => {
-            if (!old) {
- return old 
-}
+      if (action === "add" || action === "remove") {
+        queryClient.setQueryData(wishlistKey, (old: WishlistCache | undefined) => {
+          if (!old) return old
 
-            const wishlistItems = old.wishlist || []
-            const isAdding = variables.action === "add"
-
-            if (isAdding) {
-              // Add to wishlist (optimistic)
-              if (
-                !wishlistItems.some((item: any) => item.perfumeId === perfumeId || item.perfume?.id === perfumeId)
-              ) {
-                return {
-                  ...old,
-                  wishlist: [
-                    ...wishlistItems,
-                    { perfumeId, perfume: { id: perfumeId } },
-                  ],
-                }
-              }
-            } else {
-              // Remove from wishlist (optimistic)
-              return {
-                ...old,
-                wishlist: wishlistItems.filter((item: any) => item.perfumeId !== perfumeId &&
-                    item.perfume?.id !== perfumeId),
-              }
+          const items = old.wishlist ?? []
+          if (action === "add") {
+            if (isInWishlist(items, perfumeId)) return old
+            return {
+              ...old,
+              wishlist: [...items, { perfumeId, perfume: { id: perfumeId } }],
             }
-
-            return old
           }
-        )
+          return {
+            ...old,
+            wishlist: items.filter(
+              item =>
+                item.perfumeId !== perfumeId && item.perfume?.id !== perfumeId
+            ),
+          }
+        })
       }
 
       return { previousWishlist, previousPerfume }
     },
-    onError: (error, variables, context) => {
-      // Rollback optimistic update on error
+    onError: (_error, variables, context) => {
       if (context?.previousWishlist) {
         queryClient.setQueryData(
           queryKeys.user.wishlist("current"),
@@ -134,25 +124,15 @@ export function useToggleWishlist() {
         )
       }
     },
-    onSuccess: (data, variables) => {
-      // Invalidate queries to refetch fresh data
-      const { perfumeId } = variables
-
-      // Invalidate only wishlist queries (not all user data)
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.user.wishlist("current"),
-        exact: false, // Also invalidates nested keys
+        exact: false,
       })
-
-      // Invalidate specific perfume detail query
       queryClient.invalidateQueries({
-        queryKey: perfumeQueryKeys.perfumes.detail(perfumeId),
-        exact: true, // Only this specific perfume
+        queryKey: perfumeQueryKeys.perfumes.detail(variables.perfumeId),
+        exact: true,
       })
-
-      // Don't invalidate all perfume lists - too broad and causes unnecessary refetches
-      // If perfume lists need wishlist status, they should include it in their response
-      // or use a separate query to check wishlist status
     },
   })
 }

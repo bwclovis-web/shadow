@@ -48,15 +48,15 @@ export const queryKeys = {
 
 /**
  * Fetch data quality statistics.
- * 
+ *
  * @param timeframe - Timeframe for the statistics: "week", "month", or "all"
  * @param force - Force regeneration of reports (default: false)
  * @returns Promise resolving to data quality stats
  */
-export async function getDataQualityStats(
+export const getDataQualityStats = async (
   timeframe: DataQualityTimeframe = "month",
   force: boolean = false
-): Promise<DataQualityStats> {
+): Promise<DataQualityStats> => {
   // Add cache-busting timestamp to ensure fresh data when needed
   const cacheBuster = Date.now()
   const params = new URLSearchParams({
@@ -78,9 +78,7 @@ export async function getDataQualityStats(
     throw new Error(`Failed to fetch data quality stats: ${response.statusText}${errorText ? ` - ${errorText}` : ""}`)
   }
 
-  const data: DataQualityStats = await response.json()
-
-  return data
+  return (await response.json()) as DataQualityStats
 }
 
 /**
@@ -88,7 +86,7 @@ export async function getDataQualityStats(
  * 
  * @returns Promise resolving to houses array
  */
-export async function getDataQualityHouses(): Promise<any[]> {
+export const getDataQualityHouses = async (): Promise<any[]> => {
   const response = await fetch("/api/data-quality-houses", {
     cache: "no-store", // Always fetch fresh data for data quality
   })
@@ -101,8 +99,6 @@ export async function getDataQualityHouses(): Promise<any[]> {
   }
 
   const data = await response.json()
-
-  // API returns array directly
   return Array.isArray(data) ? data : []
 }
 

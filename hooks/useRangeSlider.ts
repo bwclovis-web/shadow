@@ -15,7 +15,7 @@ import {
   getKeyboardValue,
   setupHoverListeners,
   sliderAnimations,
-} from "~/utils/rangeSliderUtils"
+} from "@/utils/rangeSliderUtils"
 
 import { useDragState } from "./useDragState"
 
@@ -58,7 +58,6 @@ export const useRangeSlider = ({
   const trackRef = useRef<HTMLDivElement>(null)
   const fillRef = useRef<HTMLDivElement>(null)
   const thumbRef = useRef<HTMLDivElement>(null)
-  const [isDragging, setIsDragging] = useState(false)
   const [internalValue, setInternalValue] = useState(value)
 
   const percentage = calculatePercentage(internalValue, min, max)
@@ -73,9 +72,7 @@ export const useRangeSlider = ({
 
   const calculateValue = useCallback(
     (clientX: number) => {
-      if (!trackRef.current) {
-        return internalValue
-      }
+      if (!trackRef.current) return min
       return calculateValueFromPosition({
         clientX,
         trackElement: trackRef.current,
@@ -84,12 +81,15 @@ export const useRangeSlider = ({
         step,
       })
     },
-    [
-internalValue, min, max, step
-]
+    [min, max, step]
   )
 
-  // Animation effects
+  const { isDragging, startDragging } = useDragState({
+    onValueChange: updateValue,
+    calculateValue,
+    thumbRef,
+  })
+
   useGSAP(() => {
     if (thumbRef.current && fillRef.current) {
       sliderAnimations.animatePosition(
@@ -101,37 +101,20 @@ internalValue, min, max, step
     }
   }, [percentage, isDragging])
 
-  // Hover animations
   useGSAP(() => {
-    if (!thumbRef.current) {
-      return
-    }
+    if (!thumbRef.current) return
     return setupHoverListeners(thumbRef.current, disabled, isDragging)
   }, [disabled, isDragging])
 
-  // Drag state management
-  const { startDragging } = useDragState({
-    onValueChange: updateValue,
-    calculateValue,
-    thumbRef,
-  })
-
-  // Event handlers
   const handleMouseDown = (event: ReactMouseEvent) => {
-    if (disabled) {
-      return
-    }
+    if (disabled) return
     event.preventDefault()
-    setIsDragging(true)
     startDragging(event.clientX)
   }
 
   const handleTouchStart = (event: ReactTouchEvent) => {
-    if (disabled || event.touches.length === 0) {
-      return
-    }
-    event.preventDefault() // Prevent scrolling when interacting with slider
-    setIsDragging(true)
+    if (disabled || event.touches.length === 0) return
+    event.preventDefault()
     startDragging(event.touches[0].clientX)
   }
 
@@ -174,10 +157,10 @@ internalValue, min, max, step
     }
   }
 
-  // Sync external value changes
+  // Sync external value when not dragging (avoid overwriting user input)
   useEffect(() => {
-    setInternalValue(value)
-  }, [value])
+    if (!isDragging) setInternalValue(value)
+  }, [value, isDragging])
 
   return {
     trackRef,

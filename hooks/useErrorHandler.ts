@@ -6,7 +6,7 @@ import {
   ErrorHandler,
   type ErrorSeverity,
   type ErrorType,
-} from "~/utils/errorHandling"
+} from "@/utils/errorHandling"
 
 interface UseErrorHandlerReturn {
   error: AppError | null
@@ -174,20 +174,13 @@ export const useApiErrorHandler = (userId?: string) => {
         statusCode,
         timestamp: new Date().toISOString(),
       }
-
-      let errorType: ErrorType = "UNKNOWN" as ErrorType
-      if (statusCode) {
-        if (statusCode >= 400 && statusCode < 500) {
-          errorType = "CLIENT" as ErrorType
-        } else if (statusCode >= 500) {
-          errorType = "SERVER" as ErrorType
-        }
+      if (statusCode !== undefined && statusCode >= 500) {
+        return createError.server(message, context)
       }
-
-      return createError[errorType.toLowerCase() as keyof typeof createError](
-        message,
-        context
-      )
+      if (statusCode !== undefined && statusCode >= 400 && statusCode < 500) {
+        return createError.client(message, context)
+      }
+      return createError.unknown(message, context)
     },
     []
   )

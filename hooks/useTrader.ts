@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 
-import { getTraderById, queryKeys } from "~/lib/queries/user"
+import { getTraderById, queryKeys, type TraderResponse } from "@/lib/queries/user"
 
 /**
  * Hook to fetch a trader profile by ID with hydration from loader data.
@@ -15,8 +15,8 @@ import { getTraderById, queryKeys } from "~/lib/queries/user"
  * const { data: trader } = useTrader(traderId, loaderData.trader)
  * ```
  */
-export function useTrader(traderId: string, initialData?: any) {
-  return useQuery({
+export const useTrader = (traderId: string, initialData?: TraderResponse) =>
+  useQuery({
     queryKey: queryKeys.user.trader(traderId),
     queryFn: () => getTraderById(traderId),
     initialData,
@@ -24,5 +24,4 @@ export function useTrader(traderId: string, initialData?: any) {
     staleTime: 5 * 60 * 1000, // 5 minutes
     enabled: !!traderId,
   })
-}
 

@@ -1,27 +1,18 @@
 import { useCallback, useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 
-import NoirRating from "~/components/Organisms/NoirRating"
-import { useRatingSystem } from "~/hooks"
+import NoirRating from "@/components/Organisms/NoirRating"
+import { useRatingSystem } from "@/hooks"
+
+type RatingKeys = "longevity" | "sillage" | "gender" | "priceValue" | "overall"
+
+type RatingValues = Partial<Record<RatingKeys, number | null>>
 
 interface PerfumeRatingSystemProps {
   perfumeId: string
   userId?: string | null
-  userRatings?: {
-    longevity?: number | null
-    sillage?: number | null
-    gender?: number | null
-    priceValue?: number | null
-    overall?: number | null
-  } | null
-  averageRatings?: {
-    longevity?: number | null
-    sillage?: number | null
-    gender?: number | null
-    priceValue?: number | null
-    overall?: number | null
-    totalRatings: number
-  } | null
+  userRatings?: RatingValues | null
+  averageRatings?: (RatingValues & { totalRatings: number }) | null
   readonly?: boolean
 }
 
@@ -41,18 +32,15 @@ const PerfumeRatingSystem = ({
   }, [initialAverageRatings])
 
   const refreshAverageRatings = useCallback(async () => {
+    setIsRefreshing(true)
     try {
-      setIsRefreshing(true)
-      const params = new URLSearchParams({ perfumeId })
-      const response = await fetch(`/api/ratings?${params}`)
-
+      const response = await fetch(`/api/ratings?${new URLSearchParams({ perfumeId })}`)
       if (!response.ok) {
         const errorPayload = await response.json().catch(() => ({}))
-        throw new Error(errorPayload.message || "Failed to refresh ratings")
+        throw new Error((errorPayload as { message?: string }).message ?? "Failed to refresh ratings")
       }
-
-      const data = await response.json()
-      setAverageRatings(data?.averageRatings ?? null)
+      const data = (await response.json()) as { averageRatings?: PerfumeRatingSystemProps["averageRatings"] }
+      setAverageRatings(data.averageRatings ?? null)
     } catch (error) {
       console.error("Failed to refresh ratings", error)
     } finally {
@@ -98,38 +86,30 @@ const PerfumeRatingSystem = ({
               <NoirRating
                 category={key}
                 value={currentRatings?.[key]}
-                onChange={(rating: number) => handleRatingChange(key, rating)}
-                readonly={false}
+                onChange={(rating) => handleRatingChange(key, rating)}
+                readonly={!isInteractive}
                 showLabel
               />
               <div className="text-xs text-noir-gold-100 text-center">
-                {averageRatings && averageRatings[key] ? (
+                {averageRatings && averageRatings[key] != null ? (
                   <>
-                    {t("communityAverage")}:{" "}
-                    {averageRatings[key]?.toFixed(1)}/5
+                    {t("communityAverage")}: {Number(averageRatings[key]).toFixed(1)}/5
                     {averageRatings.totalRatings > 0 && (
-                      <>
-                        <span className="ml-1">
-                          ({averageRatings.totalRatings}{" "}
-                          {t("totalRatings", { count: averageRatings.totalRatings })}
-                          )
-                        </span>
-                        {isRefreshing && <span className="ml-1">…</span>}
-                      </>
+                      <span className="ml-1">
+                        ({averageRatings.totalRatings}{" "}
+                        {t("totalRatings", { count: averageRatings.totalRatings })})
+                        {isRefreshing && " …"}
+                      </span>
                     )}
                   </>
                 ) : (
-                  <span className="text-noir-gold-100">
-                    {t("notYetRated")}
-                  </span>
+                  <span className="text-noir-gold-100">{t("notYetRated")}</span>
                 )}
               </div>
             </div>
           </div>
         ))}
       </div>
-
-      {/* Loading and error states are now handled by the useRatingSystem hook */}
     </div>
   )
 }
