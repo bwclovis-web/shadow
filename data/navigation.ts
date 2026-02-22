@@ -1,8 +1,7 @@
 export const mainNavigation = [
-  { id: "home", path: "/", key: "home", label: "Home" },
   { id: "houses", path: "/houses", key: "houses", label: "Behind the Bottle" },
   { id: "perfumes", path: "/the-vault", key: "perfumes", label: "The Vault" },
-  { id: "about", path: "/about", key: "about", label: "About" },
+  { id: "about", path: "/the-exchange", key: "theExchange", label: "The Exchange" },
 ] as const
 
 export const adminNavigation = [

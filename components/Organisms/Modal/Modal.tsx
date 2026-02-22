@@ -112,9 +112,12 @@ const Modal = ({
     </div>
   )
 
-  return mounted
-    ? createPortal(template, document.querySelector("#modal-portal") as Element)
-    : null
+  const portalRoot =
+    typeof document !== "undefined"
+      ? (document.querySelector("#modal-portal") ?? document.body)
+      : null
+
+  return mounted && portalRoot ? createPortal(template, portalRoot) : null
 }
 
 export default Modal

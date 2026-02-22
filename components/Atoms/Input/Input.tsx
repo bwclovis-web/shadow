@@ -35,6 +35,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       inputId,
       className,
       defaultValue,
+      value,
       actionData,
       action,
       placeholder,
@@ -66,15 +67,34 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       if (inputRef) inputRef.current = el
     }
 
+    const controlled = value !== undefined
+    const inputPropsWithValue = inputProps as Record<string, unknown> & {
+      value?: unknown
+      defaultValue?: string | number | readonly string[] | undefined
+    }
+    const { value: _v, defaultValue: conformDefault, ...restInputProps } = inputPropsWithValue
+    const resolvedDefault =
+      defaultValue ?? conformDefault ?? ""
+    const valueProps = controlled
+      ? { value }
+      : {
+          defaultValue:
+            typeof resolvedDefault === "string" ||
+            typeof resolvedDefault === "number" ||
+            Array.isArray(resolvedDefault)
+              ? resolvedDefault
+              : "",
+        }
+
     return (
       <input
         ref={setRef}
         name={action?.name}
-        defaultValue={defaultValue ?? ""}
         aria-invalid={actionData?.errors?.[action?.name ?? ""] ? true : undefined}
         className={styleMerge(inputVariants({ shading }), className)}
         data-testid="Input"
-        {...inputProps}
+        {...(restInputProps as Omit<HTMLProps<HTMLInputElement>, "value" | "defaultValue">)}
+        {...valueProps}
         {...props}
       />
     )

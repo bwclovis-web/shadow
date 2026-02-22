@@ -25,6 +25,11 @@ const nextConfig: NextConfig = {
         hostname: 'sites.create-cdn.net',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'mysterymodernmark.com',
+        pathname: '/**',
+      },
     ],
   },
 }

@@ -47,6 +47,7 @@ export default async function RootLayout({
           <GlobalNavigation user={user} />
           <Providers>{children}</Providers>
         </NextIntlClientProvider>
+        <div id="modal-portal" />
       </body>
     </html>
   )
