@@ -25,7 +25,7 @@ export enum ErrorSeverity {
   CRITICAL = "CRITICAL",
 }
 
-// Sensitive keys that should be redacted from error context
+// Sensitive keys that should be redacted from error context (all lowercase for comparison)
 const SENSITIVE_KEYS = [
   "password",
   "token",
@@ -54,33 +54,29 @@ const SENSITIVE_KEYS = [
  * Sanitize context by redacting sensitive information
  * This prevents sensitive data from being logged or exposed in error responses
  */
-export function sanitizeContext(context?: Record<string, any>): Record<string, any> | undefined {
-  if (!context) {
-    return undefined
-  }
+export const sanitizeContext = (
+  context?: Record<string, any>
+): Record<string, any> | undefined => {
+  if (!context) return undefined
 
   const sanitized: Record<string, any> = {}
-
-  Object.keys(context).forEach(key => {
+  for (const key of Object.keys(context)) {
     const lowerKey = key.toLowerCase()
-
-    // Check if key contains any sensitive keywords
-    const isSensitive = SENSITIVE_KEYS.some(sensitive => lowerKey.includes(sensitive.toLowerCase()))
-
+    const isSensitive = SENSITIVE_KEYS.some((s) => lowerKey.includes(s))
     if (isSensitive) {
       sanitized[key] = "[REDACTED]"
     } else if (typeof context[key] === "object" && context[key] !== null) {
-      // Recursively sanitize nested objects
       if (Array.isArray(context[key])) {
-        sanitized[key] = context[key].map((item: any) => typeof item === "object" ? sanitizeContext(item) : item)
+        sanitized[key] = (context[key] as any[]).map((item: any) =>
+          typeof item === "object" && item !== null ? sanitizeContext(item as Record<string, any>) : item
+        )
       } else {
         sanitized[key] = sanitizeContext(context[key] as Record<string, any>)
       }
     } else {
       sanitized[key] = context[key]
     }
-  })
-
+  }
   return sanitized
 }
 
@@ -125,21 +121,22 @@ export class AppError extends Error {
     }
   }
 
+  private static readonly DEFAULT_USER_MESSAGES: Record<ErrorType, string> = {
+    [ErrorType.VALIDATION]: "Please check your input and try again.",
+    [ErrorType.AUTHENTICATION]: "Please sign in to continue.",
+    [ErrorType.AUTHORIZATION]:
+      "You do not have permission to perform this action.",
+    [ErrorType.NOT_FOUND]: "The requested resource was not found.",
+    [ErrorType.NETWORK]:
+      "Network error. Please check your connection and try again.",
+    [ErrorType.DATABASE]: "Database error. Please try again later.",
+    [ErrorType.SERVER]: "Server error. Please try again later.",
+    [ErrorType.CLIENT]: "An error occurred. Please try again.",
+    [ErrorType.UNKNOWN]: "An unexpected error occurred. Please try again.",
+  }
+
   private getDefaultUserMessage(type: ErrorType): string {
-    const messages = {
-      [ErrorType.VALIDATION]: "Please check your input and try again.",
-      [ErrorType.AUTHENTICATION]: "Please sign in to continue.",
-      [ErrorType.AUTHORIZATION]:
-        "You do not have permission to perform this action.",
-      [ErrorType.NOT_FOUND]: "The requested resource was not found.",
-      [ErrorType.NETWORK]:
-        "Network error. Please check your connection and try again.",
-      [ErrorType.DATABASE]: "Database error. Please try again later.",
-      [ErrorType.SERVER]: "Server error. Please try again later.",
-      [ErrorType.CLIENT]: "An error occurred. Please try again.",
-      [ErrorType.UNKNOWN]: "An unexpected error occurred. Please try again.",
-    }
-    return messages[type] || messages[ErrorType.UNKNOWN]
+    return AppError.DEFAULT_USER_MESSAGES[type] ?? AppError.DEFAULT_USER_MESSAGES[ErrorType.UNKNOWN]
   }
 
   toJSON(includeStack: boolean = false) {
@@ -251,27 +248,18 @@ export const createError = {
     ),
 }
 
-// Import correlation ID utilities (only available on server)
-// We use a function to safely get the correlation ID without breaking client-side code
-// Cache the function reference to ensure we use the same AsyncLocalStorage instance
+// Correlation ID is server-only; dynamic require avoids pulling in AsyncLocalStorage on client
 let cachedGetCorrelationId: (() => string | undefined) | null = null
 
-function getCorrelationId(): string | undefined {
-  // Check if we're on the client side
-  if (typeof window !== "undefined") {
-    return undefined
-  }
-
-  // Server-side: try to get correlation ID from AsyncLocalStorage
+const getCorrelationId = (): string | undefined => {
+  if (typeof window !== "undefined") return undefined
   try {
-    // Cache the function reference to ensure consistent AsyncLocalStorage access
     if (!cachedGetCorrelationId) {
-      const correlationIdModule = require("./correlationId.server")
-      cachedGetCorrelationId = correlationIdModule.getCorrelationId
+      const { getCorrelationId: get } = require("./correlationId.server")
+      cachedGetCorrelationId = get
     }
-    return cachedGetCorrelationId()
+    return cachedGetCorrelationId!()
   } catch {
-    // If import fails (e.g., during build), return undefined
     return undefined
   }
 }
@@ -304,7 +292,7 @@ export class ErrorLogger {
     const correlationId = getCorrelationId()
 
     const logEntry = {
-      id: `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `error_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
       correlationId,
       error,
       timestamp: new Date(),
@@ -488,20 +476,20 @@ export const createErrorResponse = (
   })
 }
 
-const getStatusCodeForErrorType = (type: ErrorType): number => {
-  const statusCodes = {
-    [ErrorType.VALIDATION]: 400,
-    [ErrorType.AUTHENTICATION]: 401,
-    [ErrorType.AUTHORIZATION]: 403,
-    [ErrorType.NOT_FOUND]: 404,
-    [ErrorType.NETWORK]: 408,
-    [ErrorType.DATABASE]: 500,
-    [ErrorType.SERVER]: 500,
-    [ErrorType.CLIENT]: 400,
-    [ErrorType.UNKNOWN]: 500,
-  }
-  return statusCodes[type] || 500
+const STATUS_BY_ERROR_TYPE: Record<ErrorType, number> = {
+  [ErrorType.VALIDATION]: 400,
+  [ErrorType.AUTHENTICATION]: 401,
+  [ErrorType.AUTHORIZATION]: 403,
+  [ErrorType.NOT_FOUND]: 404,
+  [ErrorType.NETWORK]: 408,
+  [ErrorType.DATABASE]: 500,
+  [ErrorType.SERVER]: 500,
+  [ErrorType.CLIENT]: 400,
+  [ErrorType.UNKNOWN]: 500,
 }
+
+const getStatusCodeForErrorType = (type: ErrorType): number =>
+  STATUS_BY_ERROR_TYPE[type] ?? 500
 
 // Error Boundary Utilities
 export interface ErrorBoundaryState {

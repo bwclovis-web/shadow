@@ -596,8 +596,8 @@
     "perfumes": "Profumi",
     "summaryCard": {
       "totalPerfumeCount": "Totale profumi",
-      "backToHouses": "Torna a {{selectedLetter}}",
-      "ariaLabel": "Torna alle case che iniziano con {{selectedLetter}}",
+      "backToHouses": "Torna a {selectedLetter}",
+      "ariaLabel": "Torna alle case che iniziano con {selectedLetter}",
       "backToHousesLabel": "Torna alle case"
     },
     "perfumeBottleAltText": "Flacone {name}",

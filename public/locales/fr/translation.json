@@ -595,8 +595,8 @@
     "perfumes": "Parfums",
     "summaryCard": {
       "totalPerfumeCount": "Total des parfums",
-      "backToHouses": "Retour à {{selectedLetter}}",
-      "ariaLabel": "Retour aux maisons commençant par {{selectedLetter}}",
+      "backToHouses": "Retour à {selectedLetter}",
+      "ariaLabel": "Retour aux maisons commençant par {selectedLetter}",
       "backToHousesLabel": "Retour aux maisons"
     },
     "perfumeBottleAltText": "Flacon {{name}}",

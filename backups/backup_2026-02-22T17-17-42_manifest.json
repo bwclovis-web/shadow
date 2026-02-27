@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-02-22T17-17-42",
+  "database": "new_scent",
+  "host": "localhost",
+  "port": "5432",
+  "files": {
+    "full": "backup_2026-02-22T17-17-42_full.sql",
+    "schema": "backup_2026-02-22T17-17-42_schema.sql",
+    "data": "backup_2026-02-22T17-17-42_data.sql",
+    "custom": "backup_2026-02-22T17-17-42_custom.dump"
+  },
+  "sizes": {
+    "full": {
+      "bytes": 24739347,
+      "human": "23.59 MB"
+    },
+    "schema": {
+      "bytes": 38328,
+      "human": "37.43 KB"
+    },
+    "data": {
+      "bytes": 24701761,
+      "human": "23.56 MB"
+    },
+    "custom": {
+      "bytes": 6705214,
+      "human": "6.39 MB"
+    }
+  }
+}

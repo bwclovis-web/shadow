@@ -629,8 +629,8 @@
     
     "summaryCard": {
       "totalPerfumeCount": "Total perfumes",
-      "backToHouses": "Back to {{selectedLetter}}",
-      "ariaLabel": "Back to houses starting with {{selectedLetter}}",
+      "backToHouses": "Back to {selectedLetter}",
+      "ariaLabel": "Back to houses starting with {selectedLetter}",
       "backToHousesLabel": "Back to houses"
     },
     "perfumeBottleAltText": "{{name}} Perfume Bottle",
