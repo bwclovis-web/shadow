@@ -4,14 +4,15 @@ import { FaBars, FaHeart, FaUser } from "react-icons/fa"
 import { LuSearch } from "react-icons/lu"
 import { NavLink } from "react-router"
 
+import { SIGN_IN } from "~/constants/routes"
 import { mainNavigation } from "~/data/navigation"
-import { ROUTE_PATH as ADMIN_PATH } from "~/routes/admin/profilePage"
-import { ROUTE_PATH as SIGN_IN } from "~/routes/login/SignInPage"
+import { getProfilePathForUser } from "~/utils/user"
 import { styleMerge } from "~/utils/styleUtils"
 
 interface MobileBottomNavigationProps extends HTMLProps<HTMLDivElement> {
   user?: {
     id?: string
+    username?: string | null
     role?: string
   } | null
   onMenuOpen?: () => void
@@ -73,7 +74,14 @@ const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
 
       {/* User/Profile */}
       <NavLink
-        to={user ? ADMIN_PATH : SIGN_IN}
+        to={
+            user?.id
+              ? getProfilePathForUser({
+                  id: user.id,
+                  username: user.username ?? null,
+                })
+              : SIGN_IN
+          }
         className={({ isActive: active }) => styleMerge(
             "flex flex-col items-center gap-1 p-2 mobile-touch-target transition-colors duration-200",
             active ? "text-noir-light" : "text-noir-gold hover:text-noir-light"

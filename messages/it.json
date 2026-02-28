@@ -26,6 +26,9 @@
   },
   "admin": {
     "navigation": {
+      "dashboard": "Dashboard",
+      "houses": "Case",
+      "perfumes": "Profumi",
       "createHouse": "Crea casa",
       "createPerfume": "Crea profumo",
       "dataQuality": "Qualità dati",
@@ -712,6 +715,10 @@
     }
   },
   "termsAndConditions": {
+    "meta": {
+      "title": "Termini e condizioni - Shadow and Sillage",
+      "description": "Termini di utilizzo, regole di scambio e politica sulla privacy di Shadow and Sillage."
+    },
     "heading": "Termini e condizioni",
     "subheading": "Shadow and Sillage",
     "gist": {

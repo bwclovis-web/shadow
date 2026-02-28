@@ -36,7 +36,7 @@ async function setup() {
     console.log('\n📝 Next steps:')
     console.log('   1. Run: npx prisma generate')
     console.log('   2. Restart your dev server')
-    console.log('   3. Visit /admin/profile to see your alerts\n')
+    console.log('   3. Visit your profile (e.g. /your-username/profile or /your-user-id/profile) to see your alerts\n')
     
   } catch (error) {
     if (error.message.includes('already exists')) {

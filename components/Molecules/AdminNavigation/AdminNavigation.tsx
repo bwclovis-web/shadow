@@ -6,7 +6,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 
-import { adminNavigation, profileNavigation } from "@/data/navigation"
+import { adminNavigation, getProfileNavigation } from "@/data/navigation"
 import { styleMerge } from "@/utils/styleUtils"
 
 import { adminNavigationVariants } from "./adminNavigation-variants"
@@ -15,6 +15,8 @@ interface AdminNavigationProps
   extends HTMLProps<HTMLUListElement>,
     VariantProps<typeof adminNavigationVariants> {
   user?: {
+    id?: string
+    username?: string | null
     role?: string
   }
   onNavClick?: () => void
@@ -53,14 +55,17 @@ const AdminNavigation = ({ className, user, onNavClick }: AdminNavigationProps) 
                 className={styleMerge(linkBase, isActive(item.path) && linkActive)}
               >
                 <span className="pl-2" suppressHydrationWarning>
-                  {t("admin.navigation." + item.key)}
+                  {tAdmin("navigation." + item.key)}
                 </span>
               </Link>
             </li>
           ))}
         {/* Profile navigation - show for all authenticated users */}
-        {user &&
-          profileNavigation.map((item: (typeof profileNavigation)[number]) => (
+        {user?.id &&
+          getProfileNavigation({
+            id: user.id,
+            username: user.username ?? null,
+          }).map(item => (
             <li
               key={item.id}
               className="capitalize font-semibold text-shadow-sm text-shadow-noir-dark/70 leading-5"

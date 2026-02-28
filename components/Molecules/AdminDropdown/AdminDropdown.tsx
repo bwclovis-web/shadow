@@ -3,13 +3,14 @@ import { useTranslations } from "next-intl"
 import { FaChevronDown } from "react-icons/fa"
 import { NavLink } from "react-router"
 
-import { adminNavigation, profileNavigation } from "~/data/navigation"
+import { adminNavigation, getProfileNavigation } from "~/data/navigation"
 import { styleMerge } from "~/utils/styleUtils"
 
 interface AdminDropdownProps {
   className?: string
   user?: {
     id?: string
+    username?: string | null
     role?: string
   } | null
   onNavClick?: () => void
@@ -116,8 +117,12 @@ const AdminDropdown = ({
             )}
 
             {/* Profile navigation - show for all authenticated users */}
-            {profileNavigation.map(item => (
-              <li key={`profile-${item.id}`}>
+            {user?.id &&
+              getProfileNavigation({
+                id: user.id,
+                username: user.username ?? null,
+              }).map(item => (
+                <li key={`profile-${item.id}`}>
                 <NavLink
                   to={item.path}
                   onClick={handleNavClick}
@@ -131,8 +136,8 @@ const AdminDropdown = ({
                 >
                   {tProfile("navigation." + item.key)}
                 </NavLink>
-              </li>
-            ))}
+                </li>
+              ))}
           </ul>
         </div>
       )}

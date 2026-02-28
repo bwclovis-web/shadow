@@ -1,7 +1,7 @@
 import type { VariantProps } from "class-variance-authority"
 import type { HTMLProps } from "react"
 
-import { styleMerge } from "~/utils/styleUtils"
+import { styleMerge } from "@/utils/styleUtils"
 
 import {
   checkboxInputVariants,

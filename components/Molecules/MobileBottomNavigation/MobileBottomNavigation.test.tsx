@@ -203,7 +203,7 @@ describe("MobileBottomNavigation", () => {
     it("links to profile page when user is logged in", () => {
       renderWithProviders(<MobileBottomNavigation user={mockUser} />)
       const profileLink = screen.getByRole("link", { name: /profile/i })
-      expect(profileLink).toHaveAttribute("href", "/admin/profile")
+      expect(profileLink).toHaveAttribute("href", "/user-1/profile")
     })
 
     it("displays user icon", () => {
@@ -381,7 +381,7 @@ describe("MobileBottomNavigation", () => {
       renderWithProviders(<MobileBottomNavigation user={adminUser} />)
 
       const profileLink = screen.getByRole("link", { name: /profile/i })
-      expect(profileLink).toHaveAttribute("href", "/admin/profile")
+      expect(profileLink).toHaveAttribute("href", "/admin-1/profile")
     })
 
     it("handles user with editor role", () => {

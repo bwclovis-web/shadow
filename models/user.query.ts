@@ -66,3 +66,25 @@ export const getUserBySubscriptionId = async (subscriptionId: string) => {
     where: { subscriptionId },
   })
 }
+
+const slugify = (s: string): string =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+
+/**
+ * Resolve profile path segment to user: by id first, then by slugified username.
+ */
+export const getUserByProfileSlug = async (slug: string) => {
+  const byId = await getUserById(slug)
+  if (byId) return byId
+  const users = await prisma.user.findMany({
+    where: { username: { not: null } },
+    select: { id: true, username: true },
+  })
+  const match = users.find(
+    (u) => u.username && slugify(u.username) === slug
+  )
+  return match ? getUserById(match.id) : null
+}

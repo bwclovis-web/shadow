@@ -1,146 +1,144 @@
-// app/models/session.server.ts
-import cookie from "cookie"
-import { redirect } from "react-router"
+/**
+ * Session helpers for Next.js App Router.
+ * Use getSessionFromCookieHeader (utils/session-from-request.server) in layout/pages;
+ * use these helpers when you need requireUser, requireRoles, or login/logout tokens.
+ */
 
-import { ROUTE_PATH as ADMIN_PROFILE } from "~/routes/admin/profilePage"
+import { redirect } from "next/navigation"
 
-// Use hardcoded path to avoid circular dependency with SignInPage
-const SIGN_IN = "/sign-in"
+import { SIGN_IN } from "@/constants/routes"
 import {
   createSession,
-  getActiveSession,
   invalidateAllUserSessions,
   invalidateSession,
   refreshAccessToken,
   verifyAccessToken,
-} from "~/utils/security/session-manager.server"
+} from "@/utils/security/session-manager.server"
+import {
+  getSessionFromCookieHeader,
+  type SessionFromRequest,
+} from "@/utils/session-from-request.server"
 
 import { getUserById } from "./user.query"
-export async function getUser(context: { userSession: any }) {
-  const userId = context?.userSession?.userId
-  if (!userId) {
-    return null
+
+/** Cookie header string (e.g. from next/headers cookies().getAll()) or existing session */
+export type SessionContext =
+  | string
+  | null
+  | { userSession?: { userId?: string } | null }
+  | SessionFromRequest
+  | null
+
+const getUserIdFromContext = async (
+  context: SessionContext
+): Promise<string | null> => {
+  if (context == null) return null
+  if (typeof context === "string") {
+    const session = await getSessionFromCookieHeader(context, {
+      includeUser: false,
+    })
+    return session?.userId ?? null
   }
+  const session = context as
+    | SessionFromRequest
+    | { userSession?: { userId?: string } | null }
+  if ("userId" in session && typeof (session as SessionFromRequest).userId === "string") {
+    return (session as SessionFromRequest).userId
+  }
+  if ("userSession" in session) {
+    return session.userSession?.userId ?? null
+  }
+  return null
+}
+
+/** Get current user from cookie header or session context. Returns null if unauthenticated. */
+export const getUser = async (
+  context: SessionContext
+): Promise<Awaited<ReturnType<typeof getUserById>> | null> => {
+  const userId = await getUserIdFromContext(context)
+  if (!userId) return null
   return getUserById(userId)
 }
 
-export async function requireUser(context: { userSession: any }) {
+/** Require authenticated user; redirects to sign-in if none. Use in server components/actions. */
+export const requireUser = async (
+  context: SessionContext
+): Promise<NonNullable<Awaited<ReturnType<typeof getUser>>>> => {
   const user = await getUser(context)
   if (!user) {
-    throw redirect(SIGN_IN)
+    redirect(SIGN_IN)
   }
   return user
 }
 
-export async function login({
-  context,
+/** Create session tokens for login. Caller must set cookies and redirect (e.g. in a Server Action). */
+export const getLoginSession = async ({
   userId,
-  redirectTo = ADMIN_PROFILE,
+  redirectTo,
   userAgent,
   ipAddress,
 }: {
-  context: { req: any; res?: any }
   userId: string
+  /** e.g. getProfilePathForUser(user) - must be passed when redirecting to profile */
   redirectTo?: string
   userAgent?: string
   ipAddress?: string
-}) {
-  // Create new session
-  const { accessToken, refreshToken, sessionId } = await createSession({
+}) => {
+  const { accessToken, refreshToken } = await createSession({
     userId,
     userAgent,
     ipAddress,
   })
-
-  // Set both access and refresh token cookies
-  const accessTokenCookie = cookie.serialize("accessToken", accessToken, {
-    httpOnly: true,
-    path: "/",
-    maxAge: 60 * 60, // 60 minutes
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-  })
-
-  const refreshTokenCookie = cookie.serialize("refreshToken", refreshToken, {
-    httpOnly: true,
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-  })
-
-  throw redirect(redirectTo, {
-    headers: {
-      "Set-Cookie": [accessTokenCookie, refreshTokenCookie],
-    },
-  })
+  return { accessToken, refreshToken, redirectTo }
 }
 
-export async function logout({
-  context,
+/** Prepare logout. Caller must clear cookies (maxAge: 0) and redirect to redirectTo. */
+export const getLogoutRedirect = async ({
   sessionId,
 }: {
-  context: { res?: any }
   sessionId?: string
-}) {
-  // Invalidate session if sessionId provided
+} = {}): Promise<{ redirectTo: string }> => {
   if (sessionId) {
     await invalidateSession(sessionId)
   }
-
-  // Clear both cookies
-  const accessTokenCookie = cookie.serialize("accessToken", "", {
-    httpOnly: true,
-    path: "/",
-    maxAge: 0, // Expire immediately
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-  })
-
-  const refreshTokenCookie = cookie.serialize("refreshToken", "", {
-    httpOnly: true,
-    path: "/",
-    maxAge: 0, // Expire immediately
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-  })
-
-  throw redirect(SIGN_IN, {
-    headers: {
-      "Set-Cookie": [accessTokenCookie, refreshTokenCookie],
-    },
-  })
+  return { redirectTo: SIGN_IN }
 }
 
-export async function requireRoles(context: { userSession: any }, roles: string[]) {
+/** Require user to have one of the given roles; redirects to sign-in if not. */
+export const requireRoles = async (
+  context: SessionContext,
+  roles: string[]
+): Promise<NonNullable<Awaited<ReturnType<typeof getUser>>>> => {
   const user = await getUser(context)
   if (!user || !roles.includes(user.role)) {
-    throw redirect(SIGN_IN) // or custom unauthorized route
+    redirect(SIGN_IN)
   }
   return user
 }
 
-// Refresh access token using refresh token
-export async function refreshSession(refreshToken: string) {
+/** Refresh access token using refresh token. Returns null on failure. */
+export const refreshSession = async (refreshToken: string) => {
   try {
-    const { accessToken, userId, sessionId } = await refreshAccessToken(refreshToken)
-    return { accessToken, userId, sessionId }
-  } catch (error) {
-    console.error("Session refresh failed:", error)
+    const result = await refreshAccessToken(refreshToken)
+    return result
+      ? {
+          accessToken: result.accessToken,
+          userId: result.userId,
+          sessionId: result.sessionId,
+        }
+      : null
+  } catch {
     return null
   }
 }
 
-// Invalidate all user sessions (for password change)
-export async function invalidateAllSessions(userId: string) {
-  await invalidateAllUserSessions(userId)
-}
+/** Invalidate all sessions for a user (e.g. after password change). */
+export const invalidateAllSessions = (userId: string): Promise<void> =>
+  invalidateAllUserSessions(userId)
 
-// Get user from access token
-export async function getUserFromToken(accessToken: string) {
+/** Resolve user from access token. Returns null if token invalid or user not found. */
+export const getUserFromToken = async (accessToken: string) => {
   const payload = verifyAccessToken(accessToken)
-  if (!payload) {
-    return null
-  }
-  return await getUserById(payload.userId)
+  if (!payload) return null
+  return getUserById(payload.userId)
 }

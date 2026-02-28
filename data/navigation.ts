@@ -1,3 +1,5 @@
+import { getProfilePathForUser } from "@/utils/user"
+
 export const mainNavigation = [
   { id: "houses", path: "/houses", key: "houses", label: "Behind the Bottle" },
   { id: "perfumes", path: "/the-vault", key: "perfumes", label: "The Vault" },
@@ -10,6 +12,13 @@ export const adminNavigation = [
   { id: "admin-perfumes", path: "/admin/perfumes", key: "perfumes", label: "Perfumes" },
 ] as const
 
-export const profileNavigation = [
-  { id: "profile", path: "/admin/profile", key: "profile", label: "Profile" },
-] as const
+const profileNavItem = {
+  id: "profile" as const,
+  key: "profile" as const,
+  label: "Profile" as const,
+}
+
+/** Profile nav item with dynamic path for the given user. Use when rendering profile links. */
+export const getProfileNavigation = (user: { id: string; username?: string | null }) => [
+  { ...profileNavItem, path: getProfilePathForUser(user) },
+]

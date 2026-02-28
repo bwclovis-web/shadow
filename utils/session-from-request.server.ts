@@ -11,6 +11,7 @@ import {
   refreshAccessToken,
   verifyAccessToken,
 } from "@/utils/security/session-manager.server"
+import { createSafeUser } from "./user"
 
 // Canonical cookie names; temporary legacy fallback for migration (Fix #2)
 const ACCESS_TOKEN_COOKIE = "accessToken"

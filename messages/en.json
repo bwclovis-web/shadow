@@ -22,6 +22,9 @@
   },
   "admin": {
     "navigation": {
+      "dashboard": "Dashboard",
+      "houses": "Houses",
+      "perfumes": "Perfumes",
       "createHouse": "Create House",
       "createPerfume": "Create Perfume",
       "dataQuality": "Data Quality",
@@ -759,6 +762,10 @@
     
   },
   "termsAndConditions": {
+    "meta": {
+      "title": "Terms and Conditions - Shadow and Sillage",
+      "description": "Terms of use, trading rules, and privacy policy for Shadow and Sillage."
+    },
     "heading": "Terms and Conditions",
     "subheading": "Shadow and Sillage",
     "gist": {

@@ -1,25 +1,18 @@
-"use client"
-
 import Link from "next/link"
-import { useRef } from "react"
-import { useTranslations } from "next-intl"
-
+import { getTranslations } from "next-intl/server"
 
 const SIGN_UP_PATH = "/sign-up"
 
-export default function AuthLayout({
+export default async function AuthLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const container = useRef<HTMLDivElement>(null)
-  const t = useTranslations("auth")
-
+  const t = await getTranslations("auth")
 
   return (
     <div
       className="flex flex-col gap-8 items-center justify-center min-h-screen px-4 bg-noir-gold-500/30"
-      ref={container}
     >
       <img
         src="/images/password.webp"

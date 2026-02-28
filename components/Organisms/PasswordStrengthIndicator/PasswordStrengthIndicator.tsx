@@ -1,7 +1,24 @@
+"use client"
+
+import type { ReactNode } from "react"
 import { useTranslations } from "next-intl"
 import { LuBadge, LuBadgeAlert, LuBadgeCheck } from "react-icons/lu"
 
-import { usePasswordStrength } from "~/hooks"
+import { usePasswordStrength } from "@/hooks/usePasswordStrength" 
+
+const ICON_PROPS = { size: 25, strokeWidth: 1.5, stroke: "white" } as const
+
+const STRENGTH_ICONS: Record<string, ReactNode> = {
+  weak: <LuBadgeAlert {...ICON_PROPS} fill="red" />,
+  fair: <LuBadge {...ICON_PROPS} fill="orange" />,
+  good: <LuBadge {...ICON_PROPS} fill="yellow" />,
+  strong: <LuBadgeCheck {...ICON_PROPS} fill="blue" />,
+  very_strong: <LuBadgeCheck {...ICON_PROPS} fill="green" />,
+}
+
+const DEFAULT_STRENGTH_ICON = (
+  <LuBadgeAlert {...ICON_PROPS} fill="white" />
+)
 
 interface PasswordStrengthIndicatorProps {
   password: string
@@ -14,7 +31,7 @@ interface PasswordStrengthIndicatorProps {
   minScore?: number
 }
 
-export default function PasswordStrengthIndicator({
+const PasswordStrengthIndicator = ({
   password,
   className = "",
   minLength = 8,
@@ -23,7 +40,7 @@ export default function PasswordStrengthIndicator({
   requireNumbers = true,
   requireSpecialChars = true,
   minScore = 3,
-}: PasswordStrengthIndicatorProps) {
+}: PasswordStrengthIndicatorProps) => {
   const t = useTranslations("password")
   const { strengthInfo, isValid, getStrengthColor, getStrengthText } =
     usePasswordStrength(password, {
@@ -39,28 +56,7 @@ export default function PasswordStrengthIndicator({
     return null
   }
 
-  const getStrengthIcon = (strength: string) => {
-    switch (strength) {
-      case "weak":
-        return <LuBadgeAlert size={25} fill="red" strokeWidth={1.5} stroke="white" />
-      case "fair":
-        return <LuBadge size={25} fill="orange" strokeWidth={1.5} stroke="white" />
-      case "good":
-        return <LuBadge size={25} fill="yellow" strokeWidth={1.5} stroke="white" />
-      case "strong":
-        return (
-          <LuBadgeCheck size={25} fill="blue" strokeWidth={1.5} stroke="white" />
-        )
-      case "very_strong":
-        return (
-          <LuBadgeCheck size={25} fill="green" strokeWidth={1.5} stroke="white" />
-        )
-      default:
-        return (
-          <LuBadgeAlert size={25} fill="white" strokeWidth={1.5} stroke="white" />
-        )
-    }
-  }
+  const barWidthPercent = Math.min(100, (strengthInfo.score / 8) * 100)
 
   return (
     <div className={`space-y-2 ${className}`}>
@@ -69,13 +65,13 @@ export default function PasswordStrengthIndicator({
         <div className="flex-1 bg-gray-200 rounded-full h-2">
           <div
             className={`h-2 rounded-full transition-all duration-300 ${getStrengthColor(strengthInfo.strength)}`}
-            style={{
-              width: `${Math.min(100, (strengthInfo.score / 8) * 100)}%`,
-            }}
+            style={{ width: `${barWidthPercent}%` }}
           />
         </div>
         <span className="text-sm font-medium text-noir-white flex items-center space-x-1">
-          <span>{getStrengthIcon(strengthInfo.strength)}</span>
+          <span>
+            {STRENGTH_ICONS[strengthInfo.strength] ?? DEFAULT_STRENGTH_ICON}
+          </span>
           <span>{getStrengthText(strengthInfo.strength)}</span>
         </span>
       </div>
@@ -83,10 +79,10 @@ export default function PasswordStrengthIndicator({
       {/* Feedback Messages */}
       {strengthInfo.feedback.length > 0 && (
         <div className="text-xs text-noir-gold-100 space-y-1">
-          {strengthInfo.feedback.map((message, index) => (
-            <div key={index} className="flex items-center space-x-1">
+          {strengthInfo.feedback.map((message: string, index: number) => (
+            <div key={`${index}-${message}`} className="flex items-center space-x-1">
               <span className="text-red-500">•</span>
-              <span>{message} </span>
+              <span>{message}</span>
             </div>
           ))}
         </div>
@@ -96,7 +92,7 @@ export default function PasswordStrengthIndicator({
       {strengthInfo.strength === "very_strong" && (
         <div className="text-xs text-green-600 flex items-center space-x-1">
           <span>✅</span>
-          <span>{t("password.excellentPasswordStrength", "Excellent password strength!")}</span>
+          <span>{t("excellentPasswordStrength")}</span>
         </div>
       )}
 
@@ -110,3 +106,5 @@ export default function PasswordStrengthIndicator({
     </div>
   )
 }
+
+export default PasswordStrengthIndicator
