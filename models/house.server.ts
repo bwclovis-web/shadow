@@ -573,6 +573,7 @@ export const updatePerfumeHouse = async (id: string, data: FormData) => {
     validateHouseFormData(data)
 
     const name = sanitizeText(data.get("name") as string)
+    const type = parseHouseType(data.get("type"))
     const updatedHouse = await prisma.perfumeHouse.update({
       where: { id },
       data: {
@@ -583,7 +584,7 @@ export const updatePerfumeHouse = async (id: string, data: FormData) => {
         website: data.get("website") as string,
         country: data.get("country") as string,
         founded: data.get("founded") as string,
-        type: data.get("type") as HouseType,
+        type,
         email: data.get("email") as string,
         phone: data.get("phone") as string,
         address: data.get("address") as string,
@@ -629,10 +630,30 @@ const sanitizeText = (text: string | null): string => {
     .replace(/[\u2026]/g, "...") // ellipsis
 }
 
+const VALID_HOUSE_TYPES: HouseType[] = [
+  "niche",
+  "designer",
+  "indie",
+  "celebrity",
+  "drugstore",
+]
+
+const parseHouseType = (value: FormDataEntryValue | null): HouseType => {
+  if (typeof value === "string" && VALID_HOUSE_TYPES.includes(value as HouseType)) {
+    return value as HouseType
+  }
+  return "indie"
+}
+
 export const createPerfumeHouse = async (data: FormData) => {
   try {
     const name = sanitizeText(data.get("name") as string)
     const slug = createUrlSlug(name)
+    const rawType = data.get("type")
+    const type: HouseType =
+      typeof rawType === "string" && VALID_HOUSE_TYPES.includes(rawType as HouseType)
+        ? (rawType as HouseType)
+        : "indie"
 
     const newHouse = await prisma.perfumeHouse.create({
       data: {
@@ -643,7 +664,7 @@ export const createPerfumeHouse = async (data: FormData) => {
         website: data.get("website") as string,
         country: data.get("country") as string,
         founded: data.get("founded") as string,
-        type: data.get("type") as HouseType,
+        type,
         email: data.get("email") as string,
         phone: data.get("phone") as string,
         address: data.get("address") as string,
