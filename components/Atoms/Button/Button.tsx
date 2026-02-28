@@ -1,6 +1,9 @@
+"use client"
+
 import { type VariantProps } from "class-variance-authority"
 import { type ButtonHTMLAttributes, type LinkHTMLAttributes, type ReactNode, type Ref } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 import { styleMerge } from "@/utils/styleUtils"
 
@@ -60,6 +63,8 @@ const VooDooLink = ({
   background,
   ...props
 }: LinkProps) => {
+  const router = useRouter()
+
   const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if(props["aria-disabled"]){
       event.preventDefault()
@@ -68,14 +73,16 @@ const VooDooLink = ({
     }
   }
 
-  return(
-  <Link
-    href={url}
-    prefetch={true}
-    className={styleMerge(buttonVariants({ className, size, variant, background }))}
-    {...props}
-  >
-    {children}
-  </Link>
-)}
+  return (
+    <Link
+      href={url}
+      prefetch={true}
+      className={styleMerge(buttonVariants({ className, size, variant, background }))}
+      onMouseEnter={() => router.prefetch(url)}
+      {...props}
+    >
+      {children}
+    </Link>
+  )
+}
 export { Button, VooDooLink }

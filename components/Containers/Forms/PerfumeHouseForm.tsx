@@ -39,8 +39,22 @@ interface PerfumeHouseFormProps {
   submitButtonText?: string
   className?: string
   hideImage?: boolean
-  /** For traditional form POST when onSubmit is not provided (e.g. Next.js server action URL) */
-  action?: string
+  /** Form POST URL or Next.js server action (function) */
+  action?: string | ((formData: FormData) => void)
+}
+
+const displayErrorFromResult = (
+  result: SubmissionResult | null
+): string | null =>
+  result?.status === "error" && typeof result.error === "string"
+    ? result.error
+    : null
+
+/** Ordered field ids (for focus). Image omitted when hideImage. */
+const getOrderedFieldIds = (hideImage: boolean): string[] => {
+  const base = ["name", "description", "founded", "type"]
+  if (!hideImage) base.push("image")
+  return [...base, "address", "country", "phone", "email", "website"]
 }
 
 const PerfumeHouseForm = ({
@@ -54,19 +68,10 @@ const PerfumeHouseForm = ({
   action,
 }: PerfumeHouseFormProps) => {
   const inputRef = useRef<HTMLInputElement | null>(null)
-  const [serverError, setServerError] = useState<string | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (lastResult?.status === "error" && typeof lastResult.error === "string") {
-      setServerError(lastResult.error)
-    }
-  }, [lastResult])
-
-  const [
-    form,
-    { name, description, image, website, email, phone, address, founded, type, country },
-  ] = useForm({
+  const [form, fieldset] = useForm({
     id: formType,
     lastResult: lastResult ?? undefined,
     constraint: getZodConstraint(CreatePerfumeHouseSchema),
@@ -74,35 +79,96 @@ const PerfumeHouseForm = ({
       parseWithZod(formData, { schema: CreatePerfumeHouseSchema }),
   })
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    if (onSubmit) {
-      event.preventDefault()
-      setServerError(null)
-      setSuccessMessage(null)
+  const { name, description, image, website, email, phone, address, founded, type, country } =
+    fieldset
 
-      const formData = new FormData(event.currentTarget)
-      try {
-        await onSubmit(formData)
-        setSuccessMessage("Your submission has been received!")
-      } catch (error) {
-        setServerError(
-          error instanceof Error ? error.message : "Failed to submit request"
-        )
-      }
+  const displayError =
+    displayErrorFromResult(lastResult) ?? submitError
+
+  const submittedValues =
+    lastResult?.status === "error" &&
+    lastResult.initialValue &&
+    typeof lastResult.initialValue === "object"
+      ? (lastResult.initialValue as Record<string, unknown>)
+      : undefined
+  const effectiveData = (data ?? submittedValues) as PerfumeHouseFormData | undefined
+
+  useEffect(() => {
+    if (!displayError) return
+    const fieldIds = getOrderedFieldIds(hideImage)
+    const fieldsWithErrors = [
+      name,
+      description,
+      founded,
+      type,
+      ...(hideImage ? [] : [image]),
+      address,
+      country,
+      phone,
+      email,
+      website,
+    ]
+    const firstErrorIndex = fieldsWithErrors.findIndex(
+      (field) => field?.errors && field.errors.length > 0
+    )
+    const indexToFocus = firstErrorIndex >= 0 ? firstErrorIndex : 0
+    const id = fieldIds[indexToFocus]
+    const el = id ? document.getElementById(id) : null
+    if (el && "focus" in el && typeof (el as HTMLInputElement).focus === "function") {
+      ;(el as HTMLInputElement).focus({ preventScroll: false })
     }
+  }, [displayError, hideImage, name, description, founded, type, image, address, country, phone, email, website])
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    if (!onSubmit) return
+    event.preventDefault()
+    setSubmitError(null)
+    setSuccessMessage(null)
+    const formData = new FormData(event.currentTarget)
+    try {
+      await onSubmit(formData)
+      setSuccessMessage("Your submission has been received!")
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : "Failed to submit request"
+      )
+    }
+  }
+
+  const addressData = effectiveData
+    ? { address: effectiveData.address ?? "", country: effectiveData.country ?? "" }
+    : undefined
+  const contactData = effectiveData
+    ? {
+        phone: effectiveData.phone ?? "",
+        email: effectiveData.email ?? "",
+        website: effectiveData.website ?? "",
+      }
+    : undefined
+  const submitLabel =
+    submitButtonText ??
+    (formType === FORM_TYPES.CREATE_HOUSE_FORM
+      ? "Create Perfume House"
+      : "Submit Changes")
+
+  const isServerAction = typeof action === "function"
+  const formProps = getFormProps(form)
+  if (isServerAction) {
+    delete (formProps as Record<string, unknown>).method
+    delete (formProps as Record<string, unknown>).encType
   }
 
   return (
     <form
-      method={onSubmit ? undefined : "post"}
+      {...formProps}
+      {...(!isServerAction && !onSubmit && { method: "post" })}
       action={onSubmit ? undefined : action}
-      {...getFormProps(form)}
       onSubmit={onSubmit ? handleSubmit : undefined}
       autoComplete="off"
       className={className ?? formClassName}
     >
       <InfoFieldset
-        data={data ?? undefined}
+        data={effectiveData ?? undefined}
         actions={{ name, description, image, founded, type }}
         hideImage={hideImage}
       />
@@ -110,23 +176,11 @@ const PerfumeHouseForm = ({
         address={address}
         country={country}
         inputRef={inputRef}
-        data={
-          data
-            ? { address: data.address ?? "", country: data.country ?? "" }
-            : undefined
-        }
+        data={addressData}
       />
       <ContactFieldset
         inputRef={inputRef}
-        data={
-          data
-            ? {
-                phone: data.phone ?? "",
-                email: data.email ?? "",
-                website: data.website ?? "",
-              }
-            : undefined
-        }
+        data={contactData}
         actions={{ phone, website, email }}
       />
       {successMessage && (
@@ -134,20 +188,18 @@ const PerfumeHouseForm = ({
           {successMessage}
         </div>
       )}
-      {serverError && (
+      {displayError && (
         <div className="bg-red-500 text-lg font-semibold px-3 py-2 max-w-max rounded-2xl border-2 text-white">
-          {serverError}
+          {displayError}
         </div>
       )}
       <CSRFToken />
-      <input type="hidden" name="houseId" value={data?.id} />
+      <input type="hidden" name="houseId" value={effectiveData?.id ?? ""} />
       <Button type="submit" className="mt-4 max-w-max">
-        {submitButtonText ??
-          (formType === FORM_TYPES.CREATE_HOUSE_FORM
-            ? "Create Perfume House"
-            : "Submit Changes")}
+        {submitLabel}
       </Button>
     </form>
   )
 }
+
 export default PerfumeHouseForm

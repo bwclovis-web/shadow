@@ -2,22 +2,21 @@ import type { FormEvent } from "react"
 import { useState } from "react"
 import { useTranslations } from "next-intl"
 
-import { Button } from "~/components/Atoms/Button/Button"
-import VooDooCheck from "~/components/Atoms/VooDooCheck/VooDooCheck"
-import { useSessionStore } from "~/stores/sessionStore"
-import type { CommentsModalProps } from "~/types/comments"
-import { sanitizeString } from "~/utils/validation"
+import { Button } from "@/components/Atoms/Button/Button"
+import VooDooCheck from "@/components/Atoms/VooDooCheck/VooDooCheck"
+import { useSessionStore } from "@/hooks/sessionStore"
+import type { CommentsModalProps } from "@/types/comments"
+import { sanitizeString } from "@/utils/validation"
 
 const CommentsModal = ({ perfume, onCommentAdded, addComment }: CommentsModalProps) => {
   const t = useTranslations("myScents.comments")
-  const { toggleModal, modalId } = useSessionStore()
-  const [isPublic, setIsPublic] = useState(true) // Default to public
+  const { closeModal: closeModalStore } = useSessionStore()
+  const [isPublic, setIsPublic] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [comment, setComment] = useState("")
 
   const closeModal = () => {
-    const buttonRef = { current: document.createElement("button") }
-    toggleModal(buttonRef as any, modalId || "add-scent")
+    closeModalStore()
     setIsSubmitting(false)
     setIsPublic(false)
     setComment("")

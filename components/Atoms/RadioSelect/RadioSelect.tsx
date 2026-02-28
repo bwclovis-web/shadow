@@ -1,7 +1,7 @@
 import { type VariantProps } from "class-variance-authority"
 import { type ChangeEvent } from "react"
 
-import { styleMerge } from "~/utils/styleUtils"
+import { styleMerge } from "@/utils/styleUtils"
 
 import { radioSelectVariants } from "./radioSelect-variants"
 

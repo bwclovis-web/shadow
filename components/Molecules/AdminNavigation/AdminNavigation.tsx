@@ -33,8 +33,8 @@ const AdminNavigation = ({ className, user, onNavClick }: AdminNavigationProps) 
   const pathname = usePathname()
   const isAdmin = user?.role === "admin" || user?.role === "editor"
 
-  const isActive = (path: string) =>
-    pathname === path || pathname.startsWith(path + "/")
+  const isActive = (path: string, exact?: boolean) =>
+    exact ? pathname === path : pathname === path || pathname.startsWith(path + "/")
 
   return (
     <nav className="z-20 w-full text-noir-light pt-4">
@@ -75,7 +75,7 @@ const AdminNavigation = ({ className, user, onNavClick }: AdminNavigationProps) 
                 onClick={onNavClick}
                 className={styleMerge(
                   "text-noir-gold py-2 hover:text-noir-gold-500 transition-colors duration-200 hover:bg-noir-dark/80 block w-full",
-                  isActive(item.path) && linkActive
+                  isActive(item.path, true) && linkActive
                 )}
               >
                 <span className="pl-2" suppressHydrationWarning>

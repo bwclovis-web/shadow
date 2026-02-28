@@ -1,11 +1,27 @@
-import { prisma } from "~/db.server"
-import type { AlertType, UserAlert, UserAlertPreferences } from "~/types/database"
+import { Prisma, type PrismaClient } from "@prisma/client"
+import { prisma } from "@/lib/db"
+import type { AlertType, UserAlertPreferences } from "@/types/database"
+
+type PrismaTx = Omit<
+  PrismaClient,
+  "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
+>
+
+const ALERT_DEDUPE_WINDOW_MS = 24 * 60 * 60 * 1000
+
+const defaultAlertPreferences = {
+  wishlistAlertsEnabled: true,
+  decantAlertsEnabled: true,
+  emailWishlistAlerts: false,
+  emailDecantAlerts: false,
+  maxAlerts: 10,
+} as const
 
 /**
  * Get user's active alerts (not dismissed, ordered by newest first)
  */
-export async function getUserAlerts(userId: string, limit: number = 10) {
-  return await prisma.userAlert.findMany({
+export const getUserAlerts = async (userId: string, limit: number = 10) =>
+  prisma.userAlert.findMany({
     where: {
       userId,
       isDismissed: false,
@@ -35,40 +51,28 @@ export async function getUserAlerts(userId: string, limit: number = 10) {
     },
     take: limit,
   })
-}
 
 /**
- * Get user's alert preferences, creating default preferences if none exist
+ * Get user's alert preferences, creating default preferences if none exist (single query via upsert)
  */
-export async function getUserAlertPreferences(userId: string): Promise<UserAlertPreferences> {
-  let preferences = await prisma.userAlertPreferences.findUnique({
+export const getUserAlertPreferences = async (userId: string): Promise<UserAlertPreferences> =>
+  prisma.userAlertPreferences.upsert({
     where: { userId },
-  })
-
-  if (!preferences) {
-    preferences = await prisma.userAlertPreferences.create({
-      data: {
-        userId,
-        wishlistAlertsEnabled: true,
-        decantAlertsEnabled: true,
-        emailWishlistAlerts: false,
-        emailDecantAlerts: false,
-        maxAlerts: 10,
-      },
-    })
-  }
-
-  return preferences
-}
+    update: {},
+    create: {
+      userId,
+      ...defaultAlertPreferences,
+    },
+  }) as unknown as Promise<UserAlertPreferences>
 
 /**
  * Update user's alert preferences
  */
-export async function updateUserAlertPreferences(
+export const updateUserAlertPreferences = async (
   userId: string,
   preferences: Partial<Omit<UserAlertPreferences, "id" | "userId" | "user">>
-) {
-  return await prisma.userAlertPreferences.upsert({
+) =>
+  prisma.userAlertPreferences.upsert({
     where: { userId },
     update: preferences,
     create: {
@@ -80,13 +84,12 @@ export async function updateUserAlertPreferences(
       maxAlerts: preferences.maxAlerts ?? 10,
     },
   })
-}
 
 /**
  * Mark an alert as read
  */
-export async function markAlertAsRead(alertId: string, userId: string) {
-  return await prisma.userAlert.updateMany({
+export const markAlertAsRead = async (alertId: string, userId: string) =>
+  prisma.userAlert.updateMany({
     where: {
       id: alertId,
       userId,
@@ -97,13 +100,12 @@ export async function markAlertAsRead(alertId: string, userId: string) {
       readAt: new Date(),
     },
   })
-}
 
 /**
  * Dismiss an alert (remove it from view)
  */
-export async function dismissAlert(alertId: string, userId: string) {
-  const result = await prisma.userAlert.updateMany({
+export const dismissAlert = async (alertId: string, userId: string) =>
+  prisma.userAlert.updateMany({
     where: {
       id: alertId,
       userId,
@@ -113,14 +115,12 @@ export async function dismissAlert(alertId: string, userId: string) {
       dismissedAt: new Date(),
     },
   })
-  return result
-}
 
 /**
  * Dismiss all alerts for a user
  */
-export async function dismissAllAlerts(userId: string) {
-  return await prisma.userAlert.updateMany({
+export const dismissAllAlerts = async (userId: string) =>
+  prisma.userAlert.updateMany({
     where: {
       userId,
       isDismissed: false,
@@ -130,105 +130,69 @@ export async function dismissAllAlerts(userId: string) {
       dismissedAt: new Date(),
     },
   })
-}
 
 /**
- * Create a new user alert
+ * Create a new user alert. Pass existing preferences to avoid an extra DB round-trip when the caller already has them.
  */
-export async function createUserAlert(
+export const createUserAlert = async (
   userId: string,
   perfumeId: string,
   alertType: AlertType,
   title: string,
   message: string,
-  metadata?: any
-) {
-  // Check user's preferences and alert limits
-  const preferences = await getUserAlertPreferences(userId)
+  metadata?: Record<string, unknown>,
+  existingPreferences?: Omit<UserAlertPreferences, "user"> | null
+) => {
+  const preferences =
+    existingPreferences ?? (await getUserAlertPreferences(userId))
 
-  // Check if this alert type is enabled
-  if (alertType === "wishlist_available" && !preferences.wishlistAlertsEnabled) {
-    return null
-  }
-  if (alertType === "decant_interest" && !preferences.decantAlertsEnabled) {
-    return null
-  }
+  if (alertType === "wishlist_available" && !preferences.wishlistAlertsEnabled) return null
+  if (alertType === "decant_interest" && !preferences.decantAlertsEnabled) return null
 
-  // Check current alert count and clean up old alerts if needed
-  const currentAlertCount = await prisma.userAlert.count({
-    where: {
-      userId,
-      isDismissed: false,
-    },
-  })
-
-  // If at max capacity, dismiss oldest alerts
-  if (currentAlertCount >= preferences.maxAlerts) {
-    const oldestAlerts = await prisma.userAlert.findMany({
-      where: {
-        userId,
-        isDismissed: false,
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
-      take: currentAlertCount - preferences.maxAlerts + 1,
-      select: {
-        id: true,
-      },
+  return prisma.$transaction(async tx => {
+    const currentAlertCount = await tx.userAlert.count({
+      where: { userId, isDismissed: false },
     })
 
-    await prisma.userAlert.updateMany({
-      where: {
-        id: {
-          in: oldestAlerts.map(alert => alert.id),
-        },
-      },
-      data: {
-        isDismissed: true,
-        dismissedAt: new Date(),
-      },
-    })
-  }
+    if (currentAlertCount >= preferences.maxAlerts) {
+      const oldestAlerts = await tx.userAlert.findMany({
+        where: { userId, isDismissed: false },
+        orderBy: { createdAt: "asc" },
+        take: currentAlertCount - preferences.maxAlerts + 1,
+        select: { id: true },
+      })
+      await tx.userAlert.updateMany({
+        where: { id: { in: oldestAlerts.map((a: { id: string }) => a.id) } },
+        data: { isDismissed: true, dismissedAt: new Date() },
+      })
+    }
 
-  // Create the new alert
-  return await prisma.userAlert.create({
-    data: {
-      userId,
-      perfumeId,
-      alertType,
-      title,
-      message,
-      metadata,
-    },
-    include: {
-      Perfume: {
-        include: {
-          perfumeHouse: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
+    return tx.userAlert.create({
+      data: { userId, perfumeId, alertType, title, message, metadata: metadata as Prisma.InputJsonValue },
+      include: {
+        Perfume: {
+          include: {
+            perfumeHouse: {
+              select: { id: true, name: true, slug: true },
             },
           },
         },
       },
-    },
+    })
   })
 }
 
 /**
  * Get count of unread alerts for a user
  */
-export async function getUnreadAlertCount(userId: string): Promise<number> {
-  return await prisma.userAlert.count({
+export const getUnreadAlertCount = async (userId: string): Promise<number> =>
+  prisma.userAlert.count({
     where: {
       userId,
       isRead: false,
       isDismissed: false,
     },
   })
-}
 
 /**
  * Check if user should receive wishlist availability alerts
@@ -236,9 +200,10 @@ export async function getUnreadAlertCount(userId: string): Promise<number> {
  * @param perfumeId - The perfume that became available
  * @param decantingUserId - Optional: The user who made the perfume available (to exclude from notifications)
  */
-export async function checkWishlistAvailabilityAlerts(perfumeId: string, decantingUserId?: string) {
-  // Find all users who have this perfume in their PUBLIC wishlist
-  // Exclude the decanting user (they don't need notification about their own action)
+export const checkWishlistAvailabilityAlerts = async (
+  perfumeId: string,
+  decantingUserId?: string
+) => {
   const wishlistUsers = await prisma.userPerfumeWishlist.findMany({
     where: {
       perfumeId,
@@ -264,13 +229,10 @@ export async function checkWishlistAvailabilityAlerts(perfumeId: string, decanti
     },
   })
 
-  // Find who currently has this perfume available for trade
   const availableTraders = await prisma.userPerfume.findMany({
     where: {
       perfumeId,
-      available: {
-        not: "0",
-      },
+      available: { not: "0" },
     },
     include: {
       user: {
@@ -285,34 +247,38 @@ export async function checkWishlistAvailabilityAlerts(perfumeId: string, decanti
     },
   })
 
-  const alertsToCreate = []
+  const since = new Date(Date.now() - ALERT_DEDUPE_WINDOW_MS)
+  const existingAlertUserIds = new Set(
+    (
+      await prisma.userAlert.findMany({
+        where: {
+          userId: { in: wishlistUsers.map((w: { userId: string }) => w.userId) },
+          perfumeId,
+          alertType: "wishlist_available",
+          isDismissed: false,
+          createdAt: { gte: since },
+        },
+        select: { userId: true },
+      })
+    ).map((a: { userId: string }) => a.userId)
+  )
+
+  const alertsToCreate: Array<{
+    userId: string
+    perfumeId: string
+    alertType: AlertType
+    title: string
+    message: string
+    metadata: Record<string, unknown>
+    preferences?: Omit<UserAlertPreferences, "user"> | null
+  }> = []
 
   for (const wishlistItem of wishlistUsers) {
     const preferences = wishlistItem.user.alertPreferences
-    // If user has no preferences yet, default to enabled (true)
-    // Only skip if preferences exist AND wishlistAlertsEnabled is explicitly false
-    if (preferences && preferences.wishlistAlertsEnabled === false) {
-      continue
-    }
+    if (preferences?.wishlistAlertsEnabled === false) continue
+    if (existingAlertUserIds.has(wishlistItem.userId)) continue
+    existingAlertUserIds.add(wishlistItem.userId)
 
-    // Check if we already created an active (non-dismissed) alert for this user/perfume combination recently
-    const existingAlert = await prisma.userAlert.findFirst({
-      where: {
-        userId: wishlistItem.userId,
-        perfumeId,
-        alertType: "wishlist_available",
-        isDismissed: false, // Only prevent duplicates for active alerts
-        createdAt: {
-          gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Within last 24 hours
-        },
-      },
-    })
-
-    if (existingAlert) {
-      continue
-    }
-
-    // Create alert for this user
     const title = `${wishlistItem.perfume.name} is now available!`
     const message = `${wishlistItem.perfume.name} by ${wishlistItem.perfume.perfumeHouse?.name} is now available on the trading post from ${availableTraders.length} trader(s).`
     alertsToCreate.push({
@@ -321,8 +287,9 @@ export async function checkWishlistAvailabilityAlerts(perfumeId: string, decanti
       alertType: "wishlist_available" as AlertType,
       title,
       message,
+      preferences,
       metadata: {
-        availableTraders: availableTraders.map(trader => ({
+        availableTraders: availableTraders.map((trader: { user: { id: string; firstName: string | null; lastName: string | null; username: string | null; email: string } }) => ({
           userId: trader.user.id,
           displayName:
             trader.user.username ||
@@ -337,7 +304,6 @@ export async function checkWishlistAvailabilityAlerts(perfumeId: string, decanti
     })
   }
 
-  // Create all alerts
   const createdAlerts = []
   for (const alertData of alertsToCreate) {
     const alert = await createUserAlert(
@@ -346,7 +312,8 @@ export async function checkWishlistAvailabilityAlerts(perfumeId: string, decanti
       alertData.alertType,
       alertData.title,
       alertData.message,
-      alertData.metadata
+      alertData.metadata,
+      alertData.preferences
     )
     if (alert) {
       createdAlerts.push(alert)
@@ -360,17 +327,13 @@ export async function checkWishlistAvailabilityAlerts(perfumeId: string, decanti
  * Check if user should receive decant interest alerts
  * Only sends alerts when the wishlist item is PUBLIC
  */
-export async function checkDecantInterestAlerts(
+export const checkDecantInterestAlerts = async (
   perfumeId: string,
   interestedUserId: string,
   isPublicWishlist: boolean = false
-) {
-  // Only process alerts for public wishlist additions
-  if (!isPublicWishlist) {
-    return []
-  }
+) => {
+  if (!isPublicWishlist) return []
 
-  // Find all users who have this perfume available for trade (decanters)
   const decanters = await prisma.userPerfume.findMany({
     where: {
       perfumeId,
@@ -411,53 +374,41 @@ export async function checkDecantInterestAlerts(
     },
   })
 
-  if (!interestedUser) {
-    return []
-  }
+  if (!interestedUser) return []
 
-  const alertsToCreate = []
+  const since = new Date(Date.now() - ALERT_DEDUPE_WINDOW_MS)
+  const existingDecanterIds = new Set(
+    (
+      await prisma.userAlert.findMany({
+        where: {
+          userId: { in: decanters.map((d: { userId: string }) => d.userId) },
+          perfumeId,
+          alertType: "decant_interest",
+          isDismissed: false,
+          metadata: { path: ["interestedUserId"], equals: interestedUserId },
+          createdAt: { gte: since },
+        },
+        select: { userId: true },
+      })
+    ).map((a: { userId: string }) => a.userId)
+  )
+
+  const alertsToCreate: Array<{
+    userId: string
+    perfumeId: string
+    alertType: AlertType
+    title: string
+    message: string
+    metadata: Record<string, unknown>
+    preferences?: Omit<UserAlertPreferences, "user"> | null
+  }> = []
 
   for (const decanter of decanters) {
     const preferences = decanter.user.alertPreferences
-    // If user has no preferences yet, default to enabled (true)
-    // Only skip if preferences exist AND decantAlertsEnabled is explicitly false
-    if (preferences && preferences.decantAlertsEnabled === false) {
-      continue
-    }
+    if (preferences?.decantAlertsEnabled === false) continue
+    if (existingDecanterIds.has(decanter.userId)) continue
+    existingDecanterIds.add(decanter.userId)
 
-    // Check if we already created an active (non-dismissed) alert for this user/perfume/interested user combination recently
-    const existingAlert = await prisma.userAlert.findFirst({
-      where: {
-        userId: decanter.userId,
-        perfumeId,
-        alertType: "decant_interest",
-        isDismissed: false, // Only prevent duplicates for active alerts
-        metadata: {
-          path: ["interestedUserId"],
-          equals: interestedUserId,
-        },
-        createdAt: {
-          gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Within last 24 hours
-        },
-      },
-    })
-
-    // Also check for any existing alerts (including dismissed ones) for debugging
-    const allExistingAlerts = await prisma.userAlert.findMany({
-      where: {
-        userId: decanter.userId,
-        perfumeId,
-        alertType: "decant_interest",
-        createdAt: {
-          gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
-        },
-      },
-    })
-    if (existingAlert) {
-      continue
-    }
-
-    // Create alert for this decanter
     const interestedUserName =
       interestedUser.username ||
       (interestedUser.firstName && interestedUser.lastName
@@ -474,15 +425,15 @@ export async function checkDecantInterestAlerts(
       alertType: "decant_interest" as AlertType,
       title,
       message,
+      preferences,
       metadata: {
-        interestedUserId: interestedUserId,
+        interestedUserId,
         interestedUserName,
         interestedUserEmail: interestedUser.email,
       },
     })
   }
 
-  // Create all alerts
   const createdAlerts = []
   for (const alertData of alertsToCreate) {
     const alert = await createUserAlert(
@@ -491,7 +442,8 @@ export async function checkDecantInterestAlerts(
       alertData.alertType,
       alertData.title,
       alertData.message,
-      alertData.metadata
+      alertData.metadata,
+      alertData.preferences
     )
     if (alert) {
       createdAlerts.push(alert)

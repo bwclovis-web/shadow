@@ -8,6 +8,13 @@ import { createSession } from "@/utils/security/session-manager.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { getProfilePathForUser } from "@/utils/user"
 
+/** Next.js redirect() throws an error; re-throw so the redirect is performed. */
+const isRedirectError = (error: unknown): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  "digest" in error &&
+  String((error as { digest?: string }).digest).startsWith("NEXT_REDIRECT")
+
 export type SignInActionState = { error?: string } | null
 
 const setSessionCookies = async (
@@ -50,10 +57,7 @@ export const signInAction = async (
     await setSessionCookies(accessToken, refreshToken)
     redirect(getProfilePathForUser(existingUser))
   } catch (error) {
-    if (
-      error instanceof Response &&
-      (error.status === 302 || error.status === 303)
-    ) {
+    if (isRedirectError(error)) {
       throw error
     }
     const message =

@@ -14,12 +14,15 @@ interface AddToCollectionModalProps {
   type?: "icon" | "primary"
   perfume?: PerfumeI
   className?: string
+  /** Called after a perfume is successfully added to the collection (e.g. to refresh the list). */
+  onAddedToCollection?: () => void
 }
 
 const AddToCollectionModal = ({
   type,
   perfume,
   className,
+  onAddedToCollection,
 }: AddToCollectionModalProps) => {
   const { modalOpen, toggleModal, modalId } = useSessionStore()
   const modalTrigger = useRef<HTMLButtonElement>(null)
@@ -47,7 +50,7 @@ const AddToCollectionModal = ({
 
       {modalOpen && modalId === "add-scent" && (
         <Modal innerType="dark" id="add-scent" animateStart="top">
-          <MyScentsModal perfume={perfume} />
+          <MyScentsModal perfume={perfume} onAddedToCollection={onAddedToCollection} />
         </Modal>
       )}
     </>

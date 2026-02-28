@@ -1,12 +1,11 @@
-import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from "react"
+import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
-import {  MdAdd } from "react-icons/md"
-import { useFetcher } from "react-router"
+import { MdAdd } from "react-icons/md"
 
-import { Button } from "~/components/Atoms/Button"
-import { useCSRF } from "~/hooks/useCSRF"
-import { useSessionStore } from "~/stores/sessionStore"
-import type { UserPerfumeI } from "~/types"
+import { Button } from "@/components/Atoms/Button"
+import { useCSRF } from "@/hooks/useCSRF"
+import { useSessionStore } from "@/hooks/sessionStore"
+import type { UserPerfumeI } from "@/types"
 
 import DestashForm from "../DeStashForm/DeStashForm"
 import DestashItem from "./DestashItem"
@@ -15,65 +14,69 @@ interface DestashManagerProps {
   perfumeId: string
   userPerfumes: UserPerfumeI[]
   setUserPerfumes: Dispatch<SetStateAction<UserPerfumeI[]>>
+  apiBasePath?: string
 }
 
 const DestashManager = ({
   perfumeId,
   userPerfumes,
   setUserPerfumes,
+  apiBasePath = "/api/user-perfumes",
 }: DestashManagerProps) => {
   const t = useTranslations("myScents.destashManager")
-  const fetcher = useFetcher()
   const { addToFormData } = useCSRF()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
-  const previousStateRef = useRef<string>(fetcher.state)
+  const [submitState, setSubmitState] = useState<"idle" | "submitting">("idle")
+  const [submitData, setSubmitData] = useState<{ success?: boolean; userPerfume?: UserPerfumeI } | null>(null)
+  const previousStateRef = useRef<"idle" | "submitting">("idle")
   const submittedRef = useRef(false)
   const { closeModal } = useSessionStore()
 
-  // Revalidate data after successful fetcher submission and close form
+  const submitForm = useCallback(
+    async (formData: FormData) => {
+      setSubmitState("submitting")
+      submittedRef.current = true
+      addToFormData(formData)
+      try {
+        const res = await fetch(apiBasePath, {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        })
+        const data = await res.json().catch(() => ({}))
+        setSubmitData(data)
+        return data
+      } finally {
+        setSubmitState("idle")
+      }
+    },
+    [apiBasePath, addToFormData]
+  )
+
   useEffect(() => {
-    const responseData = fetcher.data
-    const isSuccess = responseData && typeof responseData === "object" && "success" in responseData
-      ? (responseData as { success?: boolean }).success
-      : false
+    const responseData = submitData
+    const isSuccess =
+      responseData &&
+      typeof responseData === "object" &&
+      "success" in responseData
+        ? (responseData as { success?: boolean }).success
+        : false
 
     const transitionedToIdle =
-      previousStateRef.current === "submitting" && fetcher.state === "idle"
+      previousStateRef.current === "submitting" && submitState === "idle"
 
-    if (transitionedToIdle && isSuccess) {
-      if (responseData && typeof responseData === "object" && "userPerfume" in responseData) {
-        const updatedUserPerfume = (responseData as { userPerfume: UserPerfumeI }).userPerfume
+    if (transitionedToIdle && isSuccess && submittedRef.current) {
+      if (
+        responseData &&
+        typeof responseData === "object" &&
+        "userPerfume" in responseData
+      ) {
+        const updatedUserPerfume = (responseData as { userPerfume: UserPerfumeI })
+          .userPerfume
         if (updatedUserPerfume) {
-          setUserPerfumes(prev => {
-            const index = prev.findIndex(up => up.id === updatedUserPerfume.id)
-            if (index >= 0) {
-              const updated = [...prev]
-              updated[index] = updatedUserPerfume
-              return updated
-            }
-            return [...prev, updatedUserPerfume]
-          })
-        }
-      }
-
-      setIsCreating(false)
-      setEditingId(null)
-      submittedRef.current = false
-    }
-
-    // Fallback: close form when idle with success data and we had submitted
-    // (handles remount or effect order issues)
-    if (
-      fetcher.state === "idle" &&
-      isSuccess &&
-      submittedRef.current
-    ) {
-      if (responseData && typeof responseData === "object" && "userPerfume" in responseData) {
-        const updatedUserPerfume = (responseData as { userPerfume: UserPerfumeI }).userPerfume
-        if (updatedUserPerfume) {
-          setUserPerfumes(prev => {
-            const index = prev.findIndex(up => up.id === updatedUserPerfume.id)
+          setUserPerfumes((prev) => {
+            const index = prev.findIndex((up) => up.id === updatedUserPerfume.id)
             if (index >= 0) {
               const updated = [...prev]
               updated[index] = updatedUserPerfume
@@ -88,8 +91,8 @@ const DestashManager = ({
       submittedRef.current = false
     }
 
-    previousStateRef.current = fetcher.state
-  }, [fetcher.state, fetcher.data, setUserPerfumes])
+    previousStateRef.current = submitState
+  }, [submitState, submitData, setUserPerfumes])
 
   // Filter destashes for this perfume
   const destashes = userPerfumes.filter(up => up.perfumeId === perfumeId && parseFloat(up.available || "0") > 0)
@@ -121,19 +124,20 @@ const DestashManager = ({
   }
 
   const handleDelete = (userPerfumeId: string) => {
-    const destash = userPerfumes.find(up => up.id === userPerfumeId)
+    const destash = userPerfumes.find((up) => up.id === userPerfumeId)
     closeModal()
     if (destash) {
-      setUserPerfumes(prev => prev.map(perfume => perfume.id === userPerfumeId
-            ? { ...perfume, available: "0" }
-            : perfume))
-
+      setUserPerfumes((prev) =>
+        prev.map((perfume) =>
+          perfume.id === userPerfumeId ? { ...perfume, available: "0" } : perfume
+        )
+      )
       const formData = new FormData()
       formData.append("action", "decant")
       formData.append("userPerfumeId", userPerfumeId)
-      formData.append("availableAmount", "0")
-      addToFormData(formData)
-      fetcher.submit(formData, { method: "post", action: "/admin/my-scents" })
+      formData.append("perfumeId", perfumeId)
+      formData.append("amount", "0")
+      submitForm(formData)
     }
   }
 
@@ -146,32 +150,23 @@ const DestashManager = ({
   }) => {
     const formData = new FormData()
     formData.append("perfumeId", perfumeId)
+    formData.append("tradePreference", data.tradePreference)
+    formData.append("tradeOnly", data.tradeOnly.toString())
 
     const shouldEdit = editingId && !isCreating && !data.createNew
 
     if (shouldEdit) {
-      // Editing existing destash
       formData.append("action", "decant")
       formData.append("userPerfumeId", editingId)
-      formData.append("availableAmount", data.amount)
-      if (data.price) {
-        formData.append("tradePrice", data.price)
-      }
+      formData.append("amount", data.amount)
+      if (data.price) formData.append("tradePrice", data.price)
     } else {
-      // Creating new destash entry
       formData.append("action", "create-decant")
       formData.append("amount", data.amount)
-      if (data.price) {
-        formData.append("tradePrice", data.price)
-      }
+      if (data.price) formData.append("tradePrice", data.price)
     }
 
-    formData.append("tradePreference", data.tradePreference)
-    formData.append("tradeOnly", data.tradeOnly.toString())
-
-    addToFormData(formData)
-    submittedRef.current = true
-    fetcher.submit(formData, { method: "post", action: "/admin/my-scents" })
+    submitForm(formData)
   }
 
   const editingDestash = editingId

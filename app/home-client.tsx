@@ -84,13 +84,13 @@ export default function HomeClient({ features, counts }: HomeClientProps) {
         ref={container}
       >
         <img
-          src="/images/landing.webp"
+          src="/images/landing.png"
           alt=""
           width={1200}
           height={800}
           fetchPriority="high"
           loading="eager"
-          className="absolute object-cover w-full h-full filter grayscale-[100%] sepia-[0.5] mix-blend-multiply hero-image"
+          className="absolute object-cover w-full h-full filter grayscale-100% sepia-[0.5] mix-blend-multiply hero-image"
         />
         <div className="absolute inset-0 bg-noir-black/85 mask-radial-from-10% mask-radial-to-74% md:mask-radial-from-25% md:mask-radial-to-44%" />
         <section className="text-noir-gold relative z-10 flex flex-col items-center gap-4 pt-40 md:pt-0">

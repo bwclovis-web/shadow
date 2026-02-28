@@ -1,26 +1,30 @@
 import { useRef } from "react"
 import { useTranslations } from "next-intl"
 import { MdDeleteForever } from "react-icons/md"
-import { useFetcher, useNavigate } from "react-router"
-import { Button } from "~/components/Atoms/Button"
-import DangerModal from "~/components/Organisms/DangerModal"
-import Modal from "~/components/Organisms/Modal"
 
-import { getPerfumeTypeLabel } from "~/data/SelectTypes"
-import { useSessionStore } from "~/stores/sessionStore"
-import { formatPrice } from "~/utils/numberUtils"
+import { Button } from "@/components/Atoms/Button"
+import { getPerfumeTypeLabel } from "@/data/SelectTypes"
+import { useSessionStore } from "@/hooks/sessionStore"
+import type { UserPerfumeI } from "@/types"
+import { formatPrice } from "@/utils/numberUtils"
 
-const GeneralDetails = ({ userPerfume }: { userPerfume: any }) => {
+type GeneralDetailsProps = {
+  userPerfume: UserPerfumeI
+  deletePerfume?: (userPerfumeId: string) => void
+  isRemoving?: boolean
+}
+
+const GeneralDetails = ({
+  userPerfume,
+  isRemoving = false,
+}: GeneralDetailsProps) => {
   const t = useTranslations("myScents.listItem")
-  const { modalOpen, toggleModal, modalId, closeModal } = useSessionStore()
-  const navigate = useNavigate()
+  const { toggleModal } = useSessionStore()
   const removeButtonRef = useRef<HTMLButtonElement>(null)
-  const fetcher = useFetcher()
-  const isSubmitting = fetcher.state === "submitting"
 
+  const priceNum = userPerfume.price != null ? Number(userPerfume.price) : null
 
   return (
-    <>
     <div className="flex flex-col md:flex-row gap-2 md:gap-10 mt-6 justify-between md:items-center px-2">
       {userPerfume.placeOfPurchase && (
         <p className="font-medium flex flex-col justify-start items-start">
@@ -31,13 +35,13 @@ const GeneralDetails = ({ userPerfume }: { userPerfume: any }) => {
         </p>
       )}
       <div className="flex items-start justify-start gap-8">
-        {userPerfume.price && (
+        {priceNum != null && !Number.isNaN(priceNum) && (
           <p className="flex flex-col items-start justify-start">
             <span className="text-lg font-medium text-noir-gold">
               {t("price")}
             </span>
             <span className="text-2xl text-noir-gold-100">
-              {formatPrice(userPerfume.price)}
+              {formatPrice(priceNum)}
             </span>
           </p>
         )}
@@ -53,20 +57,17 @@ const GeneralDetails = ({ userPerfume }: { userPerfume: any }) => {
         onClick={() => {
           toggleModal(removeButtonRef, "delete-item")
         }}
-        disabled={isSubmitting}
+        disabled={isRemoving}
         variant="icon"
         background="red"
         size="sm"
         leftIcon={<MdDeleteForever size={20} fill="white" />}
       >
         <span className="text-white/90 font-bold text-sm">
-          {isSubmitting
-            ? t("removing")
-            : t("removeButton")}
+          {isRemoving ? t("removing") : t("removeButton")}
         </span>
       </Button>
     </div>
-    </>
   )
 }
 

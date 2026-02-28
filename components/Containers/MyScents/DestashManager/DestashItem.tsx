@@ -1,14 +1,33 @@
+"use client"
+
+import { useRef } from "react"
 import { useTranslations } from "next-intl"
 import { MdDelete, MdDeleteForever, MdEdit } from "react-icons/md"
 
-import { Button } from "~/components/Atoms/Button"
-import VooDooCheck from "~/components/Atoms/VooDooCheck/VooDooCheck"
-import CommentsModal from "~/components/Containers/MyScents/CommentsModal"
-import DangerModal from "~/components/Organisms/DangerModal"
-import Modal from "~/components/Organisms/Modal"
-import { usePerfumeComments } from "~/hooks/usePerfumeComments"
-import { useSessionStore } from "~/stores/sessionStore"
-import type { UserPerfumeI } from "~/types"
+import { Button } from "@/components/Atoms/Button"
+import VooDooCheck from "@/components/Atoms/VooDooCheck/VooDooCheck"
+import CommentsModal from "@/components/Containers/MyScents/CommentsModal"
+import DangerModal from "@/components/Organisms/DangerModal"
+import Modal from "@/components/Organisms/Modal"
+import { usePerfumeComments } from "@/hooks/usePerfumeComments"
+import { useSessionStore } from "@/hooks/sessionStore"
+import type { UserPerfumeI } from "@/types"
+
+const getTradePreferenceLabel = (
+  preference: "cash" | "trade" | "both",
+  t: (key: string) => string
+): string => {
+  switch (preference) {
+    case "cash":
+      return t("decantOptionsTradePreferencesCash")
+    case "trade":
+      return t("decantOptionsTradePreferencesTrade")
+    case "both":
+      return t("decantOptionsTradePreferencesBoth")
+    default:
+      return preference
+  }
+}
 
 interface DestashItemProps {
   destash: UserPerfumeI
@@ -21,21 +40,10 @@ const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
   const tDestash = useTranslations("myScents.destashManager")
   const tComments = useTranslations("myScents.comments")
   const { modalOpen, toggleModal, modalId } = useSessionStore()
-  const { uniqueModalId, addComment, comments, toggleCommentVisibility, deleteComment } = usePerfumeComments({ userPerfume: destash })
-
-  const getTradePreferenceLabel = (preference: "cash" | "trade" | "both") => {
-    switch (preference) {
-      case "cash":
-        return tListItem("decantOptionsTradePreferencesCash")
-      case "trade":
-        return tListItem("decantOptionsTradePreferencesTrade")
-      case "both":
-        return tListItem("decantOptionsTradePreferencesBoth")
-      default:
-        return preference
-    }
-  }
-
+  const { uniqueModalId, addComment, comments, toggleCommentVisibility, deleteComment } =
+    usePerfumeComments({ userPerfume: destash })
+  const commentButtonRef = useRef<HTMLButtonElement>(null)
+  const deleteButtonRef = useRef<HTMLButtonElement>(null)
 
   return (
     <>
@@ -79,7 +87,7 @@ const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
                 {tDestash("tradePreference")}
               </p>
               <p className="text-lg text-noir-gold-100">
-                {getTradePreferenceLabel(destash.tradePreference as "cash" | "trade" | "both")}
+                {getTradePreferenceLabel(destash.tradePreference as "cash" | "trade" | "both", tListItem)}
               </p>
             </div>
             {destash.tradeOnly && (
@@ -95,10 +103,10 @@ const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
           </div>
           <div className="w-full md:w-auto flex flex-col md:flex-row gap-2">
             <Button
-              onClick={() => {
-                const buttonRef = { current: document.createElement("button") }
-                toggleModal(buttonRef as any, uniqueModalId, { action: "create" })
-              }}
+              ref={commentButtonRef}
+              onClick={() =>
+                toggleModal(commentButtonRef, uniqueModalId, { action: "create" })
+              }
               variant="primary"
               size="sm"
               className="w-full md:w-auto"
@@ -115,10 +123,8 @@ const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
               {tDestash("edit")}
             </Button>
             <Button
-              onClick={() => {
-                const buttonRef = { current: document.createElement("button") }
-                toggleModal(buttonRef as any, "delete-destash-item")
-              }}
+              ref={deleteButtonRef}
+              onClick={() => toggleModal(deleteButtonRef, "delete-destash-item")}
               variant="icon"
               size="sm"
               background="red"

@@ -16,9 +16,11 @@ import type { UserPerfumeI } from "@/types"
 
 interface MyScentsModalProps {
   perfume?: UserPerfumeI
+  /** Called after a perfume is successfully added to the collection. */
+  onAddedToCollection?: () => void
 }
 
-const MyScentsModal = ({ perfume }: MyScentsModalProps) => {
+const MyScentsModal = ({ perfume, onAddedToCollection }: MyScentsModalProps) => {
   const { modalData } = useSessionStore()
   const t = useTranslations("myScents.modal")
 
@@ -35,7 +37,7 @@ const MyScentsModal = ({ perfume }: MyScentsModalProps) => {
     setPerfumeData,
     handleClick,
     handleAddPerfume,
-  } = useMyScentsForm(perfume)
+  } = useMyScentsForm(perfume, onAddedToCollection)
 
   return (
     <div className="w-full p-6">

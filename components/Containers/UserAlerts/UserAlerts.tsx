@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react"
-import { useTranslations } from "next-intl"
-import { Link } from "react-router"
+"use client"
 
-import { Button } from "~/components/Atoms/Button/Button"
-import VooDooDetails from "~/components/Atoms/VooDooDetails/VooDooDetails"
-import { useCSRF } from "~/hooks/useCSRF"
-import type { UserAlert, UserAlertPreferences } from "~/types/database"
+import Link from "next/link"
+import { useEffect, useRef, useState } from "react"
+import { useTranslations } from "next-intl"
+
+import { Button } from "@/components/Atoms/Button/Button"
+import VooDooDetails from "@/components/Atoms/VooDooDetails/VooDooDetails"
+import { useCSRF } from "@/hooks/useCSRF"
+import type { UserAlert, UserAlertPreferences } from "@/types/database"
 
 import { AlertBell } from "./AlertBell"
 import { AlertItem } from "./AlertItem"
@@ -30,54 +32,53 @@ export const UserAlerts = ({
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount)
   const [isLoading, setIsLoading] = useState(false)
   const { addToHeaders } = useCSRF()
+  const addToHeadersRef = useRef(addToHeaders)
+  addToHeadersRef.current = addToHeaders
 
   // Load preferences on mount if not provided
   useEffect(() => {
-    if (!preferences && userId) {
-      const loadPreferences = async () => {
-        try {
-          const response = await fetch(`/api/user-alerts/${userId}/preferences`, {
-            headers: addToHeaders(),
-          })
-          if (response.ok) {
-            const loadedPreferences = await response.json()
-            setPreferences(loadedPreferences)
-          }
-        } catch (error) {
-          console.error("Failed to load preferences:", error)
+    if (preferences !== null || !userId) return
+    const loadPreferences = async () => {
+      try {
+        const response = await fetch(`/api/user-alerts/${userId}/preferences`, {
+          headers: addToHeadersRef.current(),
+        })
+        if (response.ok) {
+          const loadedPreferences = await response.json()
+          setPreferences(loadedPreferences)
         }
+      } catch (error) {
+        console.error("Failed to load preferences:", error)
       }
-      loadPreferences()
     }
-    // Only run when userId or initialPreferences change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, initialPreferences])
+    loadPreferences()
+  }, [userId, preferences])
 
-  // Real-time updates using polling (you could replace this with WebSocket/SSE later)
+  // Poll for new alerts every 30 seconds (ref avoids effect re-running when addToHeaders identity changes)
   useEffect(() => {
-    const interval = setInterval(async () => {
+    const poll = async () => {
       try {
         const response = await fetch(`/api/user-alerts/${userId}`, {
-          headers: addToHeaders(),
+          headers: addToHeadersRef.current(),
         })
         if (response.ok) {
           const data = await response.json()
-          setAlerts(data.alerts || [])
-          setUnreadCount(data.unreadCount || 0)
+          setAlerts(data.alerts ?? [])
+          setUnreadCount(data.unreadCount ?? 0)
         }
       } catch (error) {
         console.error("Failed to fetch alerts:", error)
       }
-    }, 30000) // Poll every 30 seconds
-
+    }
+    const interval = setInterval(poll, 30000)
     return () => clearInterval(interval)
-  }, [userId, addToHeaders])
+  }, [userId])
 
   const handleMarkAsRead = async (alertId: string) => {
     try {
       const response = await fetch(`/api/user-alerts/${userId}/alert/${alertId}/read`, {
         method: "POST",
-        headers: addToHeaders(),
+        headers: addToHeadersRef.current(),
       })
 
       if (response.ok) {
@@ -92,18 +93,18 @@ export const UserAlerts = ({
   }
 
   const handleDismissAlert = async (alertId: string) => {
+    const wasUnread = alerts.find(a => a.id === alertId)?.isRead === false
     try {
       const response = await fetch(`/api/user-alerts/${userId}/alert/${alertId}/dismiss`, {
         method: "POST",
-        headers: addToHeaders(),
+        headers: addToHeadersRef.current(),
       })
 
       if (response.ok) {
         setAlerts(prev => prev.filter(alert => alert.id !== alertId))
-        setUnreadCount(prev => {
-          const alert = alerts.find(a => a.id === alertId)
-          return alert && !alert.isRead ? Math.max(0, prev - 1) : prev
-        })
+        if (wasUnread) {
+          setUnreadCount(prev => Math.max(0, prev - 1))
+        }
       }
     } catch (error) {
       console.error("Failed to dismiss alert:", error)
@@ -137,7 +138,7 @@ export const UserAlerts = ({
 
       const response = await fetch(`/api/user-alerts/${userId}/preferences`, {
         method: "PUT",
-        headers: addToHeaders({
+        headers: addToHeadersRef.current({
           "Content-Type": "application/json",
         }),
         body: JSON.stringify(newPreferences),
@@ -202,7 +203,7 @@ export const UserAlerts = ({
                     {isLoading ? t("dismissing") : t("dismissAll")}
                   </Button>
                 )}
-                <Link to="/the-exchange">
+                <Link href="/the-exchange">
                   <Button variant="primary" size="sm">
                     {t("viewTradingPost")}
                   </Button>

@@ -1,12 +1,12 @@
-import { t } from "i18next"
+import { useTranslations } from "next-intl"
 import { useCallback, useMemo } from "react"
 
-import { Button } from "~/components/Atoms/Button"
-import RadioSelect from "~/components/Atoms/RadioSelect"
-import RangeSlider from "~/components/Atoms/RangeSlider"
-import VooDooCheck from "~/components/Atoms/VooDooCheck/VooDooCheck"
-import { useFormState } from "~/hooks"
-import type { UserPerfumeI } from "~/types"
+import { Button } from "@/components/Atoms/Button"
+import RadioSelect from "@/components/Atoms/RadioSelect"
+import RangeSlider from "@/components/Atoms/RangeSlider"
+import VooDooCheck from "@/components/Atoms/VooDooCheck/VooDooCheck"
+import { useFormState } from "@/hooks/useFormState"
+import type { UserPerfumeI } from "@/types"
 
 interface DeStashFormProps {
   handleDecantConfirm: (deStashData: DeStashData) => void
@@ -25,24 +25,9 @@ interface DeStashData {
 }
 
 const TRADE_OPTIONS = [
-  {
-    id: "cash",
-    value: "cash",
-    label: "myScents.listItem.decantOptionsTradePreferencesCash",
-    name: "tradePreference",
-  },
-  {
-    id: "trade",
-    value: "trade",
-    label: "myScents.listItem.decantOptionsTradePreferencesTrade",
-    name: "tradePreference",
-  },
-  {
-    id: "both",
-    value: "both",
-    label: "myScents.listItem.decantOptionsTradePreferencesBoth",
-    name: "tradePreference",
-  },
+  { id: "cash", value: "cash", label: "decantOptionsTradePreferencesCash", name: "tradePreference" },
+  { id: "trade", value: "trade", label: "decantOptionsTradePreferencesTrade", name: "tradePreference" },
+  { id: "both", value: "both", label: "decantOptionsTradePreferencesBoth", name: "tradePreference" },
 ] as const
 
 const DeStashForm = ({
@@ -52,6 +37,7 @@ const DeStashForm = ({
   isCreating = false,
   maxAvailable,
 }: DeStashFormProps) => {
+  const t = useTranslations("myScents.listItem")
   const initialValues = useMemo(
     () => {
       return {
@@ -79,27 +65,25 @@ const DeStashForm = ({
 
       const amount = parseFloat(values.deStashAmount)
       if (isNaN(amount) || amount < 0) {
-        errors.deStashAmount = t("myScents.listItem.decantOptionsAmountError")
+        errors.deStashAmount = t("decantOptionsAmountError")
       }
 
-      // Check that destash amount doesn't exceed max available
       if (!isNaN(amount) && maxAvailable !== undefined && amount > maxAvailable) {
-        errors.deStashAmount = t(
-          "myScents.listItem.decantOptionsExceedsOwned",
-          { owned: maxAvailable.toFixed(1) }
-        )
+        errors.deStashAmount = t("decantOptionsExceedsOwned", {
+          owned: maxAvailable.toFixed(1),
+        })
       }
 
       if (values.price && values.price !== "") {
         const price = parseFloat(values.price)
         if (isNaN(price) || price < 0) {
-          errors.price = t("myScents.listItem.decantOptionsPriceError")
+          errors.price = t("decantOptionsPriceError")
         }
       }
 
       return errors
     },
-    [maxAvailable]
+    [maxAvailable, t]
   )
 
   const onSubmit = useCallback(
@@ -136,18 +120,13 @@ const DeStashForm = ({
   const showPriceAndTrade = deStashAmount > 0
   const isFormMode = !isEditing && !isCreating
 
-  const getButtonText = useCallback(() => {
-    if (isEditing) {
-      return t("myScents.destashManager.saveChanges")
-    }
-    if (isCreating) {
-      return t("myScents.destashManager.createDestash")
-    }
-    if (deStashAmount === 0) {
-      return t("myScents.listItem.removeFromTradingPost")
-    }
-    return t("myScents.listItem.confirmDeStash")
-  }, [isEditing, isCreating, deStashAmount])
+  const buttonText = isEditing
+    ? t("destashManager.saveChanges")
+    : isCreating
+      ? t("destashManager.createDestash")
+      : deStashAmount === 0
+        ? t("removeFromTradingPost")
+        : t("confirmDeStash")
 
   const tradeOptions = useMemo(
     () => TRADE_OPTIONS.map(option => ({
@@ -158,51 +137,37 @@ const DeStashForm = ({
     [values.tradePreference]
   )
 
-  const renderHeader = () => {
-    if (!isFormMode) {
-      return null
-    }
-    return (
-      <>
-        <h3 className="!text-noir-dark">
-          {t("myScents.listItem.decantOptionsTitle")}
-        </h3>
-        <p className="text-sm text-noir-black">
-          {t("myScents.listItem.decantOptionsDescriptionOne")}
-        </p>
-        <p className="text-sm text-noir-black">
-          {t("myScents.listItem.decantOptionsDescriptionTwo")}
-        </p>
-      </>
-    )
-  }
-
-  const renderCreateNewOption = () => {
-    if (!isFormMode) {
-      return null
-    }
-    return (
-      <div className="mb-4">
-        <VooDooCheck
-          labelChecked={t("myScents.listItem.createNewDecant")}
-          labelUnchecked={t("myScents.listItem.updateExistingDecant")}
-          checked={values.createNew}
-          onChange={() => setValue("createNew", !values.createNew)}
-        />
-        {values.createNew && (
-          <p className="text-sm text-noir-gold-500 mt-2">
-            {t("myScents.listItem.createNewDecantDescription")}
-          </p>
-        )}
-      </div>
-    )
-  }
-
   return (
     <div className="p-4">
-      {renderHeader()}
+      {isFormMode && (
+        <>
+          <h3 className="text-noir-dark!">
+            {t("decantOptionsTitle")}
+          </h3>
+          <p className="text-sm text-noir-black">
+            {t("decantOptionsDescriptionOne")}
+          </p>
+          <p className="text-sm text-noir-black">
+            {t("decantOptionsDescriptionTwo")}
+          </p>
+        </>
+      )}
       <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-        {renderCreateNewOption()}
+        {isFormMode && (
+          <div className="mb-4">
+            <VooDooCheck
+              labelChecked={t("createNewDecant")}
+              labelUnchecked={t("updateExistingDecant")}
+              checked={values.createNew}
+              onChange={() => setValue("createNew", !values.createNew)}
+            />
+            {values.createNew && (
+              <p className="text-sm text-noir-gold-500 mt-2">
+                {t("createNewDecantDescription")}
+              </p>
+            )}
+          </div>
+        )}
 
         <div>
           <RangeSlider
@@ -212,9 +177,9 @@ const DeStashForm = ({
             value={deStashAmount}
             onChange={value => setValue("deStashAmount", value.toFixed(1))}
             formatValue={value => value.toFixed(1)}
-            label={t("myScents.listItem.decantOptionsAmountLabel")}
+            label={t("decantOptionsAmountLabel")}
             showManualInput={true}
-            inputPlaceholder={t("myScents.listItem.decantOptionsAmountPlaceholder", {
+            inputPlaceholder={t("decantOptionsAmountPlaceholder", {
               amount: isNewDecant ? "100" : (userPerfume?.amount || "0"),
             })}
           />
@@ -226,44 +191,42 @@ const DeStashForm = ({
         </div>
 
         {showPriceAndTrade && (
-          <div>
-            <label
-              htmlFor="price"
-              className="block text-sm font-medium text-noir-dark mb-1"
-            >
-              {t("myScents.listItem.decantOptionsPriceLabel")}
-            </label>
-            <input
-              type="number"
-              id="price"
-              name="price"
-              placeholder="0.00"
-              value={values.price}
-              onChange={event => setValue("price", event.target.value)}
-              step="0.01"
-              min="0"
-              className="mt-1 px-2 py-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            />
-          </div>
-        )}
-
-        {showPriceAndTrade && (
-          <div>
-            <fieldset>
-              <legend className="block text-sm font-medium text-gray-700 mb-2">
-                {t("myScents.listItem.decantOptionsTradePreferencesLabel")}
-              </legend>
-              <RadioSelect
-                data={tradeOptions}
-                handleRadioChange={event => {
-                  const newPreference = event.target.value as "cash" | "trade" | "both"
-                  setValue("tradePreference", newPreference)
-                  // Automatically update tradeOnly based on selection
-                  setValue("tradeOnly", newPreference === "trade")
-                }}
+          <>
+            <div>
+              <label
+                htmlFor="price"
+                className="block text-sm font-medium text-noir-dark mb-1"
+              >
+                {t("decantOptionsPriceLabel")}
+              </label>
+              <input
+                type="number"
+                id="price"
+                name="price"
+                placeholder="0.00"
+                value={values.price}
+                onChange={event => setValue("price", event.target.value)}
+                step="0.01"
+                min="0"
+                className="mt-1 px-2 py-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               />
-            </fieldset>
-          </div>
+            </div>
+            <div>
+              <fieldset>
+                <legend className="block text-sm font-medium text-gray-700 mb-2">
+                  {t("decantOptionsTradePreferencesLabel")}
+                </legend>
+                <RadioSelect
+                  data={tradeOptions}
+                  handleRadioChange={event => {
+                    const newPreference = event.target.value as "cash" | "trade" | "both"
+                    setValue("tradePreference", newPreference)
+                    setValue("tradeOnly", newPreference === "trade")
+                  }}
+                />
+              </fieldset>
+            </div>
+          </>
         )}
 
         <div className="flex gap-2">
@@ -272,7 +235,7 @@ const DeStashForm = ({
             disabled={!isValid || deStashAmount < 0}
             variant="primary"
           >
-            {getButtonText()}
+            {buttonText}
           </Button>
         </div>
       </form>

@@ -1,4 +1,4 @@
-import { getUserDisplayName } from "~/utils/user"
+import { getUserDisplayName } from "@/utils/user"
 
 interface WishListAvailabilityInfoI {
   userPerfumes: any[]

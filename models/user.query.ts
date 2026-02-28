@@ -88,3 +88,25 @@ export const getUserByProfileSlug = async (slug: string) => {
   )
   return match ? getUserById(match.id) : null
 }
+
+export type UpdateUserProfilePayload = {
+  firstName?: string | null
+  lastName?: string | null
+  username?: string | null
+  email?: string
+}
+
+export const updateUser = async (
+  userId: string,
+  payload: UpdateUserProfilePayload
+) => {
+  return prisma.user.update({
+    where: { id: userId },
+    data: {
+      firstName: payload.firstName ?? undefined,
+      lastName: payload.lastName ?? undefined,
+      username: payload.username ?? undefined,
+      email: payload.email,
+    },
+  })
+}

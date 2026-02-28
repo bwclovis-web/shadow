@@ -236,6 +236,7 @@ export const usePerfumeComments = ({ userPerfume, onCommentAdded, onCommentSucce
       return { success: false, error: jsonError || result.error }
     }
 
+    onCommentSuccess?.()
     return { success: true }
   }
 

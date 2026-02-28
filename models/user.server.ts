@@ -278,7 +278,6 @@ export const changePassword = async (
       success: true,
       message:
         "Password changed successfully. All sessions have been invalidated for security.",
-      strength: strengthInfo.strength,
     }
   } catch (error) {
     console.error("Password change error:", error)
@@ -573,26 +572,28 @@ export const removeUserPerfume = async (userId: string, userPerfumeId: string) =
       return { success: false, error: "Perfume not found in your collection" }
     }
 
-    // Use a transaction to ensure both operations succeed or fail together
+    const perfumeId = existingPerfume.perfumeId
+
+    // Remove all user perfume entries for this user + perfume (main + destash entries)
+    // so the perfume disappears from the collection list
     await prisma.$transaction(async transaction => {
-      // First, delete all comments associated with this user perfume
+      const allEntriesForPerfume = await transaction.userPerfume.findMany({
+        where: { userId, perfumeId },
+        select: { id: true },
+      })
+      const idsToRemove = allEntriesForPerfume.map((e) => e.id)
+
       await transaction.userPerfumeComment.deleteMany({
-        where: {
-          userPerfumeId: existingPerfume.id,
-        },
+        where: { userPerfumeId: { in: idsToRemove } },
       })
 
-      // Then remove the perfume from the user's collection
-      await transaction.userPerfume.delete({
-        where: {
-          id: existingPerfume.id,
-        },
+      await transaction.userPerfume.deleteMany({
+        where: { id: { in: idsToRemove } },
       })
     })
 
     return { success: true }
   } catch (error) {
-     
     console.error("Error removing perfume from user collection:", error)
     return {
       success: false,

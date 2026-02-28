@@ -23,7 +23,7 @@ const InfoFieldset = ({ data, actions, hideImage = false }) => (
         defaultValue={data?.description}
       />
     </FormField>
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-2 gap-2 w-full items-center">
       <FormField label="Founded" error={actions.founded?.errors?.[0]}>
         <Input
           shading={true}

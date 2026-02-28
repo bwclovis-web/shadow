@@ -11,6 +11,7 @@
     "allLoaded": "Tutte le {{itemName}} caricate.",
     "loadMore": "Carica più {{itemName}}",
     "search": "Cerca",
+    "clearSearch": "Cancella ricerca",
     "searchError": "Errore di ricerca: {{error}}",
     "noResultsFound": "Nessun risultato trovato",
     "edit": "Modifica",
@@ -448,7 +449,7 @@
       "decantOptionsDescriptionOne": "Il decantaggio permette di condividere parte del profumo.",
       "decantOptionsDescriptionTwo": "Imposta quantità, prezzo e preferenze sotto.",
       "decantOptionsAmountLabel": "Quantità da destockare",
-      "decantOptionsAmountPlaceholder": "Quantità (0-{{amount}} ml)",
+      "decantOptionsAmountPlaceholder": "Quantità (0-{amount} ml)",
       "decantOptionsPriceLabel": "Prezzo ($/ml, opzionale)",
       "decantOptionsTradePreferencesLabel": "Preferenze di scambio",
       "decantOptionsTradePreferencesDescription": "Scegli le preferenze sotto.",
@@ -466,7 +467,11 @@
       "createNewDecant": "Crea nuova voce decant",
       "updateExistingDecant": "Aggiorna decant esistente",
       "createNewDecantDescription": "Crea una nuova voce invece di aggiornare quella attuale.",
-      "manageDestashes": "Gestisci destock"
+      "manageDestashes": "Gestisci destock",
+      "destashManager": {
+        "saveChanges": "Salva modifiche",
+        "createDestash": "Crea destock"
+      }
     },
     "destashManager": {
       "title": "Gestione destock",
@@ -508,7 +513,7 @@
     },
     "comments": {
       "heading": "Commenti",
-      "subheading": "Condividi le tue opinioni su {{perfumeName}}.",
+      "subheading": "Condividi le tue opinioni su {perfumeName}.",
       "addCommentPlaceholder": "Aggiungi un commento...",
       "addCommentButton": "Aggiungi commento",
       "deleteComment": "Elimina commento",
@@ -572,6 +577,9 @@
     "heading": "Il profilo",
     "subheading": "Cosa conservi. Cosa cerchi. Cosa lasci.",
     "userInfo": "Informazioni utente",
+    "firstName": "Nome",
+    "lastName": "Cognome",
+    "username": "Nome utente",
     "email": "Email",
     "emailPlaceholder": "Inserisci la tua email",
     "password": "Password",
@@ -690,7 +698,7 @@
     "review": {
       "failedToCreateReview": "Creazione recensione fallita",
       "heading": "Recensioni",
-      "subheading": "Condividi le tue opinioni su {{perfumeName}}.",
+      "subheading": "Condividi le tue opinioni su {perfumeName}.",
       "addReviewButton": "Aggiungi recensione",
       "noReviews": "Nessuna recensione. Sii il primo!",
       "editFunctionalityWillBeImplemented": "Modifica in arrivo",

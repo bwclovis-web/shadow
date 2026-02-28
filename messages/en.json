@@ -6,6 +6,7 @@
     "allLoaded": "All {{itemName}} loaded.",
     "loadMore": "Load More {{itemName}}",
     "search": "Search",
+    "clearSearch": "Clear search",
     "searchError": "Search error: {{error}}",
     "noResultsFound": "No results found",
     "edit": "Edit",
@@ -445,7 +446,7 @@
       "decantOptionsDescriptionOne": "Decanting allows you to share or transfer a portion of your fragrance to another bottle.",
       "decantOptionsDescriptionTwo": "Set your amount, price, and trade preferences below.",
       "decantOptionsAmountLabel": "Amount to De-stash",
-      "decantOptionsAmountPlaceholder": "Enter amount (0-{{amount}}ml)",
+      "decantOptionsAmountPlaceholder": "Enter amount (0-{amount}ml)",
       "decantOptionsPriceLabel": "Price ($ per ml, optional)",
       "decantOptionsTradePreferencesLabel": "Trade Preferences",
       "decantOptionsTradePreferencesDescription": "Choose your trade preferences below.",
@@ -463,7 +464,11 @@
       "createNewDecant": "Create as new decant entry",
       "updateExistingDecant": "Update existing decant",
       "createNewDecantDescription": "This will create a separate new decant entry instead of updating the current one.",
-      "manageDestashes": "Manage Destashes"
+      "manageDestashes": "Manage Destashes",
+      "destashManager": {
+        "saveChanges": "Save Changes",
+        "createDestash": "Create Destash"
+      }
     },
     "destashManager": {
       "title": "Destash Management",
@@ -505,7 +510,7 @@
     },
     "comments": {
       "heading": "Comments",
-      "subheading": "Share your thoughts about {{perfumeName}}.",
+      "subheading": "Share your thoughts about {perfumeName}.",
       "addCommentPlaceholder": "Add a comment...",
       "addCommentButton": "Add Comment",
       "deleteComment": "Delete Comment",
@@ -578,6 +583,9 @@
     "heading": "The Profile",
     "subheading": "What you keep. What you chase. What you leave behind.",
     "userInfo": "User Information",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "username": "Username",
     "email": "Email",
     "emailPlaceholder": "Enter your email",
     "password": "Password",
@@ -735,7 +743,7 @@
     "review": {
       "failedToCreateReview": "Failed to create review",
       "heading": "Reviews",
-      "subheading": "Share your thoughts about {{perfumeName}}.",
+      "subheading": "Share your thoughts about {perfumeName}.",
       "addReviewButton": "Add Review",
       "noReviews": "No reviews yet. Be the first to share your thoughts!",
       "editFunctionalityWillBeImplemented": "Edit functionality will be implemented",

@@ -1,10 +1,11 @@
+import Image from "next/image"
+import Link from "next/link"
 import { useTranslations } from "next-intl"
-import { NavLink } from "react-router"
 
-import { OptimizedImage } from "~/components/Atoms/OptimizedImage"
-import type { RecommendationPerfume } from "~/services/recommendations"
-import bottleBanner from "~/images/single-bottle.webp"
-import { validImageRegex } from "~/utils/styleUtils"
+import type { RecommendationPerfume } from "@/services/recommendations"
+import { validImageRegex } from "@/utils/styleUtils"
+
+const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
 
 const PERFUME_LIMIT = 6
 
@@ -14,10 +15,11 @@ interface RecommendedForYouProps {
   limit?: number
 }
 
-export default function RecommendedForYou({ perfumes, limit = PERFUME_LIMIT }: RecommendedForYouProps) {
+const RecommendedForYou = ({ perfumes, limit = PERFUME_LIMIT }: RecommendedForYouProps) => {
   const tRecommendations = useTranslations("recommendations")
   const tSingleHouse = useTranslations("singleHouse")
   const list = (perfumes ?? []).slice(0, limit)
+
   if (list.length === 0) return null
 
   return (
@@ -28,18 +30,18 @@ export default function RecommendedForYou({ perfumes, limit = PERFUME_LIMIT }: R
       <ul className="grid grid-cols-1 md:grid-cols-3 gap-4 p-2">
         {list.map((similar, index) => (
           <li key={similar.id}>
-            <NavLink
-              viewTransition
-              prefetch="intent"
-              to={`/perfume/${similar.slug}`}
+            <Link
+              href={`/perfume/${similar.slug}`}
+              prefetch={true}
               className="block p-2 h-full noir-border relative w-full transition-colors duration-300 ease-in-out hover:bg-white/5"
             >
               <h3 className="text-center block text-sm tracking-wide py-2 font-semibold text-noir-gold leading-tight capitalize line-clamp-2">
                 {similar.name}
               </h3>
-              <OptimizedImage
+              <Image
                 src={
-                  (!validImageRegex.test(similar.image ?? "") ? similar.image : null) ?? bottleBanner
+                  (!validImageRegex.test(similar.image ?? "") ? similar.image : null) ??
+                  BOTTLE_PLACEHOLDER
                 }
                 alt={tSingleHouse("perfumeBottleAltText", { name: similar.name })}
                 priority={index < 3}
@@ -48,18 +50,21 @@ export default function RecommendedForYou({ perfumes, limit = PERFUME_LIMIT }: R
                 quality={75}
                 className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-lg mb-2 mx-auto dark:brightness-90"
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
-                viewTransitionName={`perfume-image-${similar.id}`}
-                placeholder="blur"
+                style={
+                  { viewTransitionName: `perfume-image-${similar.id}` } as React.CSSProperties
+                }
               />
               {similar.perfumeHouse && (
                 <p className="text-center text-xs text-noir-gold-500/80 truncate">
                   {similar.perfumeHouse.name}
                 </p>
               )}
-            </NavLink>
+            </Link>
           </li>
         ))}
       </ul>
     </div>
   )
 }
+
+export default RecommendedForYou

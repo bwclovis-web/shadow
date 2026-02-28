@@ -1,11 +1,13 @@
+"use client"
+
 import { useState } from "react"
 import { useTranslations } from "next-intl"
 import { BsBell, BsEnvelope, BsGear, BsX } from "react-icons/bs"
 
-import { Button } from "~/components/Atoms/Button/Button"
-import VooDooCheck from "~/components/Atoms/VooDooCheck"
-import VooDooDetails from "~/components/Atoms/VooDooDetails/VooDooDetails"
-import type { UserAlertPreferences } from "~/types/database"
+import { Button } from "@/components/Atoms/Button/Button"
+import VooDooCheck from "@/components/Atoms/VooDooCheck"
+import VooDooDetails from "@/components/Atoms/VooDooDetails/VooDooDetails"
+import type { UserAlertPreferences } from "@/types/database"
 
 interface AlertPreferencesProps {
   preferences: UserAlertPreferences
@@ -19,15 +21,12 @@ interface StatusBadgeProps {
   value?: number
 }
 
-const StatusBadge = ({ enabled, value }: StatusBadgeProps) => {
-  if (value !== undefined) {
-    return (
-      <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">
-        {value}
-      </span>
-    )
-  }
-  return (
+const StatusBadge = ({ enabled, value }: StatusBadgeProps) =>
+  value !== undefined ? (
+    <span className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-800">
+      {value}
+    </span>
+  ) : (
     <span
       className={`text-xs px-2 py-1 rounded ${
         enabled ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
@@ -36,7 +35,6 @@ const StatusBadge = ({ enabled, value }: StatusBadgeProps) => {
       {enabled ? "Enabled" : "Disabled"}
     </span>
   )
-}
 
 export const AlertPreferences = ({
   preferences,
@@ -215,10 +213,7 @@ export const AlertPreferences = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="text-sm text-noir-gold-100">
-                {t(
-                  "alerts.alertPreferencesDescription",
-                  "Configure how and when you receive alerts."
-                )}
+                {t("alertPreferencesDescription")}
               </div>
               <Button
                 variant="secondary"

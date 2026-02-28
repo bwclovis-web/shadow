@@ -3,14 +3,15 @@
 import { type VariantProps } from "class-variance-authority"
 import type { HTMLProps } from "react"
 import { Suspense, useEffect, useState } from "react"
-import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { useTranslations } from "next-intl"
 import { FaUser } from "react-icons/fa6"
 
 import LanguageSwitcher from "@/components/Organisms/LanguageSwitcher/LanguageSwitcher"
 import { mainNavigation } from "@/data/navigation"
 import { ADMIN_PATH, SIGN_IN } from "@/constants/routes"
+import { getProfilePathForUser } from "@/utils/user"
 import { styleMerge } from "@/utils/styleUtils"
 
 import AboutDropdown from "../AboutDropdown/AboutDropdown"
@@ -24,6 +25,7 @@ interface GlobalNavigationProps
     VariantProps<typeof globalNavigationVariants> {
   user?: {
     id?: string
+    username?: string | null
     role?: string
   } | null
 }
@@ -66,9 +68,9 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
     >
       <div className="flex justify-end items-center px-30 bg-noir-black/60 backdrop-blur-md w-full gap-4">
         <LanguageSwitcher />
-        <div>
+        <div className="flex items-center gap-2">
           {!user ? (
-            <Link
+            <PrefetchLink
               href={SIGN_IN}
               className={styleMerge(
                 navLinkBase,
@@ -77,9 +79,31 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
               )}
             >
               <FaUser size={20} title="Sign In" />
-            </Link>
+            </PrefetchLink>
           ) : (
-            <LogoutButton />
+            <>
+              {user.id && (
+                <PrefetchLink
+                  href={getProfilePathForUser({
+                    id: user.id,
+                    username: user.username ?? null,
+                  })}
+                  className={styleMerge(
+                    navLinkBase,
+                    "flex",
+                    isActive(
+                      getProfilePathForUser({
+                        id: user.id,
+                        username: user.username ?? null,
+                      })
+                    ) && navLinkActive
+                  )}
+                >
+                  <FaUser size={20} title="Profile" />
+                </PrefetchLink>
+              )}
+              <LogoutButton />
+            </>
           )}
         </div>
       </div>
@@ -87,7 +111,7 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
         className="hidden lg:flex justify-between inner-container"
         data-cy="GlobalNavigation"
       >
-        <Link href="/" className="px-2 block">
+        <PrefetchLink href="/" className="px-2 block">
           <Image
             src="/images/navlogo.webp"
             alt={logoText}
@@ -97,14 +121,14 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
             quality={90}
             className="w-40 h-25"
           />
-        </Link>
+        </PrefetchLink>
         <ul className="flex gap-4 items-center tracking-wide max-w-max">
           <li>
             <AboutDropdown variant="desktop" />
           </li>
           {mainNavigation.map((item) => (
             <li key={item.id}>
-              <Link
+              <PrefetchLink
                 href={item.path}
                 className={styleMerge(
                   navLinkBase,
@@ -113,12 +137,12 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
                 )}
               >
                 {isClientReady ? t(item.key) : item.label}
-              </Link>
+              </PrefetchLink>
             </li>
           ))}
           {user && (
             <li>
-              <Link
+              <PrefetchLink
                 href={ADMIN_PATH}
                 className={styleMerge(
                   navLinkBase,
@@ -127,7 +151,7 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
                 )}
               >
                 {isClientReady ? t("admin") : "Admin"}
-              </Link>
+              </PrefetchLink>
             </li>
           )}
         </ul>

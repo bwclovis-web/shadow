@@ -1,1 +1,1 @@
-export { default } from "./MyScentListItem"
+export { GeneralDetails, PerfumeComments } from "./bones"

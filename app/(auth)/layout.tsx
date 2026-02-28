@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
+import Image from "next/image"
 
 const SIGN_UP_PATH = "/sign-up"
 
@@ -14,8 +15,8 @@ export default async function AuthLayout({
     <div
       className="flex flex-col gap-8 items-center justify-center min-h-screen px-4 bg-noir-gold-500/30"
     >
-      <img
-        src="/images/password.webp"
+      <Image
+        src="/images/password.png"
         alt=""
         width={1200}
         height={800}

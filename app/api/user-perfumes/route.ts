@@ -3,6 +3,7 @@ import { getAllPerfumes } from "@/models/perfume.server"
 import {
   addPerfumeComment,
   addUserPerfume,
+  createDestashEntry,
   deletePerfumeComment,
   getCommentsByUserPerfumeId,
   getUserPerfumes,
@@ -39,15 +40,24 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const perfumeId = (formData.get("perfumeId") as string)?.trim()
     const actionType = formData.get("action") as string
-    if (!perfumeId || !actionType) {
-      return NextResponse.json({ success: false, error: "Perfume ID and action are required" }, { status: 400 })
+    const userPerfumeId = (formData.get("userPerfumeId") as string)?.trim()
+
+    if (!actionType) {
+      return NextResponse.json({ success: false, error: "Action is required" }, { status: 400 })
+    }
+    const needsPerfumeId = ["add", "decant", "create-decant"].includes(actionType)
+    const needsUserPerfumeId = ["remove", "get-comments", "add-comment", "decant"].includes(actionType)
+    if (needsPerfumeId && !perfumeId) {
+      return NextResponse.json({ success: false, error: "Perfume ID is required for this action" }, { status: 400 })
+    }
+    if (needsUserPerfumeId && !userPerfumeId && !perfumeId) {
+      return NextResponse.json({ success: false, error: "User Perfume ID or Perfume ID is required" }, { status: 400 })
     }
 
     const amount = formData.get("amount") as string | undefined
     const comment = formData.get("comment") as string | undefined
     const isPublic = formData.get("isPublic") === "true"
-    const userPerfumeId = formData.get("userPerfumeId") as string | undefined
-    const commentId = formData.get("commentId") as string | undefined
+    const commentId = (formData.get("commentId") as string)?.trim()
     const tradePrice = formData.get("tradePrice") as string | undefined
     const tradePreference = formData.get("tradePreference") as string | undefined
     const tradeOnly = formData.get("tradeOnly") === "true"
@@ -77,13 +87,33 @@ export async function POST(request: NextRequest) {
       case "decant": {
         result = await updateAvailableAmount({
           userId: user.id,
-          userPerfumeId: userPerfumeId || perfumeId,
+          userPerfumeId: userPerfumeId || perfumeId!,
           availableAmount: amount ?? "0",
           tradePrice,
           tradePreference,
           tradeOnly,
         })
         if (amount && parseFloat(amount) > 0 && perfumeId) {
+          try {
+            await processWishlistAvailabilityAlerts(perfumeId, user.id)
+          } catch (_) {}
+        }
+        break
+      }
+      case "create-decant": {
+        if (!perfumeId) {
+          return NextResponse.json({ success: false, error: "Perfume ID is required" }, { status: 400 })
+        }
+        const availableAmount = (formData.get("amount") as string) ?? "0"
+        result = await createDestashEntry({
+          userId: user.id,
+          perfumeId,
+          available: availableAmount,
+          tradePrice,
+          tradePreference: tradePreference || "cash",
+          tradeOnly,
+        })
+        if (availableAmount && parseFloat(availableAmount) > 0) {
           try {
             await processWishlistAvailabilityAlerts(perfumeId, user.id)
           } catch (_) {}

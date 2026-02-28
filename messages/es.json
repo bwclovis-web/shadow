@@ -11,6 +11,7 @@
     "allLoaded": "Todas las {{itemName}} cargadas.",
     "loadMore": "Cargar Más {{itemName}}",
     "search": "Buscar",
+    "clearSearch": "Borrar búsqueda",
     "searchError": "Error de búsqueda: {{error}}",
     "noResultsFound": "No se encontraron resultados",
     "edit": "Editar",
@@ -448,7 +449,7 @@
       "decantOptionsDescriptionOne": "El decantado te permite compartir o transferir una porción de tu fragancia a otra botella.",
       "decantOptionsDescriptionTwo": "Establece tu cantidad, precio y preferencias de intercambio a continuación.",
       "decantOptionsAmountLabel": "Cantidad a Desocultar",
-      "decantOptionsAmountPlaceholder": "Ingresa la cantidad (0-{{amount}}ml)",
+      "decantOptionsAmountPlaceholder": "Ingresa la cantidad (0-{amount}ml)",
       "decantOptionsPriceLabel": "Precio ($ por ml, opcional)",
       "decantOptionsTradePreferencesLabel": "Preferencias de Intercambio",
       "decantOptionsTradePreferencesDescription": "Elige tus preferencias de intercambio a continuación.",
@@ -466,7 +467,11 @@
       "createNewDecant": "Crear como nueva entrada de decantado",
       "updateExistingDecant": "Actualizar decantado existente",
       "createNewDecantDescription": "Esto creará una nueva entrada de decantado separada en lugar de actualizar la actual.",
-      "manageDestashes": "Administrar Desocultados"
+      "manageDestashes": "Administrar Desocultados",
+      "destashManager": {
+        "saveChanges": "Guardar Cambios",
+        "createDestash": "Crear Desocultado"
+      }
     },
     "destashManager": {
       "title": "Gestión de Desocultados",
@@ -508,7 +513,7 @@
     },
     "comments": {
       "heading": "Comentarios",
-      "subheading": "Comparte tus pensamientos sobre {{perfumeName}}.",
+      "subheading": "Comparte tus pensamientos sobre {perfumeName}.",
       "addCommentPlaceholder": "Agrega un comentario...",
       "addCommentButton": "Agregar Comentario",
       "deleteComment": "Eliminar comentario",
@@ -572,6 +577,9 @@
     "heading": "El Perfil",
     "subheading": "Lo que guardas. Lo que persigues. Lo que dejas atrás.",
     "userInfo": "Información del Usuario",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "username": "Nombre de usuario",
     "email": "Correo Electrónico",
     "emailPlaceholder": "Ingresa tu correo electrónico",
     "password": "Contraseña",
@@ -696,7 +704,7 @@
     "review": {
       "failedToCreateReview": "Error al crear la reseña",
       "heading": "Reseñas",
-      "subheading": "Comparte tus pensamientos sobre {{perfumeName}}.",
+      "subheading": "Comparte tus pensamientos sobre {perfumeName}.",
       "addReviewButton": "Agregar Reseña",
       "noReviews": "Aún no hay reseñas. ¡Sé el primero en compartir tus pensamientos!",
       "editFunctionalityWillBeImplemented": "La funcionalidad de edición se implementará",

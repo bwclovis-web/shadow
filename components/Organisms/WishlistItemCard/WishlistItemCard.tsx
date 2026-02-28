@@ -1,13 +1,12 @@
 import { useState } from "react"
 import { useTranslations } from "next-intl"
+import Image from "next/image"
+import Link from "next/link"
 import { IoMdCloseCircle } from "react-icons/io"
-import { Form, NavLink } from "react-router"
 
-import { OptimizedImage } from "~/components/Atoms/OptimizedImage"
-import { CSRFToken } from "~/components/Molecules/CSRFToken"
-import VooDooCheck from "~/components/Atoms/VooDooCheck/VooDooCheck"
-import { useToggleWishlist } from "~/lib/mutations/wishlist"
-import { styleMerge } from "~/utils/styleUtils"
+import VooDooCheck from "@/components/Atoms/VooDooCheck/VooDooCheck"
+import { useToggleWishlist } from "@/lib/mutations/wishlist"
+import { styleMerge } from "@/utils/styleUtils"
 
 import {
   wishlistAddedVariants,
@@ -21,18 +20,25 @@ interface WishlistItemCardProps {
   item: any
   isAvailable: boolean
   availableAmount: number
+  onRemove?: () => void
 }
 
 const WishlistItemCard = ({
   item,
   isAvailable,
   availableAmount,
+  onRemove,
 }: WishlistItemCardProps) => {
   const [isPublic, setIsPublic] = useState(item.isPublic)
   const t = useTranslations("wishlist.itemCard")
-  
-  // Use TanStack Query mutation for wishlist visibility
   const toggleWishlist = useToggleWishlist()
+
+  const handleRemove = () => {
+    toggleWishlist.mutate(
+      { perfumeId: item.perfume.id, action: "remove" },
+      { onSuccess: () => onRemove?.() }
+    )
+  }
 
   const handleVisibilityToggle = async () => {
     const newVisibility = !isPublic
@@ -57,32 +63,30 @@ const WishlistItemCard = ({
 
   return (
     <div className={styleMerge(wishlistVariants({ isAvailable }))}>
-      <Form method="post" className="absolute top-2 right-2 z-10">
-        <CSRFToken />
-        <input type="hidden" name="intent" value="remove" />
-        <input type="hidden" name="perfumeId" value={item.perfume.id} />
+      <div className="absolute top-2 right-2 z-10">
         <button
-          type="submit"
-          className="bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg transition-colors duration-200 group"
+          type="button"
+          onClick={handleRemove}
+          disabled={toggleWishlist.isPending}
+          className="group flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition-colors duration-200 hover:bg-red-600 disabled:opacity-50"
           title="Remove from wishlist"
         >
           <IoMdCloseCircle />
         </button>
-      </Form>
+      </div>
 
       {isAvailable && (
         <div className="bg-noir-light text-noir-dark text-xs font-bold px-3 py-1 text-center animate-pulse">
           {t("available")}
         </div>
       )}
-      <OptimizedImage
+      <Image
         src={item.perfume.image || "/placeholder-perfume.jpg"}
         alt={item.perfume.name}
         width={400}
         height={192}
-        priority={false}
         quality={75}
-        className="w-full h-48 object-cover"
+        className="h-48 w-full object-cover"
         sizes="(max-width: 640px) 100vw, 50vw"
       />
       <div>
@@ -107,12 +111,12 @@ const WishlistItemCard = ({
               Added on {new Date(item.createdAt).toLocaleDateString("en-US")}
             </span>
             <div className="flex items-center gap-2">
-              <NavLink
-                to={`/perfume/${item.perfume.slug}`}
-                className="text-noir-blue/90 hover:text-noir-blue text-sm font-medium"
+              <Link
+                href={`/perfume/${item.perfume.slug}`}
+                className="text-sm font-medium text-noir-blue/90 hover:text-noir-blue"
               >
                 View Details
-              </NavLink>
+              </Link>
             </div>
           </div>
 

@@ -26,7 +26,7 @@ const AddressFieldset = ({
     <legend className="text-3xl text-noir-gold-100 font-bold mb-2">
       Address
     </legend>
-    <div className="grid grid-cols-2 w-full gap-2">
+    <div className="grid grid-cols-2 w-full gap-2 items-center">
       <FormField label="Address" error={address?.errors?.[0]}>
         <Input
           shading={true}

@@ -18,7 +18,10 @@ const getInitialPerfumeData = (initialPerfume?: UserPerfumeI) => ({
 const MY_SCENTS_API = "/api/user-perfumes"
 
 // Custom hook to manage perfume form state
-export const useMyScentsForm = (initialPerfume?: UserPerfumeI) => {
+export const useMyScentsForm = (
+  initialPerfume?: UserPerfumeI,
+  onSuccess?: () => void
+) => {
   const { submitForm } = useCSRF()
 
   // Initialize state with helper functions
@@ -63,9 +66,13 @@ export const useMyScentsForm = (initialPerfume?: UserPerfumeI) => {
       const formData = createFormData()
       if (!formData) return
       const response = await submitForm(MY_SCENTS_API, formData)
-      if (response.ok) resetForm()
+      const data = await response.json().catch(() => ({}))
+      if (response.ok && data?.success) {
+        resetForm()
+        onSuccess?.()
+      }
     },
-    [createFormData, resetForm, submitForm]
+    [createFormData, resetForm, submitForm, onSuccess]
   )
 
   // Update state when perfume changes

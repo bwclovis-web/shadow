@@ -1,20 +1,21 @@
 import { useTranslations } from "next-intl"
 import { MdDeleteForever } from "react-icons/md"
 
-import { Button } from "~/components/Atoms/Button"
-import VooDooCheck from "~/components/Atoms/VooDooCheck/VooDooCheck"
-import { usePerfumeComments } from "~/hooks/usePerfumeComments"
-import { useSessionStore } from "~/stores/sessionStore"
-import type { UserPerfumeI } from "~/types"
+import { Button } from "@/components/Atoms/Button"
+import VooDooCheck from "@/components/Atoms/VooDooCheck/VooDooCheck"
+import { usePerfumeComments } from "@/hooks/usePerfumeComments"
+import { useSessionStore } from "@/hooks/sessionStore"
+import type { UserPerfumeI } from "@/types"
 
 interface PerfumeCommentsProps {
   userPerfume: UserPerfumeI
+  onCommentSuccess?: () => void
 }
-const PerfumeComments = ({ userPerfume }: PerfumeCommentsProps) => {
-  const { t } = useTranslation()
+const PerfumeComments = ({ userPerfume, onCommentSuccess }: PerfumeCommentsProps) => {
+  const t = useTranslations("myScents.comments")
   const { toggleModal } = useSessionStore()
   const { comments, uniqueModalId, toggleCommentVisibility, deleteComment } =
-    usePerfumeComments({ userPerfume })
+    usePerfumeComments({ userPerfume, onCommentSuccess })
 
   const handleTogglePublic = async (commentId: string, currentIsPublic: boolean) => {
     await toggleCommentVisibility(commentId, currentIsPublic)
