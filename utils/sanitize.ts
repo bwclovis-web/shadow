@@ -1,4 +1,4 @@
-import DOMPurify from "isomorphic-dompurify"
+import sanitizeHtml from "sanitize-html"
 
 /**
  * Allowlist for review HTML (safe rich text only).
@@ -23,12 +23,6 @@ export const REVIEW_HTML_ALLOWED_TAGS = [
 
 /** Tags that must never appear in review HTML (blocklist overrides allowlist). */
 const REVIEW_FORBID_TAGS = ["script", "iframe", "object", "embed", "form", "input", "button"]
-
-const REVIEW_SANITIZE_CONFIG = {
-  ALLOWED_TAGS: [...REVIEW_HTML_ALLOWED_TAGS],
-  ALLOWED_ATTR: [] as string[],
-  FORBID_TAGS: REVIEW_FORBID_TAGS,
-}
 
 /**
  * Detect HTML that is explicitly dangerous and should be rejected (not just sanitized).
@@ -71,13 +65,15 @@ function stripDangerousTags(html: string): string {
 
 /**
  * Sanitize HTML intended for review content (create/update and render).
- * Safe to use on server and client (isomorphic-dompurify).
- * Strips script/dangerous tags first (so they are never parsed by DOM), then DOMPurify allowlist.
+ * Safe to use on server and client (sanitize-html; no jsdom, avoids ESM/CJS issues in server bundles).
+ * Strips script/dangerous tags first (defense-in-depth), then allowlist via sanitize-html.
  */
 export function sanitizeReviewHtml(html: string): string {
   if (typeof html !== "string") return ""
   const noScript = stripDangerousTags(html)
-  const purified = DOMPurify.sanitize(noScript, REVIEW_SANITIZE_CONFIG)
-  const result = typeof purified === "string" ? purified : String(purified)
-  return stripDangerousTags(result)
+  const purified = sanitizeHtml(noScript, {
+    allowedTags: [...REVIEW_HTML_ALLOWED_TAGS],
+    allowedAttributes: {},
+  })
+  return stripDangerousTags(purified)
 }
