@@ -61,11 +61,21 @@ export const processPendingSubmissionAction = async (
 
   if (actionType === "approve") {
     try {
+      const submissionData = submission.submissionData
+      const data =
+        submissionData &&
+        typeof submissionData === "object" &&
+        !Array.isArray(submissionData)
+          ? (submissionData as Record<string, unknown>)
+          : null
+      if (!data) {
+        return { success: false, error: "Invalid submission data" }
+      }
       if (submission.submissionType === "perfume") {
         const perfumeFormData = new FormData()
-        Object.entries(submission.submissionData).forEach(([key, value]) => {
+        Object.entries(data).forEach(([key, value]) => {
           if (Array.isArray(value)) {
-            value.forEach((v) => perfumeFormData.append(key, v))
+            value.forEach((v) => perfumeFormData.append(key, String(v)))
           } else {
             perfumeFormData.append(key, value as string)
           }
@@ -73,7 +83,7 @@ export const processPendingSubmissionAction = async (
         await createPerfume(perfumeFormData)
       } else {
         const houseFormData = new FormData()
-        Object.entries(submission.submissionData).forEach(([key, value]) => {
+        Object.entries(data).forEach(([key, value]) => {
           houseFormData.append(key, value as string)
         })
         await createPerfumeHouse(houseFormData)
