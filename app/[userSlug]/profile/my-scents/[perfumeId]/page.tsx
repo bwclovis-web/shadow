@@ -9,7 +9,7 @@ import { getUserPerfumes } from "@/models/user.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { getProfileSlug } from "@/utils/user"
 
-import MySingleScentClient from "./MySingleScentClient"
+import MySingleScentClient, { type SerializedUserPerfume } from "./MySingleScentClient"
 
 type Props = {
   params: Promise<{ userSlug: string; perfumeId: string }>

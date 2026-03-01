@@ -21,7 +21,7 @@ import { validImageRegex } from "@/utils/styleUtils"
 const BOTTLE_BANNER = "/images/single-bottle.webp"
 const USER_PERFUMES_API = "/api/user-perfumes"
 
-type SerializedUserPerfume = {
+export type SerializedUserPerfume = {
   id: string
   perfumeId: string
   userId: string
