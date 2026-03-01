@@ -39,6 +39,11 @@ export interface UseQueryErrorOptions {
    * Custom severity mapping function
    */
   mapSeverity?: (error: unknown) => ErrorSeverity
+
+  /**
+   * Display variant for error UI
+   */
+  variant?: "inline" | "card" | "banner"
 }
 
 export interface UseQueryErrorReturn<TData, TError> {
@@ -257,7 +262,7 @@ error, title, showDetails, refetch
  */
 export function useQueryErrorInline<TData, TError>(queryResult: Pick<
     QueryObserverResult<TData, TError>,
-    "error" | "isError" | "refetch"
+    "error" | "isError" | "refetch" | "isFetching"
   >) {
   const { hasError, error, errorDisplayProps } = useQueryError(queryResult, {
     variant: "inline",

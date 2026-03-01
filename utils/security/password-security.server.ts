@@ -229,24 +229,26 @@ export function generateSecurePassword(length: number = 16): string {
 
 // Check if password is expired
 export function isPasswordExpired(lastPasswordChange: Date): boolean {
-  if (PASSWORD_CONFIG.PASSWORD_EXPIRY_DAYS === 0) {
+  const expiryDays = PASSWORD_CONFIG.PASSWORD_EXPIRY_DAYS as number
+  if (expiryDays === 0) {
     return false
   }
 
   const expiryDate = new Date(lastPasswordChange)
-  expiryDate.setDate(expiryDate.getDate() + PASSWORD_CONFIG.PASSWORD_EXPIRY_DAYS)
+  expiryDate.setDate(expiryDate.getDate() + expiryDays)
 
   return new Date() > expiryDate
 }
 
 // Calculate days until password expires
 export function getDaysUntilPasswordExpiry(lastPasswordChange: Date): number {
-  if (PASSWORD_CONFIG.PASSWORD_EXPIRY_DAYS === 0) {
+  const expiryDays = PASSWORD_CONFIG.PASSWORD_EXPIRY_DAYS as number
+  if (expiryDays === 0) {
     return Infinity
   }
 
   const expiryDate = new Date(lastPasswordChange)
-  expiryDate.setDate(expiryDate.getDate() + PASSWORD_CONFIG.PASSWORD_EXPIRY_DAYS)
+  expiryDate.setDate(expiryDate.getDate() + expiryDays)
 
   const now = new Date()
   const diffTime = expiryDate.getTime() - now.getTime()

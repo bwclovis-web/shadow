@@ -44,12 +44,12 @@ export function useDataWithFilters<
 
     // Apply type filter
     if (selectedType && selectedType !== "all") {
-      filtered = filterByType(filtered, selectedType)
+      filtered = filterByType(filtered, selectedType) as T[]
     }
 
     // Apply search filter
     if (searchQuery) {
-      filtered = filterBySearchQuery(filtered, searchQuery)
+      filtered = filterBySearchQuery(filtered, searchQuery) as T[]
     }
 
     // Apply sorting

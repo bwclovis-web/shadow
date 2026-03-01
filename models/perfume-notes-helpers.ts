@@ -89,7 +89,7 @@ export async function getPerfumeWithNotes(
     return null
   }
 
-  return transformNotesForDisplay(perfume as PerfumeWithNotes)
+  return transformNotesForDisplay(perfume as unknown as PerfumeWithNotes)
 }
 
 

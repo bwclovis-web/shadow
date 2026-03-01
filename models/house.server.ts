@@ -510,12 +510,13 @@ export const deletePerfumeHouse = async (id: string) => {
  * @throws {Error} if required fields are missing or invalid
  */
 function validateHouseFormData(data: FormData): void {
-  const name = data.get("name")
+  const nameRaw = data.get("name")
   const type = data.get("type")
+  const name = typeof nameRaw === "string" ? nameRaw : ""
 
   // Validate required fields
   assertValid(
-    !!name && typeof name === "string" && name.trim().length > 0,
+    name.trim().length > 0,
     "House name is required and must be a non-empty string",
     { field: "name", value: name }
   )
@@ -535,8 +536,12 @@ function validateHouseFormData(data: FormData): void {
   // Validate type if provided
   if (type && typeof type === "string") {
     const validTypes: HouseType[] = [
-"niche", "designer", "indie", "mainstream"
-]
+      "niche",
+      "designer",
+      "indie",
+      "celebrity",
+      "drugstore",
+    ]
     assertValid(
       validTypes.includes(type as HouseType),
       `Invalid house type. Must be one of: ${validTypes.join(", ")}`,

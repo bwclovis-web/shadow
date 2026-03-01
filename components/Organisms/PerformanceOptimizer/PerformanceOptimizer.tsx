@@ -99,7 +99,8 @@ const PerformanceOptimizer: React.FC<PerformanceOptimizerProps> = ({
       action: () => {
         const scripts = document.querySelectorAll("script:not([defer]):not([async])")
         scripts.forEach(script => {
-          if (!script.src.includes("critical") && !script.src.includes("main")) {
+          const src = (script as HTMLScriptElement).src
+          if (!src.includes("critical") && !src.includes("main")) {
             script.setAttribute("defer", "true")
           }
         })

@@ -28,7 +28,7 @@ export function usePrefetchNextPage(
     // Prefetch next page after a short delay to avoid prefetching too aggressively
     const timer = setTimeout(() => {
       // Get current query data to determine next page param
-      const queryData = queryClient.getQueryState({ queryKey })
+      const queryData = queryClient.getQueryState(queryKey)
       
       if (queryData?.data && hasNextPage) {
         // Prefetch next page

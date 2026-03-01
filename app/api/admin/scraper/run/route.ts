@@ -60,8 +60,10 @@ function toCsv(records: PerfumeCsvRecord[]): string {
   return [headers.join(","), ...rows].join("\n")
 }
 
-/** Spawn the Python scraper with the config on stdin; resolve stdout JSON. */
-async function runPythonScraper(config: ScraperRunRequest): Promise<string> {
+/** Spawn the Python scraper; resolve stdout JSON and stderr log. */
+async function runPythonScraper(
+  config: ScraperRunRequest,
+): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     const scriptPath = path.join(process.cwd(), "scraper", "run_scraper.py")
     const child = spawn("python", [scriptPath], {
@@ -71,8 +73,12 @@ async function runPythonScraper(config: ScraperRunRequest): Promise<string> {
     let stdout = ""
     let stderr = ""
 
-    child.stdout.on("data", (chunk: Buffer) => { stdout += chunk.toString("utf8") })
-    child.stderr.on("data", (chunk: Buffer) => { stderr += chunk.toString("utf8") })
+    child.stdout.on("data", (chunk: Buffer) => {
+      stdout += chunk.toString("utf8")
+    })
+    child.stderr.on("data", (chunk: Buffer) => {
+      stderr += chunk.toString("utf8")
+    })
 
     const timer = setTimeout(() => {
       child.kill()
@@ -82,9 +88,9 @@ async function runPythonScraper(config: ScraperRunRequest): Promise<string> {
     child.on("close", (code: number | null) => {
       clearTimeout(timer)
       if (code !== 0) {
-        reject(new Error(`Scraper exited with code ${code}. Stderr: ${stderr.slice(0, 500)}`))
+        reject(new Error(`Scraper exited with code ${code}. Stderr: ${stderr.slice(0, 1000)}`))
       } else {
-        resolve(stdout)
+        resolve({ stdout, stderr })
       }
     })
 
@@ -164,8 +170,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // Step 1: Python scraper
   let scrapedItems: ScrapedItem[] = []
+  let scraperLog = ""
   try {
-    const stdout = await runPythonScraper(body)
+    const { stdout, stderr } = await runPythonScraper(body)
+    scraperLog = stderr.trim()
     const parsed = JSON.parse(stdout) as unknown
     if (!Array.isArray(parsed)) throw new Error("Scraper output is not a JSON array")
     scrapedItems = parsed as ScrapedItem[]
@@ -178,6 +186,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         records: [],
         csvContent: "",
         errors: [`Scraper failed: ${msg}`],
+        scraperLog: scraperLog || undefined,
       } satisfies ScraperRunResponse,
       { status: 500 },
     )
@@ -192,6 +201,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       errors: [
         "Scraper ran successfully but found 0 products. Check your collection URLs and selectors.",
       ],
+      scraperLog: scraperLog || undefined,
     } satisfies ScraperRunResponse)
   }
 
@@ -219,5 +229,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     records,
     csvContent: toCsv(records),
     errors: [],
+    scraperLog: scraperLog || undefined,
   } satisfies ScraperRunResponse)
 }

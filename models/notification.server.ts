@@ -1,4 +1,4 @@
-import { prisma } from "~/db.server"
+import { prisma } from "@/lib/db"
 
 const checkItemNeedsNotification = async (wishlistItem: any) => {
   if (wishlistItem.perfume.userPerfume.length === 0) {

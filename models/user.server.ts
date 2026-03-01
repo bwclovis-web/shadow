@@ -1,4 +1,4 @@
-import { SubscriptionStatus } from "@prisma/client"
+import { type TradePreference, SubscriptionStatus } from "@prisma/client"
 import { prisma } from "@/lib/db"
 import { updateScentProfileFromBehavior } from "@/models/scent-profile.server"
 import { invalidateAllSessions } from "@/models/session.server"
@@ -40,12 +40,13 @@ export const createUser = async (
   data: FormData,
   options?: CreateUserOptions
 ) => {
-  const password = data.get("password")
+  const passwordRaw = data.get("password")
   assertValid(
-    typeof password === "string",
+    typeof passwordRaw === "string",
     "Password is required and must be a string",
     { field: "password" }
   )
+  const password = passwordRaw as string
 
   // Validate password complexity
   const passwordValidation = validatePasswordComplexity(password)
@@ -501,7 +502,7 @@ export const createDestashEntry = async ({
         amount: "0",
         available,
         tradePrice: tradePrice || null,
-        tradePreference: tradePreference || "cash",
+        tradePreference: (tradePreference === "trade" || tradePreference === "both" ? tradePreference : "cash") as TradePreference,
         tradeOnly: tradeOnly || false,
       },
       select: {

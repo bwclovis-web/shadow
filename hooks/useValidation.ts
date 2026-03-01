@@ -74,9 +74,9 @@ export function useValidation<T extends Record<string, unknown>>({
   debounceMs = 300,
   transform,
 }: UseValidationOptions<T>): UseValidationReturn<T> {
-  const [values, setValues] = useState<T>(initialValues)
-  const [errors, setErrors] = useState<Record<keyof T, string>>({} as Record<keyof T, string>)
-  const [touched, setTouched] = useState<Record<keyof T, boolean>>({} as Record<keyof T, boolean>)
+  const [values, setValuesState] = useState<T>(initialValues)
+  const [errors, setErrorsState] = useState<Record<keyof T, string>>({} as Record<keyof T, string>)
+  const [touched, setTouchedState] = useState<Record<keyof T, boolean>>({} as Record<keyof T, boolean>)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isValidating, setIsValidating] = useState(false)
 
@@ -112,7 +112,7 @@ export function useValidation<T extends Record<string, unknown>>({
         await fieldSchema.parseAsync(dataToValidate)
 
         // Clear error for this field
-        setErrors(prev => {
+        setErrorsState(prev => {
           const newErrors = { ...prev }
           delete newErrors[field]
           return newErrors
@@ -123,7 +123,7 @@ export function useValidation<T extends Record<string, unknown>>({
         if (error instanceof z.ZodError) {
           const fieldError = error.errors.find(err => err.path[0] === field)
           if (fieldError) {
-            setErrors(prev => ({
+            setErrorsState(prev => ({
               ...prev,
               [field]: fieldError.message,
             }))
@@ -470,4 +470,3 @@ export function useFormValidation<T>(
     isValid,
     validate,
   }
-}

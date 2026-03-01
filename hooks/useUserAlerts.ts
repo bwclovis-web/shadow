@@ -37,7 +37,7 @@ export function useUserAlerts(userId: string, enabled: boolean = true) {
     refetchOnReconnect: activeStrategy.refetchOnReconnect,
     staleTime: activeStrategy.staleTime,
     // Stale-while-revalidate: show cached data while fetching fresh data
-    placeholderData: previousData => previousData,
+    placeholderData: (previousData: UserAlertsResponse | undefined) => previousData,
   })
 }
 

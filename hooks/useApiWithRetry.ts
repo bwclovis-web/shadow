@@ -158,13 +158,13 @@ export const useApiWithRetry = (options: UseApiWithRetryOptions = {}): UseApiWit
           ...defaultRetryOptions,
           ...callOptions?.retryOptions,
           // Wrap the callbacks to update state
-          onRetry: (error, attempt, nextDelay) => {
+          onRetry: (error: unknown, attempt: number, nextDelay: number) => {
             setIsRetrying(true)
             setRetryCount(attempt)
             callOptions?.retryOptions?.onRetry?.(error, attempt, nextDelay)
             globalOnRetry?.(error, attempt, nextDelay)
           },
-          onMaxRetriesReached: (error, attempts) => {
+          onMaxRetriesReached: (error: unknown, attempts: number) => {
             setIsRetrying(false)
             setRetryCount(attempts)
             callOptions?.retryOptions?.onMaxRetriesReached?.(error, attempts)

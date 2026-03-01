@@ -18,6 +18,7 @@ export interface UserPerfumesResponse {
   success: boolean
   userPerfumes: any[]
   allPerfumes?: any[] // Optional: all perfumes list
+  error?: string
 }
 
 export interface WishlistResponse {

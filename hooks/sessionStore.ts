@@ -9,7 +9,7 @@ interface SessionState {
   modalOpen: boolean
   modalData: ModalData | null
   modalId: string | null
-  triggerId: RefObject<HTMLButtonElement> | null
+  triggerId: RefObject<HTMLButtonElement | null> | null
 
   // Actions
   toggleModal: (
@@ -29,7 +29,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   triggerId: null,
 
   toggleModal: (
-    id: RefObject<HTMLButtonElement>,
+    id: RefObject<HTMLButtonElement | null>,
     modalId: string,
     data?: ModalData
   ) => {

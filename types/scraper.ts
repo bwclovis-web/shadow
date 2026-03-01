@@ -105,6 +105,8 @@ export interface ScraperRunResponse {
   /** Full CSV text, ready for download */
   csvContent: string
   errors: string[]
+  /** Python scraper stderr output (helps debug when 0 products or failures) */
+  scraperLog?: string
 }
 
 // ---------------------------------------------------------------------------

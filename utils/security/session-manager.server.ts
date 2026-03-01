@@ -27,7 +27,7 @@ export function createAccessToken(userId: string): string {
       iat: Math.floor(Date.now() / 1000),
     },
     JWT_SECRET,
-    { expiresIn: config.accessTokenExpiresIn }
+    { expiresIn: config.accessTokenExpiresIn } as jwt.SignOptions
   )
 }
 
@@ -40,7 +40,7 @@ export function createRefreshToken(userId: string): string {
       iat: Math.floor(Date.now() / 1000),
     },
     JWT_SECRET,
-    { expiresIn: config.refreshTokenExpiresIn }
+    { expiresIn: config.refreshTokenExpiresIn } as jwt.SignOptions
   )
 }
 

@@ -1,1 +1,1 @@
-export { default } from "./CreateTagButton"
+export { default } from "../CreateTagButton"

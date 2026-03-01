@@ -10,13 +10,14 @@ export async function createPendingSubmission(
   submissionData: Record<string, any>,
   submittedBy?: string
 ): Promise<PendingSubmission> {
-  return await prisma.pendingSubmission.create({
+  const created = await prisma.pendingSubmission.create({
     data: {
       submissionType,
       submissionData,
       submittedBy: submittedBy || null,
     },
   })
+  return created as PendingSubmission
 }
 
 /**

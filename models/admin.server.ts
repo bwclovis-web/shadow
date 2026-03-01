@@ -221,7 +221,7 @@ export async function softDeleteUser(
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, role: true },
+      select: { id: true, email: true, role: true, username: true },
     })
 
     if (!user) {
@@ -241,7 +241,9 @@ export async function softDeleteUser(
       where: { id: userId },
       data: {
         email: `deleted_${Date.now()}_${user.email}`,
-        username: user.username ? `deleted_${Date.now()}_${user.username}` : null,
+        username: user.username
+          ? `deleted_${Date.now()}_${user.username}`
+          : null,
         // You could add a deletedAt field here if you add it to the schema
       },
     })
@@ -323,7 +325,7 @@ export async function updateUserRole(
       data: {
         id: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         userId: adminId,
-        action: "ROLE_CHANGE",
+        action: "DATA_MODIFICATION",
         severity: "info",
         resource: "User",
         resourceId: userId,
@@ -348,7 +350,7 @@ export async function updateUserRole(
       data: {
         id: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         userId: adminId,
-        action: "ROLE_CHANGE",
+        action: "DATA_MODIFICATION",
         severity: "error",
         resource: "User",
         resourceId: userId,

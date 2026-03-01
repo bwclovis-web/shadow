@@ -1,1 +1,1 @@
-export { default } from "./WishlistAvbalibilityInfo"
+export { default } from "../WishlistAvbalibilityInfo"

@@ -50,10 +50,8 @@ export function validateData<T>(
   const opts = { ...defaultOptions, ...options }
 
   try {
-    const result = schema.parse(data, {
-      stripUnknown: opts.stripUnknown,
-      abortEarly: opts.abortEarly,
-    })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = schema.parse(data, { abortEarly: opts.abortEarly } as any)
 
     return {
       success: true,
@@ -125,7 +123,7 @@ function formatZodErrors(error: ZodError): ValidationError[] {
     field: err.path.join("."),
     message: err.message,
     code: err.code,
-    value: err.input,
+    value: "input" in err ? (err as { input: unknown }).input : undefined,
   }))
 }
 
@@ -141,7 +139,7 @@ export function validateAndTransform<T, R>(
   const validation = validateData(schema, data, options)
 
   if (!validation.success) {
-    return validation
+    return validation as ValidationResult<R>
   }
 
   try {
@@ -213,7 +211,7 @@ export function sanitizeObject<T extends Record<string, unknown>>(obj: T): T {
     } else if (typeof value === "object" && value !== null) {
       sanitized[key as keyof T] = sanitizeObject(value as Record<string, unknown>) as T[keyof T]
     } else {
-      sanitized[key as keyof T] = value
+      sanitized[key as keyof T] = value as T[keyof T]
     }
   }
 

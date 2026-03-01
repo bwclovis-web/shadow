@@ -1,3 +1,5 @@
+import type { SafeUser, User } from "@/types"
+
 type UserLike = {
   firstName?: string | null
   lastName?: string | null
@@ -22,7 +24,7 @@ export const getUserDisplayName = (user: UserLike | null | undefined): string =>
   return full || user.username || user.email || user.id || "Unknown"
 }
 
-export const createSafeUser = (user: UserI | null): SafeUser | null => {
+export const createSafeUser = (user: User | null): SafeUser | null => {
   if (!user) {
     return null
   }

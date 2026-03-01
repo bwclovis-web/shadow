@@ -176,11 +176,17 @@ const AllHousesClient = ({ heading, subheading }: AllHousesClientProps) => {
 
   const normalizedHouses = useMemo(
     () =>
-      houses.map((house) => ({
-        ...house,
-        createdAt:
-          house.createdAt ?? house.updatedAt ?? new Date(0),
-      })),
+      houses.map((house) => {
+        const h = house as Record<string, unknown> & {
+          createdAt?: Date
+          updatedAt?: Date
+        }
+        return {
+          ...h,
+          createdAt:
+            h.createdAt ?? h.updatedAt ?? new Date(0),
+        }
+      }),
     [houses]
   )
 

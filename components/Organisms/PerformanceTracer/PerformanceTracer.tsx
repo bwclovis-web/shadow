@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react"
 
 import { styleMerge } from "@/utils/styleUtils"
 
-interface TraceEvent {
+export interface TraceEvent {
   id: string
   name: string
   category: string
@@ -14,7 +14,7 @@ interface TraceEvent {
   parentId?: string
 }
 
-interface PerformanceTracerProps {
+export interface PerformanceTracerProps {
   enabled?: boolean
   showUI?: boolean
   className?: string
@@ -87,8 +87,8 @@ const PerformanceTracer: React.FC<PerformanceTracerProps> = ({
                 tcp: navEntry.connectEnd - navEntry.connectStart,
                 ttfb: navEntry.responseStart - navEntry.requestStart,
                 domContentLoaded:
-                  navEntry.domContentLoadedEventEnd - navEntry.navigationStart,
-                loadComplete: navEntry.loadEventEnd - navEntry.navigationStart,
+                  navEntry.domContentLoadedEventEnd - (navEntry as unknown as { navigationStart: number }).navigationStart,
+                loadComplete: navEntry.loadEventEnd - (navEntry as unknown as { navigationStart: number }).navigationStart,
               }
             } else if (entry.entryType === "resource") {
               const resourceEntry = entry as PerformanceResourceTiming

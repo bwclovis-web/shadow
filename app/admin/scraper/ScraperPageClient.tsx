@@ -363,9 +363,9 @@ export function ScraperPageClient() {
       )}
 
       {/* ------------------------------------------------------------------ */}
-      {/* Step 2: Review + confirm import                                     */}
+      {/* Step 2: Review + confirm import (always show when we have a result)  */}
       {/* ------------------------------------------------------------------ */}
-      {scrapeResult && records.length > 0 && (
+      {scrapeResult && (
         <div className="mt-8 flex flex-col gap-6">
           {/* Summary bar */}
           <div className="rounded-lg border border-border p-4">
@@ -378,7 +378,13 @@ export function ScraperPageClient() {
               <div>
                 <dt className="text-muted-foreground">Notes extracted</dt>
                 <dd className="text-2xl font-bold">
-                  {records.filter(r => JSON.parse(r.openNotes ?? "[]").length > 0).length}
+                  {records.filter(r => {
+                    try {
+                      return (JSON.parse(r.openNotes ?? "[]") as string[]).length > 0
+                    } catch {
+                      return false
+                    }
+                  }).length}
                 </dd>
               </div>
               <div>
@@ -392,69 +398,80 @@ export function ScraperPageClient() {
             </dl>
 
             {scrapeResult.errors.length > 0 && (
-              <details className="mt-3">
-                <summary className="cursor-pointer text-xs text-muted-foreground">
-                  Show scrape errors
-                </summary>
-                <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-destructive">
+              <div className="mt-3 rounded border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+                <p className="font-medium">Messages</p>
+                <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs">
                   {scrapeResult.errors.map((e, i) => (
                     <li key={i}>{e}</li>
                   ))}
                 </ul>
+              </div>
+            )}
+
+            {scrapeResult.scraperLog && (
+              <details className="mt-3">
+                <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
+                  Scraper log (Python stderr)
+                </summary>
+                <pre className="mt-2 max-h-48 overflow-y-auto rounded border border-border bg-muted/30 p-2 font-mono text-xs whitespace-pre-wrap">
+                  {scrapeResult.scraperLog}
+                </pre>
               </details>
             )}
 
-            <Button
-              variant="secondary"
-              className="mt-4"
-              onClick={handleDownloadCsv}
-              type="button"
-            >
-              Download CSV
-            </Button>
+            {records.length > 0 && (
+              <Button
+                variant="secondary"
+                className="mt-4"
+                onClick={handleDownloadCsv}
+                type="button"
+              >
+                Download CSV
+              </Button>
+            )}
           </div>
 
-          {/* Product preview table */}
-          <div className="rounded-lg border border-border">
-            <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <h3 className="text-sm font-semibold">Products preview</h3>
-              <span className="text-xs text-muted-foreground">{records.length} items</span>
+          {records.length > 0 && (
+            <div className="rounded-lg border border-border">
+              <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                <h3 className="text-sm font-semibold">Products preview</h3>
+                <span className="text-xs text-muted-foreground">{records.length} items</span>
+              </div>
+              <div className="max-h-72 overflow-y-auto">
+                <table className="w-full text-xs">
+                  <thead className="sticky top-0 bg-background">
+                    <tr className="border-b border-border text-left text-muted-foreground">
+                      <th className="px-4 py-2 font-medium">Name</th>
+                      <th className="px-4 py-2 font-medium">Open notes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {records.map((r, i) => {
+                      const notes = (() => {
+                        try {
+                          return (JSON.parse(r.openNotes) as string[]).slice(0, 4)
+                        } catch {
+                          return []
+                        }
+                      })()
+                      return (
+                        <tr key={i} className="border-b border-border last:border-0">
+                          <td className="max-w-[200px] truncate px-4 py-2 font-medium">{r.name}</td>
+                          <td className="px-4 py-2 text-muted-foreground">
+                            {notes.length > 0 ? notes.join(", ") : (
+                              <span className="italic opacity-50">none extracted</span>
+                            )}
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div className="max-h-72 overflow-y-auto">
-              <table className="w-full text-xs">
-                <thead className="sticky top-0 bg-background">
-                  <tr className="border-b border-border text-left text-muted-foreground">
-                    <th className="px-4 py-2 font-medium">Name</th>
-                    <th className="px-4 py-2 font-medium">Open notes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {records.map((r, i) => {
-                    const notes = (() => {
-                      try {
-                        return (JSON.parse(r.openNotes) as string[]).slice(0, 4)
-                      } catch {
-                        return []
-                      }
-                    })()
-                    return (
-                      <tr key={i} className="border-b border-border last:border-0">
-                        <td className="max-w-[200px] truncate px-4 py-2 font-medium">{r.name}</td>
-                        <td className="px-4 py-2 text-muted-foreground">
-                          {notes.length > 0 ? notes.join(", ") : (
-                            <span className="italic opacity-50">none extracted</span>
-                          )}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          )}
 
-          {/* Import confirmation */}
-          {!importResult && (
+          {records.length > 0 && !importResult && (
             <div className="rounded-lg border border-border p-4">
               <h3 className="mb-1 text-base font-semibold">Import to database</h3>
               <p className="mb-4 text-sm text-muted-foreground">
