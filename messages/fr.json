@@ -858,8 +858,10 @@
     },
     "heading": "Gestion des utilisateurs",
     "subheading": "Gérer les comptes et permissions",
+    "confirmDeleteDescription": "Cela supprimera définitivement l'utilisateur et toutes ses données. Cette action est irréversible.",
+    "confirmSoftDeleteDescription": "Cela anonymisera le compte tout en conservant les données.",
     "users": "Utilisateurs",
-    "userCount": "Nous avons actuellement {{count}} utilisateurs",
+    "userCount": "Nous avons actuellement {count} utilisateurs",
     "manageUsers": "Gérer les utilisateurs",
     "table": {
       "user": "Utilisateur",

@@ -12,7 +12,7 @@ import {
   type CreateHouseActionState,
 } from "./actions"
 
-const BANNER_IMAGE = "/images/createHouse.webp"
+const BANNER_IMAGE = "/images/createHouse.png"
 
 const CreateHouseClient = () => {
   const t = useTranslations("createHouse")

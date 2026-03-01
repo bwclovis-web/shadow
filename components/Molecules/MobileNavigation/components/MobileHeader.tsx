@@ -1,7 +1,9 @@
+"use client"
+
 import { type RefObject } from "react"
+import Link from "next/link"
 import { AiFillHome } from "react-icons/ai"
 import { FaBars } from "react-icons/fa6"
-import { NavLink } from "react-router"
 
 interface MobileHeaderProps {
   logoText: string
@@ -21,15 +23,15 @@ const MobileHeader = ({
   onNavClick,
 }: MobileHeaderProps) => (
   <div className="flex justify-between items-center w-full py-4 px-4 bg-noir-dark/60 backdrop-blur-md">
-    <NavLink
-      to="/"
+    <Link
+      href="/"
       className="text-noir-gold hover:text-noir-light font-semibold text-lg px-2 py-1 border border-transparent transition-colors duration-400 flex items-center"
       onClick={onNavClick}
     >
       <AiFillHome className="mr-2" size={20} />
       <span className="hidden sm:inline">{logoText}</span>
       <span className="sm:hidden">S&S</span>
-    </NavLink>
+    </Link>
 
     <button
       ref={menuButtonRef}

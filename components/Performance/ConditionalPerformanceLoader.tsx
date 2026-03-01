@@ -1,6 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from "react"
 
-const LazyPerformanceComponents = lazy(() => import("~/components/Performance/LazyPerformanceComponents"))
+const LazyPerformanceComponents = lazy(
+  () => import("@/components/Performance/LazyPerformanceComponents")
+)
 
 export interface ConditionalPerformanceLoaderProps {
   userRole?: string

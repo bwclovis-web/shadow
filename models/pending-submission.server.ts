@@ -1,5 +1,5 @@
-import { prisma } from "~/db.server"
-import type { PendingSubmission, PendingSubmissionStatus, PendingSubmissionType } from "~/types/database"
+import { prisma } from "@/lib/db"
+import type { PendingSubmission, PendingSubmissionStatus, PendingSubmissionType } from "@/types/database"
 import { createUserAlert } from "./user-alerts.server"
 
 /**

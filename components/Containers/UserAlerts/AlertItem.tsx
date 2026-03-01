@@ -61,7 +61,7 @@ const formatTimeAgo = (date: Date | string) => {
 const perfumeLink = (slug: string) => `/perfume/${slug}`
 const alertLink = (alert: UserAlert) =>
   alert.alertType === "pending_submission_approval"
-    ? "/admin/pending-submissions"
+    ? "/admin/pending-submission"
     : perfumeLink(alert.Perfume.slug)
 const linkText = (alertType: UserAlert["alertType"]) =>
   alertType === "pending_submission_approval" ? "Review submission" : "View perfume"

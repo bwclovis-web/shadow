@@ -1,7 +1,9 @@
-import React, { useCallback, useEffect, useState } from "react"
+"use client"
 
-import type { CoreWebVitals, PerformanceMetrics } from "~/types/performance"
-import { styleMerge } from "~/utils/styleUtils"
+import { useCallback, useEffect, useState } from "react"
+
+import type { CoreWebVitals, PerformanceMetrics } from "@/types/performance"
+import { styleMerge } from "@/utils/styleUtils"
 
 interface PerformanceDashboardProps {
   enabled?: boolean
@@ -33,7 +35,7 @@ interface PerformanceData {
   timestamp: number
 }
 
-const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
+const PerformanceDashboard = ({
   enabled = process.env.NODE_ENV === "development",
   showUI = true,
   className = "",
@@ -45,7 +47,7 @@ const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
     fcp: 1800,
     tti: 3800,
   },
-}) => {
+}: PerformanceDashboardProps) => {
   const [performanceData, setPerformanceData] = useState<PerformanceData | null>(null)
   const [isCollecting, setIsCollecting] = useState(false)
   const [alerts, setAlerts] = useState<string[]>([])
@@ -67,28 +69,37 @@ const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
         tti: 0,
       }
 
-      // Collect navigation timing
-      const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming
+      // Collect navigation timing (entry can be missing in client-side nav)
+      type NavTiming = PerformanceEntry & {
+        domainLookupStart: number
+        domainLookupEnd: number
+        connectStart: number
+        connectEnd: number
+        requestStart: number
+        responseStart: number
+        navigationStart: number
+        domContentLoadedEventEnd: number
+        loadEventEnd: number
+      }
+      const navEntry = performance.getEntriesByType("navigation")[0] as NavTiming | undefined
       const navigationMetrics: PerformanceMetrics = {
-        dns: navigation
-          ? navigation.domainLookupEnd - navigation.domainLookupStart
+        dns: navEntry ? navEntry.domainLookupEnd - navEntry.domainLookupStart : 0,
+        tcp: navEntry ? navEntry.connectEnd - navEntry.connectStart : 0,
+        ttfb: navEntry ? navEntry.responseStart - navEntry.requestStart : 0,
+        domContentLoaded: navEntry
+          ? navEntry.domContentLoadedEventEnd - navEntry.navigationStart
           : 0,
-        tcp: navigation ? navigation.connectEnd - navigation.connectStart : 0,
-        ttfb: navigation ? navigation.responseStart - navigation.requestStart : 0,
-        domContentLoaded: navigation
-          ? navigation.domContentLoadedEventEnd - navigation.navigationStart
-          : 0,
-        loadComplete: navigation
-          ? navigation.loadEventEnd - navigation.navigationStart
+        loadComplete: navEntry
+          ? navEntry.loadEventEnd - navEntry.navigationStart
           : 0,
       }
 
-      // Collect resource information
-      const resources = performance.getEntriesByType("resource")
+      // Collect resource information (entries are PerformanceResourceTiming in practice)
+      const resources = performance.getEntriesByType("resource") as PerformanceResourceTiming[]
       const resourceMetrics = {
         count: resources.length,
         totalSize: resources.reduce(
-          (total, resource) => total + (resource.transferSize || 0),
+          (total, resource) => total + (resource.transferSize ?? 0),
           0
         ),
         loadTime: resources.reduce(
@@ -97,12 +108,13 @@ const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
         ),
       }
 
-      // Collect memory information (if available)
-      const memory = (performance as any).memory
+      // Collect memory information (Chrome-only API)
+      const perfMemory = (performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory
+      const memory = perfMemory
         ? {
-            used: (performance as any).memory.usedJSHeapSize,
-            total: (performance as any).memory.totalJSHeapSize,
-            limit: (performance as any).memory.jsHeapSizeLimit,
+            used: perfMemory.usedJSHeapSize,
+            total: perfMemory.totalJSHeapSize,
+            limit: perfMemory.jsHeapSizeLimit,
           }
         : undefined
 
@@ -142,14 +154,10 @@ const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
       return
     }
 
-    // Initial collection
     collectPerformanceData()
-
-    // Set up periodic collection
     const interval = setInterval(collectPerformanceData, refreshInterval)
-
     return () => clearInterval(interval)
-  }, [enabled, refreshInterval])
+  }, [enabled, refreshInterval, collectPerformanceData])
 
   const getPerformanceScore = (
     value: number,

@@ -7,6 +7,7 @@ import './globals.css'
 import { Providers } from './providers'
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import GlobalNavigation from '@/components/Molecules/GlobalNavigation/GlobalNavigation'
+import MobileNavigation from '@/components/Molecules/MobileNavigation'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -45,6 +46,7 @@ export default async function RootLayout({
       <body className={`${inter.className} bg-noir-black`}>
         <NextIntlClientProvider messages={messages}>
           <GlobalNavigation user={user} />
+          <MobileNavigation user={user} />
           <Providers>{children}</Providers>
         </NextIntlClientProvider>
         <div id="modal-portal" />

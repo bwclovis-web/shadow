@@ -1,6 +1,6 @@
 import { type ChangeEventHandler, useRef } from "react"
 
-import { useCSRFToken } from "~/components/Molecules/CSRFToken"
+import { useCSRFToken } from "@/components/Molecules/CSRFToken"
 
 import { handleDownloadCSV } from "../bones/csvHandlers/csvDownload"
 import { createHandleUploadCSV } from "../bones/csvHandlers/csvUploader"

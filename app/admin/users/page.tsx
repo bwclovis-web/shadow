@@ -1,0 +1,53 @@
+import type { Metadata } from "next"
+import { getTranslations } from "next-intl/server"
+import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
+
+import { getAllUsersWithCounts } from "@/models/admin.server"
+import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+
+import { UsersClient } from "./UsersClient"
+
+export const ROUTE_PATH = "/admin/users" as const
+
+const getCookieHeader = async (): Promise<string> => {
+  const store = await cookies()
+  return store
+    .getAll()
+    .map((c) => `${c.name}=${c.value}`)
+    .join("; ")
+}
+
+export const generateMetadata = async (): Promise<Metadata> => {
+  const t = await getTranslations("userAdmin.meta")
+  return {
+    title: t("title"),
+    description: t("description"),
+  }
+}
+
+const UsersPage = async () => {
+  const cookieHeader = await getCookieHeader()
+  const session = await getSessionFromCookieHeader(cookieHeader, {
+    includeUser: true,
+  })
+
+  if (!session?.user) {
+    redirect("/sign-in?redirect=/admin/users")
+  }
+
+  if (session.user.role !== "admin") {
+    redirect("/unauthorized")
+  }
+
+  const users = await getAllUsersWithCounts()
+
+  return (
+    <UsersClient
+      users={users}
+      currentUserId={session.user.id}
+    />
+  )
+}
+
+export default UsersPage

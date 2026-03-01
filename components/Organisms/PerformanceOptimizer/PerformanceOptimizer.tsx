@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react"
 
-import { styleMerge } from "~/utils/styleUtils"
+import { styleMerge } from "@/utils/styleUtils"
 
 interface OptimizationRule {
   id: string

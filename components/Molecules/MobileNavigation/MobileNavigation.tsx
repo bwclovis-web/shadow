@@ -1,9 +1,11 @@
-import { type HTMLProps, type RefObject, useEffect, useRef, useState } from "react"
+"use client"
+
+import { type HTMLProps, type RefObject, useRef } from "react"
 import { useTranslations } from "next-intl"
 
-import Modal from "~/components/Organisms/Modal"
-import { useSessionStore } from "~/stores/sessionStore"
-import { styleMerge } from "~/utils/styleUtils"
+import Modal from "@/components/Organisms/Modal"
+import { useSessionStore } from "@/hooks/sessionStore"
+import { styleMerge } from "@/utils/styleUtils"
 
 import MobileHeader from "./components/MobileHeader"
 import NavigationLinks from "./components/NavigationLinks"
@@ -18,18 +20,17 @@ interface MobileNavigationProps extends HTMLProps<HTMLDivElement> {
   onMenuClose?: () => void
 }
 
+const MOBILE_MENU_ID = "mobile-navigation-menu"
+
 const MobileNavigation = ({
   className,
   user,
   onMenuClose,
 }: MobileNavigationProps) => {
-  const { t, ready } = useTranslation()
-  const [isClientReady, setIsClientReady] = useState(false)
+  const t = useTranslations("navigation")
   const { toggleModal, modalOpen, modalId } = useSessionStore()
   const menuButtonRef = useRef<HTMLButtonElement>(null)
-  const MOBILE_MENU_ID = "mobile-navigation-menu"
 
-  // Close menu when route changes
   const handleNavClick = () => {
     toggleModal(menuButtonRef as RefObject<HTMLButtonElement>, MOBILE_MENU_ID)
     onMenuClose?.()
@@ -39,12 +40,10 @@ const MobileNavigation = ({
     toggleModal(menuButtonRef as RefObject<HTMLButtonElement>, MOBILE_MENU_ID)
   }
 
-  const logoText = t("logo")
-
   return (
     <div className={styleMerge("mobile-nav lg:hidden fixed w-full z-30", className)}>
       <MobileHeader
-        logoText={logoText}
+        logoText={t("logo")}
         menuButtonRef={menuButtonRef as RefObject<HTMLButtonElement>}
         modalOpen={modalOpen}
         modalId={MOBILE_MENU_ID}

@@ -13,8 +13,7 @@ export const adminNavigation = [
   { id: "4", label: "user management", key: "userManagement", path: "/admin/users" },
   { id: "5", label: "security monitor", key: "securityMonitor", path: "/admin/security-monitor" },
   { id: "6", label: "performance admin", key: "performanceAdmin", path: "/admin/performance-admin" },
-  { id: "7", label: "error analytics", key: "errorAnalytics", path: "/admin/error-analytics" },
-  { id: "8", label: "pending submissions", key: "pendingSubmissions", path: "/admin/pending-submissions" },
+  { id: "7", label: "pending submissions", key: "pendingSubmissions", path: "/admin/pending-submission" },
 ] as const
 
 

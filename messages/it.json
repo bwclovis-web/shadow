@@ -858,8 +858,10 @@
     },
     "heading": "Gestione utenti",
     "subheading": "Gestisci account e permessi",
+    "confirmDeleteDescription": "Questo eliminerà definitivamente l'utente e tutti i suoi dati. Questa azione non può essere annullata.",
+    "confirmSoftDeleteDescription": "Questo eseguirà una soft delete (anonimizzare l'account ma conservare i dati).",
     "users": "Utenti",
-    "userCount": "Attualmente abbiamo {{count}} utenti",
+    "userCount": "Attualmente abbiamo {count} utenti",
     "manageUsers": "Gestisci gli utenti",
     "table": {
       "user": "Utente",

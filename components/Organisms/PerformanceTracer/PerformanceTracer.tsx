@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
 
-import { styleMerge } from "~/utils/styleUtils"
+import { styleMerge } from "@/utils/styleUtils"
 
 interface TraceEvent {
   id: string

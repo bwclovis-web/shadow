@@ -1,6 +1,14 @@
-import React, { useCallback, useEffect, useState } from "react"
+"use client"
 
-import { styleMerge } from "~/utils/styleUtils"
+import { useCallback, useEffect, useRef, useState } from "react"
+
+import { styleMerge } from "@/utils/styleUtils"
+
+/** Chrome-only; not in Performance type definition */
+interface PerformanceMemory {
+  usedJSHeapSize: number
+  jsHeapSizeLimit: number
+}
 
 interface AlertRule {
   id: string
@@ -117,7 +125,7 @@ const defaultRules: AlertRule[] = [
   },
 ]
 
-const PerformanceAlerts: React.FC<PerformanceAlertsProps> = ({
+const PerformanceAlerts = ({
   enabled = process.env.NODE_ENV === "development",
   showUI = true,
   className = "",
@@ -125,10 +133,14 @@ const PerformanceAlerts: React.FC<PerformanceAlertsProps> = ({
   autoResolve = true,
   autoResolveDelay = 30000, // 30 seconds
   customRules = [],
-}) => {
+}: PerformanceAlertsProps) => {
   const [alerts, setAlerts] = useState<PerformanceAlert[]>([])
   const [rules, setRules] = useState<AlertRule[]>([...defaultRules, ...customRules])
   const [isMonitoring, setIsMonitoring] = useState(false)
+  const alertsRef = useRef<PerformanceAlert[]>([])
+  useEffect(() => {
+    alertsRef.current = alerts
+  }, [alerts])
 
   const checkRule = useCallback((rule: AlertRule, value: number): boolean => {
     switch (rule.operator) {
@@ -171,13 +183,18 @@ const PerformanceAlerts: React.FC<PerformanceAlertsProps> = ({
     const newAlerts: PerformanceAlert[] = []
 
     try {
-      // Collect navigation timing
-      const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming
-      if (navigation) {
+      const navEntry = performance.getEntriesByType("navigation")[0] as
+        | (PerformanceEntry & {
+            navigationStart: number
+            loadEventEnd: number
+            domContentLoadedEventEnd: number
+          })
+        | undefined
+      if (navEntry) {
         const metrics = {
-          lcp: navigation.loadEventEnd - navigation.navigationStart,
-          fcp: navigation.domContentLoadedEventEnd - navigation.navigationStart,
-          tti: navigation.domContentLoadedEventEnd - navigation.navigationStart,
+          lcp: navEntry.loadEventEnd - navEntry.navigationStart,
+          fcp: navEntry.domContentLoadedEventEnd - navEntry.navigationStart,
+          tti: navEntry.domContentLoadedEventEnd - navEntry.navigationStart,
           fid: 0, // FID requires user interaction
           cls: 0, // CLS requires layout shift observer
         }
@@ -211,21 +228,27 @@ const PerformanceAlerts: React.FC<PerformanceAlertsProps> = ({
             case "bundleSize":
               value = performance
                 .getEntriesByType("resource")
-                .reduce((total, resource) => total + (resource.transferSize || 0), 0)
+                .reduce(
+                  (total, resource) =>
+                    total +
+                    ((resource as PerformanceResourceTiming).transferSize ?? 0),
+                  0
+                )
               break
-            case "memoryUsage":
-              if ((performance as any).memory) {
-                value =
-                  (performance as any).memory.usedJSHeapSize /
-                  (performance as any).memory.jsHeapSizeLimit
+            case "memoryUsage": {
+              const mem = (performance as Performance & { memory?: PerformanceMemory }).memory
+              if (mem) {
+                value = mem.usedJSHeapSize / mem.jsHeapSizeLimit
               }
               break
+            }
           }
 
           if (checkRule(rule, value)) {
-            // Check if alert already exists and is not resolved
-            const existingAlert = alerts.find(alert => alert.ruleId === rule.id && !alert.resolved)
-
+            const currentAlerts = alertsRef.current
+            const existingAlert = currentAlerts.find(
+              alert => alert.ruleId === rule.id && !alert.resolved
+            )
             if (!existingAlert) {
               newAlerts.push(createAlert(rule, value))
             }
@@ -239,9 +262,7 @@ const PerformanceAlerts: React.FC<PerformanceAlertsProps> = ({
     } catch (error) {
       console.error("Error collecting performance metrics for alerts:", error)
     }
-  }, [
-enabled, rules, checkRule, createAlert, maxAlerts
-])
+  }, [enabled, rules, checkRule, createAlert, maxAlerts])
 
   const resolveAlert = useCallback((alertId: string) => {
     setAlerts(prev => prev.map(alert => alert.id === alertId ? { ...alert, resolved: true } : alert))
@@ -260,33 +281,32 @@ enabled, rules, checkRule, createAlert, maxAlerts
   }, [])
 
   useEffect(() => {
-    if (!enabled) {
+    if (!enabled || typeof window === "undefined") {
       return
     }
-
     setIsMonitoring(true)
-    const interval = setInterval(collectMetrics, 5000) // Check every 5 seconds
-
+    const interval = setInterval(collectMetrics, 5000)
     return () => {
       clearInterval(interval)
       setIsMonitoring(false)
     }
-  }, [enabled])
+  }, [enabled, collectMetrics])
 
-  // Auto-resolve alerts
   useEffect(() => {
-    if (!autoResolve) {
+    if (!autoResolve || typeof window === "undefined") {
       return
     }
-
-    const timer = setTimeout(() => {
-      setAlerts(prev => prev.map(alert => Date.now() - alert.timestamp > autoResolveDelay
+    const interval = setInterval(() => {
+      setAlerts(prev =>
+        prev.map(alert =>
+          Date.now() - alert.timestamp > autoResolveDelay
             ? { ...alert, resolved: true }
-            : alert))
+            : alert
+        )
+      )
     }, autoResolveDelay)
-
-    return () => clearTimeout(timer)
-  }, [autoResolve, autoResolveDelay, alerts])
+    return () => clearInterval(interval)
+  }, [autoResolve, autoResolveDelay])
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {

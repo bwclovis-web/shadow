@@ -905,8 +905,10 @@
     },
     "heading": "User Management",
     "subheading": "Manage user accounts and permissions",
+    "confirmDeleteDescription": "This will permanently delete the user and all their data. This cannot be undone.",
+    "confirmSoftDeleteDescription": "This will soft-delete the user (anonymize their account but keep data).",
     "users": "Users",
-    "userCount": "Currently we have {{count}} users",
+    "userCount": "Currently we have {count} users",
     "manageUsers": "Manage Our Current Users",
     "table": {
       "user": "User",

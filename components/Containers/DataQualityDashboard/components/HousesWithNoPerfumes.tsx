@@ -1,8 +1,8 @@
+import Link from "next/link"
 import { useState } from "react"
-import { NavLink } from "react-router"
 
 import { HOUSE_DETAIL_PATH } from "@/constants/routes"
-import { createUrlSlug } from "~/utils/slug"
+import { createUrlSlug } from "@/utils/slug"
 
 import { type DataQualityStats } from "../utils/chartDataUtils"
 
@@ -156,12 +156,12 @@ const HousesWithNoPerfumes = ({ stats }: HousesWithNoPerfumesProps) => {
                 className="hover:bg-purple-50"
               >
                 <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                  <NavLink
-                    to={`${HOUSE_DETAIL_PATH}/${createUrlSlug(house.name)}`}
+                  <Link
+                    href={`${HOUSE_DETAIL_PATH}/${createUrlSlug(house.name)}`}
                     className="text-purple-700 hover:text-purple-900 hover:underline"
                   >
                     {house.name}
-                  </NavLink>
+                  </Link>
                 </td>
                 {!filteredData.showMissingFields && house.type && (
                   <td className="px-4 py-3 text-sm text-gray-700 capitalize">

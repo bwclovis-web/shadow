@@ -1,10 +1,13 @@
+"use client"
+
 import { useEffect, useRef, useState } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { FaChevronDown } from "react-icons/fa"
-import { NavLink } from "react-router"
 
-import { adminNavigation, getProfileNavigation } from "~/data/navigation"
-import { styleMerge } from "~/utils/styleUtils"
+import { adminNavigation, getProfileNavigation } from "@/data/navigation"
+import { styleMerge } from "@/utils/styleUtils"
 
 interface AdminDropdownProps {
   className?: string
@@ -21,6 +24,7 @@ const AdminDropdown = ({
   user,
   onNavClick,
 }: AdminDropdownProps) => {
+  const pathname = usePathname()
   const tNav = useTranslations("navigation")
   const tAdmin = useTranslations("admin")
   const tProfile = useTranslations("profile")
@@ -50,26 +54,29 @@ const AdminDropdown = ({
     onNavClick?.()
   }
 
-  // Don't render if no user
   if (!user) {
     return null
   }
 
   const baseClasses =
     "block text-noir-gold hover:text-noir-light font-semibold text-lg py-4 px-4 border border-transparent transition-colors duration-400 rounded-lg mobile-touch-target hover:bg-noir-black/30 w-full text-left"
-
   const dropdownClasses =
     "absolute top-full left-0 w-full bg-noir-dark border border-noir-light/20 rounded-lg shadow-lg z-50"
-
   const linkClasses =
     "block text-noir-gold hover:text-noir-light font-semibold text-base py-3 px-4 transition-colors duration-400 hover:bg-noir-black/30"
-
   const activeLinkClasses =
     "text-noir-dark text-shadow-none bg-noir-gold/80 border-2 border-noir-gold"
 
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/")
+
   return (
-    <div ref={dropdownRef} className={`relative ${className || ""}`} data-cy="AdminDropdown">
+    <div
+      ref={dropdownRef}
+      className={styleMerge("relative", className)}
+      data-cy="AdminDropdown"
+    >
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={styleMerge(
           baseClasses,
@@ -81,9 +88,7 @@ const AdminDropdown = ({
       >
         {tNav("admin")}
         <FaChevronDown
-          className={`transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
+          className={styleMerge("transition-transform duration-200", isOpen && "rotate-180")}
           size={12}
         />
       </button>
@@ -91,51 +96,45 @@ const AdminDropdown = ({
       {isOpen && (
         <div className={dropdownClasses}>
           <ul className="py-2">
-            {/* Admin-only navigation - only show for admins/editors */}
             {isAdmin &&
-              adminNavigation.map(item => (
+              adminNavigation.map((item: (typeof adminNavigation)[number]) => (
                 <li key={`admin-${item.id}`}>
-                  <NavLink
-                    to={item.path}
+                  <Link
+                    href={item.path}
                     onClick={handleNavClick}
-                    viewTransition
-                    className={({ isActive }) =>
-                      styleMerge(
-                        linkClasses,
-                        isActive && activeLinkClasses
-                      )
-                    }
+                    className={styleMerge(
+                      linkClasses,
+                      isActive(item.path) && activeLinkClasses
+                    )}
                   >
                     {tAdmin("navigation." + item.key)}
-                  </NavLink>
+                  </Link>
                 </li>
               ))}
 
-            {/* Divider between admin and profile links if both exist */}
             {isAdmin && (
-              <li className="border-t border-noir-light/20 my-2" aria-hidden="true" />
+              <li
+                className="border-t border-noir-light/20 my-2"
+                aria-hidden="true"
+              />
             )}
 
-            {/* Profile navigation - show for all authenticated users */}
             {user?.id &&
               getProfileNavigation({
                 id: user.id,
                 username: user.username ?? null,
-              }).map(item => (
+              }).map((item: { id: string; path: string; key: string }) => (
                 <li key={`profile-${item.id}`}>
-                <NavLink
-                  to={item.path}
-                  onClick={handleNavClick}
-                  viewTransition
-                  className={({ isActive }) =>
-                    styleMerge(
+                  <Link
+                    href={item.path}
+                    onClick={handleNavClick}
+                    className={styleMerge(
                       linkClasses,
-                      isActive && activeLinkClasses
-                    )
-                  }
-                >
-                  {tProfile("navigation." + item.key)}
-                </NavLink>
+                      isActive(item.path) && activeLinkClasses
+                    )}
+                  >
+                    {tProfile("navigation." + item.key)}
+                  </Link>
                 </li>
               ))}
           </ul>

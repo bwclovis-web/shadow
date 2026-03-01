@@ -12,7 +12,7 @@ import {
   type CreatePerfumeActionState,
 } from "./actions"
 
-const BANNER_IMAGE = "/images/perfumeCreate.webp"
+const BANNER_IMAGE = "/images/createPerfume.png"
 
 const CreatePerfumeClient = () => {
   const t = useTranslations("createPerfume")

@@ -4,7 +4,7 @@ import {
   type DataQualityTimeframe,
   getDataQualityStats,
   queryKeys,
-} from "~/lib/queries/dataQuality"
+} from "@/lib/queries/dataQuality"
 
 /**
  * Hook to fetch data quality statistics using TanStack Query.

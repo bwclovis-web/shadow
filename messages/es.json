@@ -864,8 +864,10 @@
     },
     "heading": "Gestión de Usuarios",
     "subheading": "Administra cuentas de usuarios y permisos",
+    "confirmDeleteDescription": "Esto eliminará permanentemente al usuario y todos sus datos. Esta acción no se puede deshacer.",
+    "confirmSoftDeleteDescription": "Esto eliminará suavemente al usuario (anonimizar su cuenta pero conservar los datos).",
     "users": "Usuarios",
-    "userCount": "Actualmente tenemos {{count}} usuarios",
+    "userCount": "Actualmente tenemos {count} usuarios",
     "manageUsers": "Administrar Nuestros Usuarios Actuales",
     "table": {
       "user": "Usuario",

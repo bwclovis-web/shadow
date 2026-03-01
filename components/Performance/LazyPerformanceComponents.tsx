@@ -1,10 +1,18 @@
 import { lazy, Suspense } from "react"
 
 // Lazy load performance components
-const PerformanceDashboard = lazy(() => import("~/components/Organisms/PerformanceDashboard"))
-const PerformanceAlerts = lazy(() => import("~/components/Organisms/PerformanceAlerts"))
-const PerformanceOptimizer = lazy(() => import("~/components/Organisms/PerformanceOptimizer"))
-const PerformanceTracer = lazy(() => import("~/components/Organisms/PerformanceTracer"))
+const PerformanceDashboard = lazy(
+  () => import("@/components/Organisms/PerformanceDashboard")
+)
+const PerformanceAlerts = lazy(
+  () => import("@/components/Organisms/PerformanceAlerts")
+)
+const PerformanceOptimizer = lazy(
+  () => import("@/components/Organisms/PerformanceOptimizer")
+)
+const PerformanceTracer = lazy(
+  () => import("@/components/Organisms/PerformanceTracer")
+)
 
 // Loading fallback
 const PerformanceLoading = () => (
