@@ -33,7 +33,8 @@
       "securityMonitor": "Security Monitor",
       "performanceAdmin": "Performance Admin",
       "errorAnalytics": "Error Analytics",
-      "pendingSubmissions": "Pending Submissions"
+      "pendingSubmissions": "Pending Submissions",
+      "houseScraper": "House Scraper"
     }
   },
   "pendingSubmissions": {

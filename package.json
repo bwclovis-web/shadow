@@ -22,13 +22,18 @@
     "db:restore:pg:list": "node scripts/restore-database.js --list",
     "migrate:images": "npx tsx scripts/migrate-images-to-r2.ts",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "prepare": "husky"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.995.0",
     "@conform-to/react": "^1.17.1",
     "@conform-to/zod": "^1.17.1",
     "@gsap/react": "^2.1.2",
+    "@langchain/core": "^1.1.29",
+    "@langchain/langgraph": "^1.2.0",
+    "@langchain/openai": "^1.2.11",
     "@prisma/client": "^6.19.2",
     "@tanstack/react-query": "^5.90.21",
     "@types/bcryptjs": "^2.4.6",
@@ -60,16 +65,29 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
-    "dotenv": "^16.4.5",
     "@tailwindcss/postcss": "^4",
     "@tanstack/react-query-devtools": "^5.91.3",
     "@types/node": "^20",
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^16.4.5",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "husky": "^9.1.7",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix --cache --cache-location ./node_modules/.cache/eslint"
+    ]
+  },
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Firefox versions",
+    "last 2 Safari versions",
+    "last 2 Edge versions",
+    "not IE 11"
+  ]
 }

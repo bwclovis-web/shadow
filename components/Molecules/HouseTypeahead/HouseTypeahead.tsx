@@ -21,6 +21,8 @@ interface HouseTypeaheadProps {
   defaultId?: string
   defaultName?: string
   className?: string
+  /** Called whenever the visible text value changes (typed or selected from dropdown). */
+  onNameChange?: (name: string) => void
 }
 
 const HouseTypeahead = ({
@@ -29,6 +31,7 @@ const HouseTypeahead = ({
   defaultId,
   defaultName,
   className,
+  onNameChange,
 }: HouseTypeaheadProps) => {
   const [results, setResults] = useState<PerfumeHouseOption[]>([])
   const [searchValue, setSearchValue] = useState(defaultName ?? "")
@@ -104,6 +107,7 @@ const HouseTypeahead = ({
     const query = evt.target.value
     const previousSearchValue = searchValue
     setSearchValue(query)
+    onNameChange?.(query)
     // Clear selection if user manually types (value differs from selected)
     if (selectedId && query !== previousSearchValue) {
       setSelectedId("")
@@ -114,6 +118,7 @@ const HouseTypeahead = ({
   const handleSelect = (item: PerfumeHouseOption) => {
     setSearchValue(item.name)
     setSelectedId(item.id)
+    onNameChange?.(item.name)
     setShowDropdown(false)
     setResults([])
   }

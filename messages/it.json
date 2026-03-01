@@ -37,7 +37,8 @@
       "securityMonitor": "Monitor sicurezza",
       "performanceAdmin": "Admin prestazioni",
       "errorAnalytics": "Analisi errori",
-      "pendingSubmissions": "Invii in sospeso"
+      "pendingSubmissions": "Invii in sospeso",
+      "houseScraper": "Scraper case"
     }
   },
   "pendingSubmissions": {

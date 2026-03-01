@@ -14,6 +14,7 @@ export const adminNavigation = [
   { id: "5", label: "security monitor", key: "securityMonitor", path: "/admin/security-monitor" },
   { id: "6", label: "performance admin", key: "performanceAdmin", path: "/admin/performance-admin" },
   { id: "7", label: "pending submissions", key: "pendingSubmissions", path: "/admin/pending-submission" },
+  { id: "8", label: "house scraper", key: "houseScraper", path: "/admin/scraper" },
 ] as const
 
 

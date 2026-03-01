@@ -37,7 +37,8 @@
       "securityMonitor": "Moniteur de sécurité",
       "performanceAdmin": "Admin performance",
       "errorAnalytics": "Analyse des erreurs",
-      "pendingSubmissions": "Soumissions en attente"
+      "pendingSubmissions": "Soumissions en attente",
+      "houseScraper": "Scraper de maisons"
     }
   },
   "pendingSubmissions": {

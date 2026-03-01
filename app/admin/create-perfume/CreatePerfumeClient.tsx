@@ -1,5 +1,6 @@
 "use client"
 
+import type { SubmissionResult } from "@conform-to/react"
 import { useActionState } from "react"
 import { useTranslations } from "next-intl"
 
@@ -31,7 +32,7 @@ const CreatePerfumeClient = () => {
       />
       <PerfumeForm
         formType={FORM_TYPES.CREATE_PERFUME_FORM}
-        lastResult={state}
+        lastResult={state as SubmissionResult | null}
         data={null}
         action={formAction}
       />
