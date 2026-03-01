@@ -180,7 +180,7 @@ const ProfileClient = ({
           <UserAlerts
             userId={user.id}
             initialAlerts={alerts}
-            initialPreferences={preferences}
+            initialPreferences={preferences ?? undefined}
             initialUnreadCount={unreadCount}
           />
         </div>
