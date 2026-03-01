@@ -7,7 +7,7 @@ const ServiceWorkerRegistration = () => {
       return
     }
 
-    if (import.meta.env.DEV || !("serviceWorker" in navigator)) {
+    if (import.meta.env?.DEV || !("serviceWorker" in navigator)) {
       return
     }
 

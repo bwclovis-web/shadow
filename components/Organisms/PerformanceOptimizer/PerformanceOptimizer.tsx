@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react"
 
 import { styleMerge } from "@/utils/styleUtils"
 
-interface OptimizationRule {
+export interface OptimizationRule {
   id: string
   name: string
   description: string
@@ -14,7 +14,7 @@ interface OptimizationRule {
   impact: "low" | "medium" | "high"
 }
 
-interface OptimizationResult {
+export interface OptimizationResult {
   id: string
   ruleId: string
   name: string
@@ -25,7 +25,7 @@ interface OptimizationResult {
   error?: string
 }
 
-interface PerformanceOptimizerProps {
+export interface PerformanceOptimizerProps {
   enabled?: boolean
   showUI?: boolean
   className?: string

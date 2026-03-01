@@ -2,7 +2,7 @@ import { useEffect } from "react"
 
 const PerformanceMonitor = () => {
   useEffect(() => {
-    if (import.meta.env.DEV) {
+    if (import.meta.env?.DEV) {
       return
     }
 
@@ -36,7 +36,7 @@ const PerformanceMonitor = () => {
         entries.forEach(entry => {
           if (window.gtag) {
             window.gtag("event", "FID", {
-              value: Math.round(entry.processingStart - entry.startTime),
+              value: Math.round((entry as PerformanceEntry & { processingStart?: number }).processingStart! - entry.startTime),
               event_category: "Web Vitals",
             })
           }
@@ -103,14 +103,14 @@ const PerformanceMonitor = () => {
               tcp: navigation.connectEnd - navigation.connectStart,
               ttfb: navigation.responseStart - navigation.requestStart,
               domContentLoaded:
-                navigation.domContentLoadedEventEnd - navigation.navigationStart,
-              loadComplete: navigation.loadEventEnd - navigation.navigationStart,
+                navigation.domContentLoadedEventEnd - (navigation as unknown as { navigationStart: number }).navigationStart,
+              loadComplete: navigation.loadEventEnd - (navigation as unknown as { navigationStart: number }).navigationStart,
             }
 
             // Send to analytics
             if (window.gtag) {
               Object.entries(metrics).forEach(([key, value]) => {
-                window.gtag("event", "performance", {
+                window.gtag?.("event", "performance", {
                   metric_name: key,
                   value: Math.round(value),
                   event_category: "Performance",

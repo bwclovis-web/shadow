@@ -55,8 +55,8 @@ export function ErrorAnalyticsDashboard({
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Error Analytics</h1>
           <p className="text-gray-500 mt-1">
-            {new Date(data.startTime).toLocaleDateString("en-US")} -{" "}
-            {new Date(data.endTime).toLocaleDateString("en-US")}
+            {data.startTime != null && new Date(data.startTime).toLocaleDateString("en-US")} -{" "}
+            {data.endTime != null && new Date(data.endTime).toLocaleDateString("en-US")}
           </p>
         </div>
 
@@ -89,25 +89,25 @@ export function ErrorAnalyticsDashboard({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Total Errors"
-          value={data.totalErrors}
+          value={data.totalErrors ?? 0}
           icon="🔴"
           trend={
-            data.errorRate > 0 ? `${data.errorRate.toFixed(2)}/hr` : "No errors"
+            (data.errorRate ?? 0) > 0 ? `${Number(data.errorRate).toFixed(2)}/hr` : "No errors"
           }
         />
         <MetricCard
           title="Critical Errors"
-          value={data.criticalErrors}
+          value={data.criticalErrors ?? 0}
           icon="🚨"
           color="red"
         />
         <MetricCard
           title="High Priority"
-          value={data.highErrors}
+          value={data.highErrors ?? 0}
           icon="⚠️"
           color="orange"
         />
-        <MetricCard title="Affected Users" value={data.affectedUsers} icon="👥" />
+        <MetricCard title="Affected Users" value={data.affectedUsers ?? 0} icon="👥" />
       </div>
 
       {/* Error Severity Breakdown */}
@@ -116,7 +116,7 @@ export function ErrorAnalyticsDashboard({
           Error Severity Breakdown
         </h2>
         <div className="space-y-3">
-          {data.errorsBySeverity.map(item => (
+          {(data.errorsBySeverity ?? []).map((item: { severity: string; count: number; percentage: number }) => (
             <div key={item.severity} className="flex items-center gap-4">
               <div className="w-24 text-sm font-medium text-gray-700">
                 {item.severity}
@@ -159,7 +159,7 @@ export function ErrorAnalyticsDashboard({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {data.errorsByType.map(item => (
+              {(data.errorsByType ?? []).map((item: { type: string; count: number; percentage: number; lastOccurrence: string }) => (
                 <tr key={item.type}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {item.type}
@@ -186,7 +186,7 @@ export function ErrorAnalyticsDashboard({
           Top Errors by Frequency
         </h2>
         <div className="space-y-3">
-          {data.topErrors.map((error, index) => (
+          {(data.topErrors ?? []).map((error: { code: string; count: number; message: string; lastOccurrence: string }, index: number) => (
             <div
               key={error.code}
               className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg"
@@ -212,7 +212,7 @@ export function ErrorAnalyticsDashboard({
       </div>
 
       {/* Most Affected Users */}
-      {data.mostAffectedUsers.length > 0 && (
+      {(data.mostAffectedUsers ?? []).length > 0 && (
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             Most Affected Users
@@ -230,7 +230,7 @@ export function ErrorAnalyticsDashboard({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {data.mostAffectedUsers.map(user => (
+                {(data.mostAffectedUsers ?? []).map((user: { userId: string; errorCount: number }) => (
                   <tr key={user.userId}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {user.userId}
@@ -252,7 +252,7 @@ export function ErrorAnalyticsDashboard({
           Hourly Error Trend
         </h2>
         <div className="space-y-2">
-          {data.hourlyTrend.slice(-24).map(trend => (
+          {(data.hourlyTrend ?? []).slice(-24).map((trend: { period: string; totalErrors: number }) => (
             <div key={trend.period} className="flex items-center gap-4">
               <div className="w-32 text-sm text-gray-600">
                 {new Date(trend.period).toLocaleTimeString()}
@@ -263,7 +263,7 @@ export function ErrorAnalyticsDashboard({
                   style={{
                     width: `${Math.min(
                       (trend.totalErrors /
-                        Math.max(...data.hourlyTrend.map(t => t.totalErrors), 1)) *
+                        Math.max(...(data.hourlyTrend ?? []).map((t: { totalErrors: number }) => t.totalErrors), 1)) *
                         100,
                       100
                     )}%`,
@@ -278,13 +278,13 @@ export function ErrorAnalyticsDashboard({
       </div>
 
       {/* Recent Correlation IDs */}
-      {data.recentCorrelationIds.length > 0 && (
+      {(data.recentCorrelationIds ?? []).length > 0 && (
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             Recent Correlation IDs
           </h2>
           <div className="flex flex-wrap gap-2">
-            {data.recentCorrelationIds.map(id => (
+            {(data.recentCorrelationIds ?? []).map((id: string) => (
               <code
                 key={id}
                 className="px-3 py-1 bg-gray-100 text-gray-800 rounded text-sm font-mono"

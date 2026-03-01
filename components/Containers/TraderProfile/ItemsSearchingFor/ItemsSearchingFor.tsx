@@ -1,7 +1,6 @@
+import Image from "next/image"
 import { useTranslations } from "next-intl"
 import { BsHeartFill } from "react-icons/bs"
-
-import { OptimizedImage } from "~/components/Atoms/OptimizedImage"
 
 interface WishlistItem {
   id: string
@@ -53,12 +52,11 @@ const ItemsSearchingFor = ({ wishlistItems }: ItemsSearchingForProps) => {
           >
             <div className="flex items-center gap-0.5">
               {item.perfume.image && (
-                <OptimizedImage
+                <Image
                   src={item.perfume.image}
                   alt={item.perfume.name}
                   width={48}
                   height={48}
-                  priority={false}
                   quality={70}
                   className="w-12 h-12 object-cover rounded"
                   sizes="48px"

@@ -58,7 +58,7 @@ const AddToCollectionModal = ({
       {modalOpen && modalId === "add-scent" && (
         <Modal innerType="dark" id="add-scent" animateStart="top">
           <MyScentsModal
-            perfume={perfume}
+            perfume={perfume as unknown as import("@/types").UserPerfumeI}
             onAddedToCollection={onAddedToCollection}
             onOptimisticAddToCollection={onOptimisticAddToCollection}
             onOptimisticAddRollback={onOptimisticAddRollback}

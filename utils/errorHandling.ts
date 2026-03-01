@@ -502,6 +502,7 @@ export interface ErrorBoundaryProps {
   children: React.ReactNode
   fallback?: (error: AppError, errorId: string) => React.ReactNode
   onError?: (error: AppError, errorInfo: React.ErrorInfo) => void
+  level?: "component" | "page" | "critical"
 }
 
 // Utility Functions

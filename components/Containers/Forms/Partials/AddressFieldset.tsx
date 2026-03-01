@@ -32,7 +32,7 @@ const AddressFieldset = ({
           shading={true}
           inputType="text"
           inputRef={inputRef}
-          action={address}
+          action={address as import("@conform-to/react").FieldMetadata<string, Record<string, unknown>, unknown>}
           inputId="address"
           defaultValue={data?.address}
         />

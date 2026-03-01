@@ -26,6 +26,7 @@ export interface UseValidationReturn<T> {
   isDirty: boolean
   isSubmitting: boolean
   isValidating: boolean
+  setSubmitting: (submitting: boolean) => void
   setValue: <K extends keyof T>(field: K, value: T[K]) => void
   setValues: (values: Partial<T>) => void
   setError: <K extends keyof T>(field: K, error: string) => void
@@ -103,7 +104,7 @@ export function useValidation<T extends Record<string, unknown>>({
         setIsValidating(true)
 
         // Create a partial schema for the field
-        const fieldSchema = schema.pick({ [field]: true } as any)
+        const fieldSchema = (schema as unknown as { pick: (keys: Record<string, unknown>) => z.ZodType }).pick({ [field]: true } as Record<string, unknown>)
         const fieldData = { [field]: values[field] } as Pick<T, K>
 
         // Transform data if transform function is provided
@@ -148,7 +149,7 @@ export function useValidation<T extends Record<string, unknown>>({
       await schema.parseAsync(dataToValidate)
 
       // Clear all errors
-      setErrors({} as Record<keyof T, string>)
+      setErrorsState({} as Record<keyof T, string>)
       return true
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -161,7 +162,7 @@ export function useValidation<T extends Record<string, unknown>>({
           }
         })
 
-        setErrors(newErrors)
+        setErrorsState(newErrors)
       }
       return false
     } finally {
@@ -172,14 +173,14 @@ export function useValidation<T extends Record<string, unknown>>({
   // Set individual field value
   const setValue = useCallback(
     <K extends keyof T>(field: K, value: T[K]) => {
-      setValues(prev => ({
+      setValuesState((prev: T) => ({
         ...prev,
         [field]: value,
       }))
 
       // Clear error for this field when user starts typing
       if (errors[field]) {
-        setErrors(prev => {
+        setErrorsState((prev: Record<keyof T, string>) => {
           const newErrors = { ...prev }
           delete newErrors[field]
           return newErrors
@@ -191,7 +192,7 @@ export function useValidation<T extends Record<string, unknown>>({
 
   // Set multiple field values
   const setValues = useCallback((newValues: Partial<T>) => {
-    setValues(prev => ({
+    setValuesState((prev: T) => ({
       ...prev,
       ...newValues,
     }))
@@ -199,7 +200,7 @@ export function useValidation<T extends Record<string, unknown>>({
 
   // Set individual field error
   const setError = useCallback(<K extends keyof T>(field: K, error: string) => {
-    setErrors(prev => ({
+    setErrorsState((prev: Record<keyof T, string>) => ({
       ...prev,
       [field]: error,
     }))
@@ -207,7 +208,7 @@ export function useValidation<T extends Record<string, unknown>>({
 
   // Set multiple field errors
   const setErrors = useCallback((newErrors: Partial<Record<keyof T, string>>) => {
-    setErrors(prev => ({
+    setErrorsState((prev: Record<keyof T, string>) => ({
       ...prev,
       ...newErrors,
     }))
@@ -215,7 +216,7 @@ export function useValidation<T extends Record<string, unknown>>({
 
   // Clear individual field error
   const clearError = useCallback(<K extends keyof T>(field: K) => {
-    setErrors(prev => {
+    setErrorsState((prev: Record<keyof T, string>) => {
       const newErrors = { ...prev }
       delete newErrors[field]
       return newErrors
@@ -224,12 +225,12 @@ export function useValidation<T extends Record<string, unknown>>({
 
   // Clear all errors
   const clearErrors = useCallback(() => {
-    setErrors({} as Record<keyof T, string>)
+    setErrorsState({} as Record<keyof T, string>)
   }, [])
 
   // Set individual field touched state
   const setTouched = useCallback(<K extends keyof T>(field: K, touched: boolean) => {
-    setTouched(prev => ({
+    setTouchedState((prev: Record<keyof T, boolean>) => ({
       ...prev,
       [field]: touched,
     }))
@@ -242,7 +243,7 @@ export function useValidation<T extends Record<string, unknown>>({
       Object.keys(values).forEach(key => {
         newTouched[key as keyof T] = touched
       })
-      setTouched(newTouched)
+      setTouchedState(newTouched)
     },
     [values]
   )
@@ -301,17 +302,17 @@ validateOnSubmit, validate, values, setAllTouched
 
   // Reset form to initial values
   const reset = useCallback(() => {
-    setValues(initialValues)
-    setErrors({} as Record<keyof T, string>)
-    setTouched({} as Record<keyof T, boolean>)
+    setValuesState(initialValues)
+    setErrorsState({} as Record<keyof T, string>)
+    setTouchedState({} as Record<keyof T, boolean>)
     setIsSubmitting(false)
   }, [initialValues])
 
   // Reset form to specific values
   const resetToValues = useCallback((newValues: T) => {
-    setValues(newValues)
-    setErrors({} as Record<keyof T, string>)
-    setTouched({} as Record<keyof T, boolean>)
+    setValuesState(newValues)
+    setErrorsState({} as Record<keyof T, string>)
+    setTouchedState({} as Record<keyof T, boolean>)
     setIsSubmitting(false)
   }, [])
 
@@ -341,6 +342,7 @@ debouncedValues, validateOnChange, isDirty, validate, debounceMs
     isDirty,
     isSubmitting,
     isValidating,
+    setSubmitting: setIsSubmitting,
     setValue,
     setValues,
     setError,
@@ -380,8 +382,8 @@ export function useFieldValidation<T, K extends keyof T>(
     try {
       setIsValidating(true)
 
-      // Create a partial schema for the field
-      const fieldSchema = schema.pick({ [field]: true } as any)
+      // Create a partial schema for the field (ZodObject has pick)
+        const fieldSchema = (schema as unknown as { pick: (keys: Record<string, unknown>) => z.ZodType }).pick({ [field]: true } as Record<string, unknown>)
       const fieldData = { [field]: debouncedValue } as Pick<T, K>
 
       await fieldSchema.parseAsync(fieldData)
@@ -470,3 +472,4 @@ export function useFormValidation<T>(
     isValid,
     validate,
   }
+}

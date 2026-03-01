@@ -139,7 +139,7 @@ export function validateAndTransform<T, R>(
   const validation = validateData(schema, data, options)
 
   if (!validation.success) {
-    return validation as ValidationResult<R>
+    return validation as unknown as ValidationResult<R>
   }
 
   try {

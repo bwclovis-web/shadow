@@ -177,6 +177,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const parsed = JSON.parse(stdout) as unknown
     if (!Array.isArray(parsed)) throw new Error("Scraper output is not a JSON array")
     scrapedItems = parsed as ScrapedItem[]
+    // #region agent log
+    fetch("http://127.0.0.1:7886/ingest/9fbb2165-06c9-402e-9527-8bbcd12aa96f", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "0fa1e4" },
+      body: JSON.stringify({
+        sessionId: "0fa1e4",
+        location: "app/api/admin/scraper/run/route.ts:after parse",
+        message: "Python scraper returned",
+        data: { scrapedCount: scrapedItems.length, stderrSnippet: stderr.slice(0, 400) },
+        timestamp: Date.now(),
+        hypothesisId: "E",
+      }),
+    }).catch(() => {})
+    // #endregion
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     return NextResponse.json(

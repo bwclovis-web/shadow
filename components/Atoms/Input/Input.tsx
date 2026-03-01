@@ -6,7 +6,7 @@ import { styleMerge } from "@/utils/styleUtils"
 
 import { inputVariants } from "./input-variants"
 
-interface InputProps
+export interface InputProps
   extends Omit<HTMLProps<HTMLInputElement>, "action" | "type">,
     VariantProps<typeof inputVariants> {
   inputType?: "email" | "password" | "text" | "number" | "tel" | "url" | "search" | "date" | "datetime-local" | "file" | "month" | "range" | "time" | "week"

@@ -135,3 +135,5 @@ export const handleDownloadCSV = async () => {
     alert(`Failed to download CSV: ${errorMessage}`)
   }
 }
+
+export default handleDownloadCSV

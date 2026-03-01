@@ -1,7 +1,7 @@
 "use client"
 
 import { type VariantProps } from "class-variance-authority"
-import { type ButtonHTMLAttributes, type LinkHTMLAttributes, type ReactNode, type Ref } from "react"
+import { type ButtonHTMLAttributes, type LinkHTMLAttributes, type ReactNode, type Ref, type RefObject } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
@@ -11,9 +11,9 @@ import { buttonVariants } from "./button-variants"
 
 interface ButtonProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "style">,
-    VariantProps<typeof buttonVariants> {
+    Omit<VariantProps<typeof buttonVariants>, "leftIcon" | "rightIcon"> {
   variant?: "primary" | "secondary" | "danger" | "icon" | null
-  ref?: RefObject<HTMLButtonElement>
+  ref?: RefObject<HTMLButtonElement | null>
   leftIcon?: ReactNode
   rightIcon?: ReactNode
 }

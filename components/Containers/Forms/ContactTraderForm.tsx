@@ -1,7 +1,6 @@
 import { getFormProps, getInputProps, useForm } from "@conform-to/react"
 import { getZodConstraint, parseWithZod } from "@conform-to/zod"
 import { useEffect, useRef, useState } from "react"
-import { Form, useActionData } from "react-router"
 import { useTranslations } from "next-intl"
 
 import { Button } from "~/components/Atoms/Button/Button"
@@ -42,21 +41,20 @@ const ContactTraderForm = ({
   itemSubject,
 }: ContactTraderFormProps) => {
   const t = useTranslations("contactTrader")
-  const actionData = useActionData()
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
   const [serverError, setServerError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Use actionData if available, otherwise use lastResult prop
-  const result = actionData || lastResult
+  // Use lastResult prop (e.g. from server action or API response)
+  const result = lastResult
 
   useEffect(() => {
     // Handle conform-to SubmissionResult format or API response
     if (result) {
       // Handle API response format (from createSuccessResponse/createErrorResponse)
       if (result.success === false) {
-        const errorMsg = result.error || result.message || t("error", "Failed to send message")
+        const errorMsg = (result as { error?: string; message?: string }).error || (result as { message?: string }).message || t("error")
         setServerError(errorMsg)
         setSuccessMessage(null)
         setIsSubmitting(false)

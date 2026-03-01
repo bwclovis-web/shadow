@@ -1,2 +1,4 @@
-export { default as CsvDownload } from "./csvDownload"
-export { default as CsvUploader } from "./csvUploader"
+import CsvDownload from "./csvDownload/index"
+import CsvUploader from "./csvUploader/index"
+export { CsvDownload, CsvUploader }
+export default { CsvDownload, CsvUploader }

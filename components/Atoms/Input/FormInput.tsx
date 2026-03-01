@@ -47,8 +47,8 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
     ref
   ) => {
     // Extract error from Conform action.errors or actionData if available
-    const conformError = action?.errors?.[0]
-    const actionDataError = actionData?.errors?.[action?.name || ""]
+    const conformError = (action?.errors as string[] | undefined)?.[0]
+    const actionDataError = actionData?.errors?.[String(action?.name ?? "")]
     const fieldError = error || conformError || actionDataError
 
     return (

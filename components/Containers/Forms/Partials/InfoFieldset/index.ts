@@ -1,1 +1,1 @@
-export { default } from "./InfoFieldset"
+export { default } from "../InfoFieldset"

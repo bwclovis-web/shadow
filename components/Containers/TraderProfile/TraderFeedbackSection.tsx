@@ -80,7 +80,7 @@ const TraderFeedbackSection = ({
   const isViewerTrader = viewerId && viewerId === traderId
   const hasViewerFeedback = Boolean(data?.viewerFeedback)
 
-  const ratingSelectOptions = useMemo(
+  const ratingSelectOptions = useMemo<{ id: string | number; label: string; name: string }[]>(
     () => [
       {
         id: 0,
@@ -89,7 +89,7 @@ const TraderFeedbackSection = ({
       },
       ...Array.from(TRADER_FEEDBACK_RATING_OPTIONS)
         .reverse()
-        .map(option => ({
+        .map((option: number) => ({
           id: option,
           label: option.toString(),
           name: option.toString(),
@@ -287,7 +287,7 @@ const TraderFeedbackSection = ({
 function renderStars(value: number) {
   const normalizedValue = Math.max(0, Math.min(5, value || 0))
   return Array.from(TRADER_FEEDBACK_RATING_OPTIONS)
-    .map(option => {
+    .map((option: number) => {
       const isFilled = normalizedValue >= option - 0.25
       const isHalf = !isFilled && normalizedValue >= option - 0.75
       return (

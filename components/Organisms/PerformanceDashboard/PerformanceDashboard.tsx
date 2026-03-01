@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react"
 import type { CoreWebVitals, PerformanceMetrics } from "@/types/performance"
 import { styleMerge } from "@/utils/styleUtils"
 
-interface PerformanceDashboardProps {
+export interface PerformanceDashboardProps {
   enabled?: boolean
   showUI?: boolean
   className?: string

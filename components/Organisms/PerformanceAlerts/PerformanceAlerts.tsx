@@ -10,7 +10,7 @@ interface PerformanceMemory {
   jsHeapSizeLimit: number
 }
 
-interface AlertRule {
+export interface AlertRule {
   id: string
   name: string
   metric: string
@@ -21,7 +21,7 @@ interface AlertRule {
   description?: string
 }
 
-interface PerformanceAlert {
+export interface PerformanceAlert {
   id: string
   ruleId: string
   message: string
@@ -32,7 +32,7 @@ interface PerformanceAlert {
   threshold: number
 }
 
-interface PerformanceAlertsProps {
+export interface PerformanceAlertsProps {
   enabled?: boolean
   showUI?: boolean
   className?: string

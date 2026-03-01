@@ -178,11 +178,17 @@ const AllHousesClient = ({ heading, subheading }: AllHousesClientProps) => {
     () =>
       houses.map((house) => {
         const h = house as Record<string, unknown> & {
+          id?: string
+          name?: string
+          slug?: string
           createdAt?: Date
           updatedAt?: Date
         }
         return {
           ...h,
+          id: h.id ?? "",
+          name: h.name ?? "",
+          slug: h.slug ?? "",
           createdAt:
             h.createdAt ?? h.updatedAt ?? new Date(0),
         }
@@ -191,7 +197,7 @@ const AllHousesClient = ({ heading, subheading }: AllHousesClientProps) => {
   )
 
   const sortedHouses = useMemo(
-    () => sortItems(normalizedHouses, selectedSort),
+    () => sortItems(normalizedHouses as import("@/utils/sortUtils").SortableItem[], selectedSort),
     [normalizedHouses, selectedSort]
   )
 
@@ -284,7 +290,7 @@ const AllHousesClient = ({ heading, subheading }: AllHousesClientProps) => {
       />
 
       <DataDisplaySection
-        data={sortedHouses}
+        data={sortedHouses as unknown as { id: string; name: string; slug: string; image?: string; type?: string; perfumeHouse?: { name: string } }[]}
         isLoading={loading}
         type="house"
         selectedLetter={letterFromUrl}

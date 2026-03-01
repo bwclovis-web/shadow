@@ -1,1 +1,1 @@
-export { default } from "./TradersComments"
+export { default } from "../TradersComments"

@@ -2,25 +2,30 @@ import FormField from "@/components/Atoms/FormField/FormField"
 import Input from "@/components/Atoms/Input/Input"
 import Select from "@/components/Atoms/Select/Select"
 import { houseTypes } from "@/data/SelectTypes"
-const InfoFieldset = ({ data, actions, hideImage = false }) => (
+interface InfoFieldsetProps {
+  data?: Record<string, unknown>
+  actions?: Record<string, { errors?: string[]; name?: string; key?: string; id?: string; initialValue?: unknown }>
+  hideImage?: boolean
+}
+const InfoFieldset = ({ data, actions = {}, hideImage = false }: InfoFieldsetProps) => (
   <fieldset className="flex flex-col gap-2">
     <legend className="text-3xl text-noir-gold-100 font-bold mb-2">Info</legend>
     <FormField label="Name" error={actions.name?.errors?.[0]} required>
       <Input
         shading={true}
         inputType="text"
-        action={actions.name}
+        action={actions.name as import("@conform-to/react").FieldMetadata<string, Record<string, unknown>, unknown>}
         inputId="name"
-        defaultValue={data?.name}
+        defaultValue={data?.name as string | undefined}
       />
     </FormField>
     <FormField label="Description" error={actions.description?.errors?.[0]}>
       <Input
         shading={true}
         inputType="text"
-        action={actions.description}
+        action={actions.description as import("@conform-to/react").FieldMetadata<string, Record<string, unknown>, unknown>}
         inputId="description"
-        defaultValue={data?.description}
+        defaultValue={data?.description as string | undefined}
       />
     </FormField>
     <div className="grid grid-cols-2 gap-2 w-full items-center">
@@ -28,9 +33,9 @@ const InfoFieldset = ({ data, actions, hideImage = false }) => (
         <Input
           shading={true}
           inputType="text"
-          action={actions.founded}
+          action={actions.founded as import("@conform-to/react").FieldMetadata<string, Record<string, unknown>, unknown>}
           inputId="founded"
-          defaultValue={data?.founded}
+          defaultValue={data?.founded as string | undefined}
         />
       </FormField>
       <FormField label="House Type" error={actions.type?.errors?.[0]}>
@@ -38,7 +43,7 @@ const InfoFieldset = ({ data, actions, hideImage = false }) => (
           ariaLabel="House Type"
           selectId="type"
           selectData={houseTypes}
-          defaultId={data?.type}
+          defaultId={data?.type as string | number | undefined}
         />
       </FormField>
     </div>
@@ -47,9 +52,9 @@ const InfoFieldset = ({ data, actions, hideImage = false }) => (
         <Input
           shading={true}
           inputType="text"
-          action={actions.image}
+          action={actions.image as import("@conform-to/react").FieldMetadata<string, Record<string, unknown>, unknown>}
           inputId="image"
-          defaultValue={data?.image}
+          defaultValue={data?.image as string | undefined}
         />
       </FormField>
     )}

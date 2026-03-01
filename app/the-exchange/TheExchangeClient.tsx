@@ -172,7 +172,7 @@ const TheExchangeClient = ({
                     className="relative animate-fade-in-item"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
-                    <LinkCard data={perfume} type="perfume">
+                    <LinkCard data={{ ...perfume, image: perfume.image ?? undefined, perfumeHouse: perfume.perfumeHouse ? { name: perfume.perfumeHouse.name } : undefined }} type="perfume">
                       <div className="mt-2 rounded-md">
                         <p className="text-base font-medium text-noir-gold mb-1">
                           {t("availableFrom")}:
@@ -186,12 +186,12 @@ const TheExchangeClient = ({
                               {getUserDisplayName(userPerfume.user)}:
                             </Link>
                             <span className="text-sm ml-2 text-noir-gold-100">
-                              {getPerfumeTypeLabel(userPerfume.type) || "Unknown Type"}{" "}
+                              {getPerfumeTypeLabel(userPerfume.type ?? undefined) || "Unknown Type"}{" "}
                               {userPerfume.available} ml
                             </span>
                             {userPerfume.tradePreference && (
                               <span className="text-sm ml-2 text-noir-gold-500 font-medium">
-                                • {getTradePreferenceLabel(userPerfume.tradePreference)}
+                                • {getTradePreferenceLabel(userPerfume.tradePreference !== null ? userPerfume.tradePreference : undefined)}
                               </span>
                             )}
                           </div>

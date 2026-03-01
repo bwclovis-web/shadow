@@ -8,7 +8,8 @@ import AlphabeticalNav from "@/components/Organisms/AlphabeticalNav"
 import DataDisplaySection from "@/components/Organisms/DataDisplaySection"
 
 export default function HousesListClient() {
-  const { t } = useTranslation()
+  const tNav = useTranslations("nav")
+  const tDataDisplay = useTranslations("dataDisplay")
   const router = useRouter()
   const searchParams = useSearchParams()
   const letterParam = searchParams.get("letter")

@@ -99,3 +99,5 @@ export const createHandleUploadCSV =
       handleUploadError(error)
   }
 }
+
+export default createHandleUploadCSV

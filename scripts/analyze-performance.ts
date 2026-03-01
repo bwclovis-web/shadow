@@ -198,7 +198,7 @@ async function analyzePerformance(options: AnalysisOptions): Promise<Performance
       recommendations.push("🚨 Address high-impact performance issues first")
     }
     if (largeImages.length > 0) {
-      recommendations.push("🖼️ Optimize images using OptimizedImage component")
+      recommendations.push("🖼️ Optimize images using Next.js Image component")
     }
     if (metrics.totalBytes && metrics.totalBytes > 3000000) {
       recommendations.push("📦 Reduce bundle size with code splitting")

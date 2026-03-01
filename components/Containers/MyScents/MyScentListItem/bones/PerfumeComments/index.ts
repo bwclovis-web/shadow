@@ -1,1 +1,1 @@
-export { default } from "./PerfumeComments"
+export { default } from "../PerfumeComments"

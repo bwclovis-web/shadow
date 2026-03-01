@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl"
 import { Button } from "~/components/Atoms/Button/Button"
 import ContactTraderModal from "~/components/Containers/Forms/ContactTraderModal"
 import Modal from "~/components/Organisms/Modal/Modal"
-import { useSessionStore } from "~/stores/sessionStore"
+import { useSessionStore } from "@/hooks/sessionStore"
 import { useCSRF } from "~/hooks/useCSRF"
 import { getTraderDisplayName } from "~/utils/user"
 

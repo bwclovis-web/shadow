@@ -33,9 +33,9 @@ const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
       {/* Home */}
       <NavLink
         to="/"
-        className={({ isActive: active }) => styleMerge(
+        className={({ isActive }: { isActive: boolean }) => styleMerge(
             "flex flex-col items-center gap-1 p-2 mobile-touch-target transition-colors duration-200",
-            active ? "text-noir-light" : "text-noir-gold hover:text-noir-light"
+            isActive ? "text-noir-light" : "text-noir-gold hover:text-noir-light"
           )
         }
       >
@@ -62,9 +62,9 @@ const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
         to={
           mainNavigation.find(nav => nav.key === "perfumes")?.path || "/the-vault"
         }
-        className={({ isActive: active }) => styleMerge(
+        className={({ isActive }: { isActive: boolean }) => styleMerge(
             "flex flex-col items-center gap-1 p-2 mobile-touch-target transition-colors duration-200",
-            active ? "text-noir-light" : "text-noir-gold hover:text-noir-light"
+            isActive ? "text-noir-light" : "text-noir-gold hover:text-noir-light"
           )
         }
       >
@@ -82,9 +82,9 @@ const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
                 })
               : SIGN_IN
           }
-        className={({ isActive: active }) => styleMerge(
+        className={({ isActive }: { isActive: boolean }) => styleMerge(
             "flex flex-col items-center gap-1 p-2 mobile-touch-target transition-colors duration-200",
-            active ? "text-noir-light" : "text-noir-gold hover:text-noir-light"
+            isActive ? "text-noir-light" : "text-noir-gold hover:text-noir-light"
           )
         }
       >

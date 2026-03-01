@@ -1,4 +1,13 @@
-const PerfumeHouseAddressBlock = ({ perfumeHouse }) => (
+interface PerfumeHouseAddressBlockProps {
+  perfumeHouse: {
+    address?: string | null
+    country?: string | null
+    email?: string | null
+    phone?: string | null
+    website?: string | null
+  }
+}
+const PerfumeHouseAddressBlock = ({ perfumeHouse }: PerfumeHouseAddressBlockProps) => (
   <address className="flex flex-col md:flex-row items-start gap-2 p-4 bg-noir-dark text-noir-gold-100 ">
     <div className="md:w-1/2 w-full flex flex-col gap-2">
       {perfumeHouse.address && (

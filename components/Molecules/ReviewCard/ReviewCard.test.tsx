@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import ReviewCard from "./ReviewCard"
-import { useSessionStore } from "~/stores/sessionStore"
+import { useSessionStore } from "@/hooks/sessionStore"
 
 // Mock date-fns
 vi.mock("date-fns", () => ({
