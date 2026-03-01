@@ -22,21 +22,18 @@ const deleteHouse = async (
 ): Promise<DeleteHouseResponse> => {
   const { houseId } = params
 
-  const response = await fetch(`/api/deleteHouse?id=${houseId}`, {
-    method: "GET",
+  const response = await fetch(`/api/deleteHouse?id=${encodeURIComponent(houseId)}`, {
+    method: "DELETE",
     credentials: "include",
   })
 
+  const result = await response.json().catch(() => ({}))
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    throw new Error(
-      errorData.error || errorData.message || "Failed to delete house"
-    )
+    throw new Error(result.message || "Failed to delete house")
   }
 
-  const result = await response.json()
   return {
-    success: Array.isArray(result) ? result.length > 0 : !!result,
+    success: result.success === true,
   }
 }
 

@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
+
 import { getHousesByLetterPaginated } from "@/models/house.server"
+import { clampPagination } from "@/utils/api-pagination.server"
 import { ErrorHandler } from "@/utils/errorHandling"
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const letter = searchParams.get("letter")
   const houseType = searchParams.get("houseType") || "all"
-  const skip = parseInt(searchParams.get("skip") || "0", 10)
-  const take = parseInt(searchParams.get("take") || "16", 10)
+  const rawSkip = parseInt(searchParams.get("skip") || "0", 10)
+  const rawTake = parseInt(searchParams.get("take") || "16", 10)
+  const { skip, take } = clampPagination(isNaN(rawSkip) ? 0 : rawSkip, isNaN(rawTake) ? 16 : rawTake)
 
   if (!letter || !/^[A-Za-z]$/.test(letter)) {
     return NextResponse.json(

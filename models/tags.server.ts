@@ -1,7 +1,12 @@
-import { prisma } from "~/db.server"
-import { isDisplayableScentNote } from "~/utils/note-validation.server"
+import { prisma } from "@/lib/db"
+import {
+  isDisplayableScentNote,
+  validateNoteForApi,
+} from "@/utils/validation/note-validation.server"
 
-/** Returns only notes that pass display validation (so scent quiz etc. show confirmed scent notes only). */
+const MAX_SEARCH_TERM_LENGTH = 100
+
+/** Returns only notes that pass display validation (scent quiz etc. show confirmed scent notes only). */
 export const getAllTags = async () => {
   const tags = await prisma.perfumeNotes.findMany({
     orderBy: { name: "asc" },
@@ -9,14 +14,32 @@ export const getAllTags = async () => {
   return tags.filter((tag) => isDisplayableScentNote(tag.name))
 }
 
+const calculateTagRelevanceScore = (tagName: string, searchTerm: string): number => {
+  const name = tagName.toLowerCase()
+  const term = searchTerm.toLowerCase()
+
+  let score = 0
+
+  if (name === term) score += 100
+  else if (name.startsWith(term)) score += 80
+  else if (name.includes(term)) score += 40
+
+  score += Math.max(0, 20 - name.length)
+
+  const wordBoundaryRegex = new RegExp(`\\b${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i")
+  if (wordBoundaryRegex.test(name)) score += 20
+
+  return score
+}
+
+/**
+ * Search tags by name for autocomplete etc. Returns only displayable notes, ranked by relevance.
+ * Safe for use in Next.js API routes (e.g. GET /api/getTag?tag=...).
+ */
 export const getTagsByName = async (name: string) => {
-  const searchTerm = name.trim()
+  const searchTerm = name.trim().slice(0, MAX_SEARCH_TERM_LENGTH)
+  if (!searchTerm) return []
 
-  if (!searchTerm) {
-    return []
-  }
-
-  // First, try exact matches and starts-with matches (highest priority)
   const exactMatches = await prisma.perfumeNotes.findMany({
     where: {
       OR: [
@@ -28,77 +51,51 @@ export const getTagsByName = async (name: string) => {
     take: 5,
   })
 
-  // Then, try contains matches (lower priority)
   const containsMatches = await prisma.perfumeNotes.findMany({
     where: {
       AND: [
         { name: { contains: searchTerm, mode: "insensitive" } },
-        // Exclude items already found in exact matches
-        { id: { notIn: exactMatches.map(t => t.id) } },
+        { id: { notIn: exactMatches.map((t) => t.id) } },
       ],
     },
     orderBy: { name: "asc" },
     take: 5,
   })
 
-  // Combine and rank results, then filter to displayable only
   const allResults = [...exactMatches, ...containsMatches].filter((tag) =>
     isDisplayableScentNote(tag.name)
   )
 
-  // Sort by relevance score
-  const rankedResults = allResults
-    .map(tag => ({
+  return allResults
+    .map((tag) => ({
       ...tag,
       relevanceScore: calculateTagRelevanceScore(tag.name, searchTerm),
     }))
     .sort((a, b) => b.relevanceScore - a.relevanceScore)
     .slice(0, 10)
-
-  return rankedResults
 }
 
-// Helper function to calculate relevance score for tags
-const calculateTagRelevanceScore = (tagName: string, searchTerm: string): number => {
-  const name = tagName.toLowerCase()
-  const term = searchTerm.toLowerCase()
+export type CreateTagResult =
+  | { success: true; tag: { id: string; name: string } }
+  | { success: false; reason: string }
 
-  let score = 0
-
-  // Exact match gets highest score
-  if (name === term) {
-    score += 100
-  }
-  // Starts with gets high score
-  else if (name.startsWith(term)) {
-    score += 80
-  }
-  // Contains gets medium score
-  else if (name.includes(term)) {
-    score += 40
+/**
+ * Create a tag (perfume note) if it doesn't exist. Only allows displayable note names.
+ * Use in Next.js API route POST /api/createTag; return CreateTagResult.reason for 400.
+ */
+export const createTag = async (name: string): Promise<CreateTagResult> => {
+  const validation = validateNoteForApi(name)
+  if (!validation.valid) {
+    return { success: false, reason: validation.reason }
   }
 
-  // Bonus for shorter names (more specific matches)
-  score += Math.max(0, 20 - name.length)
-
-  // Bonus for matches at word boundaries
-  const wordBoundaryRegex = new RegExp(`\\b${term}`, "i")
-  if (wordBoundaryRegex.test(name)) {
-    score += 20
-  }
-
-  return score
-}
-
-export const createTag = async (name: string) => {
-  // Use upsert to ensure uniqueness - create if doesn't exist, get existing if it does
   const trimmedName = name.trim().toLowerCase()
+
   const tag = await prisma.perfumeNotes.upsert({
     where: { name: trimmedName },
-    update: {}, // Don't update if exists
-    create: {
-      name: trimmedName,
-    },
+    update: {},
+    create: { name: trimmedName },
   })
-  return tag
+
+  return { success: true, tag: { id: tag.id, name: tag.name } }
 }

@@ -22,9 +22,12 @@ const CreateTagButton = ({ action, setOpenDropdown }: CreateTagButtonProps) => {
 
     setIsSubmitting(true)
     try {
-      const response = await fetch(
-        `/api/createTag?tag=${encodeURIComponent(trimmed)}`
-      )
+      const response = await fetch("/api/createTag", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tag: trimmed }),
+      })
 
       if (!response.ok) {
         console.error("Failed to create tag, status:", response.status)
@@ -32,14 +35,15 @@ const CreateTagButton = ({ action, setOpenDropdown }: CreateTagButtonProps) => {
       }
 
       const res = await response.json()
-      if (!res?.id) {
+      const tagData = res?.data ?? res
+      if (!tagData?.id) {
         console.error("Invalid tag response:", res)
         return
       }
 
       setTagValue("")
       setOpenDropdown(false)
-      action(res as CreatedTag)
+      action(tagData as CreatedTag)
     } catch (error) {
       console.error("Error creating tag:", error)
     } finally {

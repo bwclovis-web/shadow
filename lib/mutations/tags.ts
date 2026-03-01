@@ -23,22 +23,21 @@ async function createTag(params: CreateTagParams): Promise<CreateTagResponse> {
     throw new Error("Tag name is required")
   }
 
-  const response = await fetch(`/api/createTag?tag=${encodeURIComponent(tag.trim())}`, {
-    method: "GET",
+  const response = await fetch("/api/createTag", {
+    method: "POST",
     credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tag: tag.trim() }),
   })
 
+  const result = await response.json().catch(() => ({}))
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    throw new Error(errorData.error || errorData.message || "Failed to create tag")
+    throw new Error(result.message || "Failed to create tag")
   }
 
-  const result = await response.json()
-
-  // API returns array, so we'll handle that
   return {
-    success: Array.isArray(result) ? result.length > 0 : !!result,
-    data: Array.isArray(result) ? result[0] : result,
+    success: result.success === true,
+    data: result.data ?? result,
   }
 }
 

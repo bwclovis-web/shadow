@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
+
 import { prisma } from "@/lib/db"
+import { clampPagination } from "@/utils/api-pagination.server"
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const houseSlug = searchParams.get("houseSlug")
-  const skip = parseInt(searchParams.get("skip") || "0", 10)
-  const take = parseInt(searchParams.get("take") || "8", 10)
+  const rawSkip = parseInt(searchParams.get("skip") || "0", 10)
+  const rawTake = parseInt(searchParams.get("take") || "8", 10)
+  const { skip, take } = clampPagination(isNaN(rawSkip) ? 0 : rawSkip, isNaN(rawTake) ? 8 : rawTake)
 
   if (!houseSlug) {
     return NextResponse.json(

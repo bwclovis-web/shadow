@@ -17,20 +17,18 @@ export interface DeletePerfumeResponse {
 const deletePerfume = async (params: DeletePerfumeParams): Promise<DeletePerfumeResponse> => {
   const { perfumeId } = params
 
-  const response = await fetch(`/api/deletePerfume?id=${perfumeId}`, {
-    method: "GET",
+  const response = await fetch(`/api/deletePerfume?id=${encodeURIComponent(perfumeId)}`, {
+    method: "DELETE",
     credentials: "include",
   })
 
+  const result = await response.json().catch(() => ({}))
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    throw new Error(errorData.error || errorData.message || "Failed to delete perfume")
+    throw new Error(result.message || "Failed to delete perfume")
   }
 
-  const result = await response.json()
-
   return {
-    success: Array.isArray(result) ? result.length > 0 : !!result,
+    success: result.success === true,
   }
 }
 
