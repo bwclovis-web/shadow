@@ -10,6 +10,7 @@ import {
   getUserAlerts,
 } from "@/models/user-alerts.server"
 import { rulesRecommendationService } from "@/services/recommendations"
+import type { UserAlert } from "@/types/database"
 import type { SafeUser } from "@/types"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { getProfileSlug } from "@/utils/user"
