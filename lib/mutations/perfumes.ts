@@ -14,12 +14,23 @@ export interface DeletePerfumeResponse {
   error?: string
 }
 
+const getCsrfHeader = (): HeadersInit => {
+  if (typeof document === "undefined") return {}
+  const cookie = document.cookie
+    .split(";")
+    .map((c) => c.trim())
+    .find((c) => c.startsWith("_csrf="))
+  const token = cookie ? cookie.split("=")[1]?.trim() : null
+  return token ? { "x-csrf-token": token } : {}
+}
+
 const deletePerfume = async (params: DeletePerfumeParams): Promise<DeletePerfumeResponse> => {
   const { perfumeId } = params
 
   const response = await fetch(`/api/deletePerfume?id=${encodeURIComponent(perfumeId)}`, {
     method: "DELETE",
     credentials: "include",
+    headers: getCsrfHeader(),
   })
 
   const result = await response.json().catch(() => ({}))

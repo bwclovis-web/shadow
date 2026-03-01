@@ -10,7 +10,8 @@ import {
   parseFormData,
   validateRating,
   validateRatingCategory,
-} from "@/utils/api-route-helpers.server"
+} from "@/utils/server/api-route-helpers.server"
+import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 import { authenticateUser } from "@/utils/server/auth.server"
 
 export async function GET(request: NextRequest) {
@@ -55,6 +56,9 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json({ message: "Rating saved successfully" })
   } catch (error) {
+    if (error instanceof CSRFError) {
+      return NextResponse.json({ error: error.message }, { status: 403 })
+    }
     const message = error instanceof Error ? error.message : "Failed to save rating"
     return NextResponse.json({ error: message }, { status: 400 })
   }

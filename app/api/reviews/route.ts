@@ -11,8 +11,9 @@ import {
   parseFormData,
   parsePaginationParams,
   parseQueryParams,
-} from "@/utils/api-route-helpers.server"
+} from "@/utils/server/api-route-helpers.server"
 import { containsDangerousReviewHtml } from "@/utils/sanitize"
+import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 import { authenticateUser } from "@/utils/server/auth.server"
 
 export async function GET(request: NextRequest) {
@@ -49,6 +50,7 @@ export async function POST(request: NextRequest) {
     }
     const auth = { userId: authResult.user!.id, user: authResult.user! }
     const formData = await parseFormData(request)
+    await requireCSRF(request, formData)
     const action = formData.required("_action")
 
     switch (action) {
@@ -92,6 +94,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: `Invalid action: ${action}` }, { status: 400 })
     }
   } catch (error) {
+    if (error instanceof CSRFError) {
+      return NextResponse.json({ error: error.message }, { status: 403 })
+    }
     const msg = error instanceof Error ? error.message : "Failed to process request"
     return NextResponse.json({ error: msg }, { status: 500 })
   }

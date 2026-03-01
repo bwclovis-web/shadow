@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from "next/server"
 import { dismissAlert } from "@/models/user-alerts.server"
 import { ErrorHandler } from "@/utils/errorHandling"
+import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 import { authenticateUser } from "@/utils/server/auth.server"
 
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ userId: string; alertId: string }> }
 ) {
+  try {
+    await requireCSRF(request)
+  } catch (error) {
+    if (error instanceof CSRFError) {
+      return NextResponse.json({ error: error.message }, { status: 403 })
+    }
+    throw error
+  }
   const { userId, alertId } = await context.params
   const authResult = await authenticateUser(request)
   if (!authResult.success) {

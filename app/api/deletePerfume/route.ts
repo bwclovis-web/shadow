@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { deletePerfume } from "@/models/perfume.server"
+import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 import { requireAdminOrEditorApi } from "@/utils/server/requireAdminOrEditorApi.server"
 
 const BAD_REQUEST = { success: false, message: "Invalid request" } as const
 const SERVER_ERROR = { success: false, message: "Operation failed" } as const
 
 export async function DELETE(request: NextRequest) {
+  try {
+    await requireCSRF(request)
+  } catch (error) {
+    if (error instanceof CSRFError) {
+      return NextResponse.json({ success: false, message: error.message }, { status: 403 })
+    }
+    throw error
+  }
   const auth = await requireAdminOrEditorApi(request)
   if (!auth.allowed) return auth.response
 

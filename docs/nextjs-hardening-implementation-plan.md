@@ -31,6 +31,33 @@
   - `components/Molecules/CSRFToken/CSRFTokenProvider.tsx`
 - Enforce CSRF checks across all cookie-auth mutation routes and server actions.
 
+### Phase 2 manual testing
+
+1. **Cookie issuance**  
+   - Open the app in a browser (any page).  
+   - In DevTools → Application → Cookies, confirm a cookie named `_csrf` is set for the site (value is a long hex string).
+
+2. **Valid token (happy path)**  
+   - Log in (or use an authenticated session).  
+   - Perform a protected action that uses CSRF (e.g. sign out via logout button, add to wishlist, submit a review, change password, or admin: create tag / delete perfume / delete house).  
+   - Action should succeed (no 403).
+
+3. **Missing token (403)**  
+   - With the app loaded and `_csrf` cookie present, open DevTools → Network.  
+   - In Console, run a mutation without sending the token, e.g.:  
+     `fetch('/api/log-out', { method: 'POST', credentials: 'include' })`  
+   - Response should be **403** and body message like "Invalid security token".
+
+4. **Wrong token (403)**  
+   - Run a mutation with a wrong token in the header, e.g.:  
+     `fetch('/api/log-out', { method: 'POST', credentials: 'include', headers: { 'x-csrf-token': 'wrong' } })`  
+   - Response should be **403** and same message.
+
+5. **Form submissions**  
+   - Use a form that includes the CSRF hidden field (e.g. sign-in, sign-up, create perfume).  
+   - Submit the form; it should succeed.  
+   - Submit the same form from a copy that omits the `_csrf` field or uses a different token; server should respond with 403 or show "Invalid security token" in the form error state.
+
 ## Phase 3: Session Hardening (Hybrid Strategy)
 
 - Add persistent refresh/session tracking in Prisma (session table + revocation metadata):
@@ -98,7 +125,7 @@
 ## Execution Checklist
 
 - [x] Phase 1 complete
-- [ ] Phase 2 complete
+- [x] Phase 2 complete
 - [ ] Phase 3 complete
 - [ ] Phase 4 complete
 - [ ] Phase 5 complete

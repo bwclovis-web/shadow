@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { authenticateUser } from "@/utils/server/auth.server"
 import { changePassword } from "@/models/user.server"
+import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 import { ErrorHandler } from "@/utils/errorHandling"
 
 export async function POST(request: NextRequest) {
@@ -14,6 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await request.formData()
+    await requireCSRF(request, formData)
     const currentPassword = formData.get("currentPassword") as string
     const newPassword = formData.get("newPassword") as string
     const confirmNewPassword = formData.get("confirmNewPassword") as string
@@ -40,6 +42,9 @@ export async function POST(request: NextRequest) {
     const result = await changePassword(authResult.user.id, currentPassword, newPassword)
     return NextResponse.json(result)
   } catch (error) {
+    if (error instanceof CSRFError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 403 })
+    }
     const appError = ErrorHandler.handle(error, { api: "change-password" })
     return NextResponse.json(
       { success: false, error: appError.userMessage },

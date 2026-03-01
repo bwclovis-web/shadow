@@ -10,7 +10,8 @@ import {
   parseFormData,
   parsePaginationParams,
   parseQueryParams,
-} from "@/utils/api-route-helpers.server"
+} from "@/utils/server/api-route-helpers.server"
+import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 import { authenticateUser } from "@/utils/server/auth.server"
 
 export async function GET(request: NextRequest) {
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status ?? 401 })
     }
     const formData = await parseFormData(request)
+    await requireCSRF(request, formData)
     const intent = formData.required("_action")
 
     if (intent === "submit") {
@@ -64,13 +66,16 @@ export async function POST(request: NextRequest) {
     }
 
     if (intent === "remove") {
-      const feedbackId = formData.required("feedbackId")
-      await removeTraderFeedback(feedbackId, authResult.user!.id)
+      const traderId = formData.required("traderId")
+      await removeTraderFeedback(traderId, authResult.user!.id)
       return NextResponse.json({ success: true, message: "Feedback removed" })
     }
 
     return NextResponse.json({ error: `Invalid action: ${intent}` }, { status: 400 })
   } catch (error) {
+    if (error instanceof CSRFError) {
+      return NextResponse.json({ error: error.message }, { status: 403 })
+    }
     const msg = error instanceof Error ? error.message : "Failed to process feedback"
     return NextResponse.json({ error: msg }, { status: 500 })
   }

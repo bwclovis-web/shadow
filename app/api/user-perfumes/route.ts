@@ -13,6 +13,7 @@ import {
 } from "@/models/user.server"
 import { processWishlistAvailabilityAlerts } from "@/utils/alert-processors"
 import { authenticateUser } from "@/utils/server/auth.server"
+import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 import { ErrorHandler } from "@/utils/errorHandling"
 
 export async function GET(request: NextRequest) {
@@ -38,6 +39,7 @@ export async function POST(request: NextRequest) {
     }
     const user = authResult.user!
     const formData = await request.formData()
+    await requireCSRF(request, formData)
     const perfumeId = (formData.get("perfumeId") as string)?.trim()
     const actionType = formData.get("action") as string
     const userPerfumeId = (formData.get("userPerfumeId") as string)?.trim()
@@ -160,6 +162,9 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json(result)
   } catch (error) {
+    if (error instanceof CSRFError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 403 })
+    }
     const appError = ErrorHandler.handle(error, { api: "user-perfumes", action: "action" })
     return NextResponse.json({ success: false, error: appError.userMessage }, { status: 500 })
   }

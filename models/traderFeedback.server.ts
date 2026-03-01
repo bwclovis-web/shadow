@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client"
 
-import { prisma } from "~/db.server"
-import { validateRating } from "~/utils/api-route-helpers.server"
+import { prisma } from "@/lib/db"
+import { validateRating } from "@/utils/server/api-route-helpers.server"
 
 export interface TraderFeedbackSubmissionInput {
   traderId: string
@@ -82,8 +82,11 @@ export async function removeTraderFeedback(
         },
       },
     })
-  } catch (error: any) {
-    if (error?.code === "P2025" || isMissingFeedbackTableError(error)) {
+  } catch (error: unknown) {
+    if (
+      (error as { code?: string })?.code === "P2025" ||
+      isMissingFeedbackTableError(error)
+    ) {
       return null
     }
     throw error
@@ -182,9 +185,7 @@ export async function getTraderFeedbackByReviewer(
   }
 }
 
-function isMissingFeedbackTableError(error: unknown) {
-  return (
-    error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021"
-  )
-}
+const isMissingFeedbackTableError = (error: unknown): boolean =>
+  error instanceof Prisma.PrismaClientKnownRequestError &&
+  error.code === "P2021"
 

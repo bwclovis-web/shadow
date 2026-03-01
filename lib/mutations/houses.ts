@@ -14,6 +14,16 @@ export interface DeleteHouseResponse {
   error?: string
 }
 
+const getCsrfHeader = (): HeadersInit => {
+  if (typeof document === "undefined") return {}
+  const cookie = document.cookie
+    .split(";")
+    .map((c) => c.trim())
+    .find((c) => c.startsWith("_csrf="))
+  const token = cookie ? cookie.split("=")[1]?.trim() : null
+  return token ? { "x-csrf-token": token } : {}
+}
+
 /**
  * Delete a house mutation function.
  */
@@ -25,6 +35,7 @@ const deleteHouse = async (
   const response = await fetch(`/api/deleteHouse?id=${encodeURIComponent(houseId)}`, {
     method: "DELETE",
     credentials: "include",
+    headers: getCsrfHeader(),
   })
 
   const result = await response.json().catch(() => ({}))

@@ -3,6 +3,7 @@ import {
   getUserAlertPreferences,
   updateUserAlertPreferences,
 } from "@/models/user-alerts.server"
+import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 import { authenticateUser } from "@/utils/server/auth.server"
 
 const defaultPreferences = {
@@ -52,6 +53,14 @@ async function updatePreferences(
   request: NextRequest,
   context: { params: Promise<{ userId: string }> }
 ) {
+  try {
+    await requireCSRF(request)
+  } catch (error) {
+    if (error instanceof CSRFError) {
+      return NextResponse.json({ error: error.message }, { status: 403 })
+    }
+    throw error
+  }
   const { userId } = await context.params
   const authResult = await authenticateUser(request)
   if (!authResult.success) {

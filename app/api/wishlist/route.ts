@@ -6,6 +6,7 @@ import {
 } from "@/models/wishlist.server"
 import { processDecantInterestAlerts } from "@/utils/alert-processors"
 import { authenticateUser } from "@/utils/server/auth.server"
+import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 import { ErrorHandler } from "@/utils/errorHandling"
 import { validationError } from "@/utils/errorHandling.patterns"
 import { WishlistActionSchema } from "@/utils/validation/formValidationSchemas"
@@ -14,6 +15,7 @@ import { validateFormData } from "@/utils/validation"
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
+    await requireCSRF(request, formData)
     const validation = validateFormData(WishlistActionSchema, formData)
     if (!validation.success) {
       return NextResponse.json({ success: false, error: "Validation failed", errors: validation.errors }, { status: 400 })
@@ -52,6 +54,9 @@ export async function POST(request: NextRequest) {
     }
     throw validationError("Invalid action type", { actionType, validActions: ["add", "remove", "updateVisibility"] })
   } catch (error) {
+    if (error instanceof CSRFError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 403 })
+    }
     const appError = ErrorHandler.handle(error, { api: "wishlist", route: "api/wishlist" })
     return NextResponse.json({ success: false, error: appError.userMessage }, { status: 500 })
   }
