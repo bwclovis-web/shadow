@@ -6,6 +6,7 @@ import { MdLibraryAdd } from "react-icons/md"
 import { Button } from "@/components/Atoms/Button"
 import MyScentsModal from "@/components/Containers/MyScents/MyScentsModal"
 import { useSessionStore } from "@/hooks/sessionStore"
+import type { OptimisticCollectionItem } from "@/hooks/useMyScentsForm"
 import type { PerfumeI } from "@/types"
 
 import Modal from "../Modal/Modal"
@@ -16,6 +17,10 @@ interface AddToCollectionModalProps {
   className?: string
   /** Called after a perfume is successfully added to the collection (e.g. to refresh the list). */
   onAddedToCollection?: () => void
+  /** Called immediately to show an optimistic perfume entry. */
+  onOptimisticAddToCollection?: (item: OptimisticCollectionItem) => void
+  /** Called when optimistic add should be rolled back. */
+  onOptimisticAddRollback?: (tempId: string) => void
 }
 
 const AddToCollectionModal = ({
@@ -23,6 +28,8 @@ const AddToCollectionModal = ({
   perfume,
   className,
   onAddedToCollection,
+  onOptimisticAddToCollection,
+  onOptimisticAddRollback,
 }: AddToCollectionModalProps) => {
   const { modalOpen, toggleModal, modalId } = useSessionStore()
   const modalTrigger = useRef<HTMLButtonElement>(null)
@@ -50,7 +57,12 @@ const AddToCollectionModal = ({
 
       {modalOpen && modalId === "add-scent" && (
         <Modal innerType="dark" id="add-scent" animateStart="top">
-          <MyScentsModal perfume={perfume} onAddedToCollection={onAddedToCollection} />
+          <MyScentsModal
+            perfume={perfume}
+            onAddedToCollection={onAddedToCollection}
+            onOptimisticAddToCollection={onOptimisticAddToCollection}
+            onOptimisticAddRollback={onOptimisticAddRollback}
+          />
         </Modal>
       )}
     </>

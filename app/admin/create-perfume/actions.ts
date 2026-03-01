@@ -18,7 +18,7 @@ const isRedirectError = (error: unknown): boolean =>
   String((error as { digest?: string }).digest).startsWith("NEXT_REDIRECT")
 
 export type CreatePerfumeActionState =
-  | ReturnType<ReturnType<typeof parseWithZod>["reply"]>
+  | ReturnType<Awaited<ReturnType<typeof parseWithZod>>["reply"]>
   | { status: "error"; error: string; initialValue?: Record<string, unknown> }
   | null
 

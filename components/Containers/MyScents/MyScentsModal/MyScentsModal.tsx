@@ -10,7 +10,10 @@ import RangeSlider from "@/components/Atoms/RangeSlider"
 import Select from "@/components/Atoms/Select"
 import SearchBar from "@/components/Organisms/SearchBar"
 import { perfumeTypes } from "@/data/SelectTypes"
-import { useMyScentsForm } from "@/hooks/useMyScentsForm"
+import {
+  useMyScentsForm,
+  type OptimisticCollectionItem,
+} from "@/hooks/useMyScentsForm"
 import { useSessionStore } from "@/hooks/sessionStore"
 import type { UserPerfumeI } from "@/types"
 
@@ -18,9 +21,18 @@ interface MyScentsModalProps {
   perfume?: UserPerfumeI
   /** Called after a perfume is successfully added to the collection. */
   onAddedToCollection?: () => void
+  /** Called immediately to show an optimistic perfume entry. */
+  onOptimisticAddToCollection?: (item: OptimisticCollectionItem) => void
+  /** Called when optimistic add should be rolled back. */
+  onOptimisticAddRollback?: (tempId: string) => void
 }
 
-const MyScentsModal = ({ perfume, onAddedToCollection }: MyScentsModalProps) => {
+const MyScentsModal = ({
+  perfume,
+  onAddedToCollection,
+  onOptimisticAddToCollection,
+  onOptimisticAddRollback,
+}: MyScentsModalProps) => {
   const { modalData } = useSessionStore()
   const t = useTranslations("myScents.modal")
 
@@ -37,7 +49,10 @@ const MyScentsModal = ({ perfume, onAddedToCollection }: MyScentsModalProps) => 
     setPerfumeData,
     handleClick,
     handleAddPerfume,
-  } = useMyScentsForm(perfume, onAddedToCollection)
+  } = useMyScentsForm(perfume, onAddedToCollection, {
+    onOptimisticAdd: onOptimisticAddToCollection,
+    onOptimisticAddRollback,
+  })
 
   return (
     <div className="w-full p-6">

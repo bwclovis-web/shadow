@@ -51,7 +51,7 @@ const setSessionCookies = async (
 }
 
 export type SignUpActionState =
-  | { error?: string; submission?: ReturnType<ReturnType<typeof parseWithZod>["reply"]> }
+  | { error?: string; submission?: ReturnType<Awaited<ReturnType<typeof parseWithZod>>["reply"]> }
   | null
 
 export const signUpAction = async (

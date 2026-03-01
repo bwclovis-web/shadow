@@ -11,7 +11,7 @@ import { CreatePerfumeHouseSchema } from "@/utils/validation/formValidationSchem
 import { cookies } from "next/headers"
 
 export type CreateHouseActionState =
-  | ReturnType<ReturnType<typeof parseWithZod>["reply"]>
+  | ReturnType<Awaited<ReturnType<typeof parseWithZod>>["reply"]>
   | { status: "error"; error: string }
   | null
 

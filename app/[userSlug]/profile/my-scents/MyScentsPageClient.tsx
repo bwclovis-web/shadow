@@ -8,6 +8,7 @@ import { useParams } from "next/navigation"
 
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import AddToCollectionModal from "@/components/Organisms/AddToCollectionModal"
+import type { OptimisticCollectionItem } from "@/hooks/useMyScentsForm"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import { validImageRegex } from "@/utils/styleUtils"
 
@@ -86,6 +87,38 @@ const serializeUserPerfume = (up: Record<string, unknown>): UserPerfumeForClient
   } as UserPerfumeForClient
 }
 
+const buildOptimisticUserPerfume = (
+  optimisticItem: OptimisticCollectionItem
+): UserPerfumeForClient => ({
+  id: optimisticItem.tempId,
+  userId: "optimistic-user",
+  perfumeId: optimisticItem.perfumeId,
+  amount: optimisticItem.amount,
+  available: null,
+  price: optimisticItem.price || null,
+  placeOfPurchase: optimisticItem.placeOfPurchase || null,
+  tradePrice: null,
+  tradePreference: null,
+  tradeOnly: null,
+  type: optimisticItem.type || null,
+  createdAt: new Date().toISOString(),
+  perfume: {
+    id: optimisticItem.perfume.id,
+    name: optimisticItem.perfume.name,
+    slug: optimisticItem.perfume.slug || "",
+    image: optimisticItem.perfume.image || null,
+    description: optimisticItem.perfume.description || null,
+    perfumeHouse: optimisticItem.perfume.perfumeHouse
+      ? {
+          id: optimisticItem.perfume.perfumeHouse.id,
+          name: optimisticItem.perfume.perfumeHouse.name,
+          slug: optimisticItem.perfume.perfumeHouse.slug || "",
+        }
+      : null,
+  },
+  _count: { comments: 0 },
+})
+
 const MyScentsPageClient = ({
   userPerfumes: initialUserPerfumes,
   bannerImage,
@@ -108,6 +141,14 @@ const MyScentsPageClient = ({
     setUserPerfumes(data.userPerfumes.map(serializeUserPerfume))
   }, [])
 
+  const handleOptimisticAdd = useCallback((optimisticItem: OptimisticCollectionItem) => {
+    setUserPerfumes((prev) => [buildOptimisticUserPerfume(optimisticItem), ...prev])
+  }, [])
+
+  const handleOptimisticRollback = useCallback((tempId: string) => {
+    setUserPerfumes((prev) => prev.filter((item) => item.id !== tempId))
+  }, [])
+
   const grouped = groupByPerfumeId(userPerfumes)
   const uniquePerfumes = Object.values(grouped)
 
@@ -128,7 +169,11 @@ const MyScentsPageClient = ({
         heading={t("heading")}
         subheading={t("subheading")}
       >
-        <AddToCollectionModal onAddedToCollection={refreshCollection} />
+        <AddToCollectionModal
+          onAddedToCollection={refreshCollection}
+          onOptimisticAddToCollection={handleOptimisticAdd}
+          onOptimisticAddRollback={handleOptimisticRollback}
+        />
       </TitleBanner>
       <div className="noir-border relative inner-container mx-auto text-center flex flex-col items-center justify-center gap-4 p-4 my-6">
         <h2 className="mb-2">{t("collection.heading")}</h2>
