@@ -3,7 +3,7 @@
  * Centralized validation system for forms, API endpoints, and data operations
  */
 
-import type { ZodError, ZodSchema } from "zod"
+import type { ZodError, ZodSchema, ZodType, ZodTypeDef } from "zod"
 import { z } from "zod"
 
 // Re-export all schemas for convenience
@@ -39,10 +39,11 @@ const defaultOptions: ValidationOptions = {
 }
 
 /**
- * Validate data against a Zod schema
+ * Validate data against a Zod schema.
+ * Uses ZodType<T, ZodTypeDef, unknown> so schemas with transforms (input ≠ output) are accepted.
  */
 export function validateData<T>(
-  schema: ZodSchema<T>,
+  schema: ZodType<T, ZodTypeDef, unknown>,
   data: unknown,
   options: ValidationOptions = {}
 ): ValidationResult<T> {
@@ -77,7 +78,7 @@ export function validateData<T>(
  * Validate form data from a request
  */
 export function validateFormData<T>(
-  schema: ZodSchema<T>,
+  schema: ZodType<T, ZodTypeDef, unknown>,
   formData: FormData,
   options: ValidationOptions = {}
 ): ValidationResult<T> {
@@ -89,7 +90,7 @@ export function validateFormData<T>(
  * Validate JSON data from a request
  */
 export async function validateJsonData<T>(
-  schema: ZodSchema<T>,
+  schema: ZodType<T, ZodTypeDef, unknown>,
   request: Request,
   options: ValidationOptions = {}
 ): Promise<ValidationResult<T>> {
@@ -108,7 +109,7 @@ export async function validateJsonData<T>(
  * Validate URL search parameters
  */
 export function validateSearchParams<T>(
-  schema: ZodSchema<T>,
+  schema: ZodType<T, ZodTypeDef, unknown>,
   searchParams: URLSearchParams,
   options: ValidationOptions = {}
 ): ValidationResult<T> {
@@ -132,7 +133,7 @@ function formatZodErrors(error: ZodError): ValidationError[] {
  * Validate and transform data with error handling
  */
 export function validateAndTransform<T, R>(
-  schema: ZodSchema<T>,
+  schema: ZodType<T, ZodTypeDef, unknown>,
   data: unknown,
   transform: (validData: T) => R,
   options: ValidationOptions = {}
@@ -223,7 +224,7 @@ export function sanitizeObject<T extends Record<string, unknown>>(obj: T): T {
  * Validate and sanitize data
  */
 export function validateAndSanitize<T>(
-  schema: ZodSchema<T>,
+  schema: ZodType<T, ZodTypeDef, unknown>,
   data: unknown,
   options: ValidationOptions = {}
 ): ValidationResult<T> {
@@ -239,7 +240,7 @@ export function validateAndSanitize<T>(
  * Create a validation middleware for API routes
  */
 export function createValidationMiddleware<T>(
-  schema: ZodSchema<T>,
+  schema: ZodType<T, ZodTypeDef, unknown>,
   options: ValidationOptions = {}
 ) {
   return async (request: Request) => {

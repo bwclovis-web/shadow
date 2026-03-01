@@ -23,7 +23,7 @@
     "migrate:images": "npx tsx scripts/migrate-images-to-r2.ts",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc",
     "prepare": "husky"
   },
   "dependencies": {
