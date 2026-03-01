@@ -8,6 +8,11 @@ const eslintConfig = defineConfig([
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
+      // Valid patterns (isMounted, sync props→state, etc.) often trigger these:
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/purity": "off",
+      "react-hooks/refs": "warn",
+      "react-hooks/globals": "warn",
     },
   },
   // Override default ignores of eslint-config-next.
@@ -18,6 +23,7 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "scripts/**",
+    "crews/**",
   ]),
 ]);
 

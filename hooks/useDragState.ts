@@ -45,6 +45,9 @@ export const useDragState = ({
     [calculateValue, onValueChange]
   )
 
+  const handleMouseUpRef = useRef<() => void>(() => {})
+  const mouseUpWrapperRef = useRef<() => void>(() => {})
+
   const handleMouseUp = useCallback(() => {
     if (!isDraggingRef.current) {
       return
@@ -55,14 +58,15 @@ export const useDragState = ({
       sliderAnimations.animateScale(thumbRef.current, 1.2)
     }
     document.removeEventListener("mousemove", handleMouseMove)
-    document.removeEventListener("mouseup", handleMouseUp)
+    document.removeEventListener("mouseup", mouseUpWrapperRef.current)
     document.removeEventListener("touchmove", handleTouchMove)
-    document.removeEventListener("touchend", handleMouseUp)
-    document.removeEventListener("touchcancel", handleMouseUp)
+    document.removeEventListener("touchend", mouseUpWrapperRef.current)
+    document.removeEventListener("touchcancel", mouseUpWrapperRef.current)
   }, [handleMouseMove, handleTouchMove, thumbRef])
 
   const startDragging = useCallback(
     (clientX: number) => {
+      handleMouseUpRef.current = handleMouseUp
       isDraggingRef.current = true
       setIsDragging(true)
 
@@ -73,11 +77,14 @@ export const useDragState = ({
         sliderAnimations.animateScale(thumbRef.current, 1.3, 0.1)
       }
 
+      const mouseUpWrapper = () => handleMouseUpRef.current()
+      mouseUpWrapperRef.current = mouseUpWrapper
+
       document.addEventListener("mousemove", handleMouseMove)
-      document.addEventListener("mouseup", handleMouseUp)
+      document.addEventListener("mouseup", mouseUpWrapper)
       document.addEventListener("touchmove", handleTouchMove, { passive: false })
-      document.addEventListener("touchend", handleMouseUp)
-      document.addEventListener("touchcancel", handleMouseUp)
+      document.addEventListener("touchend", mouseUpWrapper)
+      document.addEventListener("touchcancel", mouseUpWrapper)
     },
     [
       calculateValue,

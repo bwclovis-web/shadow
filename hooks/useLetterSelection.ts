@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 interface UseLetterSelectionProps {
   loadDataByLetter: (
@@ -14,8 +14,9 @@ const useLetterSelection = ({
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null)
   const resetDataRef = useRef(resetData)
 
-  // Update the ref when resetData changes
-  resetDataRef.current = resetData
+  useEffect(() => {
+    resetDataRef.current = resetData
+  }, [resetData])
 
   const handleLetterClick = useCallback(
     async (letter: string | null) => {

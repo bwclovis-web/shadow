@@ -255,6 +255,8 @@ const getCorrelationId = (): string | undefined => {
   if (typeof window !== "undefined") return undefined
   try {
     if (!cachedGetCorrelationId) {
+      // Dynamic require for server-only module (avoids bundling in client)
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { getCorrelationId: get } = require("./correlationId.server")
       cachedGetCorrelationId = get
     }

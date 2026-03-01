@@ -51,7 +51,10 @@ export const useRatingSystem = ({
 
   const [currentRatings, setCurrentRatings] = useState<RatingData | null>(initialRatings)
   const ratingsRef = useRef(currentRatings)
-  ratingsRef.current = currentRatings
+
+  useEffect(() => {
+    ratingsRef.current = currentRatings
+  }, [currentRatings])
 
   const saveRating = useCreateOrUpdateRating()
 

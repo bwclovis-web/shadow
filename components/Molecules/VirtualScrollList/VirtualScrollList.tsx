@@ -33,14 +33,15 @@ const VirtualScrollList: React.FC<VirtualScrollListProps> = ({
   const hasItems = items.length > 0
 
   const renderItemWithWrapper = useMemo(
+    // eslint-disable-next-line react/display-name -- render callback, not a mounted component
     () => (item: any, index: number) => (
-        <div
-          key={`${item.id || index}`}
-          className={styleMerge("w-full", itemClassName)}
-        >
-          {renderItem(item, index)}
-        </div>
-      ),
+      <div
+        key={`${item.id || index}`}
+        className={styleMerge("w-full", itemClassName)}
+      >
+        {renderItem(item, index)}
+      </div>
+    ),
     [renderItem, itemClassName]
   )
 

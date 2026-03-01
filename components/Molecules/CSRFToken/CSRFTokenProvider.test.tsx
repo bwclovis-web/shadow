@@ -382,18 +382,19 @@ describe("useCSRFToken", () => {
     })
 
     it("should share same context between multiple consumers", () => {
-      let addToFormDataRef1: any
-      let addToFormDataRef2: any
+      const refs = { addToFormData1: null as any, addToFormData2: null as any }
 
       function Consumer1() {
         const context = useCSRFToken()
-        addToFormDataRef1 = context.addToFormData
+        /* eslint-disable-next-line react-hooks/immutability -- capture for test assertion */
+        refs.addToFormData1 = context.addToFormData
         return <div>Consumer 1</div>
       }
 
       function Consumer2() {
         const context = useCSRFToken()
-        addToFormDataRef2 = context.addToFormData
+        /* eslint-disable-next-line react-hooks/immutability -- capture for test assertion */
+        refs.addToFormData2 = context.addToFormData
         return <div>Consumer 2</div>
       }
 
@@ -402,8 +403,8 @@ describe("useCSRFToken", () => {
           <Consumer2 />
         </CSRFTokenProvider>)
 
-      // Both consumers should receive the same function reference
-      expect(addToFormDataRef1).toBe(addToFormDataRef2)
+      // Both consumers should receive the same function reference (capture via refs for test assertion)
+      expect(refs.addToFormData1).toBe(refs.addToFormData2)
     })
   })
 

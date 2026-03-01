@@ -134,7 +134,7 @@ const DeStashForm = ({
       label: t(option.label),
       defaultChecked: option.value === values.tradePreference,
     })),
-    [values.tradePreference]
+    [t, values.tradePreference]
   )
 
   return (

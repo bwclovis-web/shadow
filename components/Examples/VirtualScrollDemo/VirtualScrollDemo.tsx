@@ -188,7 +188,7 @@ const VirtualScrollDemo: React.FC = () => {
           </li>
           <li>• Try scrolling with large datasets to see the smooth performance</li>
           <li>
-            • Notice how the "Rendered Items" count stays low with virtual scrolling
+            • Notice how the &quot;Rendered Items&quot; count stays low with virtual scrolling
           </li>
         </ul>
       </div>

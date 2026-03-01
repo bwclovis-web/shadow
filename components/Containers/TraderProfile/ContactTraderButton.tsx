@@ -29,13 +29,11 @@ const ContactTraderButton = ({
   const { modalOpen, toggleModal, modalId, closeModal } = useSessionStore()
   const modalTrigger = useRef<HTMLButtonElement>(null)
   const { prepareApiRequest } = useCSRF()
+  const [result, setResult] = useState<any>(null)
+  const [, setIsSubmitting] = useState(false)
 
   // Only show button if viewer is authenticated and not viewing their own profile
-  if (viewerId === traderId) {
-    return null
-  }
-  
-  if (!viewerId) {
+  if (viewerId === traderId || !viewerId) {
     return null
   }
 
@@ -44,8 +42,6 @@ const ContactTraderButton = ({
     lastName: trader.lastName,
     email: trader.email || trader.id,
   })
-  const [result, setResult] = useState<any>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = async (formData: FormData) => {
     setIsSubmitting(true)

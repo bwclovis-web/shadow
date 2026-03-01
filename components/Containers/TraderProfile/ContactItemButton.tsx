@@ -32,6 +32,8 @@ const ContactItemButton = ({
   const { modalOpen, toggleModal, modalId, closeModal } = useSessionStore()
   const modalTrigger = useRef<HTMLButtonElement>(null)
   const { prepareApiRequest } = useCSRF()
+  const [result, setResult] = useState<any>(null)
+  const [, setIsSubmitting] = useState(false)
 
   if (viewerId === traderId || !viewerId) {
     return null
@@ -42,8 +44,6 @@ const ContactItemButton = ({
     lastName: trader.lastName,
     email: trader.email || trader.id,
   })
-  const [result, setResult] = useState<any>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Generate item-specific modal ID to allow multiple item modals
   const itemModalId = `contact-item-${userPerfume.id}`
