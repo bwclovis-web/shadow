@@ -112,7 +112,7 @@ const SignUpClient = ({ sessionId, prefillEmail }: SignUpClientProps) => {
           <p className="text-red-600 text-sm">{acceptTerms.errors.join(" ")}</p>
         )}
 
-        {signupForm.errors && (
+        {Array.isArray(signupForm.errors) && signupForm.errors.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-md p-3 text-sm text-red-700">
             <p className="font-medium mb-1">Please fix the following errors:</p>
             <ul className="list-disc list-inside">
