@@ -42,7 +42,10 @@ const getCsrfCookieFromRequest = async (request: Request): Promise<string | null
   return cookieStore.get(CSRF_COOKIE_NAME)?.value?.trim() || null
 }
 
-const getCsrfTokenFromRequest = (request: Request, formData?: FormData): string | null => {
+/** FormData or a parsed wrapper that exposes get(key) for CSRF token lookup */
+type CSRFFormDataLike = FormData | { get(key: string): string | File | null }
+
+const getCsrfTokenFromRequest = (request: Request, formData?: CSRFFormDataLike): string | null => {
   const header = request.headers.get(CSRF_HEADER_NAME)?.trim()
   if (header) return header
   const formToken = formData?.get(CSRF_COOKIE_NAME)
@@ -75,7 +78,7 @@ const timingSafeEqual = (a: string, b: string): boolean => {
  */
 export const requireCSRF = async (
   request: Request,
-  formData?: FormData
+  formData?: CSRFFormDataLike
 ): Promise<void> => {
   const cookieToken = await getCsrfCookieFromRequest(request)
   const submittedToken = getCsrfTokenFromRequest(request, formData)
