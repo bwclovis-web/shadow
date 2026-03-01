@@ -420,6 +420,12 @@ export const createPerfume = async (data: FormData) => {
 
   // Use transaction to create perfume and note relations
   const newPerfume = await prisma.$transaction(async tx => {
+    const house = await tx.perfumeHouse.findUnique({
+      where: { id: houseId },
+      select: { name: true },
+    })
+    const houseName = house?.name?.trim() ?? ""
+
     const existing = await tx.perfume.findFirst({
       where: {
         name: { equals: name, mode: "insensitive" },
@@ -432,7 +438,18 @@ export const createPerfume = async (data: FormData) => {
       )
     }
 
-    const nameSlug = createUrlSlug(name)
+    const existingInOtherHouse = await tx.perfume.findFirst({
+      where: {
+        name: { equals: name, mode: "insensitive" },
+        perfumeHouseId: { not: houseId },
+      },
+      select: { id: true },
+    })
+
+    const finalName =
+      existingInOtherHouse && houseName ? `${name} - ${houseName}` : name
+
+    const nameSlug = createUrlSlug(finalName)
     const existingSlug = await tx.perfume.findUnique({
       where: { slug: nameSlug },
       select: { id: true },
@@ -440,11 +457,7 @@ export const createPerfume = async (data: FormData) => {
 
     let slugBase = nameSlug
     if (existingSlug) {
-      const house = await tx.perfumeHouse.findUnique({
-        where: { id: houseId },
-        select: { name: true },
-      })
-      const houseSlug = house?.name ? createUrlSlug(house.name) : ""
+      const houseSlug = houseName ? createUrlSlug(houseName) : ""
       if (houseSlug) {
         slugBase = `${nameSlug}-${houseSlug}`
       }
@@ -455,7 +468,7 @@ export const createPerfume = async (data: FormData) => {
     // Create perfume
     const perfume = await tx.perfume.create({
       data: {
-        name,
+        name: finalName,
         slug,
         description,
         image,

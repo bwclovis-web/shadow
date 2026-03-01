@@ -63,13 +63,15 @@ const PerfumeDetailClient = ({
 
   const handleDelete = () => {
     if (!perfume) return
+    const vaultPath = selectedLetter ? `${VAULT_PATH}/${selectedLetter.toLowerCase()}` : VAULT_PATH
+
+    // Optimistic redirect: navigate immediately instead of waiting for API response.
+    closeModal()
+    router.push(vaultPath)
+
     deletePerfume.mutate(
       { perfumeId: perfume.id },
       {
-        onSuccess: () => {
-          closeModal()
-          router.push(selectedLetter ? `${VAULT_PATH}/${selectedLetter.toLowerCase()}` : VAULT_PATH)
-        },
         onError: (error) => {
           console.error("Failed to delete perfume:", error)
           alert("Failed to delete perfume. Please try again.")
