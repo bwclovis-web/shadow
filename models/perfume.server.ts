@@ -398,24 +398,69 @@ const sanitizeText = (text: string | null): string => {
     .replace(/[\u2026]/g, "...") // ellipsis
 }
 
+const findUniqueSlug = async (
+  tx: Prisma.TransactionClient,
+  baseSlug: string
+): Promise<string> => {
+  if (!baseSlug) return baseSlug
+  let slug = baseSlug
+  let n = 2
+  while (await tx.perfume.findUnique({ where: { slug } })) {
+    slug = `${baseSlug}-${n}`
+    n += 1
+  }
+  return slug
+}
+
 export const createPerfume = async (data: FormData) => {
   const name = sanitizeText(data.get("name") as string)
   const description = sanitizeText(data.get("description") as string)
   const image = data.get("image") as string
+  const houseId = data.get("house") as string
 
   // Use transaction to create perfume and note relations
   const newPerfume = await prisma.$transaction(async tx => {
+    const existing = await tx.perfume.findFirst({
+      where: {
+        name: { equals: name, mode: "insensitive" },
+        perfumeHouseId: houseId,
+      },
+    })
+    if (existing) {
+      throw new Error(
+        "Perfume already exists in the house it is being assigned to."
+      )
+    }
+
+    const nameSlug = createUrlSlug(name)
+    const existingSlug = await tx.perfume.findUnique({
+      where: { slug: nameSlug },
+      select: { id: true },
+    })
+
+    let slugBase = nameSlug
+    if (existingSlug) {
+      const house = await tx.perfumeHouse.findUnique({
+        where: { id: houseId },
+        select: { name: true },
+      })
+      const houseSlug = house?.name ? createUrlSlug(house.name) : ""
+      if (houseSlug) {
+        slugBase = `${nameSlug}-${houseSlug}`
+      }
+    }
+
+    const slug = await findUniqueSlug(tx, slugBase)
+
     // Create perfume
     const perfume = await tx.perfume.create({
       data: {
         name,
-        slug: createUrlSlug(name),
+        slug,
         description,
         image,
         perfumeHouse: {
-          connect: {
-            id: data.get("house") as string,
-          },
+          connect: { id: houseId },
         },
       },
     })

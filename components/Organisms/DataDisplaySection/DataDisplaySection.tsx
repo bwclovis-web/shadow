@@ -92,7 +92,7 @@ const DataDisplaySection = ({
               variant="secondary"
               size="sm"
             >
-              {t("common.previous")}
+              {tCommon("previous")}
             </Button>
           )}
 

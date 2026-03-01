@@ -949,5 +949,15 @@
     "heading": "Looking a bit lost",
     "subheading": "The page you are looking for does not exist.",
     "homeLink": "Head back home"
+  },
+  "validation": {
+    "descriptionRequired": "Description is required and must be at least 10 characters.",
+    "descriptionMin": "Description must be at least 10 characters.",
+    "descriptionMax": "Description must be less than 1000 characters.",
+    "nameRequired": "Name is required.",
+    "nameMin": "Name must be at least 1 character.",
+    "nameMax": "Name must be less than 100 characters.",
+    "urlInvalid": "Please enter a valid URL.",
+    "perfumeHouseRequired": "Please select a perfume house."
   }
 }

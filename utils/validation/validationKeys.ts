@@ -74,11 +74,16 @@ export const validationKeys = {
   messageMax: "validation.messageMax",
 } as const
 
-/** Pass validation error (or undefined) and next-intl t(); returns translated message or undefined. */
+/** Known validation key prefix; only these are looked up in messages. */
+const VALIDATION_KEY_PREFIX = "validation."
+
+/** Pass validation error (or undefined) and next-intl t(); returns translated message or undefined. Only translates when the message is a known validation key (e.g. "validation.descriptionRequired"); otherwise returns the message as-is so Zod defaults like "Required" display without lookup. */
 export const getTranslatedError = (
   error: string | string[] | undefined,
   t: (key: string) => string
 ): string | undefined => {
   const msg = Array.isArray(error) ? error[0] : error
-  return msg ? t(msg) : undefined
+  if (!msg) return undefined
+  if (msg.startsWith(VALIDATION_KEY_PREFIX)) return t(msg)
+  return msg
 }
