@@ -14,7 +14,7 @@ interface InputProps
   placeholder?: string
   shading?: boolean
   inputRef?: RefObject<HTMLInputElement | null>
-  action?: FieldMetadata<unknown>
+  action?: FieldMetadata<string, Record<string, unknown>, unknown>
   actionData?: {
     errors?: { [key: string]: string }
   }

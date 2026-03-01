@@ -36,10 +36,6 @@ const UsersPage = async () => {
     redirect("/sign-in?redirect=/admin/users")
   }
 
-  if (session.user.role !== "admin") {
-    redirect("/unauthorized")
-  }
-
   const users = await getAllUsersWithCounts()
 
   return (

@@ -39,3 +39,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/scraper
+/crews
+/csv
+/csv_noir
+/reports
+/backups
+/venv-ai
+/venv-scraper
+/venv-crews
+/venv-csv
+/venv-csv_noir
+/venv-reports
+/venv-backups

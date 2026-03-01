@@ -1,12 +1,14 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
+import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 
 import {
   defaultAuditStats,
   defaultRateLimitStats,
   defaultSecurityStats,
 } from "@/app/admin/types/security-stats"
-import { requireAdminSession } from "@/utils/requireAdmin.server"
+import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import {
   getAuditStats,
   logAuditEvent,
@@ -28,8 +30,23 @@ export const generateMetadata = async (): Promise<Metadata> => {
   }
 }
 
+const getCookieHeader = async (): Promise<string> => {
+  const store = await cookies()
+  return store
+    .getAll()
+    .map((c) => `${c.name}=${c.value}`)
+    .join("; ")
+}
+
 const SecurityMonitorPage = async () => {
-  const session = await requireAdminSession(ROUTE_PATH)
+  const cookieHeader = await getCookieHeader()
+  const session = await getSessionFromCookieHeader(cookieHeader, {
+    includeUser: true,
+  })
+
+  if (!session?.user) {
+    redirect("/sign-in?redirect=/admin/security-monitor")
+  }
 
   logAuditEvent({
     level: AUDIT_LEVELS.INFO,

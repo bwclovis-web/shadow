@@ -18,7 +18,7 @@ export interface FormInputProps extends Omit<InputProps, "inputId"> {
   helpText?: string
   showValidationIcon?: boolean
   inputId?: string
-  action?: FieldMetadata<unknown>
+  action?: FieldMetadata<string, Record<string, unknown>, unknown>
   actionData?: {
     errors?: { [key: string]: string }
   }

@@ -11,15 +11,8 @@ const generateCsrfToken = (): string => {
 }
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-
-  // Protect admin routes
-  if (pathname.startsWith('/admin')) {
-    const accessToken = request.cookies.get('accessToken')?.value
-    if (!accessToken) {
-      return NextResponse.redirect(new URL('/sign-in', request.url))
-    }
-  }
+  // Admin routes are protected server-side in app/admin/layout.tsx via requireAdminSession.
+  // We do not check tokens here (token-presence-only is weak); auth is enforced in the layout.
 
   const response = NextResponse.next()
 

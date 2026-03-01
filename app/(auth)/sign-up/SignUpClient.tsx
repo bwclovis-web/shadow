@@ -108,7 +108,7 @@ const SignUpClient = ({ sessionId, prefillEmail }: SignUpClientProps) => {
             labelPosition="right"
           />
         </div>
-        {acceptTerms?.errors && (
+        {Array.isArray(acceptTerms?.errors) && acceptTerms.errors.length > 0 && (
           <p className="text-red-600 text-sm">{acceptTerms.errors.join(" ")}</p>
         )}
 

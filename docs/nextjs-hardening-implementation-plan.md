@@ -80,6 +80,39 @@
   - `utils/requireAdmin.server.ts`
 - Harden `middleware.ts` (avoid token-presence-only checks) or limit middleware responsibility and rely on strict server-side auth checks.
 
+### Phase 4 manual testing
+
+1. **Unauthenticated user → sign-in**  
+   - Sign out (or use an incognito window with no session).  
+   - Visit any admin URL, e.g. `/admin/users`, `/admin/create-perfume`, `/admin/security-monitor`.  
+   - You should be **redirected to `/sign-in?redirect=%2Fadmin`** (or similar).  
+   - After signing in, you should land on `/admin` (or the intended admin page if the app supports it).
+
+2. **Authenticated non-admin (e.g. editor or regular user) → unauthorized**  
+   - Sign in as a user whose role is **not** `admin` (e.g. `editor` or normal user, if you have test accounts).  
+   - Visit any admin URL, e.g. `/admin/users`, `/admin/data-quality`.  
+   - You should be **redirected to `/unauthorized`** and must not see admin content.
+
+3. **Authenticated admin → full access**  
+   - Sign in as an **admin** user.  
+   - Open each admin route and confirm the page loads (no redirect):  
+     - `/admin/users`  
+     - `/admin/create-perfume`  
+     - `/admin/create-house`  
+     - `/admin/data-quality`  
+     - `/admin/pending-submission`  
+     - `/admin/audit-stats`  
+     - `/admin/rate-limit-stats`  
+     - `/admin/security-stats`  
+     - `/admin/security-monitor`  
+     - `/admin/performance-admin`  
+   - Confirm no flash of content before redirect (protection happens in the layout before children render).
+
+4. **No token-presence-only bypass**  
+   - With dev tools, ensure there is **no** cookie named `accessToken` (or clear it).  
+   - Visit `/admin/users`.  
+   - You should still be redirected to sign-in (middleware no longer gates on cookie presence; the layout’s `requireAdminSession` does the real check).
+
 ## Phase 5: Performance Improvements
 
 - Load React Query Devtools only in development:
@@ -127,7 +160,7 @@
 - [x] Phase 1 complete
 - [x] Phase 2 complete
 - [ ] Phase 3 complete
-- [ ] Phase 4 complete
+- [x] Phase 4 complete
 - [ ] Phase 5 complete
 - [ ] Phase 6 complete
 - [ ] Validation + rollout complete
