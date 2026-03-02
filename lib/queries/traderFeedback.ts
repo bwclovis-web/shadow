@@ -40,6 +40,7 @@ export interface TraderFeedbackQueryParams {
   traderId: string
   includeComments?: boolean
   viewerId?: string | null
+  signal?: AbortSignal
 }
 
 export const queryKeys = {
@@ -49,11 +50,11 @@ export const queryKeys = {
 } as const
 
 export async function getTraderFeedback(params: TraderFeedbackQueryParams): Promise<TraderFeedbackResponse> {
-  const { traderId, includeComments = true, viewerId } = params
+  const { traderId, includeComments = true, viewerId, signal } = params
 
   const searchParams = new URLSearchParams({
     traderId,
-    includeComments: includeComments ? "true" : "false",
+    includeComments: String(includeComments),
   })
 
   if (viewerId) {
@@ -62,6 +63,7 @@ export async function getTraderFeedback(params: TraderFeedbackQueryParams): Prom
 
   const response = await fetch(`/api/trader-feedback?${searchParams.toString()}`, {
     credentials: "include",
+    signal,
   })
 
   if (!response.ok) {

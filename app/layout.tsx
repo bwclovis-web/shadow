@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 import './globals.css'
 import { Providers } from './providers'
+import { ViewTransitionsWrapper } from './ViewTransitionsWrapper'
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import GlobalNavigation from '@/components/Molecules/GlobalNavigation/GlobalNavigation'
 import MobileNavigation from '@/components/Molecules/MobileNavigation'
@@ -44,12 +45,14 @@ export default async function RootLayout({
   return (
     <html lang={locale} className={`${inter.variable} ${limelight.variable}`}>
       <body className={`${inter.className} bg-noir-black`}>
-        <NextIntlClientProvider messages={messages}>
-          <GlobalNavigation user={user} />
-          <MobileNavigation user={user} />
-          <Providers>{children}</Providers>
-        </NextIntlClientProvider>
-        <div id="modal-portal" />
+        <ViewTransitionsWrapper>
+          <NextIntlClientProvider messages={messages}>
+            <GlobalNavigation user={user} />
+            <MobileNavigation user={user} />
+            <Providers>{children}</Providers>
+          </NextIntlClientProvider>
+          <div id="modal-portal" />
+        </ViewTransitionsWrapper>
       </body>
     </html>
   )

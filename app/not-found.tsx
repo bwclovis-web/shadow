@@ -1,4 +1,4 @@
-import Link from "next/link"
+import { Link } from "next-view-transitions"
 
 const NotFound = () => (
   <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">

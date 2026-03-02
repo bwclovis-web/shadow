@@ -2,8 +2,8 @@
 
 import { type VariantProps } from "class-variance-authority"
 import { type ButtonHTMLAttributes, type LinkHTMLAttributes, type ReactNode, type Ref, type RefObject } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { Link } from "next-view-transitions"
+import { useTransitionRouter } from "next-view-transitions"
 
 import { styleMerge } from "@/utils/styleUtils"
 
@@ -63,7 +63,7 @@ const VooDooLink = ({
   background,
   ...props
 }: LinkProps) => {
-  const router = useRouter()
+  const router = useTransitionRouter()
 
   const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if(props["aria-disabled"]){

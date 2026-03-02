@@ -2,7 +2,7 @@
 
 import { getFormProps, useForm } from "@conform-to/react"
 import { getZodConstraint, parseWithZod } from "@conform-to/zod"
-import Link from "next/link"
+import { Link } from "next-view-transitions"
 import { useRef, useActionState } from "react"
 import { useTranslations } from "next-intl"
 

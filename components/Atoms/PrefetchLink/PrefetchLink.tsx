@@ -1,7 +1,7 @@
 "use client"
 
-import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { Link } from "next-view-transitions"
+import { useTransitionRouter } from "next-view-transitions"
 import type { ComponentProps } from "react"
 
 type NextLinkProps = ComponentProps<typeof Link>
@@ -17,7 +17,7 @@ const getPrefetchPath = (href: NextLinkProps["href"]): string | null => {
 }
 
 const PrefetchLink = (props: NextLinkProps) => {
-  const router = useRouter()
+  const router = useTransitionRouter()
   const path = getPrefetchPath(props.href)
   const { onMouseEnter, ...rest } = props
 

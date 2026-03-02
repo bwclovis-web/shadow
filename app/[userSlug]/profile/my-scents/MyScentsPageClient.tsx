@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react"
 import { useTranslations } from "next-intl"
 import Image from "next/image"
-import Link from "next/link"
+import { Link } from "next-view-transitions"
 import { useParams } from "next/navigation"
 
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"

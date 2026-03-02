@@ -1,7 +1,7 @@
 "use client"
 
 import { type VariantProps } from "class-variance-authority"
-import Link from "next/link"
+import { Link } from "next-view-transitions"
 import {
   type ChangeEvent,
   type HTMLProps,

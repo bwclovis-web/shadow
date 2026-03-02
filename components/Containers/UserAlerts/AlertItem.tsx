@@ -1,4 +1,4 @@
-import Link from "next/link"
+import { Link } from "next-view-transitions"
 import {
   BsBell,
   BsBoxArrowUpRight,
@@ -220,7 +220,7 @@ export const AlertItem = ({
                             index: number) => (
                               <Link
                                 key={trader.userId ?? index}
-                                href={`/trader/${trader.userId}`}
+                                href={`/trader-profile/${trader.userId}`}
                                 className="block text-blue-600 hover:text-blue-800"
                               >
                                 {trader.displayName ??

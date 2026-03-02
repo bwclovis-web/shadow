@@ -63,7 +63,7 @@ export function useDeleteTraderFeedback() {
   return useMutation({
     mutationFn: async (params: DeleteTraderFeedbackParams) => {
       const formData = new FormData()
-      formData.append("_action", "delete")
+      formData.append("_action", "remove")
       formData.append("traderId", params.traderId)
 
       const response = await fetch("/api/trader-feedback", {

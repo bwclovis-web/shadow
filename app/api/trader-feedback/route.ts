@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import {
-  getTraderFeedbackByReviewer,
-  getTraderFeedbackList,
-  getTraderFeedbackSummary,
+  getTraderFeedbackForProfile,
   removeTraderFeedback,
   submitTraderFeedback,
+  getTraderFeedbackSummary,
 } from "@/models/traderFeedback.server"
 import {
   parseFormData,
@@ -22,14 +21,17 @@ export async function GET(request: NextRequest) {
     const includeComments = params.getBoolean("includeComments")
     const viewerId = params.get("viewerId")
 
-    const summary = await getTraderFeedbackSummary(traderId)
-    const comments = includeComments
-      ? await getTraderFeedbackList(traderId, { limit: pagination.limit, offset: pagination.skip })
-      : []
-    const viewerFeedback =
-      viewerId && viewerId !== traderId
-        ? await getTraderFeedbackByReviewer(traderId, viewerId)
-        : null
+    const { summary, comments, viewerFeedback } = await getTraderFeedbackForProfile(
+      traderId,
+      viewerId && viewerId !== traderId ? viewerId : null,
+      {
+        includeList: includeComments,
+        ...(includeComments && {
+          listLimit: pagination.limit,
+          listOffset: pagination.skip,
+        }),
+      }
+    )
 
     return NextResponse.json({ success: true, summary, comments, viewerFeedback })
   } catch (error) {

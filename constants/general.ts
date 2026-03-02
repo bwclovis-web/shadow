@@ -42,7 +42,7 @@ export const ADMIN_ROLE_BADGE_CLASSES: Record<AdminRoleValue, string> = {
 export const TRADER_FEEDBACK_RATING_OPTIONS = [1, 2, 3, 4, 5] as const
 
 // DEPRECATED: Rating labels are now managed via i18n translations
-// See: public/locales/{en,es}/translation.json -> singlePerfume.rating.labels
+// See: messages/{en,es,fr,it}.json -> singlePerfume.rating.labels (next-intl)
 // This constant is kept for reference only and is no longer used in components
 export const RATING_LABELS = {
   longevity: {

@@ -3,6 +3,9 @@ import { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/db"
 import { validateRating } from "@/utils/server/api-route-helpers.server"
 
+/** Default number of feedback items returned in list endpoints */
+const DEFAULT_LIST_LIMIT = 10
+
 export interface TraderFeedbackSubmissionInput {
   traderId: string
   reviewerId: string
@@ -33,6 +36,48 @@ export interface TraderFeedbackListItem {
   }
 }
 
+export interface TraderFeedbackViewerEntry {
+  traderId: string
+  reviewerId: string
+  rating: number
+  comment: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+/** Combined profile data: summary, paginated list, and current viewer's feedback (if any). */
+export interface TraderFeedbackProfileData {
+  summary: TraderFeedbackSummary
+  comments: TraderFeedbackListItem[]
+  viewerFeedback: TraderFeedbackViewerEntry | null
+}
+
+const isMissingFeedbackTableError = (error: unknown): boolean =>
+  error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2021"
+
+type FeedbackWithReviewer = Prisma.TraderFeedbackGetPayload<{
+  include: {
+    reviewer: { select: { id: true; firstName: true; lastName: true; username: true } }
+  }
+}>
+
+function serializeFeedbackEntry(entry: FeedbackWithReviewer): TraderFeedbackListItem {
+  return {
+    id: entry.id,
+    traderId: entry.traderId,
+    reviewerId: entry.reviewerId,
+    rating: entry.rating,
+    comment: entry.comment,
+    createdAt: entry.createdAt.toISOString(),
+    updatedAt: entry.updatedAt.toISOString(),
+    reviewer: entry.reviewer,
+  }
+}
+
+/**
+ * Submit or update feedback for a trader. One review per (trader, reviewer).
+ * Use from API route with auth; validates rating and prevents self-review.
+ */
 export async function submitTraderFeedback(input: TraderFeedbackSubmissionInput) {
   const { traderId, reviewerId, rating, comment } = input
 
@@ -45,10 +90,7 @@ export async function submitTraderFeedback(input: TraderFeedbackSubmissionInput)
   try {
     return await prisma.traderFeedback.upsert({
       where: {
-        traderId_reviewerId: {
-          traderId,
-          reviewerId,
-        },
+        traderId_reviewerId: { traderId, reviewerId },
       },
       create: {
         traderId,
@@ -69,18 +111,16 @@ export async function submitTraderFeedback(input: TraderFeedbackSubmissionInput)
   }
 }
 
+/**
+ * Remove the current user's feedback for a trader. Idempotent: returns null if no row.
+ */
 export async function removeTraderFeedback(
   traderId: string,
   reviewerId: string
 ) {
   try {
     return await prisma.traderFeedback.delete({
-      where: {
-        traderId_reviewerId: {
-          traderId,
-          reviewerId,
-        },
-      },
+      where: { traderId_reviewerId: { traderId, reviewerId } },
     })
   } catch (error: unknown) {
     if (
@@ -93,6 +133,9 @@ export async function removeTraderFeedback(
   }
 }
 
+/**
+ * Aggregate summary for a trader: average rating, total reviews, badge eligibility.
+ */
 export async function getTraderFeedbackSummary(traderId: string): Promise<TraderFeedbackSummary> {
   try {
     const aggregate = await prisma.traderFeedback.aggregate({
@@ -102,7 +145,6 @@ export async function getTraderFeedbackSummary(traderId: string): Promise<Trader
     })
 
     const totalReviews = aggregate._count._all
-
     return {
       traderId,
       averageRating: aggregate._avg.rating,
@@ -122,11 +164,14 @@ export async function getTraderFeedbackSummary(traderId: string): Promise<Trader
   }
 }
 
+/**
+ * Paginated list of feedback for a trader (newest first), with reviewer info.
+ */
 export async function getTraderFeedbackList(
   traderId: string,
   options: { limit?: number; offset?: number } = {}
 ): Promise<TraderFeedbackListItem[]> {
-  const { limit = 10, offset = 0 } = options
+  const { limit = DEFAULT_LIST_LIMIT, offset = 0 } = options
 
   try {
     const feedback = await prisma.traderFeedback.findMany({
@@ -145,17 +190,7 @@ export async function getTraderFeedbackList(
         },
       },
     })
-
-    return feedback.map(entry => ({
-      id: entry.id,
-      traderId: entry.traderId,
-      reviewerId: entry.reviewerId,
-      rating: entry.rating,
-      comment: entry.comment,
-      createdAt: entry.createdAt.toISOString(),
-      updatedAt: entry.updatedAt.toISOString(),
-      reviewer: entry.reviewer,
-    }))
+    return feedback.map(serializeFeedbackEntry)
   } catch (error) {
     if (isMissingFeedbackTableError(error)) {
       return []
@@ -164,18 +199,16 @@ export async function getTraderFeedbackList(
   }
 }
 
+/**
+ * Fetch a single feedback row for (trader, reviewer), or null if none.
+ */
 export async function getTraderFeedbackByReviewer(
   traderId: string,
   reviewerId: string
 ) {
   try {
     return await prisma.traderFeedback.findUnique({
-      where: {
-        traderId_reviewerId: {
-          traderId,
-          reviewerId,
-        },
-      },
+      where: { traderId_reviewerId: { traderId, reviewerId } },
     })
   } catch (error) {
     if (isMissingFeedbackTableError(error)) {
@@ -185,7 +218,42 @@ export async function getTraderFeedbackByReviewer(
   }
 }
 
-const isMissingFeedbackTableError = (error: unknown): boolean =>
-  error instanceof Prisma.PrismaClientKnownRequestError &&
-  error.code === "P2021"
+/**
+ * Load summary, paginated comments, and viewer's own feedback in one parallel round-trip.
+ * Use in RSC (trader profile page) or API GET to avoid sequential requests.
+ * Set includeList: false to skip the comments query when only summary/viewer feedback is needed.
+ */
+export async function getTraderFeedbackForProfile(
+  traderId: string,
+  viewerId: string | null,
+  options: { listLimit?: number; listOffset?: number; includeList?: boolean } = {}
+): Promise<TraderFeedbackProfileData> {
+  const {
+    listLimit = DEFAULT_LIST_LIMIT,
+    listOffset = 0,
+    includeList = true,
+  } = options
 
+  const [summary, comments, viewerRecord] = await Promise.all([
+    getTraderFeedbackSummary(traderId),
+    includeList
+      ? getTraderFeedbackList(traderId, { limit: listLimit, offset: listOffset })
+      : Promise.resolve([]),
+    viewerId && viewerId !== traderId
+      ? getTraderFeedbackByReviewer(traderId, viewerId)
+      : Promise.resolve(null),
+  ])
+
+  const viewerFeedback: TraderFeedbackViewerEntry | null = viewerRecord
+    ? {
+        traderId: viewerRecord.traderId,
+        reviewerId: viewerRecord.reviewerId,
+        rating: viewerRecord.rating,
+        comment: viewerRecord.comment,
+        createdAt: viewerRecord.createdAt.toISOString(),
+        updatedAt: viewerRecord.updatedAt.toISOString(),
+      }
+    : null
+
+  return { summary, comments, viewerFeedback }
+}

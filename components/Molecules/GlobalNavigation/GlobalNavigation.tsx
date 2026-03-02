@@ -116,10 +116,10 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
             src="/images/navlogo.webp"
             alt={logoText}
             width={160}
-            height={25}
+            height={15}
             priority={true}
             quality={90}
-            className="w-40 h-25"
+            className="w-30 h-15"
           />
         </PrefetchLink>
         <ul className="flex gap-4 items-center tracking-wide max-w-max">

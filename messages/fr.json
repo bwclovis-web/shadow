@@ -224,10 +224,10 @@
     "title": "Contacter le vendeur",
     "itemTitle": "Demande d'information",
     "heading": "Contacter le vendeur",
-    "subheading": "Contacter {{traderName}} pour un échange.",
-    "itemSubheading": "Contacter le vendeur au sujet de {{perfumeName}}{{perfumeHouse}}.",
+    "subheading": "Contacter {traderName} pour un échange.",
+    "itemSubheading": "Contacter le vendeur au sujet de {perfumeName}{perfumeHouse}.",
     "itemSubject": "Demande concernant {{perfumeName}}{{perfumeHouse}}",
-    "itemMessageTemplate": "Je suis intéressé par {{perfumeName}}{{perfumeHouse}} ({{amount}} ml).",
+    "itemMessageTemplate": "Je suis intéressé par {perfumeName}{perfumeHouse} ({amount} ml).",
     "button": "Contacter le vendeur",
     "inquireButton": "Demander des infos sur cet article",
     "subjectLabel": "Sujet (optionnel)",
@@ -803,14 +803,14 @@
   "traderProfile": {
     "meta": {
       "title": "Profil vendeur - Shadow and Sillage",
-      "description": "Profil de {{traderName}}"
+      "description": "Profil de {traderName}"
     },
-    "heading": "Vendeur {{traderName}}",
-    "subheading": "Profil de {{traderName}}",
+    "heading": "Vendeur {traderName}",
+    "subheading": "Profil de {traderName}",
     "itemsAvailable": "Articles à échanger",
-    "itemsAvailableSummary": "{{traderName}} propose les articles suivants :",
+    "itemsAvailableSummary": "{traderName} propose les articles suivants :",
     "itemsSearchingFor": "Recherche",
-    "itemsSummary": "{{traderName}} recherche les parfums suivants :",
+    "itemsSummary": "{traderName} recherche les parfums suivants :",
     "noItemsAvailable": "Aucun article disponible.",
     "noItemsSearchingFor": "Aucune recherche.",
     "amount": "Quantité disponible",
@@ -828,8 +828,7 @@
     "feedback": {
       "title": "Avis sur le vendeur",
       "subtitle": "Construisez la confiance avec les avis de la communauté.",
-      "reviewCount_one": "{{count}} avis",
-      "reviewCount_other": "{{count}} avis",
+      "reviewCount": "{count, plural, one {# avis} other {# avis}}",
       "badgeLabel": "Vendeur de confiance",
       "noRatings": "Pas encore d'avis",
       "loading": "Chargement des avis...",

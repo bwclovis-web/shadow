@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import Link from "next/link"
+import { Link } from "next-view-transitions"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
@@ -180,7 +180,7 @@ const TheExchangeClient = ({
                         {perfume.userPerfume.map((userPerfume) => (
                           <div key={userPerfume.id} className="mb-1">
                             <Link
-                              href={`/trader/${userPerfume.userId}`}
+                              href={`/trader-profile/${userPerfume.userId}`}
                               className="text-sm font-semibold text-blue-300 hover:text-noir-blue underline"
                             >
                               {getUserDisplayName(userPerfume.user)}:

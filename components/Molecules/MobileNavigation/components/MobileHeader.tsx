@@ -1,7 +1,7 @@
 "use client"
 
 import { type RefObject } from "react"
-import Link from "next/link"
+import { Link } from "next-view-transitions"
 import { AiFillHome } from "react-icons/ai"
 import { FaBars } from "react-icons/fa6"
 

@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import { Link } from "next-view-transitions"
 import { FaUser } from "react-icons/fa6"
 
 import { SIGN_IN } from "@/constants/routes"

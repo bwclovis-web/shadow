@@ -224,10 +224,10 @@
     "title": "Contatta il venditore",
     "itemTitle": "Richiedi informazioni",
     "heading": "Contatta il venditore",
-    "subheading": "Contatta {{traderName}} per uno scambio.",
+    "subheading": "Contatta {traderName} per uno scambio.",
     "itemSubheading": "Contatta il venditore riguardo {{perfumeName}}{{perfumeHouse}}.",
-    "itemSubject": "Richiesta su {{perfumeName}}{{perfumeHouse}}",
-    "itemMessageTemplate": "Sono interessato a {{perfumeName}}{{perfumeHouse}} ({{amount}} ml).",
+    "itemSubject": "Richiesta su {perfumeName}{perfumeHouse}",
+    "itemMessageTemplate": "Sono interessato a {perfumeName}{perfumeHouse} ({amount} ml).",
     "button": "Contatta il venditore",
     "inquireButton": "Richiedi info su questo articolo",
     "subjectLabel": "Oggetto (opzionale)",
@@ -803,14 +803,14 @@
   "traderProfile": {
     "meta": {
       "title": "Profilo venditore - Shadow and Sillage",
-      "description": "Profilo di {{traderName}}"
+      "description": "Profilo di {traderName}"
     },
-    "heading": "Venditore {{traderName}}",
-    "subheading": "Profilo di {{traderName}}",
+    "heading": "Venditore {traderName}",
+    "subheading": "Profilo di {traderName}",
     "itemsAvailable": "Articoli da scambiare",
-    "itemsAvailableSummary": "{{traderName}} ha questi articoli da scambiare:",
+    "itemsAvailableSummary": "{traderName} ha questi articoli da scambiare:",
     "itemsSearchingFor": "È in cerca di",
-    "itemsSummary": "{{traderName}} cerca i seguenti profumi:",
+    "itemsSummary": "{traderName} cerca i seguenti profumi:",
     "noItemsAvailable": "Nessun articolo disponibile.",
     "noItemsSearchingFor": "Nessuna ricerca.",
     "amount": "Quantità disponibile",
@@ -828,8 +828,7 @@
     "feedback": {
       "title": "Feedback venditore",
       "subtitle": "Costruisci fiducia con valutazioni e commenti.",
-      "reviewCount_one": "{{count}} recensione",
-      "reviewCount_other": "{{count}} recensioni",
+      "reviewCount": "{count, plural, one {# recensione} other {# recensioni}}",
       "badgeLabel": "Venditore affidabile",
       "noRatings": "Nessuna valutazione",
       "loading": "Caricamento feedback...",

@@ -17,22 +17,28 @@ type SubmitParams = SubmitTraderFeedbackParams & {
   viewerId?: string | null
 }
 
+const STALE_TIME_MS = 60 * 1000
+
 export const useTraderFeedback = (
   traderId: string,
   viewerId?: string | null,
   initialData?: TraderFeedbackResponse
-) => useQuery({
-  queryKey: queryKeys.traderFeedback.detail(traderId, viewerId),
-  queryFn: () => getTraderFeedback({
-    traderId,
-    viewerId,
-    includeComments: true,
-  }),
-  enabled: !!traderId,
-  staleTime: 60 * 1000,
-  initialData,
-  initialDataUpdatedAt: initialData ? Date.now() : undefined,
-})
+) =>
+  useQuery({
+    queryKey: queryKeys.traderFeedback.detail(traderId, viewerId),
+    queryFn: ({ signal }) =>
+      getTraderFeedback({
+        traderId,
+        viewerId,
+        includeComments: true,
+        signal,
+      }),
+    enabled: !!traderId,
+    staleTime: STALE_TIME_MS,
+    gcTime: STALE_TIME_MS * 2,
+    initialData,
+    initialDataUpdatedAt: initialData ? Date.now() : undefined,
+  })
 
 export const useTraderFeedbackMutations = () => {
   const submitMutation = useSubmitTraderFeedback()

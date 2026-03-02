@@ -1,13 +1,17 @@
-import { type FormEvent, useEffect, useMemo, useState } from "react"
+import { type FormEvent, memo, useCallback, useEffect, useMemo, useState } from "react"
 import { useTranslations } from "next-intl"
 import { FaStar } from "react-icons/fa"
 import { Button } from "~/components/Atoms/Button"
-
 import Select from "~/components/Atoms/Select"
-import { useTraderFeedback, useTraderFeedbackMutations } from "~/hooks/useTraderFeedback"
-import type { TraderFeedbackResponse } from "~/lib/queries/traderFeedback"
-import { TRADER_FEEDBACK_RATING_OPTIONS } from "~/utils/constants"
-import { formatUserName } from "~/utils/formatters"
+import { useTraderFeedback, useTraderFeedbackMutations } from "@/hooks/useTraderFeedback"
+import type {
+  TraderFeedbackComment,
+  TraderFeedbackResponse,
+} from "@/lib/queries/traderFeedback"
+import { TRADER_FEEDBACK_RATING_OPTIONS } from "@/utils/constants"
+import { formatUserName } from "@/utils/formatters"
+
+const RATING_OPTIONS_REVERSED = [...TRADER_FEEDBACK_RATING_OPTIONS].reverse()
 
 type TraderFeedbackSectionProps = {
   traderId: string
@@ -15,12 +19,65 @@ type TraderFeedbackSectionProps = {
   initialData?: TraderFeedbackResponse
 }
 
-// eslint-disable-next-line complexity
-const TraderFeedbackSection = ({
+function StarDisplay({ value }: { value: number }) {
+  const normalizedValue = Math.max(0, Math.min(5, value || 0))
+  return (
+    <>
+      {RATING_OPTIONS_REVERSED.map((option) => {
+        const isFilled = normalizedValue >= option - 0.25
+        const isHalf = !isFilled && normalizedValue >= option - 0.75
+        return (
+          <FaStar
+            key={option}
+            className={`h-5 w-5 ${
+              isFilled
+                ? "text-noir-gold"
+                : isHalf
+                  ? "text-noir-gold-300"
+                  : "text-noir-gold-800"
+            }`}
+          />
+        )
+      })}
+    </>
+  )
+}
+
+const FeedbackCommentItem = memo(function FeedbackCommentItem({
+  commentEntry,
+  anonymousLabel,
+}: {
+  commentEntry: TraderFeedbackComment
+  anonymousLabel: string
+}) {
+  const displayName =
+    formatUserName(commentEntry.reviewer) || anonymousLabel
+  const dateLabel = new Date(commentEntry.createdAt).toLocaleDateString("en-US")
+
+  return (
+    <li className="border border-noir-gold/40 rounded-lg p-4 bg-noir-black/60">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="font-medium text-noir-gold">{displayName}</div>
+        <div className="flex items-center gap-2 text-noir-gold-500 text-sm">
+          <StarDisplay value={commentEntry.rating} />
+          <span>{commentEntry.rating}/5</span>
+          <span className="text-noir-gold-500 text-xs">{dateLabel}</span>
+        </div>
+      </div>
+      {commentEntry.comment && (
+        <p className="mt-2 text-noir-gold-100 text-sm whitespace-pre-line">
+          {commentEntry.comment}
+        </p>
+      )}
+    </li>
+  )
+})
+
+const TraderFeedbackSection = memo(function TraderFeedbackSection({
   traderId,
   viewerId,
   initialData,
-}: TraderFeedbackSectionProps) => {
+}: TraderFeedbackSectionProps) {
   const t = useTranslations("traderProfile.feedback")
 
   const { data, isLoading, isError, error } = useTraderFeedback(
@@ -52,9 +109,9 @@ const TraderFeedbackSection = ({
 
   useEffect(() => {
     if (submitMutation.isError) {
-      setFormError(submitMutation.error?.message || t("error"))
+      setFormError(submitMutation.error?.message ?? t("error"))
     } else if (deleteMutation.isError) {
-      setFormError(deleteMutation.error?.message || t("error"))
+      setFormError(deleteMutation.error?.message ?? t("error"))
     } else {
       setFormError(null)
     }
@@ -71,67 +128,64 @@ const TraderFeedbackSection = ({
     (data?.summary?.averageRating ?? null) !== null && totalReviews > 0
 
   const averageDisplay = useMemo(() => {
-    if (!hasRatings) {
-      return t("noRatings")
-    }
+    if (!hasRatings) return t("noRatings")
     return Number(data?.summary?.averageRating ?? 0).toFixed(1)
   }, [data?.summary?.averageRating, hasRatings, t])
 
-  const isViewerTrader = viewerId && viewerId === traderId
+  const isViewerTrader = Boolean(viewerId && viewerId === traderId)
   const hasViewerFeedback = Boolean(data?.viewerFeedback)
 
-  const ratingSelectOptions = useMemo<{ id: string | number; label: string; name: string }[]>(
+  const ratingSelectOptions = useMemo(
     () => [
       {
         id: 0,
         label: t("selectRating"),
         name: "select-rating",
       },
-      ...Array.from(TRADER_FEEDBACK_RATING_OPTIONS)
-        .reverse()
-        .map((option: number) => ({
-          id: option,
-          label: option.toString(),
-          name: option.toString(),
-        })),
+      ...RATING_OPTIONS_REVERSED.map((option) => ({
+        id: option,
+        label: String(option),
+        name: String(option),
+      })),
     ],
     [t]
   )
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (!rating) {
-      setFormError(t("validation.ratingRequired"))
-      return
-    }
-    submitFeedback({
-      traderId,
-      rating,
-      comment: comment.trim(),
-      viewerId,
-    })
-  }
+  const handleSubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault()
+      if (!rating) {
+        setFormError(t("validation.ratingRequired"))
+        return
+      }
+      submitFeedback({
+        traderId,
+        rating,
+        comment: comment.trim(),
+        viewerId,
+      })
+    },
+    [rating, comment, traderId, viewerId, submitFeedback, t]
+  )
 
-  const handleDelete = () => {
-    deleteFeedback({
-      traderId,
-      viewerId,
-    })
-  }
+  const handleDelete = useCallback(() => {
+    deleteFeedback({ traderId, viewerId })
+  }, [traderId, viewerId, deleteFeedback])
+
+  const anonymousLabel = t("anonymousReviewer")
+  const averageRating = data?.summary?.averageRating ?? 0
 
   return (
     <section className="noir-border relative w-full p-4 space-y-6 bg-noir-black/40">
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2>{t("title")}</h2>
-          <p className="text-noir-gold-100">
-            {t("subtitle")}
-          </p>
+          <p className="text-noir-gold-100">{t("subtitle")}</p>
         </div>
         <div className="flex items-center gap-3">
           {hasRatings ? (
             <div className="flex items-center gap-1 text-noir-gold">
-              {renderStars(data?.summary?.averageRating ?? 0)}
+              <StarDisplay value={averageRating} />
               <span className="text-2xl font-bold">{averageDisplay}</span>
             </div>
           ) : (
@@ -149,9 +203,7 @@ const TraderFeedbackSection = ({
       </header>
 
       {isLoading && (
-        <p className="text-noir-gold-500 text-sm">
-          {t("loading")}
-        </p>
+        <p className="text-noir-gold-500 text-sm">{t("loading")}</p>
       )}
 
       {isError && (
@@ -165,36 +217,16 @@ const TraderFeedbackSection = ({
           <div className="space-y-4">
             {data?.comments && data.comments.length > 0 ? (
               <ul className="space-y-3">
-                {data.comments.map(commentEntry => (
-                  <li
+                {data.comments.map((commentEntry) => (
+                  <FeedbackCommentItem
                     key={commentEntry.id}
-                    className="border border-noir-gold/40 rounded-lg p-4 bg-noir-black/60"
-                  >
-                    <div className="flex items-center justify-between gap-4 flex-wrap">
-                      <div className="font-medium text-noir-gold">
-                        {formatUserName(commentEntry.reviewer) ||
-                          t("anonymousReviewer")}
-                      </div>
-                      <div className="flex items-center gap-2 text-noir-gold-500 text-sm">
-                        {renderStars(commentEntry.rating)}
-                        <span>{commentEntry.rating}/5</span>
-                        <span className="text-noir-gold-500 text-xs">
-                          {new Date(commentEntry.createdAt).toLocaleDateString("en-US")}
-                        </span>
-                      </div>
-                    </div>
-                    {commentEntry.comment && (
-                      <p className="mt-2 text-noir-gold-100 text-sm whitespace-pre-line">
-                        {commentEntry.comment}
-                      </p>
-                    )}
-                  </li>
+                    commentEntry={commentEntry}
+                    anonymousLabel={anonymousLabel}
+                  />
                 ))}
               </ul>
             ) : (
-              <p className="text-noir-gold-500 text-sm">
-                {t("noComments")}
-              </p>
+              <p className="text-noir-gold-500 text-sm">{t("noComments")}</p>
             )}
           </div>
 
@@ -207,7 +239,10 @@ const TraderFeedbackSection = ({
               ) : (
                 <form className="space-y-4" onSubmit={handleSubmit}>
                   <div>
-                    <label htmlFor="feedback-rating" className="block text-noir-gold-100 text-sm font-medium mb-2">
+                    <label
+                      htmlFor="feedback-rating"
+                      className="block text-noir-gold-100 text-sm font-medium mb-2"
+                    >
                       {t("ratingLabel")}
                     </label>
                     <div className="flex items-center gap-3">
@@ -217,8 +252,10 @@ const TraderFeedbackSection = ({
                         ariaLabel={t("ratingLabel")}
                         value={rating}
                         disabled={isMutating}
-                        action={event => setRating(Number(event.target.value))}
-                        className="!w-auto"
+                        action={(event) =>
+                          setRating(Number(event.target.value))
+                        }
+                        className="w-auto!"
                       />
                       <span className="text-noir-gold text-sm">
                         {t("ratingHint")}
@@ -227,7 +264,10 @@ const TraderFeedbackSection = ({
                   </div>
 
                   <div>
-                    <label htmlFor="feedback-comment" className="block text-noir-gold-100 text-sm font-medium mb-2">
+                    <label
+                      htmlFor="feedback-comment"
+                      className="block text-noir-gold-100 text-sm font-medium mb-2"
+                    >
                       {t("commentLabel")}
                     </label>
                     <textarea
@@ -236,7 +276,7 @@ const TraderFeedbackSection = ({
                       className="w-full min-h-[120px] bg-noir-black border border-noir-gold/40 text-noir-gold-100 px-3 py-2 rounded"
                       value={comment}
                       disabled={isMutating}
-                      onChange={event => setComment(event.target.value)}
+                      onChange={(event) => setComment(event.target.value)}
                       maxLength={1000}
                       placeholder={t("commentPlaceholder")}
                     />
@@ -273,38 +313,13 @@ const TraderFeedbackSection = ({
                 </form>
               )
             ) : (
-              <p className="text-noir-gold-500 text-sm">
-                {t("loginPrompt")}
-              </p>
+              <p className="text-noir-gold-500 text-sm">{t("loginPrompt")}</p>
             )}
           </div>
         </>
       )}
     </section>
   )
-}
-
-function renderStars(value: number) {
-  const normalizedValue = Math.max(0, Math.min(5, value || 0))
-  return Array.from(TRADER_FEEDBACK_RATING_OPTIONS)
-    .map((option: number) => {
-      const isFilled = normalizedValue >= option - 0.25
-      const isHalf = !isFilled && normalizedValue >= option - 0.75
-      return (
-        <FaStar
-          key={option}
-          className={`h-5 w-5 ${
-            isFilled
-              ? "text-noir-gold"
-              : isHalf
-              ? "text-noir-gold-300"
-              : "text-noir-gold-800"
-          }`}
-        />
-      )
-    })
-    .reverse()
-}
+})
 
 export default TraderFeedbackSection
-

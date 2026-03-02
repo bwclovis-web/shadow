@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import { Link } from "next-view-transitions"
 import { useTranslations } from "next-intl"
 import { AiFillHome } from "react-icons/ai"
 import { FaMagnifyingGlass } from "react-icons/fa6"
