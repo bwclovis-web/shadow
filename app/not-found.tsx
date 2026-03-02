@@ -1,10 +1,12 @@
-import { getTranslations } from "next-intl/server"
+"use client"
+
+import { useTranslations } from "next-intl"
 import { Link } from "next-view-transitions"
 
 import TitleBanner from "@/components/Organisms/TitleBanner"
 
-const NotFound = async () => {
-  const t = await getTranslations("404")
+const NotFound = () => {
+  const t = useTranslations("404")
 
   return (
     <section>
