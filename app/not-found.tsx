@@ -1,19 +1,31 @@
+import { getTranslations } from "next-intl/server"
 import { Link } from "next-view-transitions"
 
-const NotFound = () => (
-  <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
-    <h1 className="text-8xl font-bold text-noir-gold mb-4">404</h1>
-    <h2 className="text-2xl text-noir-gold-100 mb-4">Page not found</h2>
-    <p className="text-noir-gold-100/70 text-lg mb-8 max-w-md">
-      The page you&apos;re looking for doesn&apos;t exist or has been moved.
-    </p>
-    <Link
-      href="/"
-      className="px-6 py-3 bg-noir-gold text-noir-black font-semibold rounded hover:bg-noir-gold/80 transition-colors"
-    >
-      Back to home
-    </Link>
-  </div>
-)
+import TitleBanner from "@/components/Organisms/TitleBanner"
+
+const NotFound = async () => {
+  const t = await getTranslations("404")
+
+  return (
+    <section>
+      <TitleBanner
+        image="/images/404.png"
+        heading={t("heading")}
+        subheading={t("subheading")}
+      />
+      <div className="inner-container py-12 flex flex-col items-center justify-center px-4 text-center">
+        <p className="text-noir-gold-100/70 text-lg mb-8 max-w-md">
+          {t("subheading")}
+        </p>
+        <Link
+          href="/"
+          className="px-6 py-3 bg-noir-gold text-noir-black font-semibold rounded hover:bg-noir-gold/80 transition-colors"
+        >
+          {t("homeLink")}
+        </Link>
+      </div>
+    </section>
+  )
+}
 
 export default NotFound

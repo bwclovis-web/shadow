@@ -14,7 +14,7 @@ import { useMediaQuery } from "@/hooks/useMediaQuery"
 import { useTrader } from "@/hooks/useTrader"
 import type { TraderResponse } from "@/lib/queries/user"
 import type { TraderFeedbackResponse } from "@/lib/queries/traderFeedback"
-import type { SafeUser } from "@/types"
+import type { SafeUser, UserPerfumeI } from "@/types"
 import { getTraderDisplayName } from "@/utils/user"
 
 const BANNER_IMAGE = "/images/trade.webp"
@@ -81,10 +81,10 @@ export default function TraderProfileClient({
           >
             {trader.UserPerfume?.length ? (
               <ul className="mt-6">
-                {trader.UserPerfume.map((userPerfume: { id: string }) => (
+                {trader.UserPerfume.map((up) => (
                   <ItemsToTrade
-                    key={userPerfume.id}
-                    userPerfume={userPerfume}
+                    key={up.id}
+                    userPerfume={{ ...up, userId: trader.id } as UserPerfumeI}
                     trader={trader}
                     viewerId={viewer?.id}
                   />
@@ -108,9 +108,19 @@ export default function TraderProfileClient({
             defaultOpen={detailsOpenByDefault}
           >
             <ItemsSearchingFor
-              wishlistItems={(trader.UserPerfumeWishlist ?? []).map((item: { user?: unknown }) => ({
-                ...item,
-                user: trader,
+              wishlistItems={(trader.UserPerfumeWishlist ?? []).map((item) => ({
+                id: item.id,
+                perfumeId: item.perfumeId,
+                isPublic: item.isPublic,
+                createdAt: item.createdAt,
+                user: {
+                  id: trader.id,
+                  firstName: trader.firstName ?? "",
+                  lastName: trader.lastName ?? "",
+                  username: trader.username ?? "",
+                  email: trader.email,
+                },
+                perfume: item.perfume,
               }))}
             />
           </VooDooDetails>

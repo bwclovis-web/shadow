@@ -6,6 +6,7 @@ import { notFound } from "next/navigation"
 
 import type { TraderResponse } from "@/lib/queries/user"
 import type { TraderFeedbackResponse } from "@/lib/queries/traderFeedback"
+import type { SafeUser } from "@/types"
 import { getTraderFeedbackForProfile } from "@/models/traderFeedback.server"
 import { getTraderById } from "@/models/user.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
@@ -63,7 +64,7 @@ export default async function TraderProfilePage({
   return (
     <TraderProfileClient
       initialTrader={trader as TraderResponse}
-      viewer={viewer}
+      viewer={viewer as SafeUser | null}
       feedback={feedback}
     />
   )
