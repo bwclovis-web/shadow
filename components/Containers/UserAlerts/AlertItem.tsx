@@ -19,7 +19,7 @@ interface AlertItemProps {
 }
 
 const getAlertIconClassName = (alertType: UserAlert["alertType"]) => {
-  switch (alertType) {
+  switch (alertType as string) {
     case "wishlist_available":
       return "text-green-600"
     case "decant_interest":
@@ -34,7 +34,7 @@ const getAlertIconClassName = (alertType: UserAlert["alertType"]) => {
 }
 
 const getAlertTypeLabel = (alertType: UserAlert["alertType"]) => {
-  switch (alertType) {
+  switch (alertType as string) {
     case "wishlist_available":
       return "Wishlist Alert"
     case "decant_interest":
@@ -65,15 +65,15 @@ const formatTimeAgo = (date: Date | string) => {
 const perfumeLink = (slug: string) => `/perfume/${slug}`
 const messagesLink = (otherUserId: string) => `/messages/${otherUserId}`
 const alertLink = (alert: UserAlert) => {
-  if (alert.alertType === "pending_submission_approval") return "/admin/pending-submission"
-  if (alert.alertType === "new_trader_message" && alert.metadata?.senderId)
+  if ((alert.alertType as string) === "pending_submission_approval") return "/admin/pending-submission"
+  if ((alert.alertType as string) === "new_trader_message" && alert.metadata?.senderId)
     return messagesLink(alert.metadata.senderId as string)
   if (alert.Perfume) return perfumeLink(alert.Perfume.slug)
   return "/messages"
 }
 const linkText = (alertType: UserAlert["alertType"]) => {
-  if (alertType === "pending_submission_approval") return "Review submission"
-  if (alertType === "new_trader_message") return "View message"
+  if ((alertType as string) === "pending_submission_approval") return "Review submission"
+  if ((alertType as string) === "new_trader_message") return "View message"
   return "View perfume"
 }
 
