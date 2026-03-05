@@ -10,7 +10,7 @@ const generateCsrfToken = (): string => {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Admin routes are protected server-side in app/admin/layout.tsx via requireAdminSession.
   // We do not check tokens here (token-presence-only is weak); auth is enforced in the layout.
 
