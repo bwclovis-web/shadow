@@ -213,20 +213,25 @@ export const AlertItem = ({
 
               {alert.metadata && (
                 <div className="mt-3 text-sm">
-                  {alert.alertType === "wishlist_available" &&
-                    alert.metadata.availableTraders && (
+                  {alert.alertType === "wishlist_available" && (() => {
+                    const traders = (alert.metadata as { availableTraders?: Array<{ userId: string; displayName?: string; email?: string }> })
+                      .availableTraders
+                    if (!traders?.length) return null
+                    return (
                       <div>
                         <span className="font-medium text-gray-700">
                           Available from:
                         </span>
                         <div className="mt-1 space-y-1">
-                          {alert.metadata.availableTraders.map(
-                            (trader: {
-                              userId: string
-                              displayName?: string
-                              email?: string
-                            },
-                            index: number) => (
+                          {traders.map(
+                            (
+                              trader: {
+                                userId: string
+                                displayName?: string
+                                email?: string
+                              },
+                              index: number
+                            ) => (
                               <Link
                                 key={trader.userId ?? index}
                                 href={`/trader-profile/${trader.userId}`}
@@ -240,7 +245,8 @@ export const AlertItem = ({
                           )}
                         </div>
                       </div>
-                    )}
+                    )
+                  })()}
 
                   {alert.alertType === "decant_interest" && (
                     <div>
@@ -248,8 +254,10 @@ export const AlertItem = ({
                         Interested user:
                       </span>
                       <span className="ml-2 text-blue-600">
-                        {alert.metadata?.interestedUserName ??
-                          alert.metadata?.interestedUserEmail ??
+                        {(alert.metadata as { interestedUserName?: string; interestedUserEmail?: string })
+                          ?.interestedUserName ??
+                          (alert.metadata as { interestedUserEmail?: string })
+                            ?.interestedUserEmail ??
                           "Unknown User"}
                       </span>
                     </div>

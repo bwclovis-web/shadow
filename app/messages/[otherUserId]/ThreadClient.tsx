@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import Link from "next-view-transitions"
+import { Link } from "next-view-transitions"
 import { useState } from "react"
 
 import ContactTraderForm from "@/components/Containers/Forms/ContactTraderForm"

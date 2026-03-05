@@ -61,9 +61,17 @@ export default function MessagesClient({
                   </div>
                   <time
                     className="text-xs text-gray-400 shrink-0"
-                    dateTime={conv.lastMessageAt.toISOString()}
+                    dateTime={
+                      typeof conv.lastMessageAt === "string"
+                        ? conv.lastMessageAt
+                        : conv.lastMessageAt.toISOString()
+                    }
                   >
-                    {formatRelative(conv.lastMessageAt)}
+                    {formatRelative(
+                      typeof conv.lastMessageAt === "string"
+                        ? new Date(conv.lastMessageAt)
+                        : conv.lastMessageAt
+                    )}
                   </time>
                 </Link>
               </li>
@@ -75,7 +83,7 @@ export default function MessagesClient({
   )
 }
 
-function formatRelative(date: Date): string {
+function formatRelative(date: Date | string): string {
   const now = new Date()
   const d = typeof date === "string" ? new Date(date) : date
   const diffMs = now.getTime() - d.getTime()

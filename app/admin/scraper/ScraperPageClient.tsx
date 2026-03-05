@@ -87,6 +87,39 @@ export function ScraperPageClient() {
     return () => clearInterval(interval)
   }, [scraping])
 
+  // Warn when leaving the page while scraper is running (tab close, refresh, or navigate away)
+  useEffect(() => {
+    if (!scraping) return
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+    }
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      const anchor = target.closest("a[href]") as HTMLAnchorElement | null
+      if (!anchor || anchor.target === "_blank" || !anchor.href) return
+      try {
+        const url = new URL(anchor.href)
+        if (url.origin === window.location.origin && url.pathname !== window.location.pathname) {
+          const leave = window.confirm(
+            "Scraper is still running. If you leave this page you will lose the results. Leave anyway?",
+          )
+          if (!leave) {
+            e.preventDefault()
+            e.stopPropagation()
+          }
+        }
+      } catch {
+        // ignore invalid URLs
+      }
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    document.addEventListener("click", handleClick, true)
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+      document.removeEventListener("click", handleClick, true)
+    }
+  }, [scraping])
+
   // -- step 2 state (import + R2) --
   const [uploadImagesToR2, setUploadImagesToR2] = useState(true)
   const [importing, setImporting] = useState(false)
@@ -423,7 +456,7 @@ export function ScraperPageClient() {
 
       {/* Running indicator */}
       {scraping && (
-        <div className="mt-8 rounded-lg border border-border p-6 text-center text-sm text-muted-foreground">
+        <div className="mt-8 rounded-lg border border-amber-500/50 bg-amber-500/5 p-6 text-center text-sm text-muted-foreground">
           <p className="animate-pulse font-medium">
             Scraper is running — this may take several minutes for large houses…
           </p>
@@ -434,6 +467,10 @@ export function ScraperPageClient() {
           <p className="mt-2 text-xs">
             The headless browser visits each product page; LangGraph then extracts notes from every
             description.
+          </p>
+          <p className="mt-3 text-xs font-medium text-amber-600 dark:text-amber-400">
+            Do not close this tab or navigate away — you will lose the results. Stay on this page
+            until the run completes.
           </p>
         </div>
       )}
