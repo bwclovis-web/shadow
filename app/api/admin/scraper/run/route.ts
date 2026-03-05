@@ -30,7 +30,12 @@ import { requireAdminOrEditorApi } from "@/utils/server/requireAdminOrEditorApi.
 // Helpers
 // ---------------------------------------------------------------------------
 
-const SCRAPER_TIMEOUT_MS = 10 * 60 * 1000 // 10 minutes
+/** Scraper timeout: env SCRAPER_TIMEOUT_MS (ms) or default 30 minutes. */
+const SCRAPER_TIMEOUT_MS =
+  typeof process.env.SCRAPER_TIMEOUT_MS === "string" &&
+  /^\d+$/.test(process.env.SCRAPER_TIMEOUT_MS)
+    ? Number(process.env.SCRAPER_TIMEOUT_MS)
+    : 30 * 60 * 1000 // 30 minutes default
 
 /** Serialise extracted records to CSV text. */
 function toCsv(records: PerfumeCsvRecord[]): string {
@@ -219,10 +224,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     } satisfies ScraperRunResponse)
   }
 
-  // Step 2: LangGraph note extraction
+  // Step 2: LangGraph note extraction (+ optional title cleaning & film noir descriptions)
+  const pipelineOptions = {
+    titleTakeBeforeDash: body.titleTakeBeforeDash ?? false,
+    titleStripNumbers: body.titleStripNumbers ?? false,
+    generateNoirDescriptions: body.generateNoirDescriptions ?? true,
+  }
   let records: PerfumeCsvRecord[] = []
   try {
-    records = await extractNotesForItems(scrapedItems, body.houseName)
+    records = await extractNotesForItems(scrapedItems, body.houseName, pipelineOptions)
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     return NextResponse.json(

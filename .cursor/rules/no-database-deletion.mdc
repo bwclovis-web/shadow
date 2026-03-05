@@ -1,0 +1,21 @@
+---
+description: Never delete the database or existing data
+alwaysApply: true
+---
+
+# Database and Data Protection
+
+Do not take any action that would delete the database or any data already stored in it.
+
+## Prohibited Actions
+
+- Do not run commands or migrations that drop the database, reset the schema, or truncate/delete tables
+- Do not suggest or execute `prisma migrate reset`, `db push --force-reset`, or equivalent destructive operations on production or shared data
+- Do not write or run code that deletes, truncates, or clears existing records unless the user explicitly requests data removal for a specific purpose
+- Do not remove or alter migrations or schema in ways that would require wiping and recreating the database
+
+## Allowed
+
+- Adding new tables, columns, or migrations that extend the schema without removing existing data
+- Read-only queries and reporting
+- The user may explicitly ask to reset or clear data; only then consider destructive operations, and confirm before proceeding

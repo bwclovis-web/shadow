@@ -1,6 +1,6 @@
 "use client"
 
-import { type ChangeEvent, type FormEvent, useState } from "react"
+import { type ChangeEvent, type FormEvent, useEffect, useState } from "react"
 
 import { Button } from "@/components/Atoms/Button/Button"
 import HouseTypeahead from "@/components/Molecules/HouseTypeahead/HouseTypeahead"
@@ -64,11 +64,28 @@ export function ScraperPageClient() {
     "set, sample, sampler, collection, collections",
   )
   const [baseUrl, setBaseUrl] = useState("")
+  const [titleTakeBeforeDash, setTitleTakeBeforeDash] = useState(true)
+  const [titleStripNumbers, setTitleStripNumbers] = useState(true)
+  const [generateNoirDescriptions, setGenerateNoirDescriptions] = useState(true)
 
   // -- step 1 state (scrape + note extraction) --
   const [scraping, setScraping] = useState(false)
+  const [scrapeElapsedSeconds, setScrapeElapsedSeconds] = useState(0)
   const [scrapeResult, setScrapeResult] = useState<ScraperRunResponse | null>(null)
   const [scrapeError, setScrapeError] = useState<string | null>(null)
+
+  // Show elapsed time while scraper is running
+  useEffect(() => {
+    if (!scraping) {
+      setScrapeElapsedSeconds(0)
+      return
+    }
+    const start = Date.now()
+    const interval = setInterval(() => {
+      setScrapeElapsedSeconds(Math.floor((Date.now() - start) / 1000))
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [scraping])
 
   // -- step 2 state (import + R2) --
   const [uploadImagesToR2, setUploadImagesToR2] = useState(true)
@@ -114,6 +131,9 @@ export function ScraperPageClient() {
       imageSelector,
       skipKeywords,
       baseUrl: baseUrl || undefined,
+      titleTakeBeforeDash,
+      titleStripNumbers,
+      generateNoirDescriptions,
     }
 
     try {
@@ -205,7 +225,7 @@ export function ScraperPageClient() {
       {/* ------------------------------------------------------------------ */}
       <form onSubmit={handleScrape} className="flex flex-col gap-6">
         {/* House */}
-        <section className="flex flex-col gap-4 rounded-lg border border-border p-4">
+        <section className="flex flex-col gap-4 rounded-lg border border-noir-border p-4 bg-noir-dark border-noir-gold text-noir-gold-100">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             House
           </h2>
@@ -336,6 +356,66 @@ export function ScraperPageClient() {
           </Field>
         </section>
 
+        {/* Title & description rules */}
+        <section className="flex flex-col gap-4 rounded-lg border border-border p-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Title & description
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Clean product names and choose how descriptions are generated. Notes are always extracted;
+            you can strip them from the source text and have LangGraph write new film noir themed copy.
+          </p>
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={titleTakeBeforeDash}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setTitleTakeBeforeDash(e.target.checked)
+              }
+            />
+            <span className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium">Take only text before first &quot; - &quot; in name</span>
+              <span className="text-xs text-muted-foreground">
+                e.g. &quot;Velvet Vanilla - 50ml&quot; → &quot;Velvet Vanilla&quot;
+              </span>
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={titleStripNumbers}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setTitleStripNumbers(e.target.checked)
+              }
+            />
+            <span className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium">Strip numbers and sizes from name</span>
+              <span className="text-xs text-muted-foreground">
+                Remove 30ml, 1.7 fl oz, etc. from product names.
+              </span>
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={generateNoirDescriptions}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setGenerateNoirDescriptions(e.target.checked)
+              }
+            />
+            <span className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium">Generate film noir themed descriptions</span>
+              <span className="text-xs text-muted-foreground">
+                Use notes + original copy to write unique, sexy, mysterious descriptions. Uncheck to
+                keep original text with note phrases removed.
+              </span>
+            </span>
+          </label>
+        </section>
+
         <Button type="submit" variant="primary" disabled={scraping}>
           {scraping ? "Running scraper…" : "Run scraper"}
         </Button>
@@ -346,6 +426,10 @@ export function ScraperPageClient() {
         <div className="mt-8 rounded-lg border border-border p-6 text-center text-sm text-muted-foreground">
           <p className="animate-pulse font-medium">
             Scraper is running — this may take several minutes for large houses…
+          </p>
+          <p className="mt-2 font-mono text-xs">
+            Elapsed: {Math.floor(scrapeElapsedSeconds / 60)}m {scrapeElapsedSeconds % 60}s — results
+            will appear when the full run finishes (no progress stream).
           </p>
           <p className="mt-2 text-xs">
             The headless browser visits each product page; LangGraph then extracts notes from every

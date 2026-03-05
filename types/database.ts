@@ -174,18 +174,18 @@ export interface WishlistNotification {
 export interface UserAlert {
   id: string
   userId: string
-  perfumeId: string
+  perfumeId: string | null
   alertType: AlertType
   title: string
   message: string
   isRead: boolean
   isDismissed: boolean
-  metadata?: any
+  metadata?: { messageId?: string; senderId?: string; [key: string]: unknown }
   createdAt: Date
   readAt?: Date | null
   dismissedAt?: Date | null
   User: User
-  Perfume: Perfume
+  Perfume: Perfume | null
 }
 
 export interface UserAlertPreferences {

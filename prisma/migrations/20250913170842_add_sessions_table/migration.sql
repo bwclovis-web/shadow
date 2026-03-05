@@ -1,3 +1,3 @@
--- This migration was superseded by 20250713221000_add_review_fields.
+-- Sessions table migration. Schema no longer tracks this table.
 -- Kept as a no-op placeholder so shadow DB replay does not skip it.
 SELECT 1;

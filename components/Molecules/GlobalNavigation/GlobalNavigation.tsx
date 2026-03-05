@@ -141,18 +141,32 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
             </li>
           ))}
           {user && (
-            <li>
-              <PrefetchLink
-                href={ADMIN_PATH}
-                className={styleMerge(
-                  navLinkBase,
-                  "block text-center leading-5",
-                  isActive(ADMIN_PATH) && navLinkActiveAdmin
-                )}
-              >
-                {isClientReady ? t("admin") : "Admin"}
-              </PrefetchLink>
-            </li>
+            <>
+              <li>
+                <PrefetchLink
+                  href="/messages"
+                  className={styleMerge(
+                    navLinkBase,
+                    "block text-center leading-5",
+                    isActive("/messages") && navLinkActive
+                  )}
+                >
+                  {isClientReady ? t("messages") : "Messages"}
+                </PrefetchLink>
+              </li>
+              <li>
+                <PrefetchLink
+                  href={ADMIN_PATH}
+                  className={styleMerge(
+                    navLinkBase,
+                    "block text-center leading-5",
+                    isActive(ADMIN_PATH) && navLinkActiveAdmin
+                  )}
+                >
+                  {isClientReady ? t("admin") : "Admin"}
+                </PrefetchLink>
+              </li>
+            </>
           )}
         </ul>
       </nav>

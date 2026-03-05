@@ -5,12 +5,14 @@ import { getTranslations } from "next-intl/server"
 
 import { getPerfumeDetailPayload } from "@/models/perfumeDetail.server"
 import { getPerfumeBySlug } from "@/models/perfume.server"
+import { rulesRecommendationService } from "@/services/recommendations"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
 import PerfumeDetailClient from "./PerfumeDetailClient"
 
 export const ROUTE_PATH = "/perfume"
 const REVIEWS_PAGE_SIZE = 5
+const SIMILAR_PERFUMES_LIMIT = 4
 
 type Props = {
   params: Promise<{ perfumeSlug: string }>
@@ -52,11 +54,22 @@ export default async function PerfumeDetailPage({
     notFound()
   }
 
-  const payload = await getPerfumeDetailPayload(
-    perfume.id,
-    session?.userId ?? null,
-    REVIEWS_PAGE_SIZE
-  )
+  const [payload, similarPerfumes] = await Promise.all([
+    getPerfumeDetailPayload(
+      perfume.id,
+      session?.userId ?? null,
+      REVIEWS_PAGE_SIZE
+    ),
+    rulesRecommendationService
+      .getSimilarPerfumes(perfume.id, SIMILAR_PERFUMES_LIMIT)
+      .catch((err) => {
+        console.warn(
+          "[perfume] getSimilarPerfumes failed, showing none:",
+          err?.message ?? err
+        )
+        return []
+      }),
+  ])
 
   return (
     <PerfumeDetailClient
@@ -68,7 +81,7 @@ export default async function PerfumeDetailPage({
       userReview={payload.userReview}
       reviewsData={payload.reviewsData}
       reviewsPageSize={REVIEWS_PAGE_SIZE}
-      similarPerfumes={[]}
+      similarPerfumes={similarPerfumes}
       selectedLetter={resolvedSearchParams.letter ?? null}
     />
   )

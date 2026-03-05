@@ -58,6 +58,22 @@ export interface ScraperConfig {
    * Example: "https://blackheartedtart.com"
    */
   baseUrl?: string
+
+  /**
+   * If true, use only the part of the product name before the first " - " (e.g. "Scent Name - 50ml" → "Scent Name").
+   */
+  titleTakeBeforeDash?: boolean
+
+  /**
+   * If true, remove numbers and size patterns (e.g. 30ml, 1.7 fl oz) from product names.
+   */
+  titleStripNumbers?: boolean
+
+  /**
+   * If true, generate film noir themed descriptions from notes + original description (unique, sexy, mysterious).
+   * If false, use the original description with extracted notes removed from the text.
+   */
+  generateNoirDescriptions?: boolean
 }
 
 /**

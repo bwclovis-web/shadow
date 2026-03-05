@@ -249,7 +249,7 @@ model SecurityAuditLog {
 model UserAlert {
   id          String    @id @default(cuid())
   userId      String
-  perfumeId   String
+  perfumeId   String?
   alertType   AlertType
   title       String
   message     String
@@ -259,7 +259,7 @@ model UserAlert {
   createdAt   DateTime  @default(now())
   readAt      DateTime?
   dismissedAt DateTime?
-  Perfume     Perfume   @relation(fields: [perfumeId], references: [id])
+  Perfume     Perfume?  @relation(fields: [perfumeId], references: [id])
   User        User      @relation(fields: [userId], references: [id])
 
   @@index([userId, createdAt])
@@ -421,6 +421,7 @@ enum AlertType {
   wishlist_available
   decant_interest
   pending_submission_approval
+  new_trader_message
 }
 
 enum PerfumeNoteType {

@@ -9,7 +9,10 @@ import {
   getUserAlertPreferences,
   getUserAlerts,
 } from "@/models/user-alerts.server"
-import { rulesRecommendationService } from "@/services/recommendations"
+import {
+  getPersonalizedRecommendations,
+  DEFAULT_RECOMMENDATIONS_LIMIT,
+} from "@/services/recommendations"
 import type { UserAlert } from "@/types/database"
 import type { SafeUser } from "@/types"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
@@ -61,28 +64,24 @@ export default async function ProfilePage({ params }: Props): Promise<React.Reac
   let alerts: Awaited<ReturnType<typeof getUserAlerts>> = []
   let preferences: Awaited<ReturnType<typeof getUserAlertPreferences>> | null = null
   let unreadCount = 0
+  let recommendedPerfumes: Awaited<ReturnType<typeof getPersonalizedRecommendations>> = []
 
   try {
-    const [alertsResult, preferencesResult, unreadResult] = await Promise.all([
-      getUserAlerts(user.id),
-      getUserAlertPreferences(user.id),
-      getUnreadAlertCount(user.id),
-    ])
+    const [alertsResult, preferencesResult, unreadResult, recommendedResult] =
+      await Promise.all([
+        getUserAlerts(user.id),
+        getUserAlertPreferences(user.id),
+        getUnreadAlertCount(user.id),
+        getPersonalizedRecommendations(user.id, DEFAULT_RECOMMENDATIONS_LIMIT).catch(
+          () => [] as Awaited<ReturnType<typeof getPersonalizedRecommendations>>
+        ),
+      ])
     alerts = alertsResult
     preferences = preferencesResult
     unreadCount = unreadResult
+    recommendedPerfumes = recommendedResult
   } catch {
-    // UserAlert tables may not exist yet
-  }
-
-  let recommendedPerfumes: Awaited<
-    ReturnType<typeof rulesRecommendationService.getPersonalizedForUser>
-  > = []
-  try {
-    recommendedPerfumes =
-      await rulesRecommendationService.getPersonalizedForUser(user.id, 6)
-  } catch {
-    // Recommendations optional
+    // UserAlert tables may not exist yet; recommendations already fallback to [] on reject
   }
 
   return (

@@ -26,6 +26,8 @@ const getAlertIconClassName = (alertType: UserAlert["alertType"]) => {
       return "text-blue-600"
     case "pending_submission_approval":
       return "text-yellow-600"
+    case "new_trader_message":
+      return "text-indigo-600"
     default:
       return "text-gray-600"
   }
@@ -39,6 +41,8 @@ const getAlertTypeLabel = (alertType: UserAlert["alertType"]) => {
       return "Interest Alert"
     case "pending_submission_approval":
       return "Pending Submission"
+    case "new_trader_message":
+      return "Message"
     default:
       return "Alert"
   }
@@ -59,20 +63,25 @@ const formatTimeAgo = (date: Date | string) => {
 }
 
 const perfumeLink = (slug: string) => `/perfume/${slug}`
-const alertLink = (alert: UserAlert) =>
-  alert.alertType === "pending_submission_approval"
-    ? "/admin/pending-submission"
-    : perfumeLink(alert.Perfume.slug)
-const linkText = (alertType: UserAlert["alertType"]) =>
-  alertType === "pending_submission_approval" ? "Review submission" : "View perfume"
+const messagesLink = (otherUserId: string) => `/messages/${otherUserId}`
+const alertLink = (alert: UserAlert) => {
+  if (alert.alertType === "pending_submission_approval") return "/admin/pending-submission"
+  if (alert.alertType === "new_trader_message" && alert.metadata?.senderId)
+    return messagesLink(alert.metadata.senderId as string)
+  if (alert.Perfume) return perfumeLink(alert.Perfume.slug)
+  return "/messages"
+}
+const linkText = (alertType: UserAlert["alertType"]) => {
+  if (alertType === "pending_submission_approval") return "Review submission"
+  if (alertType === "new_trader_message") return "View message"
+  return "View perfume"
+}
 
 const AlertIcon = ({ alertType }: { alertType: UserAlert["alertType"] }) => {
   const cn = `h-4 w-4 ${getAlertIconClassName(alertType)}`
-  return alertType === "wishlist_available" ? (
-    <BsHeartFill className={cn} />
-  ) : (
-    <BsBell className={cn} />
-  )
+  if (alertType === "wishlist_available")
+    return <BsHeartFill className={cn} />
+  return <BsBell className={cn} />
 }
 
 export const AlertItem = ({

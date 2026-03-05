@@ -1,5 +1,5 @@
--- CreateEnum (skipped - already exists)
--- CREATE TYPE "AlertType" AS ENUM ('wishlist_available', 'decant_interest');
+-- CreateEnum
+CREATE TYPE "AlertType" AS ENUM ('wishlist_available', 'decant_interest');
 
 -- CreateTable
 CREATE TABLE "UserAlert" (

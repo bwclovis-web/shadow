@@ -133,10 +133,11 @@ export const dismissAllAlerts = async (userId: string) =>
 
 /**
  * Create a new user alert. Pass existing preferences to avoid an extra DB round-trip when the caller already has them.
+ * For new_trader_message alerts, pass perfumeId: null.
  */
 export const createUserAlert = async (
   userId: string,
-  perfumeId: string,
+  perfumeId: string | null,
   alertType: AlertType,
   title: string,
   message: string,
@@ -168,7 +169,14 @@ export const createUserAlert = async (
     }
 
     return tx.userAlert.create({
-      data: { userId, perfumeId, alertType, title, message, metadata: metadata as Prisma.InputJsonValue },
+      data: {
+        userId,
+        perfumeId: perfumeId ?? undefined,
+        alertType,
+        title,
+        message,
+        metadata: metadata as Prisma.InputJsonValue,
+      },
       include: {
         Perfume: {
           include: {
