@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { createContactMessage } from "@/models/contactMessage.server"
 import { createUserAlert } from "@/models/user-alerts.server"
+import type { AlertType } from "@/types/database"
 import { ContactTraderSchema } from "@/utils/validation/formValidationSchemas"
 import { parseFormData } from "@/utils/server/api-route-helpers.server"
 import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
     await createUserAlert(
       recipientId,
       null,
-      "new_trader_message",
+      "new_trader_message" as AlertType,
       `New message from ${senderName}`,
       subject?.trim() ? `${subject.slice(0, 60)}${subject.length > 60 ? "…" : ""}` : message.trim().slice(0, 80),
       { messageId: created.id, senderId: authResult.user!.id }
