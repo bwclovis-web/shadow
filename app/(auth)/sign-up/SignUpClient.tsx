@@ -35,12 +35,14 @@ const SignUpClient = ({ sessionId, prefillEmail }: SignUpClientProps) => {
     shouldRevalidate: "onInput",
   })
 
+  // Omit method/encType when using a function action — React sets them automatically
+  const { method: _method, encType: _encType, ...formProps } = getFormProps(signupForm)
+
   return (
     <section className="flex flex-col items-center px-4 w-full max-w-md mx-auto">
       <form
-        {...getFormProps(signupForm)}
+        {...formProps}
         action={formAction}
-        method="POST"
         className="max-w-md mx-auto p-4 relative w-full flex flex-col gap-4 noir-border"
       >
         <CSRFToken />
