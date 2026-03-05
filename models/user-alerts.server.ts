@@ -171,7 +171,7 @@ export const createUserAlert = async (
     return tx.userAlert.create({
       data: {
         userId,
-        perfumeId: perfumeId ?? undefined,
+        perfumeId: perfumeId ?? null,
         alertType,
         title,
         message,
