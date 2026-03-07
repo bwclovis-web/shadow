@@ -5,25 +5,9 @@ import { cache } from "react"
 import { prisma } from "@/lib/db"
 import { transformNotesForDisplay } from "@/models/perfume-notes-helpers"
 import { calculateRelevanceScore } from "@/utils/calculateRelevanceScore"
+import { buildNameOrderBy } from "@/utils/server/order-by.server"
 import { sanitizeText } from "@/utils/server/sanitize.server"
 import { createUrlSlug } from "@/utils/slug"
-
-const buildPerfumeOrderBy = 
-  (sortBy?: string): Prisma.PerfumeOrderByWithRelationInput => {
-  if (sortBy) {
-    switch (sortBy) {
-      case "name-asc":
-        return { name: "asc" }
-      case "name-desc":
-        return { name: "desc" }
-      case "created-asc":
-        return { createdAt: "asc" }
-      default:
-        return { createdAt: "desc" }
-    }
-  }
-  return { createdAt: "desc" }
-}
 
 /** Max rows returned by getAllPerfumes to avoid unbounded queries. Callers needing more should use a paginated API. */
 const GET_ALL_PERFUMES_TAKE_LIMIT = 5000
@@ -106,7 +90,7 @@ export const getAllPerfumesWithOptions = async (options?: {
   sortBy?: "name-asc" | "name-desc" | "created-desc" | "created-asc" | "type-asc"
 }) => {
   const { sortBy } = options || {}
-  const orderBy = buildPerfumeOrderBy(sortBy)
+  const orderBy = buildNameOrderBy(sortBy) as Prisma.PerfumeOrderByWithRelationInput
 
   return prisma.perfume.findMany({
     select: {

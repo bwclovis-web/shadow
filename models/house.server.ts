@@ -5,28 +5,9 @@ import { cache } from "react"
 import { prisma } from "@/lib/db"
 import { calculateRelevanceScore } from "@/utils/calculateRelevanceScore"
 import { assertValid, validationError } from "@/utils/errorHandling.patterns"
+import { buildNameOrderBy } from "@/utils/server/order-by.server"
 import { sanitizeText } from "@/utils/server/sanitize.server"
 import { createUrlSlug } from "@/utils/slug"
-const buildHouseOrderBy = (
-  sortBy?: string,
-  sortByType?: boolean
-): Prisma.PerfumeHouseOrderByWithRelationInput => {
-  if (sortBy) {
-    switch (sortBy) {
-      case "name-asc":
-        return { name: "asc" }
-      case "name-desc":
-        return { name: "desc" }
-      case "created-asc":
-        return { createdAt: "asc" }
-      case "type-asc":
-        return { type: "asc" }
-      default:
-        return { createdAt: "desc" }
-    }
-  }
-  return sortByType ? { type: "asc" } : { createdAt: "desc" }
-}
 
 export const getAllHousesWithOptions = async (options?: {
   sortByType?: boolean
@@ -60,7 +41,7 @@ export const getAllHousesWithOptions = async (options?: {
     where.type = houseType as HouseType
   }
 
-  const orderBy = buildHouseOrderBy(sortBy, sortByType)
+  const orderBy = buildNameOrderBy(sortBy, sortByType) as Prisma.PerfumeHouseOrderByWithRelationInput
 
   // If selectFields is true, only return essential fields to reduce response size
   if (selectFields) {
@@ -124,7 +105,7 @@ export const getHousesPaginated = async (options?: {
     where.type = houseType as HouseType
   }
 
-  const orderBy = buildHouseOrderBy(sortBy, sortByType)
+  const orderBy = buildNameOrderBy(sortBy, sortByType) as Prisma.PerfumeHouseOrderByWithRelationInput
 
   const [houses, totalCount] = await Promise.all([
     selectFields
