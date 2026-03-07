@@ -41,7 +41,7 @@ type PerfumeFromApi = {
   updatedAt?: Date | string
   type?: string
   image?: string
-  perfumeHouse?: { name: string }
+  perfumeHouse?: { name: string } | null
 }
 
 const parseLetterFromParam = (param: unknown): string | null => {
