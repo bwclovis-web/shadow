@@ -11,9 +11,7 @@ interface LinkCardProps {
     slug: string
     image?: string
     type?: string
-    perfumeHouse?: {
-      name: string
-    }
+    perfumeHouse?: { name: string } | null
   }
   type: "house" | "perfume"
   children?: React.ReactNode
