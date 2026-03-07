@@ -5,6 +5,7 @@
  */
 
 import cookie from "cookie"
+import type { UserRole } from "@prisma/client"
 
 import { getUserById } from "@/models/user.query"
 import {
@@ -21,10 +22,10 @@ const LEGACY_TOKEN_COOKIE = "token"
 export type SessionUser = {
   id: string
   email: string
-  firstName?: string | null
-  lastName?: string | null
-  username?: string | null
-  role: string
+  firstName: string | null
+  lastName: string | null
+  username: string | null
+  role: UserRole
 }
 
 export type SessionFromRequest = {
@@ -143,7 +144,14 @@ export async function getSessionFromCookieHeader(
     const fullUser = await getUserById(userId)
     const user = createSafeUser(fullUser)
     if (user) {
-      result.user = user
+      result.user = {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName ?? null,
+        lastName: user.lastName ?? null,
+        username: user.username ?? null,
+        role: user.role,
+      }
     }
   }
 
