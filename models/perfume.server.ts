@@ -4,6 +4,7 @@ import { cache } from "react"
 
 import { prisma } from "@/lib/db"
 import { transformNotesForDisplay } from "@/models/perfume-notes-helpers"
+import { sanitizeText } from "@/utils/server/sanitize.server"
 import { createUrlSlug } from "@/utils/slug"
 
 const buildPerfumeOrderBy = 
@@ -386,26 +387,6 @@ export const updatePerfume = async (id: string, data: FormData) => {
     }
     throw err
   }
-}
-
-// Helper function to sanitize text input by normalizing Unicode characters and preventing XSS
-const sanitizeText = (text: string | null): string => {
-  if (!text) {
-    return ""
-  }
-
-  return text
-    .trim()
-    .replace(/[<>]/g, "") // Remove angle brackets to prevent HTML/script tags
-    .replace(/javascript:/gi, "") // Remove javascript: protocol
-    .replace(/on\w+=/gi, "") // Remove event handlers (onclick, onerror, etc.)
-    .replace(/[\x00-\x1F\x7F]/g, "") // Remove control characters
-    .normalize("NFD") // Normalize Unicode
-    .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
-    .replace(/[\u2013\u2014]/g, "-") // en dash, em dash → hyphen
-    .replace(/[\u2018\u2019]/g, "'") // smart single quotes
-    .replace(/[\u201C\u201D]/g, '"') // smart double quotes
-    .replace(/[\u2026]/g, "...") // ellipsis
 }
 
 const findUniqueSlug = async (

@@ -187,7 +187,7 @@ Full improvement report and implementation checklist for the Shadows Next.js cod
 ### Code Reuse
 
 - [ ] Extract `getCookieHeader` to `utils/server/get-cookie-header.server.ts` and remove 7+ duplicates
-- [ ] Extract `sanitizeText` from `models/perfume.server.ts` and `models/house.server.ts` to a shared util
+- [x] Extract `sanitizeText` from `models/perfume.server.ts` and `models/house.server.ts` to a shared util
 - [ ] Extract `calculateRelevanceScore` to a shared util used by both model files
 - [ ] Extract `buildNameOrderBy` factory to `utils/server/order-by.server.ts`
 - [ ] Create `useAlphabeticalBrowserState` hook to replace duplicated pagination setup in `TheVaultClient` and `AllHousesClient`

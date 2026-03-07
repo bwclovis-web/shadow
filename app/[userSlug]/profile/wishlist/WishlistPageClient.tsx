@@ -41,9 +41,9 @@ type WishlistPageClientProps = {
 const WishlistPageClient = ({
   wishlist,
   bannerImage,
+  userSlug,
 }: WishlistPageClientProps) => {
   const t = useTranslations("wishlist")
-  const router = useRouter()
   const router = useRouter()
 
   return (

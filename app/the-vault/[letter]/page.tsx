@@ -38,10 +38,15 @@ const TheVaultLetterPage = async ({ params }: Props) => {
     initialTotal = result.count
   }
 
+  const perfumesForClient = initialPerfumes.map((p) => ({
+    ...p,
+    image: p.image ?? undefined,
+  }))
+
   return (
     <TheVaultClient
       initialLetter={isValidLetter ? normalizedLetter : null}
-      initialPerfumes={initialPerfumes}
+      initialPerfumes={perfumesForClient}
       initialPerfumeTotal={initialTotal}
     />
   )
