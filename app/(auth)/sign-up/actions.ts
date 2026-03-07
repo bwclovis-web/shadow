@@ -121,6 +121,7 @@ export const signUpAction = async (
       })
       const { accessToken, refreshToken } = await createSession({
         userId: user.id,
+        tokenVersion: user.tokenVersion ?? 0,
       })
       await setSessionCookies(accessToken, refreshToken)
       redirect(getProfilePathForUser(user))
@@ -136,6 +137,7 @@ export const signUpAction = async (
     const user = await createUser(formData)
     const { accessToken, refreshToken } = await createSession({
       userId: user.id,
+      tokenVersion: user.tokenVersion ?? 0,
     })
     await setSessionCookies(accessToken, refreshToken)
     redirect(getProfilePathForUser(user))

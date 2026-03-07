@@ -874,7 +874,13 @@
       "delete": "Supprimer",
       "currentUser": "Utilisateur actuel",
       "admin": "Admin",
-      "deleted": "Supprimé"
+      "deleted": "Supprimé",
+      "changeRole": "Changer le rôle de l'utilisateur",
+      "roles": {
+        "user": "Utilisateur",
+        "editor": "Éditeur",
+        "admin": "Admin"
+      }
     }
   },
   "wishlist": {

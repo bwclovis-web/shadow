@@ -138,7 +138,7 @@ export const invalidateAllSessions = (userId: string): Promise<void> =>
 
 /** Resolve user from access token. Returns null if token invalid or user not found. */
 export const getUserFromToken = async (accessToken: string) => {
-  const payload = verifyAccessToken(accessToken)
+  const payload = await verifyAccessToken(accessToken)
   if (!payload) return null
   return getUserById(payload.userId)
 }

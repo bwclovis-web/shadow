@@ -53,6 +53,7 @@ export const signInAction = async (
 
     const { accessToken, refreshToken } = await createSession({
       userId: existingUser.id,
+      tokenVersion: existingUser.tokenVersion ?? 0,
     })
     await setSessionCookies(accessToken, refreshToken)
     redirect(getProfilePathForUser(existingUser))

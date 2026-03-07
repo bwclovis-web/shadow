@@ -1,6 +1,6 @@
 import { type FieldMetadata, getInputProps } from "@conform-to/react"
 import { type VariantProps } from "class-variance-authority"
-import { forwardRef, type HTMLProps, type RefObject } from "react"
+import { forwardRef, useId, type HTMLProps, type RefObject } from "react"
 
 import { styleMerge } from "@/utils/styleUtils"
 
@@ -11,6 +11,7 @@ export interface InputProps
     VariantProps<typeof inputVariants> {
   inputType?: "email" | "password" | "text" | "number" | "tel" | "url" | "search" | "date" | "datetime-local" | "file" | "month" | "range" | "time" | "week"
   inputId?: string
+  label?: string
   placeholder?: string
   shading?: boolean
   inputRef?: RefObject<HTMLInputElement | null>
@@ -33,6 +34,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     {
       inputType = "text",
       inputId,
+      label,
       className,
       defaultValue,
       value,
@@ -46,16 +48,18 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     },
     ref
   ) => {
+    const generatedId = useId()
     const resolvedAutoComplete = resolveAutoComplete(inputType, autoComplete)
+    const resolvedId = inputId ?? action?.id ?? (label ? generatedId : undefined)
     const inputProps = action
       ? {
           ...getInputProps(action, { ariaAttributes: true, type: inputType }),
-          id: inputId ?? action.id,
+          id: resolvedId,
           placeholder,
           autoComplete: resolvedAutoComplete,
         }
       : {
-          id: inputId,
+          id: resolvedId,
           type: inputType,
           placeholder,
           autoComplete: resolvedAutoComplete,
@@ -86,7 +90,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               : "",
         }
 
-    return (
+    const inputElement = (
       <input
         ref={setRef}
         name={action?.name}
@@ -98,6 +102,22 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {...props}
       />
     )
+
+    if (label !== undefined) {
+      return (
+        <div className="flex flex-col gap-1" data-input-has-label>
+          <label
+            htmlFor={inputProps.id}
+            className="block text-sm font-medium text-noir-gold-100"
+          >
+            {label}
+          </label>
+          {inputElement}
+        </div>
+      )
+    }
+
+    return inputElement
   }
 )
 

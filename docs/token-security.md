@@ -49,26 +49,26 @@ flowchart LR
 
 ### Session manager (`utils/security/session-manager.server.ts`)
 
-- [ ] Change `createAccessToken(userId, tokenVersion)` and add `tokenVersion` to the JWT payload.
-- [ ] Change `createRefreshToken(userId, tokenVersion)` and add `tokenVersion` to the JWT payload.
-- [ ] Update `createSession` to accept `tokenVersion` (optional; if omitted, call `getUserTokenVersion(userId)`). Pass `tokenVersion` into `createAccessToken` and `createRefreshToken`.
-- [ ] Make `verifyAccessToken` async: after `jwt.verify`, load current version via `getUserTokenVersion(userId)`; if payload has no `tokenVersion` treat as invalid (or as 0); if `payload.tokenVersion < currentVersion` return `null`, else return `{ userId }`.
-- [ ] Make `verifyRefreshToken` async with the same tokenVersion check.
-- [ ] In `refreshAccessToken`, after verifying refresh token get current `tokenVersion` and pass it into `createAccessToken` (and optionally new refresh token).
-- [ ] Implement `invalidateAllUserSessions(userId)`: import `prisma` from `@/lib/db` and run `prisma.user.update({ where: { id: userId }, data: { tokenVersion: { increment: 1 } } })`.
-- [ ] Leave `invalidateSession` as-is (no-op) or document that only "invalidate all" is supported per user.
+- [x] Change `createAccessToken(userId, tokenVersion)` and add `tokenVersion` to the JWT payload.
+- [x] Change `createRefreshToken(userId, tokenVersion)` and add `tokenVersion` to the JWT payload.
+- [x] Update `createSession` to accept `tokenVersion` (optional; if omitted, call `getUserTokenVersion(userId)`). Pass `tokenVersion` into `createAccessToken` and `createRefreshToken`.
+- [x] Make `verifyAccessToken` async: after `jwt.verify`, load current version via `getUserTokenVersion(userId)`; if payload has no `tokenVersion` treat as invalid (or as 0); if `payload.tokenVersion < currentVersion` return `null`, else return `{ userId }`.
+- [x] Make `verifyRefreshToken` async with the same tokenVersion check.
+- [x] In `refreshAccessToken`, after verifying refresh token get current `tokenVersion` and pass it into `createAccessToken` (and optionally new refresh token).
+- [x] Implement `invalidateAllUserSessions(userId)`: import `prisma` from `@/lib/db` and run `prisma.user.update({ where: { id: userId }, data: { tokenVersion: { increment: 1 } } })`.
+- [x] Leave `invalidateSession` as-is (no-op) or document that only "invalidate all" is supported per user.
 
 ### Callers that create sessions
 
-- [ ] In `app/(auth)/sign-in/actions.ts`, pass `tokenVersion: existingUser.tokenVersion` into `createSession` (ensure Prisma returns `tokenVersion` from `signInCustomer`).
-- [ ] In `app/(auth)/sign-up/actions.ts`, pass `tokenVersion: user.tokenVersion` into both `createSession` calls.
+- [x] In `app/(auth)/sign-in/actions.ts`, pass `tokenVersion: existingUser.tokenVersion` into `createSession` (ensure Prisma returns `tokenVersion` from `signInCustomer`).
+- [x] In `app/(auth)/sign-up/actions.ts`, pass `tokenVersion: user.tokenVersion` into both `createSession` calls.
 
 ### Callers that verify tokens
 
-- [ ] In `utils/session-from-request.server.ts`, change `verifyAccessToken(accessToken)` to `await verifyAccessToken(accessToken)` (verifyAccessToken is now async).
-- [ ] In `models/session.server.ts`, change `verifyAccessToken(accessToken)` to `await verifyAccessToken(accessToken)` in `getUserFromToken`.
+- [x] In `utils/session-from-request.server.ts`, change `verifyAccessToken(accessToken)` to `await verifyAccessToken(accessToken)` (verifyAccessToken is now async).
+- [x] In `models/session.server.ts`, change `verifyAccessToken(accessToken)` to `await verifyAccessToken(accessToken)` in `getUserFromToken`.
 
 ### Verification
 
-- [ ] Confirm `lib/db` does not import session-manager (no circular dependency).
+- [x] Confirm `lib/db` does not import session-manager (no circular dependency).
 - [ ] After implementation: change password and confirm existing sessions are rejected until user signs in again.

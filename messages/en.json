@@ -921,7 +921,13 @@
       "delete": "Delete",
       "currentUser": "Current User",
       "admin": "Admin",
-      "deleted": "Deleted"
+      "deleted": "Deleted",
+      "changeRole": "Change user role",
+      "roles": {
+        "user": "User",
+        "editor": "Editor",
+        "admin": "Admin"
+      }
     }
   },
   "wishlist": {

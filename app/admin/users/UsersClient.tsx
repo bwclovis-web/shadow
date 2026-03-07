@@ -1,6 +1,7 @@
 "use client"
 
 import { useActionState, useState, useCallback, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 
 import {
@@ -12,7 +13,9 @@ import type { UserWithCounts } from "@/models/admin.server"
 
 import {
   deleteUserAction,
+  updateUserRoleAction,
   type DeleteUserActionState,
+  type UpdateRoleActionState,
 } from "./actions"
 import ConfirmDeleteModal from "./ConfirmDeleteModal"
 import FormPendingSync from "./FormPendingSync"
@@ -26,9 +29,14 @@ type UsersClientProps = {
 }
 
 const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
+  const router = useRouter()
   const [state, formAction] = useActionState(
     deleteUserAction,
     null as DeleteUserActionState
+  )
+  const [roleState, roleFormAction] = useActionState(
+    updateUserRoleAction,
+    null as UpdateRoleActionState
   )
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
@@ -54,6 +62,12 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
       setSelectedUserId(null)
     }
   }, [state])
+
+  useEffect(() => {
+    if (roleState?.success) {
+      router.refresh()
+    }
+  }, [roleState?.success, router])
 
   const pendingAction = isSubmitting && selectedUserId ? deleteType : null
   const pendingUserId = isSubmitting ? selectedUserId : null
@@ -105,6 +119,7 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
                       onSoftDelete={(id) => handleDelete(id, "soft-delete")}
                       pendingAction={pendingAction}
                       pendingUserId={pendingUserId}
+                      roleFormAction={roleFormAction}
                     />
                   ))}
                 </tbody>

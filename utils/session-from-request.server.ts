@@ -101,7 +101,7 @@ export async function getSessionFromCookieHeader(
   let didRefresh = false
 
   if (accessToken) {
-    const payload = verifyAccessToken(accessToken)
+    const payload = await verifyAccessToken(accessToken)
     if (payload?.userId) {
       userId = payload.userId
     }

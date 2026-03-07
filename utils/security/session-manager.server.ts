@@ -1,6 +1,8 @@
 import crypto from "crypto"
 import jwt from "jsonwebtoken"
 
+import { prisma } from "@/lib/db"
+import { getUserTokenVersion } from "@/models/user.query"
 import { getSessionConfig } from "@/utils/security/session-config.server"
 
 // Validate JWT secret
@@ -18,12 +20,13 @@ function validateJwtSecret() {
 const JWT_SECRET = validateJwtSecret()
 const config = getSessionConfig()
 
-// Create access token
-export function createAccessToken(userId: string): string {
+// Create access token (tokenVersion used for invalidation; callers pass 0 until session flow wires getUserTokenVersion)
+export function createAccessToken(userId: string, tokenVersion: number): string {
   return jwt.sign(
     {
       userId,
       type: "access",
+      tokenVersion,
       iat: Math.floor(Date.now() / 1000),
     },
     JWT_SECRET,
@@ -31,12 +34,13 @@ export function createAccessToken(userId: string): string {
   )
 }
 
-// Create refresh token
-export function createRefreshToken(userId: string): string {
+// Create refresh token (tokenVersion used for invalidation; callers pass 0 until session flow wires getUserTokenVersion)
+export function createRefreshToken(userId: string, tokenVersion: number): string {
   return jwt.sign(
     {
       userId,
       type: "refresh",
+      tokenVersion,
       iat: Math.floor(Date.now() / 1000),
     },
     JWT_SECRET,
@@ -44,11 +48,27 @@ export function createRefreshToken(userId: string): string {
   )
 }
 
-// Verify access token
-export function verifyAccessToken(token: string): { userId: string } | null {
+// Verify access token (async: checks payload.tokenVersion against current user.tokenVersion)
+export async function verifyAccessToken(token: string): Promise<{ userId: string } | null> {
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as any
-    if (payload.type !== "access") {
+    const payload = jwt.verify(token, JWT_SECRET) as {
+      userId?: string
+      type?: string
+      tokenVersion?: number
+    }
+    if (payload.type !== "access" || !payload.userId) {
+      return null
+    }
+    const payloadVersion =
+      typeof payload.tokenVersion === "number" ? payload.tokenVersion : undefined
+    if (payloadVersion === undefined) {
+      return null
+    }
+    const currentVersion = await getUserTokenVersion(payload.userId)
+    if (currentVersion === null) {
+      return null
+    }
+    if (payloadVersion < currentVersion) {
       return null
     }
     return { userId: payload.userId }
@@ -57,11 +77,27 @@ export function verifyAccessToken(token: string): { userId: string } | null {
   }
 }
 
-// Verify refresh token
-export function verifyRefreshToken(token: string): { userId: string } | null {
+// Verify refresh token (async: checks payload.tokenVersion against current user.tokenVersion)
+export async function verifyRefreshToken(token: string): Promise<{ userId: string } | null> {
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as any
-    if (payload.type !== "refresh") {
+    const payload = jwt.verify(token, JWT_SECRET) as {
+      userId?: string
+      type?: string
+      tokenVersion?: number
+    }
+    if (payload.type !== "refresh" || !payload.userId) {
+      return null
+    }
+    const payloadVersion =
+      typeof payload.tokenVersion === "number" ? payload.tokenVersion : undefined
+    if (payloadVersion === undefined) {
+      return null
+    }
+    const currentVersion = await getUserTokenVersion(payload.userId)
+    if (currentVersion === null) {
+      return null
+    }
+    if (payloadVersion < currentVersion) {
       return null
     }
     return { userId: payload.userId }
@@ -73,16 +109,21 @@ export function verifyRefreshToken(token: string): { userId: string } | null {
 // Create new session (simplified - no database storage)
 export async function createSession({
   userId,
+  tokenVersion: tokenVersionOpt,
   userAgent,
   ipAddress,
 }: {
   userId: string
+  tokenVersion?: number
   userAgent?: string
   ipAddress?: string
 }) {
+  const tokenVersion =
+    tokenVersionOpt !== undefined ? tokenVersionOpt : (await getUserTokenVersion(userId)) ?? 0
+
   // Generate tokens (JWT refresh token for stateless verify in refreshAccessToken)
-  const refreshToken = createRefreshToken(userId)
-  const accessToken = createAccessToken(userId)
+  const refreshToken = createRefreshToken(userId, tokenVersion)
+  const accessToken = createAccessToken(userId, tokenVersion)
 
   // Calculate expiration date
   const expiresAt = new Date()
@@ -97,34 +138,36 @@ export async function createSession({
   }
 }
 
-// Refresh access token using refresh token (simplified - no database lookup)
+// Refresh access token using refresh token; issues new access (and new refresh) token with current tokenVersion
 export async function refreshAccessToken(refreshToken: string) {
-  // Verify refresh token
-  const payload = verifyRefreshToken(refreshToken)
+  const payload = await verifyRefreshToken(refreshToken)
   if (!payload) {
     throw new Error("Invalid refresh token")
   }
 
-  // Generate new access token
-  const accessToken = createAccessToken(payload.userId)
+  const currentVersion = (await getUserTokenVersion(payload.userId)) ?? 0
+  const accessToken = createAccessToken(payload.userId, currentVersion)
+  const newRefreshToken = createRefreshToken(payload.userId, currentVersion)
 
   return {
     accessToken,
+    refreshToken: newRefreshToken,
     userId: payload.userId,
-    sessionId: crypto.randomUUID(), // Generate new session ID
+    sessionId: crypto.randomUUID(),
   }
 }
 
-// Invalidate session (simplified - no database operation needed)
+// Invalidate a single session by id. No-op: we do not store sessions server-side; only "invalidate all" per user is supported via invalidateAllUserSessions(userId).
 export async function invalidateSession(sessionId: string) {
-  // In a cookie-based system, invalidation happens by clearing cookies
-  // No database operation needed
+  // No database operation; call invalidateAllUserSessions(userId) to revoke all tokens for a user.
 }
 
-// Invalidate all user sessions (simplified - no database operation needed)
+// Invalidate all user sessions by incrementing tokenVersion so existing JWTs fail verification
 export async function invalidateAllUserSessions(userId: string) {
-  // In a cookie-based system, invalidation happens by clearing cookies
-  // No database operation needed
+  await prisma.user.update({
+    where: { id: userId },
+    data: { tokenVersion: { increment: 1 } },
+  })
 }
 
 // Get active session (simplified - no database lookup)

@@ -1,18 +1,29 @@
 "use server"
 
+import type { UserRole } from "@prisma/client"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { redirect } from "next/navigation"
 
 import {
   deleteUserSafely,
   softDeleteUser,
+  updateUserRole,
 } from "@/models/admin.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 
+const VALID_ROLES: UserRole[] = ["user", "editor", "admin"]
+
 export type DeleteUserActionState = {
   success: boolean
   message: string
+} | null
+
+export type UpdateRoleActionState = {
+  success: boolean
+  message: string
+  userId?: string
+  role?: UserRole
 } | null
 
 export const deleteUserAction = async (
@@ -56,4 +67,38 @@ export const deleteUserAction = async (
   }
 
   return result
+}
+
+export const updateUserRoleAction = async (
+  _prevState: UpdateRoleActionState,
+  formData: FormData
+): Promise<UpdateRoleActionState> => {
+  const cookieHeader = await getCookieHeader()
+  const session = await getSessionFromCookieHeader(cookieHeader, {
+    includeUser: true,
+  })
+
+  if (!session?.user) {
+    redirect("/sign-in?redirect=/admin/users")
+  }
+
+  if (session.user.role !== "admin") {
+    return { success: false, message: "Unauthorized" }
+  }
+
+  const request = new Request("http://localhost", { method: "POST" })
+  await requireCSRF(request, formData)
+
+  const userId = formData.get("userId")
+  const newRole = formData.get("newRole")
+
+  if (typeof userId !== "string" || typeof newRole !== "string") {
+    return { success: false, message: "Invalid request" }
+  }
+
+  if (!VALID_ROLES.includes(newRole as UserRole)) {
+    return { success: false, message: "Invalid role" }
+  }
+
+  return updateUserRole(userId, newRole as UserRole, session.user.id)
 }
