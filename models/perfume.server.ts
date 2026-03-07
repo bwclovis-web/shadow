@@ -22,6 +22,10 @@ const buildPerfumeOrderBy =
   }
   return { createdAt: "desc" }
 }
+
+/** Max rows returned by getAllPerfumes to avoid unbounded queries. Callers needing more should use a paginated API. */
+const GET_ALL_PERFUMES_TAKE_LIMIT = 5000
+
 export const getAllPerfumes = async () => {
   const perfumes = await prisma.perfume.findMany({
     select: {
@@ -42,6 +46,8 @@ export const getAllPerfumes = async () => {
         },
       },
     },
+    orderBy: { name: "asc" },
+    take: GET_ALL_PERFUMES_TAKE_LIMIT,
   })
   return perfumes
 }

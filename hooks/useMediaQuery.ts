@@ -39,7 +39,7 @@ const getPageSize = (isTablet: boolean, isDesktop: boolean): number =>
  * @returns Page size based on current screen size
  */
 export const useResponsivePageSize = (): number => {
-  const [pageSize, setPageSize] = useState(6)
+  const [pageSize, setPageSize] = useState(8)
 
   useEffect(() => {
     const mqTablet = window.matchMedia(TABLET)

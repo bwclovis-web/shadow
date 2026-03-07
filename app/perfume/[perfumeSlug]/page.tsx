@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { cookies } from "next/headers"
 import { notFound } from "next/navigation"
+import { Suspense } from "react"
 import { getTranslations } from "next-intl/server"
 
 import { getPerfumeDetailPayload } from "@/models/perfumeDetail.server"
@@ -72,17 +73,25 @@ export default async function PerfumeDetailPage({
   ])
 
   return (
-    <PerfumeDetailClient
-      initialPerfume={perfume}
-      user={session?.user ?? null}
-      isInUserWishlist={payload.isInUserWishlist}
-      userRatings={payload.userRatings}
-      averageRatings={payload.averageRatings}
-      userReview={payload.userReview}
-      reviewsData={payload.reviewsData}
-      reviewsPageSize={REVIEWS_PAGE_SIZE}
-      similarPerfumes={similarPerfumes}
-      selectedLetter={resolvedSearchParams.letter ?? null}
-    />
+    <Suspense
+      fallback={
+        <div className="flex min-h-[60vh] items-center justify-center" aria-busy="true">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-noir-gold border-t-transparent" />
+        </div>
+      }
+    >
+      <PerfumeDetailClient
+        initialPerfume={perfume}
+        user={session?.user ?? null}
+        isInUserWishlist={payload.isInUserWishlist}
+        userRatings={payload.userRatings}
+        averageRatings={payload.averageRatings}
+        userReview={payload.userReview}
+        reviewsData={payload.reviewsData}
+        reviewsPageSize={REVIEWS_PAGE_SIZE}
+        similarPerfumes={similarPerfumes}
+        selectedLetter={resolvedSearchParams.letter ?? null}
+      />
+    </Suspense>
   )
 }

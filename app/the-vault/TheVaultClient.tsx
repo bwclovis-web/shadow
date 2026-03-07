@@ -27,6 +27,12 @@ const ROUTE_PATH = "/the-vault"
 const BANNER_IMAGE = "/images/vault.webp"
 const SINGLE_LETTER_REGEX = /^[A-Za-z]$/
 
+export type TheVaultClientProps = {
+  initialLetter?: string | null
+  initialPerfumes?: PerfumeFromApi[]
+  initialPerfumeTotal?: number
+}
+
 type PerfumeFromApi = {
   id: string
   name: string
@@ -43,7 +49,11 @@ const parseLetterFromParam = (param: unknown): string | null => {
   return param.toUpperCase()
 }
 
-const TheVaultClient = () => {
+const TheVaultClient = ({
+  initialLetter = null,
+  initialPerfumes = [],
+  initialPerfumeTotal = 0,
+}: TheVaultClientProps = {}) => {
   const t = useTranslations("allPerfumes")
   const tSort = useTranslations("sortOptions")
   const params = useParams()
@@ -55,6 +65,11 @@ const TheVaultClient = () => {
   const pageSize = useResponsivePageSize()
   const letterFromUrl = parseLetterFromParam(params?.letter)
   const pageFromUrl = Math.max(1, parseInt(searchParams.get("pg") ?? "1", 10))
+
+  const useInitialData =
+    letterFromUrl &&
+    initialLetter &&
+    letterFromUrl.toUpperCase() === initialLetter.toUpperCase()
 
   const sortOptions = getDefaultSortOptions((key: string) =>
     tSort(key.replace("sortOptions.", ""))
@@ -71,6 +86,8 @@ const TheVaultClient = () => {
     letter: letterFromUrl,
     houseType: "all",
     pageSize,
+    initialData: useInitialData ? initialPerfumes : undefined,
+    initialTotalCount: useInitialData ? initialPerfumeTotal : undefined,
   })
 
   const { items: perfumes, pagination, loading } = useInfinitePagination({

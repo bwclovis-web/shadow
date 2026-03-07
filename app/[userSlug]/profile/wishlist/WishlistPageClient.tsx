@@ -7,6 +7,8 @@ import { VooDooLink } from "@/components/Atoms/Button/Button"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import WishlistItemCard from "@/components/Organisms/WishlistItemCard/WishlistItemCard"
 
+import { revalidateWishlistPage } from "./actions"
+
 /** Shape of a single wishlist item as returned by getUserWishlist (serializable from server). */
 export type WishlistItemForClient = {
   id: string
@@ -33,6 +35,7 @@ export type WishlistItemForClient = {
 type WishlistPageClientProps = {
   wishlist: WishlistItemForClient[]
   bannerImage: string
+  userSlug: string
 }
 
 const WishlistPageClient = ({
@@ -40,6 +43,7 @@ const WishlistPageClient = ({
   bannerImage,
 }: WishlistPageClientProps) => {
   const t = useTranslations("wishlist")
+  const router = useRouter()
   const router = useRouter()
 
   return (
@@ -80,7 +84,10 @@ const WishlistPageClient = ({
                 item={item}
                 isAvailable={isAvailable}
                 availableAmount={availableAmount}
-                onRemove={() => router.refresh()}
+                onRemove={async () => {
+                  await revalidateWishlistPage(userSlug)
+                  router.refresh()
+                }}
               />
             )
           })}

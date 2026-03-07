@@ -13,6 +13,12 @@ export const generateMetadata = async (): Promise<Metadata> => {
   }
 }
 
-const TheVaultPage = () => <TheVaultClient />
+const TheVaultPage = () => (
+  <TheVaultClient
+    initialLetter={null}
+    initialPerfumes={[]}
+    initialPerfumeTotal={0}
+  />
+)
 
 export default TheVaultPage

@@ -54,6 +54,10 @@ export default async function WishlistPage({
   const wishlist = await getUserWishlist(session.user.id)
 
   return (
-    <WishlistPageClient wishlist={wishlist} bannerImage={BANNER_IMAGE} />
+    <WishlistPageClient
+      wishlist={wishlist}
+      bannerImage={BANNER_IMAGE}
+      userSlug={userSlug}
+    />
   )
 }

@@ -20,6 +20,7 @@ interface UseInfinitePerfumesByLetterOptions {
   houseType?: string
   pageSize?: number
   initialData?: any[]
+  initialTotalCount?: number
 }
 
 interface UseInfinitePerfumesByHouseOptions {
@@ -49,7 +50,8 @@ interface UseInfinitePerfumesByHouseOptions {
 export const useInfinitePerfumesByLetter = (
   options: UseInfinitePerfumesByLetterOptions
 ) => {
-  const { letter, houseType = "all", pageSize = 16, initialData } = options
+  const { letter, houseType = "all", pageSize = 16, initialData, initialTotalCount } = options
+  const totalCount = initialTotalCount ?? initialData?.length ?? 0
 
   return useInfiniteQuery({
     queryKey: queryKeys.perfumes.byLetterInfinite(letter || "", houseType),
@@ -71,8 +73,8 @@ export const useInfinitePerfumesByLetter = (
                 letter: letter || "",
                 skip: 0,
                 take: pageSize,
-                hasMore: initialData.length === pageSize,
-                totalCount: initialData.length,
+                hasMore: totalCount > initialData.length,
+                totalCount,
               },
             },
           ],

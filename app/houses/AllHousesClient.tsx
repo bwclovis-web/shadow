@@ -30,6 +30,9 @@ const BANNER_IMAGE = "/images/behind-bottle.webp"
 interface AllHousesClientProps {
   heading: string
   subheading: string
+  initialLetter?: string | null
+  initialHouses?: unknown[]
+  initialHousesTotal?: number
 }
 
 const useHouseFilters = (t: ReturnType<typeof useTranslations<"allHouses">>) => {
@@ -102,7 +105,9 @@ const useHousesData = (
   letterFromUrl: string | null,
   selectedHouseType: string,
   currentPage: number,
-  pageSize: number
+  pageSize: number,
+  initialData?: unknown[],
+  initialTotalCount?: number
 ) => {
   const {
     data,
@@ -115,6 +120,8 @@ const useHousesData = (
     letter: letterFromUrl,
     houseType: selectedHouseType,
     pageSize,
+    initialData,
+    initialTotalCount,
   })
 
   const { items: houses, pagination, loading } = useInfinitePagination({
@@ -146,7 +153,13 @@ const buildHousesPath = (
   return query ? `${ROUTE_PATH}?${query}` : ROUTE_PATH
 }
 
-const AllHousesClient = ({ heading, subheading }: AllHousesClientProps) => {
+const AllHousesClient = ({
+  heading,
+  subheading,
+  initialLetter = null,
+  initialHouses = [],
+  initialHousesTotal = 0,
+}: AllHousesClientProps) => {
   const t = useTranslations("allHouses")
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -164,6 +177,12 @@ const AllHousesClient = ({ heading, subheading }: AllHousesClientProps) => {
 
   const pageFromUrl = Math.max(1, parseInt(searchParams.get("pg") ?? "1", 10))
 
+  const useInitialData =
+    letterFromUrl &&
+    initialLetter &&
+    letterFromUrl === initialLetter &&
+    selectedHouseType === "all"
+
   const filters = useHouseFilters(t)
   const handlers = useHouseHandlers(setSelectedHouseType, setSelectedSort)
 
@@ -171,7 +190,9 @@ const AllHousesClient = ({ heading, subheading }: AllHousesClientProps) => {
     letterFromUrl,
     selectedHouseType,
     pageFromUrl,
-    pageSize
+    pageSize,
+    useInitialData ? initialHouses : undefined,
+    useInitialData ? initialHousesTotal : undefined
   )
 
   const normalizedHouses = useMemo(

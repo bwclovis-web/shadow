@@ -13,6 +13,7 @@ interface UseInfiniteHousesOptions {
   houseType?: string
   pageSize?: number
   initialData?: unknown[]
+  initialTotalCount?: number
 }
 
 /**
@@ -38,9 +39,11 @@ export const useInfiniteHouses = (options: UseInfiniteHousesOptions) => {
     houseType = "all",
     pageSize = 16,
     initialData,
+    initialTotalCount,
   } = options
 
   const isLetterValid = !!letter && LETTER_REGEX.test(letter)
+  const totalCount = initialTotalCount ?? initialData?.length ?? 0
 
   return useInfiniteQuery({
     queryKey: queryKeys.houses.byLetterInfinite(letter ?? "", houseType),
@@ -65,8 +68,8 @@ export const useInfiniteHouses = (options: UseInfiniteHousesOptions) => {
                 houseType,
                 skip: 0,
                 take: pageSize,
-                hasMore: initialData.length === pageSize,
-                totalCount: initialData.length,
+                hasMore: totalCount > initialData.length,
+                totalCount,
               },
             },
           ],

@@ -178,11 +178,11 @@ Full improvement report and implementation checklist for the Shadows Next.js cod
 - [x] **[MED]** Convert `app/how-we-work/HowWeWorkClient.tsx` to async server component using `getTranslations()`
 - [x] **[MED]** Convert GSAP import in `utils/rangeSliderUtils.ts` from static to dynamic
 - [x] **[MED]** Guard `<ReactQueryDevtools>` in `app/providers.tsx` behind `process.env.NODE_ENV === "development"`
-- [ ] **[MED]** Fix redundant `prisma.perfume.count()` in `models/house.server.ts` — use `house._count.perfumes`
-- [ ] **[MED]** Replace `router.refresh()` in `WishlistPageClient.tsx` with a Server Action + `revalidatePath`
-- [ ] **[LOW]** Pass initial data from server to `TheVaultClient` and `AllHousesClient`
-- [ ] **[LOW]** Add `<Suspense>` boundaries to at least `app/perfume/[perfumeSlug]/page.tsx` and `app/the-exchange/page.tsx`
-- [ ] **[LOW]** Add `take` limit / pagination guard to `getAllPerfumes()` in `models/perfume.server.ts`
+- [x] **[MED]** Fix redundant `prisma.perfume.count()` in `models/house.server.ts` — use `house._count.perfumes`
+- [x] **[MED]** Replace `router.refresh()` in `WishlistPageClient.tsx` with a Server Action + `revalidatePath`
+- [x] **[LOW]** Pass initial data from server to `TheVaultClient` and `AllHousesClient`
+- [x] **[LOW]** Add `<Suspense>` boundaries to at least `app/perfume/[perfumeSlug]/page.tsx` and `app/the-exchange/page.tsx`
+- [x] **[LOW]** Add `take` limit / pagination guard to `getAllPerfumes()` in `models/perfume.server.ts`
 
 ### Code Reuse
 

@@ -326,10 +326,7 @@ export const getPerfumeHouseBySlug = cache(
           },
         })
         if (!house) return house
-        const perfumeCount = await prisma.perfume.count({
-          where: { perfumeHouseId: house.id },
-        })
-        return { ...house, perfumeCount }
+        return { ...house, perfumeCount: house._count.perfumes }
       },
       ["house-by-slug", slug, String(skip), String(take)],
       {
