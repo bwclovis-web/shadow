@@ -168,15 +168,13 @@ export const createUserAlert = async (
       })
     }
 
-    const data: Prisma.UserAlertUncheckedCreateInput = {
-      userId,
+    const data: Prisma.UserAlertCreateInput = {
+      user: { connect: { id: userId } },
       alertType,
       title,
       message,
       metadata: metadata as Prisma.InputJsonValue,
-    }
-    if (perfumeId != null) {
-      data.perfumeId = perfumeId
+      ...(perfumeId != null && { perfume: { connect: { id: perfumeId } } }),
     }
 
     return tx.userAlert.create({
