@@ -1,19 +1,12 @@
 "use server"
 
 import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
+import { isRedirectError, redirect } from "next/navigation"
 
 import { signInCustomer } from "@/models/user.server"
 import { createSession } from "@/utils/security/session-manager.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { getProfilePathForUser } from "@/utils/user"
-
-/** Next.js redirect() throws an error; re-throw so the redirect is performed. */
-const isRedirectError = (error: unknown): boolean =>
-  typeof error === "object" &&
-  error !== null &&
-  "digest" in error &&
-  String((error as { digest?: string }).digest).startsWith("NEXT_REDIRECT")
 
 export type SignInActionState = { error?: string } | null
 
