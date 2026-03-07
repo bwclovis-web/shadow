@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
 import { Inter, Limelight } from 'next/font/google'
-import { cookies } from 'next/headers'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 import './globals.css'
 import { Providers } from './providers'
 import { ViewTransitionsWrapper } from './ViewTransitionsWrapper'
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import GlobalNavigation from '@/components/Molecules/GlobalNavigation/GlobalNavigation'
 import MobileNavigation from '@/components/Molecules/MobileNavigation'
 
@@ -30,11 +30,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const cookieStore = await cookies()
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ")
+  const cookieHeader = await getCookieHeader()
   const session = await getSessionFromCookieHeader(cookieHeader, {
     includeUser: true,
   })

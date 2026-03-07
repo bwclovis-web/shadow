@@ -1,6 +1,5 @@
 "use server"
 
-import { cookies } from "next/headers"
 import { revalidatePath } from "next/cache"
 
 import {
@@ -10,6 +9,7 @@ import {
 import { createPerfume } from "@/models/perfume.server"
 import { createPerfumeHouse } from "@/models/house.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 
 export type PendingSubmissionActionState = {
@@ -17,14 +17,6 @@ export type PendingSubmissionActionState = {
   message?: string
   error?: string
 } | null
-
-const getCookieHeader = async (): Promise<string> => {
-  const store = await cookies()
-  return store
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ")
-}
 
 export const processPendingSubmissionAction = async (
   _prevState: PendingSubmissionActionState,

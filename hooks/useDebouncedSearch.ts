@@ -5,23 +5,38 @@ import { useCallback, useEffect, useRef, useState } from "react"
 export interface UseDebouncedSearchOptions {
   delay?: number
   minLength?: number
+  /** Sync from external source (e.g. URL search param). When this changes, searchValue is updated. */
+  initialValue?: string
 }
 
 export function useDebouncedSearch<T = unknown>(
   searchFn: (query: string) => Promise<T[]>,
   options: UseDebouncedSearchOptions = {}
 ) {
-  const { delay = 300, minLength = 2 } = options
-  const [searchValue, setSearchValue] = useState("")
+  const { delay = 300, minLength = 2, initialValue } = options
+  const [searchValue, setSearchValue] = useState(initialValue ?? "")
   const [results, setResults] = useState<T[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const abortRef = useRef<AbortController | null>(null)
 
+  useEffect(() => {
+    if (initialValue !== undefined) {
+      setSearchValue(initialValue)
+    }
+  }, [initialValue])
+
   const clearResults = useCallback(() => {
     setResults([])
     setError(null)
+  }, [])
+
+  const cancelPending = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
   }, [])
 
   useEffect(() => {
@@ -60,5 +75,13 @@ export function useDebouncedSearch<T = unknown>(
     }
   }, [searchValue, delay, minLength, searchFn])
 
-  return { searchValue, setSearchValue, results, isLoading, error, clearResults }
+  return {
+    searchValue,
+    setSearchValue,
+    results,
+    isLoading,
+    error,
+    clearResults,
+    cancelPending,
+  }
 }

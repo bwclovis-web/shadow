@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
-import { cookies } from "next/headers"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { redirect } from "next/navigation"
 
 import { getAllUsersWithCounts } from "@/models/admin.server"
@@ -9,14 +9,6 @@ import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { UsersClient } from "./UsersClient"
 
 export const ROUTE_PATH = "/admin/users" as const
-
-const getCookieHeader = async (): Promise<string> => {
-  const store = await cookies()
-  return store
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ")
-}
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("userAdmin.meta")

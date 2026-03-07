@@ -8,20 +8,12 @@ import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { CreatePerfumeHouseSchema } from "@/utils/validation/formValidationSchemas"
 
-import { cookies } from "next/headers"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 
 export type CreateHouseActionState =
   | ReturnType<Awaited<ReturnType<typeof parseWithZod>>["reply"]>
   | { status: "error"; error: string }
   | null
-
-const getCookieHeader = async (): Promise<string> => {
-  const store = await cookies()
-  return store
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ")
-}
 
 export const createHouseAction = async (
   _prevState: CreateHouseActionState,

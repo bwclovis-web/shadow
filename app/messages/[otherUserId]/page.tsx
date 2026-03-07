@@ -1,20 +1,12 @@
 import type React from "react"
-import { cookies } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 
 import { getThread, markThreadAsRead } from "@/models/contactMessage.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { prisma } from "@/lib/db"
 
 import ThreadClient from "./ThreadClient"
-
-async function getCookieHeader(): Promise<string> {
-  const store = await cookies()
-  return store
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ")
-}
 
 export default async function ThreadPage({
   params,

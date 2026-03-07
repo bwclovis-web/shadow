@@ -186,13 +186,13 @@ Full improvement report and implementation checklist for the Shadows Next.js cod
 
 ### Code Reuse
 
-- [ ] Extract `getCookieHeader` to `utils/server/get-cookie-header.server.ts` and remove 7+ duplicates
+- [x] Extract `getCookieHeader` to `utils/server/get-cookie-header.server.ts` and remove 7+ duplicates
 - [x] Extract `sanitizeText` from `models/perfume.server.ts` and `models/house.server.ts` to a shared util
 - [x] Extract `calculateRelevanceScore` to a shared util used by both model files
 - [x] Extract `buildNameOrderBy` factory to `utils/server/order-by.server.ts`
 - [x] Create `useAlphabeticalBrowserState` hook to replace duplicated pagination setup in `TheVaultClient` and `AllHousesClient`
-- [ ] Replace manual debounce in `TheExchangeClient.tsx` with existing `hooks/useDebouncedSearch.ts`
-- [ ] Delete `app/houses/HousesListClient.tsx` (dead code, no imports)
+- [x] Replace manual debounce in `TheExchangeClient.tsx` with existing `hooks/useDebouncedSearch.ts`
+- [x] Delete `app/houses/HousesListClient.tsx` (dead code, no imports)
 
 ### Next.js Best Practices
 

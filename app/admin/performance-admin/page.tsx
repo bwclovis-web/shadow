@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { cookies } from "next/headers"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { redirect } from "next/navigation"
 
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
@@ -13,14 +13,6 @@ export const generateMetadata = (): Metadata => ({
   description:
     "Performance monitoring and management admin interface",
 })
-
-const getCookieHeader = async (): Promise<string> => {
-  const store = await cookies()
-  return store
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ")
-}
 
 const PerformanceAdminPage = async () => {
   const cookieHeader = await getCookieHeader()

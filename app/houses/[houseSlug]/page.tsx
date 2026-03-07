@@ -1,9 +1,9 @@
-import { cookies } from "next/headers"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 
 import { getPerfumeHouseBySlug } from "@/models/house.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 
 import HouseDetailClient from "./HouseDetailClient"
 
@@ -37,20 +37,16 @@ export default async function HouseDetailPage({ params, searchParams }: Props) {
   const { houseSlug } = await params
   const resolvedSearchParams = await searchParams
 
-  const [perfumeHouse, session] = await Promise.all([
+  const [perfumeHouse, cookieHeader] = await Promise.all([
     getPerfumeHouseBySlug(houseSlug, {
       skip: 0,
       take: DEFAULT_PAGE_SIZE,
     }),
-    (async () => {
-      const cookieStore = await cookies()
-      const cookieHeader = cookieStore
-        .getAll()
-        .map((c) => `${c.name}=${c.value}`)
-        .join("; ")
-      return getSessionFromCookieHeader(cookieHeader, { includeUser: true })
-    })(),
+    getCookieHeader(),
   ])
+  const session = await getSessionFromCookieHeader(cookieHeader, {
+    includeUser: true,
+  })
 
   if (!perfumeHouse) {
     notFound()

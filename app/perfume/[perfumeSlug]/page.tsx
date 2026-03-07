@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { cookies } from "next/headers"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { getTranslations } from "next-intl/server"
@@ -40,11 +40,7 @@ export default async function PerfumeDetailPage({
   const { perfumeSlug } = await params
   const resolvedSearchParams = await searchParams
 
-  const cookieStore = await cookies()
-  const cookieHeader = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ")
+  const cookieHeader = await getCookieHeader()
 
   const [perfume, session] = await Promise.all([
     getPerfumeBySlug(perfumeSlug),

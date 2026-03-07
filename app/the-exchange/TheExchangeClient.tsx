@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback } from "react"
 import { Link } from "next-view-transitions"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -10,6 +10,7 @@ import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import LinkCard from "@/components/Organisms/LinkCard"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { getPerfumeTypeLabel } from "@/data/SelectTypes"
+import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
 import { getUserDisplayName } from "@/utils/user"
 
 const ROUTE_PATH = "/the-exchange"
@@ -60,8 +61,29 @@ const TheExchangeClient = ({
   const tPrefs = useTranslations("traderProfile.preferences")
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [localSearchValue, setLocalSearchValue] = useState(searchQuery)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const updateSearchUrl = useCallback(
+    async (query: string) => {
+      const nextSearch = new URLSearchParams(searchParams.toString())
+      if (query) nextSearch.set("q", query)
+      else nextSearch.delete("q")
+      nextSearch.delete("pg")
+      const qs = nextSearch.toString()
+      router.push(`${ROUTE_PATH}${qs ? `?${qs}` : ""}`, { scroll: false })
+      return []
+    },
+    [router, searchParams]
+  )
+
+  const {
+    searchValue: localSearchValue,
+    setSearchValue: setLocalSearchValue,
+    cancelPending,
+  } = useDebouncedSearch(updateSearchUrl, {
+    delay: 300,
+    minLength: 0,
+    initialValue: searchQuery,
+  })
 
   const getTradePreferenceLabel = (preference: string | null | undefined) => {
     switch (preference) {
@@ -76,39 +98,8 @@ const TheExchangeClient = ({
     }
   }
 
-  useEffect(() => {
-    setLocalSearchValue(searchQuery)
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current)
-      debounceRef.current = null
-    }
-  }, [searchQuery])
-
-  const handleSearchChange = (value: string) => {
-    setLocalSearchValue(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      const nextSearch = new URLSearchParams(searchParams.toString())
-      if (value.trim()) nextSearch.set("q", value.trim())
-      else nextSearch.delete("q")
-      nextSearch.delete("pg")
-      const qs = nextSearch.toString()
-      router.push(`${ROUTE_PATH}${qs ? `?${qs}` : ""}`, { scroll: false })
-    }, 300)
-  }
-
-  useEffect(
-    () => () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    },
-    []
-  )
-
   const handlePageChange = (page: number) => {
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current)
-      debounceRef.current = null
-    }
+    cancelPending()
     const nextSearch = new URLSearchParams(searchParams.toString())
     if (localSearchValue.trim()) nextSearch.set("q", localSearchValue.trim())
     else nextSearch.delete("q")
@@ -153,7 +144,7 @@ const TheExchangeClient = ({
             <div className="max-w-md mx-auto mb-6">
               <SearchInput
                 value={localSearchValue}
-                onChange={handleSearchChange}
+                onChange={setLocalSearchValue}
                 placeholder={t("search.placeholder")}
               />
             </div>

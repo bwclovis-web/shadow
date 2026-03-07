@@ -1,11 +1,11 @@
 import type { Metadata } from "next"
 import type React from "react"
-import { cookies } from "next/headers"
 import { getTranslations } from "next-intl/server"
 import { redirect } from "next/navigation"
 
 import { getUserWishlist } from "@/models/wishlist.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getProfileSlug } from "@/utils/user"
 
 import WishlistPageClient from "./WishlistPageClient"
@@ -23,14 +23,6 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
     title: t("title"),
     description: t("description"),
   }
-}
-
-const getCookieHeader = async (): Promise<string> => {
-  const store = await cookies()
-  return store
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ")
 }
 
 export default async function WishlistPage({

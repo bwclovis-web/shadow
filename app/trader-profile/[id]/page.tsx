@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import type React from "react"
-import { cookies } from "next/headers"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getTranslations } from "next-intl/server"
 import { notFound } from "next/navigation"
 
@@ -15,14 +15,6 @@ import TraderProfileClient from "./TraderProfileClient"
 
 type Props = {
   params: Promise<{ id: string }>
-}
-
-async function getCookieHeader(): Promise<string> {
-  const store = await cookies()
-  return store
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ")
 }
 
 export const generateMetadata = async ({ params }: Props): Promise<Metadata> => {

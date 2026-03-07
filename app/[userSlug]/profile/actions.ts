@@ -1,24 +1,16 @@
 "use server"
 
-import { cookies } from "next/headers"
 import { parseWithZod } from "@conform-to/zod"
 
 import { getUserByName, updateUser } from "@/models/user.query"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { UpdateProfileSchema } from "@/utils/validation/formValidationSchemas"
 
 export type UpdateProfileActionState =
   | { success?: boolean; errors?: Record<string, string[]>; submission?: unknown }
   | null
-
-const getCookieHeader = async (): Promise<string> => {
-  const store = await cookies()
-  return store
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ")
-}
 
 export const updateProfileAction = async (
   _prevState: UpdateProfileActionState,

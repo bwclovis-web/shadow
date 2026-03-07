@@ -1,6 +1,6 @@
 "use server"
 
-import { cookies } from "next/headers"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { redirect } from "next/navigation"
 
 import {
@@ -14,14 +14,6 @@ export type DeleteUserActionState = {
   success: boolean
   message: string
 } | null
-
-const getCookieHeader = async (): Promise<string> => {
-  const store = await cookies()
-  return store
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ")
-}
 
 export const deleteUserAction = async (
   _prevState: DeleteUserActionState,

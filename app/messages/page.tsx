@@ -1,19 +1,11 @@
 import type React from "react"
-import { cookies } from "next/headers"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { redirect } from "next/navigation"
 
 import { getConversations } from "@/models/contactMessage.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
 import MessagesClient from "./MessagesClient"
-
-async function getCookieHeader(): Promise<string> {
-  const store = await cookies()
-  return store
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ")
-}
 
 export default async function MessagesPage(): Promise<React.ReactElement> {
   const cookieHeader = await getCookieHeader()

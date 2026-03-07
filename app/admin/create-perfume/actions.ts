@@ -5,10 +5,9 @@ import { redirect } from "next/navigation"
 
 import { createPerfume } from "@/models/perfume.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { CreatePerfumeSchema } from "@/utils/validation/formValidationSchemas"
-
-import { cookies } from "next/headers"
 
 /** Next.js redirect() throws; re-throw so the redirect is performed. */
 const isRedirectError = (error: unknown): boolean =>
@@ -21,14 +20,6 @@ export type CreatePerfumeActionState =
   | ReturnType<Awaited<ReturnType<typeof parseWithZod>>["reply"]>
   | { status: "error"; error: string; initialValue?: Record<string, unknown> }
   | null
-
-const getCookieHeader = async (): Promise<string> => {
-  const store = await cookies()
-  return store
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ")
-}
 
 export const createPerfumeAction = async (
   _prevState: CreatePerfumeActionState,

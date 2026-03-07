@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import type React from "react"
-import { cookies } from "next/headers"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getTranslations } from "next-intl/server"
 import { redirect } from "next/navigation"
 
@@ -23,14 +23,6 @@ export const generateMetadata = async ({
   return {
     title: t("changePassword"),
   }
-}
-
-const getCookieHeader = async (): Promise<string> => {
-  const store = await cookies()
-  return store
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ")
 }
 
 export default async function ChangePasswordPage({

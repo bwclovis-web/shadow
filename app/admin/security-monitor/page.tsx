@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
-import { cookies } from "next/headers"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { redirect } from "next/navigation"
 
 import {
@@ -28,14 +28,6 @@ export const generateMetadata = async (): Promise<Metadata> => {
     title: t("heading"),
     description: t("subheading"),
   }
-}
-
-const getCookieHeader = async (): Promise<string> => {
-  const store = await cookies()
-  return store
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ")
 }
 
 const SecurityMonitorPage = async () => {

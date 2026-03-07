@@ -23,6 +23,16 @@ const isInWishlist = (items: WishlistItem[], perfumeId: string) =>
     item => item.perfumeId === perfumeId || item.perfume?.id === perfumeId
   )
 
+const getCsrfHeader = (): HeadersInit => {
+  if (typeof document === "undefined") return {}
+  const cookie = document.cookie
+    .split(";")
+    .map((c) => c.trim())
+    .find((c) => c.startsWith("_csrf="))
+  const token = cookie ? cookie.split("=")[1]?.trim() : null
+  return token ? { "x-csrf-token": token } : {}
+}
+
 const wishlistAction = async (
   params: WishlistActionParams
 ): Promise<WishlistResponse> => {
@@ -39,6 +49,7 @@ const wishlistAction = async (
     method: "POST",
     body: formData,
     credentials: "include",
+    headers: getCsrfHeader(),
   })
 
   if (!response.ok) {
