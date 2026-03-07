@@ -45,7 +45,7 @@ flowchart LR
 
 ### User query helper
 
-- [ ] In `models/user.query.ts`, add `getUserTokenVersion(userId: string): Promise<number | null>` that fetches only `tokenVersion` for the user (e.g. `findUnique` with `select: { tokenVersion: true }`).
+- [x] In `models/user.query.ts`, add `getUserTokenVersion(userId: string): Promise<number | null>` that fetches only `tokenVersion` for the user (e.g. `findUnique` with `select: { tokenVersion: true }`).
 
 ### Session manager (`utils/security/session-manager.server.ts`)
 

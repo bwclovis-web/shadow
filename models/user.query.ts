@@ -33,6 +33,17 @@ export const getUserByEmail = async (email: string) => {
   return user
 }
 
+/**
+ * Fetch only tokenVersion for a user (for JWT verification / session invalidation).
+ */
+export const getUserTokenVersion = async (userId: string): Promise<number | null> => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { tokenVersion: true },
+  })
+  return user?.tokenVersion ?? null
+}
+
 export const getAllUsers = async () => {
   const users = await prisma.user.findMany()
   return users
