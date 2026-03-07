@@ -176,8 +176,8 @@ Full improvement report and implementation checklist for the Shadows Next.js cod
 - [x] **[HIGH]** Add `unstable_cache` wrapping to perfume and house detail model queries
 - [x] **[MED]** Convert `app/about-us/AboutUsClient.tsx` to async server component using `getTranslations()`
 - [x] **[MED]** Convert `app/how-we-work/HowWeWorkClient.tsx` to async server component using `getTranslations()`
-- [ ] **[MED]** Convert GSAP import in `utils/rangeSliderUtils.ts` from static to dynamic
-- [ ] **[MED]** Guard `<ReactQueryDevtools>` in `app/providers.tsx` behind `process.env.NODE_ENV === "development"`
+- [x] **[MED]** Convert GSAP import in `utils/rangeSliderUtils.ts` from static to dynamic
+- [x] **[MED]** Guard `<ReactQueryDevtools>` in `app/providers.tsx` behind `process.env.NODE_ENV === "development"`
 - [ ] **[MED]** Fix redundant `prisma.perfume.count()` in `models/house.server.ts` — use `house._count.perfumes`
 - [ ] **[MED]** Replace `router.refresh()` in `WishlistPageClient.tsx` with a Server Action + `revalidatePath`
 - [ ] **[LOW]** Pass initial data from server to `TheVaultClient` and `AllHousesClient`

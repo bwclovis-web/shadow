@@ -1,5 +1,3 @@
-import { gsap } from "gsap"
-
 const DRAG_ANIMATION_DURATION = 0
 const IDLE_ANIMATION_DURATION = 0.3
 const SCALE_ANIMATION_DURATION = 0.2
@@ -83,12 +81,13 @@ export const getKeyboardValue = ({
 const tweenConfig = (duration: number) => ({ duration, ease: EASE })
 
 export const sliderAnimations = {
-  animatePosition: (
+  animatePosition: async (
     thumbElement: HTMLElement,
     fillElement: HTMLElement,
     percentage: number,
     isDragging: boolean
   ) => {
+    const { gsap } = await import("gsap")
     const duration = isDragging ? DRAG_ANIMATION_DURATION : IDLE_ANIMATION_DURATION
     const config = tweenConfig(duration)
 
@@ -96,11 +95,12 @@ export const sliderAnimations = {
     gsap.to(fillElement, { width: `${percentage}%`, ...config })
   },
 
-  animateScale: (
+  animateScale: async (
     element: HTMLElement,
     scale: number,
     duration = SCALE_ANIMATION_DURATION
   ) => {
+    const { gsap } = await import("gsap")
     gsap.to(element, { scale, ...tweenConfig(duration) })
   },
 }
@@ -114,11 +114,12 @@ export const setupHoverListeners = (
   isDragging: boolean
 ): (() => void) => {
   const handleMouseEnter = () => {
-    if (!disabled) sliderAnimations.animateScale(thumbElement, HOVER_SCALE)
+    if (!disabled) void sliderAnimations.animateScale(thumbElement, HOVER_SCALE)
   }
 
   const handleMouseLeave = () => {
-    if (!isDragging && !disabled) sliderAnimations.animateScale(thumbElement, 1)
+    if (!isDragging && !disabled)
+      void sliderAnimations.animateScale(thumbElement, 1)
   }
 
   thumbElement.addEventListener("mouseenter", handleMouseEnter)

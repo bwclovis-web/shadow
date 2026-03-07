@@ -90,9 +90,9 @@ export const useRangeSlider = ({
     thumbRef,
   })
 
-  useGSAP(() => {
+  useGSAP(async () => {
     if (thumbRef.current && fillRef.current) {
-      sliderAnimations.animatePosition(
+      await sliderAnimations.animatePosition(
         thumbRef.current,
         fillRef.current,
         percentage,

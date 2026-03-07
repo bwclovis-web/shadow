@@ -417,6 +417,7 @@ const migratePerfumes = async () => {
   // Track used slugs so duplicate names get unique slugs and every perfume gets its own row
   const usedSlugs = new Set()
   let duplicateSlugCount = 0
+  let processed = 0
 
   for (const perfume of perfumes) {
     try {
@@ -457,7 +458,12 @@ const migratePerfumes = async () => {
       stats.errors++
       console.error(`  ❌ Error migrating perfume ${perfume.name}:`, error.message)
     }
+    processed++
+    if (processed % 500 === 0) {
+      console.log(`  📊 Progress: ${processed}/${perfumes.length} perfumes (${stats.errors} errors)`)
+    }
   }
+  console.log(`  📊 Final: ${processed}/${perfumes.length} perfumes (${stats.errors} errors)`)
 
   if (duplicateSlugCount > 0) {
     console.log(`  ℹ️  ${duplicateSlugCount} perfumes had duplicate names and were given unique slugs (e.g. name-id)`)
@@ -503,6 +509,7 @@ const migratePerfumeNotes = async () => {
     return
   }
 
+  let processed = 0
   for (const note of notes) {
     try {
       // Use name as the unique key, preserve local ID
@@ -523,7 +530,12 @@ const migratePerfumeNotes = async () => {
       stats.errors++
       console.error(`  ❌ Error migrating note ${note.name}:`, error.message)
     }
+    processed++
+    if (processed % 500 === 0) {
+      console.log(`  📊 Progress: ${processed}/${notes.length} notes (${stats.errors} errors)`)
+    }
   }
+  console.log(`  📊 Final: ${processed}/${notes.length} notes (${stats.errors} errors)`)
 
   await updateMigrationState("PerfumeNotes", migrationStart, notes.length)
   console.log("  ✅ Perfume notes migration completed")
@@ -569,6 +581,7 @@ const migratePerfumeNoteRelations = async () => {
     console.log(`  ⚠️  Skipping ${skipped} relations whose perfume is not on remote (would cause FK errors)`)
   }
 
+  let processed = 0
   for (const relation of validRelations) {
     try {
       await acceleratePrisma.perfumeNoteRelation.upsert({
@@ -593,7 +606,12 @@ const migratePerfumeNoteRelations = async () => {
       stats.errors++
       console.error(`  ❌ Error migrating note relation ${relation.id}:`, error.message)
     }
+    processed++
+    if (processed % 500 === 0) {
+      console.log(`  📊 Progress: ${processed}/${validRelations.length} note relations (${stats.errors} errors)`)
+    }
   }
+  console.log(`  📊 Final: ${processed}/${validRelations.length} note relations (${stats.errors} errors)`)
 
   await updateMigrationState("PerfumeNoteRelation", migrationStart, relations.length)
   console.log("  ✅ Perfume note relations migration completed")
@@ -629,6 +647,7 @@ const migrateUserPerfumes = async () => {
     return
   }
 
+  let processed = 0
   for (const userPerfume of userPerfumes) {
     try {
       await acceleratePrisma.userPerfume.upsert({
@@ -667,7 +686,12 @@ const migrateUserPerfumes = async () => {
       stats.errors++
       console.error(`  ❌ Error migrating user perfume ${userPerfume.id}:`, error.message)
     }
+    processed++
+    if (processed % 500 === 0) {
+      console.log(`  📊 Progress: ${processed}/${userPerfumes.length} user perfumes (${stats.errors} errors)`)
+    }
   }
+  console.log(`  📊 Final: ${processed}/${userPerfumes.length} user perfumes (${stats.errors} errors)`)
 
   await updateMigrationState("UserPerfume", migrationStart, userPerfumes.length)
   console.log("  ✅ User perfumes migration completed")
@@ -703,6 +727,7 @@ const migrateUserPerfumeRatings = async () => {
     return
   }
 
+  let processed = 0
   for (const rating of ratings) {
     try {
       await acceleratePrisma.userPerfumeRating.upsert({
@@ -735,7 +760,12 @@ const migrateUserPerfumeRatings = async () => {
       stats.errors++
       console.error(`  ❌ Error migrating rating ${rating.id}:`, error.message)
     }
+    processed++
+    if (processed % 500 === 0) {
+      console.log(`  📊 Progress: ${processed}/${ratings.length} ratings (${stats.errors} errors)`)
+    }
   }
+  console.log(`  📊 Final: ${processed}/${ratings.length} ratings (${stats.errors} errors)`)
 
   await updateMigrationState("UserPerfumeRating", migrationStart, ratings.length)
   console.log("  ✅ User perfume ratings migration completed")
@@ -771,6 +801,7 @@ const migrateUserPerfumeReviews = async () => {
     return
   }
 
+  let processed = 0
   for (const review of reviews) {
     try {
       await acceleratePrisma.userPerfumeReview.upsert({
@@ -797,7 +828,12 @@ const migrateUserPerfumeReviews = async () => {
       stats.errors++
       console.error(`  ❌ Error migrating review ${review.id}:`, error.message)
     }
+    processed++
+    if (processed % 500 === 0) {
+      console.log(`  📊 Progress: ${processed}/${reviews.length} reviews (${stats.errors} errors)`)
+    }
   }
+  console.log(`  📊 Final: ${processed}/${reviews.length} reviews (${stats.errors} errors)`)
 
   await updateMigrationState("UserPerfumeReview", migrationStart, reviews.length)
   console.log("  ✅ User perfume reviews migration completed")
@@ -833,6 +869,7 @@ const migrateUserPerfumeWishlists = async () => {
     return
   }
 
+  let processed = 0
   for (const wishlist of wishlists) {
     try {
       await acceleratePrisma.userPerfumeWishlist.upsert({
@@ -893,6 +930,7 @@ const migrateUserPerfumeComments = async () => {
     return
   }
 
+  let processed = 0
   for (const comment of comments) {
     try {
       await acceleratePrisma.userPerfumeComment.upsert({
@@ -957,6 +995,7 @@ const migrateWishlistNotifications = async () => {
     return
   }
 
+  let processed = 0
   for (const notification of notifications) {
     try {
       await acceleratePrisma.wishlistNotification.upsert({
@@ -980,7 +1019,12 @@ const migrateWishlistNotifications = async () => {
       stats.errors++
       console.error(`  ❌ Error migrating notification ${notification.id}:`, error.message)
     }
+    processed++
+    if (processed % 500 === 0) {
+      console.log(`  📊 Progress: ${processed}/${notifications.length} notifications (${stats.errors} errors)`)
+    }
   }
+  console.log(`  📊 Final: ${processed}/${notifications.length} notifications (${stats.errors} errors)`)
 
   await updateMigrationState("WishlistNotification", migrationStart, notifications.length)
   console.log("  ✅ Wishlist notifications migration completed")

@@ -55,7 +55,7 @@ export const useDragState = ({
     isDraggingRef.current = false
     setIsDragging(false)
     if (thumbRef.current) {
-      sliderAnimations.animateScale(thumbRef.current, 1.2)
+      void sliderAnimations.animateScale(thumbRef.current, 1.2)
     }
     document.removeEventListener("mousemove", handleMouseMove)
     document.removeEventListener("mouseup", mouseUpWrapperRef.current)
@@ -74,7 +74,7 @@ export const useDragState = ({
       onValueChange(newValue)
 
       if (thumbRef.current) {
-        sliderAnimations.animateScale(thumbRef.current, 1.3, 0.1)
+        void sliderAnimations.animateScale(thumbRef.current, 1.3, 0.1)
       }
 
       const mouseUpWrapper = () => handleMouseUpRef.current()
