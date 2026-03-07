@@ -10,7 +10,7 @@ type DisplayItem = {
   slug: string
   image?: string
   type?: string
-  perfumeHouse?: { name: string }
+  perfumeHouse?: { name: string } | null
 }
 
 interface DataDisplaySectionProps {
