@@ -27,7 +27,16 @@ export const authenticateUser = async (request: Request): Promise<AuthResult> =>
       return { success: false, error: "User not found", status: 401 }
     }
 
-    return { success: true, user: session.user }
+    const u = session.user
+    const user: AuthUser = {
+      id: u.id,
+      email: u.email,
+      firstName: u.firstName ?? null,
+      lastName: u.lastName ?? null,
+      username: u.username ?? null,
+      role: u.role,
+    }
+    return { success: true, user }
   } catch (error) {
     console.error("Authentication error:", error)
     return { success: false, error: "Authentication failed", status: 500 }
