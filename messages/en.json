@@ -439,6 +439,8 @@
       "removeButton": "Remove from Collection",
       "removing": "Removing from Collection...",
       "total": "Total",
+      "totalAmount": "Total amount",
+      "remainingAmount": "In collection (after destashes)",
       "type": "Type",
       "viewDetails": "View / Edit details",
       "viewComments": "View My Comments",

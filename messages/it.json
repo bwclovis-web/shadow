@@ -442,6 +442,8 @@
       "removeButton": "Rimuovi dalla collezione",
       "removing": "Rimozione...",
       "total": "Totale",
+      "totalAmount": "Quantità totale",
+      "remainingAmount": "In collezione (dopo destock)",
       "type": "Tipo",
       "viewDetails": "Visualizza / Modifica",
       "viewComments": "I miei commenti",

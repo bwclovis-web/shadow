@@ -69,12 +69,14 @@ export async function POST(request: NextRequest) {
       case "add": {
         const price = formData.get("price") as string | undefined
         const placeOfPurchase = formData.get("placeOfPurchase") as string | undefined
+        const perfumeType = (formData.get("type") as string)?.trim() || undefined
         result = await addUserPerfume({
           userId: user.id,
           perfumeId,
           amount,
           price,
           placeOfPurchase,
+          type: perfumeType,
         })
         if (amount && parseFloat(amount) > 0) {
           try {

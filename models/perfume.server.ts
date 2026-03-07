@@ -46,6 +46,9 @@ export const getSingleUserPerfumeById = async (userPerfumeId: string, userId: st
     id: true,
     perfumeId: true,
     userId: true,
+    amount: true,
+    available: true,
+    type: true,
     comments: {
       select: {
         id: true,

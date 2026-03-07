@@ -25,6 +25,9 @@ export type SerializedUserPerfume = {
   id: string
   perfumeId: string
   userId: string
+  amount?: string | null
+  available?: string | null
+  type?: string | null
   comments?: Array<{
     id: string
     userPerfumeId: string
@@ -225,6 +228,24 @@ const MySingleScentClient = ({
       ? perfume.image
       : BOTTLE_BANNER
 
+  // Total amount owned and remaining (after destashes) for this perfume
+  const entriesForThisPerfume = userPerfumesListState.filter(
+    (up) => (up as { perfumeId: string }).perfumeId === perfumeId
+  )
+  const totalAmount = entriesForThisPerfume.reduce((sum, entry) => {
+    const amt = parseFloat(
+      (entry.amount ?? "").toString().replace(/[^0-9.]/g, "") || "0"
+    )
+    return sum + (Number.isNaN(amt) ? 0 : amt)
+  }, 0)
+  const totalDestashed = entriesForThisPerfume.reduce((sum, entry) => {
+    const avail = parseFloat(
+      (entry.available ?? "").toString().replace(/[^0-9.]/g, "") || "0"
+    )
+    return sum + (Number.isNaN(avail) ? 0 : avail)
+  }, 0)
+  const remainingAmount = totalAmount - totalDestashed
+
   return (
     <>
       {modalOpen && modalId === "delete-item" && (
@@ -250,6 +271,8 @@ const MySingleScentClient = ({
           userPerfume={finalPerfume}
           deletePerfume={handleRemovePerfume}
           isRemoving={isRemoving}
+          totalAmount={totalAmount}
+          remainingAmount={remainingAmount}
         />
         <VooDooDetails
           summary={t("viewComments")}

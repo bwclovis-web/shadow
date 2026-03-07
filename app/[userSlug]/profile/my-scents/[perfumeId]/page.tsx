@@ -28,6 +28,9 @@ const serializeUserPerfume = (up: {
   id: string
   perfumeId: string
   userId: string
+  amount?: string | null
+  available?: string | null
+  type?: string | null
   comments?: Array<{ createdAt?: Date; updatedAt?: Date; [k: string]: unknown }>
   perfume: unknown
   [key: string]: unknown

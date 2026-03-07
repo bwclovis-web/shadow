@@ -121,6 +121,9 @@ export const useMyScentsForm = (
     formData.append("amount", perfumeData.amount)
     formData.append("price", perfumeData.price)
     formData.append("placeOfPurchase", perfumeData.placeOfPurchase)
+    if (perfumeData.type) {
+      formData.append("type", perfumeData.type)
+    }
     formData.append("action", "add")
     return formData
   }, [selectedPerfume, perfumeData])
