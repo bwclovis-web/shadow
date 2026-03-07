@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache"
 import { cache } from "react"
 
 import { prisma } from "@/lib/db"
+import { calculateRelevanceScore } from "@/utils/calculateRelevanceScore"
 import { assertValid, validationError } from "@/utils/errorHandling.patterns"
 import { sanitizeText } from "@/utils/server/sanitize.server"
 import { createUrlSlug } from "@/utils/slug"
@@ -442,60 +443,12 @@ export const searchPerfumeHouseByName = async (
   const rankedResults = allResults
     .map(house => ({
       ...house,
-      relevanceScore: calculateHouseRelevanceScore(house.name, searchTerm),
+      relevanceScore: calculateRelevanceScore(house.name, searchTerm),
     }))
     .sort((a, b) => b.relevanceScore - a.relevanceScore)
     .slice(0, 10)
 
   return rankedResults
-}
-
-// Helper function to calculate relevance score for houses
-const calculateHouseRelevanceScore = (
-  houseName: string,
-  searchTerm: string
-): number => {
-  const name = houseName.toLowerCase()
-  const term = searchTerm.toLowerCase()
-
-  let score = 0
-
-  // Exact match gets highest score
-  if (name === term) {
-    score += 150
-  }
-  // Starts with gets high score
-  else if (name.startsWith(term)) {
-    score += 100
-
-    // Bonus for "name - " pattern (search term followed by space and hyphen)
-    // This prioritizes specific versions or house branches
-    if (
-      name.startsWith(term + " -") ||
-      name.startsWith(term + " –") ||
-      name.startsWith(term + " —")
-    ) {
-      score += 45
-    } else if (name.startsWith(term + "-")) {
-      // Smaller bonus for hyphen without space
-      score += 20
-    }
-  }
-  // Contains gets medium score
-  else if (name.includes(term)) {
-    score += 40
-  }
-
-  // Bonus for shorter names (more specific matches)
-  score += Math.max(0, 20 - name.length)
-
-  // Bonus for matches at word boundaries
-  const wordBoundaryRegex = new RegExp(`\\b${term}`, "i")
-  if (wordBoundaryRegex.test(name)) {
-    score += 20
-  }
-
-  return score
 }
 
 export const deletePerfumeHouse = async (id: string) => {
