@@ -1,13 +1,20 @@
 "use server"
 
 import { parseWithZod } from "@conform-to/zod"
-import { isRedirectError, redirect } from "next/navigation"
+import { redirect } from "next/navigation"
 
 import { createPerfume } from "@/models/perfume.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { CreatePerfumeSchema } from "@/utils/validation/formValidationSchemas"
+
+/** Next.js redirect() throws; re-throw so the redirect is performed. Not in next/navigation types in 16.x. */
+const isRedirectError = (error: unknown): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  "digest" in error &&
+  String((error as { digest?: string }).digest).startsWith("NEXT_REDIRECT")
 
 export type CreatePerfumeActionState =
   | ReturnType<Awaited<ReturnType<typeof parseWithZod>>["reply"]>
