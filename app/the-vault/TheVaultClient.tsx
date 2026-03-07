@@ -1,22 +1,17 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { useParams, useRouter, useSearchParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
 import AlphabeticalNav from "@/components/Organisms/AlphabeticalNav"
 import DataDisplaySection from "@/components/Organisms/DataDisplaySection"
 import DataFilters from "@/components/Organisms/DataFilters"
 import TitleBanner from "@/components/Organisms/TitleBanner"
+import { useAlphabeticalBrowserState } from "@/hooks/useAlphabeticalBrowserState"
 import { useInfinitePagination } from "@/hooks/useInfinitePagination"
 import { useInfinitePerfumesByLetter } from "@/hooks/useInfinitePerfumes"
 import { useResponsivePageSize } from "@/hooks/useMediaQuery"
-import {
-  usePaginatedNavigation,
-  usePreserveScrollPosition,
-} from "@/hooks/usePaginatedNavigation"
-import { useScrollToDataList } from "@/hooks/useScrollToDataList"
-import { useSyncPaginationUrl } from "@/hooks/useSyncPaginationUrl"
 import {
   getDefaultSortOptions,
   sortItems,
@@ -58,7 +53,6 @@ const TheVaultClient = ({
   const tSort = useTranslations("sortOptions")
   const params = useParams()
   const searchParams = useSearchParams()
-  const router = useRouter()
 
   const [selectedSort, setSelectedSort] = useState<SortOption>("created-desc")
 
@@ -122,62 +116,25 @@ const TheVaultClient = ({
     [letterFromUrl]
   )
 
-  const navigate = useMemo(
-    () =>
-      (
-        to: string,
-        opts?: { replace?: boolean; preventScrollReset?: boolean }
-      ) => {
-        router[opts?.replace ? "replace" : "push"](to, {
-          scroll: !opts?.preventScrollReset,
-        })
-      },
-    [router]
+  const buildPathForLetter = useMemo(
+    () => (letter: string | null) =>
+      letter ? `${ROUTE_PATH}/${letter.toLowerCase()}` : ROUTE_PATH,
+    []
   )
 
-  const { handleNextPage, handlePrevPage } = usePaginatedNavigation({
-    currentPage: pagination.currentPage,
-    hasNextPage: pagination.hasNextPage,
-    hasPrevPage: pagination.hasPrevPage,
-    navigate,
-    buildPath,
-  })
-
-  usePreserveScrollPosition(loading)
-
-  useSyncPaginationUrl({
-    currentPage: pagination.currentPage,
-    pageFromUrl,
-    letter: letterFromUrl,
-    basePath: letterFromUrl
-      ? `${ROUTE_PATH}/${letterFromUrl.toLowerCase()}`
-      : ROUTE_PATH,
-  })
-
-  const handleLetterClick = (letter: string | null) => {
-    if (letter) {
-      router.push(`${ROUTE_PATH}/${letter.toLowerCase()}`, { scroll: false })
-    } else {
-      router.push(ROUTE_PATH, { scroll: false })
-    }
-  }
-
-  useScrollToDataList({
-    trigger: letterFromUrl,
-    enabled: !!letterFromUrl,
-    isLoading: loading,
-    hasData: perfumes.length > 0,
-    additionalOffset: 32,
-  })
-
-  useScrollToDataList({
-    trigger: pagination.currentPage,
-    enabled: !!letterFromUrl && !!pagination.currentPage,
-    isLoading: loading,
-    hasData: perfumes.length > 0,
-    additionalOffset: 32,
-    skipInitialScroll: true,
-  })
+  const { handleLetterClick, handleNextPage, handlePrevPage } =
+    useAlphabeticalBrowserState({
+      letter: letterFromUrl,
+      pageFromUrl,
+      basePathForSync: letterFromUrl
+        ? `${ROUTE_PATH}/${letterFromUrl.toLowerCase()}`
+        : ROUTE_PATH,
+      buildPath,
+      buildPathForLetter,
+      pagination,
+      loading,
+      itemCount: perfumes.length,
+    })
 
   if (error) {
     return (

@@ -1,22 +1,17 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
 import AlphabeticalNav from "@/components/Organisms/AlphabeticalNav"
 import DataDisplaySection from "@/components/Organisms/DataDisplaySection"
 import DataFilters from "@/components/Organisms/DataFilters"
 import TitleBanner from "@/components/Organisms/TitleBanner"
+import { useAlphabeticalBrowserState } from "@/hooks/useAlphabeticalBrowserState"
 import { useInfiniteHouses } from "@/hooks/useInfiniteHouses"
 import { useInfinitePagination } from "@/hooks/useInfinitePagination"
 import { useResponsivePageSize } from "@/hooks/useMediaQuery"
-import {
-  usePaginatedNavigation,
-  usePreserveScrollPosition,
-} from "@/hooks/usePaginatedNavigation"
-import { useScrollToDataList } from "@/hooks/useScrollToDataList"
-import { useSyncPaginationUrl } from "@/hooks/useSyncPaginationUrl"
 import {
   getDefaultSortOptions,
   sortItems,
@@ -161,7 +156,6 @@ const AllHousesClient = ({
   initialHousesTotal = 0,
 }: AllHousesClientProps) => {
   const t = useTranslations("allHouses")
-  const router = useRouter()
   const searchParams = useSearchParams()
 
   const [selectedHouseType, setSelectedHouseType] = useState("all")
@@ -227,52 +221,22 @@ const AllHousesClient = ({
     [letterFromUrl]
   )
 
-  const navigate = useMemo(
-    () => (to: string, opts?: { replace?: boolean; preventScrollReset?: boolean }) => {
-      router[opts?.replace ? "replace" : "push"](to, {
-        scroll: !opts?.preventScrollReset,
-      })
-    },
-    [router]
+  const buildPathForLetter = useMemo(
+    () => (letter: string | null) => buildHousesPath(letter, 1),
+    []
   )
 
-  const { handleNextPage, handlePrevPage } = usePaginatedNavigation({
-    currentPage: pagination.currentPage,
-    hasNextPage: pagination.hasNextPage,
-    hasPrevPage: pagination.hasPrevPage,
-    navigate,
-    buildPath,
-  })
-
-  usePreserveScrollPosition(loading)
-
-  useSyncPaginationUrl({
-    currentPage: pagination.currentPage,
-    pageFromUrl,
-    letter: letterFromUrl,
-    basePath: ROUTE_PATH,
-  })
-
-  const handleLetterClick = (letter: string | null) => {
-    const path = buildHousesPath(letter, 1)
-    router.push(path, { scroll: false })
-  }
-
-  useScrollToDataList({
-    trigger: letterFromUrl,
-    enabled: !!letterFromUrl,
-    isLoading: loading,
-    hasData: houses.length > 0,
-    additionalOffset: 32,
-  })
-  useScrollToDataList({
-    trigger: pagination.currentPage,
-    enabled: !!letterFromUrl && !!pagination.currentPage,
-    isLoading: loading,
-    hasData: houses.length > 0,
-    additionalOffset: 32,
-    skipInitialScroll: true,
-  })
+  const { handleLetterClick, handleNextPage, handlePrevPage } =
+    useAlphabeticalBrowserState({
+      letter: letterFromUrl,
+      pageFromUrl,
+      basePathForSync: ROUTE_PATH,
+      buildPath,
+      buildPathForLetter,
+      pagination,
+      loading,
+      itemCount: houses.length,
+    })
 
   if (error) {
     return (
