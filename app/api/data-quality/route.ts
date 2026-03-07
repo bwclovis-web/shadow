@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { subDays } from "date-fns"
 
 import { prisma } from "@/lib/db"
-
 import type { DataQualityStats } from "@/lib/queries/dataQuality"
+import { requireAdminOrEditorApi } from "@/utils/server/requireAdminOrEditorApi.server"
 
 type Timeframe = "week" | "month" | "all"
 
@@ -14,6 +14,9 @@ const buildDateFilter = (timeframe: Timeframe) => {
 }
 
 export const GET = async (request: NextRequest) => {
+  const auth = await requireAdminOrEditorApi(request)
+  if (!auth.allowed) return auth.response
+
   try {
     const timeframe = (request.nextUrl.searchParams.get("timeframe") ||
       "month") as Timeframe

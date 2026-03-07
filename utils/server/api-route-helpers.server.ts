@@ -5,6 +5,7 @@
 
 import type { NextRequest } from "next/server"
 
+import type { AuthUser } from "@/utils/server/auth.server"
 import { authenticateUser } from "@/utils/server/auth.server"
 import { ErrorHandler } from "@/utils/errorHandling"
 import { createErrorResponse, createSuccessResponse } from "@/utils/response.server"
@@ -13,11 +14,7 @@ import { createErrorResponse, createSuccessResponse } from "@/utils/response.ser
 
 export interface AuthenticatedContext {
   userId: string
-  user: {
-    id: string
-    email: string
-    role: string
-  }
+  user: AuthUser
 }
 
 /** Context passed to authenticated Next.js API handlers */

@@ -1,5 +1,4 @@
 import bcrypt from "bcryptjs"
-import crypto from "crypto"
 
 // Password security configuration
 export const PASSWORD_CONFIG = {
@@ -125,16 +124,9 @@ export function calculatePasswordStrength(password: string): {
   return { score, strength, feedback }
 }
 
-// Enhanced password hashing with additional security
+// Password hashing (bcrypt embeds its own salt in the hash)
 export async function hashPassword(password: string): Promise<string> {
-  // Generate a random salt for additional security
-  const salt = crypto.randomBytes(16).toString("hex")
-
-  // Hash the password with bcrypt
-  const hashedPassword = await bcrypt.hash(password, PASSWORD_CONFIG.SALT_ROUNDS)
-
-  // Combine salt and hash for storage (salt:hash format)
-  return `${salt}:${hashedPassword}`
+  return bcrypt.hash(password, PASSWORD_CONFIG.SALT_ROUNDS)
 }
 
 // Enhanced password verification
@@ -203,28 +195,42 @@ export function validatePasswordComplexity(password: string): {
   }
 }
 
-// Generate a secure random password
+// Secure random integer in [0, maxExclusive) using crypto.getRandomValues
+function secureRandomInt(maxExclusive: number): number {
+  const arr = new Uint32Array(1)
+  globalThis.crypto.getRandomValues(arr)
+  return arr[0] % maxExclusive
+}
+
+// Generate a secure random password (uses crypto.getRandomValues, not Math.random)
 export function generateSecurePassword(length: number = 16): string {
   const charset =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*"
+  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  const lowercase = "abcdefghijklmnopqrstuvwxyz"
+  const digits = "0123456789"
+  const special = "!@#$%^&*"
+
   let password = ""
 
   // Ensure at least one character from each required category
-  password += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[Math.floor(Math.random() * 26)] // uppercase
-  password += "abcdefghijklmnopqrstuvwxyz"[Math.floor(Math.random() * 26)] // lowercase
-  password += "0123456789"[Math.floor(Math.random() * 10)] // number
-  password += "!@#$%^&*"[Math.floor(Math.random() * 8)] // special char
+  password += uppercase[secureRandomInt(26)]
+  password += lowercase[secureRandomInt(26)]
+  password += digits[secureRandomInt(10)]
+  password += special[secureRandomInt(8)]
 
   // Fill the rest randomly
   for (let i = 4; i < length; i++) {
-    password += charset[Math.floor(Math.random() * charset.length)]
+    password += charset[secureRandomInt(charset.length)]
   }
 
-  // Shuffle the password
-  return password
-    .split("")
-    .sort(() => Math.random() - 0.5)
-    .join("")
+  // Fisher-Yates shuffle using secure random
+  const chars = password.split("")
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = secureRandomInt(i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]]
+  }
+  return chars.join("")
 }
 
 // Check if password is expired

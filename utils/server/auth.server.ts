@@ -1,10 +1,18 @@
+import type { User } from "@prisma/client"
+
 import { getSessionFromRequest } from "@/utils/session-from-request.server"
+
+/** Authenticated user shape (subset of Prisma User returned by auth; no password) */
+export type AuthUser = Pick<
+  User,
+  "id" | "email" | "firstName" | "lastName" | "username" | "role"
+>
 
 export type AuthResult = {
   success: boolean
   error?: string
   status?: number
-  user?: any
+  user?: AuthUser
 }
 
 export const authenticateUser = async (request: Request): Promise<AuthResult> => {

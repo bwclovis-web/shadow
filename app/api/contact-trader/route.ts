@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
 
+import { prisma } from "@/lib/db"
 import { createContactMessage } from "@/models/contactMessage.server"
 import { createUserAlert } from "@/models/user-alerts.server"
 import type { AlertType } from "@/types/database"
-import { ContactTraderSchema } from "@/utils/validation/formValidationSchemas"
-import { parseFormData } from "@/utils/server/api-route-helpers.server"
-import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
-import { authenticateUser } from "@/utils/server/auth.server"
+import { validateRateLimit } from "@/utils/api-validation.server"
+import { getContactMessageRateLimits } from "@/utils/rate-limit-config.server"
 import { createSuccessResponse } from "@/utils/response.server"
-import { prisma } from "@/lib/db"
+import { parseFormData } from "@/utils/server/api-route-helpers.server"
+import { authenticateUser } from "@/utils/server/auth.server"
+import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
+import { ContactTraderSchema } from "@/utils/validation/formValidationSchemas"
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,15 +49,35 @@ export async function POST(request: NextRequest) {
 
     const { recipientId, subject, message } = parsed.data
 
+    const senderId = authResult.user!.id
+    const limits = getContactMessageRateLimits()
+    try {
+      validateRateLimit(
+        `contact-trader:user:${senderId}`,
+        limits.perUser.max,
+        limits.perUser.windowMs
+      )
+      validateRateLimit(
+        `contact-trader:pair:${senderId}:${recipientId}`,
+        limits.perPair.max,
+        limits.perPair.windowMs
+      )
+    } catch (rateLimitResponse) {
+      if (rateLimitResponse instanceof Response) {
+        return rateLimitResponse
+      }
+      throw rateLimitResponse
+    }
+
     const created = await createContactMessage({
-      senderId: authResult.user!.id,
+      senderId,
       recipientId,
       subject: subject?.trim() || null,
       message: message.trim(),
     })
 
     const sender = await prisma.user.findUnique({
-      where: { id: authResult.user!.id },
+      where: { id: senderId },
       select: { username: true, firstName: true, lastName: true },
     })
     const senderName =
@@ -69,7 +91,7 @@ export async function POST(request: NextRequest) {
       "new_trader_message" as AlertType,
       `New message from ${senderName}`,
       subject?.trim() ? `${subject.slice(0, 60)}${subject.length > 60 ? "…" : ""}` : message.trim().slice(0, 80),
-      { messageId: created.id, senderId: authResult.user!.id }
+      { messageId: created.id, senderId }
     )
 
     return createSuccessResponse({

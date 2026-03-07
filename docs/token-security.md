@@ -1,12 +1,15 @@
 # Token Security
 
-Implement session invalidation via a **tokenVersion** counter so that password change and "invalidate all sessions" actually revoke existing JWTs.
+Session invalidation is implemented via a **tokenVersion** counter in the DB. Password change and "invalidate all sessions" revoke existing JWTs by incrementing `User.tokenVersion`; tokens issued with an older version fail verification.
 
-## Current behavior
+**This satisfies the [HIGH] "Fix session invalidation" item in `docs/launch-checklist.md`** (DB tokenVersion approach; Redis blocklist is not required.)
 
-- JWTs are issued with `userId` and `type`; once valid, they stay valid until expiry (access 1h, refresh 7d).
-- `invalidateSession` and `invalidateAllUserSessions` in `utils/security/session-manager.server.ts` are no-ops.
-- After a password change, `invalidateAllSessions(userId)` is called but existing tokens remain valid.
+## Current behavior (implemented)
+
+- JWTs are issued with `userId`, `type`, and `tokenVersion`; on each verify, payload `tokenVersion` is compared to the user's current DB `tokenVersion` — if payload version is lower, the token is rejected.
+- `invalidateAllUserSessions(userId)` in `utils/security/session-manager.server.ts` increments `User.tokenVersion` in the DB, so all existing tokens for that user fail verification.
+- `invalidateSession(sessionId)` remains a no-op (no server-side session store); only "invalidate all" per user is supported.
+- After a password change, `invalidateAllUserSessions(userId)` is called and existing tokens are revoked.
 
 ## Target behavior
 

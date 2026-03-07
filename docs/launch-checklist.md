@@ -32,11 +32,11 @@ Full improvement report and implementation checklist for the Shadows Next.js cod
 
 ### High
 
-- **Session invalidation is a no-op** — `utils/security/session-manager.server.ts` — `invalidateSession()` and `invalidateAllUserSessions()` are empty stubs. After a password change, existing JWTs remain valid for their full TTL (1h access, 7d refresh). Implement a token blocklist (Redis) or a DB `tokenVersion` counter.
+- **Session invalidation** — **Done.** `utils/security/session-manager.server.ts` implements a DB `tokenVersion` counter: tokens carry `tokenVersion` at issue time; `invalidateAllUserSessions(userId)` increments `User.tokenVersion` so existing JWTs fail verification. See `docs/token-security.md`. (Redis blocklist not required.)
 
-- **JWT token-type confusion** — `lib/auth/tokens.ts` — `verifyAccessToken` does **not** check `payload.type`, so a refresh token is accepted as a valid access token. `utils/security/session-manager.server.ts` (System 2) does check `payload.type` correctly. Either delete System 1 entirely or add the type check. Both systems share the same `JWT_SECRET`.
+- **JWT token-type confusion** — **Resolved.** System 1 (`lib/auth/tokens.ts`, `lib/auth/session.ts`) has been removed. All auth uses System 2 (`utils/security/session-manager.server.ts`), which checks `payload.type` and `tokenVersion`.
 
-- **`/api/data-quality` is unauthenticated** — `app/api/data-quality/route.ts` returns internal DB statistics (row counts, duplication rates, completeness percentages) with no auth check. Add `requireAdminOrEditorApi`.
+- **`/api/data-quality` is unauthenticated** — **Done.** `app/api/data-quality/route.ts` now uses `requireAdminOrEditorApi`; only admin or editor can access.
 
 - **Cron endpoint open when `CRON_SECRET` is unset** — `app/api/cron/cleanup-messages/route.ts` only checks auth `if (cronSecret)` — if the env var is missing, the endpoint is fully open and can bulk-delete messages. Invert: fail-closed if secret is not configured.
 
@@ -46,15 +46,15 @@ Full improvement report and implementation checklist for the Shadows Next.js cod
 
 - **In-memory rate limiter** — `utils/api-validation.server.ts` uses a process-local `Map`. On Vercel / any multi-instance deployment, each instance has its own counter and limits can be trivially bypassed. Replace with Upstash Redis or similar distributed store.
 
-- **`/api/contact-trader` has no rate limiting** — Despite a `rate-limit-config.server.ts` with `perUser` and `perPair` configs, `app/api/contact-trader/route.ts` never calls `validateRateLimit`. Add the configured limits.
+- **`/api/contact-trader` has no rate limiting** — **Resolved.** Route now calls `validateRateLimit` for per-user (per hour) and per-sender–recipient-pair (per day) using `getContactMessageRateLimits()`; returns 429 when exceeded. Tests in `app/api/contact-trader/route.test.ts`.
 
-- **`AuthResult.user` typed as `any`** — `utils/server/auth.server.ts` — type with the Prisma `User` model to restore type-safety throughout all API route handlers.
+- **`AuthResult.user` typed as `any`** — **Resolved.** `AuthResult.user` is now `AuthUser` (Pick from Prisma `User`: id, email, firstName, lastName, username, role); tests in `utils/server/auth.server.test.ts`.
 
 ### Low
 
 - **Redundant plaintext salt prefix in password hashes** — `utils/security/password-security.server.ts` prepends `randomBytes(16).toString("hex") + ":"` before the bcrypt hash. bcrypt already includes its own salt; this prefix is stored but not used in the bcrypt computation. Remove it.
 
-- **`generateSecurePassword` uses `Math.random()`** — Same file, lines 207–228. Replace `Math.random()` with `crypto.getRandomValues()` for character selection and shuffle.
+- **`generateSecurePassword` uses `Math.random()`** — **Resolved.** Replaced with `crypto.getRandomValues()` for character selection and Fisher-Yates shuffle; tests in `utils/security/password-security.server.test.ts`.
 
 - **`/api/ratings` POST missing CSRF check** — `app/api/ratings/route.ts` — every other mutation endpoint calls `requireCSRF`. Add it here for consistency.
 
@@ -138,7 +138,7 @@ Full improvement report and implementation checklist for the Shadows Next.js cod
 
 - **`isRedirectError` manual detection** — `app/(auth)/sign-in/actions.ts` detects redirect errors by matching the string `"NEXT_REDIRECT"` against `error.digest`. Use `isRedirectError` from `next/navigation` instead.
 
-- **Missing root `.env.example`** — No env template at project root; only `scripts/env.example` (migration-scoped). Create root `.env.example` with all required variables.
+- **Missing root `.env.example`** — **Done.** Root `.env.example` documents DATABASE_URL, JWT_SECRET, Stripe, R2, cron, session overrides, rate limits, scraper/OpenAI, and script-only vars (LOCAL/REMOTE_DATABASE_URL, BACKUPS_DIR).
 
 - **`TitleBanner.tsx` forces large client boundary** — Used on many pages; entire banner is `use client` due to GSAP `useEffect`. Extract animation to a `TitleBannerAnimator` client child so the banner can be a server component.
 
@@ -154,19 +154,19 @@ Full improvement report and implementation checklist for the Shadows Next.js cod
 
 - [x] **[CRITICAL]** Remove AI agent telemetry beacon from `app/api/admin/scraper/run/route.ts` lines 185–198
 - [x] **[CRITICAL]** Move `backups/` directory outside the repository root
-- [ ] **[HIGH]** Fix session invalidation — implement `tokenVersion` counter in DB or Redis blocklist in `utils/security/session-manager.server.ts`
-- [ ] **[HIGH]** Delete `lib/auth/tokens.ts` and `lib/auth/session.ts` (System 1 JWT); migrate all callers to System 2
-- [ ] **[HIGH]** Add auth check to `app/api/data-quality/route.ts`
+- [x] **[HIGH]** Fix session invalidation — implement `tokenVersion` counter in DB or Redis blocklist in `utils/security/session-manager.server.ts` (done: DB tokenVersion in session-manager; see `docs/token-security.md`)
+- [x] **[HIGH]** Delete `lib/auth/tokens.ts` and `lib/auth/session.ts` (System 1 JWT); migrate all callers to System 2 (done: no callers used System 1; files removed)
+- [x] **[HIGH]** Add auth check to `app/api/data-quality/route.ts` (requireAdminOrEditorApi)
 - [ ] **[HIGH]** Invert cron secret check to fail-closed in `app/api/cron/cleanup-messages/route.ts`
 - [ ] **[MED]** Remove `email` fields from `UserAlert.metadata` in `models/user-alerts.server.ts`
 - [ ] **[MED]** Replace in-memory rate limiter with Upstash Redis (or similar) in `utils/api-validation.server.ts`
-- [ ] **[MED]** Add `validateRateLimit` calls to `app/api/contact-trader/route.ts`
-- [ ] **[MED]** Type `AuthResult.user` with the Prisma `User` type in `utils/server/auth.server.ts`
-- [ ] **[LOW]** Remove redundant plaintext salt prefix from `hashPassword` in `utils/security/password-security.server.ts`
-- [ ] **[LOW]** Replace `Math.random()` with `crypto.getRandomValues()` in `generateSecurePassword`
+- [x] **[MED]** Add `validateRateLimit` calls to `app/api/contact-trader/route.ts`
+- [x] **[MED]** Type `AuthResult.user` with the Prisma `User` type in `utils/server/auth.server.ts`
+- [x] **[LOW]** Remove redundant plaintext salt prefix from `hashPassword` in `utils/security/password-security.server.ts`
+- [x] **[LOW]** Replace `Math.random()` with `crypto.getRandomValues()` in `generateSecurePassword`
 - [ ] **[LOW]** Add `requireCSRF` to `app/api/ratings/route.ts` POST handler
 - [ ] **[LOW]** Add `middleware.ts` with baseline JWT presence check for protected routes
-- [ ] **[LOW]** Create root `.env.example` documenting all required environment variables
+- [x] **[LOW]** Create root `.env.example` documenting all required environment variables
 
 ### Performance
 
