@@ -42,7 +42,7 @@ export default async function RootLayout({
     <html lang={locale} className={`${inter.variable} ${limelight.variable}`}>
       <body className={`${inter.className} bg-noir-black`}>
         <ViewTransitionsWrapper>
-          <NextIntlClientProvider messages={messages}>
+          <NextIntlClientProvider locale={locale} messages={messages}>
             <GlobalNavigation user={user} />
             <MobileNavigation user={user} />
             <Providers>{children}</Providers>

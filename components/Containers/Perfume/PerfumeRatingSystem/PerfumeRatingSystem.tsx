@@ -3,16 +3,16 @@ import { useTranslations } from "next-intl"
 
 import NoirRating from "@/components/Organisms/NoirRating"
 import { useRatingSystem } from "@/hooks"
-
-type RatingKeys = "longevity" | "sillage" | "gender" | "priceValue" | "overall"
-
-type RatingValues = Partial<Record<RatingKeys, number | null>>
+import type {
+  PerfumeDetailAverageRatingsProp,
+  PerfumeDetailUserRatingsProp,
+} from "@/components/Containers/Perfume/perfume-detail-types"
 
 interface PerfumeRatingSystemProps {
   perfumeId: string
   userId?: string | null
-  userRatings?: RatingValues | null
-  averageRatings?: (RatingValues & { totalRatings: number }) | null
+  userRatings?: PerfumeDetailUserRatingsProp
+  averageRatings?: PerfumeDetailAverageRatingsProp
   readonly?: boolean
 }
 
@@ -39,7 +39,9 @@ const PerfumeRatingSystem = ({
         const errorPayload = await response.json().catch(() => ({}))
         throw new Error((errorPayload as { message?: string }).message ?? "Failed to refresh ratings")
       }
-      const data = (await response.json()) as { averageRatings?: PerfumeRatingSystemProps["averageRatings"] }
+      const data = (await response.json()) as {
+        averageRatings?: PerfumeDetailAverageRatingsProp
+      }
       setAverageRatings(data.averageRatings ?? null)
     } catch (error) {
       console.error("Failed to refresh ratings", error)

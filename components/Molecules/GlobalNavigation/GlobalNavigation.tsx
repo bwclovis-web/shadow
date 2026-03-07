@@ -2,7 +2,7 @@
 
 import { type VariantProps } from "class-variance-authority"
 import type { HTMLProps } from "react"
-import { Suspense, useEffect, useState } from "react"
+import { Suspense } from "react"
 import { usePathname } from "next/navigation"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { useTranslations } from "next-intl"
@@ -40,23 +40,10 @@ const navLinkActiveAdmin =
 function GlobalNavigationContent({ user }: GlobalNavigationProps) {
   const t = useTranslations("navigation")
   const pathname = usePathname()
-  const [isClientReady, setIsClientReady] = useState(false)
 
-  useEffect(() => {
-    const id =
-      typeof requestIdleCallback !== "undefined"
-        ? requestIdleCallback(() => setIsClientReady(true), { timeout: 500 })
-        : setTimeout(() => setIsClientReady(true), 0)
-    return () =>
-      typeof requestIdleCallback !== "undefined"
-        ? cancelIdleCallback(id as number)
-        : clearTimeout(id as ReturnType<typeof setTimeout>)
-  }, [])
-
-  const logoText = isClientReady ? t("logo") : " Shadow and Sillage"
+  const logoText = t("logo")
 
   const isActive = (href: string, exact?: boolean) => {
-    if (!isClientReady) return false
     if (exact) return pathname === href
     return pathname === href || pathname.startsWith(href + "/")
   }
@@ -136,7 +123,7 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
                   isActive(item.path) && navLinkActive
                 )}
               >
-                {isClientReady ? t(item.key) : item.label}
+                {t(item.key)}
               </PrefetchLink>
             </li>
           ))}
@@ -151,7 +138,7 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
                     isActive("/messages") && navLinkActive
                   )}
                 >
-                  {isClientReady ? t("messages") : "Messages"}
+                  {t("messages")}
                 </PrefetchLink>
               </li>
               <li>
@@ -163,7 +150,7 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
                     isActive(ADMIN_PATH) && navLinkActiveAdmin
                   )}
                 >
-                  {isClientReady ? t("admin") : "Admin"}
+                  {t("admin")}
                 </PrefetchLink>
               </li>
             </>

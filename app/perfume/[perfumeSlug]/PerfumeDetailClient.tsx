@@ -9,6 +9,10 @@ import { Button } from "@/components/Atoms/Button"
 import PerfumeIcons from "@/components/Containers/Perfume/PerfumeIcons"
 import PerfumeNotes from "@/components/Containers/Perfume/PerfumeNotes"
 import PerfumeRatingSystem from "@/components/Containers/Perfume/PerfumeRatingSystem"
+import type {
+  PerfumeDetailAverageRatingsProp,
+  PerfumeDetailUserRatingsProp,
+} from "@/components/Containers/Perfume/perfume-detail-types"
 import { HeroHeader } from "@/components/Molecules/HeroHeader"
 import ReviewSection from "@/components/Organisms/ReviewSection"
 import { HOUSE_DETAIL_PATH } from "@/constants/routes"
@@ -33,8 +37,8 @@ type PerfumeDetailClientProps = {
   initialPerfume: Awaited<ReturnType<typeof import("@/models/perfume.server").getPerfumeBySlug>> & { id: string }
   user: { id: string; role?: string } | null
   isInUserWishlist: boolean
-  userRatings: unknown
-  averageRatings: unknown
+  userRatings: PerfumeDetailUserRatingsProp
+  averageRatings: PerfumeDetailAverageRatingsProp
   userReview: unknown
   reviewsData: unknown
   reviewsPageSize: number
@@ -154,8 +158,8 @@ const PerfumeDetailClient = ({
             <PerfumeRatingSystem
               perfumeId={perfume.id}
               userId={user?.id ?? "anonymous"}
-              userRatings={userRatings as never}
-              averageRatings={averageRatings as never}
+              userRatings={userRatings}
+              averageRatings={averageRatings}
             />
           </div>
           <div className="noir-border relative w-full lg:w-3/4 p-4">
