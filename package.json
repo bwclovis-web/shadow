@@ -10,6 +10,7 @@
     "db:push": "prisma db push",
     "db:serve": "prisma db pull && prisma db push && run-p db:studio db:docs dev",
     "db:studio": "npx prisma studio",
+    "db:push:prod": "node scripts/push-prod-schema.js",
     "db:push:remote:cli": "node scripts/push_local_to_remote_db_cli.js",
     "db:diagnose:perfumes": "node scripts/diagnose-perfume-mismatch.js",
     "db:check:migration": "node scripts/check-migration-status.js",
