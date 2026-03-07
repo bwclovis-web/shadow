@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run typecheck && next build",
+    "build": "prisma generate && npm run typecheck && next build",
     "db:docs": "npx prisma-docs-generator serve",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
