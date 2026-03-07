@@ -21,8 +21,8 @@ import dotenv from "dotenv"
 process.env.DOTENV_CONFIG_QUIET = "true"
 dotenv.config({ path: join(projectRoot, ".env") })
 
-// Configuration
-const BACKUP_DIR = join(projectRoot, "backups")
+// Configuration: backups live outside repo root (sibling directory) unless BACKUPS_DIR is set
+const BACKUP_DIR = process.env.BACKUPS_DIR || join(projectRoot, "..", "backups")
 const TIMESTAMP = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5)
 const BACKUP_PREFIX = `backup_${TIMESTAMP}`
 

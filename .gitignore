@@ -45,6 +45,7 @@ next-env.d.ts
 /csv
 /csv_noir
 /reports
+# backups (default location is now outside repo: ../backups or BACKUPS_DIR)
 /backups
 /venv-ai
 /venv-scraper

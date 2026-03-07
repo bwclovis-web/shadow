@@ -37,7 +37,7 @@ npm run clean:notes:complete:apply
 
 The apply command now enforces:
 - explicit apply confirmation via script flags
-- a recent backup manifest check in `backups/`
+- a recent backup manifest check in the backups directory (default: `../backups` or `BACKUPS_DIR`)
 
 This will:
 1. ✅ Apply JavaScript rule-based cleaning (actual changes)

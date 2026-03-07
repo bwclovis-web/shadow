@@ -39,7 +39,7 @@
 
 **Safety gates (enforced):**
 - Requires explicit apply confirmation (`--confirm-apply`) via npm script
-- Requires a recent backup manifest in `backups/` (created by `npm run db:backup`)
+- Requires a recent backup manifest in the backups directory (default: sibling of repo `../backups`, or set `BACKUPS_DIR`; created by `npm run db:backup`)
 
 **Database Changes:** ✅ **YES** - JavaScript rule-based changes are applied
 
@@ -72,7 +72,7 @@
 
 **Safety gates (enforced):**
 - Requires explicit apply confirmation (`--confirm-apply`) via npm script
-- Requires a recent backup manifest in `backups/` (created by `npm run db:backup`)
+- Requires a recent backup manifest in the backups directory (default: sibling of repo `../backups`, or set `BACKUPS_DIR`; created by `npm run db:backup`)
 
 **Database Changes:** ✅ **YES** - All changes are applied (JS rules + AI recommendations + duplicate cleanup)
 

@@ -19,12 +19,16 @@ import { execSync } from 'child_process'
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import dotenv from 'dotenv'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const projectRoot = join(__dirname, '..')
+process.env.DOTENV_CONFIG_QUIET = 'true'
+dotenv.config({ path: join(projectRoot, '.env') })
 const reportsDir = join(projectRoot, 'reports')
-const backupsDir = join(projectRoot, 'backups')
+// Backups live outside repo root (sibling directory) unless BACKUPS_DIR is set
+const backupsDir = process.env.BACKUPS_DIR || join(projectRoot, '..', 'backups')
 const BACKUP_MAX_AGE_MINUTES = 120
 
 /** Path to .venv-ai in project root (for AI step; use Python 3.10–3.12 to avoid numpy build issues). */

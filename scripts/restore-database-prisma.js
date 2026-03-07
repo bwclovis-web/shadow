@@ -22,8 +22,8 @@ import dotenv from "dotenv"
 process.env.DOTENV_CONFIG_QUIET = "true"
 dotenv.config({ path: join(projectRoot, ".env") })
 
-// Configuration
-const BACKUP_DIR = join(projectRoot, "backups")
+// Configuration: backups live outside repo root (sibling directory) unless BACKUPS_DIR is set
+const BACKUP_DIR = process.env.BACKUPS_DIR || join(projectRoot, "..", "backups")
 
 // Initialize Prisma client
 const prisma = new PrismaClient()

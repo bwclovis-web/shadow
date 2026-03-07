@@ -28,7 +28,7 @@ Full improvement report and implementation checklist for the Shadows Next.js cod
 
 - **AI agent telemetry beacon in production** — `app/api/admin/scraper/run/route.ts` lines 185–198 contain a hardcoded `fetch("http://127.0.0.1:7886/ingest/...")` call injected by a Cursor AI agent and never removed. Every scraper invocation POSTs internal stderr data to localhost. Remove this block immediately.
 
-- **Database backup files on disk** — `backups/` contains a 23 MB full SQL dump, a 6 MB binary dump, and a 37 KB schema dump (all dated Feb 22). They are `.gitignore`d but sit inside the repo root. Move these outside the repo root entirely.
+- **Database backup files on disk** — Resolved: backup scripts now use a directory outside the repo root by default (`<repo-parent>/backups`), or `BACKUPS_DIR` if set. Move any existing `backups/` contents out of the repo and remove the folder if present.
 
 ### High
 
@@ -152,8 +152,8 @@ Full improvement report and implementation checklist for the Shadows Next.js cod
 
 ### Security — Do First
 
-- [ ] **[CRITICAL]** Remove AI agent telemetry beacon from `app/api/admin/scraper/run/route.ts` lines 185–198
-- [ ] **[CRITICAL]** Move `backups/` directory outside the repository root
+- [x] **[CRITICAL]** Remove AI agent telemetry beacon from `app/api/admin/scraper/run/route.ts` lines 185–198
+- [x] **[CRITICAL]** Move `backups/` directory outside the repository root
 - [ ] **[HIGH]** Fix session invalidation — implement `tokenVersion` counter in DB or Redis blocklist in `utils/security/session-manager.server.ts`
 - [ ] **[HIGH]** Delete `lib/auth/tokens.ts` and `lib/auth/session.ts` (System 1 JWT); migrate all callers to System 2
 - [ ] **[HIGH]** Add auth check to `app/api/data-quality/route.ts`

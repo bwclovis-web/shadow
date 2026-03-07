@@ -30,7 +30,8 @@ process.env.DOTENV_CONFIG_QUIET = "true"
 dotenv.config({ path: join(projectRoot, ".env") })
 
 const prisma = new PrismaClient()
-const BACKUP_DIR = join(projectRoot, "backups")
+// Backups live outside repo root (sibling directory) unless BACKUPS_DIR is set
+const BACKUP_DIR = process.env.BACKUPS_DIR || join(projectRoot, "..", "backups")
 
 /**
  * Get record counts for all tables

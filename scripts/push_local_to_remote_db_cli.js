@@ -13,17 +13,20 @@
  */
 
 import { execSync } from "child_process"
+import dotenv from "dotenv"
 import { existsSync, readFileSync, writeFileSync } from "fs"
 import { dirname, join } from "path"
 import { fileURLToPath } from "url"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
+const projectRoot = join(__dirname, "..")
+dotenv.config({ path: join(projectRoot, ".env") })
 
-// Configuration
-const BACKUP_DIR = join(__dirname, "../backups")
-const SCHEMA_BACKUP_PATH = join(__dirname, "../backups/schema_backup.prisma")
-const ENV_BACKUP_PATH = join(__dirname, "../backups/.env.backup")
+// Configuration: backups live outside repo root unless BACKUPS_DIR is set
+const BACKUP_DIR = process.env.BACKUPS_DIR || join(projectRoot, "..", "backups")
+const SCHEMA_BACKUP_PATH = join(BACKUP_DIR, "schema_backup.prisma")
+const ENV_BACKUP_PATH = join(BACKUP_DIR, ".env.backup")
 
 // Colors for console output
 const colors = {
