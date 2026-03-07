@@ -313,6 +313,17 @@ DO $$ BEGIN
     END IF;
 END $$;
 
+-- Add tokenVersion to User if missing (for token invalidation)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'tokenVersion'
+    ) THEN
+        ALTER TABLE "User" ADD COLUMN "tokenVersion" INTEGER NOT NULL DEFAULT 0;
+        RAISE NOTICE 'Added tokenVersion column to User';
+    END IF;
+END $$;
+
 -- Add review approval fields if missing
 DO $$ BEGIN
     IF NOT EXISTS (

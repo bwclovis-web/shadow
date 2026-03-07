@@ -81,7 +81,11 @@ async function verifySchema() {
         EXISTS (
           SELECT 1 FROM information_schema.columns
           WHERE table_name = 'UserPerfumeReview' AND column_name = 'isApproved'
-        ) AS "hasReviewIsApproved"
+        ) AS "hasReviewIsApproved",
+        EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'tokenVersion'
+        ) AS "hasUserTokenVersion"
     `)
 
     const result = Array.isArray(checks) ? checks[0] : checks

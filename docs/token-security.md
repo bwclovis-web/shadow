@@ -40,8 +40,8 @@ flowchart LR
 
 ### Schema and migration
 
-- [ ] Add `tokenVersion Int @default(0)` to `User` in `prisma/schema.prisma`.
-- [ ] Run migration: `npx prisma migrate dev --name add_user_token_version`.
+- [x] Add `tokenVersion Int @default(0)` to `User` in `prisma/schema.prisma`.
+- [x] Apply schema to DB: run `npm run db:push:prod` (uses `prisma/migrations/APPLY_TO_REMOTE_DB.sql`). For local/dev, apply `prisma/migrations/20260307000000_add_user_token_version/migration.sql` or use your usual migration process.
 
 ### User query helper
 

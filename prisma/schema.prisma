@@ -21,6 +21,7 @@ model User {
   subscriptionId        String?
   subscriptionStartDate DateTime?
   isEarlyAdopter        Boolean                @default(false)
+  tokenVersion          Int                    @default(0)
   SecurityAuditLog      SecurityAuditLog[]
   UserAlert             UserAlert[]
   alertPreferences      UserAlertPreferences?
