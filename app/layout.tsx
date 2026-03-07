@@ -9,6 +9,7 @@ import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import GlobalNavigation from '@/components/Molecules/GlobalNavigation/GlobalNavigation'
 import MobileNavigation from '@/components/Molecules/MobileNavigation'
+import ServiceWorkerRegistration from '@/components/Containers/ServiceWorkerRegistration'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -23,6 +24,12 @@ const limelight = Limelight({
 export const metadata: Metadata = {
   title: 'New Smell',
   description: 'Perfume trading platform',
+  themeColor: '#c9a227',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'New Smell',
+  },
 }
 
 export default async function RootLayout({
@@ -49,6 +56,7 @@ export default async function RootLayout({
           </NextIntlClientProvider>
           <div id="modal-portal" />
         </ViewTransitionsWrapper>
+        <ServiceWorkerRegistration />
       </body>
     </html>
   )

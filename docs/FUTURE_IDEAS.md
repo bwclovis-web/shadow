@@ -3,6 +3,13 @@
 This document reframes future product ideas now that Shadows is fully on Next.js.  
 Focus areas: monetization, quality of life, and customer-facing improvements while building on features we already have.
 
+## Related planning docs
+
+- `docs/ROADMAP_90_DAYS.md` - execution plan by phase
+- `docs/MONETIZATION_PLAYBOOK.md` - revenue strategy and experiments
+- `docs/CUSTOMER_FEATURES_BACKLOG.md` - customer-facing roadmap
+- `docs/QOL_AND_OPERATIONS_PLAN.md` - quality-of-life and internal operations improvements
+
 ---
 
 ## What We Already Have (Foundation to Build On)
