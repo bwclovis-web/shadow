@@ -90,7 +90,7 @@ const MyScentsModal = ({
               <div className="w-full md:w-1/2 noir-border relative p-4">
                 <RangeSlider
                   min={0}
-                  max={10}
+                  max={250}
                   step={0.1}
                   value={parseFloat(perfumeData.amount) || 0}
                   onChange={value => {
