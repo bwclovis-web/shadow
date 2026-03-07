@@ -1,16 +1,18 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useMemo } from "react"
 import { useTranslations } from "next-intl"
 import Image from "next/image"
 import { Link } from "next-view-transitions"
-import { useParams } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 
+import { Button } from "@/components/Atoms/Button"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import AddToCollectionModal from "@/components/Organisms/AddToCollectionModal"
 import type { OptimisticCollectionItem } from "@/hooks/useMyScentsForm"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import { getPerfumeTypeLabel } from "@/data/SelectTypes"
+import { useResponsivePageSize } from "@/hooks/useMediaQuery"
 import { validImageRegex } from "@/utils/styleUtils"
 
 const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
@@ -153,15 +155,70 @@ const MyScentsPageClient = ({
   }, [])
 
   const bottleEntries = getBottleEntries(userPerfumes)
-
-  const filteredPerfumes =
-    !searchQuery.trim()
-      ? bottleEntries
-      : bottleEntries.filter((up) =>
-          up.perfume.name.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-
+  const pageSize = useResponsivePageSize()
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const basePath = userSlug ? `/${userSlug}/profile/my-scents` : "/profile/my-scents"
+
+  const sortedBottleEntries = useMemo(
+    () =>
+      [...bottleEntries].sort((a, b) =>
+        (a.perfume.name ?? "").localeCompare(b.perfume.name ?? "", undefined, { sensitivity: "base" })
+      ),
+    [bottleEntries]
+  )
+
+  const filteredPerfumes = useMemo(
+    () =>
+      !searchQuery.trim()
+        ? sortedBottleEntries
+        : sortedBottleEntries.filter((up) =>
+            up.perfume.name.toLowerCase().includes(searchQuery.toLowerCase())
+          ),
+    [searchQuery, sortedBottleEntries]
+  )
+
+  const totalCount = filteredPerfumes.length
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
+  const rawPage = Math.max(1, parseInt(searchParams.get("pg") ?? "1", 10) || 1)
+  const currentPage = totalPages > 0 ? Math.min(rawPage, totalPages) : 1
+
+  const paginatedPerfumes = useMemo(
+    () =>
+      filteredPerfumes.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [filteredPerfumes, currentPage, pageSize]
+  )
+
+  useEffect(() => {
+    if (totalPages >= 1 && rawPage > totalPages) {
+      const next = new URLSearchParams(searchParams.toString())
+      next.set("pg", String(totalPages))
+      router.replace(`${basePath}?${next.toString()}`, { scroll: false })
+    }
+  }, [totalPages, rawPage, basePath, router, searchParams])
+
+  useEffect(() => {
+    if (searchQuery.trim() && rawPage > 1) {
+      const next = new URLSearchParams(searchParams.toString())
+      next.set("pg", "1")
+      router.replace(`${basePath}?${next.toString()}`, { scroll: false })
+    }
+  }, [searchQuery, rawPage, basePath, router, searchParams])
+
+  const handlePageChange = useCallback(
+    (page: number) => {
+      const next = new URLSearchParams(searchParams.toString())
+      if (page <= 1) next.delete("pg")
+      else next.set("pg", String(page))
+      const qs = next.toString()
+      router.push(`${basePath}${qs ? `?${qs}` : ""}`, { scroll: false })
+    },
+    [basePath, router, searchParams]
+  )
+
+  const hasPrevPage = currentPage > 1
+  const hasNextPage = currentPage < totalPages
+  const tCommon = useTranslations("common")
 
   return (
     <section>
@@ -209,7 +266,7 @@ const MyScentsPageClient = ({
         ) : (
           <div className="animate-fade-in">
             <ul className="w-full animate-fade-in grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[auto-fill_minmax(900px,1fr)] gap-4">
-              {filteredPerfumes.map((userPerfume) => {
+              {paginatedPerfumes.map((userPerfume) => {
                 const { perfume } = userPerfume
                 const imageSrc =
                   perfume.image && !validImageRegex.test(perfume.image)
@@ -250,6 +307,34 @@ const MyScentsPageClient = ({
                 )
               })}
             </ul>
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-4 py-6">
+                {hasPrevPage && (
+                  <Button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    variant="secondary"
+                    size="sm"
+                  >
+                    {tCommon("previous")}
+                  </Button>
+                )}
+                <span className="text-noir-gold/80">
+                  {tCommon("pageOf", {
+                    current: currentPage,
+                    total: totalPages,
+                  })}
+                </span>
+                {hasNextPage && (
+                  <Button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    variant="secondary"
+                    size="sm"
+                  >
+                    {tCommon("next")}
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
