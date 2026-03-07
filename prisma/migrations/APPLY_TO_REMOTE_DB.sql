@@ -59,6 +59,14 @@ EXCEPTION
         RAISE NOTICE 'PendingSubmissionStatus enum already exists, skipping';
 END $$;
 
+-- SubscriptionStatus enum
+DO $$ BEGIN
+    CREATE TYPE "SubscriptionStatus" AS ENUM ('free', 'paid', 'cancelled');
+EXCEPTION
+    WHEN duplicate_object THEN
+        RAISE NOTICE 'SubscriptionStatus enum already exists, skipping';
+END $$;
+
 -- Add missing AlertType enum value
 DO $$ BEGIN
     IF NOT EXISTS (
@@ -189,6 +197,22 @@ CREATE TABLE IF NOT EXISTS "MigrationState" (
     CONSTRAINT "MigrationState_pkey" PRIMARY KEY ("id")
 );
 
+-- ScentProfile table
+CREATE TABLE IF NOT EXISTS "ScentProfile" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "noteWeights" JSONB NOT NULL,
+    "avoidNoteIds" JSONB NOT NULL,
+    "preferredPriceRange" JSONB,
+    "seasonHint" TEXT,
+    "browsingStyle" TEXT,
+    "lastQuizAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ScentProfile_pkey" PRIMARY KEY ("id")
+);
+
 -- ============================================================================
 -- 3. ADD MISSING COLUMNS TO EXISTING TABLES
 -- ============================================================================
@@ -248,6 +272,68 @@ DO $$ BEGIN
     END IF;
 END $$;
 
+-- Add subscription fields to User if missing
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'User' AND column_name = 'subscriptionStatus'
+    ) THEN
+        ALTER TABLE "User" ADD COLUMN "subscriptionStatus" "SubscriptionStatus" NOT NULL DEFAULT 'free';
+        RAISE NOTICE 'Added subscriptionStatus column to User';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'User' AND column_name = 'subscriptionId'
+    ) THEN
+        ALTER TABLE "User" ADD COLUMN "subscriptionId" TEXT;
+        RAISE NOTICE 'Added subscriptionId column to User';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'User' AND column_name = 'subscriptionStartDate'
+    ) THEN
+        ALTER TABLE "User" ADD COLUMN "subscriptionStartDate" TIMESTAMP(3);
+        RAISE NOTICE 'Added subscriptionStartDate column to User';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'User' AND column_name = 'isEarlyAdopter'
+    ) THEN
+        ALTER TABLE "User" ADD COLUMN "isEarlyAdopter" BOOLEAN NOT NULL DEFAULT false;
+        RAISE NOTICE 'Added isEarlyAdopter column to User';
+    END IF;
+END $$;
+
+-- Add review approval fields if missing
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'UserPerfumeReview' AND column_name = 'isApproved'
+    ) THEN
+        ALTER TABLE "UserPerfumeReview" ADD COLUMN "isApproved" BOOLEAN NOT NULL DEFAULT true;
+        RAISE NOTICE 'Added isApproved column to UserPerfumeReview';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'UserPerfumeReview' AND column_name = 'updatedAt'
+    ) THEN
+        ALTER TABLE "UserPerfumeReview" ADD COLUMN "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        RAISE NOTICE 'Added updatedAt column to UserPerfumeReview';
+    END IF;
+END $$;
+
 -- ============================================================================
 -- 4. CREATE INDEXES
 -- ============================================================================
@@ -265,6 +351,16 @@ DO $$ BEGIN
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_note_relation_note_type') THEN
         CREATE INDEX "idx_note_relation_note_type" ON "PerfumeNoteRelation"("noteId", "noteType");
+    END IF;
+END $$;
+
+-- ScentProfile indexes
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'ScentProfile_userId_key') THEN
+        CREATE UNIQUE INDEX "ScentProfile_userId_key" ON "ScentProfile"("userId");
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'ScentProfile_userId_idx') THEN
+        CREATE INDEX "ScentProfile_userId_idx" ON "ScentProfile"("userId");
     END IF;
 END $$;
 
@@ -354,6 +450,9 @@ DO $$ BEGIN
         ADD CONSTRAINT "PerfumeNoteRelation_perfumeId_noteId_noteType_key" 
         UNIQUE ("perfumeId", "noteId", "noteType");
     END IF;
+EXCEPTION
+    WHEN duplicate_object OR duplicate_table THEN
+        RAISE NOTICE 'PerfumeNoteRelation unique relation/constraint already exists, skipping';
 END $$;
 
 DO $$ BEGIN
@@ -365,6 +464,9 @@ DO $$ BEGIN
         ADD CONSTRAINT "TraderFeedback_traderId_reviewerId_key" 
         UNIQUE ("traderId", "reviewerId");
     END IF;
+EXCEPTION
+    WHEN duplicate_object OR duplicate_table THEN
+        RAISE NOTICE 'TraderFeedback unique relation/constraint already exists, skipping';
 END $$;
 
 DO $$ BEGIN
@@ -376,6 +478,9 @@ DO $$ BEGIN
         ADD CONSTRAINT "UserAlertPreferences_userId_key" 
         UNIQUE ("userId");
     END IF;
+EXCEPTION
+    WHEN duplicate_object OR duplicate_table THEN
+        RAISE NOTICE 'UserAlertPreferences unique relation/constraint already exists, skipping';
 END $$;
 
 DO $$ BEGIN
@@ -387,6 +492,9 @@ DO $$ BEGIN
         ADD CONSTRAINT "MigrationState_tableName_key" 
         UNIQUE ("tableName");
     END IF;
+EXCEPTION
+    WHEN duplicate_object OR duplicate_table THEN
+        RAISE NOTICE 'MigrationState unique relation/constraint already exists, skipping';
 END $$;
 
 -- ============================================================================
@@ -535,6 +643,21 @@ END $$;
 -- ============================================================================
 -- 7. COMMIT TRANSACTION
 -- ============================================================================
+
+-- ScentProfile foreign key
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'ScentProfile_userId_fkey'
+    ) THEN
+        ALTER TABLE "ScentProfile"
+        ADD CONSTRAINT "ScentProfile_userId_fkey"
+        FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+EXCEPTION
+    WHEN duplicate_object OR duplicate_table THEN
+        RAISE NOTICE 'ScentProfile_userId_fkey already exists, skipping';
+END $$;
 
 COMMIT;
 

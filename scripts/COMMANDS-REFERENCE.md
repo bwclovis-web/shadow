@@ -1,5 +1,9 @@
 # Note Cleaning Commands Reference
 
+## Related Docs
+
+- Production schema/table sync runbook: `docs/production-schema-sync.md`
+
 ## Quick Summary
 
 | Command | JavaScript Rules | AI Extraction | AI Applied | Duplicates Re-checked | Database Changes |
