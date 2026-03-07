@@ -23,6 +23,8 @@
 # misc
 .DS_Store
 *.pem
+# Windows reserved device name (can break git/lint-staged)
+nul
 
 # debug
 npm-debug.log*
