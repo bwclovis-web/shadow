@@ -36,7 +36,7 @@ const PerfumeHousePerfumeList = ({
   const tSingleHouse = useTranslations("singleHouse")
 
   return (
-    <div id="data-list" className="rounded-b-lg w-full relative overflow-x-hidden style-scroll">
+    <div id="data-list" className="rounded-b-lg w-full relative">
       <h2 className="text-center mb-4">{tSingleHouse("perfumes")}</h2>
 
       {loading && perfumes.length === 0 ? (
@@ -50,11 +50,11 @@ const PerfumeHousePerfumeList = ({
               ? `${PERFUME_PATH}/${perfume.slug}?letter=${selectedLetter}`
               : `${PERFUME_PATH}/${perfume.slug}`
             return (
-            <li key={perfume.id}>
+            <li key={perfume.id} className="h-full">
+              <div className="relative w-full h-full noir-border overflow-hidden transition-all duration-300 ease-in-out">
               <Link
                 href={href}
-                prefetch
-                className="block p-2 h-full noir-border relative w-full transition-colors duration-300 ease-in-out"
+                className="block p-2 h-full relative w-full transition-colors duration-300 ease-in-out"
               >
                 <h3 className="text-center block text-lg tracking-wide py-2 font-semibold text-noir-gold leading-6 capitalize">
                   {perfume.name}
@@ -71,6 +71,7 @@ const PerfumeHousePerfumeList = ({
                     style={{ viewTransitionName: `perfume-image-${perfume.id}` } as React.CSSProperties}
                   />
               </Link>
+              </div>
             </li>
           )})}
         </ul>
