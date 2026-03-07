@@ -1,13 +1,11 @@
-"use client"
-
-import { useTranslations } from "next-intl"
+import { getTranslations } from "next-intl/server"
 
 import TitleBanner from "@/components/Organisms/TitleBanner"
 
 const BANNER_IMAGE = "/images/about.webp"
 
-const AboutUsClient = () => {
-  const t = useTranslations("aboutUs")
+const AboutUsClient = async () => {
+  const t = await getTranslations("aboutUs")
 
   return (
     <section>

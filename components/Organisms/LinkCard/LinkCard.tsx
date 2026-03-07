@@ -1,8 +1,6 @@
 import { Link } from "next-view-transitions"
 
 import { HOUSE_DETAIL_PATH, PERFUME_PATH } from "@/constants/routes"
-import houseBanner from "@/images/house-soon.webp"
-import bottleBanner from "@/images/single-bottle.webp"
 import { validImageRegex } from "@/utils/styleUtils"
 import Image from "next/image"
 

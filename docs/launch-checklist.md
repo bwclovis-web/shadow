@@ -174,8 +174,8 @@ Full improvement report and implementation checklist for the Shadows Next.js cod
 - [x] **[HIGH]** Replace `<img>` with `<Image priority sizes="100vw">` in `app/home-client.tsx` line 86
 - [x] **[HIGH]** Add `export const revalidate` to `app/page.tsx` (home stats) and `app/the-exchange/page.tsx`
 - [x] **[HIGH]** Add `unstable_cache` wrapping to perfume and house detail model queries
-- [ ] **[MED]** Convert `app/about-us/AboutUsClient.tsx` to async server component using `getTranslations()`
-- [ ] **[MED]** Convert `app/how-we-work/HowWeWorkClient.tsx` to async server component using `getTranslations()`
+- [x] **[MED]** Convert `app/about-us/AboutUsClient.tsx` to async server component using `getTranslations()`
+- [x] **[MED]** Convert `app/how-we-work/HowWeWorkClient.tsx` to async server component using `getTranslations()`
 - [ ] **[MED]** Convert GSAP import in `utils/rangeSliderUtils.ts` from static to dynamic
 - [ ] **[MED]** Guard `<ReactQueryDevtools>` in `app/providers.tsx` behind `process.env.NODE_ENV === "development"`
 - [ ] **[MED]** Fix redundant `prisma.perfume.count()` in `models/house.server.ts` — use `house._count.perfumes`

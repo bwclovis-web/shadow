@@ -1,9 +1,7 @@
-"use client"
-
-import { useTranslations } from "next-intl"
+import Image from "next/image"
+import { getTranslations } from "next-intl/server"
 
 import TitleBanner from "@/components/Organisms/TitleBanner"
-import Image from "next/image"
 
 const IMAGES = {
   banner: "/images/work.webp",
@@ -19,8 +17,8 @@ const SECTION_IMG_CLASS =
 const IMAGE_SIZES =
   "(min-width: 1440px) 55vw, (min-width: 1024px) 65vw, 80vw"
 
-const HowWeWorkClient = () => {
-  const t = useTranslations("howItWorks")
+const HowWeWorkClient = async () => {
+  const t = await getTranslations("howItWorks")
 
   return (
     <section>
