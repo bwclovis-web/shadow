@@ -197,6 +197,6 @@ Full improvement report and implementation checklist for the Shadows Next.js cod
 ### Next.js Best Practices
 
 - [ ] Replace manual `"NEXT_REDIRECT"` string check in `app/(auth)/sign-in/actions.ts` with `isRedirectError` from `next/navigation` (blocked: not exported in Next 16.x)
-- [ ] Extract GSAP animation from `TitleBanner.tsx` to a `TitleBannerAnimator` client child to reduce the client boundary surface area
+- [x] Extract GSAP animation from `TitleBanner.tsx` to a `TitleBannerAnimator` client child to reduce the client boundary surface area
 - [ ] Investigate and fix `GlobalNavigation.tsx` `isClientReady` hydration workaround
 - [ ] Define shared prop types for `PerfumeDetailClient` / `PerfumeRatingSystem` to replace `as never` casts
