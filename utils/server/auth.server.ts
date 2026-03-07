@@ -1,4 +1,4 @@
-import type { User } from "@prisma/client"
+import type { User, UserRole } from "@prisma/client"
 
 import { getSessionFromRequest } from "@/utils/session-from-request.server"
 
@@ -34,7 +34,7 @@ export const authenticateUser = async (request: Request): Promise<AuthResult> =>
       firstName: u.firstName ?? null,
       lastName: u.lastName ?? null,
       username: u.username ?? null,
-      role: u.role,
+      role: u.role as UserRole,
     }
     return { success: true, user }
   } catch (error) {
