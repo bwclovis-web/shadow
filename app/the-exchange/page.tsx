@@ -6,6 +6,7 @@ import { getAvailablePerfumesForDecantingPaginated } from "@/models/perfume.serv
 import TheExchangeClient from "./TheExchangeClient"
 
 export const ROUTE_PATH = "/the-exchange"
+export const revalidate = 60
 
 const PAGE_SIZE = 16
 

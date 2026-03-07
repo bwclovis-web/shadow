@@ -1,4 +1,6 @@
 import { Prisma } from "@prisma/client"
+import { unstable_cache } from "next/cache"
+import { cache } from "react"
 
 import { prisma } from "@/lib/db"
 import { transformNotesForDisplay } from "@/models/perfume-notes-helpers"
@@ -121,27 +123,29 @@ export const getAllPerfumesWithOptions = async (options?: {
   })
 }
 
-export const getPerfumeBySlug = async (slug: string) => {
-  const perfume = await prisma.perfume.findUnique({
-    where: { slug },
-    include: {
-      perfumeHouse: true,
-      // Use junction table for notes
-      perfumeNoteRelations: {
+const PERFUME_BY_SLUG_REVALIDATE = 3600
+
+export const getPerfumeBySlug = cache(async (slug: string) => {
+  return unstable_cache(
+    async () => {
+      const perfume = await prisma.perfume.findUnique({
+        where: { slug },
         include: {
-          note: true,
+          perfumeHouse: true,
+          perfumeNoteRelations: {
+            include: {
+              note: true,
+            },
+          },
         },
-      },
+      })
+      if (!perfume) return null
+      return transformNotesForDisplay(perfume as any)
     },
-  })
-  
-  if (!perfume) {
-    return null
-  }
-  
-  // Transform to backward-compatible format
-  return transformNotesForDisplay(perfume as any)
-}
+    ["perfume-by-slug", slug],
+    { revalidate: PERFUME_BY_SLUG_REVALIDATE, tags: ["perfume", `perfume-${slug}`] }
+  )()
+})
 
 export const getPerfumeById = async (id: string) => {
   const perfume = await prisma.perfume.findUnique({

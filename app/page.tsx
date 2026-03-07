@@ -3,6 +3,8 @@ import { getAllFeatures } from '@/models/feature.server'
 import HomeClient from './home-client'
 import { Metadata } from 'next'
 
+export const revalidate = 3600
+
 export const metadata: Metadata = {
   title: "New Smell",
   description: "Discover and trade perfumes.",

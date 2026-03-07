@@ -1,6 +1,7 @@
 "use client"
 
 import { type ChangeEvent, useEffect, useRef, useState } from "react"
+import Image from "next/image"
 import { useTranslations } from "next-intl"
 
 import Select from "@/components/Atoms/Select"
@@ -83,13 +84,13 @@ export default function HomeClient({ features, counts }: HomeClientProps) {
         className="flex flex-col gap-8 items-center md:justify-center min-h-screen px-4 relative bg-noir-gold-500/30"
         ref={container}
       >
-        <img
+        <Image
           src="/images/landing.png"
           alt=""
           width={1200}
           height={800}
-          fetchPriority="high"
-          loading="eager"
+          priority
+          sizes="100vw"
           className="absolute object-cover w-full h-full filter grayscale-100% sepia-[0.5] mix-blend-multiply hero-image"
         />
         <div className="absolute inset-0 bg-noir-black/85 mask-radial-from-10% mask-radial-to-74% md:mask-radial-from-25% md:mask-radial-to-44%" />

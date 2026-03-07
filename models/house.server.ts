@@ -1,4 +1,6 @@
 import { HouseType, Prisma } from "@prisma/client"
+import { unstable_cache } from "next/cache"
+import { cache } from "react"
 
 import { prisma } from "@/lib/db"
 import { assertValid, validationError } from "@/utils/errorHandling.patterns"
@@ -300,41 +302,43 @@ export const getHousesByLetterPaginated = async (
   }
 }
 
-export const getPerfumeHouseBySlug = async (
-  slug: string,
-  opts?: { skip?: number; take?: number }
-) => {
-  const house = await prisma.perfumeHouse.findUnique({
-    where: { slug },
-    include: {
-      perfumes: {
-        skip: opts?.skip ?? 0,
-        take: opts?.take ?? 9,
-        orderBy: { createdAt: "desc" }, // Add consistent ordering
+const HOUSE_BY_SLUG_REVALIDATE = 3600
+
+export const getPerfumeHouseBySlug = cache(
+  async (slug: string, opts?: { skip?: number; take?: number }) => {
+    const skip = opts?.skip ?? 0
+    const take = opts?.take ?? 9
+    return unstable_cache(
+      async () => {
+        const house = await prisma.perfumeHouse.findUnique({
+          where: { slug },
+          include: {
+            perfumes: {
+              skip,
+              take,
+              orderBy: { createdAt: "desc" },
+            },
+            _count: {
+              select: {
+                perfumes: true,
+              },
+            },
+          },
+        })
+        if (!house) return house
+        const perfumeCount = await prisma.perfume.count({
+          where: { perfumeHouseId: house.id },
+        })
+        return { ...house, perfumeCount }
       },
-      _count: {
-        select: {
-          perfumes: true,
-        },
-      },
-    },
-  })
-
-  if (!house) {
-    return house
+      ["house-by-slug", slug, String(skip), String(take)],
+      {
+        revalidate: HOUSE_BY_SLUG_REVALIDATE,
+        tags: ["house", `house-${slug}`],
+      }
+    )()
   }
-
-  const perfumeCount = await prisma.perfume.count({
-    where: {
-      perfumeHouseId: house.id,
-    },
-  })
-
-  return {
-    ...house,
-    perfumeCount,
-  }
-}
+)
 
 export const getPerfumeHouseById = async (
   id: string,

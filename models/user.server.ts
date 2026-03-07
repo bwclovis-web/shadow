@@ -1,4 +1,5 @@
 import { type TradePreference, SubscriptionStatus } from "@prisma/client"
+import { cache } from "react"
 import { prisma } from "@/lib/db"
 import { updateScentProfileFromBehavior } from "@/models/scent-profile.server"
 import { invalidateAllSessions } from "@/models/session.server"
@@ -101,7 +102,7 @@ export const createUser = async (
   })
 }
 
-export const getTraderById = async (id: string) => {
+export const getTraderById = cache(async (id: string) => {
   const trader = await prisma.user.findUnique({
     where: { id },
     select: {
@@ -200,7 +201,7 @@ export const getTraderById = async (id: string) => {
     },
   })
   return trader
-}
+})
 
 export const signInCustomer = async (data: FormData) => {
   const password = data.get("password") as string

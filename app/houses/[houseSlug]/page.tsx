@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { houseSlug } = await params
   const perfumeHouse = await getPerfumeHouseBySlug(houseSlug, {
     skip: 0,
-    take: 1,
+    take: DEFAULT_PAGE_SIZE,
   })
   if (!perfumeHouse) {
     return { title: "House not found" }
