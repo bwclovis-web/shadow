@@ -22,13 +22,13 @@ const limelight = Limelight({
 })
 
 export const metadata: Metadata = {
-  title: 'New Smell',
+  title: 'Shadow and Sillage',
   description: 'Perfume trading platform',
   themeColor: '#c9a227',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'New Smell',
+    title: 'Shadow and Sillage',
   },
 }
 
