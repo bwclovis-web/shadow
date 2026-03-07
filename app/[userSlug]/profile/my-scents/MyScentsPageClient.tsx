@@ -10,6 +10,7 @@ import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import AddToCollectionModal from "@/components/Organisms/AddToCollectionModal"
 import type { OptimisticCollectionItem } from "@/hooks/useMyScentsForm"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
+import { getPerfumeTypeLabel } from "@/data/SelectTypes"
 import { validImageRegex } from "@/utils/styleUtils"
 
 const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
@@ -49,22 +50,24 @@ type MyScentsPageClientProps = {
   bannerImage: string
 }
 
-const groupByPerfumeId = (
-  list: UserPerfumeForClient[]
-): Record<string, UserPerfumeForClient> =>
-  list.reduce((acc, up) => {
-    if (!acc[up.perfumeId]) {
-      acc[up.perfumeId] = up
-    } else {
-      const existing = acc[up.perfumeId]
-      if (
-        new Date(up.createdAt).getTime() < new Date(existing.createdAt).getTime()
-      ) {
-        acc[up.perfumeId] = up
-      }
-    }
-    return acc
-  }, {} as Record<string, UserPerfumeForClient>)
+/** Returns only "real bottle" entries – excludes standalone destash rows (amount === "0"). */
+const getBottleEntries = (list: UserPerfumeForClient[]): UserPerfumeForClient[] =>
+  list.filter((up) => up.amount !== "0")
+
+/** How many real bottles does this perfumeId have in the full list? */
+const countBottlesForPerfume = (
+  list: UserPerfumeForClient[],
+  perfumeId: string
+): number => list.filter((up) => up.amount !== "0" && up.perfumeId === perfumeId).length
+
+const buildBottleLabel = (up: UserPerfumeForClient, bottleCount: number): string | null => {
+  if (bottleCount < 2) return null
+  const typeLabel = getPerfumeTypeLabel(up.type ?? undefined)
+  const amtNum = parseFloat((up.amount ?? "").replace(/[^0-9.]/g, "") || "0")
+  const amtStr = up.amount && up.amount !== "0" && !isNaN(amtNum) ? `${amtNum.toFixed(1)} ml` : null
+  const parts = [typeLabel, amtStr].filter(Boolean)
+  return parts.length > 0 ? parts.join(" · ") : null
+}
 
 const serializeUserPerfume = (up: Record<string, unknown>): UserPerfumeForClient => {
   const createdAt = up.createdAt
@@ -149,13 +152,12 @@ const MyScentsPageClient = ({
     setUserPerfumes((prev) => prev.filter((item) => item.id !== tempId))
   }, [])
 
-  const grouped = groupByPerfumeId(userPerfumes)
-  const uniquePerfumes = Object.values(grouped)
+  const bottleEntries = getBottleEntries(userPerfumes)
 
   const filteredPerfumes =
     !searchQuery.trim()
-      ? uniquePerfumes
-      : uniquePerfumes.filter((up) =>
+      ? bottleEntries
+      : bottleEntries.filter((up) =>
           up.perfume.name.toLowerCase().includes(searchQuery.toLowerCase())
         )
 
@@ -177,7 +179,7 @@ const MyScentsPageClient = ({
       </TitleBanner>
       <div className="noir-border relative inner-container mx-auto text-center flex flex-col items-center justify-center gap-4 p-4 my-6">
         <h2 className="mb-2">{t("collection.heading")}</h2>
-        {uniquePerfumes.length > 0 && (
+        {bottleEntries.length > 0 && (
           <div className="w-full mb-4">
             <SearchInput
               value={searchQuery}
@@ -186,7 +188,7 @@ const MyScentsPageClient = ({
             />
           </div>
         )}
-        {uniquePerfumes.length === 0 ? (
+        {bottleEntries.length === 0 ? (
           <div>
             <p className="text-noir-gold-100 text-xl">
               {t("collection.empty.heading")}
@@ -213,6 +215,8 @@ const MyScentsPageClient = ({
                   perfume.image && !validImageRegex.test(perfume.image)
                     ? perfume.image
                     : BOTTLE_PLACEHOLDER
+                const bottleCount = countBottlesForPerfume(bottleEntries, userPerfume.perfumeId)
+                const bottleLabel = buildBottleLabel(userPerfume, bottleCount)
                 return (
                   <li
                     key={userPerfume.id}
@@ -233,11 +237,14 @@ const MyScentsPageClient = ({
                         sizes="(max-width: 768px) 50vw, 33vw"
                         style={
                           {
-                            viewTransitionName: `perfume-image-${perfume.id}`,
+                            viewTransitionName: `perfume-image-${userPerfume.id}`,
                           } as React.CSSProperties
                         }
                       />
                       <span className="text-noir-gold">{perfume.name}</span>
+                      {bottleLabel && (
+                        <span className="block text-xs text-noir-gold-100 mt-1">{bottleLabel}</span>
+                      )}
                     </Link>
                   </li>
                 )

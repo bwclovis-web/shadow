@@ -577,23 +577,14 @@ export const removeUserPerfume = async (userId: string, userPerfumeId: string) =
       return { success: false, error: "Perfume not found in your collection" }
     }
 
-    const perfumeId = existingPerfume.perfumeId
-
-    // Remove all user perfume entries for this user + perfume (main + destash entries)
-    // so the perfume disappears from the collection list
-    await prisma.$transaction(async transaction => {
-      const allEntriesForPerfume = await transaction.userPerfume.findMany({
-        where: { userId, perfumeId },
-        select: { id: true },
-      })
-      const idsToRemove = allEntriesForPerfume.map((e) => e.id)
-
+    // Delete only this specific bottle (and its comments)
+    await prisma.$transaction(async (transaction) => {
       await transaction.userPerfumeComment.deleteMany({
-        where: { userPerfumeId: { in: idsToRemove } },
+        where: { userPerfumeId },
       })
 
-      await transaction.userPerfume.deleteMany({
-        where: { id: { in: idsToRemove } },
+      await transaction.userPerfume.delete({
+        where: { id: userPerfumeId },
       })
     })
 
@@ -764,6 +755,77 @@ export const updateAvailableAmount = async (params: {
      
     console.error("Error updating available amount:", error)
     return { success: false, error: "Failed to update available amount" }
+  }
+}
+
+export const updateUserPerfumeAmount = async ({
+  userId,
+  userPerfumeId,
+  amount,
+  type,
+  price,
+  placeOfPurchase,
+}: {
+  userId: string
+  userPerfumeId: string
+  amount: string
+  type?: string
+  price?: string
+  placeOfPurchase?: string
+}) => {
+  try {
+    const existingPerfume = await prisma.userPerfume.findFirst({
+      where: { id: userPerfumeId, userId },
+    })
+
+    if (!existingPerfume) {
+      return { success: false, error: "Perfume not found in your collection" }
+    }
+
+    if (!amount.trim()) {
+      return { success: false, error: "Amount is required" }
+    }
+
+    const updateData: Record<string, unknown> = { amount: amount.trim() }
+    if (type) updateData.type = type as PerfumeType
+    if (price !== undefined) updateData.price = price.trim() || null
+    if (placeOfPurchase !== undefined) updateData.placeOfPurchase = placeOfPurchase.trim() || null
+
+    const updatedPerfume = await prisma.userPerfume.update({
+      where: { id: userPerfumeId },
+      data: updateData as Parameters<typeof prisma.userPerfume.update>[0]["data"],
+      select: {
+        id: true,
+        userId: true,
+        perfumeId: true,
+        amount: true,
+        available: true,
+        price: true,
+        placeOfPurchase: true,
+        tradePrice: true,
+        tradePreference: true,
+        tradeOnly: true,
+        type: true,
+        createdAt: true,
+        perfume: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            image: true,
+            description: true,
+            perfumeHouse: {
+              select: { id: true, name: true, slug: true },
+            },
+          },
+        },
+      },
+    })
+
+    return { success: true, userPerfume: updatedPerfume }
+  } catch (error) {
+    console.error("Error updating perfume amount:", error)
+    return { success: false, error: "Failed to update perfume amount" }
   }
 }
 

@@ -10,6 +10,7 @@ import {
   removeUserPerfume,
   updateAvailableAmount,
   updatePerfumeComment,
+  updateUserPerfumeAmount,
 } from "@/models/user.server"
 import { processWishlistAvailabilityAlerts } from "@/utils/alert-processors"
 import { authenticateUser } from "@/utils/server/auth.server"
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Action is required" }, { status: 400 })
     }
     const needsPerfumeId = ["add", "decant", "create-decant"].includes(actionType)
-    const needsUserPerfumeId = ["remove", "get-comments", "add-comment", "decant"].includes(actionType)
+    const needsUserPerfumeId = ["remove", "get-comments", "add-comment", "decant", "update-bottle"].includes(actionType)
     if (needsPerfumeId && !perfumeId) {
       return NextResponse.json({ success: false, error: "Perfume ID is required for this action" }, { status: 400 })
     }
@@ -122,6 +123,29 @@ export async function POST(request: NextRequest) {
             await processWishlistAvailabilityAlerts(perfumeId, user.id)
           } catch (_) {}
         }
+        break
+      }
+      case "update-bottle": {
+        if (!userPerfumeId) {
+          return NextResponse.json({ success: false, error: "User Perfume ID is required" }, { status: 400 })
+        }
+        const newAmount = (formData.get("amount") as string)?.trim()
+        if (!newAmount) {
+          return NextResponse.json({ success: false, error: "Amount is required" }, { status: 400 })
+        }
+        const newType = (formData.get("type") as string)?.trim() || undefined
+        const newPrice = formData.has("price") ? (formData.get("price") as string) ?? "" : undefined
+        const newPlaceOfPurchase = formData.has("placeOfPurchase")
+          ? (formData.get("placeOfPurchase") as string) ?? ""
+          : undefined
+        result = await updateUserPerfumeAmount({
+          userId: user.id,
+          userPerfumeId,
+          amount: newAmount,
+          type: newType,
+          price: newPrice,
+          placeOfPurchase: newPlaceOfPurchase,
+        })
         break
       }
       case "add-comment": {

@@ -10,12 +10,14 @@ import { CommentsModal } from "@/components/Containers/MyScents"
 import { GeneralDetails, PerfumeComments } from "@/components/Containers/MyScents/MyScentListItem/bones"
 import DangerModal from "@/components/Organisms/DangerModal"
 import Modal from "@/components/Organisms/Modal"
+import AddToCollectionModal from "@/components/Organisms/AddToCollectionModal"
 import TitleBanner from "@/components/Organisms/TitleBanner"
+import { getPerfumeTypeLabel } from "@/data/SelectTypes"
 import { useCSRF } from "@/hooks/useCSRF"
 import { usePerfumeComments } from "@/hooks/usePerfumeComments"
 import { useSessionStore } from "@/hooks/sessionStore"
 import type { Comment } from "@/types/comments"
-import type { UserPerfumeI } from "@/types"
+import type { PerfumeI, UserPerfumeI } from "@/types"
 import { validImageRegex } from "@/utils/styleUtils"
 
 const BOTTLE_BANNER = "/images/single-bottle.webp"
@@ -246,6 +248,24 @@ const MySingleScentClient = ({
   }, 0)
   const remainingAmount = totalAmount - totalDestashed
 
+  // Totals grouped by type (only real bottle entries – amount !== "0")
+  const byTypeMap = entriesForThisPerfume
+    .filter((entry) => entry.amount !== "0")
+    .reduce<Record<string, { typeLabel: string; totalAmount: number; bottleCount: number }>>((acc, entry) => {
+      const typeKey = (entry as { type?: string }).type ?? "unknown"
+      const typeLabel = getPerfumeTypeLabel(typeKey) ?? typeKey
+      const amt = parseFloat(
+        (entry.amount ?? "").toString().replace(/[^0-9.]/g, "") || "0"
+      )
+      if (!acc[typeKey]) {
+        acc[typeKey] = { typeLabel, totalAmount: 0, bottleCount: 0 }
+      }
+      acc[typeKey].totalAmount += Number.isNaN(amt) ? 0 : amt
+      acc[typeKey].bottleCount += 1
+      return acc
+    }, {})
+  const byTypeTotals = Object.values(byTypeMap)
+
   return (
     <>
       {modalOpen && modalId === "delete-item" && (
@@ -267,12 +287,35 @@ const MySingleScentClient = ({
         heading={perfume?.name ?? ""}
       />
       <div className="inner-container">
+        <div className="flex justify-end mt-4 mb-2">
+          <AddToCollectionModal
+            type="icon"
+            perfume={finalPerfume.perfume as PerfumeI}
+            onAddedToCollection={() => router.refresh()}
+          />
+        </div>
         <GeneralDetails
           userPerfume={finalPerfume}
           deletePerfume={handleRemovePerfume}
           isRemoving={isRemoving}
           totalAmount={totalAmount}
           remainingAmount={remainingAmount}
+          byTypeTotals={byTypeTotals}
+          onBottleUpdated={(id, fields) => {
+            setUserPerfumesListState((prev) =>
+              prev.map((up) =>
+                up.id === id
+                  ? {
+                      ...up,
+                      amount: fields.amount,
+                      ...(fields.type !== undefined && { type: fields.type }),
+                      ...(fields.price !== undefined && { price: fields.price ?? undefined }),
+                      ...(fields.placeOfPurchase !== undefined && { placeOfPurchase: fields.placeOfPurchase ?? undefined }),
+                    }
+                  : up
+              )
+            )
+          }}
         />
         <VooDooDetails
           summary={t("viewComments")}
@@ -291,6 +334,7 @@ const MySingleScentClient = ({
             userPerfumes={userPerfumesListState}
             setUserPerfumes={setUserPerfumesListState}
             apiBasePath={USER_PERFUMES_API}
+            currentBottleId={finalPerfume.id}
           />
         </VooDooDetails>
       </div>

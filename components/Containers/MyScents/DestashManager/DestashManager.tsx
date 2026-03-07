@@ -15,6 +15,8 @@ interface DestashManagerProps {
   userPerfumes: UserPerfumeI[]
   setUserPerfumes: Dispatch<SetStateAction<UserPerfumeI[]>>
   apiBasePath?: string
+  /** When on a single-bottle page, pass this bottle's id so new decants use it as source (no dropdown). */
+  currentBottleId?: string
 }
 
 const DestashManager = ({
@@ -22,6 +24,7 @@ const DestashManager = ({
   userPerfumes,
   setUserPerfumes,
   apiBasePath = "/api/user-perfumes",
+  currentBottleId,
 }: DestashManagerProps) => {
   const t = useTranslations("myScents.destashManager")
   const { addToFormData } = useCSRF()
@@ -153,14 +156,21 @@ const DestashManager = ({
     formData.append("tradePreference", data.tradePreference)
     formData.append("tradeOnly", data.tradeOnly.toString())
 
-    const shouldEdit = editingId && !isCreating && !data.createNew
+    const isEditing = editingId && !isCreating && !data.createNew
 
-    if (shouldEdit) {
+    if (isEditing) {
       formData.append("action", "decant")
       formData.append("userPerfumeId", editingId)
       formData.append("amount", data.amount)
       if (data.price) formData.append("tradePrice", data.price)
+    } else if (isCreating && currentBottleId) {
+      // On single-bottle page: decant from this bottle
+      formData.append("action", "decant")
+      formData.append("userPerfumeId", currentBottleId)
+      formData.append("amount", data.amount)
+      if (data.price) formData.append("tradePrice", data.price)
     } else {
+      // No current bottle context: standalone destash entry
       formData.append("action", "create-decant")
       formData.append("amount", data.amount)
       if (data.price) formData.append("tradePrice", data.price)
@@ -228,6 +238,7 @@ const DestashManager = ({
               {t("cancel")}
             </Button>
           </div>
+
           {editingDestash && (
             <DestashForm
               key={`edit-${editingDestash.id}`}
@@ -240,47 +251,49 @@ const DestashManager = ({
             />
           )}
           {isCreating && (() => {
-            const foundByPerfumeId = userPerfumes?.find(up => up.perfumeId === perfumeId);
-            const fallbackFirst = userPerfumes?.[0];
-            let finalUserPerfume = foundByPerfumeId || fallbackFirst;
-            
-            // If no userPerfume found, create a minimal fallback object for the form
+            // Use current bottle when on single-bottle page; otherwise first entry for this perfume or fallback
+            const sourceBottle = currentBottleId
+              ? userPerfumes.find(up => up.id === currentBottleId)
+              : userPerfumes.find(up => up.perfumeId === perfumeId)
+            const fallbackFirst = userPerfumes?.[0]
+            let finalUserPerfume = sourceBottle || fallbackFirst
+
             if (!finalUserPerfume) {
-              // Try to get perfume info from any userPerfume in the array
-              const anyUserPerfume = userPerfumes?.find(up => up.perfume?.id === perfumeId) || userPerfumes?.[0];
-              const perfumeName = anyUserPerfume?.perfume?.name || "Unknown Perfume";
-              
+              const anyUserPerfume = userPerfumes?.find(up => up.perfume?.id === perfumeId) || userPerfumes?.[0]
+              const perfumeName = anyUserPerfume?.perfume?.name || "Unknown Perfume"
               finalUserPerfume = {
-                id: `temp-${perfumeId}`, // Temporary ID for dependency tracking
+                id: `temp-${perfumeId}`,
                 userId: "",
-                perfumeId: perfumeId,
-                perfume: { 
-                  id: perfumeId, 
-                  name: perfumeName 
-                },
+                perfumeId,
+                perfume: { id: perfumeId, name: perfumeName },
                 amount: "0",
                 available: "0",
                 price: undefined,
                 tradePrice: undefined,
                 tradePreference: "cash",
                 tradeOnly: false,
-              } as UserPerfumeI;
+              } as UserPerfumeI
             }
-            
-            // Ensure finalUserPerfume is always defined before rendering
-            if (!finalUserPerfume) {
-              return null; // Don't render if we can't create a valid userPerfume
+
+            let formMaxAvailable: number | undefined
+            if (sourceBottle) {
+              const rawAmt = (sourceBottle.amount ?? "").replace(/[^0-9.]/g, "")
+              const sAmt = rawAmt ? parseFloat(rawAmt) : NaN
+              const sAvail = parseFloat((sourceBottle.available ?? "").replace(/[^0-9.]/g, "") || "0")
+              formMaxAvailable = isNaN(sAmt) ? undefined : Math.max(0, sAmt - sAvail)
+            } else {
+              formMaxAvailable = totalOwned > 0 ? totalOwned - totalDestashed : undefined
             }
-            
+
             return (
               <DestashForm
-                key="create-new"
+                key={`create-new-${currentBottleId ?? "standalone"}`}
                 userPerfume={finalUserPerfume}
                 handleDecantConfirm={handleDecantConfirm}
                 isCreating={true}
-                maxAvailable={totalOwned > 0 ? totalOwned - totalDestashed : undefined}
+                maxAvailable={formMaxAvailable}
               />
-            );
+            )
           })()}
         </div>
       )}
