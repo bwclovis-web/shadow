@@ -33,7 +33,7 @@ export const authenticateUser = async (request: Request): Promise<AuthResult> =>
       email: u.email,
       firstName: u.firstName ?? null,
       lastName: u.lastName ?? null,
-      username: u.username ?? null,
+      username: u.username ?? "",
       role: u.role as UserRole,
     }
     return { success: true, user }

@@ -6,7 +6,7 @@ import { redirect } from "next/navigation"
 import {
   createUser,
   FreeSignupLimitReachedError,
-  getUserByName,
+  getUserByEmail,
 } from "@/models/user.server"
 import { validateRateLimit } from "@/utils/api-validation.server"
 import { UserFormSchema } from "@/utils/validation/formValidationSchemas"
@@ -97,7 +97,7 @@ export const signUpAction = async (
     }
   }
 
-  const existingUser = await getUserByName(formData.get("email") as string)
+  const existingUser = await getUserByEmail(formData.get("email") as string)
   if (existingUser) {
     return { error: "Email already taken", submission: undefined }
   }

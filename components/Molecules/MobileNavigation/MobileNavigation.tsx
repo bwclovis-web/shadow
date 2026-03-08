@@ -15,6 +15,7 @@ import UserSection from "./components/UserSection"
 interface MobileNavigationProps extends HTMLProps<HTMLDivElement> {
   user?: {
     id?: string
+    username?: string | null
     role?: string
   } | null
   onMenuClose?: () => void

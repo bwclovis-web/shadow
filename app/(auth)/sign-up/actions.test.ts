@@ -9,7 +9,7 @@ vi.mock("@/utils/security/session-manager.server", () => ({
 }))
 vi.mock("@/models/user.server", () => ({
   createUser: vi.fn(),
-  getUserByName: vi.fn(),
+  getUserByEmail: vi.fn(),
   FreeSignupLimitReachedError: class FreeSignupLimitReachedError extends Error {
     override name = "FreeSignupLimitReachedError"
   },
@@ -41,7 +41,7 @@ vi.mock("@/utils/rate-limit-config.server", () => ({
   getSignupSubscribeRateLimits: vi.fn().mockReturnValue({ signup: { max: 10, windowMs: 60000 } }),
 }))
 
-import { createUser, getUserByName } from "@/models/user.server"
+import { createUser, getUserByEmail } from "@/models/user.server"
 import { signUpAction } from "./actions"
 
 describe("signUpAction", () => {
@@ -51,9 +51,10 @@ describe("signUpAction", () => {
       accessToken: "access",
       refreshToken: "refresh",
     })
-    vi.mocked(getUserByName).mockResolvedValue(null)
+    vi.mocked(getUserByEmail).mockResolvedValue(null)
     vi.mocked(createUser).mockResolvedValue({
       id: "user-new-id",
+      username: "NoirShadow_7",
       tokenVersion: 0,
     } as Awaited<ReturnType<typeof createUser>>)
   })
@@ -83,9 +84,28 @@ describe("signUpAction", () => {
     })
   })
 
+  it("returns 'Email already taken' when getUserByEmail finds existing user", async () => {
+    vi.mocked(getUserByEmail).mockResolvedValue({
+      id: "existing-id",
+      email: "taken@example.com",
+    } as Awaited<ReturnType<typeof getUserByEmail>>)
+    const formData = new FormData()
+    formData.set("email", "taken@example.com")
+    formData.set("password", "ValidPassword1!")
+    formData.set("confirmPassword", "ValidPassword1!")
+    formData.set("acceptTerms", "on")
+
+    const result = await signUpAction(null, formData)
+
+    expect(result).toEqual({ error: "Email already taken", submission: undefined })
+    expect(getUserByEmail).toHaveBeenCalledWith("taken@example.com")
+    expect(createUser).not.toHaveBeenCalled()
+  })
+
   it("calls createSession with tokenVersion when createUser returns non-zero version", async () => {
     vi.mocked(createUser).mockResolvedValue({
       id: "user-paid-id",
+      username: "DarkAlley_42",
       tokenVersion: 1,
     } as Awaited<ReturnType<typeof createUser>>)
     const formData = new FormData()

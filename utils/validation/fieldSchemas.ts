@@ -102,5 +102,5 @@ export const usernameSchema = z
   .string()
   .min(3, { message: V.usernameMin })
   .max(30, { message: V.usernameMax })
-  .regex(/^[a-zA-Z0-9_]+$/, { message: V.usernameFormat })
+  .regex(/^[a-zA-Z0-9_\s]+$/, { message: V.usernameFormat })
   .trim()

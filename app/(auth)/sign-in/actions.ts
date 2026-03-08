@@ -3,10 +3,12 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
+import { updateUser } from "@/models/user.query"
 import { signInCustomer } from "@/models/user.server"
 import { createSession } from "@/utils/security/session-manager.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { getProfilePathForUser } from "@/utils/user"
+import { generateUniqueUsername } from "@/utils/username-generator.server"
 
 /** Next.js redirect() throws; re-throw so the redirect is performed. Not in next/navigation types in 16.x. */
 const isRedirectError = (error: unknown): boolean =>
@@ -51,12 +53,19 @@ export const signInAction = async (
       return { error: "Invalid email or password" }
     }
 
+    let user = existingUser
+    if (!existingUser.username?.trim()) {
+      const username = await generateUniqueUsername()
+      await updateUser(existingUser.id, { username })
+      user = { ...existingUser, username }
+    }
+
     const { accessToken, refreshToken } = await createSession({
-      userId: existingUser.id,
-      tokenVersion: existingUser.tokenVersion ?? 0,
+      userId: user.id,
+      tokenVersion: user.tokenVersion ?? 0,
     })
     await setSessionCookies(accessToken, refreshToken)
-    redirect(getProfilePathForUser(existingUser))
+    redirect(getProfilePathForUser(user))
   } catch (error) {
     if (isRedirectError(error)) {
       throw error

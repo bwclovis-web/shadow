@@ -599,6 +599,7 @@
     "firstName": "Prénom",
     "lastName": "Nom de famille",
     "username": "Nom d'utilisateur",
+    "usernameHint": "Requis. Doit être unique.",
     "email": "E-mail",
     "emailPlaceholder": "Entrez votre e-mail",
     "password": "Mot de passe",
@@ -609,6 +610,7 @@
     "updateProfile": "Mettre à jour le profil",
     "profileUpdatedSuccessfully": "Profil mis à jour !",
     "navigation": {
+      "profile": "Profil",
       "wishlist": "Ma liste de souhaits",
       "myScents": "Mes parfums",
       "changePassword": "Changer le mot de passe"

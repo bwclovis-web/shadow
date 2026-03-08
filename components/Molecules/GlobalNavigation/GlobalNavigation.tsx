@@ -141,18 +141,6 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
                   {t("messages")}
                 </PrefetchLink>
               </li>
-              <li>
-                <PrefetchLink
-                  href={ADMIN_PATH}
-                  className={styleMerge(
-                    navLinkBase,
-                    "block text-center leading-5",
-                    isActive(ADMIN_PATH) && navLinkActiveAdmin
-                  )}
-                >
-                  {t("admin")}
-                </PrefetchLink>
-              </li>
             </>
           )}
         </ul>

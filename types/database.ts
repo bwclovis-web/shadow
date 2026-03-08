@@ -20,7 +20,7 @@ export interface User {
   password: string
   firstName?: string | null
   lastName?: string | null
-  username?: string | null
+  username: string
   createdAt: Date
   updatedAt: Date
   role: UserRole
@@ -213,14 +213,14 @@ export interface PendingSubmission {
   submittedByUser?: {
     id: string
     email: string
-    username?: string | null
+    username: string
     firstName?: string | null
     lastName?: string | null
   } | null
   reviewedByUser?: {
     id: string
     email: string
-    username?: string | null
+    username: string
   } | null
 }
 

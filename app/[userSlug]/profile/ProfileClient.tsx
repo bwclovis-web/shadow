@@ -95,6 +95,9 @@ const ProfileForm = ({
         action={username}
         inputRef={inputRef}
       />
+      <p className="text-stone-400 text-sm -mt-2 mb-2" role="note">
+        {t("usernameHint")}
+      </p>
 
       <Input
         shading={true}

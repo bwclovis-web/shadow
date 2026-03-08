@@ -599,6 +599,7 @@
     "firstName": "Nombre",
     "lastName": "Apellido",
     "username": "Nombre de usuario",
+    "usernameHint": "Obligatorio. Debe ser único.",
     "email": "Correo Electrónico",
     "emailPlaceholder": "Ingresa tu correo electrónico",
     "password": "Contraseña",
@@ -611,6 +612,7 @@
     "scentPreferencesHint": "Personaliza las recomendaciones de perfumes",
     "scentQuizLink": "Cuestionario de preferencias de aromas",
     "navigation": {
+      "profile": "Perfil",
       "wishlist": "Mi Lista de Deseos",
       "myScents": "Mis Aromas",
       "changePassword": "Cambiar Contraseña"

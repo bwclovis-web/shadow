@@ -20,7 +20,7 @@ export interface User {
   password: string
   firstName?: string | null
   lastName?: string | null
-  username?: string | null
+  username: string
   createdAt: Date
   updatedAt: Date
   role: UserRole
@@ -35,7 +35,7 @@ export interface SafeUser {
   email: string
   firstName?: string | null
   lastName?: string | null
-  username?: string | null
+  username: string
   role: UserRole
 }
 

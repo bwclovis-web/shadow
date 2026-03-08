@@ -73,6 +73,8 @@ export function ScraperPageClient() {
   const [scrapeElapsedSeconds, setScrapeElapsedSeconds] = useState(0)
   const [scrapeResult, setScrapeResult] = useState<ScraperRunResponse | null>(null)
   const [scrapeError, setScrapeError] = useState<string | null>(null)
+  /** Result of "Check connection": null = not run, "checking", "ok", or error message */
+  const [connectionCheck, setConnectionCheck] = useState<null | "checking" | "ok" | string>(null)
 
   // Show elapsed time while scraper is running
   useEffect(() => {
@@ -140,6 +142,7 @@ export function ScraperPageClient() {
     setScraping(true)
     setScrapeResult(null)
     setScrapeError(null)
+    setConnectionCheck(null)
     setImportResult(null)
     setImportError(null)
     setImportConfirmed(false)
@@ -169,12 +172,18 @@ export function ScraperPageClient() {
       generateNoirDescriptions,
     }
 
+    const SCRAPER_REQUEST_TIMEOUT_MS = 30 * 60 * 1000 // 30 min — match server; avoid client aborting early
+    const ac = new AbortController()
+    const timeoutId = setTimeout(() => ac.abort(), SCRAPER_REQUEST_TIMEOUT_MS)
+
     try {
       const res = await fetch("/api/admin/scraper/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
+        signal: ac.signal,
       })
+      clearTimeout(timeoutId)
       const data = (await res.json()) as ScraperRunResponse
 
       if (!res.ok || !data.ok) {
@@ -183,7 +192,20 @@ export function ScraperPageClient() {
         setScrapeResult(data)
       }
     } catch (err) {
-      setScrapeError(err instanceof Error ? err.message : "Unknown error")
+      clearTimeout(timeoutId)
+      const raw = err instanceof Error ? err.message : "Unknown error"
+      const isAborted = err instanceof Error && err.name === "AbortError"
+      if (raw === "Failed to fetch" || isAborted) {
+        setScrapeError(
+          (isAborted ? "Request timed out (30 min).\n\n" : "Failed to fetch\n\n") +
+            "This usually means the run took too long and the connection was closed (browser, proxy, or server timeout).\n\n" +
+            "• Use 1–2 collection URLs first to confirm the scraper works.\n" +
+            "• Then run in smaller batches so each run finishes in a few minutes.\n" +
+            "• Keep this tab in the foreground and don’t close it until the run completes.",
+        )
+      } else {
+        setScrapeError(raw)
+      }
     } finally {
       setScraping(false)
     }
@@ -226,6 +248,23 @@ export function ScraperPageClient() {
   // ---------------------------------------------------------------------------
   // CSV download
   // ---------------------------------------------------------------------------
+  /** Ping scraper health endpoint to verify server is reachable (for troubleshooting "Failed to fetch"). */
+  const handleCheckConnection = async () => {
+    setConnectionCheck("checking")
+    try {
+      const res = await fetch("/api/admin/scraper/health", { method: "GET" })
+      const data = (await res.json()) as { ok?: boolean }
+      if (res.ok && data.ok) {
+        setConnectionCheck("ok")
+      } else {
+        setConnectionCheck(res.ok ? "Unexpected response" : `Server returned ${res.status}`)
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      setConnectionCheck(msg)
+    }
+  }
+
   const handleDownloadCsv = () => {
     if (!scrapeResult?.csvContent) return
     const slug = houseName.toLowerCase().replace(/\s+/g, "-")
@@ -316,14 +355,22 @@ export function ScraperPageClient() {
         </section>
 
         {/* Selectors */}
-        <section className="flex flex-col gap-4 rounded-lg border border-border p-4">
+        <section className="flex flex-col gap-4 rounded-lg border border-border p-4 bg-noir-dark border-noir-gold text-noir-gold-100">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             CSS Selectors
           </h2>
+          <details className="text-xs text-muted-foreground">
+            <summary className="cursor-pointer font-medium text-foreground">Selector tips (avoid &quot;invalid selector&quot; errors)</summary>
+            <ul className="mt-2 list-inside list-disc space-y-1 pl-1">
+              <li>Use standard CSS only — no <code className="rounded bg-muted px-0.5">:contains()</code> or jQuery-only selectors.</li>
+              <li>Product link selector must match links on the collection page (e.g. <code className="rounded bg-muted px-0.5">a[href*=&apos;/products/&apos;]</code>). Inspect the page to see the real <code className="rounded bg-muted px-0.5">href</code> pattern.</li>
+              <li>No newlines or extra spaces inside a selector.</li>
+            </ul>
+          </details>
 
           <Field
             label="Product link selector *"
-            hint="Matches links to individual product pages on a collection page."
+            hint="Valid CSS only (no :contains()). Use attribute selectors, e.g. a[href*='/products/'] or a[href*='/p/']. For non-Shopify sites, inspect the collection page to see the link href pattern."
           >
             <input
               className={inputClass("font-mono text-xs")}
@@ -332,6 +379,7 @@ export function ScraperPageClient() {
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setProductLinkSelector(e.target.value)
               }
+              placeholder="a[href*='/products/']"
             />
           </Field>
 
@@ -372,7 +420,7 @@ export function ScraperPageClient() {
         </section>
 
         {/* Skip rules */}
-        <section className="flex flex-col gap-4 rounded-lg border border-border p-4">
+        <section className="flex flex-col gap-4 rounded-lg border border-border p-4 bg-noir-dark border-noir-gold text-noir-gold-100">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Skip rules
           </h2>
@@ -390,7 +438,7 @@ export function ScraperPageClient() {
         </section>
 
         {/* Title & description rules */}
-        <section className="flex flex-col gap-4 rounded-lg border border-border p-4">
+        <section className="flex flex-col gap-4 rounded-lg border border-border p-4 bg-noir-dark border-noir-gold text-noir-gold-100">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
             Title & description
           </h2>
@@ -456,7 +504,7 @@ export function ScraperPageClient() {
 
       {/* Running indicator */}
       {scraping && (
-        <div className="mt-8 rounded-lg border border-amber-500/50 bg-amber-500/5 p-6 text-center text-sm text-muted-foreground">
+        <div className="mt-8 rounded-lg border p-6 text-center text-sm text-muted-foreground bg-noir-dark border-noir-gold text-noir-gold-100">
           <p className="animate-pulse font-medium">
             Scraper is running — this may take several minutes for large houses…
           </p>
@@ -475,11 +523,54 @@ export function ScraperPageClient() {
         </div>
       )}
 
-      {/* Scrape error */}
+      {/* Scrape error + troubleshooting */}
       {scrapeError && (
-        <div className="mt-8 rounded-lg border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
-          <p className="font-semibold">Scraper error</p>
-          <pre className="mt-1 whitespace-pre-wrap text-xs">{scrapeError}</pre>
+        <div className="mt-8 space-y-4">
+          {connectionCheck === "ok" && (scrapeError.includes("Failed to fetch") || scrapeError.includes("timed out")) && (
+            <div className="rounded-lg border border-amber-500/60 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-200">
+              <p className="font-semibold">Server is reachable — this was likely a timeout</p>
+              <p className="mt-1 text-xs">
+                The run took too long and the connection was closed before the server could respond. Use <strong>1–2 collection URLs only</strong> to test; if that works, run in smaller batches (e.g. one or two collection pages per run) so each run finishes in a few minutes.
+              </p>
+            </div>
+          )}
+          <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
+            <p className="font-semibold">Scraper error</p>
+            <pre className="mt-1 whitespace-pre-wrap text-xs">{scrapeError}</pre>
+            {scrapeError.toLowerCase().includes("invalid selector") && (
+              <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">
+                Fix: use a valid CSS selector (no spaces/newlines, no :contains()). Inspect the collection page in
+                DevTools and match the actual link structure — e.g. a[href*=&apos;/products/&apos;] for Shopify, or
+                a[href*=&apos;/p/&apos;] for some other sites.
+              </p>
+            )}
+          </div>
+          <div className="rounded-lg border border-border bg-muted/20 p-4 text-sm">
+            <p className="font-semibold text-foreground">Troubleshooting</p>
+            <ol className="mt-2 list-inside list-decimal space-y-1 text-muted-foreground">
+              <li>Confirm the dev server is running (e.g. <code className="rounded bg-muted px-1">npm run dev</code>) and check that terminal for errors.</li>
+              <li>Use <strong>Check connection</strong> below to see if the API is reachable from this browser.</li>
+              <li>If the run was long, the request may have timed out — try with fewer collection URLs (e.g. one page) first.</li>
+              <li>Open <a href="/api/admin/scraper/health" target="_blank" rel="noopener noreferrer" className="text-primary underline">/api/admin/scraper/health</a> in a new tab: you should see <code className="rounded bg-muted px-1">{"{ \"ok\": true }"}</code> when signed in as admin.</li>
+            </ol>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={handleCheckConnection}
+                disabled={connectionCheck === "checking"}
+              >
+                {connectionCheck === "checking" ? "Checking…" : "Check connection"}
+              </Button>
+              {connectionCheck === "ok" && (
+                <span className="text-sm text-green-600 dark:text-green-400">Connection OK — server is reachable.</span>
+              )}
+              {connectionCheck && connectionCheck !== "checking" && connectionCheck !== "ok" && (
+                <span className="text-sm text-destructive">Connection failed: {connectionCheck}</span>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -530,9 +621,12 @@ export function ScraperPageClient() {
             )}
 
             {scrapeResult.scraperLog && (
-              <details className="mt-3">
+              <details className="mt-3" open={scrapeResult.scrapedCount === 0}>
                 <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
                   Scraper log (Python stderr)
+                  {scrapeResult.scrapedCount === 0 && (
+                    <span className="ml-2 text-amber-600 dark:text-amber-400">(expanded — no products found, check log for why)</span>
+                  )}
                 </summary>
                 <pre className="mt-2 max-h-48 overflow-y-auto rounded border border-border bg-muted/30 p-2 font-mono text-xs whitespace-pre-wrap">
                   {scrapeResult.scraperLog}

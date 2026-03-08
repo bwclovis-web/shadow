@@ -605,6 +605,7 @@
     "firstName": "First name",
     "lastName": "Last name",
     "username": "Username",
+    "usernameHint": "Required. Must be unique.",
     "email": "Email",
     "emailPlaceholder": "Enter your email",
     "password": "Password",
@@ -617,6 +618,7 @@
     "scentPreferencesHint": "Personalize perfume recommendations",
     "scentQuizLink": "Scent preferences quiz",
     "navigation": {
+      "profile": "Profile",
       "wishlist": "My Wishlist",
       "myScents": "My Scents",
       "changePassword": "Change Password"
@@ -984,6 +986,9 @@
     "nameMin": "Name must be at least 1 character.",
     "nameMax": "Name must be less than 100 characters.",
     "urlInvalid": "Please enter a valid URL.",
-    "perfumeHouseRequired": "Please select a perfume house."
+    "perfumeHouseRequired": "Please select a perfume house.",
+    "usernameMin": "Username must be at least 3 characters.",
+    "usernameMax": "Username must be 30 characters or less.",
+    "usernameFormat": "Use only letters, numbers, spaces and underscores."
   }
 }

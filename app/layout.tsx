@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter, Limelight } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
@@ -21,10 +21,13 @@ const limelight = Limelight({
   variable: '--font-headline-loaded',
 })
 
+export const viewport: Viewport = {
+  themeColor: '#c9a227',
+}
+
 export const metadata: Metadata = {
   title: 'Shadow and Sillage',
   description: 'Perfume trading platform',
-  themeColor: '#c9a227',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',

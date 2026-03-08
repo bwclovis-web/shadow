@@ -24,7 +24,7 @@ export type SessionUser = {
   email: string
   firstName: string | null
   lastName: string | null
-  username: string | null
+  username: string
   role: UserRole
 }
 
@@ -149,7 +149,7 @@ export async function getSessionFromCookieHeader(
         email: user.email,
         firstName: user.firstName ?? null,
         lastName: user.lastName ?? null,
-        username: user.username ?? null,
+        username: user.username ?? "",
         role: user.role,
       }
     }

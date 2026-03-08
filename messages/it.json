@@ -599,6 +599,7 @@
     "firstName": "Nome",
     "lastName": "Cognome",
     "username": "Nome utente",
+    "usernameHint": "Obbligatorio. Deve essere univoco.",
     "email": "Email",
     "emailPlaceholder": "Inserisci la tua email",
     "password": "Password",
@@ -609,6 +610,7 @@
     "updateProfile": "Aggiorna profilo",
     "profileUpdatedSuccessfully": "Profilo aggiornato!",
     "navigation": {
+      "profile": "Profilo",
       "wishlist": "La mia wishlist",
       "myScents": "I miei profumi",
       "changePassword": "Cambia password"

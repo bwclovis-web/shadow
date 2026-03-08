@@ -13,7 +13,8 @@ import {
 import {
   FREE_USER_LIMIT,
   canSignupForFree,
-} from "@/utils/server/user-limit.server" 
+} from "@/utils/server/user-limit.server"
+import { generateUniqueUsername } from "@/utils/username-generator.server"
 
 import { getUserByEmail, getUserByName } from "./user.query"
 
@@ -70,6 +71,7 @@ export const createUser = async (
 
   const email = data.get("email") as string
   const hashedPassword = await hashPassword(password)
+  const username = await generateUniqueUsername()
 
   if (
     subscriptionStatus === SubscriptionStatus.free &&
@@ -84,6 +86,7 @@ export const createUser = async (
         data: {
           email,
           password: hashedPassword,
+          username,
           subscriptionStatus,
           isEarlyAdopter,
         },
@@ -96,6 +99,7 @@ export const createUser = async (
     data: {
       email,
       password: hashedPassword,
+      username,
       subscriptionStatus,
       isEarlyAdopter,
     },
