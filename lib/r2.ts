@@ -37,6 +37,33 @@ const getR2Client = (): S3Client => {
   return client
 }
 
+/** Build a readable message from SDK/network errors that may not be standard Error. */
+function getR2ErrorMessage(err: unknown): string {
+  if (err instanceof Error && err.message) return err.message
+  if (typeof err === 'object' && err !== null) {
+    const o = err as Record<string, unknown>
+    const parts: string[] = []
+    if (typeof o.message === 'string') parts.push(o.message)
+    if (typeof o.name === 'string') parts.push(`name: ${o.name}`)
+    if (typeof o.Code === 'string') parts.push(`Code: ${o.Code}`)
+    const meta = o.$metadata as { httpStatusCode?: number } | undefined
+    if (meta?.httpStatusCode) parts.push(`HTTP ${meta.httpStatusCode}`)
+    if (parts.length) return parts.join('; ')
+    try {
+      const str = JSON.stringify(
+        { name: o.name, Code: o.Code, message: o.message, $metadata: o.$metadata },
+        null,
+        0,
+      )
+      if (str && str !== '{}') return str
+    } catch {
+      // ignore
+    }
+  }
+  const fallback = String(err)
+  return fallback === '[object Object]' || !fallback ? 'Unknown error (check R2 credentials and account)' : fallback
+}
+
 /**
  * Verify the R2 bucket exists and is accessible with the current credentials.
  * Call this before a batch of uploads to fail fast with a clear error.
@@ -49,14 +76,20 @@ export async function checkR2BucketExists(): Promise<{ ok: true } | { ok: false;
     await getR2Client().send(new HeadBucketCommand({ Bucket: bucket }))
     return { ok: true }
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    if (msg.includes('bucket does not exist') || msg.includes('NoSuchBucket') || msg.includes('404')) {
+    const msg = getR2ErrorMessage(err)
+    const isBucketNotFound =
+      /bucket does not exist|NoSuchBucket|404|Not Found/i.test(msg) ||
+      (typeof err === 'object' && err !== null && (err as { Code?: string }).Code === 'NoSuchBucket')
+    if (isBucketNotFound) {
       return {
         ok: false,
         error: `R2 bucket not found or not accessible. Server is using R2_BUCKET_NAME="${bucket}" and R2_ACCOUNT_ID="${acct}". In Cloudflare: (1) Open the R2 dashboard and confirm you're in the same account as ${acct}. (2) Confirm the bucket name matches exactly (no extra spaces — current length ${bucket.length} chars). (3) Ensure your R2 API token was created in this account and has "Object Read & Write". Restart the dev server after changing .env.`,
       }
     }
-    return { ok: false, error: `R2 bucket check failed: ${msg}` }
+    return {
+      ok: false,
+      error: `R2 bucket check failed. Server is using R2_BUCKET_NAME="${bucket}" and R2_ACCOUNT_ID="${acct}". Error: ${msg}. Check credentials (R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY), account ID, and that the bucket exists in that account.`,
+    }
   }
 }
 
@@ -81,8 +114,11 @@ export const uploadToR2 = async (
   try {
     await getR2Client().send(command)
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    if (msg.includes('bucket does not exist') || msg.includes('NoSuchBucket')) {
+    const msg = getR2ErrorMessage(err)
+    const isNoSuchBucket =
+      /bucket does not exist|NoSuchBucket/i.test(msg) ||
+      (typeof err === 'object' && err !== null && (err as { Code?: string }).Code === 'NoSuchBucket')
+    if (isNoSuchBucket) {
       throw new Error(
         `The specified bucket does not exist. (R2_BUCKET_NAME="${bucket}", account ${accountId()}. Check that this bucket exists in the Cloudflare R2 dashboard for this account and that .env is loaded — e.g. restart the dev server after changing .env.)`,
       )

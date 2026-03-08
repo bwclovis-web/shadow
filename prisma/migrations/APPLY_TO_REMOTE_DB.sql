@@ -324,6 +324,17 @@ DO $$ BEGIN
     END IF;
 END $$;
 
+-- Add traderAbout to User if missing (trader bio/description)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'traderAbout'
+    ) THEN
+        ALTER TABLE "User" ADD COLUMN "traderAbout" TEXT;
+        RAISE NOTICE 'Added traderAbout column to User';
+    END IF;
+END $$;
+
 -- Add review approval fields if missing
 DO $$ BEGIN
     IF NOT EXISTS (
