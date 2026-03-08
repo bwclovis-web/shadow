@@ -6,8 +6,6 @@ import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
 import { PerformanceAdminClient } from "./PerformanceAdminClient"
 
-export const ROUTE_PATH = "/admin/performance-admin" as const
-
 export const generateMetadata = (): Metadata => ({
   title: "Performance Admin - Voodoo Perfumes",
   description:

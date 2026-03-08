@@ -5,8 +5,6 @@ import { getPendingSubmissions } from "@/models/pending-submission.server"
 
 import PendingSubmissionClient from "./PendingSubmissionClient"
 
-export const ROUTE_PATH = "/admin/pending-submission" as const
-
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("pendingSubmissions.meta")
   return {

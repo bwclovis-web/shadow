@@ -11,7 +11,6 @@ import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
 import PerfumeDetailClient from "./PerfumeDetailClient"
 
-export const ROUTE_PATH = "/perfume"
 const REVIEWS_PAGE_SIZE = 5
 const SIMILAR_PERFUMES_LIMIT = 4
 

@@ -1,5 +1,6 @@
 import {
   HeadBucketCommand,
+  ListBucketsCommand,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3'
@@ -39,19 +40,21 @@ const getR2Client = (): S3Client => {
 
 /** Build a readable message from SDK/network errors that may not be standard Error. */
 function getR2ErrorMessage(err: unknown): string {
-  if (err instanceof Error && err.message) return err.message
   if (typeof err === 'object' && err !== null) {
     const o = err as Record<string, unknown>
     const parts: string[] = []
-    if (typeof o.message === 'string') parts.push(o.message)
+    if (typeof o.message === 'string' && o.message) parts.push(o.message)
     if (typeof o.name === 'string') parts.push(`name: ${o.name}`)
     if (typeof o.Code === 'string') parts.push(`Code: ${o.Code}`)
     const meta = o.$metadata as { httpStatusCode?: number } | undefined
     if (meta?.httpStatusCode) parts.push(`HTTP ${meta.httpStatusCode}`)
+    // SDK often puts the real reason in .cause (e.g. network errors)
+    if (o.cause instanceof Error && o.cause.message) parts.push(`cause: ${o.cause.message}`)
+    else if (typeof o.cause === 'string') parts.push(`cause: ${o.cause}`)
     if (parts.length) return parts.join('; ')
     try {
       const str = JSON.stringify(
-        { name: o.name, Code: o.Code, message: o.message, $metadata: o.$metadata },
+        { name: o.name, Code: o.Code, message: o.message, $metadata: o.$metadata, cause: o.cause },
         null,
         0,
       )
@@ -60,8 +63,25 @@ function getR2ErrorMessage(err: unknown): string {
       // ignore
     }
   }
+  if (err instanceof Error && err.message) return err.message
   const fallback = String(err)
   return fallback === '[object Object]' || !fallback ? 'Unknown error (check R2 credentials and account)' : fallback
+}
+
+/**
+ * List bucket names visible with the current R2 credentials (requires token with Admin Read or account-level access).
+ * Used to show the user which buckets exist when HeadBucket returns NotFound.
+ */
+export async function listR2BucketNames(): Promise<
+  { ok: true; names: string[] } | { ok: false; error: string }
+> {
+  try {
+    const result = await getR2Client().send(new ListBucketsCommand({}))
+    const names = (result.Buckets ?? []).map(b => b.Name ?? '').filter(Boolean)
+    return { ok: true, names }
+  } catch (err) {
+    return { ok: false, error: getR2ErrorMessage(err) }
+  }
 }
 
 /**
@@ -77,18 +97,32 @@ export async function checkR2BucketExists(): Promise<{ ok: true } | { ok: false;
     return { ok: true }
   } catch (err) {
     const msg = getR2ErrorMessage(err)
+    const errObj = typeof err === 'object' && err !== null ? (err as { name?: string; Code?: string }) : null
     const isBucketNotFound =
-      /bucket does not exist|NoSuchBucket|404|Not Found/i.test(msg) ||
-      (typeof err === 'object' && err !== null && (err as { Code?: string }).Code === 'NoSuchBucket')
+      /bucket does not exist|NoSuchBucket|404|Not Found|NotFound/i.test(msg) ||
+      errObj?.Code === 'NoSuchBucket' ||
+      errObj?.name === 'NotFound'
     if (isBucketNotFound) {
+      let extra = ''
+      const listResult = await listR2BucketNames()
+      if (listResult.ok && listResult.names.length > 0) {
+        const inList = listResult.names.includes(bucket)
+        extra = ` Buckets visible with your credentials: [${listResult.names.join(', ')}]. Your R2_BUCKET_NAME "${bucket}" is ${inList ? 'in this list but HeadBucket still failed (check token permissions).' : 'NOT in this list — use one of these names or create a bucket with that exact name.'}`
+      } else {
+        extra = ` (Could not list buckets: ${listResult.ok ? '' : listResult.error}. Your token may need "Admin Read" to list buckets, or the account/credentials may be wrong.)`
+      }
       return {
         ok: false,
-        error: `R2 bucket not found or not accessible. Server is using R2_BUCKET_NAME="${bucket}" and R2_ACCOUNT_ID="${acct}". In Cloudflare: (1) Open the R2 dashboard and confirm you're in the same account as ${acct}. (2) Confirm the bucket name matches exactly (no extra spaces — current length ${bucket.length} chars). (3) Ensure your R2 API token was created in this account and has "Object Read & Write". Restart the dev server after changing .env.`,
+        error: `R2 bucket not found or not accessible. Server is using R2_BUCKET_NAME="${bucket}" and R2_ACCOUNT_ID="${acct}".${extra} If scripts/migrate-images-to-r2 works but this fails, Next.js may be using different env: .env.local overrides .env — ensure R2_* are not redefined (or wrong) in .env.local. In Cloudflare: (1) Confirm you're in the account with ID ${acct}. (2) Bucket name must match exactly. (3) R2 API token must be from this account with "Object Read & Write" (or Admin). Restart the dev server after changing .env.`,
       }
     }
+    const hint =
+      msg === 'Unknown' || msg === 'Unknown error (check R2 credentials and account)'
+        ? ' Check the server terminal/logs for full error (e.g. network, TLS, or auth).'
+        : ''
     return {
       ok: false,
-      error: `R2 bucket check failed. Server is using R2_BUCKET_NAME="${bucket}" and R2_ACCOUNT_ID="${acct}". Error: ${msg}. Check credentials (R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY), account ID, and that the bucket exists in that account.`,
+      error: `R2 bucket check failed. Server is using R2_BUCKET_NAME="${bucket}" and R2_ACCOUNT_ID="${acct}". Error: ${msg}.${hint} Check credentials (R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY), account ID, and that the bucket exists in that account.`,
     }
   }
 }

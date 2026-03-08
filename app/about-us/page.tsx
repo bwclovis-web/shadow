@@ -3,8 +3,6 @@ import { getTranslations } from "next-intl/server"
 
 import AboutUsClient from "./AboutUsClient"
 
-export const ROUTE_PATH = "/about-us"
-
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("aboutUs.meta")
   return {

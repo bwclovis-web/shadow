@@ -2,8 +2,6 @@ import { getAuditStats } from "@/utils/security/audit-logger.server"
 
 import { StatsJsonPage } from "../components/StatsJsonPage"
 
-export const ROUTE_PATH = "/admin/audit-stats" as const
-
 const AuditStatsPage = async () => {
   const stats = getAuditStats()
   const timestamp = new Date().toISOString()

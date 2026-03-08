@@ -1,7 +1,5 @@
 import SignUpClient from "./SignUpClient"
 
-export const ROUTE_PATH = "/sign-up"
-
 export const metadata = {
   title: "Sign Up | New Smell",
   description: "Create your account.",

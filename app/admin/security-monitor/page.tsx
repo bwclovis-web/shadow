@@ -20,8 +20,6 @@ import { getSecurityStats } from "@/utils/security/security-monitor.server"
 
 import { SecurityMonitorClient } from "./SecurityMonitorClient"
 
-export const ROUTE_PATH = "/admin/security-monitor" as const
-
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("securityMonitor")
   return {

@@ -8,8 +8,6 @@ import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
 import { UsersClient } from "./UsersClient"
 
-export const ROUTE_PATH = "/admin/users" as const
-
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("userAdmin.meta")
   return {

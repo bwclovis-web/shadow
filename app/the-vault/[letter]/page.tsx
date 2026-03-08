@@ -5,8 +5,6 @@ import { getPerfumesByLetterPaginated } from "@/models/perfume.server"
 
 import TheVaultClient from "../TheVaultClient"
 
-export const ROUTE_PATH = "/the-vault"
-
 const DEFAULT_PAGE_SIZE = 16
 
 export const generateMetadata = async (): Promise<Metadata> => {

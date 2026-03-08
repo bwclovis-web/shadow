@@ -5,8 +5,6 @@ import { getHousesByLetterPaginated } from "@/models/house.server"
 
 import AllHousesClient from "./AllHousesClient"
 
-export const ROUTE_PATH = "/houses"
-
 const DEFAULT_PAGE_SIZE = 16
 
 export const generateMetadata = async (): Promise<Metadata> => {

@@ -20,8 +20,6 @@ import { getProfileSlug } from "@/utils/user"
 
 import ProfileClient from "./ProfileClient"
 
-export const ROUTE_PATH = "/[userSlug]/profile"
-
 type Props = {
   params: Promise<{ userSlug: string }>
 }

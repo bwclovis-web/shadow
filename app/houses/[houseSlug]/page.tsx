@@ -9,8 +9,6 @@ import HouseDetailClient from "./HouseDetailClient"
 
 const DEFAULT_PAGE_SIZE = 8
 
-export const ROUTE_PATH = "/houses"
-
 type Props = {
   params: Promise<{ houseSlug: string }>
   searchParams: Promise<{ pg?: string; letter?: string }>

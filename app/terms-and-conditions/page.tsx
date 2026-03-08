@@ -3,8 +3,6 @@ import { getTranslations } from "next-intl/server"
 
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 
-export const ROUTE_PATH = "/terms-and-conditions"
-
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("termsAndConditions.meta")
   return {
