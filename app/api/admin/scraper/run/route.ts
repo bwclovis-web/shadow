@@ -45,10 +45,10 @@ const SCRAPER_TIMEOUT_MS =
     : 30 * 60 * 1000 // 30 minutes default
 
 /**
- * Allow this route to run up to 30 minutes on Vercel/serverless deployments.
- * Segment config must be a static literal; actual timeout is still enforced via SCRAPER_TIMEOUT_MS in code.
+ * Vercel Pro allows max 800s; scraper is only used on localhost where no limit applies.
+ * Kept within 1–800 so deployment succeeds.
  */
-export const maxDuration = 1800
+export const maxDuration = 60
 
 /** How often to send a keepalive '\n' to prevent browser idle-connection drops (ms). */
 const KEEPALIVE_INTERVAL_MS = 25_000
