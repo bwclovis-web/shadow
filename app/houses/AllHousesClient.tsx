@@ -18,7 +18,7 @@ import {
   type SortOption,
 } from "@/utils/sortUtils"
 
-export const ROUTE_PATH = "/houses"
+const ROUTE_PATH = "/houses"
 
 const BANNER_IMAGE = "/images/behind-bottle.webp"
 
