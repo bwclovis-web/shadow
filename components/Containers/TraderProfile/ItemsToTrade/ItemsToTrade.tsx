@@ -2,6 +2,7 @@ import { useTranslations } from "next-intl"
 import { GiTrade } from "react-icons/gi"
 
 import VooDooDetails from "~/components/Atoms/VooDooDetails"
+import { getPerfumeTypeLabel } from "~/data/SelectTypes"
 import type { UserPerfumeI } from "~/types"
 import ContactItemButton from "~/components/Containers/TraderProfile/ContactItemButton"
 
@@ -22,14 +23,19 @@ const getTradeLabel = (t: ReturnType<typeof useTranslations>, preference: string
 
 // Header component for perfume info
 const PerfumeHeader = ({ userPerfume }: { userPerfume: UserPerfumeI }) => (
-  <>
+  <div className="flex flex-col">
     <div className="font-semibold text-xl text-noir-gold">
       {userPerfume.perfume?.name || "Unknown Perfume"}
     </div>
     <div className="text-sm text-noir-gold-100">
       by {userPerfume.perfume?.perfumeHouse?.name}
     </div>
-  </>
+    {userPerfume.type && (
+      <p className="text-sm text-noir-gold-300 mt-1">
+        {getPerfumeTypeLabel(userPerfume.type) ?? userPerfume.type}
+      </p>
+    )}
+  </div>
 )
 
 const PriceInfo = ({ userPerfume, t }: { userPerfume: UserPerfumeI; t: ReturnType<typeof useTranslations> }) => {
@@ -120,11 +126,15 @@ const ItemsToTrade = ({ userPerfume, trader, viewerId }: ItemsToTradeProps) => {
   return (
   <li
     key={userPerfume.id}
-    className="mb-4 border bg-noir-gold/20 border-noir-gold rounded p-2"
+    className="mb-4 border bg-noir-gold/20 border-noir-gold rounded py-2 px-4"
   >
+    <div className="flex justify-between items-center">
     <PerfumeHeader userPerfume={userPerfume} />
-    <PriceInfo userPerfume={userPerfume} t={t} />
-    <TradeInfo userPerfume={userPerfume} t={t} />
+    <div>
+      <PriceInfo userPerfume={userPerfume} t={t} />
+      <TradeInfo userPerfume={userPerfume} t={t} />
+    </div>
+    </div>
     <CommentsSection userPerfume={userPerfume} t={t} />
     {trader && (
       <ContactItemButton

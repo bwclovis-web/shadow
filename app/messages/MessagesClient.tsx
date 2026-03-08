@@ -1,8 +1,12 @@
 "use client"
 
 import { Link } from "next-view-transitions"
+import { useTranslations } from "next-intl"
 
-import { getUserDisplayName } from "@/utils/user"
+import TitleBanner from "@/components/Organisms/TitleBanner"
+import { getTraderDisplayName } from "@/utils/user"
+
+const BANNER_IMAGE = "/images/messages.png"
 
 export interface ConversationSummary {
   otherUserId: string
@@ -23,17 +27,24 @@ export default function MessagesClient({
   userId,
   initialConversations: conversations,
 }: MessagesClientProps) {
-  return (
-    <section className="inner-container py-8">
-      <h1 className="text-2xl font-bold mb-6">Messages</h1>
+  const t = useTranslations("messagesPage")
 
-      {conversations.length === 0 ? (
-        <p className="text-gray-600">You have no conversations yet.</p>
+  return (
+    <section>
+      <TitleBanner
+        image={BANNER_IMAGE}
+        heading={t("heading")}
+        subheading={t("subheading")}
+      />
+
+      <div className="inner-container py-8">
+        {conversations.length === 0 ? (
+        <p className="text-noir-gold-500">You have no conversations yet.</p>
       ) : (
         <ul className="space-y-2">
           {conversations.map((conv) => {
             const displayName =
-              getUserDisplayName({
+              getTraderDisplayName({
                 firstName: conv.otherUserFirstName,
                 lastName: conv.otherUserLastName,
                 username: conv.otherUserUsername,
@@ -79,6 +90,7 @@ export default function MessagesClient({
           })}
         </ul>
       )}
+      </div>
     </section>
   )
 }

@@ -417,6 +417,10 @@
       "cancelButton": "Annulla"
     }
   },
+  "messagesPage": {
+    "heading": "Messaggi",
+    "subheading": "Le tue conversazioni con altri venditori."
+  },
   "securityMonitor": {
     "heading": "Monitor sicurezza",
     "subheading": "Così dormi sonni tranquilli"
@@ -609,6 +613,9 @@
     "notFound": "Profilo utente non trovato",
     "updateProfile": "Aggiorna profilo",
     "profileUpdatedSuccessfully": "Profilo aggiornato!",
+    "traderAbout": "Informazioni sul venditore",
+    "traderAboutPlaceholder": "Una breve bio mostrata sul tuo profilo venditore",
+    "traderAboutHint": "Mostrato sul tuo profilo venditore. Massimo {max} caratteri.",
     "navigation": {
       "profile": "Profilo",
       "wishlist": "La mia wishlist",
@@ -827,6 +834,7 @@
     },
     "heading": "Venditore {traderName}",
     "subheading": "Profilo di {traderName}",
+    "aboutHeading": "Informazioni",
     "itemsAvailable": "Articoli da scambiare",
     "itemsAvailableSummary": "{traderName} ha questi articoli da scambiare:",
     "itemsSearchingFor": "È in cerca di",
@@ -925,5 +933,8 @@
       "availableMessage": "Questo articolo apparirà sul tuo profilo",
       "unavailableMessage": "Questo articolo è privato e non apparirà sul tuo profilo"
     }
+  },
+  "validation": {
+    "profileAboutMax": "Informazioni sul venditore devono essere al massimo {max} caratteri."
   }
 }

@@ -102,7 +102,7 @@ const ContactItemButton = ({
         variant="primary"
         background="gold"
         size="sm"
-        className="mt-2 w-full"
+        className="mt-2 w-full max-w-max"
         onClick={() => {
           toggleModal(modalTrigger, itemModalId, {
             traderId,

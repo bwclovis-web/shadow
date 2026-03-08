@@ -26,6 +26,8 @@ export type SessionUser = {
   lastName: string | null
   username: string
   role: UserRole
+  traderAbout?: string | null
+  updatedAt?: Date
 }
 
 export type SessionFromRequest = {
@@ -151,6 +153,7 @@ export async function getSessionFromCookieHeader(
         lastName: user.lastName ?? null,
         username: user.username ?? "",
         role: user.role,
+        traderAbout: user.traderAbout ?? null,
       }
     }
   }

@@ -166,37 +166,47 @@ export async function getConversations(userId: string): Promise<ConversationSumm
     }))
 }
 
+const threadInclude = {
+  sender: {
+    select: {
+      id: true,
+      username: true,
+      firstName: true,
+      lastName: true,
+    },
+  },
+  recipient: {
+    select: {
+      id: true,
+      username: true,
+      firstName: true,
+      lastName: true,
+    },
+  },
+} as const
+
 /**
  * Get messages between the current user and another user, ordered by createdAt.
+ * Fetches both "user sent to other" and "other sent to user" and merges.
  */
 export async function getThread(userId: string, otherUserId: string) {
-  return prisma.traderContactMessage.findMany({
-    where: {
-      OR: [
-        { senderId: userId, recipientId: otherUserId },
-        { senderId: otherUserId, recipientId: userId },
-      ],
-    },
-    include: {
-      sender: {
-        select: {
-          id: true,
-          username: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
-      recipient: {
-        select: {
-          id: true,
-          username: true,
-          firstName: true,
-          lastName: true,
-        },
-      },
-    },
-    orderBy: { createdAt: "asc" },
-  })
+  const [sentByUser, receivedByUser] = await Promise.all([
+    prisma.traderContactMessage.findMany({
+      where: { senderId: userId, recipientId: otherUserId },
+      include: threadInclude,
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.traderContactMessage.findMany({
+      where: { senderId: otherUserId, recipientId: userId },
+      include: threadInclude,
+      orderBy: { createdAt: "asc" },
+    }),
+  ])
+
+  const merged = [...sentByUser, ...receivedByUser].sort(
+    (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
+  )
+  return merged
 }
 
 /**

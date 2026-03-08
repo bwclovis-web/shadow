@@ -180,6 +180,7 @@ export interface TraderResponse {
   lastName?: string | null
   username?: string | null
   email: string
+  traderAbout?: string | null
   UserPerfume?: any[]
   UserPerfumeWishlist?: any[]
   [key: string]: any // Allow for additional trader properties

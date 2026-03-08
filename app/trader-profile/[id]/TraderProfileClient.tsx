@@ -10,7 +10,6 @@ import {
 } from "@/components/Containers/TraderProfile"
 import ContactTraderButton from "@/components/Containers/TraderProfile/ContactTraderButton"
 import TraderFeedbackSection from "@/components/Containers/TraderProfile/TraderFeedbackSection"
-import { useMediaQuery } from "@/hooks/useMediaQuery"
 import { useTrader } from "@/hooks/useTrader"
 import type { TraderResponse } from "@/lib/queries/user"
 import type { TraderFeedbackResponse } from "@/lib/queries/traderFeedback"
@@ -32,7 +31,6 @@ export default function TraderProfileClient({
 }: TraderProfileClientProps) {
   const { data: trader } = useTrader(initialTrader.id, initialTrader)
   const t = useTranslations("traderProfile")
-  const detailsOpenByDefault = useMediaQuery("(min-width: 768px)")
 
   if (!trader) {
     return (
@@ -43,6 +41,7 @@ export default function TraderProfileClient({
   }
 
   const traderName = getTraderDisplayName(trader)
+  console.log(trader.username)
 
   return (
     <section>
@@ -54,6 +53,14 @@ export default function TraderProfileClient({
 
       <div className="inner-container grid grid-cols-1 items-start gap-8 p-6 md:grid-cols-2 xl:grid-cols-3">
         <div className="md:col-span-2 xl:col-span-1">
+          {trader.traderAbout?.trim() ? (
+            <div className="noir-border mb-4 p-4">
+              <h2 className="mb-2 text-noir-gold">{t("aboutHeading")}</h2>
+              <p className="whitespace-pre-wrap text-noir-gold-100">
+                {trader.traderAbout}
+              </p>
+            </div>
+          ) : null}
           <TraderFeedbackSection
             traderId={trader.id}
             viewerId={viewer?.id}
@@ -68,62 +75,64 @@ export default function TraderProfileClient({
           </div>
         </div>
 
-        <div className="noir-border relative col-span-1 p-4">
-          <h2 className="mb-2 text-center">
-            {t("itemsAvailable")}
-          </h2>
-          <VooDooDetails
-            type="primary"
-            name="itemsAvailable"
-            summary={t("itemsAvailableSummary", { traderName })}
-            background="dark"
-            defaultOpen={detailsOpenByDefault}
-          >
-            {trader.UserPerfume?.length ? (
-              <ul className="mt-6">
-                {trader.UserPerfume.map((up) => (
-                  <ItemsToTrade
-                    key={up.id}
-                    userPerfume={{ ...up, userId: trader.id } as UserPerfumeI}
-                    trader={trader}
-                    viewerId={viewer?.id}
-                  />
-                ))}
-              </ul>
-            ) : (
-              <p>{t("noItemsAvailable")}</p>
-            )}
-          </VooDooDetails>
-        </div>
+        <div className="flex flex-col gap-8 md:col-span-2 xl:col-span-2">
+          <div className="noir-border relative p-4">
+            <h2 className="mb-2 text-center">
+              {t("itemsAvailable")}
+            </h2>
+            <VooDooDetails
+              type="primary"
+              name="itemsAvailable"
+              summary={t("itemsAvailableSummary", { traderName })}
+              background="dark"
+              defaultOpen={false}
+            >
+              {trader.UserPerfume?.length ? (
+                <ul className="mt-6">
+                  {trader.UserPerfume.map((up) => (
+                    <ItemsToTrade
+                      key={up.id}
+                      userPerfume={{ ...up, userId: trader.id } as UserPerfumeI}
+                      trader={trader}
+                      viewerId={viewer?.id}
+                    />
+                  ))}
+                </ul>
+              ) : (
+                <p>{t("noItemsAvailable")}</p>
+              )}
+            </VooDooDetails>
+          </div>
 
-        <div className="noir-border relative col-span-1 w-full p-4">
-          <h2 className="mb-2 text-center">
-            {t("itemsSearchingFor")}
-          </h2>
-          <VooDooDetails
-            type="primary"
-            name="itemsSearchingFor"
-            summary={t("itemsSummary", { traderName })}
-            background="dark"
-            defaultOpen={detailsOpenByDefault}
-          >
-            <ItemsSearchingFor
-              wishlistItems={(trader.UserPerfumeWishlist ?? []).map((item) => ({
-                id: item.id,
-                perfumeId: item.perfumeId,
-                isPublic: item.isPublic,
-                createdAt: item.createdAt,
-                user: {
-                  id: trader.id,
-                  firstName: trader.firstName ?? "",
-                  lastName: trader.lastName ?? "",
-                  username: trader.username ?? "",
-                  email: trader.email,
-                },
-                perfume: item.perfume,
-              }))}
-            />
-          </VooDooDetails>
+          <div className="noir-border relative w-full p-4">
+            <h2 className="mb-2 text-center">
+              {t("itemsSearchingFor")}
+            </h2>
+            <VooDooDetails
+              type="primary"
+              name="itemsSearchingFor"
+              summary={t("itemsSummary", { traderName })}
+              background="dark"
+              defaultOpen={false}
+            >
+              <ItemsSearchingFor
+                wishlistItems={(trader.UserPerfumeWishlist ?? []).map((item) => ({
+                  id: item.id,
+                  perfumeId: item.perfumeId,
+                  isPublic: item.isPublic,
+                  createdAt: item.createdAt,
+                  user: {
+                    id: trader.id,
+                    firstName: trader.firstName ?? "",
+                    lastName: trader.lastName ?? "",
+                    username: trader.username ?? "",
+                    email: trader.email,
+                  },
+                  perfume: item.perfume,
+                }))}
+              />
+            </VooDooDetails>
+          </div>
         </div>
       </div>
     </section>

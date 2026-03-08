@@ -417,6 +417,10 @@
       "cancelButton": "Cancelar"
     }
   },
+  "messagesPage": {
+    "heading": "Mensajes",
+    "subheading": "Tus conversaciones con otros comerciantes."
+  },
   "securityMonitor": {
     "heading": "Monitor de Seguridad",
     "subheading": "Para que duermas tranquilo por la noche"
@@ -609,6 +613,9 @@
     "notFound": "Perfil de usuario no encontrado",
     "updateProfile": "Actualizar Perfil",
     "profileUpdatedSuccessfully": "¡Perfil actualizado exitosamente!",
+    "traderAbout": "Sobre el comerciante",
+    "traderAboutPlaceholder": "Una breve biografía que se muestra en tu perfil de comerciante",
+    "traderAboutHint": "Se muestra en tu perfil de comerciante. Máximo {max} caracteres.",
     "scentPreferencesHint": "Personaliza las recomendaciones de perfumes",
     "scentQuizLink": "Cuestionario de preferencias de aromas",
     "navigation": {
@@ -833,6 +840,7 @@
     },
     "heading": "Comerciante {traderName}",
     "subheading": "Perfil del Comerciante de {traderName}",
+    "aboutHeading": "Sobre",
     "itemsAvailable": "Artículos Disponibles",
     "itemsAvailableSummary": "{traderName} tiene los siguientes artículos para intercambiar:",
     "itemsSearchingFor": "Está Buscando",
@@ -931,5 +939,8 @@
       "availableMessage": "Este artículo aparecerá en tu perfil de comerciante",
       "unavailableMessage": "Este artículo es privado y no aparecerá en tu perfil de comerciante"
     }
+  },
+  "validation": {
+    "profileAboutMax": "Sobre el comerciante debe tener {max} caracteres o menos."
   }
 }

@@ -105,6 +105,7 @@ export type UpdateUserProfilePayload = {
   lastName?: string | null
   username?: string | null
   email?: string
+  traderAbout?: string | null
 }
 
 export const updateUser = async (
@@ -118,6 +119,7 @@ export const updateUser = async (
       lastName: payload.lastName ?? undefined,
       username: payload.username ?? undefined,
       email: payload.email,
+      traderAbout: payload.traderAbout === undefined ? undefined : payload.traderAbout,
     },
   })
 }

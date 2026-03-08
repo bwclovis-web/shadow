@@ -72,6 +72,7 @@ export const validationKeys = {
   subjectMax: "validation.subjectMax",
   messageMin: "validation.messageMin",
   messageMax: "validation.messageMax",
+  profileAboutMax: "validation.profileAboutMax",
 } as const
 
 /** Known validation key prefix; only these are looked up in messages. */

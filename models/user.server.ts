@@ -115,6 +115,7 @@ export const getTraderById = cache(async (id: string) => {
       firstName: true,
       lastName: true,
       username: true,
+      traderAbout: true,
       UserPerfume: {
         where: {
           available: {
@@ -131,6 +132,7 @@ export const getTraderById = cache(async (id: string) => {
           tradePrice: true,
           tradePreference: true,
           tradeOnly: true,
+          type: true,
           perfume: {
             select: {
               id: true,

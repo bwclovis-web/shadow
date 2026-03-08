@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { PROFILE_LENGTH } from "@/utils/constants"
 import { validationKeys as V } from "./validationKeys"
 
 /** Sanitize form input to prevent XSS and code injection. */
@@ -104,3 +105,14 @@ export const usernameSchema = z
   .max(30, { message: V.usernameMax })
   .regex(/^[a-zA-Z0-9_\s]+$/, { message: V.usernameFormat })
   .trim()
+
+/** Optional trader about text; max PROFILE_LENGTH, sanitized; empty string becomes null. */
+export const traderAboutSchema = z
+  .string()
+  .max(PROFILE_LENGTH, { message: V.profileAboutMax })
+  .optional()
+  .transform((s) => {
+    const raw = (s ?? "").trim()
+    if (raw === "") return null
+    return sanitizeInput(raw)
+  })

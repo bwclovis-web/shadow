@@ -12,6 +12,41 @@ import type {
 } from "@/types/scraper"
 
 // ---------------------------------------------------------------------------
+// Persist last successful result so you can restore after closing tab / failed import
+// ---------------------------------------------------------------------------
+const SCRAPER_SAVED_RESULT_KEY = "scraper-last-result"
+
+function saveScrapeResultToStorage(data: ScraperRunResponse) {
+  try {
+    localStorage.setItem(SCRAPER_SAVED_RESULT_KEY, JSON.stringify(data))
+  } catch {
+    // quota exceeded or private mode
+  }
+}
+
+function loadScrapeResultFromStorage(): ScraperRunResponse | null {
+  try {
+    const raw = localStorage.getItem(SCRAPER_SAVED_RESULT_KEY)
+    if (!raw) return null
+    const data = JSON.parse(raw) as unknown
+    if (!data || typeof data !== "object") return null
+    const d = data as Record<string, unknown>
+    if (d.ok !== true || !Array.isArray(d.records)) return null
+    return data as ScraperRunResponse
+  } catch {
+    return null
+  }
+}
+
+function clearSavedScrapeResult() {
+  try {
+    localStorage.removeItem(SCRAPER_SAVED_RESULT_KEY)
+  } catch {
+    // ignore
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Shopify defaults
 // ---------------------------------------------------------------------------
 const SHOPIFY_DEFAULTS = {
@@ -71,10 +106,19 @@ export function ScraperPageClient() {
   // -- step 1 state (scrape + note extraction) --
   const [scraping, setScraping] = useState(false)
   const [scrapeElapsedSeconds, setScrapeElapsedSeconds] = useState(0)
+  const [scrapeProgressLog, setScrapeProgressLog] = useState<string[]>([])
   const [scrapeResult, setScrapeResult] = useState<ScraperRunResponse | null>(null)
   const [scrapeError, setScrapeError] = useState<string | null>(null)
   /** Result of "Check connection": null = not run, "checking", "ok", or error message */
   const [connectionCheck, setConnectionCheck] = useState<null | "checking" | "ok" | string>(null)
+  /** Saved result from a previous run (for restore after tab close / failed import) */
+  const [savedScrapeResult, setSavedScrapeResult] = useState<ScraperRunResponse | null>(null)
+
+  // On mount: check for saved result from a previous run
+  useEffect(() => {
+    const saved = loadScrapeResultFromStorage()
+    if (saved) setSavedScrapeResult(saved)
+  }, [])
 
   // Show elapsed time while scraper is running
   useEffect(() => {
@@ -184,12 +228,64 @@ export function ScraperPageClient() {
         signal: ac.signal,
       })
       clearTimeout(timeoutId)
-      const data = (await res.json()) as ScraperRunResponse
 
-      if (!res.ok || !data.ok) {
-        setScrapeError(data.errors?.join("\n") ?? `Server error ${res.status}`)
+      if (!res.ok || !res.body) {
+        const data = (await res.json().catch(() => ({}))) as ScraperRunResponse
+        setScrapeError(data?.errors?.join("\n") ?? `Server error ${res.status}`)
+        return
+      }
+
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ""
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split("\n")
+        buffer = lines.pop() ?? ""
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (!trimmed) continue
+          try {
+            const obj = JSON.parse(trimmed) as { type: string; message?: string; data?: ScraperRunResponse }
+            if (obj.type === "log" && typeof obj.message === "string") {
+              setScrapeProgressLog(prev => [...prev, obj.message!])
+            } else if (obj.type === "result" && obj.data) {
+              const data = obj.data
+              if (!data.ok) {
+                setScrapeError(data.errors?.join("\n") ?? "Unknown error")
+              } else {
+                setScrapeResult(data)
+                saveScrapeResultToStorage(data)
+                setSavedScrapeResult(null)
+              }
+              return
+            }
+          } catch {
+            // skip malformed lines
+          }
+        }
+      }
+      if (buffer.trim()) {
+        try {
+          const obj = JSON.parse(buffer.trim()) as { type: string; data?: ScraperRunResponse }
+          if (obj.type === "result" && obj.data) {
+            const data = obj.data
+            if (!data.ok) setScrapeError(data.errors?.join("\n") ?? "Unknown error")
+            else {
+              setScrapeResult(data)
+              saveScrapeResultToStorage(data)
+              setSavedScrapeResult(null)
+            }
+          } else {
+            setScrapeError("Stream ended without a result")
+          }
+        } catch {
+          setScrapeError("Incomplete response from server")
+        }
       } else {
-        setScrapeResult(data)
+        setScrapeError("Stream ended without a result")
       }
     } catch (err) {
       clearTimeout(timeoutId)
@@ -502,30 +598,68 @@ export function ScraperPageClient() {
         </Button>
       </form>
 
-      {/* Running indicator */}
+      {/* Running indicator + live progress */}
       {scraping && (
-        <div className="mt-8 rounded-lg border p-6 text-center text-sm text-muted-foreground bg-noir-dark border-noir-gold text-noir-gold-100">
-          <p className="animate-pulse font-medium">
+        <div className="mt-8 rounded-lg border p-6 bg-noir-dark border-noir-gold text-noir-gold-100">
+          <p className="animate-pulse font-medium text-center text-sm">
             Scraper is running — this may take several minutes for large houses…
           </p>
-          <p className="mt-2 font-mono text-xs">
-            Elapsed: {Math.floor(scrapeElapsedSeconds / 60)}m {scrapeElapsedSeconds % 60}s — results
-            will appear when the full run finishes (no progress stream).
+          <p className="mt-2 text-center font-mono text-xs text-muted-foreground">
+            Elapsed: {Math.floor(scrapeElapsedSeconds / 60)}m {scrapeElapsedSeconds % 60}s
           </p>
-          <p className="mt-2 text-xs">
-            The headless browser visits each product page; LangGraph then extracts notes from every
-            description.
+          {scrapeProgressLog.length > 0 && (
+            <div className="mt-4 rounded border border-border bg-black/30 p-3">
+              <p className="mb-2 text-xs font-medium text-muted-foreground">Progress</p>
+              <pre className="max-h-48 overflow-y-auto font-mono text-xs whitespace-pre-wrap break-words">
+                {scrapeProgressLog.join("\n")}
+              </pre>
+            </div>
+          )}
+          <p className="mt-3 text-center text-xs font-medium text-amber-600 dark:text-amber-400">
+            Do not close this tab or navigate away — you will lose the results.
           </p>
-          <p className="mt-3 text-xs font-medium text-amber-600 dark:text-amber-400">
-            Do not close this tab or navigate away — you will lose the results. Stay on this page
-            until the run completes.
+        </div>
+      )}
+
+      {/* Restore previous run — avoid re-scraping after tab close or failed import */}
+      {savedScrapeResult && !scrapeResult && !scraping && (
+        <div className="mt-8 rounded-lg border border-green-600/50 bg-green-950/20 p-4 text-sm text-green-800 dark:text-green-200">
+          <p className="font-medium">Previous scrape results saved</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            You have results from a previous run ({savedScrapeResult.scrapedCount} products). Restore them to confirm &
+            import without re-running the scraper.
           </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={() => {
+                setScrapeResult(savedScrapeResult)
+                clearSavedScrapeResult()
+                setSavedScrapeResult(null)
+              }}
+            >
+              Restore previous results
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                clearSavedScrapeResult()
+                setSavedScrapeResult(null)
+              }}
+            >
+              Clear saved results
+            </Button>
+          </div>
         </div>
       )}
 
       {/* Scrape error + troubleshooting */}
       {scrapeError && (
-        <div className="mt-8 space-y-4">
+        <div className="mt-8 space-y-4 bg-noir-dark border border-noir-gold text-noir-gold-100">
           {connectionCheck === "ok" && (scrapeError.includes("Failed to fetch") || scrapeError.includes("timed out")) && (
             <div className="rounded-lg border border-amber-500/60 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-200">
               <p className="font-semibold">Server is reachable — this was likely a timeout</p>
@@ -578,18 +712,18 @@ export function ScraperPageClient() {
       {/* Step 2: Review + confirm import (always show when we have a result)  */}
       {/* ------------------------------------------------------------------ */}
       {scrapeResult && (
-        <div className="mt-8 flex flex-col gap-6">
+        <div className="mt-8 flex flex-col gap-6 ">
           {/* Summary bar */}
-          <div className="rounded-lg border border-border p-4">
+          <div className="rounded-lg border border-border p-4 bg-noir-dark border-noir-gold text-noir-gold-100">
             <h2 className="mb-3 text-lg font-semibold">Scrape results</h2>
             <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
               <div>
                 <dt className="text-muted-foreground">Products found</dt>
-                <dd className="text-2xl font-bold">{scrapeResult.scrapedCount}</dd>
+                <dd className="text-2xl font-bold text-noir-gold-500">{scrapeResult.scrapedCount}</dd>
               </div>
               <div>
                 <dt className="text-muted-foreground">Notes extracted</dt>
-                <dd className="text-2xl font-bold">
+                <dd className="text-2xl font-bold text-noir-gold-500">
                   {records.filter(r => {
                     try {
                       return (JSON.parse(r.openNotes ?? "[]") as string[]).length > 0
@@ -647,7 +781,7 @@ export function ScraperPageClient() {
           </div>
 
           {records.length > 0 && (
-            <div className="rounded-lg border border-border">
+            <div className="rounded-lg border border-border bg-noir-dark border-noir-gold text-noir-gold-100">
               <div className="flex items-center justify-between border-b border-border px-4 py-3">
                 <h3 className="text-sm font-semibold">Products preview</h3>
                 <span className="text-xs text-muted-foreground">{records.length} items</span>
@@ -687,7 +821,7 @@ export function ScraperPageClient() {
           )}
 
           {records.length > 0 && !importResult && (
-            <div className="rounded-lg border border-border p-4">
+            <div className="rounded-lg border border-border p-4 bg-noir-dark border-noir-gold text-noir-gold-100">
               <h3 className="mb-1 text-base font-semibold">Import to database</h3>
               <p className="mb-4 text-sm text-muted-foreground">
                 Review the products above, then confirm to write them to the database.
@@ -756,7 +890,7 @@ export function ScraperPageClient() {
 
           {/* Import success */}
           {importResult && (
-            <div className="rounded-lg border border-border p-4">
+            <div className="rounded-lg border border-border p-4 bg-noir-dark border-noir-gold text-noir-gold-100">
               <h3 className="mb-3 text-base font-semibold">Import complete</h3>
               <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
                 <div>

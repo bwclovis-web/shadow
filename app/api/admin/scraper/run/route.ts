@@ -9,11 +9,12 @@
  * 2. Runs the LangGraph note-extraction pipeline on the scraped items.
  * 3. Returns all extracted records + CSV content for preview/download.
  *
- * The response is a streaming JSON body: the server sends '\n' keepalive bytes
- * every 30 s while the scraper runs, then writes the final JSON payload and
- * closes the stream. This prevents browsers from closing idle connections
- * (Chrome's ~300 s idle socket timeout) during long scrape runs. JSON.parse
- * ignores leading whitespace so the client can call res.json() as usual.
+ * Response: NDJSON stream (application/x-ndjson). Each line is a JSON object:
+ * - { "type": "log", "message": "..." } — progress line from Python stderr or keepalive
+ * - { "type": "result", "data": <ScraperRunResponse> } — final payload (only line with type "result")
+ *
+ * The client should read the stream line-by-line and show progress; when type is "result", use data.
+ * Keeps the connection alive during long runs and gives real-time progress.
  *
  * Requires admin or editor role.
  */
@@ -82,61 +83,6 @@ function toCsv(records: PerfumeCsvRecord[]): string {
     ].join(","),
   )
   return [headers.join(","), ...rows].join("\n")
-}
-
-/** Spawn the Python scraper; resolve stdout JSON and stderr log. */
-async function runPythonScraper(
-  config: ScraperRunRequest,
-): Promise<{ stdout: string; stderr: string }> {
-  return new Promise((resolve, reject) => {
-    const scriptPath = path.join(process.cwd(), "scraper", "run_scraper.py")
-    const child = spawn("python", [scriptPath], {
-      stdio: ["pipe", "pipe", "pipe"],
-    })
-
-    let stdout = ""
-    let stderr = ""
-
-    child.stdout.on("data", (chunk: Buffer) => {
-      stdout += chunk.toString("utf8")
-    })
-    child.stderr.on("data", (chunk: Buffer) => {
-      stderr += chunk.toString("utf8")
-    })
-
-    const timer = setTimeout(() => {
-      child.kill()
-      reject(new Error(`Scraper timed out after ${SCRAPER_TIMEOUT_MS / 1000}s`))
-    }, SCRAPER_TIMEOUT_MS)
-
-    child.on("close", (code: number | null) => {
-      clearTimeout(timer)
-      if (code !== 0) {
-        reject(new Error(`Scraper exited with code ${code}. Stderr: ${stderr.slice(0, 1000)}`))
-      } else {
-        resolve({ stdout, stderr })
-      }
-    })
-
-    child.on("error", (err: Error) => {
-      clearTimeout(timer)
-      reject(new Error(`Failed to start Python scraper: ${err.message}`))
-    })
-
-    child.stdin.write(
-      JSON.stringify({
-        houseName: config.houseName,
-        collectionUrls: config.collectionUrls,
-        productLinkSelector: config.productLinkSelector,
-        nameSelector: config.nameSelector,
-        descriptionSelector: config.descriptionSelector,
-        imageSelector: config.imageSelector,
-        skipKeywords: config.skipKeywords,
-        baseUrl: config.baseUrl ?? "",
-      }),
-    )
-    child.stdin.end()
-  })
 }
 
 // ---------------------------------------------------------------------------
@@ -234,146 +180,196 @@ export async function POST(request: NextRequest): Promise<Response> {
   }
 
   // ---------------------------------------------------------------------------
-  // Streaming response — prevents browser idle-connection drops (Chrome ~300 s).
-  // We send '\n' keepalive bytes every KEEPALIVE_INTERVAL_MS while the scraper
-  // runs, then write the final JSON. JSON.parse ignores leading whitespace.
+  // NDJSON stream: progress lines from Python stderr + final result.
+  // Keeps connection alive and gives real-time progress.
   // ---------------------------------------------------------------------------
   const encoder = new TextEncoder()
+
+  function sendLine(controller: ReadableStreamDefaultController<Uint8Array>, obj: object) {
+    controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"))
+  }
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
       const keepalive = setInterval(() => {
         try {
-          controller.enqueue(encoder.encode("\n"))
-          // #region agent log
-          fetch("http://127.0.0.1:7886/ingest/4d4b6cb5-ecca-41e8-a12b-7415fa8e44a7", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d246c8" },
-            body: JSON.stringify({ sessionId: "d246c8", hypothesisId: "H-idle-timeout", location: "run/route.ts:keepalive", message: "Sent keepalive chunk", data: { ts: Date.now() }, timestamp: Date.now() }),
-          }).catch(() => {})
-          // #endregion
+          sendLine(controller, { type: "log", message: "Still running…" })
         } catch {
-          // stream already closed; ignore
+          // stream already closed
         }
       }, KEEPALIVE_INTERVAL_MS)
 
-      // #region agent log
-      fetch("http://127.0.0.1:7886/ingest/4d4b6cb5-ecca-41e8-a12b-7415fa8e44a7", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d246c8" },
-        body: JSON.stringify({ sessionId: "d246c8", hypothesisId: "H-idle-timeout", location: "run/route.ts:stream-start", message: "Stream opened, scraper starting", data: {}, timestamp: Date.now() }),
-      }).catch(() => {})
-      // #endregion
+      let stdout = ""
+      let scraperLog = ""
+      let stderrBuffer = ""
 
-      let result: ScraperRunResponse
+      const scriptPath = path.join(process.cwd(), "scraper", "run_scraper.py")
+      const child = spawn("python", [scriptPath], { stdio: ["pipe", "pipe", "pipe"] })
 
-      try {
-        // Step 1: Python scraper
-        let scrapedItems: ScrapedItem[] = []
-        let scraperLog = ""
-        try {
-          const { stdout, stderr } = await runPythonScraper(body)
-          scraperLog = stderr.trim()
-          const parsed = JSON.parse(stdout) as unknown
-          if (!Array.isArray(parsed)) throw new Error("Scraper output is not a JSON array")
-          scrapedItems = parsed as ScrapedItem[]
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err)
-          result = {
-            ok: false,
-            scrapedCount: 0,
-            records: [],
-            csvContent: "",
-            errors: [`Scraper failed: ${msg}`],
-            scraperLog: scraperLog || undefined,
+      child.stdout.on("data", (chunk: Buffer) => {
+        stdout += chunk.toString("utf8")
+      })
+      child.stderr.on("data", (chunk: Buffer) => {
+        const text = chunk.toString("utf8")
+        scraperLog += text
+        stderrBuffer += text
+        const lines = stderrBuffer.split("\n")
+        stderrBuffer = lines.pop() ?? ""
+        for (const line of lines) {
+          const trimmed = line.trim()
+          if (trimmed) {
+            try {
+              sendLine(controller, { type: "log", message: trimmed })
+            } catch {
+              break
+            }
           }
-          clearInterval(keepalive)
-          controller.enqueue(encoder.encode(JSON.stringify(result)))
-          controller.close()
-          return
         }
+      })
 
-        if (scrapedItems.length === 0) {
+      const timer = setTimeout(() => {
+        child.kill()
+      }, SCRAPER_TIMEOUT_MS)
+
+      child.stdin.write(
+        JSON.stringify({
+          houseName: body.houseName,
+          collectionUrls: body.collectionUrls,
+          productLinkSelector: body.productLinkSelector,
+          nameSelector: body.nameSelector,
+          descriptionSelector: body.descriptionSelector,
+          imageSelector: body.imageSelector,
+          skipKeywords: body.skipKeywords,
+          baseUrl: body.baseUrl ?? "",
+        }),
+      )
+      child.stdin.end()
+
+      child.on("close", async (code: number | null) => {
+        clearTimeout(timer)
+        clearInterval(keepalive)
+        // Release child stdio so the process can be fully reaped
+        try {
+          child.stdin?.destroy()
+          child.stdout?.destroy()
+          child.stderr?.destroy()
+        } catch {
+          // ignore
+        }
+        if (stderrBuffer.trim()) sendLine(controller, { type: "log", message: stderrBuffer.trim() })
+
+        let result: ScraperRunResponse
+
+        try {
+          if (code !== 0) {
+            result = {
+              ok: false,
+              scrapedCount: 0,
+              records: [],
+              csvContent: "",
+              errors: [`Scraper exited with code ${code}. Stderr: ${scraperLog.slice(0, 1000)}`],
+              scraperLog: scraperLog.trim() || undefined,
+            }
+            sendLine(controller, { type: "result", data: result })
+            controller.close()
+            return
+          }
+
+          const parsed = JSON.parse(stdout) as unknown
+          if (!Array.isArray(parsed)) {
+            result = {
+              ok: false,
+              scrapedCount: 0,
+              records: [],
+              csvContent: "",
+              errors: ["Scraper output is not a JSON array"],
+              scraperLog: scraperLog.trim() || undefined,
+            }
+            sendLine(controller, { type: "result", data: result })
+            controller.close()
+            return
+          }
+
+          const scrapedItems = parsed as ScrapedItem[]
+
+          if (scrapedItems.length === 0) {
+            result = {
+              ok: true,
+              scrapedCount: 0,
+              records: [],
+              csvContent: "",
+              errors: ["Scraper ran successfully but found 0 products. Check your collection URLs and selectors."],
+              scraperLog: scraperLog.trim() || undefined,
+            }
+            sendLine(controller, { type: "result", data: result })
+            controller.close()
+            return
+          }
+
+          try {
+            sendLine(controller, { type: "log", message: `Extracting notes from ${scrapedItems.length} products…` })
+          } catch {
+            // ignore
+          }
+
+          const pipelineOptions = {
+            titleTakeBeforeDash: body.titleTakeBeforeDash ?? false,
+            titleStripNumbers: body.titleStripNumbers ?? false,
+            generateNoirDescriptions: body.generateNoirDescriptions ?? true,
+          }
+          const records = await extractNotesForItems(scrapedItems, body.houseName, pipelineOptions)
+
           result = {
             ok: true,
-            scrapedCount: 0,
-            records: [],
-            csvContent: "",
-            errors: ["Scraper ran successfully but found 0 products. Check your collection URLs and selectors."],
-            scraperLog: scraperLog || undefined,
+            scrapedCount: scrapedItems.length,
+            records,
+            csvContent: toCsv(records),
+            errors: [],
+            scraperLog: scraperLog.trim() || undefined,
           }
-          clearInterval(keepalive)
-          controller.enqueue(encoder.encode(JSON.stringify(result)))
+          sendLine(controller, { type: "result", data: result })
           controller.close()
-          return
-        }
-
-        // Step 2: LangGraph note extraction
-        const pipelineOptions = {
-          titleTakeBeforeDash: body.titleTakeBeforeDash ?? false,
-          titleStripNumbers: body.titleStripNumbers ?? false,
-          generateNoirDescriptions: body.generateNoirDescriptions ?? true,
-        }
-        let records: PerfumeCsvRecord[] = []
-        try {
-          records = await extractNotesForItems(scrapedItems, body.houseName, pipelineOptions)
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err)
           result = {
             ok: false,
-            scrapedCount: scrapedItems.length,
+            scrapedCount: 0,
             records: [],
             csvContent: "",
-            errors: [`Note extraction failed: ${msg}`],
+            errors: [`Unexpected error: ${msg}`],
+            scraperLog: scraperLog.trim() || undefined,
           }
-          clearInterval(keepalive)
-          controller.enqueue(encoder.encode(JSON.stringify(result)))
-          controller.close()
-          return
+          try {
+            sendLine(controller, { type: "result", data: result })
+            controller.close()
+          } catch {
+            // already closed
+          }
         }
+      })
 
-        result = {
-          ok: true,
-          scrapedCount: scrapedItems.length,
-          records,
-          csvContent: toCsv(records),
-          errors: [],
-          scraperLog: scraperLog || undefined,
-        }
-
-        // #region agent log
-        fetch("http://127.0.0.1:7886/ingest/4d4b6cb5-ecca-41e8-a12b-7415fa8e44a7", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "d246c8" },
-          body: JSON.stringify({ sessionId: "d246c8", hypothesisId: "H-idle-timeout", location: "run/route.ts:stream-end", message: "Stream closing with result", data: { ok: result.ok, scrapedCount: result.scrapedCount }, timestamp: Date.now() }),
-        }).catch(() => {})
-        // #endregion
-
+      child.on("error", (err: Error) => {
+        clearTimeout(timer)
         clearInterval(keepalive)
-        controller.enqueue(encoder.encode(JSON.stringify(result)))
-        controller.close()
-      } catch (err) {
-        clearInterval(keepalive)
-        const msg = err instanceof Error ? err.message : String(err)
-        const errorResult: ScraperRunResponse = {
+        const result: ScraperRunResponse = {
           ok: false,
           scrapedCount: 0,
           records: [],
           csvContent: "",
-          errors: [`Unexpected error: ${msg}`],
+          errors: [`Failed to start Python scraper: ${err.message}`],
         }
         try {
-          controller.enqueue(encoder.encode(JSON.stringify(errorResult)))
+          sendLine(controller, { type: "result", data: result })
           controller.close()
         } catch {
-          // controller already closed
+          // already closed
         }
-      }
+      })
     },
   })
 
   return new Response(stream, {
     status: 200,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/x-ndjson" },
   })
 }

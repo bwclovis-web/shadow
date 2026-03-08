@@ -414,6 +414,10 @@
       "submissionSuccess": "Your submission has been received and will be reviewed by an admin."
     }
   },
+  "messagesPage": {
+    "heading": "Messages",
+    "subheading": "Your conversations with other traders."
+  },
   "securityMonitor": {
     "heading": "Security Monitor",
     "subheading": "So you sleep safe at night"
@@ -615,6 +619,9 @@
     "notFound": "User profile not found",
     "updateProfile": "Update Profile",
     "profileUpdatedSuccessfully": "Profile updated successfully!",
+    "traderAbout": "Trader about",
+    "traderAboutPlaceholder": "A short bio shown on your trader profile",
+    "traderAboutHint": "Shown on your trader profile. Max {max} characters.",
     "scentPreferencesHint": "Personalize perfume recommendations",
     "scentQuizLink": "Scent preferences quiz",
     "navigation": {
@@ -874,6 +881,7 @@
     },
     "heading": "Trader {traderName}",
     "subheading": "Trader Profile of {traderName}",
+    "aboutHeading": "About",
     "itemsAvailable": "Items To  Trade",
     "itemsAvailableSummary": "{traderName} has the following items to trade:",
     "itemsSearchingFor": "Is Seeking Out",
@@ -989,6 +997,7 @@
     "perfumeHouseRequired": "Please select a perfume house.",
     "usernameMin": "Username must be at least 3 characters.",
     "usernameMax": "Username must be 30 characters or less.",
-    "usernameFormat": "Use only letters, numbers, spaces and underscores."
+    "usernameFormat": "Use only letters, numbers, spaces and underscores.",
+    "profileAboutMax": "Trader about must be {max} characters or less."
   }
 }

@@ -14,6 +14,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { PrismaClient } from "@prisma/client"
 
 import { importPerfumeRecords } from "@/lib/import-perfume-csv"
+import { checkR2BucketExists } from "@/lib/r2"
 import { migratePerfumeImageToR2 } from "@/lib/r2-migrate"
 import type {
   PerfumeCsvRecord,
@@ -95,22 +96,41 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // Step 2: Optional R2 image upload
     if (body.uploadImagesToR2 && summary.successful.length > 0) {
-      const ids = summary.successful.map(r => r.id)
-      const perfumes = await prisma.perfume.findMany({
-        where: { id: { in: ids } },
-        select: { id: true, name: true, image: true },
-      })
+      const bucketCheck = await checkR2BucketExists()
+      if (!bucketCheck.ok) {
+        errors.push(bucketCheck.error)
+      } else {
+        const ids = summary.successful.map(r => r.id)
+        const perfumes = await prisma.perfume.findMany({
+          where: { id: { in: ids } },
+          select: { id: true, name: true, image: true },
+        })
 
-      for (const { id, name, image } of perfumes) {
-        if (!image) continue
-        try {
-          const result = await migratePerfumeImageToR2(id, image, { prismaClient: prisma })
-          if (result.ok && !result.skipped) r2UploadCount++
-          else if (!result.ok) errors.push(`R2 upload (${name}): ${result.error}`)
-        } catch (err) {
-          errors.push(
-            `R2 upload (${name}): ${err instanceof Error ? err.message : String(err)}`,
-          )
+        const bucketNotExistMessage = "bucket does not exist"
+        let bucketErrorShown = false
+
+        for (const { id, name, image } of perfumes) {
+          if (!image) continue
+          try {
+            const result = await migratePerfumeImageToR2(id, image, { prismaClient: prisma })
+            if (result.ok && !result.skipped) r2UploadCount++
+            else if (!result.ok) {
+              if (result.error?.toLowerCase().includes(bucketNotExistMessage) && !bucketErrorShown) {
+                errors.push(`R2: ${result.error}`)
+                bucketErrorShown = true
+              } else if (!result.error?.toLowerCase().includes(bucketNotExistMessage)) {
+                errors.push(`R2 upload (${name}): ${result.error}`)
+              }
+            }
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err)
+            if (msg.toLowerCase().includes(bucketNotExistMessage) && !bucketErrorShown) {
+              errors.push(`R2: ${msg}`)
+              bucketErrorShown = true
+            } else if (!msg.toLowerCase().includes(bucketNotExistMessage)) {
+              errors.push(`R2 upload (${name}): ${msg}`)
+            }
+          }
         }
       }
     }

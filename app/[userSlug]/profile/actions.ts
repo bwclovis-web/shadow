@@ -7,9 +7,15 @@ import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { UpdateProfileSchema } from "@/utils/validation/formValidationSchemas"
+import type { SessionUser } from "@/utils/session-from-request.server"
 
 export type UpdateProfileActionState =
-  | { success?: boolean; errors?: Record<string, string[]>; submission?: unknown }
+  | {
+      success?: boolean
+      errors?: Record<string, string[]>
+      submission?: unknown
+      user?: SessionUser
+    }
   | null
 
 export const updateProfileAction = async (
@@ -43,7 +49,14 @@ export const updateProfileAction = async (
     return { errors: { username: ["Username is already taken"] } }
   }
 
-  const { firstName, lastName, email } = submission.value
-  await updateUser(userId, { firstName, lastName, username, email })
-  return { success: true }
+  const { firstName, lastName, email, traderAbout } = submission.value
+  const updated = await updateUser(userId, {
+    firstName,
+    lastName,
+    username,
+    email,
+    traderAbout,
+  })
+  const { password: _pw, ...safeUser } = updated
+  return { success: true, user: safeUser as SessionUser }
 }

@@ -12,10 +12,11 @@ export const getTraderDisplayName = (trader: {
   firstName?: string | null
   lastName?: string | null
   email?: string | null
+  username?: string | null
 }): string => {
-  const { firstName, lastName, email } = trader
+  const { firstName, lastName, email, username } = trader
   const full = [firstName, lastName].filter(Boolean).join(" ").trim()
-  return full || email || "Trader"
+  return username || full || email  || "Trader"
 }
 
 export const getUserDisplayName = (user: UserLike | null | undefined): string => {
@@ -36,6 +37,7 @@ export const createSafeUser = (user: User | null): SafeUser | null => {
     lastName: user.lastName,
     username: user.username,
     role: user.role,
+    ...("traderAbout" in user && { traderAbout: user.traderAbout }),
   }
 }
 

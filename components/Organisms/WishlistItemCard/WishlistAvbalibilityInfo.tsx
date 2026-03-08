@@ -1,4 +1,4 @@
-import { getUserDisplayName } from "@/utils/user"
+import { getTraderDisplayName } from "@/utils/user"
 
 interface WishListAvailabilityInfoI {
   userPerfumes: any[]
@@ -23,7 +23,7 @@ const WishListAvailabilityInfo = ({
       >
         <div>
           <span className="font-medium text-green-700 dark:text-green-300">
-            {getUserDisplayName(userPerfume.user)}
+            {getTraderDisplayName(userPerfume.user)}
           </span>
           <span className="text-green-600 dark:text-green-400 ml-2">
             ({userPerfume.available}ml available)

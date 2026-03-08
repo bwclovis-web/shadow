@@ -19,6 +19,7 @@ import {
   ratingSchema,
   requiredUrlSchema,
   sanitizeInput,
+  traderAboutSchema,
   urlSchema,
   usernameSchema,
   yearSchema,
@@ -216,6 +217,7 @@ export const UpdateProfileSchema = z.object({
   lastName: lastNameSchema,
   username: usernameSchema,
   email: emailSchema,
+  traderAbout: traderAboutSchema,
 })
 
 // Search

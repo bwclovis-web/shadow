@@ -2,7 +2,7 @@
 
 import { useCallback } from "react"
 import { Link } from "next-view-transitions"
-import { useRouter, useSearchParams } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button"
@@ -11,7 +11,7 @@ import LinkCard from "@/components/Organisms/LinkCard"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { getPerfumeTypeLabel } from "@/data/SelectTypes"
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
-import { getUserDisplayName } from "@/utils/user"
+import { getTraderDisplayName } from "@/utils/user"
 
 const ROUTE_PATH = "/the-exchange"
 const BANNER_IMAGE = "/images/exchange.webp"
@@ -60,6 +60,7 @@ const TheExchangeClient = ({
   const t = useTranslations("tradingPost")
   const tPrefs = useTranslations("traderProfile.preferences")
   const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
 
   const updateSearchUrl = useCallback(
@@ -69,10 +70,14 @@ const TheExchangeClient = ({
       else nextSearch.delete("q")
       nextSearch.delete("pg")
       const qs = nextSearch.toString()
-      router.push(`${ROUTE_PATH}${qs ? `?${qs}` : ""}`, { scroll: false })
+      const newUrl = `${ROUTE_PATH}${qs ? `?${qs}` : ""}`
+      const currentUrl = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`
+      if (newUrl !== currentUrl) {
+        router.push(newUrl, { scroll: false })
+      }
       return []
     },
-    [router, searchParams]
+    [router, pathname, searchParams]
   )
 
   const {
@@ -174,7 +179,7 @@ const TheExchangeClient = ({
                               href={`/trader-profile/${userPerfume.userId}`}
                               className="text-sm font-semibold text-blue-300 hover:text-noir-blue underline"
                             >
-                              {getUserDisplayName(userPerfume.user)}:
+                              {getTraderDisplayName(userPerfume.user)}:
                             </Link>
                             <span className="text-sm ml-2 text-noir-gold-100">
                               {getPerfumeTypeLabel(userPerfume.type ?? undefined) || "Unknown Type"}{" "}

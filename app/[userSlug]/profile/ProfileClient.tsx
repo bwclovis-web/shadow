@@ -1,6 +1,6 @@
 "use client"
 
-import { getFormProps, useForm } from "@conform-to/react"
+import { getFormProps, getTextareaProps, useForm } from "@conform-to/react"
 import { getZodConstraint, parseWithZod } from "@conform-to/zod"
 import { Link } from "next-view-transitions"
 import { useRef, useActionState } from "react"
@@ -15,7 +15,9 @@ import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import type { RecommendationPerfume } from "@/services/recommendations"
 import type { SafeUser } from "@/types"
 import type { UserAlert, UserAlertPreferences } from "@/types/database"
+import { PROFILE_LENGTH } from "@/utils/constants"
 import { UpdateProfileSchema } from "@/utils/validation/formValidationSchemas"
+import { getTranslatedError } from "@/utils/validation/formValidationSchemas"
 import { getUserDisplayName } from "@/utils/user"
 import {
   updateProfileAction,
@@ -44,21 +46,23 @@ const ProfileForm = ({
   const t = useTranslations("profile")
   const inputRef = useRef<HTMLInputElement | null>(null)
 
-  const [profileForm, { firstName, lastName, username, email }] = useForm({
-    id: "profile-form",
-    lastResult: lastResult ?? undefined,
-    constraint: getZodConstraint(UpdateProfileSchema),
-    onValidate: ({ formData }) =>
-      parseWithZod(formData, { schema: UpdateProfileSchema }),
-    shouldValidate: "onBlur",
-    shouldRevalidate: "onInput",
-    defaultValue: {
-      firstName: user.firstName ?? "",
-      lastName: user.lastName ?? "",
-      username: user.username ?? "",
-      email: user.email ?? "",
-    },
-  })
+  const [profileForm, { firstName, lastName, username, email, traderAbout }] =
+    useForm({
+      id: "profile-form",
+      lastResult: lastResult ?? undefined,
+      constraint: getZodConstraint(UpdateProfileSchema),
+      onValidate: ({ formData }) =>
+        parseWithZod(formData, { schema: UpdateProfileSchema }),
+      shouldValidate: "onBlur",
+      shouldRevalidate: "onInput",
+      defaultValue: {
+        firstName: user.firstName ?? "",
+        lastName: user.lastName ?? "",
+        username: user.username ?? "",
+        email: user.email ?? "",
+        traderAbout: user.traderAbout ?? "",
+      },
+    })
 
   return (
     <form
@@ -108,6 +112,32 @@ const ProfileForm = ({
         inputRef={inputRef}
       />
 
+      <div className="flex flex-col gap-1">
+        <label
+          htmlFor={traderAbout.id}
+          className="block text-sm font-medium text-noir-gold-100"
+        >
+          {t("traderAbout")}
+        </label>
+        <textarea
+          {...getTextareaProps(traderAbout, { ariaAttributes: true })}
+          rows={4}
+          maxLength={PROFILE_LENGTH}
+          className="block w-full rounded-md border border-stone-600 bg-stone-800 px-3 py-2 text-noir-gold-100 shadow-inner placeholder:text-stone-500 focus:border-noir-gold-500 focus:outline-none focus:ring-1 focus:ring-noir-gold-500"
+          placeholder={t("traderAboutPlaceholder")}
+        />
+        <p className="text-stone-400 text-sm" role="note">
+          {t("traderAboutHint", { max: PROFILE_LENGTH })}
+        </p>
+        {traderAbout.errors?.[0] && (
+          <p id={`${traderAbout.id}-error`} className="text-sm text-red-500">
+            {traderAbout.errors[0] === "validation.profileAboutMax"
+              ? t("validation.profileAboutMax", { max: PROFILE_LENGTH })
+              : getTranslatedError(traderAbout.errors, t)}
+          </p>
+        )}
+      </div>
+
       <Button
         type="submit"
         variant="primary"
@@ -143,6 +173,9 @@ const ProfileClient = ({
     null as UpdateProfileActionState
   )
 
+  // Use the returned user after a successful save so the form shows saved data without a full refresh
+  const displayUser = (state?.user ?? user) as SafeUser
+
   const hasSuccess = state?.success === true
   const hasErrors = state?.errors && Object.keys(state.errors).length > 0
 
@@ -154,7 +187,7 @@ const ProfileClient = ({
         subheading={t("subheading")}
       >
         <span className="block max-w-max rounded-md font-semibold text-noir-gold-500 mx-auto">
-          {getUserDisplayName(user)}
+          {getUserDisplayName(displayUser)}
         </span>
       </TitleBanner>
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 inner-container">
@@ -173,7 +206,8 @@ const ProfileClient = ({
             </div>
           )}
           <ProfileForm
-            user={user}
+            key={state?.user ? "saved" : (user as { updatedAt?: Date }).updatedAt?.toString() ?? user.id}
+            user={displayUser}
             formAction={formAction}
             lastResult={state?.submission}
           />
