@@ -91,7 +91,6 @@ export const getUserByProfileSlug = async (slug: string) => {
   const byId = await getUserById(slug)
   if (byId) return byId
   const users = await prisma.user.findMany({
-    where: { username: { not: null } },
     select: { id: true, username: true },
   })
   const match = users.find(

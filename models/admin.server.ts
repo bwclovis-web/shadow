@@ -243,7 +243,7 @@ export async function softDeleteUser(
         email: `deleted_${Date.now()}_${user.email}`,
         username: user.username
           ? `deleted_${Date.now()}_${user.username}`
-          : null,
+          : `deleted_${Date.now()}`,
         // You could add a deletedAt field here if you add it to the schema
       },
     })
