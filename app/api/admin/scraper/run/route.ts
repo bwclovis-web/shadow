@@ -37,12 +37,12 @@ import { requireAdminOrEditorApi } from "@/utils/server/requireAdminOrEditorApi.
 // Constants
 // ---------------------------------------------------------------------------
 
-/** Scraper timeout: env SCRAPER_TIMEOUT_MS (ms) or default 30 minutes. */
+/** Scraper timeout: env SCRAPER_TIMEOUT_MS (ms) or default 90 minutes (large Etsy runs need more). */
 const SCRAPER_TIMEOUT_MS =
   typeof process.env.SCRAPER_TIMEOUT_MS === "string" &&
   /^\d+$/.test(process.env.SCRAPER_TIMEOUT_MS)
     ? Number(process.env.SCRAPER_TIMEOUT_MS)
-    : 30 * 60 * 1000 // 30 minutes default
+    : 90 * 60 * 1000 // 90 minutes default
 
 /**
  * Vercel Pro allows max 800s; scraper is only used on localhost where no limit applies.
@@ -116,17 +116,19 @@ function validateSelectors(body: ScraperRunRequest): string | null {
 function validateBody(body: unknown): body is ScraperRunRequest {
   if (!body || typeof body !== "object") return false
   const b = body as Record<string, unknown>
-  return (
-    typeof b.houseName === "string" &&
-    b.houseName.trim().length > 0 &&
-    Array.isArray(b.collectionUrls) &&
-    (b.collectionUrls as unknown[]).length > 0 &&
-    typeof b.productLinkSelector === "string" &&
-    typeof b.nameSelector === "string" &&
-    typeof b.descriptionSelector === "string" &&
-    typeof b.imageSelector === "string" &&
-    Array.isArray(b.skipKeywords)
+  if (
+    !(typeof b.houseName === "string" && b.houseName.trim().length > 0) ||
+    !Array.isArray(b.collectionUrls) ||
+    (b.collectionUrls as unknown[]).length === 0 ||
+    typeof b.productLinkSelector !== "string" ||
+    typeof b.nameSelector !== "string" ||
+    typeof b.descriptionSelector !== "string" ||
+    typeof b.imageSelector !== "string" ||
+    !Array.isArray(b.skipKeywords)
   )
+    return false
+  if (b.titleOmitWords !== undefined && !Array.isArray(b.titleOmitWords)) return false
+  return true
 }
 
 // ---------------------------------------------------------------------------
@@ -240,7 +242,17 @@ export async function POST(request: NextRequest): Promise<Response> {
           descriptionSelector: body.descriptionSelector,
           imageSelector: body.imageSelector,
           skipKeywords: body.skipKeywords,
+          titleOmitWords: Array.isArray(body.titleOmitWords) ? body.titleOmitWords : [],
           baseUrl: body.baseUrl ?? "",
+          etsyHeaded: body.etsyHeaded === true,
+          delayBetweenUrlsMs:
+            typeof body.delayBetweenUrlsMs === "number" && body.delayBetweenUrlsMs >= 0
+              ? body.delayBetweenUrlsMs
+              : undefined,
+          retryAttempts:
+            typeof body.retryAttempts === "number" && body.retryAttempts >= 1
+              ? body.retryAttempts
+              : undefined,
         }),
       )
       child.stdin.end()
@@ -315,6 +327,7 @@ export async function POST(request: NextRequest): Promise<Response> {
           const pipelineOptions = {
             titleTakeBeforeDash: body.titleTakeBeforeDash ?? false,
             titleStripNumbers: body.titleStripNumbers ?? false,
+            titleOmitWords: Array.isArray(body.titleOmitWords) ? body.titleOmitWords : [],
             generateNoirDescriptions: body.generateNoirDescriptions ?? true,
           }
           const records = await extractNotesForItems(scrapedItems, body.houseName, pipelineOptions)

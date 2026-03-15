@@ -112,7 +112,7 @@ const RangeSlider = ({
   }
 
   return (
-    <div className="w-full space-y-2 text-noir-dark">
+    <div className="w-full space-y-2 text-noir-gold">
       {label && (
         <div className="flex justify-between items-center text-md">
           <span>{label}</span>

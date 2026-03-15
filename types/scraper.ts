@@ -70,10 +70,34 @@ export interface ScraperConfig {
   titleStripNumbers?: boolean
 
   /**
+   * Words or phrases to strip from product names (case-insensitive).
+   * e.g. ["eau de toilette", "edp", "travel size"] so "Vanilla Eau de Toilette" → "Vanilla".
+   */
+  titleOmitWords?: string[]
+
+  /**
    * If true, generate film noir themed descriptions from notes + original description (unique, sexy, mysterious).
    * If false, use the original description with extracted notes removed from the text.
    */
   generateNoirDescriptions?: boolean
+
+  /**
+   * For Etsy only: open a visible browser window so you can solve CAPTCHA if Etsy shows it.
+   * Use when running locally (e.g. npm run dev). Leave unchecked when running on a server.
+   */
+  etsyHeaded?: boolean
+
+  /**
+   * Optional delay in ms between loading each collection URL. Use for sites that reset connections
+   * (e.g. ERR_CONNECTION_RESET on Lush) to avoid rate limiting or bot detection. Example: 5000.
+   */
+  delayBetweenUrlsMs?: number
+
+  /**
+   * Optional number of retries per page load when the connection is reset or the page fails to load.
+   * Implement in run_scraper.py with backoff. Example: 3.
+   */
+  retryAttempts?: number
 }
 
 /**
@@ -133,6 +157,8 @@ export interface ScraperRunResponse {
 export interface ScraperImportRequest {
   records: PerfumeCsvRecord[]
   uploadImagesToR2: boolean
+  /** When false, do not overwrite existing image URLs in the DB (only set image for new records or when current image is empty). Default true. */
+  overwriteImageUrls?: boolean
 }
 
 /** Response from POST /api/admin/scraper/import */

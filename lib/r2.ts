@@ -1,4 +1,5 @@
 import {
+  DeleteObjectCommand,
   HeadBucketCommand,
   ListBucketsCommand,
   PutObjectCommand,
@@ -161,6 +162,11 @@ export const uploadToR2 = async (
   }
 }
 
+/** Base URL of the R2 public bucket (no trailing slash). Used to detect "already on R2" and for next.config. */
+export function getR2BaseUrl(): string {
+  return publicUrl().replace(/\/$/, '')
+}
+
 /**
  * Returns the public URL for an object stored in R2.
  * R2_PUBLIC_URL should not have a trailing slash; key should not have a leading slash.
@@ -168,7 +174,35 @@ export const uploadToR2 = async (
  * @returns Full public URL
  */
 export const getR2PublicUrl = (key: string): string => {
-  const base = publicUrl().replace(/\/$/, '')
+  const base = getR2BaseUrl()
   const normalizedKey = key.startsWith('/') ? key.slice(1) : key
   return `${base}/${normalizedKey}`
+}
+
+/**
+ * If the URL is our R2 public bucket URL, returns the object key (path after base). Otherwise null.
+ * Used to derive the key for deleteFromR2 when we have a stored image URL.
+ */
+export function getR2KeyFromPublicUrl(url: string): string | null {
+  if (!url || typeof url !== 'string') return null
+  const base = getR2BaseUrl()
+  const normalized = url.trim()
+  if (!normalized.startsWith(base)) return null
+  const path = normalized.slice(base.length).replace(/^\//, '')
+  return path || null
+}
+
+/**
+ * Deletes an object from R2 by key. Key should not include leading slash.
+ * Does not throw if the object does not exist (R2 returns success for no-op).
+ */
+export async function deleteFromR2(key: string): Promise<void> {
+  const bucket = bucketName()
+  const normalizedKey = key.startsWith('/') ? key.slice(1) : key
+  if (!normalizedKey) return
+  const command = new DeleteObjectCommand({
+    Bucket: bucket,
+    Key: normalizedKey,
+  })
+  await getR2Client().send(command)
 }

@@ -94,6 +94,8 @@ const PerfumeForm = ({
   useEffect(() => {
     if (lastResult?.status === "error" && typeof lastResult.error === "string") {
       setServerError(lastResult.error)
+    } else {
+      setServerError(null)
     }
   }, [lastResult])
 
@@ -112,8 +114,10 @@ const PerfumeForm = ({
     const firstErrorIndex = fieldsWithErrors.findIndex(
       (field) => field?.errors && field.errors.length > 0
     )
-    if (firstErrorIndex < 0) return
-    const id = fieldIds[firstErrorIndex]
+    const id =
+      firstErrorIndex >= 0
+        ? fieldIds[firstErrorIndex]
+        : "name" /* server error (e.g. duplicate name): focus name so user can rename */
     const el = id ? document.getElementById(id) : null
     if (el && "focus" in el && typeof (el as HTMLInputElement).focus === "function") {
       ;(el as HTMLInputElement).focus({ preventScroll: false })

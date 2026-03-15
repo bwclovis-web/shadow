@@ -13,7 +13,7 @@ import 'dotenv/config'
 
 import { PrismaClient } from '@prisma/client'
 
-import { getR2PublicUrl, uploadToR2 } from '@/lib/r2'
+import { getR2BaseUrl, getR2PublicUrl, uploadToR2 } from '@/lib/r2'
 
 const PERFUME_PLACEHOLDER = '/images/single-bottle.webp'
 const HOUSE_PLACEHOLDER = '/images/house-soon.webp'
@@ -129,9 +129,14 @@ async function _migrateRecord(
   imageUrl: string,
   dryRun: boolean,
 ): Promise<MigrateImageResult> {
-  const r2Base = process.env.R2_PUBLIC_URL?.replace(/\/$/, '') ?? ''
+  let r2Base: string
+  try {
+    r2Base = getR2BaseUrl()
+  } catch {
+    r2Base = ''
+  }
 
-  // Already on R2 — nothing to do
+  // Already on R2 — nothing to do (use same base as getR2PublicUrl so DB and skip check match)
   if (r2Base && imageUrl.startsWith(r2Base)) {
     return { ok: true, skipped: true, newUrl: imageUrl }
   }

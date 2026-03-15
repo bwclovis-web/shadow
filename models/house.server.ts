@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache"
 import { cache } from "react"
 
 import { prisma } from "@/lib/db"
+import { migrateHouseImageToR2 } from "@/lib/r2-migrate"
 import { calculateRelevanceScore } from "@/utils/calculateRelevanceScore"
 import { assertValid, validationError } from "@/utils/errorHandling.patterns"
 import { buildNameOrderBy } from "@/utils/server/order-by.server"
@@ -531,6 +532,12 @@ export const updatePerfumeHouse = async (id: string, data: FormData) => {
         address: data.get("address") as string,
       },
     })
+    const imageUrl = (data.get("image") as string)?.trim()
+    if (imageUrl) {
+      await migrateHouseImageToR2(id, imageUrl, { prismaClient: prisma })
+      const refreshed = await prisma.perfumeHouse.findUnique({ where: { id } })
+      if (refreshed) return { success: true, data: refreshed }
+    }
     return { success: true, data: updatedHouse }
   } catch (err) {
     if (
@@ -592,6 +599,10 @@ export const createPerfumeHouse = async (data: FormData) => {
         address: data.get("address") as string,
       },
     })
+    const imageUrl = (data.get("image") as string)?.trim()
+    if (imageUrl) {
+      await migrateHouseImageToR2(newHouse.id, imageUrl, { prismaClient: prisma })
+    }
     return { success: true, data: newHouse }
   } catch (err) {
     if (

@@ -7,8 +7,8 @@ export const selectWrapperVariants = cva(["flex flex-col bg-noir-black/90 py-0 h
   defaultVariants: {},
   variants: {
     size: {
-      default: "w-1/4 pr-2",
-      compact: "w-1/4 pr-2",
+      default: "md:w-1/4 w-full pr-2",
+      compact: "md:w-1/4 w-full pr-2",
       expanded: "w-full border border-noir-gold pr-4 md:rounded-tl-sm md:rounded-bl-sm md:rounded-tr-none md:rounded-br-none rounded-xl self-center md:self-end",
     },
   },

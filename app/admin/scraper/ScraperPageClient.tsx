@@ -101,7 +101,15 @@ export function ScraperPageClient() {
   const [baseUrl, setBaseUrl] = useState("")
   const [titleTakeBeforeDash, setTitleTakeBeforeDash] = useState(true)
   const [titleStripNumbers, setTitleStripNumbers] = useState(true)
+  const [titleOmitWordsRaw, setTitleOmitWordsRaw] = useState(
+    "eau de toilette, eau de parfum, edt, edp, travel size",
+  )
   const [generateNoirDescriptions, setGenerateNoirDescriptions] = useState(true)
+  const [etsyHeaded, setEtsyHeaded] = useState(false)
+  /** Optional delay in ms between each collection URL (e.g. 5000 for Lush to avoid ERR_CONNECTION_RESET). */
+  const [delayBetweenUrlsMs, setDelayBetweenUrlsMs] = useState<string>("")
+  /** Optional retries per page load when connection is reset. */
+  const [retryAttempts, setRetryAttempts] = useState<string>("")
 
   // -- step 1 state (scrape + note extraction) --
   const [scraping, setScraping] = useState(false)
@@ -168,6 +176,7 @@ export function ScraperPageClient() {
 
   // -- step 2 state (import + R2) --
   const [uploadImagesToR2, setUploadImagesToR2] = useState(true)
+  const [overwriteImageUrls, setOverwriteImageUrls] = useState(true)
   const [importing, setImporting] = useState(false)
   const [importResult, setImportResult] = useState<ScraperImportResponse | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
@@ -201,6 +210,11 @@ export function ScraperPageClient() {
       .map(k => k.trim())
       .filter(Boolean)
 
+    const titleOmitWords = titleOmitWordsRaw
+      .split(",")
+      .map(w => w.trim())
+      .filter(Boolean)
+
     const body: ScraperRunRequest = {
       houseName,
       collectionUrls,
@@ -213,10 +227,20 @@ export function ScraperPageClient() {
       baseUrl: baseUrl || undefined,
       titleTakeBeforeDash,
       titleStripNumbers,
+      titleOmitWords: titleOmitWords.length > 0 ? titleOmitWords : undefined,
       generateNoirDescriptions,
+      etsyHeaded: etsyHeaded || undefined,
+      delayBetweenUrlsMs: (() => {
+        const n = parseInt(delayBetweenUrlsMs, 10)
+        return Number.isFinite(n) && n >= 0 ? n : undefined
+      })(),
+      retryAttempts: (() => {
+        const n = parseInt(retryAttempts, 10)
+        return Number.isFinite(n) && n >= 1 ? n : undefined
+      })(),
     }
 
-    const SCRAPER_REQUEST_TIMEOUT_MS = 30 * 60 * 1000 // 30 min — match server; avoid client aborting early
+    const SCRAPER_REQUEST_TIMEOUT_MS = 90 * 60 * 1000 // 90 min — match server; avoid client aborting early
     const ac = new AbortController()
     const timeoutId = setTimeout(() => ac.abort(), SCRAPER_REQUEST_TIMEOUT_MS)
 
@@ -293,7 +317,7 @@ export function ScraperPageClient() {
       const isAborted = err instanceof Error && err.name === "AbortError"
       if (raw === "Failed to fetch" || isAborted) {
         setScrapeError(
-          (isAborted ? "Request timed out (30 min).\n\n" : "Failed to fetch\n\n") +
+          (isAborted ? "Request timed out (90 min).\n\n" : "Failed to fetch\n\n") +
             "This usually means the run took too long and the connection was closed (browser, proxy, or server timeout).\n\n" +
             "• Use 1–2 collection URLs first to confirm the scraper works.\n" +
             "• Then run in smaller batches so each run finishes in a few minutes.\n" +
@@ -324,6 +348,7 @@ export function ScraperPageClient() {
         body: JSON.stringify({
           records: scrapeResult.records,
           uploadImagesToR2,
+          overwriteImageUrls,
         }),
       })
       const data = (await res.json()) as ScraperImportResponse
@@ -448,6 +473,48 @@ export function ScraperPageClient() {
               placeholder="https://blackheartedtart.com"
             />
           </Field>
+
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={etsyHeaded}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setEtsyHeaded(e.target.checked)}
+              className="mt-1"
+            />
+            <span className="text-sm">
+              <strong>Etsy: open browser window</strong> — Use when Etsy shows CAPTCHA. A visible Chrome window will open so you can solve it. Run locally (e.g. <code className="rounded bg-muted px-0.5">npm run dev</code>); leave unchecked on a server.
+            </span>
+          </label>
+          <div className="mt-3 flex flex-wrap items-center gap-4">
+            <Field
+              label="Delay between collection URLs (ms)"
+              hint="e.g. 5000 for Lush to avoid ERR_CONNECTION_RESET. Leave empty for no delay."
+            >
+              <input
+                type="number"
+                min={0}
+                step={1000}
+                placeholder="none"
+                className={inputClass()}
+                value={delayBetweenUrlsMs}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setDelayBetweenUrlsMs(e.target.value)}
+              />
+            </Field>
+            <Field
+              label="Retry attempts per page"
+              hint="Retries when a page fails to load (e.g. connection reset). Leave empty for no retries."
+            >
+              <input
+                type="number"
+                min={1}
+                max={10}
+                placeholder="1"
+                className={inputClass()}
+                value={retryAttempts}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => setRetryAttempts(e.target.value)}
+              />
+            </Field>
+          </div>
         </section>
 
         {/* Selectors */}
@@ -574,6 +641,16 @@ export function ScraperPageClient() {
               </span>
             </span>
           </label>
+          <Field
+            label="Words to omit from title"
+            hint="Comma-separated. These words/phrases are stripped from product names (case-insensitive). Size patterns are already stripped by the option above."
+          >
+            <input
+              className={inputClass()}
+              value={titleOmitWordsRaw}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setTitleOmitWordsRaw(e.target.value)}
+            />
+          </Field>
           <label className="flex cursor-pointer items-start gap-3">
             <input
               type="checkbox"
@@ -828,6 +905,23 @@ export function ScraperPageClient() {
                 This will create or update Perfume and PerfumeHouse records.
               </p>
 
+              <label className="mb-3 flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={overwriteImageUrls}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setOverwriteImageUrls(e.target.checked)
+                  }
+                />
+                <span className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium">Overwrite existing image URLs</span>
+                  <span className="text-xs text-muted-foreground">
+                    When on, import replaces current image URLs with scraped ones. When off, existing images are left unchanged (new records still get scraped images).
+                  </span>
+                </span>
+              </label>
+
               <label className="mb-4 flex cursor-pointer items-start gap-3">
                 <input
                   type="checkbox"
@@ -840,7 +934,7 @@ export function ScraperPageClient() {
                 <span className="flex flex-col gap-0.5">
                   <span className="text-sm font-medium">Upload images to R2</span>
                   <span className="text-xs text-muted-foreground">
-                    Download each product image and store it in Cloudflare R2 after importing.
+                    Upload all imported images to your R2 bucket and update DB URLs. Images already on R2 are skipped automatically. Keep this on to ensure every perfume is served from your own CDN.
                   </span>
                 </span>
               </label>

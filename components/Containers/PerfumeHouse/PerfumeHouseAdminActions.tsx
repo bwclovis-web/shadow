@@ -22,25 +22,25 @@ const PerfumeHouseAdminActions = ({
     </h2>
     <div className="flex flex-col items-center justify-between gap-2">
       <VooDooLink
-        aria-label={`edit ${houseName}`}
+        aria-label={`edit perfume house ${houseName}`}
         variant="icon"
         background="gold"
         size="sm"
         className="flex items-center justify-between gap-2"
         url={`/admin/perfume-house/${houseSlug}/edit`}
       >
-        <span>Edit Perfume</span>
+        <span>Edit Perfume House</span>
         <GrEdit size={22} />
       </VooDooLink>
       <Button
         onClick={onDeleteClick}
-        aria-label={`delete ${houseName}`}
+        aria-label={`delete perfume house ${houseName}`}
         variant="icon"
         className="flex items-center justify-between gap-2"
         background="gold"
         size="sm"
       >
-        <span>Delete Perfume</span>
+        <span>Delete Perfume House</span>
         <MdDeleteForever size={22} />
       </Button>
     </div>

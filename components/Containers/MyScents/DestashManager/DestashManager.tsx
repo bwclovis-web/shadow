@@ -184,9 +184,9 @@ const DestashManager = ({
     : null
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="flex flex-col md:flex-row gap-2 md:gap-0 justify-between items-center">
-        <h3 className="!text-noir-dark text-xl font-semibold">
+    <div className="p-2 space-y-4">
+      <div className="flex flex-col md:flex-row gap-3 md:gap-0 justify-between items-center">
+        <h3 className="text-noir-dark! text-xl">
           {t("title")}
         </h3>
         {!isCreating && !editingId && (
@@ -201,7 +201,7 @@ const DestashManager = ({
         )}
       </div>
 
-      <p className="text-sm text-noir-gold-dark">
+      <p className="text-sm text-noir-dark font-medium wrap-anywhere">
         {t("description")}
       </p>
 
@@ -209,7 +209,7 @@ const DestashManager = ({
       {!isCreating && !editingId && (
         <div className="space-y-3">
           {destashes.length === 0 ? (
-            <p className="text-noir-gold-300 italic text-center py-4">
+            <p className="text-noir-dark italic leading-none text-center py-4 text-sm">
               {t("noDestashes")}
             </p>
           ) : (

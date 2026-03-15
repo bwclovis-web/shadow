@@ -3,6 +3,8 @@ import { unstable_cache } from "next/cache"
 import { cache } from "react"
 
 import { prisma } from "@/lib/db"
+import { deleteFromR2, getR2KeyFromPublicUrl } from "@/lib/r2"
+import { migratePerfumeImageToR2 } from "@/lib/r2-migrate"
 import { transformNotesForDisplay } from "@/models/perfume-notes-helpers"
 import { calculateRelevanceScore } from "@/utils/calculateRelevanceScore"
 import { buildNameOrderBy } from "@/utils/server/order-by.server"
@@ -165,12 +167,25 @@ export const getPerfumeById = async (id: string) => {
 }
 
 export const deletePerfume = async (id: string) => {
-  const deletedHouse = await prisma.perfume.delete({
-    where: {
-      id,
-    },
+  const perfume = await prisma.perfume.findUnique({
+    where: { id },
+    select: { image: true },
   })
-  return deletedHouse
+  if (perfume?.image) {
+    const r2Key = getR2KeyFromPublicUrl(perfume.image)
+    if (r2Key) {
+      try {
+        await deleteFromR2(r2Key)
+      } catch (err) {
+        console.error("[deletePerfume] Failed to delete image from R2:", r2Key, err)
+        // Continue with DB delete; orphaned R2 object can be cleaned up later
+      }
+    }
+  }
+  const deleted = await prisma.perfume.delete({
+    where: { id },
+  })
+  return deleted
 }
 
 export const searchPerfumeByName = async (name: string) => {
@@ -317,6 +332,20 @@ export const updatePerfume = async (id: string, data: FormData) => {
       return perfume
     })
 
+    const imageUrl = (data.get("image") as string)?.trim()
+    if (imageUrl) {
+      await migratePerfumeImageToR2(id, imageUrl, { prismaClient: prisma })
+      const refreshed = await prisma.perfume.findUnique({
+        where: { id },
+        include: {
+          perfumeHouse: true,
+          perfumeNoteRelations: { include: { note: true } },
+        },
+      })
+      if (refreshed) {
+        return { success: true, data: transformNotesForDisplay(refreshed as any) }
+      }
+    }
     return { success: true, data: updatedPerfume }
   } catch (err) {
     if (
@@ -365,7 +394,7 @@ export const createPerfume = async (data: FormData) => {
     })
     if (existing) {
       throw new Error(
-        "Perfume already exists in the house it is being assigned to."
+        "A perfume with this name already exists for this house. Please choose a different name."
       )
     }
 
@@ -442,6 +471,10 @@ export const createPerfume = async (data: FormData) => {
     return perfume
   })
 
+  const imageUrl = (data.get("image") as string)?.trim()
+  if (imageUrl) {
+    await migratePerfumeImageToR2(newPerfume.id, imageUrl, { prismaClient: prisma })
+  }
   return newPerfume
 }
 

@@ -5,7 +5,8 @@
  * Called only after the user has reviewed the scrape results and clicked "Confirm & Import".
  *
  * 1. Imports each PerfumeCsvRecord into the DB via the shared import lib.
- * 2. Optionally uploads each perfume image to Cloudflare R2.
+ * 2. Optionally uploads each perfume image to Cloudflare R2: any image URL not already
+ *    from our R2 bucket is fetched, uploaded to R2, and the DB record updated (overwrite).
  *
  * Requires admin or editor role.
  */
@@ -30,7 +31,9 @@ import { requireAdminOrEditorApi } from "@/utils/server/requireAdminOrEditorApi.
 function validateBody(body: unknown): body is ScraperImportRequest {
   if (!body || typeof body !== "object") return false
   const b = body as Record<string, unknown>
-  return Array.isArray(b.records) && typeof b.uploadImagesToR2 === "boolean"
+  if (!Array.isArray(b.records) || typeof b.uploadImagesToR2 !== "boolean") return false
+  if (b.overwriteImageUrls !== undefined && typeof b.overwriteImageUrls !== "boolean") return false
+  return true
 }
 
 function isValidRecord(r: unknown): r is PerfumeCsvRecord {
@@ -90,17 +93,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const prisma = new PrismaClient()
   try {
     // Step 1: Import records to DB
-    const summary = await importPerfumeRecords(validRecords, { prismaClient: prisma })
+    const overwriteImageUrls = body.overwriteImageUrls !== false
+    const summary = await importPerfumeRecords(validRecords, {
+      prismaClient: prisma,
+      overwriteImageUrls,
+    })
     importedCount = summary.successful.length
     summary.errors.forEach(e => errors.push(`Import (${e.record.name}): ${e.error}`))
 
-    // Step 2: Optional R2 image upload
-    if (body.uploadImagesToR2 && summary.successful.length > 0) {
+    // Step 2: Optional R2 image upload — for all successfully imported records.
+    // migratePerfumeImageToR2 skips any image already on R2, so it is safe to run on all records.
+    const idsForR2 = summary.successful.map(r => r.id)
+    if (body.uploadImagesToR2 && idsForR2.length > 0) {
       const bucketCheck = await checkR2BucketExists()
       if (!bucketCheck.ok) {
         errors.push(bucketCheck.error)
       } else {
-        const ids = summary.successful.map(r => r.id)
+        const ids = idsForR2
         const perfumes = await prisma.perfume.findMany({
           where: { id: { in: ids } },
           select: { id: true, name: true, image: true },

@@ -26,6 +26,8 @@ export interface ScraperPipelineOptions {
   titleTakeBeforeDash?: boolean
   /** Remove numbers and size patterns (e.g. 30ml, 1.7 fl oz) from product names. */
   titleStripNumbers?: boolean
+  /** Words or phrases to strip from the title (case-insensitive). */
+  titleOmitWords?: string[]
   /** Generate film noir themed descriptions; if false, use original with notes stripped. */
   generateNoirDescriptions?: boolean
 }
@@ -70,13 +72,29 @@ function stripNumbersFromTitle(name: string): string {
     .trim()
 }
 
+function omitWordsFromTitle(name: string, words: string[]): string {
+  if (!words?.length) return name
+  let out = name
+  for (const phrase of words) {
+    if (!phrase?.trim()) continue
+    const re = new RegExp(phrase.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi")
+    out = out.replace(re, " ")
+  }
+  return out.replace(/\s+/g, " ").trim()
+}
+
 function cleanTitle(
   name: string,
-  opts: { titleTakeBeforeDash?: boolean; titleStripNumbers?: boolean },
+  opts: {
+    titleTakeBeforeDash?: boolean
+    titleStripNumbers?: boolean
+    titleOmitWords?: string[]
+  },
 ): string {
   let out = name
   if (opts.titleTakeBeforeDash) out = takeBeforeDash(out)
   if (opts.titleStripNumbers) out = stripNumbersFromTitle(out)
+  if (opts.titleOmitWords?.length) out = omitWordsFromTitle(out, opts.titleOmitWords)
   return out.replace(/\s+/g, " ").trim() || name
 }
 
@@ -99,55 +117,201 @@ function stripNotesFromDescription(description: string, notes: string[]): string
 // LLM note-extraction helper
 // ---------------------------------------------------------------------------
 
-const NOTE_SYSTEM_PROMPT = `You are a master perfumer. Given a perfume product description, extract the fragrance notes.
-Return ONLY a JSON object with exactly these three keys:
-  "openNotes":  string[] — top/opening notes
-  "heartNotes": string[] — middle/heart notes  
-  "baseNotes":  string[] — base/dry-down notes
+const NOTE_SYSTEM_PROMPT = `You are a master perfumer. Extract every fragrance note from the product description and assign them to three layers.
+
+Return ONLY a JSON object with exactly these keys (use these exact names):
+  "openNotes":  string[] — top/opening notes (first impression, evaporates first)
+  "heartNotes": string[] — middle/heart notes (core of the scent)
+  "baseNotes":  string[] — base/dry-down notes (last to fade, depth)
+
+Layer detection:
+- If the text uses section headers (e.g. "Top:", "Heart:", "Base:" or "Opening:", "Mid:", "Dry down:" or "Head/Heart/Base"), put each note in the matching layer.
+- If it says "top notes include X, Y" or "heart: X, Y" or "base notes: X", follow that structure.
+- If there is no layering, spread notes by typical volatility: citrus, herbs, light florals → openNotes; florals, spices, fruits → heartNotes; woods, musk, vanilla, amber, resins → baseNotes.
+- When in doubt, prefer putting a note in heartNotes rather than omitting it.
 
 Rules:
-- Each note must be a real fragrance ingredient or scent descriptor (e.g. "vanilla", "rose", "black pepper")
-- If the description does not separate notes into layers, put all notes in "openNotes" and leave the other arrays empty
-- Notes must be lowercase
-- Remove duplicates
-- Omit marketing words that are not actual notes (e.g. "luscious", "soft", "warm" used as adjectives alone)
-- Return only the JSON object — no explanation, no markdown fences`
+- Extract ALL notes mentioned — do not skip any. Include every ingredient or scent descriptor (e.g. vanilla, rose, black pepper, sandalwood, bergamot, jasmine, musk, amber, oud).
+- Notes must be lowercase. Remove duplicates within each array.
+- Omit only pure marketing fluff that is not a note (e.g. "luscious", "irresistible", "seductive" as standalone words). Adjectives that describe a note (e.g. "warm vanilla", "fresh bergamot") → keep the note (vanilla, bergamot).
+- Return only the JSON object — no explanation, no markdown fences.`
+
+const NAME_ONLY_PROMPT = `You are a master perfumer extracting fragrance notes from a product name.
+
+STEP 1 — LITERAL INGREDIENTS: Does the name contain real scent ingredients? Extract every one.
+Examples:
+  "Lavender" → openNotes: ["lavender"]
+  "Honey" → heartNotes: ["honey"], baseNotes: ["beeswax"]
+  "Vanilla Ice Cream" → openNotes: ["vanilla cream", "sugar"], heartNotes: ["vanilla", "milk"], baseNotes: ["musk", "vanilla"]
+  "Condensed Milk" → openNotes: ["cream", "sugar"], heartNotes: ["milk", "vanilla"], baseNotes: ["musk"]
+  "Suntan Lotion" → openNotes: ["coconut", "tropical flowers"], heartNotes: ["banana", "orange blossom"], baseNotes: ["coconut milk", "solar musk", "vanilla"]
+  "Sandalwood & Rose" → heartNotes: ["rose"], baseNotes: ["sandalwood"]
+  "Lavender & Vanilla" → openNotes: ["lavender"], heartNotes: ["lavender"], baseNotes: ["vanilla"]
+
+STEP 2 — THEMATIC INFERENCE: If the name doesn't contain literal ingredients, infer notes from the theme/mood:
+  - Witchy/ritual names (e.g. "Shadow Work", "Hexbreaker", "Samhain") → dark amber, incense, patchouli, black musk, smoke, myrrh
+  - Mythological names (e.g. "Aphrodite", "The Siren", "Persephone") → rose, jasmine, musk, pomegranate, neroli, ylang ylang
+  - Nature names (e.g. "Forest Floor", "Awakening") → vetiver, moss, pine, cedar, earth, green
+  - Fresh names → bergamot, citrus, green tea, aquatic
+  - Romantic names → rose, jasmine, peony, violet
+  - Gourmand names → vanilla, caramel, honey, tonka bean
+
+Return ONLY a JSON object: {"openNotes": string[], "heartNotes": string[], "baseNotes": string[]}.
+Use lowercase. No duplicates. No explanation, no markdown.
+Always provide at least 1-3 notes even when guessing.`
+
+/** Used when description + name fallback still yield no notes: infer from name and/or known perfume databases. */
+const FALLBACK_LOOKUP_SYSTEM_PROMPT = `You are a fragrance encyclopedia. This perfume returned NO notes from its listing. You MUST return notes — empty arrays are NOT acceptable.
+
+How to find notes (use ALL of these):
+1. NAME ANALYSIS — Many names include scent words (e.g. "Lavender & Vanilla" → lavender, vanilla; "Forest Floor" → pine, moss, earth, cedar; "The Siren" → aquatic, salt, jasmine, musk). Think creatively about what scents the name evokes.
+2. PERFUME DATABASE KNOWLEDGE — If you recognize this as a known fragrance (from Fragrantica, Basenotes, or indie perfume communities), list its documented top/heart/base notes.
+3. HOUSE KNOWLEDGE — If you know the perfume house, use their common ingredient palette.
+4. THEMATIC INFERENCE — If the name is evocative/abstract (e.g. "Midnight", "Shadow Work", "Aphrodite"), infer notes that match the theme:
+   - Dark/gothic names → oud, black musk, incense, patchouli, smoke, dark amber
+   - Floral/romantic names → rose, jasmine, peony, ylang ylang, neroli
+   - Fresh/nature names → bergamot, green tea, bamboo, vetiver, cedar
+   - Mystical/witchy names → frankincense, myrrh, mugwort, lavender, sage, sandalwood
+   - Gourmand names → vanilla, honey, cinnamon, cocoa, caramel, tonka bean
+
+Rules:
+- Return ONLY a JSON object: {"openNotes": string[], "heartNotes": string[], "baseNotes": string[]}.
+- NEVER return all empty arrays. Always provide at least 2-3 notes total.
+- Use lowercase. No duplicates. No explanation, no markdown.
+- Assign by volatility: citrus, herbs, green, light florals → openNotes; florals, spices, fruits → heartNotes; woods, musk, vanilla, amber, oud, resins → baseNotes.`
+
+/** Keys the LLM might use for each layer; we normalize to openNotes, heartNotes, baseNotes. */
+const OPEN_KEYS = ["openNotes", "open", "opening", "openingNotes", "topNotes", "top", "headNotes", "head"]
+const HEART_KEYS = ["heartNotes", "heart", "middleNotes", "middle", "midNotes", "mid", "coreNotes"]
+const BASE_KEYS = ["baseNotes", "base", "dryDownNotes", "dryDown", "dry-down", "endNotes", "end"]
+
+function toNoteArray(val: unknown): string[] {
+  if (!Array.isArray(val)) return []
+  const arr = (val as unknown[]).map(String).map(s => s.trim().toLowerCase()).filter(Boolean)
+  return [...new Set(arr)]
+}
+
+function pickFirstArray(obj: Record<string, unknown>, keys: string[]): string[] {
+  for (const k of keys) {
+    const v = obj[k]
+    if (Array.isArray(v) && v.length > 0) return toNoteArray(v)
+  }
+  return []
+}
+
+function parseNotesFromLlmResponse(responseContent: unknown): {
+  openNotes: string[]
+  heartNotes: string[]
+  baseNotes: string[]
+} {
+  const empty = { openNotes: [] as string[], heartNotes: [] as string[], baseNotes: [] as string[] }
+  const text = typeof responseContent === "string" ? responseContent : ""
+  const cleaned = text.replace(/^```[a-z]*\n?/i, "").replace(/```$/, "").trim()
+  const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) return empty
+  try {
+    const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>
+    const openNotes = pickFirstArray(parsed, OPEN_KEYS)
+    const heartNotes = pickFirstArray(parsed, HEART_KEYS)
+    const baseNotes = pickFirstArray(parsed, BASE_KEYS)
+    return {
+      openNotes: openNotes.length ? openNotes : toNoteArray(parsed.openNotes),
+      heartNotes: heartNotes.length ? heartNotes : toNoteArray(parsed.heartNotes),
+      baseNotes: baseNotes.length ? baseNotes : toNoteArray(parsed.baseNotes),
+    }
+  } catch {
+    return empty
+  }
+}
 
 async function extractNotesFromDescription(
   llm: ChatOpenAI,
   description: string,
+  productNameFallback?: string,
 ): Promise<{ openNotes: string[]; heartNotes: string[]; baseNotes: string[] }> {
   const empty = { openNotes: [], heartNotes: [], baseNotes: [] }
-  if (!description?.trim()) return empty
+  const descTrimmed = description?.trim() ?? ""
+  const nameTrimmed = productNameFallback?.trim() ?? ""
 
+  if (!descTrimmed && !nameTrimmed) return empty
+
+  // ── Path A: We have a description ────────────────────────────────────────
+  if (descTrimmed) {
+    // Always include product name as context alongside the description
+    const userContent = nameTrimmed
+      ? `Product name: "${nameTrimmed.slice(0, 200)}"\n\nProduct description:\n"${descTrimmed.slice(0, 3500)}"`
+      : `Product description:\n"${descTrimmed.slice(0, 3500)}"`
+
+    // Attempt 1: standard extraction
+    try {
+      const response = await llm.invoke([
+        { role: "system", content: NOTE_SYSTEM_PROMPT },
+        { role: "user", content: userContent },
+      ])
+      const notes = parseNotesFromLlmResponse(response.content)
+      if (notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length > 0) return notes
+    } catch {
+      // fall through to retry
+    }
+
+    // Attempt 2: aggressive retry — also instructs it to check the product name
+    try {
+      const retryResponse = await llm.invoke([
+        {
+          role: "system",
+          content:
+            NOTE_SYSTEM_PROMPT +
+            "\n\nIMPORTANT: Also look at the product name for scent ingredients (e.g. 'Vanilla Ice Cream' → vanilla, cream; 'Lavender Honey' → lavender, honey). Extract every fragrance ingredient or scent term you can find anywhere in the text, even single words. When layer is unclear, put in heartNotes.",
+        },
+        { role: "user", content: userContent },
+      ])
+      const retryNotes = parseNotesFromLlmResponse(retryResponse.content)
+      if (retryNotes.openNotes.length + retryNotes.heartNotes.length + retryNotes.baseNotes.length > 0) {
+        return retryNotes
+      }
+    } catch {
+      // fall through to name-only
+    }
+  }
+
+  // ── Path B: No description (or description extraction failed) — extract from name ──
+  if (nameTrimmed) {
+    try {
+      const response = await llm.invoke([
+        { role: "system", content: NAME_ONLY_PROMPT },
+        { role: "user", content: `Product name: "${nameTrimmed.slice(0, 200)}"` },
+      ])
+      return parseNotesFromLlmResponse(response.content)
+    } catch {
+      return empty
+    }
+  }
+
+  return empty
+}
+
+/**
+ * Fallback when description + name extraction returned no notes: ask LLM to infer from
+ * the perfume name and/or knowledge from Fragrantica, Basenotes, or common perfumery.
+ */
+async function extractNotesFallbackLookup(
+  llm: ChatOpenAI,
+  productName: string,
+  houseName?: string,
+): Promise<{ openNotes: string[]; heartNotes: string[]; baseNotes: string[] }> {
+  const empty = { openNotes: [], heartNotes: [], baseNotes: [] }
+  if (!productName?.trim()) return empty
+  const name = productName.trim().slice(0, 300)
+  const houseCtx = houseName?.trim() ? `\nPerfume house: "${houseName.trim()}"` : ""
   try {
     const response = await llm.invoke([
-      { role: "system", content: NOTE_SYSTEM_PROMPT },
+      { role: "system", content: FALLBACK_LOOKUP_SYSTEM_PROMPT },
       {
         role: "user",
-        content: `Product description:\n"${description.slice(0, 2000)}"`,
+        content: `Perfume name: "${name}"${houseCtx}\n\nReturn a JSON object with openNotes, heartNotes, baseNotes. Use the name, the house, and your knowledge (Fragrantica, Basenotes, indie perfume communities) to list as many notes as possible. Do NOT return empty arrays.`,
       },
     ])
-
-    const text = typeof response.content === "string" ? response.content : ""
-
-    // Strip optional markdown fences
-    const cleaned = text.replace(/^```[a-z]*\n?/i, "").replace(/```$/, "").trim()
-    const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) return empty
-
-    const parsed = JSON.parse(jsonMatch[0])
-    return {
-      openNotes: Array.isArray(parsed.openNotes)
-        ? (parsed.openNotes as unknown[]).map(String).filter(Boolean)
-        : [],
-      heartNotes: Array.isArray(parsed.heartNotes)
-        ? (parsed.heartNotes as unknown[]).map(String).filter(Boolean)
-        : [],
-      baseNotes: Array.isArray(parsed.baseNotes)
-        ? (parsed.baseNotes as unknown[]).map(String).filter(Boolean)
-        : [],
-    }
+    return parseNotesFromLlmResponse(response.content)
   } catch {
     return empty
   }
@@ -224,7 +388,24 @@ function buildGraph(
 
     for (const item of state.items) {
       const name = cleanTitle(item.name, opts)
-      const notes = await extractNotesFromDescription(llm, item.description)
+      let notes = await extractNotesFromDescription(llm, item.description, name || item.name)
+      const totalFromDescription =
+        notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
+      if (totalFromDescription === 0 && (name || item.name)?.trim()) {
+        const fallbackNotes = await extractNotesFallbackLookup(llm, name || item.name, item.perfumeHouse ?? state.houseName)
+        const totalFallback =
+          fallbackNotes.openNotes.length +
+          fallbackNotes.heartNotes.length +
+          fallbackNotes.baseNotes.length
+        if (totalFallback > 0) notes = fallbackNotes
+      }
+
+      // If only one layer has notes, consolidate everything into openNotes so they are always visible.
+      const layersWithNotes = [notes.openNotes, notes.heartNotes, notes.baseNotes].filter(a => a.length > 0)
+      if (layersWithNotes.length === 1 && layersWithNotes[0] !== notes.openNotes) {
+        notes = { openNotes: layersWithNotes[0], heartNotes: [], baseNotes: [] }
+      }
+
       const allNoteStrs = [
         ...notes.openNotes,
         ...notes.heartNotes,

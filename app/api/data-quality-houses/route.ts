@@ -1,8 +1,12 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 
 import { prisma } from "@/lib/db"
+import { requireAdminOrEditorApi } from "@/utils/server/requireAdminOrEditorApi.server"
 
-export const GET = async () => {
+export const GET = async (request: NextRequest) => {
+  const auth = await requireAdminOrEditorApi(request)
+  if (!auth.allowed) return auth.response
+
   try {
     const houses = await prisma.perfumeHouse.findMany({
       orderBy: { name: "asc" },

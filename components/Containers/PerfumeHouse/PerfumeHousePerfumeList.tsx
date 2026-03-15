@@ -60,7 +60,7 @@ const PerfumeHousePerfumeList = ({
                   {perfume.name}
                 </h3>
                   <Image
-                    src={!validImageRegex.test(perfume.image) ? perfume.image : "/images/single-bottle.webp"}
+                    src={perfume.image && validImageRegex.test(perfume.image) ? perfume.image : "/images/single-bottle.webp"}
                     alt={tSingleHouse("perfumeBottleAltText", { name: perfume.name })}
                     priority={index < 6}
                     width={192}

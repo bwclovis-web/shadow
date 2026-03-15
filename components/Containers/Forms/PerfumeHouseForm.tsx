@@ -8,7 +8,10 @@ import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/Atoms/Button/Button"
 import { CSRFToken } from "@/components/Molecules/CSRFToken"
 import { FORM_TYPES } from "@/constants/general"
-import { CreatePerfumeHouseSchema } from "@/utils/validation/formValidationSchemas"
+import {
+  CreatePerfumeHouseSchema,
+  UpdatePerfumeHouseSchema,
+} from "@/utils/validation/formValidationSchemas"
 
 import AddressFieldset from "./Partials/AddressFieldset"
 import ContactFieldset from "./Partials/ContactFiledset"
@@ -71,12 +74,16 @@ const PerfumeHouseForm = ({
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
+  const schema =
+    formType === FORM_TYPES.EDIT_HOUSE_FORM
+      ? UpdatePerfumeHouseSchema
+      : CreatePerfumeHouseSchema
+
   const [form, fieldset] = useForm({
     id: formType,
     lastResult: lastResult ?? undefined,
-    constraint: getZodConstraint(CreatePerfumeHouseSchema),
-    onValidate: ({ formData }) =>
-      parseWithZod(formData, { schema: CreatePerfumeHouseSchema }),
+    constraint: getZodConstraint(schema),
+    onValidate: ({ formData }) => parseWithZod(formData, { schema }),
   })
 
   const { name, description, image, website, email, phone, address, founded, type, country } =

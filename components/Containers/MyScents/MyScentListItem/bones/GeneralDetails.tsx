@@ -111,7 +111,7 @@ const GeneralDetails = ({
     <div className="flex flex-col gap-4 mt-6 px-2">
       {/* Totals row */}
       <div className="flex flex-col md:flex-row gap-2 md:gap-10 justify-between md:items-start">
-        <div className="flex items-start justify-start gap-8 flex-wrap">
+        <div className="flex items-start justify-start gap-2 lg:gap-6 md:gap-4">
           {typeof totalAmount === "number" && (
             <p className="flex flex-col items-start justify-start">
               <span className="text-lg font-medium text-noir-gold">{t("totalAmount")}</span>
@@ -130,7 +130,7 @@ const GeneralDetails = ({
               <ul className="flex flex-wrap gap-3">
                 {byTypeTotals.map((entry) => (
                   <li key={entry.typeLabel} className="flex flex-col items-start">
-                    <span className="text-xs text-noir-gold-100">{entry.typeLabel}</span>
+                    <span className="text-xs text-noir-gold-500">{entry.typeLabel}</span>
                     <span className="text-base text-noir-gold-100">
                       {entry.totalAmount.toFixed(1)} ml
                       {entry.bottleCount > 1 && (
@@ -176,22 +176,22 @@ const GeneralDetails = ({
           </div>
           <div className="flex flex-wrap gap-6 mt-1">
             <p className="flex flex-col items-start">
-              <span className="text-xs text-noir-gold-100">{t("amountLabel")}</span>
+              <span className="text-xs text-noir-gold-500">{t("amountLabel")}</span>
               <span className="text-xl text-noir-gold-100">{userPerfume.amount} ml</span>
             </p>
             <p className="flex flex-col items-start">
-              <span className="text-xs text-noir-gold-100">{t("type")}</span>
+              <span className="text-xs text-noir-gold-500">{t("type")}</span>
               <span className="text-xl text-noir-gold-100">{typeLabel}</span>
             </p>
             {priceNum != null && !Number.isNaN(priceNum) && (
               <p className="flex flex-col items-start">
-                <span className="text-xs text-noir-gold-100">{t("price")}</span>
+                <span className="text-xs text-noir-gold-500">{t("price")}</span>
                 <span className="text-xl text-noir-gold-100">{formatPrice(priceNum)}</span>
               </p>
             )}
             {userPerfume.placeOfPurchase && (
               <p className="flex flex-col items-start">
-                <span className="text-xs text-noir-gold-100">{t("pointOfPurchase")}</span>
+                <span className="text-xs text-noir-gold-500">{t("pointOfPurchase")}</span>
                 <span className="text-xl text-noir-gold-100 capitalize">{userPerfume.placeOfPurchase}</span>
               </p>
             )}

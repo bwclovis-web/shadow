@@ -26,6 +26,8 @@ export interface ImportResult {
   name: string
   /** Whether the record was newly created (true) or updated (false) */
   created: boolean
+  /** Whether the image field was set/updated (false when overwriteImageUrls was false and existing record had an image) */
+  imageWasUpdated: boolean
 }
 
 export interface ImportSummary {
@@ -151,7 +153,9 @@ async function upsertNoteRelation(
 async function importOneRecord(
   prisma: PrismaClient,
   data: PerfumeCsvRecord,
+  options?: { overwriteImageUrls?: boolean },
 ): Promise<ImportResult> {
+  const overwriteImages = options?.overwriteImageUrls !== false
   if (!data.name?.trim()) throw new Error("Record has no name")
 
   const house = data.perfumeHouse ? await createOrGetPerfumeHouse(prisma, data.perfumeHouse) : null
@@ -167,6 +171,7 @@ async function importOneRecord(
 
   let perfume: { id: string; name: string }
   let created = false
+  let imageWasUpdated = true
 
   if (existingPerfumes.length > 0) {
     const sameHouse = existingPerfumes.filter(p => p.perfumeHouseId === houseId)
@@ -198,12 +203,14 @@ async function importOneRecord(
       }
 
       const { description: parsedDescription } = parseDescription(data.description)
+      const existingImage = best.perfume.image
+      const shouldSetImage = overwriteImages || !existingImage
+      if (!shouldSetImage) imageWasUpdated = false
+      const updateData: { description: string | null; image?: string | null } = { description: parsedDescription }
+      if (shouldSetImage) updateData.image = fixImageUrl(data.image)
       perfume = await prisma.perfume.update({
         where: { id: best.perfume.id },
-        data: {
-          description: parsedDescription,
-          image: fixImageUrl(data.image),
-        },
+        data: updateData,
       })
     } else {
       // Different house — append house name
@@ -216,12 +223,13 @@ async function importOneRecord(
       if (renamedExists) {
         if (renamedExists.perfumeHouseId === houseId) {
           const { description: parsedDescription } = parseDescription(data.description)
+          const shouldSetImage = overwriteImages || !renamedExists.image
+          if (!shouldSetImage) imageWasUpdated = false
+          const updateData: { description: string | null; image?: string | null } = { description: parsedDescription }
+          if (shouldSetImage) updateData.image = fixImageUrl(data.image)
           perfume = await prisma.perfume.update({
             where: { id: renamedExists.id },
-            data: {
-              description: parsedDescription,
-              image: fixImageUrl(data.image),
-            },
+            data: updateData,
           })
         } else {
           throw new Error(`Perfume "${newName}" already exists under a different house; skipping`)
@@ -290,7 +298,7 @@ async function importOneRecord(
     if (note) await upsertNoteRelation(prisma, perfume.id, note.id, "base")
   }
 
-  return { id: perfume.id, name: perfume.name, created }
+  return { id: perfume.id, name: perfume.name, created, imageWasUpdated }
 }
 
 // ---------------------------------------------------------------------------
@@ -300,12 +308,12 @@ async function importOneRecord(
 /**
  * Import an array of PerfumeCsvRecord objects into the database.
  *
- * Accepts an optional `prismaClient` so callers can pass a shared instance.
- * When not provided, a new PrismaClient is created and disconnected afterwards.
+ * Accepts optional `prismaClient` and `overwriteImageUrls` (default true).
+ * When overwriteImageUrls is false, existing image URLs are left unchanged.
  */
 export async function importPerfumeRecords(
   records: PerfumeCsvRecord[],
-  options?: { prismaClient?: PrismaClient },
+  options?: { prismaClient?: PrismaClient; overwriteImageUrls?: boolean },
 ): Promise<ImportSummary> {
   const ownClient = !options?.prismaClient
   const prisma = options?.prismaClient ?? new PrismaClient()
@@ -315,7 +323,9 @@ export async function importPerfumeRecords(
     for (let i = 0; i < records.length; i++) {
       const rec = records[i]
       try {
-        const result = await importOneRecord(prisma, rec)
+        const result = await importOneRecord(prisma, rec, {
+          overwriteImageUrls: options?.overwriteImageUrls,
+        })
         summary.successful.push(result)
       } catch (err) {
         summary.errors.push({

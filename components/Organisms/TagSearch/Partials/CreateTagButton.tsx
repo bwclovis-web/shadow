@@ -1,6 +1,7 @@
 import { useState } from "react"
 
 import { Button } from "@/components/Atoms/Button/Button"
+import { useCSRF } from "@/hooks/useCSRF"
 
 type CreatedTag = { id: string; name?: string }
 
@@ -12,40 +13,50 @@ type CreateTagButtonProps = {
 const CreateTagButton = ({ action, setOpenDropdown }: CreateTagButtonProps) => {
   const [tagValue, setTagValue] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const { addToHeaders, getTokenWithFallback } = useCSRF()
 
   const handleCreateTag = async () => {
     const trimmed = tagValue.trim()
     if (!trimmed) {
-      console.warn("Cannot create tag with empty value")
+      setError("Enter a tag name")
       return
     }
 
+    if (!getTokenWithFallback()) {
+      setError("Security token missing. Please refresh the page and try again.")
+      return
+    }
+
+    setError(null)
     setIsSubmitting(true)
     try {
       const response = await fetch("/api/createTag", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: addToHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ tag: trimmed }),
       })
 
       if (!response.ok) {
-        console.error("Failed to create tag, status:", response.status)
+        const body = await response.json().catch(() => ({}))
+        const message = body?.error ?? body?.message ?? `Failed to create tag (${response.status})`
+        setError(message)
         return
       }
 
       const res = await response.json()
       const tagData = res?.data ?? res
       if (!tagData?.id) {
-        console.error("Invalid tag response:", res)
+        setError("Invalid response from server")
         return
       }
 
       setTagValue("")
       setOpenDropdown(false)
       action(tagData as CreatedTag)
-    } catch (error) {
-      console.error("Error creating tag:", error)
+    } catch {
+      setError("Could not create tag. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -54,6 +65,11 @@ const CreateTagButton = ({ action, setOpenDropdown }: CreateTagButtonProps) => {
   return (
     <div className="flex flex-col gap-2">
       <label htmlFor="tag-search">Create new tag</label>
+      {error && (
+        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+          {error}
+        </p>
+      )}
       <input
         type="text"
         autoComplete="off"

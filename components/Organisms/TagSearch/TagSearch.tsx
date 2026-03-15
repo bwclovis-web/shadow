@@ -64,13 +64,18 @@ const TagSearch: FC<TagSearchProps> = ({
     !!error ||
     (inputValue.length >= 1 && results.length === 0)
 
+  const closeDropdown = useCallback(() => {
+    setInputValue("")
+    clearResults()
+  }, [clearResults, setInputValue])
+
   const handleItemClick = (item: Tag | { id: string; name?: string }) => {
     if (selectedTags.some(t => t.id === item.id)) return
     const tag: Tag = { id: item.id, name: item.name ?? "" }
     const newTags = [...selectedTags, tag]
     setSelectedTags(newTags)
     onChange?.(newTags)
-    clearResults()
+    closeDropdown()
   }
 
   const handleRemoveTag = (tagId: string) => {
@@ -138,7 +143,7 @@ const TagSearch: FC<TagSearchProps> = ({
               <li className={dropdownItemClasses}>
                 <CreateTagButton
                   action={handleItemClick}
-                  setOpenDropdown={() => clearResults()}
+                  setOpenDropdown={closeDropdown}
                 />
               </li>
             )}
