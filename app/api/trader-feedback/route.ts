@@ -10,6 +10,7 @@ import {
   parsePaginationParams,
   parseQueryParams,
 } from "@/utils/server/api-route-helpers.server"
+import { isValidPrismaRecordId } from "@/utils/prisma-record-id"
 import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 import { authenticateUser } from "@/utils/server/auth.server"
 
@@ -17,9 +18,24 @@ export async function GET(request: NextRequest) {
   try {
     const params = parseQueryParams(request)
     const pagination = parsePaginationParams(request)
-    const traderId = params.required("traderId")
+    const traderRaw = params.get("traderId")
+    if (!traderRaw?.trim()) {
+      return NextResponse.json({ error: "traderId is required" }, { status: 400 })
+    }
+    const traderId = traderRaw.trim()
+    if (!isValidPrismaRecordId(traderId)) {
+      return NextResponse.json({ error: "Invalid trader ID" }, { status: 400 })
+    }
     const includeComments = params.getBoolean("includeComments")
-    const viewerId = params.get("viewerId")
+    const viewerRaw = params.get("viewerId")
+    let viewerId: string | null = null
+    if (viewerRaw?.trim()) {
+      const v = viewerRaw.trim()
+      if (!isValidPrismaRecordId(v)) {
+        return NextResponse.json({ error: "Invalid viewer ID" }, { status: 400 })
+      }
+      viewerId = v
+    }
 
     const { summary, comments, viewerFeedback } = await getTraderFeedbackForProfile(
       traderId,
@@ -68,7 +84,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (intent === "remove") {
-      const traderId = formData.required("traderId")
+      const traderId = formData.required("traderId").trim()
+      if (!isValidPrismaRecordId(traderId)) {
+        return NextResponse.json({ error: "Invalid trader ID" }, { status: 400 })
+      }
       await removeTraderFeedback(traderId, authResult.user!.id)
       return NextResponse.json({ success: true, message: "Feedback removed" })
     }

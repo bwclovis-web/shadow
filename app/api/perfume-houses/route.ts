@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { searchPerfumeHouseByName } from "@/models/house.server"
+import { parseOptionalAutocompleteQuery } from "@/utils/server/api-route-helpers.server"
 
 export async function GET(request: NextRequest) {
-  const name = request.nextUrl.searchParams.get("name")
+  const name = parseOptionalAutocompleteQuery(
+    request.nextUrl.searchParams.get("name")
+  )
   if (!name) {
     return NextResponse.json([])
   }

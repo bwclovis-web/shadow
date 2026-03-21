@@ -11,13 +11,23 @@ import {
   validateRating,
   validateRatingCategory,
 } from "@/utils/server/api-route-helpers.server"
+import { isValidPrismaRecordId } from "@/utils/prisma-record-id"
+import { validateRateLimit } from "@/utils/api-validation.server"
+import { getUserMutationRateLimits } from "@/utils/rate-limit-config.server"
 import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 import { authenticateUser } from "@/utils/server/auth.server"
 
 export async function GET(request: NextRequest) {
   try {
     const params = parseQueryParams(request)
-    const perfumeId = params.required("perfumeId")
+    const perfumeRaw = params.get("perfumeId")
+    if (!perfumeRaw?.trim()) {
+      return NextResponse.json({ error: "perfumeId is required" }, { status: 400 })
+    }
+    const perfumeId = perfumeRaw.trim()
+    if (!isValidPrismaRecordId(perfumeId)) {
+      return NextResponse.json({ error: "Invalid perfume ID" }, { status: 400 })
+    }
     const ratingsData = await getPerfumeRatings(perfumeId)
     return NextResponse.json(ratingsData)
   } catch (error) {
@@ -38,7 +48,25 @@ export async function POST(request: NextRequest) {
 
     const formData = await parseFormData(request)
     await requireCSRF(request, formData)
-    const perfumeId = formData.required("perfumeId")
+
+    const mutationLimits = getUserMutationRateLimits()
+    try {
+      validateRateLimit(
+        `ratings:post:${authResult.user!.id}`,
+        mutationLimits.ratingsPost.max,
+        mutationLimits.ratingsPost.windowMs
+      )
+    } catch (rateLimitResponse) {
+      if (rateLimitResponse instanceof Response) {
+        return rateLimitResponse
+      }
+      throw rateLimitResponse
+    }
+
+    const perfumeId = formData.required("perfumeId").trim()
+    if (!isValidPrismaRecordId(perfumeId)) {
+      return NextResponse.json({ error: "Invalid perfume ID" }, { status: 400 })
+    }
     const category = formData.required("category")
     const rating = formData.getInt("rating")
 

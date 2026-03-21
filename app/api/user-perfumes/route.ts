@@ -16,6 +16,7 @@ import { processWishlistAvailabilityAlerts } from "@/utils/alert-processors"
 import { authenticateUser } from "@/utils/server/auth.server"
 import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 import { ErrorHandler } from "@/utils/errorHandling"
+import { isValidPrismaRecordId } from "@/utils/prisma-record-id"
 
 export async function GET(request: NextRequest) {
   try {
@@ -64,6 +65,16 @@ export async function POST(request: NextRequest) {
     const tradePrice = formData.get("tradePrice") as string | undefined
     const tradePreference = formData.get("tradePreference") as string | undefined
     const tradeOnly = formData.get("tradeOnly") === "true"
+
+    if (perfumeId && !isValidPrismaRecordId(perfumeId)) {
+      return NextResponse.json({ success: false, error: "Invalid ID format" }, { status: 400 })
+    }
+    if (userPerfumeId && !isValidPrismaRecordId(userPerfumeId)) {
+      return NextResponse.json({ success: false, error: "Invalid ID format" }, { status: 400 })
+    }
+    if (commentId && !isValidPrismaRecordId(commentId)) {
+      return NextResponse.json({ success: false, error: "Invalid ID format" }, { status: 400 })
+    }
 
     let result: unknown
     switch (actionType) {

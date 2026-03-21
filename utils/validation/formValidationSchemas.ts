@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { isValidPrismaRecordId } from "@/utils/prisma-record-id"
 import {
   addressOptional,
   amountSchema,
@@ -145,7 +146,11 @@ export const UpdateCommentSchema = z.object({
 
 // Wishlist
 export const WishlistActionSchema = z.object({
-  perfumeId: z.string().trim().min(1, { message: V.perfumeIdRequired }),
+  perfumeId: z
+    .string()
+    .trim()
+    .min(1, { message: V.perfumeIdRequired })
+    .refine(isValidPrismaRecordId, { message: "Invalid ID format" }),
   action: z.enum(["add", "remove", "updateVisibility"], {
     errorMap: () => ({ message: V.wishlistAction }),
   }),

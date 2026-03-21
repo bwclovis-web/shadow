@@ -7,6 +7,9 @@
  * - Subscribe: SUBSCRIBE_RATE_LIMIT_MAX, SUBSCRIBE_RATE_LIMIT_WINDOW_MINUTES
  * - Auth refresh: AUTH_REFRESH_RATE_LIMIT_MAX, AUTH_REFRESH_RATE_LIMIT_WINDOW_SECONDS
  * - Auth sign-in: AUTH_SIGN_IN_RATE_LIMIT_MAX, AUTH_SIGN_IN_RATE_LIMIT_WINDOW_MINUTES
+ * - Change password: CHANGE_PASSWORD_RATE_LIMIT_MAX, CHANGE_PASSWORD_RATE_LIMIT_WINDOW_MINUTES
+ * - Reviews POST: REVIEWS_POST_RATE_LIMIT_MAX, REVIEWS_POST_RATE_LIMIT_WINDOW_MINUTES
+ * - Ratings POST: RATINGS_POST_RATE_LIMIT_MAX, RATINGS_POST_RATE_LIMIT_WINDOW_MINUTES
  */
 
 const HOUR_MS = 60 * 60 * 1000
@@ -117,4 +120,34 @@ export const getAuthRateLimits = (): AuthRateLimits => {
     },
   }
   return authLimitsCache
+}
+
+let userMutationLimitsCache: UserMutationRateLimits | null = null
+
+export const getUserMutationRateLimits = (): UserMutationRateLimits => {
+  if (userMutationLimitsCache) return userMutationLimitsCache
+  userMutationLimitsCache = {
+    changePassword: {
+      max: parseIntEnv(process.env.CHANGE_PASSWORD_RATE_LIMIT_MAX, 5),
+      windowMs:
+        parseIntEnv(process.env.CHANGE_PASSWORD_RATE_LIMIT_WINDOW_MINUTES, 60) *
+        60 *
+        1000,
+    },
+    reviewsPost: {
+      max: parseIntEnv(process.env.REVIEWS_POST_RATE_LIMIT_MAX, 40),
+      windowMs:
+        parseIntEnv(process.env.REVIEWS_POST_RATE_LIMIT_WINDOW_MINUTES, 60) *
+        60 *
+        1000,
+    },
+    ratingsPost: {
+      max: parseIntEnv(process.env.RATINGS_POST_RATE_LIMIT_MAX, 120),
+      windowMs:
+        parseIntEnv(process.env.RATINGS_POST_RATE_LIMIT_WINDOW_MINUTES, 15) *
+        60 *
+        1000,
+    },
+  }
+  return userMutationLimitsCache
 }

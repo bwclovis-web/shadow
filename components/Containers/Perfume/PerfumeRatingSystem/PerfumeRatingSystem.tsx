@@ -98,8 +98,11 @@ const PerfumeRatingSystem = ({
                     {t("communityAverage")}: {Number(averageRatings[key]).toFixed(1)}/5
                     {averageRatings.totalRatings > 0 && (
                       <span className="ml-1">
-                        ({averageRatings.totalRatings}{" "}
-                        {t("totalRatings", { count: averageRatings.totalRatings })})
+                        (
+                        {t("totalRatings", {
+                          count: averageRatings.totalRatings,
+                        })}
+                        )
                         {isRefreshing && " …"}
                       </span>
                     )}

@@ -38,30 +38,30 @@
 
 | Issue | Priority |
 |-------|----------|
-| No query-string length limits on `/api/getTag`, `/api/perfume-houses`, `/api/perfume` (DoS vector) | **P1** |
-| `traderId` in `/api/trader-feedback` GET is not UUID-validated | **P1** |
-| `perfumeId` in `/api/ratings` POST is not UUID-validated | **P2** |
+| ~~No query-string length limits on `/api/getTag`, `/api/perfume-houses`, `/api/perfume` (DoS vector)~~ **Done:** `parseRequiredAutocompleteQuery` / `parseOptionalAutocompleteQuery` (200 chars) in `api-route-helpers.server.ts` | **P1** ✅ |
+| ~~`traderId` / `perfumeId` / related ids not validated before DB queries~~ **Done:** `isValidPrismaRecordId` in `utils/prisma-record-id.ts` (Prisma `cuid` + UUID); applied to `/api/trader-feedback`, `/api/ratings`, `/api/reviews`, `/api/user-perfumes`, and wishlist Zod | **P1** ✅ |
 | `sortBy` in `/api/perfumeSortLoader` is cast without validation | **P2** |
 
 **Fixes (non-breaking):**
 
 - Clamp query params to a max length (e.g. 200 chars) at the start of each handler.
-- Validate IDs against a UUID regex before passing to Prisma.
+- ~~Validate IDs against a UUID regex before passing to Prisma.~~ **Done** (see `isValidPrismaRecordId` — schema uses `cuid()`, not only UUID).
 
 ### 1.3 Rate Limiting
 
-`/api/contact-trader`, `/api/auth/refresh`, sign-in (`signInAction`), and sign-up (`signUpAction`) are rate-limited using `validateRateLimit` (in-memory `Map`). The store still does not work across multiple instances.
+`/api/contact-trader`, `/api/auth/refresh`, sign-in (`signInAction`), sign-up (`signUpAction`), `/api/change-password`, `/api/reviews` POST, and `/api/ratings` POST are rate-limited using `validateRateLimit` (in-memory `Map`). The store still does not work across multiple instances.
 
 | What to rate-limit | Priority |
 |--------------------|----------|
 | `/api/auth/refresh`, sign-in, sign-up | **P0** (implemented) |
-| `/api/change-password` | **P1** |
-| `/api/reviews` POST, `/api/ratings` POST | **P1** |
+| ~~`/api/change-password`~~ | **P1** ✅ |
+| ~~`/api/reviews` POST, `/api/ratings` POST~~ | **P1** ✅ |
 | `/api/wishlist` POST | **P2** |
 
 **Fixes (non-breaking):**
 
 - Auth: `getAuthRateLimits()` — refresh defaults to 60 req / 60s per client IP; sign-in defaults to 5 req / min per IP (`AUTH_*` env vars in `rate-limit-config.server.ts`). Sign-up uses existing signup limits (`SIGNUP_RATE_LIMIT_*`).
+- User mutations: `getUserMutationRateLimits()` — per authenticated user: change-password (default 5 / 60 min), reviews POST (40 / 60 min), ratings POST (120 / 15 min); tune via `CHANGE_PASSWORD_*`, `REVIEWS_POST_*`, `RATINGS_POST_*` in `rate-limit-config.server.ts`.
 - For production multi-instance deployments, swap the in-memory store with a Redis-backed store (e.g. `@upstash/ratelimit`) — this is a **breaking change** if there's no Redis yet; flag it for post-launch.
 
 ### 1.4 Middleware
@@ -92,7 +92,7 @@ There is **no root `middleware.ts`**. Adding one is optional but recommended.
 | `getAvailablePerfumesForDecanting` has no pagination | `models/perfume.server.ts` | **P2** |
 | Scraper import uploads images to R2 sequentially in a `for` loop | `app/api/admin/scraper/import/route.ts` | **P1** |
 | Note resolution in CSV import calls `getOrCreateNote` + `upsertNoteRelation` per note sequentially | `lib/import-perfume-csv.ts` | **P2** |
-| Scraper import creates its own `PrismaClient` instead of reusing the singleton | `app/api/admin/scraper/import/route.ts` | **P1** |
+| ~~Scraper import creates its own `PrismaClient` instead of reusing the singleton~~ **Fixed:** shared `prisma` from `lib/db.ts` | `app/api/admin/scraper/import/route.ts` | **P1** ✅ |
 
 **Fixes (non-breaking):**
 
@@ -100,7 +100,7 @@ There is **no root `middleware.ts`**. Adding one is optional but recommended.
 - **`getAllPerfumes` / `getAllPerfumesWithOptions`**: Add cursor-based pagination; keep the current API as a backwards-compatible default with a reasonable `take` limit.
 - **Scraper R2 uploads**: Use `Promise.all` with a concurrency limiter (e.g. `p-limit(5)`).
 - **Note resolution**: Batch `findMany({ where: { name: { in: [...] } } })` first, then only create missing notes.
-- **Prisma singleton**: Replace `new PrismaClient()` in the import route with the shared `prisma` from `lib/db.ts`.
+- ~~**Prisma singleton**: Replace `new PrismaClient()` in the import route with the shared `prisma` from `lib/db.ts`.~~ **Done** (do not call `$disconnect()` on the shared client).
 
 ### 2.2 Caching
 
@@ -267,11 +267,11 @@ Over 30 usages of `any` across models and components. Key files:
 
 - [x] Add CSRF protection to `/api/ratings` POST
 - [x] Add CSRF protection to admin scraper import/run routes
-- [ ] Add query param length limits on `/api/getTag`, `/api/perfume-houses`, `/api/perfume`
-- [ ] Validate UUID format on `traderId`, `perfumeId`, etc. before DB queries
-- [ ] Add rate limiting to `/api/change-password`, `/api/reviews` POST, `/api/ratings` POST
+- [x] Add query param length limits on `/api/getTag`, `/api/perfume-houses`, `/api/perfume`
+- [x] Validate record id format on `traderId`, `perfumeId`, etc. before DB queries (`isValidPrismaRecordId`)
+- [x] Add rate limiting to `/api/change-password`, `/api/reviews` POST, `/api/ratings` POST
 - [ ] Add root `middleware.ts` with security headers (HSTS, X-Frame-Options, etc.)
-- [ ] Replace `new PrismaClient()` in scraper import with shared singleton from `lib/db.ts`
+- [x] Replace `new PrismaClient()` in scraper import with shared singleton from `lib/db.ts`
 - [ ] Add pagination / `take` limit to `getAllPerfumes` and `getAllPerfumesWithOptions`
 - [ ] Add `revalidateTag()` calls after perfume and house create/update/delete mutations
 - [ ] Wrap `getAllPerfumes`, `getAllHouses` in `unstable_cache` with tag-based invalidation

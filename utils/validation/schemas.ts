@@ -5,6 +5,8 @@
 
 import { z } from "zod"
 
+import { isValidPrismaRecordId } from "@/utils/prisma-record-id"
+
 // ============================================================================
 // COMMON/PRIMITIVE SCHEMAS
 // ============================================================================
@@ -363,7 +365,11 @@ export const commentSchemas = {
 
 export const wishlistSchemas = {
   action: z.object({
-    perfumeId: z.string().min(1, { message: "Perfume ID is required" }),
+    perfumeId: z
+      .string()
+      .trim()
+      .min(1, { message: "Perfume ID is required" })
+      .refine(isValidPrismaRecordId, { message: "Invalid ID format" }),
     action: z.enum(["add", "remove", "updateVisibility"], {
       errorMap: () => ({
         message: "Action must be add, remove, or updateVisibility",

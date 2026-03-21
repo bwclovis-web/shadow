@@ -682,7 +682,7 @@
       "selectRating": "Selecciona tu calificación",
       "loginToRate": "Por favor, inicia sesión para calificar este perfume",
       "communityAverage": "Promedio de la Comunidad",
-      "totalRatings": "{{count}} voto{{count !== 1 ? 's' : ''}}",
+      "totalRatings": "{count, plural, one {# voto} other {# votos}}",
       "notYetRated": "Aún no calificado",
       "categories": {
         "longevity": "Longevidad",

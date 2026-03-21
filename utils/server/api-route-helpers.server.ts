@@ -30,6 +30,31 @@ export type AuthenticatedApiHandler<T = unknown> = (
 
 // ==================== Query Parameter Helpers ====================
 
+/** Max length for public autocomplete/search query params (DoS mitigation). */
+export const MAX_AUTOCOMPLETE_QUERY_LENGTH = 200
+
+/**
+ * Optional search param (e.g. `?name=`): absent → null; empty/whitespace → null; otherwise trim + clamp.
+ */
+export const parseOptionalAutocompleteQuery = (
+  value: string | null
+): string | null => {
+  if (value === null) return null
+  const trimmed = value.trim().slice(0, MAX_AUTOCOMPLETE_QUERY_LENGTH)
+  return trimmed.length > 0 ? trimmed : null
+}
+
+/**
+ * Required search param (e.g. `?tag=`): missing, empty, or whitespace-only → null; otherwise trim + clamp.
+ */
+export const parseRequiredAutocompleteQuery = (
+  value: string | null
+): string | null => {
+  if (value === null) return null
+  const trimmed = value.trim().slice(0, MAX_AUTOCOMPLETE_QUERY_LENGTH)
+  return trimmed.length > 0 ? trimmed : null
+}
+
 /**
  * Safely parse query parameters from URL (works with Request or NextRequest)
  */

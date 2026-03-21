@@ -12,7 +12,10 @@ import {
   parsePaginationParams,
   parseQueryParams,
 } from "@/utils/server/api-route-helpers.server"
+import { isValidPrismaRecordId } from "@/utils/prisma-record-id"
 import { containsDangerousReviewHtml } from "@/utils/sanitize"
+import { validateRateLimit } from "@/utils/api-validation.server"
+import { getUserMutationRateLimits } from "@/utils/rate-limit-config.server"
 import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 import { authenticateUser } from "@/utils/server/auth.server"
 
@@ -20,10 +23,16 @@ export async function GET(request: NextRequest) {
   try {
     const params = parseQueryParams(request)
     const pagination = parsePaginationParams(request)
-    const perfumeId = params.get("perfumeId")
-    const userId = params.get("userId")
+    const perfumeId = (params.get("perfumeId") ?? "").trim()
+    const userId = (params.get("userId") ?? "").trim()
     if (!perfumeId && !userId) {
       return NextResponse.json({ error: "Either perfumeId or userId is required" }, { status: 400 })
+    }
+    if (perfumeId && !isValidPrismaRecordId(perfumeId)) {
+      return NextResponse.json({ error: "Invalid perfume ID" }, { status: 400 })
+    }
+    if (userId && !isValidPrismaRecordId(userId)) {
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 })
     }
     const filters: Record<string, unknown> = {}
     if (perfumeId) filters.perfumeId = perfumeId
@@ -51,11 +60,29 @@ export async function POST(request: NextRequest) {
     const auth = { userId: authResult.user!.id, user: authResult.user! }
     const formData = await parseFormData(request)
     await requireCSRF(request, formData)
+
+    const mutationLimits = getUserMutationRateLimits()
+    try {
+      validateRateLimit(
+        `reviews:post:${auth.userId}`,
+        mutationLimits.reviewsPost.max,
+        mutationLimits.reviewsPost.windowMs
+      )
+    } catch (rateLimitResponse) {
+      if (rateLimitResponse instanceof Response) {
+        return rateLimitResponse
+      }
+      throw rateLimitResponse
+    }
+
     const action = formData.required("_action")
 
     switch (action) {
       case "create": {
-        const perfumeId = formData.required("perfumeId")
+        const perfumeId = formData.required("perfumeId").trim()
+        if (!isValidPrismaRecordId(perfumeId)) {
+          return NextResponse.json({ error: "Invalid perfume ID" }, { status: 400 })
+        }
         const review = formData.required("review")
         if (containsDangerousReviewHtml(review)) {
           return NextResponse.json({ error: "Reviews cannot contain scripts or embedded content." }, { status: 400 })
@@ -68,7 +95,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true, message: "Review created successfully", data: newReview })
       }
       case "update": {
-        const reviewId = formData.required("reviewId")
+        const reviewId = formData.required("reviewId").trim()
+        if (!isValidPrismaRecordId(reviewId)) {
+          return NextResponse.json({ error: "Invalid review ID" }, { status: 400 })
+        }
         const review = formData.required("review")
         if (containsDangerousReviewHtml(review)) {
           return NextResponse.json({ error: "Reviews cannot contain scripts or embedded content." }, { status: 400 })
@@ -77,7 +107,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true, message: "Review updated successfully", data: updatedReview })
       }
       case "delete": {
-        const reviewId = formData.required("reviewId")
+        const reviewId = formData.required("reviewId").trim()
+        if (!isValidPrismaRecordId(reviewId)) {
+          return NextResponse.json({ error: "Invalid review ID" }, { status: 400 })
+        }
         await deletePerfumeReview(reviewId, auth.userId, auth.user.role)
         return NextResponse.json({ success: true, message: "Review deleted successfully" })
       }
@@ -85,7 +118,10 @@ export async function POST(request: NextRequest) {
         if (auth.user.role !== "admin" && auth.user.role !== "editor") {
           return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
         }
-        const reviewId = formData.required("reviewId")
+        const reviewId = formData.required("reviewId").trim()
+        if (!isValidPrismaRecordId(reviewId)) {
+          return NextResponse.json({ error: "Invalid review ID" }, { status: 400 })
+        }
         const isApproved = formData.getBoolean("isApproved")
         const moderatedReview = await moderatePerfumeReview(reviewId, isApproved)
         return NextResponse.json({ success: true, message: "Review moderated successfully", data: moderatedReview })

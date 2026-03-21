@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { authenticateUser } from "@/utils/server/auth.server"
 import { changePassword } from "@/models/user.server"
-import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
+import { validateRateLimit } from "@/utils/api-validation.server"
 import { ErrorHandler } from "@/utils/errorHandling"
+import { getUserMutationRateLimits } from "@/utils/rate-limit-config.server"
+import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,6 +18,21 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData()
     await requireCSRF(request, formData)
+
+    const mutationLimits = getUserMutationRateLimits()
+    try {
+      validateRateLimit(
+        `change-password:${authResult.user.id}`,
+        mutationLimits.changePassword.max,
+        mutationLimits.changePassword.windowMs
+      )
+    } catch (rateLimitResponse) {
+      if (rateLimitResponse instanceof Response) {
+        return rateLimitResponse
+      }
+      throw rateLimitResponse
+    }
+
     const currentPassword = formData.get("currentPassword") as string
     const newPassword = formData.get("newPassword") as string
     const confirmNewPassword = formData.get("confirmNewPassword") as string
