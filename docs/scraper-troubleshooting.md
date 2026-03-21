@@ -46,3 +46,46 @@ The run route sends a JSON object to `run_scraper.py` on stdin. You can extend t
 - **`etsyHeaded`** — Already supported; opens a visible browser for Etsy. The same idea can be used for other sites (e.g. Lush) by adding a `headed` or site-specific flag and opening a visible window when set.
 
 If these keys are missing from the JSON, use sensible defaults (e.g. no delay, 1 attempt).
+
+---
+
+## Not getting all the pages / missing products
+
+**Symptom:** The scraper returns fewer products than expected, or only from the first few collection URLs.
+
+**Checks:**
+
+1. **Collection URL count** — Under the Collection URLs field, the UI shows “X collection URL(s) — all will be visited”. Confirm this matches the number of listing pages you expect (e.g. one line per page: page 1, page 2, page 3). You can paste one URL per line or comma-separated; only lines starting with `http://` or `https://` are used.
+
+2. **Timeouts / connection resets** — If some collection pages never load, you’ll see “Warning: timed out waiting for product links” or `ERR_CONNECTION_RESET` for those URLs. Use **Delay between collection URLs (ms)** (e.g. 5000) and **Retry attempts per page** (e.g. 3) so the Python script retries and waits between URLs. Implement `delayBetweenUrlsMs` and `retryAttempts` in `run_scraper.py` (see above).
+
+3. **Product link selector** — The scraper waits for links matching your **Product link selector**. If the selector doesn’t match the site’s URLs, you get “timed out waiting for product links”. The script now tries a fallback when the primary times out (e.g. `a[href*='/product/']` if you used `a[href*='/products/']`). For **thoo.it** and similar WooCommerce-style sites, product URLs are `/product/...` (singular). You can set the selector to `a[href*='/product/']` explicitly, or leave the default and let the fallback run.
+
+4. **403 Forbidden** — If the site returns **403 Forbidden** (e.g. **thoo.it**), you’ll see a message and 0 product links. First enable **Open visible browser** and run again. If you still get 403 (the site blocks all WebDriver), install **undetected-chromedriver** and run again with **Open visible browser** checked. Run locally (e.g. `npm run dev`).  
+   **Installing undetected-chromedriver:** The API runs the scraper with the same Python as the launcher: on Windows it uses `py -3`, so install with **`py -3 -m pip install undetected-chromedriver`** (not plain `pip`, so the package is installed for the same interpreter the scraper uses). If you still see "undetected-chromedriver not installed", set **`SCRAPER_PYTHON`** to the full path of the Python executable that has the package (e.g. `C:\Python314\python.exe`).
+
+3. **Pagination** — The scraper does not auto-follow “Next” links. Add every listing page URL explicitly (e.g. `...?page=1`, `...?page=2`, `...?page=3`).
+
+---
+
+## Missing notes (description inside tab containers)
+
+**Symptom:** The scraper finds the product but note extraction returns few or no notes; the notes are in a tab (e.g. “Ingredients”, “Details”) that isn’t the default visible one.
+
+**Cause:** The description selector targets a tab container. Selenium’s `.text` only returns **visible** text, so content in hidden tab panels was skipped.
+
+**Fix:** The scraper now uses `textContent` for the description element (and fallbacks), so all descendant text is captured including hidden tab panels. Point the **Description selector** at the tab container (or the wrapper that holds all tab panels). Re-run the scrape; notes from every panel should be included.
+
+---
+
+## Request / route timeout
+
+**Symptom:** The scrape stops after about 1–2 minutes with “timeout” or “connection closed”, or the stream ends without a result.
+
+**Cause:** The API route has a maximum duration (e.g. 5 minutes on this app). If the run takes longer (many collection URLs + many products + note extraction), the platform kills the request.
+
+**What to do:**
+
+1. **Run in smaller batches** — Use fewer collection URLs per run (e.g. 2–4 pages), then run again for more pages.
+2. **Run locally** — Use `npm run dev` and trigger the scrape from localhost; the dev server may allow longer runs than a deployed environment.
+3. **Increase timeout** — The route uses `maxDuration` (seconds). On Vercel Pro you can raise it up to 800 in `app/api/admin/scraper/run/route.ts` if you need longer runs.

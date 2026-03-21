@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const mockUserCreate = vi.fn()
 const mockUserCount = vi.fn()
+const mockUserFindFirst = vi.fn()
 const mockTransaction = vi.fn()
 
 vi.mock("@/lib/db", () => ({
@@ -9,6 +10,7 @@ vi.mock("@/lib/db", () => ({
     user: {
       create: (...args: unknown[]) => mockUserCreate(...args),
       count: (...args: unknown[]) => mockUserCount(...args),
+      findFirst: (...args: unknown[]) => mockUserFindFirst(...args),
     },
     $transaction: (fn: (tx: any) => Promise<any>) => mockTransaction(fn),
   },
@@ -25,13 +27,18 @@ vi.mock("@/utils/server/user-limit.server", () => ({
 vi.mock("@/utils/username-generator.server", () => ({
   generateUniqueUsername: vi.fn().mockResolvedValue("DarkAlley_42"),
 }))
+vi.mock("@/utils/profile-slug.server", () => ({
+  allocateUniqueProfileSlug: vi.fn().mockResolvedValue("noirshadow-7"),
+}))
 
 import { createUser, FreeSignupLimitReachedError } from "./user.server"
+import { allocateUniqueProfileSlug } from "@/utils/profile-slug.server"
 import { generateUniqueUsername } from "@/utils/username-generator.server"
 import { canSignupForFree } from "@/utils/server/user-limit.server"
 
 const mockGenerateUniqueUsername = vi.mocked(generateUniqueUsername)
 const mockCanSignupForFree = vi.mocked(canSignupForFree)
+const mockAllocateUniqueProfileSlug = vi.mocked(allocateUniqueProfileSlug)
 
 function formData(overrides: { email?: string; password?: string } = {}) {
   const fd = new FormData()
@@ -46,6 +53,7 @@ describe("createUser", () => {
     mockCanSignupForFree.mockResolvedValue(true)
     mockGenerateUniqueUsername.mockResolvedValue("NoirShadow_7")
     mockUserCount.mockResolvedValue(0)
+    mockUserFindFirst.mockResolvedValue(null)
     mockUserCreate.mockResolvedValue({
       id: "user-123",
       email: "new@example.com",
@@ -57,6 +65,7 @@ describe("createUser", () => {
         user: {
           count: mockUserCount,
           create: mockUserCreate,
+          findFirst: mockUserFindFirst,
         },
       }
       return fn(tx)
@@ -69,11 +78,13 @@ describe("createUser", () => {
 
     expect(mockGenerateUniqueUsername).toHaveBeenCalledTimes(1)
     expect(mockTransaction).toHaveBeenCalledTimes(1)
+    expect(mockAllocateUniqueProfileSlug).toHaveBeenCalled()
     expect(mockUserCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({
         email: "new@example.com",
         password: "hashed-password",
         username: "NoirShadow_7",
+        profileSlug: "noirshadow-7",
         subscriptionStatus: "free",
         isEarlyAdopter: true,
       }),
@@ -88,10 +99,12 @@ describe("createUser", () => {
 
     expect(mockGenerateUniqueUsername).toHaveBeenCalledTimes(1)
     expect(mockTransaction).not.toHaveBeenCalled()
+    expect(mockAllocateUniqueProfileSlug).toHaveBeenCalled()
     expect(mockUserCreate).toHaveBeenCalledWith({
       data: expect.objectContaining({
         email: "new@example.com",
         username: "NoirShadow_7",
+        profileSlug: "noirshadow-7",
         subscriptionStatus: "paid",
         isEarlyAdopter: false,
       }),

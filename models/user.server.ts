@@ -14,6 +14,7 @@ import {
   FREE_USER_LIMIT,
   canSignupForFree,
 } from "@/utils/server/user-limit.server"
+import { allocateUniqueProfileSlug } from "@/utils/profile-slug.server"
 import { generateUniqueUsername } from "@/utils/username-generator.server"
 
 import { getUserByEmail, getUserByName } from "./user.query"
@@ -82,11 +83,13 @@ export const createUser = async (
       if (count >= FREE_USER_LIMIT) {
         throw new FreeSignupLimitReachedError()
       }
+      const profileSlug = await allocateUniqueProfileSlug(tx, username, null)
       return tx.user.create({
         data: {
           email,
           password: hashedPassword,
           username,
+          profileSlug,
           subscriptionStatus,
           isEarlyAdopter,
         },
@@ -95,11 +98,13 @@ export const createUser = async (
     return user
   }
 
+  const profileSlug = await allocateUniqueProfileSlug(prisma, username, null)
   return prisma.user.create({
     data: {
       email,
       password: hashedPassword,
       username,
+      profileSlug,
       subscriptionStatus,
       isEarlyAdopter,
     },

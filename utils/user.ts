@@ -1,4 +1,5 @@
 import type { SafeUser, User } from "@/types"
+import { slugifyUsernameForProfile } from "@/utils/profile-slug"
 
 type UserLike = {
   firstName?: string | null
@@ -37,6 +38,8 @@ export const createSafeUser = (user: User | null): SafeUser | null => {
     lastName: user.lastName,
     username: user.username,
     role: user.role,
+    ...("profileSlug" in user &&
+      user.profileSlug != null && { profileSlug: user.profileSlug }),
     ...("traderAbout" in user && { traderAbout: user.traderAbout }),
   }
 }
@@ -59,16 +62,16 @@ export const getUsernameFromEmail = (email: string): string => {
   return email.substring(0, atIndex)
 }
 
-/** URL-safe segment for profile path: slugified username when set, else user id. */
+/** URL-safe segment for profile path: stored profileSlug, else slugified username, else user id. */
 export const getProfileSlug = (user: {
   id: string
   username?: string | null
+  profileSlug?: string | null
 }): string => {
+  const stored = user.profileSlug?.trim()
+  if (stored) return stored
   if (user.username?.trim()) {
-    const slug = user.username
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "")
+    const slug = slugifyUsernameForProfile(user.username)
     if (slug) return slug
   }
   return user.id
@@ -78,5 +81,6 @@ export const getProfileSlug = (user: {
 export const getProfilePathForUser = (user: {
   id: string
   username?: string | null
+  profileSlug?: string | null
 }): string => `/${getProfileSlug(user)}/profile`
 

@@ -6,6 +6,7 @@
 import type { SubscriptionStatus } from "@prisma/client"
 
 import { prisma } from "@/lib/db"
+import { allocateUniqueProfileSlug } from "@/utils/profile-slug.server"
 
 export const getUserById = async (id: string) => {
   const user = await prisma.user.findUnique({
@@ -78,25 +79,15 @@ export const getUserBySubscriptionId = async (subscriptionId: string) => {
   })
 }
 
-const slugify = (s: string): string =>
-  s
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-
 /**
- * Resolve profile path segment to user: by id first, then by slugified username.
+ * Resolve profile path segment to user: by id first, then by stored profileSlug.
  */
 export const getUserByProfileSlug = async (slug: string) => {
   const byId = await getUserById(slug)
   if (byId) return byId
-  const users = await prisma.user.findMany({
-    select: { id: true, username: true },
+  return prisma.user.findUnique({
+    where: { profileSlug: slug },
   })
-  const match = users.find(
-    (u) => u.username && slugify(u.username) === slug
-  )
-  return match ? getUserById(match.id) : null
 }
 
 export type UpdateUserProfilePayload = {
@@ -111,6 +102,21 @@ export const updateUser = async (
   userId: string,
   payload: UpdateUserProfilePayload
 ) => {
+  let profileSlug: string | undefined
+  if (payload.username !== undefined && payload.username !== null) {
+    const current = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { username: true },
+    })
+    if (current && current.username !== payload.username) {
+      profileSlug = await allocateUniqueProfileSlug(
+        prisma,
+        payload.username,
+        userId
+      )
+    }
+  }
+
   return prisma.user.update({
     where: { id: userId },
     data: {
@@ -119,6 +125,7 @@ export const updateUser = async (
       username: payload.username ?? undefined,
       email: payload.email,
       traderAbout: payload.traderAbout === undefined ? undefined : payload.traderAbout,
+      ...(profileSlug !== undefined ? { profileSlug } : {}),
     },
   })
 }

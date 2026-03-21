@@ -275,6 +275,13 @@ export const updatePerfume = async (id: string, data: FormData) => {
   try {
     const name = sanitizeText(data.get("name") as string)
 
+    // Capture old image URL before overwriting, so we can clean up R2 if it changes.
+    const existing = await prisma.perfume.findUnique({
+      where: { id },
+      select: { image: true },
+    })
+    const oldImageUrl = existing?.image ?? null
+
     // Extract notes from FormData
     const topNotes = data.getAll("notesTop") as string[]
     const heartNotes = data.getAll("notesHeart") as string[]
@@ -333,6 +340,20 @@ export const updatePerfume = async (id: string, data: FormData) => {
     })
 
     const imageUrl = (data.get("image") as string)?.trim()
+
+    // Delete the old R2 object if the image URL changed and the old one was stored in R2.
+    if (oldImageUrl && imageUrl !== oldImageUrl) {
+      const oldKey = getR2KeyFromPublicUrl(oldImageUrl)
+      if (oldKey) {
+        try {
+          await deleteFromR2(oldKey)
+        } catch (err) {
+          console.error("[updatePerfume] Failed to delete old image from R2:", oldKey, err)
+          // Non-fatal: continue with update; orphaned object can be cleaned up later.
+        }
+      }
+    }
+
     if (imageUrl) {
       await migratePerfumeImageToR2(id, imageUrl, { prismaClient: prisma })
       const refreshed = await prisma.perfume.findUnique({

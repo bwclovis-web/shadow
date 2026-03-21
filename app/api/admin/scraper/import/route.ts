@@ -87,6 +87,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const errors: string[] = []
+  const failedR2Names: string[] = []
   let importedCount = 0
   let r2UploadCount = 0
 
@@ -129,6 +130,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
                 bucketErrorShown = true
               } else if (!result.error?.toLowerCase().includes(bucketNotExistMessage)) {
                 errors.push(`R2 upload (${name}): ${result.error}`)
+                failedR2Names.push(name)
               }
             }
           } catch (err) {
@@ -138,6 +140,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
               bucketErrorShown = true
             } else if (!msg.toLowerCase().includes(bucketNotExistMessage)) {
               errors.push(`R2 upload (${name}): ${msg}`)
+              failedR2Names.push(name)
             }
           }
         }
@@ -152,5 +155,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     importedCount,
     r2UploadCount,
     errors,
+    failedR2Names,
   } satisfies ScraperImportResponse)
 }

@@ -24,6 +24,15 @@ vi.mock("@/utils/username-generator.server", () => ({
 }))
 vi.mock("next/headers", () => ({
   cookies: vi.fn().mockResolvedValue({ set: vi.fn() }),
+  headers: vi.fn().mockResolvedValue(new Headers()),
+}))
+vi.mock("@/utils/api-validation.server", () => ({
+  validateRateLimit: vi.fn(),
+}))
+vi.mock("@/utils/rate-limit-config.server", () => ({
+  getAuthRateLimits: vi.fn().mockReturnValue({
+    signIn: { max: 5, windowMs: 60_000 },
+  }),
 }))
 vi.mock("next/navigation", () => ({
   redirect: (...args: unknown[]) => mockRedirect(...args),

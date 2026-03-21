@@ -11,42 +11,28 @@ import {
 import { validateRateLimit } from "@/utils/api-validation.server"
 import { UserFormSchema } from "@/utils/validation/formValidationSchemas"
 import { getSignupSubscribeRateLimits } from "@/utils/rate-limit-config.server"
+import { getAuthCookieFlags } from "@/utils/security/auth-cookie.server"
+import { createSession } from "@/utils/security/session-manager.server"
+import { requireCSRF } from "@/utils/server/csrf.server"
+import { getClientIdentifierFromHeaders } from "@/utils/server/request.server"
 import { getCheckoutSession } from "@/utils/server/stripe.server"
 import { canSignupForFree } from "@/utils/server/user-limit.server"
 import { getProfilePathForUser } from "@/utils/user"
-import { createSession } from "@/utils/security/session-manager.server"
-import { requireCSRF } from "@/utils/server/csrf.server"
 import { parseWithZod } from "@conform-to/zod"
-
-
-const getClientIdentifierFromHeaders = async (): Promise<string> => {
-  const h = await headers()
-  const forwarded = h.get("x-forwarded-for")
-  const first = forwarded?.split(",")[0]?.trim()
-  if (first) return first
-  const realIp = h.get("x-real-ip")?.trim()
-  if (realIp) return realIp
-  return "unknown"
-}
 
 const setSessionCookies = async (
   accessToken: string,
   refreshToken: string
 ): Promise<void> => {
   const cookieStore = await cookies()
+  const flags = getAuthCookieFlags()
   cookieStore.set("accessToken", accessToken, {
-    httpOnly: true,
-    path: "/",
+    ...flags,
     maxAge: 60 * 60,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
   })
   cookieStore.set("refreshToken", refreshToken, {
-    httpOnly: true,
-    path: "/",
+    ...flags,
     maxAge: 60 * 60 * 24 * 7,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
   })
 }
 
@@ -62,10 +48,10 @@ export const signUpAction = async (
   await requireCSRF(request, formData)
 
   const rateLimits = getSignupSubscribeRateLimits()
-  const clientId = await getClientIdentifierFromHeaders()
+  const clientId = getClientIdentifierFromHeaders(await headers())
   try {
     validateRateLimit(
-      `signup:${clientId}`,
+      `auth:signup:${clientId}`,
       rateLimits.signup.max,
       rateLimits.signup.windowMs
     )

@@ -5,6 +5,8 @@
  * - Contact messages: CONTACT_MESSAGE_RATE_LIMIT_PER_HOUR, CONTACT_MESSAGE_RATE_LIMIT_PER_DAY_PER_PAIR
  * - Signup: SIGNUP_RATE_LIMIT_MAX, SIGNUP_RATE_LIMIT_WINDOW_MINUTES
  * - Subscribe: SUBSCRIBE_RATE_LIMIT_MAX, SUBSCRIBE_RATE_LIMIT_WINDOW_MINUTES
+ * - Auth refresh: AUTH_REFRESH_RATE_LIMIT_MAX, AUTH_REFRESH_RATE_LIMIT_WINDOW_SECONDS
+ * - Auth sign-in: AUTH_SIGN_IN_RATE_LIMIT_MAX, AUTH_SIGN_IN_RATE_LIMIT_WINDOW_MINUTES
  */
 
 const HOUR_MS = 60 * 60 * 1000
@@ -34,6 +36,13 @@ export interface RateLimitMessages {
 export interface SignupSubscribeRateLimits {
   signup: RateLimitConfig
   subscribe: RateLimitConfig
+}
+
+export interface AuthRateLimits {
+  /** Token refresh — higher ceiling for multiple tabs / retries */
+  refresh: RateLimitConfig
+  /** Credential stuffing protection */
+  signIn: RateLimitConfig
 }
 
 let contactMessageLimitsCache: ContactMessageRateLimits | null = null
@@ -86,4 +95,26 @@ export const getSignupSubscribeRateLimits = (): SignupSubscribeRateLimits => {
     },
   }
   return signupSubscribeLimitsCache
+}
+
+let authLimitsCache: AuthRateLimits | null = null
+
+export const getAuthRateLimits = (): AuthRateLimits => {
+  if (authLimitsCache) return authLimitsCache
+  authLimitsCache = {
+    refresh: {
+      max: parseIntEnv(process.env.AUTH_REFRESH_RATE_LIMIT_MAX, 60),
+      windowMs:
+        parseIntEnv(process.env.AUTH_REFRESH_RATE_LIMIT_WINDOW_SECONDS, 60) *
+        1000,
+    },
+    signIn: {
+      max: parseIntEnv(process.env.AUTH_SIGN_IN_RATE_LIMIT_MAX, 5),
+      windowMs:
+        parseIntEnv(process.env.AUTH_SIGN_IN_RATE_LIMIT_WINDOW_MINUTES, 1) *
+        60 *
+        1000,
+    },
+  }
+  return authLimitsCache
 }

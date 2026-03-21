@@ -38,9 +38,12 @@ const TagSearch: FC<TagSearchProps> = ({
   const [selectedTags, setSelectedTags] = useState<Tag[]>(initialTags)
 
   useEffect(() => {
-    if (Array.isArray(data)) {
-      setSelectedTags(data)
-    }
+    if (!Array.isArray(data)) return
+    setSelectedTags(prev => {
+      const prevIds = prev.map(t => t.id).join("\0")
+      const nextIds = data.map(t => t.id).join("\0")
+      return prevIds === nextIds ? prev : data
+    })
   }, [data])
 
   const searchFunction = useCallback(async (query: string) => {

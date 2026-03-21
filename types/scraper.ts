@@ -41,6 +41,12 @@ export interface ScraperConfig {
   descriptionSelector: string
 
   /**
+   * Optional. CSS selector for the element containing fragrance notes.
+   * If blank, description selector text is used for note extraction.
+   */
+  notesSelector?: string
+
+  /**
    * CSS selector for the main product image element on a product page.
    * The scraper will look for an <img src> or background-image style attribute.
    * Example: '.product-media-modal__content img'
@@ -52,6 +58,14 @@ export interface ScraperConfig {
    * Example: ["set", "sample", "sampler", "collection"]
    */
   skipKeywords: string[]
+
+  /**
+   * When true (default), products whose names contain a size measurement (e.g. "100ml", "1.7 fl oz")
+   * are skipped outright. Disable this when a site puts sizes in ALL product names — the scraper will
+   * collect everything and deduplicate by cleaned name instead, preferring the bare-name listing when
+   * both a sized and an unsized variant exist for the same product.
+   */
+  skipSizeVariants?: boolean
 
   /**
    * Base URL used to normalise relative image and product links.
@@ -88,6 +102,12 @@ export interface ScraperConfig {
   etsyHeaded?: boolean
 
   /**
+   * Open a visible browser window for any site (e.g. thoo.it returns 403 in headless).
+   * Use when a site blocks headless Chrome. Run locally; leave unchecked on a server.
+   */
+  headed?: boolean
+
+  /**
    * Optional delay in ms between loading each collection URL. Use for sites that reset connections
    * (e.g. ERR_CONNECTION_RESET on Lush) to avoid rate limiting or bot detection. Example: 5000.
    */
@@ -106,6 +126,8 @@ export interface ScraperConfig {
 export interface ScrapedItem {
   name: string
   description: string
+  /** When notesSelector is set, text scraped from that element for note extraction; otherwise description is used. */
+  notesText?: string
   image: string
   detailURL: string
   perfumeHouse?: string
@@ -167,4 +189,21 @@ export interface ScraperImportResponse {
   importedCount: number
   r2UploadCount: number
   errors: string[]
+  /** Names of perfumes whose R2 upload failed during import (for retry UI). */
+  failedR2Names?: string[]
+}
+
+/** Body accepted by POST /api/admin/scraper/retry-r2 */
+export interface ScraperRetryR2Request {
+  records: PerfumeCsvRecord[]
+}
+
+/** Response from POST /api/admin/scraper/retry-r2 */
+export interface ScraperRetryR2Response {
+  ok: boolean
+  attemptedCount: number
+  uploadedCount: number
+  skippedCount: number
+  errors: string[]
+  failedR2Names?: string[]
 }

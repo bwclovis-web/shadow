@@ -44,6 +44,9 @@ interface PerfumeHouseFormProps {
   hideImage?: boolean
   /** Form POST URL or Next.js server action (function) */
   action?: string | ((formData: FormData) => void)
+  /** Optional action to retry current house image upload to R2 (edit form only). */
+  retryImageAction?: (formData: FormData) => void
+  retryImageState?: { status?: "success" | "error"; message?: string; error?: string } | null
 }
 
 const displayErrorFromResult = (
@@ -69,6 +72,8 @@ const PerfumeHouseForm = ({
   className,
   hideImage = false,
   action,
+  retryImageAction,
+  retryImageState,
 }: PerfumeHouseFormProps) => {
   const inputRef = useRef<HTMLInputElement | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -205,6 +210,23 @@ const PerfumeHouseForm = ({
       <Button type="submit" className="mt-4 max-w-max">
         {submitLabel}
       </Button>
+
+      {formType === FORM_TYPES.EDIT_HOUSE_FORM && effectiveData?.id && retryImageAction && (
+        <div className="mt-3 rounded-md border border-border/70 bg-background/30 p-3">
+          <p className="text-xs text-muted-foreground">
+            If house image upload to R2 fails (e.g. source host returns 403), retry just the image upload.
+          </p>
+          <Button type="submit" formAction={retryImageAction} variant="secondary" className="mt-2 max-w-max">
+            Retry image upload to R2
+          </Button>
+          {retryImageState?.status === "success" && retryImageState.message && (
+            <p className="mt-2 text-xs text-green-400">{retryImageState.message}</p>
+          )}
+          {retryImageState?.status === "error" && retryImageState.error && (
+            <p className="mt-2 text-xs text-destructive">{retryImageState.error}</p>
+          )}
+        </div>
+      )}
     </form>
   )
 }

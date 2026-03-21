@@ -45,10 +45,11 @@ const SCRAPER_TIMEOUT_MS =
     : 90 * 60 * 1000 // 90 minutes default
 
 /**
- * Vercel Pro allows max 800s; scraper is only used on localhost where no limit applies.
- * Kept within 1–800 so deployment succeeds.
+ * Route max duration (seconds). Platform may kill the request after this.
+ * Vercel Pro allows up to 800s; keep within 1–800 so deployment succeeds.
+ * 300s (5 min) allows moderate scrapes; long runs should use local dev or smaller batches.
  */
-export const maxDuration = 60
+export const maxDuration = 300
 
 /** How often to send a keepalive '\n' to prevent browser idle-connection drops (ms). */
 const KEEPALIVE_INTERVAL_MS = 25_000
@@ -94,6 +95,18 @@ const INVALID_SELECTOR_PATTERNS = [
   { pattern: /\n|\r/, message: "Selectors cannot contain newlines" },
   { pattern: /:contains\s*\(/i, message: ":contains() is not valid CSS (Selenium uses standard CSS; use attribute selectors instead)" },
   { pattern: /:first(?!-)/i, message: ":first is jQuery-only; use :first-child or :nth-child(1)" },
+  // Tailwind arbitrary-value pattern e.g. pt-[3.25rem] — looks like an attribute selector but isn't valid
+  {
+    pattern: /\[[\d.]/,
+    message: "Selector contains a Tailwind arbitrary-value class (e.g. pt-[3.25rem]). These are Tailwind CSS utility classes, not valid CSS selectors. In Chrome DevTools, right-click the element → Copy → Copy selector, or use a stable class like .product-description or a data attribute like [data-component='Description'].",
+  },
+  // Tailwind responsive/variant prefix pattern e.g. tablet-landscape-s:pt-[…] or sm:text-lg
+  // Matches a word-with-dash directly before a colon at a selector boundary (after space/combinator or at start).
+  // Standard CSS pseudo-classes (a:hover, p:first-child) don't have dashes in the part before the colon.
+  {
+    pattern: /(?:^|[\s>+~,])[\w][\w-]+-[\w][\w-]*:/,
+    message: "Selector contains a Tailwind responsive/variant prefix (e.g. tablet-landscape-s:, sm:, hover:). These are Tailwind CSS class-name prefixes, not valid CSS selectors. In Chrome DevTools, right-click the element → Copy → Copy selector, or pick a stable semantic class or data attribute.",
+  },
 ]
 
 function validateSelectors(body: ScraperRunRequest): string | null {
@@ -103,6 +116,10 @@ function validateSelectors(body: ScraperRunRequest): string | null {
     { name: "Description selector", value: body.descriptionSelector },
     { name: "Image selector", value: body.imageSelector },
   ]
+  const notesSelectorTrimmed = (body.notesSelector ?? "").trim()
+  if (notesSelectorTrimmed) {
+    selectors.push({ name: "Notes selector", value: body.notesSelector!.trim() })
+  }
   for (const { name, value } of selectors) {
     const trimmed = value.trim()
     if (!trimmed) return `${name} cannot be empty or whitespace.`
@@ -206,7 +223,13 @@ export async function POST(request: NextRequest): Promise<Response> {
       let stderrBuffer = ""
 
       const scriptPath = path.join(process.cwd(), "scraper", "run_scraper.py")
-      const child = spawn("python", [scriptPath], { stdio: ["pipe", "pipe", "pipe"] })
+      // Use SCRAPER_PYTHON if set; on Windows prefer Python launcher so same interpreter as `py -3 -m pip install`
+      const pythonCmd =
+        process.env.SCRAPER_PYTHON ||
+        (process.platform === "win32" ? "py" : "python3")
+      const pythonArgs =
+        process.env.SCRAPER_PYTHON ? [scriptPath] : (process.platform === "win32" ? ["-3", scriptPath] : [scriptPath])
+      const child = spawn(pythonCmd, pythonArgs, { stdio: ["pipe", "pipe", "pipe"] })
 
       child.stdout.on("data", (chunk: Buffer) => {
         stdout += chunk.toString("utf8")
@@ -240,11 +263,14 @@ export async function POST(request: NextRequest): Promise<Response> {
           productLinkSelector: body.productLinkSelector,
           nameSelector: body.nameSelector,
           descriptionSelector: body.descriptionSelector,
+          notesSelector: (body.notesSelector ?? "").trim() || "",
           imageSelector: body.imageSelector,
           skipKeywords: body.skipKeywords,
           titleOmitWords: Array.isArray(body.titleOmitWords) ? body.titleOmitWords : [],
           baseUrl: body.baseUrl ?? "",
           etsyHeaded: body.etsyHeaded === true,
+          headed: body.headed === true,
+          skipSizeVariants: body.skipSizeVariants !== false,
           delayBetweenUrlsMs:
             typeof body.delayBetweenUrlsMs === "number" && body.delayBetweenUrlsMs >= 0
               ? body.delayBetweenUrlsMs

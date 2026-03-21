@@ -35,6 +35,16 @@ const nextConfig: NextConfig = {
         hostname: 'pub-cebc143562244d6fbf277d0ab2b1d01e.r2.dev',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'scentsofwood.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn-content-oz2.storbie.com',
+        pathname: '/**',
+      },
     ],
   },
 }

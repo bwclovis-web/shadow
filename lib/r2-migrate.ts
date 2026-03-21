@@ -20,6 +20,9 @@ const HOUSE_PLACEHOLDER = '/images/house-soon.webp'
 
 const MAX_RETRIES = 2
 const DELAY_MS = 100
+const FETCH_TIMEOUT_MS = 30_000
+const RETRYABLE_HTTP_STATUS = new Set([403, 408, 425, 429, 500, 502, 503, 504])
+const FETCH_BACKOFF_MS = [900, 2_500, 6_000]
 
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms))
 
@@ -34,6 +37,46 @@ async function withRetry<T>(fn: () => Promise<T>, retries = MAX_RETRIES): Promis
     }
   }
   throw lastErr
+}
+
+function buildImageFetchHeaders(imageUrl: string): HeadersInit {
+  let referer = "https://www.google.com/"
+  try {
+    const u = new URL(imageUrl)
+    referer = `${u.protocol}//${u.host}/`
+  } catch {
+    // keep default
+  }
+  return {
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+    Referer: referer,
+    "Cache-Control": "no-cache",
+  }
+}
+
+async function fetchImageWithBackoff(imageUrl: string, type: 'house' | 'perfume') {
+  const headers = buildImageFetchHeaders(imageUrl)
+  let lastStatus: number | null = null
+
+  for (let attempt = 0; attempt < FETCH_BACKOFF_MS.length; attempt++) {
+    const res = await fetch(imageUrl.trim(), {
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      headers,
+      redirect: "follow",
+    })
+    if (res.ok) return { response: res, usePlaceholder: false }
+    if (type === 'house' && res.status === 404) return { response: null, usePlaceholder: true }
+
+    lastStatus = res.status
+    if (!RETRYABLE_HTTP_STATUS.has(res.status) || attempt === FETCH_BACKOFF_MS.length - 1) {
+      throw new Error(`HTTP ${res.status}`)
+    }
+    await sleep(FETCH_BACKOFF_MS[attempt]!)
+  }
+  throw new Error(`HTTP ${lastStatus ?? "unknown"}`)
 }
 
 function getExtensionFromUrl(url: string, contentType?: string | null): string {
@@ -153,16 +196,7 @@ async function _migrateRecord(
   let contentType: string | null = null
 
   try {
-    const fetchResult = await withRetry(async () => {
-      const res = await fetch(imageUrl.trim(), { signal: AbortSignal.timeout(30_000) })
-      if (!res.ok) {
-        if (type === 'house' && res.status === 404) {
-          return { response: null, usePlaceholder: true }
-        }
-        throw new Error(`HTTP ${res.status}`)
-      }
-      return { response: res, usePlaceholder: false }
-    })
+    const fetchResult = await withRetry(() => fetchImageWithBackoff(imageUrl, type))
 
     if (fetchResult.usePlaceholder) {
       if (dryRun) return { ok: true, skipped: true }

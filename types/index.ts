@@ -21,6 +21,7 @@ export interface User {
   firstName?: string | null
   lastName?: string | null
   username: string
+  profileSlug?: string | null
   traderAbout?: string | null
   createdAt: Date
   updatedAt: Date
@@ -37,6 +38,7 @@ export interface SafeUser {
   firstName?: string | null
   lastName?: string | null
   username: string
+  profileSlug?: string | null
   traderAbout?: string | null
   role: UserRole
 }
@@ -56,6 +58,7 @@ export function createSafeUser(user: User | null): SafeUser | null {
     firstName: user.firstName,
     lastName: user.lastName,
     username: user.username,
+    profileSlug: user.profileSlug ?? null,
     traderAbout: user.traderAbout,
     role: user.role,
   }

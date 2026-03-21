@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
 import cookie from "cookie"
 
+import { validateRateLimit } from "@/utils/api-validation.server"
+import { getAuthRateLimits } from "@/utils/rate-limit-config.server"
+import { getAuthCookieFlags } from "@/utils/security/auth-cookie.server"
 import { refreshAccessToken } from "@/utils/security/session-manager.server"
+import { getClientIdentifier } from "@/utils/server/request.server"
 import { getTokensFromCookieHeader } from "@/utils/session-from-request.server"
 
 const ACCESS_TOKEN_MAX_AGE = 60 * 60 // 1 hour
@@ -21,6 +25,21 @@ const cookieOptions = {
  * No CSRF required (refresh token is httpOnly; we only issue new tokens).
  */
 export async function POST(request: Request) {
+  const authLimits = getAuthRateLimits()
+  const clientId = getClientIdentifier(request)
+  try {
+    validateRateLimit(
+      `auth:refresh:${clientId}`,
+      authLimits.refresh.max,
+      authLimits.refresh.windowMs
+    )
+  } catch (rateLimitResponse) {
+    if (rateLimitResponse instanceof Response) {
+      return rateLimitResponse
+    }
+    throw rateLimitResponse
+  }
+
   const cookieHeader = request.headers.get("cookie") ?? ""
   const { refreshToken } = getTokensFromCookieHeader(cookieHeader)
 
@@ -30,12 +49,13 @@ export async function POST(request: Request) {
 
   try {
     const result = await refreshAccessToken(refreshToken)
+    const cookieFlags = getAuthCookieFlags()
     const accessTokenCookie = cookie.serialize("accessToken", result.accessToken, {
-      ...cookieOptions,
+      ...cookieFlags,
       maxAge: ACCESS_TOKEN_MAX_AGE,
     })
     const refreshTokenCookie = cookie.serialize("refreshToken", result.refreshToken, {
-      ...cookieOptions,
+      ...cookieFlags,
       maxAge: REFRESH_TOKEN_MAX_AGE,
     })
 

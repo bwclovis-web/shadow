@@ -14,6 +14,8 @@ model User {
   firstName             String?
   lastName              String?
   username              String                 @unique
+  /// URL path segment for /{profileSlug}/profile; unique; may differ from slug(username) when disambiguating collisions.
+  profileSlug           String?                @unique
   traderAbout            String?
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt

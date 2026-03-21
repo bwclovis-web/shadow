@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import cookie from "cookie"
+import { getAuthCookieFlags } from "@/utils/security/auth-cookie.server"
 import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 
 const SIGN_IN = "/sign-in"
@@ -13,19 +14,14 @@ export async function POST(request: NextRequest) {
     }
     throw error
   }
+  const cookieFlags = getAuthCookieFlags()
   const accessTokenCookie = cookie.serialize("accessToken", "", {
-    httpOnly: true,
-    path: "/",
+    ...cookieFlags,
     maxAge: 0,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
   })
   const refreshTokenCookie = cookie.serialize("refreshToken", "", {
-    httpOnly: true,
-    path: "/",
+    ...cookieFlags,
     maxAge: 0,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
   })
 
   const res = NextResponse.redirect(new URL(SIGN_IN, process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"))

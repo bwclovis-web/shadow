@@ -1,12 +1,16 @@
 "use server"
 
-import { cookies } from "next/headers"
+import { cookies, headers } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { updateUser } from "@/models/user.query"
 import { signInCustomer } from "@/models/user.server"
+import { validateRateLimit } from "@/utils/api-validation.server"
+import { getAuthRateLimits } from "@/utils/rate-limit-config.server"
+import { getAuthCookieFlags } from "@/utils/security/auth-cookie.server"
 import { createSession } from "@/utils/security/session-manager.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
+import { getClientIdentifierFromHeaders } from "@/utils/server/request.server"
 import { getProfilePathForUser } from "@/utils/user"
 import { generateUniqueUsername } from "@/utils/username-generator.server"
 
@@ -24,19 +28,14 @@ const setSessionCookies = async (
   refreshToken: string
 ): Promise<void> => {
   const cookieStore = await cookies()
+  const flags = getAuthCookieFlags()
   cookieStore.set("accessToken", accessToken, {
-    httpOnly: true,
-    path: "/",
+    ...flags,
     maxAge: 60 * 60,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
   })
   cookieStore.set("refreshToken", refreshToken, {
-    httpOnly: true,
-    path: "/",
+    ...flags,
     maxAge: 60 * 60 * 24 * 7,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
   })
 }
 
@@ -47,6 +46,23 @@ export const signInAction = async (
   const request = new Request("http://localhost", { method: "POST" })
   try {
     await requireCSRF(request, formData)
+
+    const authLimits = getAuthRateLimits()
+    const clientId = getClientIdentifierFromHeaders(await headers())
+    try {
+      validateRateLimit(
+        `auth:sign-in:${clientId}`,
+        authLimits.signIn.max,
+        authLimits.signIn.windowMs
+      )
+    } catch (res) {
+      if (res instanceof Response) {
+        return {
+          error: "Too many sign-in attempts. Please wait and try again.",
+        }
+      }
+      throw res
+    }
 
     const existingUser = await signInCustomer(formData)
     if (!existingUser) {

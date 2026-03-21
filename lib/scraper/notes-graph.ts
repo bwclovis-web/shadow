@@ -19,6 +19,7 @@ import { Annotation, StateGraph } from "@langchain/langgraph"
 import { ChatOpenAI } from "@langchain/openai"
 
 import type { PerfumeCsvRecord, ScrapedItem } from "@/types/scraper"
+import { isDisplayableScentNote } from "@/utils/validation/note-validation.server"
 
 /** Options for title cleaning and description generation. */
 export interface ScraperPipelineOptions {
@@ -52,6 +53,47 @@ const ScraperState = Annotation.Root({
 })
 
 type ScraperStateType = typeof ScraperState.State
+
+// ---------------------------------------------------------------------------
+// Name from URL (when scraper returns hostname or empty)
+// ---------------------------------------------------------------------------
+
+/** True if the scraped "name" is empty or looks like a hostname (e.g. Www.lush.com). */
+function isLikelyHostnameOrEmpty(name: string): boolean {
+  const t = name?.trim() ?? ""
+  if (!t) return true
+  // e.g. "Www.lush.com", "lush.com", "www.example.co.uk"
+  if (/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}(\s|$)/i.test(t)) return true
+  if (/^www\./i.test(t) && /\.(com|co\.uk|org|net|io)(\s|$)/i.test(t)) return true
+  return false
+}
+
+/**
+ * Derive a product name from a product detail URL when the scraper returns a hostname or empty.
+ * e.g. .../p/lord-of-misrule-perfume -> "Lord of Misrule Perfume"
+ */
+function nameFromProductUrl(detailURL: string): string | null {
+  if (!detailURL?.trim()) return null
+  try {
+    const pathname = new URL(detailURL).pathname
+    const segments = pathname.split("/").filter(Boolean)
+    const slug = segments[segments.length - 1]
+    if (!slug || slug.length > 120) return null
+    const withSpaces = slug.replace(/-/g, " ")
+    const titleCased = withSpaces.replace(/\b\w/g, c => c.toUpperCase())
+    return titleCased.trim() || null
+  } catch {
+    return null
+  }
+}
+
+/** Resolve display name: use URL-derived name when scraped name is hostname/empty. */
+function resolveProductName(item: ScrapedItem): string {
+  const raw = item.name?.trim() ?? ""
+  if (!isLikelyHostnameOrEmpty(raw)) return raw
+  const fromUrl = nameFromProductUrl(item.detailURL ?? "")
+  return fromUrl ?? raw
+}
 
 // ---------------------------------------------------------------------------
 // Title cleaning (no LLM)
@@ -176,7 +218,8 @@ How to find notes (use ALL of these):
 
 Rules:
 - Return ONLY a JSON object: {"openNotes": string[], "heartNotes": string[], "baseNotes": string[]}.
-- NEVER return all empty arrays. Always provide at least 2-3 notes total.
+- NEVER return all empty arrays. Always provide at least 2-3 notes total (prefer 4+ for well-known perfumes).
+- For recognized fragrances (e.g. Lush Lord of Misrule, Karma, Rose Jam), use the fragrance's documented top/heart/base notes — do not return only a single generic note like "musk".
 - Use lowercase. No duplicates. No explanation, no markdown.
 - Assign by volatility: citrus, herbs, green, light florals → openNotes; florals, spices, fruits → heartNotes; woods, musk, vanilla, amber, oud, resins → baseNotes.`
 
@@ -387,12 +430,14 @@ function buildGraph(
     const previousOpenings: string[] = []
 
     for (const item of state.items) {
-      const name = cleanTitle(item.name, opts)
-      let notes = await extractNotesFromDescription(llm, item.description, name || item.name)
+      const resolvedName = resolveProductName(item)
+      const name = cleanTitle(resolvedName, opts)
+      const notesSource = item.notesText ?? item.description
+      let notes = await extractNotesFromDescription(llm, notesSource, name || resolvedName)
       const totalFromDescription =
         notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
-      if (totalFromDescription === 0 && (name || item.name)?.trim()) {
-        const fallbackNotes = await extractNotesFallbackLookup(llm, name || item.name, item.perfumeHouse ?? state.houseName)
+      if (totalFromDescription === 0 && (name || resolvedName)?.trim()) {
+        const fallbackNotes = await extractNotesFallbackLookup(llm, name || resolvedName, item.perfumeHouse ?? state.houseName)
         const totalFallback =
           fallbackNotes.openNotes.length +
           fallbackNotes.heartNotes.length +
@@ -404,6 +449,13 @@ function buildGraph(
       const layersWithNotes = [notes.openNotes, notes.heartNotes, notes.baseNotes].filter(a => a.length > 0)
       if (layersWithNotes.length === 1 && layersWithNotes[0] !== notes.openNotes) {
         notes = { openNotes: layersWithNotes[0], heartNotes: [], baseNotes: [] }
+      }
+
+      // Run extracted notes through the note validator (same rules as tags/scent quiz).
+      notes = {
+        openNotes: notes.openNotes.filter(isDisplayableScentNote),
+        heartNotes: notes.heartNotes.filter(isDisplayableScentNote),
+        baseNotes: notes.baseNotes.filter(isDisplayableScentNote),
       }
 
       const allNoteStrs = [

@@ -7,7 +7,12 @@ import PerfumeHouseForm from "@/components/Containers/Forms/PerfumeHouseForm"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import { FORM_TYPES } from "@/constants/general"
 
-import { editHouseAction, type EditHouseActionState } from "./actions"
+import {
+  editHouseAction,
+  retryHouseImageAction,
+  type EditHouseActionState,
+  type RetryHouseImageActionState,
+} from "./actions"
 
 const BANNER_IMAGE = "/images/createHouse.png"
 
@@ -21,6 +26,10 @@ const EditHouseClient = ({ initialHouse }: EditHouseClientProps) => {
   const [state, formAction] = useActionState(
     editHouseAction,
     null as EditHouseActionState
+  )
+  const [retryState, retryAction] = useActionState(
+    retryHouseImageAction,
+    null as RetryHouseImageActionState
   )
 
   if (!initialHouse) {
@@ -53,6 +62,8 @@ const EditHouseClient = ({ initialHouse }: EditHouseClientProps) => {
         lastResult={state as SubmissionResult | null}
         data={formData}
         action={formAction}
+        retryImageAction={retryAction}
+        retryImageState={retryState}
       />
     </section>
   )

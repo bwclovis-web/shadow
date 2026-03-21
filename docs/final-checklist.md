@@ -50,18 +50,18 @@
 
 ### 1.3 Rate Limiting
 
-Only `/api/contact-trader` is rate-limited today. The in-memory `Map` approach also doesn't work across multiple instances.
+`/api/contact-trader`, `/api/auth/refresh`, sign-in (`signInAction`), and sign-up (`signUpAction`) are rate-limited using `validateRateLimit` (in-memory `Map`). The store still does not work across multiple instances.
 
 | What to rate-limit | Priority |
 |--------------------|----------|
-| `/api/auth/refresh`, sign-in, sign-up | **P0** |
+| `/api/auth/refresh`, sign-in, sign-up | **P0** (implemented) |
 | `/api/change-password` | **P1** |
 | `/api/reviews` POST, `/api/ratings` POST | **P1** |
 | `/api/wishlist` POST | **P2** |
 
 **Fixes (non-breaking):**
 
-- Apply `validateRateLimit` to the routes above using sensible windows (e.g. 5 req / min for auth).
+- Auth: `getAuthRateLimits()` — refresh defaults to 60 req / 60s per client IP; sign-in defaults to 5 req / min per IP (`AUTH_*` env vars in `rate-limit-config.server.ts`). Sign-up uses existing signup limits (`SIGNUP_RATE_LIMIT_*`).
 - For production multi-instance deployments, swap the in-memory store with a Redis-backed store (e.g. `@upstash/ratelimit`) — this is a **breaking change** if there's no Redis yet; flag it for post-launch.
 
 ### 1.4 Middleware
@@ -75,7 +75,7 @@ There is **no root `middleware.ts`**. Adding one is optional but recommended.
 
 ### 1.5 Cookie & Token Hardening
 
-- Verify `Secure`, `HttpOnly`, `SameSite=Strict` flags are set on **all** auth cookies in production.
+- **Auth cookies (`accessToken`, `refreshToken`):** `getAuthCookieFlags()` in `utils/security/auth-cookie.server.ts` sets **HttpOnly** always; **Secure** and **SameSite=Strict** when `NODE_ENV === "production"`; in local dev over HTTP, **Secure=false** and **SameSite=lax** so cookies still work. Applied from sign-in / sign-up actions, `/api/auth/refresh`, and `/api/log-out`.
 - Confirm `JWT_SECRET` is at least 32 characters (`.env.example` documents this).
 
 ---
@@ -258,9 +258,9 @@ Over 30 usages of `any` across models and components. Key files:
 
 - [x] Add auth (`requireAdminOrEditorApi`) to `/api/data-quality-houses`
 - [ ] Make `/api/cron/cleanup-messages` fail if `CRON_SECRET` is not set
-- [ ] Add rate limiting to `/api/auth/refresh`, sign-in, and sign-up endpoints
+- [x] Add rate limiting to `/api/auth/refresh`, sign-in, and sign-up endpoints
 - [ ] Fix `getUserByProfileSlug` to avoid loading all users into memory (add slug column + index, or use a `WHERE` with `LOWER()`)
-- [ ] Verify auth cookies set `Secure`, `HttpOnly`, `SameSite=Strict` in production
+- [x] Verify auth cookies set `Secure`, `HttpOnly`, `SameSite=Strict` in production
 - [ ] Ensure `JWT_SECRET` is ≥ 32 characters in production environment
 
 ### P1 — Strongly Recommended

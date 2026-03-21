@@ -631,3 +631,33 @@ export const createPerfumeHouse = async (data: FormData) => {
     }
   }
 }
+
+export const retryPerfumeHouseImageUpload = async (id: string) => {
+  try {
+    const house = await prisma.perfumeHouse.findUnique({
+      where: { id },
+      select: { id: true, image: true },
+    })
+    if (!house) {
+      return { success: false, error: "Perfume house not found." }
+    }
+
+    const imageUrl = house.image?.trim()
+    if (!imageUrl) {
+      return { success: false, error: "This house has no image URL to retry." }
+    }
+
+    const result = await migrateHouseImageToR2(house.id, imageUrl, { prismaClient: prisma })
+    if (!result.ok) {
+      return { success: false, error: result.error ?? "R2 upload failed" }
+    }
+
+    const refreshed = await prisma.perfumeHouse.findUnique({ where: { id } })
+    return { success: true, data: refreshed }
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Unexpected error during image retry.",
+    }
+  }
+}

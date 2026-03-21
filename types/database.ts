@@ -21,6 +21,7 @@ export interface User {
   firstName?: string | null
   lastName?: string | null
   username: string
+  profileSlug?: string | null
   traderAbout?: string | null
   createdAt: Date
   updatedAt: Date

@@ -7,6 +7,7 @@ import HouseTypeahead from "@/components/Molecules/HouseTypeahead/HouseTypeahead
 import type {
   PerfumeCsvRecord,
   ScraperImportResponse,
+  ScraperRetryR2Response,
   ScraperRunRequest,
   ScraperRunResponse,
 } from "@/types/scraper"
@@ -94,6 +95,7 @@ export function ScraperPageClient() {
   const [descriptionSelector, setDescriptionSelector] = useState(
     SHOPIFY_DEFAULTS.descriptionSelector,
   )
+  const [notesSelector, setNotesSelector] = useState("")
   const [imageSelector, setImageSelector] = useState(SHOPIFY_DEFAULTS.imageSelector)
   const [skipKeywordsRaw, setSkipKeywordsRaw] = useState(
     "set, sample, sampler, collection, collections",
@@ -106,6 +108,9 @@ export function ScraperPageClient() {
   )
   const [generateNoirDescriptions, setGenerateNoirDescriptions] = useState(true)
   const [etsyHeaded, setEtsyHeaded] = useState(false)
+  const [headed, setHeaded] = useState(false)
+  /** When false, collect size-named products and deduplicate by cleaned name instead of skipping them outright. */
+  const [skipSizeVariants, setSkipSizeVariants] = useState(true)
   /** Optional delay in ms between each collection URL (e.g. 5000 for Lush to avoid ERR_CONNECTION_RESET). */
   const [delayBetweenUrlsMs, setDelayBetweenUrlsMs] = useState<string>("")
   /** Optional retries per page load when connection is reset. */
@@ -181,6 +186,9 @@ export function ScraperPageClient() {
   const [importResult, setImportResult] = useState<ScraperImportResponse | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
   const [importConfirmed, setImportConfirmed] = useState(false)
+  const [retryingR2, setRetryingR2] = useState(false)
+  const [retryR2Result, setRetryR2Result] = useState<ScraperRetryR2Response | null>(null)
+  const [retryR2Error, setRetryR2Error] = useState<string | null>(null)
 
   // ---------------------------------------------------------------------------
   // Step 1: Run scraper
@@ -199,11 +207,22 @@ export function ScraperPageClient() {
     setImportResult(null)
     setImportError(null)
     setImportConfirmed(false)
+    setRetryR2Result(null)
+    setRetryR2Error(null)
 
     const collectionUrls = collectionUrlsRaw
-      .split("\n")
+      .split(/\n|,/)
       .map(u => u.trim())
       .filter(Boolean)
+      .filter(u => /^https?:\/\//i.test(u))
+
+    if (collectionUrls.length === 0) {
+      setScrapeError(
+        "Add at least one collection URL. Each line or comma-separated value must start with http:// or https://.",
+      )
+      setScraping(false)
+      return
+    }
 
     const skipKeywords = skipKeywordsRaw
       .split(",")
@@ -222,6 +241,7 @@ export function ScraperPageClient() {
       productLinkSelector,
       nameSelector,
       descriptionSelector,
+      notesSelector: notesSelector.trim() || undefined,
       imageSelector,
       skipKeywords,
       baseUrl: baseUrl || undefined,
@@ -229,7 +249,9 @@ export function ScraperPageClient() {
       titleStripNumbers,
       titleOmitWords: titleOmitWords.length > 0 ? titleOmitWords : undefined,
       generateNoirDescriptions,
+      skipSizeVariants,
       etsyHeaded: etsyHeaded || undefined,
+      headed: headed || undefined,
       delayBetweenUrlsMs: (() => {
         const n = parseInt(delayBetweenUrlsMs, 10)
         return Number.isFinite(n) && n >= 0 ? n : undefined
@@ -357,12 +379,40 @@ export function ScraperPageClient() {
         setImportError(data.errors?.join("\n") ?? `Server error ${res.status}`)
       } else {
         setImportResult(data)
+        setRetryR2Result(null)
+        setRetryR2Error(null)
       }
     } catch (err) {
       setImportError(err instanceof Error ? err.message : "Unknown error")
     } finally {
       setImporting(false)
       setImportConfirmed(false)
+    }
+  }
+
+  const handleRetryR2Uploads = async () => {
+    if (!scrapeResult?.records?.length) return
+
+    setRetryingR2(true)
+    setRetryR2Result(null)
+    setRetryR2Error(null)
+
+    try {
+      const res = await fetch("/api/admin/scraper/retry-r2", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ records: scrapeResult.records }),
+      })
+      const data = (await res.json()) as ScraperRetryR2Response
+      if (!res.ok || !data.ok) {
+        setRetryR2Error(data.errors?.join("\n") ?? `Server error ${res.status}`)
+      } else {
+        setRetryR2Result(data)
+      }
+    } catch (err) {
+      setRetryR2Error(err instanceof Error ? err.message : "Unknown error")
+    } finally {
+      setRetryingR2(false)
     }
   }
 
@@ -433,7 +483,7 @@ export function ScraperPageClient() {
 
           <Field
             label="Collection URLs *"
-            hint="One URL per line — the listing pages that contain links to individual products."
+            hint="One URL per line or comma-separated. Each must start with http:// or https://. All listed pages are visited."
           >
             <textarea
               className={inputClass("min-h-[100px] resize-y font-mono text-xs")}
@@ -446,6 +496,22 @@ export function ScraperPageClient() {
                 "https://blackheartedtart.com/collections/perfumes\nhttps://blackheartedtart.com/collections/perfumes?page=2"
               }
             />
+            {collectionUrlsRaw.trim() ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {(() => {
+                  const parsed = collectionUrlsRaw
+                    .split(/\n|,/)
+                    .map(u => u.trim())
+                    .filter(Boolean)
+                  const valid = parsed.filter(u => /^https?:\/\//i.test(u))
+                  if (valid.length === 0)
+                    return "No valid URLs — each line or segment must start with http:// or https://"
+                  if (valid.length < parsed.length)
+                    return `${valid.length} collection URL(s) (${parsed.length - valid.length} line(s) skipped — not valid URLs)`
+                  return `${valid.length} collection URL(s) — all will be visited`
+                })()}
+              </p>
+            ) : null}
           </Field>
 
           <Field
@@ -474,6 +540,28 @@ export function ScraperPageClient() {
             />
           </Field>
 
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={skipSizeVariants}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setSkipSizeVariants(e.target.checked)}
+              className="mt-1"
+            />
+            <span className="text-sm">
+              <strong>Skip size variants</strong> — When checked (default), products whose names contain a size measurement (e.g. <code className="rounded bg-muted px-0.5">100ml</code>, <code className="rounded bg-muted px-0.5">1.7 fl oz</code>) are skipped, assuming a size-free listing of the same product also exists. <strong>Uncheck</strong> when the site puts sizes in all product names — the scraper will collect everything and deduplicate by cleaned name, keeping the bare listing when both a sized and an unsized variant exist.
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              checked={headed}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setHeaded(e.target.checked)}
+              className="mt-1"
+            />
+            <span className="text-sm">
+              <strong>Open visible browser</strong> — Use when a site blocks headless Chrome (e.g. thoo.it returns 403). A visible Chrome window will open. If you still get 403, install <code className="rounded bg-muted px-0.5">undetected-chromedriver</code> and run again. Run locally; leave unchecked on a server.
+            </span>
+          </label>
           <label className="flex cursor-pointer items-start gap-3">
             <input
               type="checkbox"
@@ -533,7 +621,7 @@ export function ScraperPageClient() {
 
           <Field
             label="Product link selector *"
-            hint="Valid CSS only (no :contains()). Use attribute selectors, e.g. a[href*='/products/'] or a[href*='/p/']. For non-Shopify sites, inspect the collection page to see the link href pattern."
+            hint="Valid CSS only (no :contains()). Use a[href*='/products/'] (Shopify), a[href*='/product/'] (thoo.it, WooCommerce), or a[href*='/p/']. Inspect the collection page to see the link href pattern."
           >
             <input
               className={inputClass("font-mono text-xs")}
@@ -570,8 +658,22 @@ export function ScraperPageClient() {
           </Field>
 
           <Field
+            label="Notes selector (optional)"
+            hint="Element containing fragrance notes. If blank, the description selector text is used for note extraction."
+          >
+            <input
+              className={inputClass("font-mono text-xs")}
+              value={notesSelector}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setNotesSelector(e.target.value)
+              }
+              placeholder="Leave blank to use description"
+            />
+          </Field>
+
+          <Field
             label="Image selector *"
-            hint="An img element or a container that holds the main product image."
+            hint="CSS for the main product image. For PhotoSwipe galleries use .pswp__zoom-wrap .pswp__img (scraper will open the lightbox to capture the full-size image)."
           >
             <input
               className={inputClass("font-mono text-xs")}
@@ -1016,6 +1118,35 @@ export function ScraperPageClient() {
                     ))}
                   </ul>
                 </details>
+              )}
+
+              {uploadImagesToR2 && (
+                <div className="mt-4 rounded-md border border-border/70 bg-background/30 p-3">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <p className="text-xs text-muted-foreground">
+                      If some image hosts returned 403, retry R2 uploads without re-importing notes/data.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={handleRetryR2Uploads}
+                      disabled={retryingR2 || importing || !scrapeResult?.records?.length}
+                    >
+                      {retryingR2 ? "Retrying R2 uploads..." : "Retry failed R2 uploads"}
+                    </Button>
+                  </div>
+
+                  {retryR2Error && (
+                    <pre className="mt-2 whitespace-pre-wrap text-xs text-destructive">{retryR2Error}</pre>
+                  )}
+
+                  {retryR2Result && (
+                    <div className="mt-2 text-xs text-foreground">
+                      Retried {retryR2Result.attemptedCount} images: {retryR2Result.uploadedCount} uploaded,{" "}
+                      {retryR2Result.skippedCount} skipped, {retryR2Result.errors.length} errors.
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           )}

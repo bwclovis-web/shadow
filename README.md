@@ -4,6 +4,71 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 - Production schema/table sync guide: `docs/production-schema-sync.md`
 
+## Special Scripts (Maintenance / Data)
+
+Many workflows in this repo are run via Node/Prisma helper scripts in `scripts/` and via npm scripts in `package.json`.
+
+### Database backups and restores
+
+These scripts load `.env` and use `DATABASE_URL`.
+
+Backups are written to `./backups/` by default. You can override the output/input folder with `BACKUPS_DIR`.
+
+Run these from the repo root.
+
+Prisma-based (no PostgreSQL client tools required):
+- `npm run db:backup`
+  Creates a Prisma-based backup set in `backups/` (SQL + JSON + manifest). Restore can re-populate the DB using the generated SQL/JSON.
+- `npm run db:restore:list`
+  Lists available Prisma backup manifests in `backups/`.
+- `npm run db:restore -- <backupNameSubstring> --clear`
+  Restores the matching backup (substring match against the backup manifest filename). Use `--clear` to wipe existing table data before restoring.
+
+Postgres-client based (requires `pg_dump` + `psql`/`pg_restore` available on your machine):
+- `npm run db:backup:pg`
+  Runs `pg_dump` and writes a full backup set (schema + data variants plus a custom dump) plus a manifest.
+  - Optional: set `PG_DUMP_PATH` if `pg_dump` is not on your PATH.
+- `npm run db:restore:pg:list`
+  Lists available Postgres-client backup manifests in `backups/`.
+- `npm run db:restore:pg -- <backupNameSubstring> --clean --create`
+  Restores the matching backup. `--clean` clears objects first; `--create` allows `pg_restore --create`.
+
+### Refresh house notes (LangGraph extraction)
+
+Rebuilds note relations and (optionally) film-noir descriptions for a single perfume house using the existing DB descriptions.
+
+Requirements:
+- `OPENAI_API_KEY` set in `.env`
+- `DATABASE_URL` set in `.env`
+
+Examples:
+- `npm run refresh:house-notes`
+  Prompts for a house name (default is `Heretic Parfum`).
+- `npm run refresh:house-notes -- "Other House"`
+  Runs for the provided house name.
+- `npm run refresh:house-notes -- --dry-run`
+  Shows what would be updated, without writing changes.
+- `npm run refresh:house-notes -- --no-noir`
+  Extracts notes but skips generating film noir descriptions.
+
+### Merge duplicate CocoaPink / ` - cc pink` perfumes
+
+This is a one-off migration that:
+1. Finds CocoaPink perfumes with names ending in ` - cc pink`
+2. Merges user references to the canonical (non-suffixed) perfume
+3. Deletes the duplicate perfume rows
+
+Run:
+- `npx tsx scripts/merge-cocoapink-cc-pink-duplicates.ts --dry-run`
+  Safe preview: prints what would be merged without making DB changes.
+- `npx tsx scripts/merge-cocoapink-cc-pink-duplicates.ts`
+  Performs the merge + delete in a transaction.
+
+### Scraper troubleshooting
+
+If the scraper hits connection resets, pagination issues, missing notes, or route timeouts, see:
+- `docs/scraper-troubleshooting.md`
+
 ## Getting Started
 
 First, run the development server:
