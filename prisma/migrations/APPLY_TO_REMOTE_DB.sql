@@ -335,6 +335,17 @@ DO $$ BEGIN
     END IF;
 END $$;
 
+-- Add profileSlug to User if missing (profile URL segment; nullable until backfilled)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'profileSlug'
+    ) THEN
+        ALTER TABLE "User" ADD COLUMN "profileSlug" TEXT;
+        RAISE NOTICE 'Added profileSlug column to User';
+    END IF;
+END $$;
+
 -- Add review approval fields if missing
 DO $$ BEGIN
     IF NOT EXISTS (
@@ -456,6 +467,13 @@ DO $$ BEGIN
     END IF;
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_user_perfume_perfume_available') THEN
         CREATE INDEX "idx_user_perfume_perfume_available" ON "UserPerfume"("perfumeId", "available");
+    END IF;
+END $$;
+
+-- User.profileSlug unique index (matches Prisma @unique; multiple NULLs allowed in PostgreSQL)
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'User_profileSlug_key') THEN
+        CREATE UNIQUE INDEX "User_profileSlug_key" ON "User"("profileSlug");
     END IF;
 END $$;
 
