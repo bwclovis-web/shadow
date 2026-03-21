@@ -43,6 +43,8 @@ type PerfumeDetailClientProps = {
   isInUserWishlist: boolean
   userRatings: PerfumeDetailUserRatingsProp
   averageRatings: PerfumeDetailAverageRatingsProp
+  seasonAggregates: PerfumeDetailSeasonAggregatesProp
+  userSeasonVote: PerfumeDetailUserSeasonVoteProp
   userReview: unknown
   reviewsData: unknown
   reviewsPageSize: number

@@ -121,6 +121,20 @@ export interface UserPerfumeRating {
   user: User
 }
 
+export interface UserPerfumeSeasonVote {
+  id: string
+  userId: string
+  perfumeId: string
+  winter: boolean
+  spring: boolean
+  summer: boolean
+  fall: boolean
+  createdAt: Date
+  updatedAt: Date
+  perfume: Perfume
+  user: User
+}
+
 export interface UserPerfumeReview {
   id: string
   userId: string
