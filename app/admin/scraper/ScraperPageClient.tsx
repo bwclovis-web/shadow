@@ -333,8 +333,9 @@ export function ScraperPageClient() {
     try {
       const res = await fetch("/api/admin/scraper/run", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: addToHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(body),
+        credentials: "include",
         signal: ac.signal,
       })
       clearTimeout(timeoutId)
@@ -465,8 +466,9 @@ export function ScraperPageClient() {
     try {
       const res = await fetch("/api/admin/scraper/retry-r2", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: addToHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ records: scrapeResult.records }),
+        credentials: "include",
       })
       const data = (await res.json()) as ScraperRetryR2Response
       if (!res.ok || !data.ok) {
