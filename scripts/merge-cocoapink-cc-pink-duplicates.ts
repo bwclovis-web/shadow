@@ -137,6 +137,26 @@ async function main() {
         console.log(`    UserPerfumeRating: ${ratings.length} migrated`)
       }
 
+      const seasonVotes = await tx.userPerfumeSeasonVote.findMany({
+        where: { perfumeId: dupId },
+      })
+      for (const sv of seasonVotes) {
+        const existing = await tx.userPerfumeSeasonVote.findUnique({
+          where: { userId_perfumeId: { userId: sv.userId, perfumeId: canId } },
+        })
+        if (existing) {
+          await tx.userPerfumeSeasonVote.delete({ where: { id: sv.id } })
+        } else {
+          await tx.userPerfumeSeasonVote.update({
+            where: { id: sv.id },
+            data: { perfumeId: canId },
+          })
+        }
+      }
+      if (seasonVotes.length > 0) {
+        console.log(`    UserPerfumeSeasonVote: ${seasonVotes.length} migrated`)
+      }
+
       const reviews = await tx.userPerfumeReview.findMany({ where: { perfumeId: dupId } })
       for (const r of reviews) {
         const existing = await tx.userPerfumeReview.findUnique({

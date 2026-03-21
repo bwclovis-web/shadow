@@ -1,11 +1,15 @@
 /**
  * Production schema sync (no row/data migration).
  *
- * This runs ONE safe, idempotent SQL file against production:
+ * This does NOT run `prisma db push`. It executes ONE additive SQL file:
  *   prisma/migrations/APPLY_TO_REMOTE_DB.sql
+ * via `prisma db execute` against REMOTE_DATABASE_URL.
  *
- * The SQL file is additive-only (new tables/columns/indexes/constraints) and
- * designed to avoid data loss.
+ * When you add a new Prisma model locally, you must append the matching DDL
+ * (table, indexes, uniques, FKs) to APPLY_TO_REMOTE_DB.sql or production will
+ * stay out of sync and Prisma Studio / the app will error on missing tables.
+ *
+ * The SQL file is additive-only and designed to avoid data loss.
  *
  * Usage:
  *   npm run db:push:prod
@@ -93,7 +97,11 @@ async function verifySchema() {
         EXISTS (
           SELECT 1 FROM information_schema.columns
           WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'profileSlug'
-        ) AS "hasUserProfileSlug"
+        ) AS "hasUserProfileSlug",
+        EXISTS (
+          SELECT 1 FROM information_schema.tables
+          WHERE table_schema = 'public' AND table_name = 'UserPerfumeSeasonVote'
+        ) AS "hasUserPerfumeSeasonVote"
     `)
 
     const result = Array.isArray(checks) ? checks[0] : checks

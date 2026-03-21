@@ -18,6 +18,7 @@ const formatDate = (date: Date | string) =>
 const totalDataRecords = (user: UserWithCounts) =>
   user._count.UserPerfume +
   user._count.UserPerfumeRating +
+  user._count.UserPerfumeSeasonVote +
   user._count.UserPerfumeReview +
   user._count.UserPerfumeWishlist +
   user._count.userPerfumeComments +

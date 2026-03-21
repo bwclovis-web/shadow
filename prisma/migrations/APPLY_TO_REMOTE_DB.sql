@@ -213,6 +213,21 @@ CREATE TABLE IF NOT EXISTS "ScentProfile" (
     CONSTRAINT "ScentProfile_pkey" PRIMARY KEY ("id")
 );
 
+-- UserPerfumeSeasonVote (community season picks per user per perfume)
+CREATE TABLE IF NOT EXISTS "UserPerfumeSeasonVote" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "perfumeId" TEXT NOT NULL,
+    "winter" BOOLEAN NOT NULL DEFAULT false,
+    "spring" BOOLEAN NOT NULL DEFAULT false,
+    "summer" BOOLEAN NOT NULL DEFAULT false,
+    "fall" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "UserPerfumeSeasonVote_pkey" PRIMARY KEY ("id")
+);
+
 -- ============================================================================
 -- 3. ADD MISSING COLUMNS TO EXISTING TABLES
 -- ============================================================================
@@ -470,6 +485,13 @@ DO $$ BEGIN
     END IF;
 END $$;
 
+-- UserPerfumeSeasonVote indexes (matches Prisma @@index([perfumeId], name: "idx_season_vote_perfume"))
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_season_vote_perfume') THEN
+        CREATE INDEX "idx_season_vote_perfume" ON "UserPerfumeSeasonVote"("perfumeId");
+    END IF;
+END $$;
+
 -- User.profileSlug unique index (matches Prisma @unique; multiple NULLs allowed in PostgreSQL)
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'User_profileSlug_key') THEN
@@ -535,6 +557,20 @@ DO $$ BEGIN
 EXCEPTION
     WHEN duplicate_object OR duplicate_table THEN
         RAISE NOTICE 'MigrationState unique relation/constraint already exists, skipping';
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'UserPerfumeSeasonVote_userId_perfumeId_key'
+    ) THEN
+        ALTER TABLE "UserPerfumeSeasonVote"
+        ADD CONSTRAINT "UserPerfumeSeasonVote_userId_perfumeId_key"
+        UNIQUE ("userId", "perfumeId");
+    END IF;
+EXCEPTION
+    WHEN duplicate_object OR duplicate_table THEN
+        RAISE NOTICE 'UserPerfumeSeasonVote unique constraint already exists, skipping';
 END $$;
 
 -- ============================================================================
@@ -677,6 +713,29 @@ DO $$ BEGIN
         ALTER TABLE "TraderContactMessage" 
         ADD CONSTRAINT "TraderContactMessage_recipientId_fkey" 
         FOREIGN KEY ("recipientId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+    END IF;
+END $$;
+
+-- UserPerfumeSeasonVote foreign keys
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'UserPerfumeSeasonVote_userId_fkey'
+    ) THEN
+        ALTER TABLE "UserPerfumeSeasonVote"
+        ADD CONSTRAINT "UserPerfumeSeasonVote_userId_fkey"
+        FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'UserPerfumeSeasonVote_perfumeId_fkey'
+    ) THEN
+        ALTER TABLE "UserPerfumeSeasonVote"
+        ADD CONSTRAINT "UserPerfumeSeasonVote_perfumeId_fkey"
+        FOREIGN KEY ("perfumeId") REFERENCES "Perfume"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
     END IF;
 END $$;
 

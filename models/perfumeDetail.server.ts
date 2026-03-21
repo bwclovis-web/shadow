@@ -11,12 +11,17 @@ import {
   getPerfumeReviews,
   getUserPerfumeReview,
 } from "@/models/perfumeReview.server"
+import {
+  getSeasonVoteAggregates,
+  getUserSeasonVote,
+} from "@/models/perfumeSeasonVote.server"
 import { isInWishlist } from "@/models/wishlist.server"
 
 export type PerfumeDetailUserData = {
   isInUserWishlist: boolean
   userRatings: Awaited<ReturnType<typeof getUserPerfumeRating>>
   userReview: Awaited<ReturnType<typeof getUserPerfumeReview>>
+  userSeasonVote: Awaited<ReturnType<typeof getUserSeasonVote>>
 }
 
 /**
@@ -27,12 +32,13 @@ export async function getPerfumeDetailUserData(
   userId: string,
   perfumeId: string
 ): Promise<PerfumeDetailUserData> {
-  const [isInUserWishlist, userRatings, userReview] = await Promise.all([
+  const [isInUserWishlist, userRatings, userReview, userSeasonVote] = await Promise.all([
     isInWishlist(userId, perfumeId),
     getUserPerfumeRating(userId, perfumeId).catch(() => null),
     getUserPerfumeReview(userId, perfumeId),
+    getUserSeasonVote(userId, perfumeId).catch(() => null),
   ])
-  return { isInUserWishlist, userRatings, userReview }
+  return { isInUserWishlist, userRatings, userReview, userSeasonVote }
 }
 
 export type PerfumeDetailPayload = {
@@ -43,6 +49,8 @@ export type PerfumeDetailPayload = {
   isInUserWishlist: boolean
   userRatings: PerfumeDetailUserData["userRatings"]
   userReview: PerfumeDetailUserData["userReview"]
+  seasonAggregates: Awaited<ReturnType<typeof getSeasonVoteAggregates>>
+  userSeasonVote: PerfumeDetailUserData["userSeasonVote"]
 }
 
 /**
@@ -54,7 +62,7 @@ export async function getPerfumeDetailPayload(
   userId: string | null,
   reviewPageSize: number
 ): Promise<PerfumeDetailPayload> {
-  const [ratingsData, reviewsData, userData] = await Promise.all([
+  const [ratingsData, reviewsData, userData, seasonAggregates] = await Promise.all([
     getPerfumeRatings(perfumeId),
     getPerfumeReviews(perfumeId, { isApproved: true }, {
       page: 1,
@@ -66,7 +74,9 @@ export async function getPerfumeDetailPayload(
           isInUserWishlist: false,
           userRatings: null,
           userReview: null,
+          userSeasonVote: null,
         } as PerfumeDetailUserData),
+    getSeasonVoteAggregates(perfumeId),
   ])
 
   return {
@@ -75,5 +85,7 @@ export async function getPerfumeDetailPayload(
     isInUserWishlist: userData.isInUserWishlist,
     userRatings: userData.userRatings,
     userReview: userData.userReview,
+    seasonAggregates,
+    userSeasonVote: userData.userSeasonVote,
   }
 }

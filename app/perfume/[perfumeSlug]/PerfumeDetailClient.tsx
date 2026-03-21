@@ -10,9 +10,12 @@ import { Button } from "@/components/Atoms/Button"
 import PerfumeIcons from "@/components/Containers/Perfume/PerfumeIcons"
 import PerfumeNotes from "@/components/Containers/Perfume/PerfumeNotes"
 import PerfumeRatingSystem from "@/components/Containers/Perfume/PerfumeRatingSystem"
+import PerfumeSeasonVote from "@/components/Containers/Perfume/PerfumeSeasonVote"
 import type {
   PerfumeDetailAverageRatingsProp,
+  PerfumeDetailSeasonAggregatesProp,
   PerfumeDetailUserRatingsProp,
+  PerfumeDetailUserSeasonVoteProp,
 } from "@/components/Containers/Perfume/perfume-detail-types"
 import { HeroHeader } from "@/components/Molecules/HeroHeader"
 import ReviewSection from "@/components/Organisms/ReviewSection"
@@ -40,6 +43,8 @@ type PerfumeDetailClientProps = {
   isInUserWishlist: boolean
   userRatings: PerfumeDetailUserRatingsProp
   averageRatings: PerfumeDetailAverageRatingsProp
+  seasonAggregates: PerfumeDetailSeasonAggregatesProp
+  userSeasonVote: PerfumeDetailUserSeasonVoteProp
   userReview: unknown
   reviewsData: unknown
   reviewsPageSize: number
@@ -53,6 +58,8 @@ const PerfumeDetailClient = ({
   isInUserWishlist,
   userRatings,
   averageRatings,
+  seasonAggregates,
+  userSeasonVote,
   userReview,
   reviewsData,
   reviewsPageSize,
@@ -161,6 +168,12 @@ const PerfumeDetailClient = ({
               userId={user?.id ?? "anonymous"}
               userRatings={userRatings}
               averageRatings={averageRatings}
+            />
+            <PerfumeSeasonVote
+              perfumeId={perfume.id}
+              userId={user?.id ?? "anonymous"}
+              userSeasonVote={userSeasonVote}
+              seasonAggregates={seasonAggregates}
             />
           </div>
           <div className="noir-border relative w-full lg:w-3/4 p-4">
