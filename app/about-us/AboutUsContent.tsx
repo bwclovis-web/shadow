@@ -4,7 +4,7 @@ import TitleBanner from "@/components/Organisms/TitleBanner"
 
 const BANNER_IMAGE = "/images/about.webp"
 
-const AboutUsClient = async () => {
+const AboutUsContent = async () => {
   const t = await getTranslations("aboutUs")
 
   return (
@@ -35,4 +35,4 @@ const AboutUsClient = async () => {
   )
 }
 
-export default AboutUsClient
+export default AboutUsContent

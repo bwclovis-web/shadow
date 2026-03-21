@@ -17,7 +17,7 @@ const SECTION_IMG_CLASS =
 const IMAGE_SIZES =
   "(min-width: 1440px) 55vw, (min-width: 1024px) 65vw, 80vw"
 
-const HowWeWorkClient = async () => {
+const HowWeWorkContent = async () => {
   const t = await getTranslations("howItWorks")
 
   return (
@@ -139,4 +139,4 @@ const HowWeWorkClient = async () => {
   )
 }
 
-export default HowWeWorkClient
+export default HowWeWorkContent

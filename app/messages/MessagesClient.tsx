@@ -53,11 +53,11 @@ export default function MessagesClient({
               <li key={conv.otherUserId}>
                 <Link
                   href={`/messages/${conv.otherUserId}`}
-                  className="flex items-center justify-between gap-4 p-4 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+                  className="flex items-center justify-between gap-4 p-4 rounded-lg border bg-noir-dark group border-noir-gold hover:bg-noir-gold-100 transition-colors"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium truncate">{displayName}</span>
+                      <span className="font-medium truncate text-noir-gold group-hover:text-noir-black transition-colors">{displayName}</span>
                       {conv.unreadCount > 0 && (
                         <span className="shrink-0 rounded-full bg-blue-600 text-white text-xs font-medium px-2 py-0.5">
                           {conv.unreadCount}
@@ -65,13 +65,13 @@ export default function MessagesClient({
                       )}
                     </div>
                     {conv.lastMessagePreview && (
-                      <p className="text-sm text-gray-500 truncate mt-0.5">
+                      <p className="text-sm text-noir-gold-500 group-hover:text-noir-dark transition-colors truncate mt-0.5">
                         {conv.lastMessagePreview}
                       </p>
                     )}
                   </div>
                   <time
-                    className="text-xs text-gray-400 shrink-0"
+                    className="text-xs text-noir-gold-100 group-hover:text-noir-black transition-colors shrink-0"
                     dateTime={
                       typeof conv.lastMessageAt === "string"
                         ? conv.lastMessageAt

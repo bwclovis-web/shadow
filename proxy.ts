@@ -1,28 +1,34 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 
-const CSRF_COOKIE_NAME = '_csrf'
+const CSRF_COOKIE_NAME = "_csrf"
 
 /** Generate a CSRF token using Web Crypto (Edge-compatible). */
 const generateCsrfToken = (): string => {
   const bytes = new Uint8Array(32)
   crypto.getRandomValues(bytes)
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("")
 }
 
 export async function proxy(request: NextRequest) {
   // Admin routes are protected server-side in app/admin/layout.tsx via requireAdminSession.
   // We do not check tokens here (token-presence-only is weak); auth is enforced in the layout.
 
-  const response = NextResponse.next()
+  const existing = request.headers.get("x-correlation-id")?.trim()
+  const correlationId = existing || crypto.randomUUID()
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set("x-correlation-id", correlationId)
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } })
+  response.headers.set("x-correlation-id", correlationId)
 
   // Issue CSRF cookie if missing (double-submit pattern; must be readable by client)
   if (!request.cookies.get(CSRF_COOKIE_NAME)) {
     response.cookies.set(CSRF_COOKIE_NAME, generateCsrfToken(), {
       httpOnly: false,
-      path: '/',
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      path: "/",
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 7,
     })
   }
@@ -32,7 +38,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Run on all routes except static assets so CSRF cookie is set on first page load
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 }

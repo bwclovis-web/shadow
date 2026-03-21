@@ -1,6 +1,15 @@
+import type { Metadata } from "next"
+
 import { getSecurityStats } from "@/utils/security/security-monitor.server"
 
 import { StatsJsonPage } from "../components/StatsJsonPage"
+
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: "Security stats - Admin - Shadow and Sillage",
+    description: "JSON snapshot of security monitor statistics for administrators.",
+  }
+}
 
 const SecurityStatsPage = async () => {
   const stats = getSecurityStats()

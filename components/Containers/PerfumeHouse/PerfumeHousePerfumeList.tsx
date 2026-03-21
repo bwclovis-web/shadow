@@ -1,10 +1,7 @@
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button"
-import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
-import { PERFUME_PATH } from "@/constants/routes"
-import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
-import Image from "next/image"
+import LinkCard from "@/components/Organisms/LinkCard"
 interface PaginationState {
   currentPage: number
   totalPages: number
@@ -45,37 +42,22 @@ const PerfumeHousePerfumeList = ({
         </div>
       ) : perfumes.length > 0 ? (
         <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 p-2 pb-4 gap-4">
-          {perfumes.map((perfume: any, index: number) => {
-            const href = selectedLetter
-              ? `${PERFUME_PATH}/${perfume.slug}?letter=${selectedLetter}`
-              : `${PERFUME_PATH}/${perfume.slug}`
-            const bottleSrc = normalizeRemoteImageSrc(perfume.image)
-            return (
+          {perfumes.map((perfume: any, index: number) => (
             <li key={perfume.id} className="h-full">
-              <div className="relative w-full h-full noir-border overflow-hidden transition-all duration-300 ease-in-out">
-              <PrefetchLink
-                href={href}
-                prefetch={false}
-                className="block p-2 h-full relative w-full transition-colors duration-300 ease-in-out"
-              >
-                <h3 className="text-center block text-lg tracking-wide py-2 font-semibold text-noir-gold leading-6 capitalize">
-                  {perfume.name}
-                </h3>
-                  <Image
-                    src={bottleSrc && !validImageRegex.test(bottleSrc) ? bottleSrc : "/images/single-bottle.webp"}
-                    alt={tSingleHouse("perfumeBottleAltText", { name: perfume.name })}
-                    priority={index < 6}
-                    width={192}
-                    height={192}
-                    quality={75}
-                    className="w-48 h-48 object-cover rounded-lg mb-2 mx-auto dark:brightness-90"
-                    sizes="(max-width: 768px) 50vw, 33vw"
-                    style={{ viewTransitionName: `perfume-image-${perfume.id}` } as React.CSSProperties}
-                  />
-              </PrefetchLink>
-              </div>
+              <LinkCard
+                type="perfume"
+                data={{
+                  id: String(perfume.id),
+                  name: perfume.name,
+                  slug: perfume.slug,
+                  image: perfume.image,
+                }}
+                selectedLetter={selectedLetter}
+                imageAlt={tSingleHouse("perfumeBottleAltText", { name: perfume.name })}
+                imagePriority={index < 6}
+              />
             </li>
-          )})}
+          ))}
         </ul>
       ) : (
         <div className="text-center py-6">

@@ -173,6 +173,15 @@
       "description": "Create an account to access your profile and manage your collection."
     }
   },
+  "directMessages": {
+    "meta": {
+      "title": "Messages - Shadow and Sillage",
+      "description": "View and send direct messages with other members.",
+      "threadTitle": "{name} — Messages — Shadow and Sillage",
+      "threadDescription": "Direct conversation with {name}.",
+      "threadFallbackTitle": "Messages — Shadow and Sillage"
+    }
+  },
   "subscribe": {
     "heading": "Subscribe",
     "subheading": "Join Shadow and Sillage with a paid subscription",

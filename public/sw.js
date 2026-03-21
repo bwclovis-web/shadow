@@ -25,6 +25,12 @@ self.addEventListener("activate", (event) => {
 })
 
 self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url)
+  // Never serve API responses from cache — always hit the network (no stale mutations / auth).
+  if (url.pathname.startsWith("/api/")) {
+    event.respondWith(fetch(event.request))
+    return
+  }
   if (event.request.mode === "navigate") {
     event.respondWith(
       fetch(event.request).catch(() =>

@@ -116,9 +116,9 @@ There is **no root `middleware.ts`**. Adding one is optional but recommended.
 
 | Issue | Priority |
 |-------|----------|
-| `react-icons` — importing from barrel files pulls large chunks; prefer importing from sub-paths (e.g. `react-icons/fi`) | **P1** |
+| `react-icons` — importing from barrel files pulls large chunks; prefer importing from sub-paths (e.g. `react-icons/fi`) | **P1** ✅ |
 | `chart.js` is dynamically imported in `DataQualityClient` — good, no action needed | — |
-| GSAP loaded for `TitleBannerAnimator` — consider dynamic import if only used on one page | **P2** |
+| GSAP — `app/home-client.tsx` uses `import("gsap")` inside `useEffect`; `NoirIcon` / `rangeSliderUtils` also dynamic-import GSAP. Unused `TitleBannerAnimator` removed. | **P2** ✅ |
 | `@tanstack/react-query` wraps the entire app in `providers.tsx` — acceptable, but ensure `ReactQueryDevtools` is tree-shaken in production (it's already lazy with `ssr: false`) | — |
 
 ### 2.4 Images
@@ -137,8 +137,8 @@ Image handling is solid — `next/image` is used consistently. No raw `<img>` ta
 | Component | Issue | Recommendation | Priority |
 |-----------|-------|----------------|----------|
 | `app/not-found.tsx` | Marked `"use client"` but only uses `useTranslations` + `Link` | Convert to server component using `next-intl` server APIs | **P2** |
-| `components/Atoms/Button/Button.tsx` | Entire file is `"use client"` because `VooDooLink` uses `useTransitionRouter` | Split `Button` (server) from `VooDooLink` (client) | **P2** |
-| `AboutUsClient.tsx`, `HowWeWorkClient.tsx` | Named `*Client` but are actually server components | Rename to drop the "Client" suffix for clarity | **P2** |
+| `components/Atoms/Button/` | `Button.tsx` is server-safe; `VooDooLink.tsx` is `"use client"` (`useTransitionRouter` + `Link`) | Done | **P2** ✅ |
+| `AboutUsContent.tsx`, `HowWeWorkContent.tsx` | Replaced misnamed `*Client` server modules | Done | **P2** ✅ |
 | The Vault page | Passes `initialPerfumes={[]}` — all data client-fetched | Fetch first page on server and pass as `initialData` for SSR + hydration | **P1** |
 | `DataQualityClient` | Uses `useQuery` for initial data | Could use server component for initial fetch, hydrate on client | **P2** |
 
@@ -170,13 +170,13 @@ Currently only the root `app/error.tsx` exists. Route-level error boundaries pre
 
 The codebase mixes server actions (sign-in, sign-up, create perfume/house) with client `fetch` (change password, contact trader, alerts). This is fine — but consider:
 
-- Migrating `ChangePasswordForm` and `ContactUsClient` to server actions + Conform for consistency and progressive enhancement (**P2**).
+- ~~Migrating `ChangePasswordForm` and `ContactUsClient` to server actions~~ **Done:** `ChangePasswordForm` uses `changePasswordAction` (`app/[userSlug]/profile/change-password/actions.ts`). Contact submissions use `submitPendingPerfumeFromContactAction` / `submitPendingHouseFromContactAction` (`app/contact-us/actions.ts`) via `PendingSubmissionModal` + Conform forms (**P2**).
 - Ensuring all `fetch`-based mutations include CSRF tokens (most do already).
 
 ### 3.4 Metadata & SEO
 
-- Confirm each page exports a `generateMetadata` function or static `metadata` object for titles, descriptions, and Open Graph tags.
-- Add `robots.txt` and `sitemap.xml` generation (Next.js supports `app/sitemap.ts` and `app/robots.ts`).
+- Each `app/**/page.tsx` exports `generateMetadata` (or root `app/layout.tsx` static `metadata`). Added for messages, admin stats JSON pages, legacy `/behind-the-bottle`, home, auth, scraper, and thread titles with `directMessages` i18n.
+- ~~Add `robots.txt` and `sitemap.xml`~~ **Done:** `app/robots.ts` and `app/sitemap.ts`.
 
 ---
 
@@ -223,8 +223,8 @@ Over 30 usages of `any` across models and components. Key files:
 
 | Component | Concern | Priority |
 |-----------|---------|----------|
-| `ScraperPageClient` | 31 hooks — check for unnecessary re-renders; memoize expensive computations | **P2** |
-| `MyScentsPageClient` | 16 hooks — similar | **P2** |
+| `ScraperPageClient` | 31 hooks — memoized URL hint, records-derived counts, preview rows | **P2** (partial) |
+| `MyScentsPageClient` | 16 hooks — memoized `bottleEntries`, `bottleCountByPerfumeId` | **P2** (partial) |
 | `TheExchangeClient` | Search / filter logic in client — consider extracting to a custom hook for clarity | **P2** |
 
 ---
@@ -235,6 +235,7 @@ Over 30 usages of `any` across models and components. Key files:
 
 - Currently: `console.log` / `console.error` scattered across 50+ files. In-memory audit logger lost on restart.
 - **Recommendation**: Adopt a structured logger (e.g. **Pino**) with JSON output, request correlation IDs, and log levels. Non-breaking; can be done incrementally.
+- **Partial:** `x-correlation-id` is set on every request in root `proxy.ts` (Next.js 16 — `middleware.ts` is not used alongside `proxy.ts`). `logAuditEvent` emits JSON lines including `correlationId`; `utils/server/structured-log.server.ts` provides `structuredLog` / `getRequestCorrelationId` for further adoption.
 - **Priority:** **P1**
 
 ### 5.2 Monitoring
@@ -247,7 +248,7 @@ Over 30 usages of `any` across models and components. Key files:
 ### 5.3 PWA & Service Worker
 
 - Service worker registration exists (`ServiceWorkerRegistration`).
-- Confirm the service worker is correctly scoped and doesn't cache API routes.
+- ~~Confirm the service worker doesn't cache API routes~~ **`public/sw.js`:** `/api/*` requests use `fetch` only (no cache). Navigate requests remain network-first with offline shell fallback.
 - **Priority:** **P2**
 
 ---
@@ -270,7 +271,7 @@ Over 30 usages of `any` across models and components. Key files:
 - [x] Add query param length limits on `/api/getTag`, `/api/perfume-houses`, `/api/perfume`
 - [x] Validate record id format on `traderId`, `perfumeId`, etc. before DB queries (`isValidPrismaRecordId`)
 - [x] Add rate limiting to `/api/change-password`, `/api/reviews` POST, `/api/ratings` POST
-- [ ] Add root `middleware.ts` with security headers (HSTS, X-Frame-Options, etc.)
+- [ ] Add security headers (HSTS, X-Frame-Options, etc.) — use root **`proxy.ts`** only (Next.js 16 disallows `middleware.ts` + `proxy.ts` together); correlation ID + CSRF already run there
 - [x] Replace `new PrismaClient()` in scraper import with shared singleton from `lib/db.ts`
 - [x] Add pagination / `take` limit to `getAllPerfumes` and `getAllPerfumesWithOptions`
 - [x] Add `revalidateTag()` calls after perfume and house create/update/delete mutations (`utils/server/revalidate-catalog-cache.server.ts` + admin actions, delete routes, house image retry)
@@ -281,7 +282,7 @@ Over 30 usages of `any` across models and components. Key files:
 - [ ] Start replacing `any` types with proper Prisma / domain types (incremental)
 - [ ] Adopt `withApiErrorHandling` / `safeAsync` in API routes for consistent error responses
 - [ ] Adopt structured logging (Pino) — at least for API routes and critical paths
-- [ ] Ensure `react-icons` imports use sub-path imports (e.g. `react-icons/fi`)
+- [x] Ensure `react-icons` imports use sub-path imports (e.g. `react-icons/fi`) — verified: all app/components imports use `react-icons/<pack>`; no bare `react-icons` imports
 - [x] Add `sitemap.ts` and `robots.ts` in the app directory
 
 ### P2 — Nice-to-Have / Iterative
@@ -290,19 +291,19 @@ Over 30 usages of `any` across models and components. Key files:
 - [ ] Batch note lookups in CSV import (single `findMany` instead of per-note queries)
 - [ ] Add pagination to `getAvailablePerfumesForDecanting`
 - [ ] Convert `app/not-found.tsx` to a server component
-- [ ] Split `Button` component into server-safe `Button` and client `VooDooLink`
-- [ ] Rename `AboutUsClient` and `HowWeWorkClient` (they are actually server components)
+- [x] Split `Button` component into server-safe `Button` and client `VooDooLink` (`Button.tsx` + `VooDooLink.tsx`; barrel `index.ts`)
+- [x] Rename misnamed server modules → `AboutUsContent.tsx`, `HowWeWorkContent.tsx`
 - [ ] Extract shared slug generation to `utils/slug.ts`
 - [ ] Extract shared Prisma select shapes to `lib/prisma-selects.ts`
 - [ ] Extract tiered search pattern to a reusable helper
 - [ ] Generalize R2 migration into a single entity-agnostic function
-- [ ] Memoize expensive computations in `ScraperPageClient` and `MyScentsPageClient`
-- [ ] Migrate `ChangePasswordForm` and `ContactUsClient` to server actions for progressive enhancement
-- [ ] Add `generateMetadata` to all pages missing it
+- [x] Memoize expensive computations in `ScraperPageClient` and `MyScentsPageClient`
+- [x] Migrate `ChangePasswordForm` and contact pending submissions to server actions for progressive enhancement (`PendingSubmissionModal` + `app/contact-us/actions.ts`)
+- [x] Add `generateMetadata` to all pages missing it (messages, thread, admin stats routes, `/behind-the-bottle`, home, auth, scraper; i18n keys under `directMessages.meta`)
 - [ ] Add `Cache-Control` headers to public GET API routes
 - [ ] Add request correlation IDs to structured logging
-- [ ] Dynamically import GSAP if only used on one page
-- [ ] Confirm service worker doesn't cache API routes
+- [x] GSAP: dynamic `import("gsap")` in hero `useEffect` (removed unused `@gsap/react` preload); removed unused `TitleBannerAnimator`
+- [x] Confirm service worker doesn't cache API routes (`public/sw.js` early return for `/api/`)
 - [ ] Swap in-memory rate-limit store with Redis for multi-instance deployments
 - [ ] Add application-level metrics/monitoring (Vercel Analytics or equivalent)
 
@@ -317,7 +318,7 @@ These items would improve the codebase but may require careful migration:
 | Add `slug` column to `User` table | Requires DB migration; existing profile URLs must still work | Add migration that backfills slugs from usernames; keep old lookup as fallback |
 | Switch rate limiting to Redis | Requires new infrastructure dependency | Feature-flag or env toggle between in-memory and Redis |
 | Convert forms from `fetch` to server actions | Changes request flow; may affect CSRF token handling | Migrate one form at a time; test thoroughly |
-| Add root `middleware.ts` | Could interfere with existing route behavior if misconfigured | Start with security headers only; avoid auth logic initially |
+| Add request `proxy` / security headers (Next 16) | Could interfere with existing route behavior if misconfigured | Start with security headers only; avoid auth logic in `proxy.ts`; do not add `middleware.ts` while `proxy.ts` exists |
 | Rename `*Client` server components | Any imports referencing the old names will break | Use find-and-replace across the repo; update all imports in one pass |
 
 ---

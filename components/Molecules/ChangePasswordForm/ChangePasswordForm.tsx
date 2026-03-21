@@ -1,16 +1,14 @@
 "use client"
 
-import { type ChangeEvent, type FormEvent, useEffect, useState } from "react"
+import { type ChangeEvent, useActionState, useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 import { BsFillEyeFill, BsFillEyeSlashFill } from "react-icons/bs"
 
+import { changePasswordAction } from "@/app/[userSlug]/profile/change-password/actions"
 import { Button } from "@/components/Atoms/Button"
+import { CSRFToken } from "@/components/Molecules/CSRFToken"
 import PasswordStrengthIndicator from "@/components/Organisms/PasswordStrengthIndicator"
 import { authSchemas } from "@/utils/validation"
-
-const CHANGE_PASSWORD_API = "/api/change-password"
-
-type ActionResult = { success: boolean; error?: string; message?: string } | null
 
 interface ChangePasswordFormProps {
   className?: string
@@ -23,6 +21,8 @@ export const ChangePasswordForm = ({
   hideHeading = false,
 }: ChangePasswordFormProps) => {
   const t = useTranslations("password")
+  const [state, formAction, isPending] = useActionState(changePasswordAction, null)
+
   const [formData, setFormData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -34,20 +34,17 @@ export const ChangePasswordForm = ({
     confirm: false,
   })
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [actionData, setActionData] = useState<ActionResult>(null)
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  // Validate form on change
   useEffect(() => {
     const result = authSchemas.changePassword.safeParse(formData)
     if (!result.success) {
       const errors: Record<string, string> = {}
-      result.error.errors.forEach(err => {
+      result.error.errors.forEach((err) => {
         if (err.path[0]) {
           errors[err.path[0] as string] = err.message
         }
@@ -58,8 +55,18 @@ export const ChangePasswordForm = ({
     }
   }, [formData])
 
+  useEffect(() => {
+    if (state?.success) {
+      setFormData({
+        currentPassword: "",
+        newPassword: "",
+        confirmNewPassword: "",
+      })
+    }
+  }, [state?.success])
+
   const togglePasswordVisibility = (field: "current" | "new" | "confirm") => {
-    setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }))
+    setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }))
   }
 
   const passwordsMatch = formData.newPassword === formData.confirmNewPassword
@@ -70,39 +77,10 @@ export const ChangePasswordForm = ({
     Boolean(formData.confirmNewPassword) &&
     passwordsMatch
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (!isFormValid || isSubmitting) return
-    setIsSubmitting(true)
-    setActionData(null)
-    const body = new FormData()
-    body.set("currentPassword", formData.currentPassword)
-    body.set("newPassword", formData.newPassword)
-    body.set("confirmNewPassword", formData.confirmNewPassword)
-    try {
-      const res = await fetch(CHANGE_PASSWORD_API, {
-        method: "POST",
-        body,
-        credentials: "include",
-      })
-      const data = (await res.json()) as ActionResult
-      setActionData(data)
-      if (data?.success) {
-        setFormData({
-          currentPassword: "",
-          newPassword: "",
-          confirmNewPassword: "",
-        })
-      }
-    } catch {
-      setActionData({ success: false, error: t("error") })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
   return (
-    <form onSubmit={handleSubmit} className={`space-y-6 ${className}`} noValidate>
+    <form action={formAction} className={`space-y-6 ${className}`} noValidate>
+      <CSRFToken />
+
       {!hideHeading && (
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">{t("changePassword")}</h2>
@@ -242,7 +220,7 @@ export const ChangePasswordForm = ({
         )}
       </div>
 
-      {actionData?.error && (
+      {state?.success === false && state.error && (
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
           <div className="flex">
             <div className="shrink-0">
@@ -251,14 +229,14 @@ export const ChangePasswordForm = ({
             <div className="ml-3">
               <h3 className="text-sm font-medium text-red-800">{t("error")}</h3>
               <div className="mt-2 text-sm text-red-700">
-                <p>{actionData.error}</p>
+                <p>{state.error}</p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {actionData?.success && (
+      {state?.success && (
         <div className="bg-green-50 border border-green-200 rounded-md p-4">
           <div className="flex">
             <div className="shrink-0">
@@ -267,7 +245,7 @@ export const ChangePasswordForm = ({
             <div className="ml-3">
               <h3 className="text-sm font-medium text-green-800">{t("success")}</h3>
               <div className="mt-2 text-sm text-green-700">
-                <p>{actionData.message}</p>
+                <p>{state.message}</p>
               </div>
             </div>
           </div>
@@ -297,7 +275,6 @@ export const ChangePasswordForm = ({
               newPassword: "",
               confirmNewPassword: "",
             })
-            setActionData(null)
             setShowPasswords({ current: false, new: false, confirm: false })
           }}
           className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -306,10 +283,10 @@ export const ChangePasswordForm = ({
         </button>
         <Button
           type="submit"
-          disabled={!isFormValid || isSubmitting}
+          disabled={!isFormValid || isPending}
           className="px-6 py-2"
         >
-          {isSubmitting ? t("changingPassword") : t("changePassword")}
+          {isPending ? t("changingPassword") : t("changePassword")}
         </Button>
       </div>
     </form>

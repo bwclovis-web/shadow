@@ -177,6 +177,15 @@
       "description": "Crea un account per gestire profilo e collezione."
     }
   },
+  "directMessages": {
+    "meta": {
+      "title": "Messaggi - Shadow and Sillage",
+      "description": "Visualizza e invia messaggi diretti agli altri membri.",
+      "threadTitle": "{name} — Messaggi — Shadow and Sillage",
+      "threadDescription": "Conversazione diretta con {name}.",
+      "threadFallbackTitle": "Messaggi — Shadow and Sillage"
+    }
+  },
   "subscribe": {
     "heading": "Iscriviti",
     "subheading": "Unisciti a Shadow and Sillage con un abbonamento a pagamento",

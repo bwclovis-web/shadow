@@ -38,7 +38,7 @@ const SecurityMonitorPage = async () => {
     redirect("/sign-in?redirect=/admin/security-monitor")
   }
 
-  logAuditEvent({
+  await logAuditEvent({
     level: AUDIT_LEVELS.INFO,
     category: AUDIT_CATEGORIES.SECURITY,
     action: "view_security_monitor",

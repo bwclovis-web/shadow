@@ -1,6 +1,12 @@
 "use client"
 
-import { type ChangeEvent, type FormEvent, useEffect, useState } from "react"
+import {
+  type ChangeEvent,
+  type FormEvent,
+  useEffect,
+  useMemo,
+  useState,
+} from "react"
 
 import { Button } from "@/components/Atoms/Button/Button"
 import HouseTypeahead from "@/components/Molecules/HouseTypeahead/HouseTypeahead"
@@ -79,6 +85,44 @@ function Field({ label, hint, children }: FieldProps) {
 
 function inputClass(extra = "") {
   return `w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 ${extra}`
+}
+
+function summarizeCollectionUrlsInput(raw: string): string | null {
+  const trimmed = raw.trim()
+  if (!trimmed) return null
+  const parsed = trimmed.split(/\n|,/).map((u) => u.trim()).filter(Boolean)
+  const valid = parsed.filter((u) => /^https?:\/\//i.test(u))
+  if (valid.length === 0) {
+    return "No valid URLs — each line or segment must start with http:// or https://"
+  }
+  if (valid.length < parsed.length) {
+    return `${valid.length} collection URL(s) (${parsed.length - valid.length} line(s) skipped — not valid URLs)`
+  }
+  return `${valid.length} collection URL(s) — all will be visited`
+}
+
+function countRecordsWithExtractedNotes(records: PerfumeCsvRecord[]): number {
+  return records.filter((r) => {
+    try {
+      return (JSON.parse(r.openNotes ?? "[]") as string[]).length > 0
+    } catch {
+      return false
+    }
+  }).length
+}
+
+type PreviewRow = { name: string; notesPreview: string[] }
+
+function buildPreviewRows(records: PerfumeCsvRecord[]): PreviewRow[] {
+  return records.map((r) => {
+    let notesPreview: string[] = []
+    try {
+      notesPreview = (JSON.parse(r.openNotes) as string[]).slice(0, 4)
+    } catch {
+      notesPreview = []
+    }
+    return { name: r.name, notesPreview }
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -181,6 +225,23 @@ export function ScraperPageClient() {
       document.removeEventListener("click", handleClick, true)
     }
   }, [scraping])
+
+  const collectionUrlsHint = useMemo(
+    () => summarizeCollectionUrlsInput(collectionUrlsRaw),
+    [collectionUrlsRaw]
+  )
+
+  const records: PerfumeCsvRecord[] = useMemo(
+    () => scrapeResult?.records ?? [],
+    [scrapeResult?.records]
+  )
+
+  const notesExtractedCount = useMemo(
+    () => countRecordsWithExtractedNotes(records),
+    [records]
+  )
+
+  const previewRows = useMemo(() => buildPreviewRows(records), [records])
 
   // -- step 2 state (import + R2) --
   const [uploadImagesToR2, setUploadImagesToR2] = useState(true)
@@ -452,8 +513,6 @@ export function ScraperPageClient() {
     URL.revokeObjectURL(url)
   }
 
-  const records: PerfumeCsvRecord[] = scrapeResult?.records ?? []
-
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
@@ -500,21 +559,8 @@ export function ScraperPageClient() {
                 "https://blackheartedtart.com/collections/perfumes\nhttps://blackheartedtart.com/collections/perfumes?page=2"
               }
             />
-            {collectionUrlsRaw.trim() ? (
-              <p className="mt-1 text-xs text-muted-foreground">
-                {(() => {
-                  const parsed = collectionUrlsRaw
-                    .split(/\n|,/)
-                    .map(u => u.trim())
-                    .filter(Boolean)
-                  const valid = parsed.filter(u => /^https?:\/\//i.test(u))
-                  if (valid.length === 0)
-                    return "No valid URLs — each line or segment must start with http:// or https://"
-                  if (valid.length < parsed.length)
-                    return `${valid.length} collection URL(s) (${parsed.length - valid.length} line(s) skipped — not valid URLs)`
-                  return `${valid.length} collection URL(s) — all will be visited`
-                })()}
-              </p>
+            {collectionUrlsHint ? (
+              <p className="mt-1 text-xs text-muted-foreground">{collectionUrlsHint}</p>
             ) : null}
           </Field>
 
@@ -907,13 +953,7 @@ export function ScraperPageClient() {
               <div>
                 <dt className="text-muted-foreground">Notes extracted</dt>
                 <dd className="text-2xl font-bold text-noir-gold-500">
-                  {records.filter(r => {
-                    try {
-                      return (JSON.parse(r.openNotes ?? "[]") as string[]).length > 0
-                    } catch {
-                      return false
-                    }
-                  }).length}
+                  {notesExtractedCount}
                 </dd>
               </div>
               <div>
@@ -978,25 +1018,16 @@ export function ScraperPageClient() {
                     </tr>
                   </thead>
                   <tbody>
-                    {records.map((r, i) => {
-                      const notes = (() => {
-                        try {
-                          return (JSON.parse(r.openNotes) as string[]).slice(0, 4)
-                        } catch {
-                          return []
-                        }
-                      })()
-                      return (
-                        <tr key={i} className="border-b border-border last:border-0">
-                          <td className="max-w-[200px] truncate px-4 py-2 font-medium">{r.name}</td>
-                          <td className="px-4 py-2 text-muted-foreground">
-                            {notes.length > 0 ? notes.join(", ") : (
-                              <span className="italic opacity-50">none extracted</span>
-                            )}
-                          </td>
-                        </tr>
-                      )
-                    })}
+                    {previewRows.map((row, i) => (
+                      <tr key={i} className="border-b border-border last:border-0">
+                        <td className="max-w-[200px] truncate px-4 py-2 font-medium">{row.name}</td>
+                        <td className="px-4 py-2 text-muted-foreground">
+                          {row.notesPreview.length > 0 ? row.notesPreview.join(", ") : (
+                            <span className="italic opacity-50">none extracted</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>

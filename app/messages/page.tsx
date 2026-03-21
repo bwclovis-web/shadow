@@ -1,4 +1,6 @@
+import type { Metadata } from "next"
 import type React from "react"
+import { getTranslations } from "next-intl/server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { redirect } from "next/navigation"
 
@@ -6,6 +8,14 @@ import { getConversations } from "@/models/contactMessage.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
 import MessagesClient from "./MessagesClient"
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("directMessages.meta")
+  return {
+    title: t("title"),
+    description: t("description"),
+  }
+}
 
 export default async function MessagesPage(): Promise<React.ReactElement> {
   const cookieHeader = await getCookieHeader()

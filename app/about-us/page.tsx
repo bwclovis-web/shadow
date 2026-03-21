@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
-import AboutUsClient from "./AboutUsClient"
+import AboutUsContent from "./AboutUsContent"
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("aboutUs.meta")
@@ -11,6 +11,6 @@ export const generateMetadata = async (): Promise<Metadata> => {
   }
 }
 
-const AboutUsPage = () => <AboutUsClient />
+const AboutUsPage = () => <AboutUsContent />
 
 export default AboutUsPage

@@ -25,10 +25,7 @@ export default function HomeClient({ features, counts }: HomeClientProps) {
   // Lazy load GSAP animations after component mounts
   useEffect(() => {
     const loadAnimations = async () => {
-      const [{ gsap }] = await Promise.all([
-        import("gsap"),
-        import("@gsap/react"),
-      ])
+      const { gsap } = await import("gsap")
 
       if (!container.current) return
 

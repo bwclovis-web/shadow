@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 
-import { VooDooLink } from "@/components/Atoms/Button/Button"
+import { VooDooLink } from "@/components/Atoms/Button"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import WishlistItemCard from "@/components/Organisms/WishlistItemCard/WishlistItemCard"
 

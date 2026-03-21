@@ -56,12 +56,6 @@ type MyScentsPageClientProps = {
 const getBottleEntries = (list: UserPerfumeForClient[]): UserPerfumeForClient[] =>
   list.filter((up) => up.amount !== "0")
 
-/** How many real bottles does this perfumeId have in the full list? */
-const countBottlesForPerfume = (
-  list: UserPerfumeForClient[],
-  perfumeId: string
-): number => list.filter((up) => up.amount !== "0" && up.perfumeId === perfumeId).length
-
 const buildBottleLabel = (up: UserPerfumeForClient, bottleCount: number): string | null => {
   if (bottleCount < 2) return null
   const typeLabel = getPerfumeTypeLabel(up.type ?? undefined)
@@ -154,7 +148,16 @@ const MyScentsPageClient = ({
     setUserPerfumes((prev) => prev.filter((item) => item.id !== tempId))
   }, [])
 
-  const bottleEntries = getBottleEntries(userPerfumes)
+  const bottleEntries = useMemo(() => getBottleEntries(userPerfumes), [userPerfumes])
+
+  const bottleCountByPerfumeId = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const up of bottleEntries) {
+      m.set(up.perfumeId, (m.get(up.perfumeId) ?? 0) + 1)
+    }
+    return m
+  }, [bottleEntries])
+
   const pageSize = useResponsivePageSize()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -273,7 +276,7 @@ const MyScentsPageClient = ({
                   normalized && !validImageRegex.test(normalized)
                     ? normalized
                     : BOTTLE_PLACEHOLDER
-                const bottleCount = countBottlesForPerfume(bottleEntries, userPerfume.perfumeId)
+                const bottleCount = bottleCountByPerfumeId.get(userPerfume.perfumeId) ?? 0
                 const bottleLabel = buildBottleLabel(userPerfume, bottleCount)
                 return (
                   <li

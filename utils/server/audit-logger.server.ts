@@ -1,5 +1,7 @@
 import type { AuditStats } from "@/app/admin/types/security-stats"
 
+import { getRequestCorrelationId } from "@/utils/server/structured-log.server"
+
 /** Single audit log entry as stored in memory */
 export interface AuditLogEntry {
   id: string
@@ -13,6 +15,8 @@ export interface AuditLogEntry {
   resource: string | null
   details: Record<string, unknown>
   outcome: string
+  /** Request correlation ID when logged inside a request (middleware `x-correlation-id`). */
+  correlationId?: string
 }
 
 /** Input for logging an audit event */
@@ -26,6 +30,8 @@ export interface LogAuditEventInput {
   resource?: string | null
   details?: Record<string, unknown>
   outcome?: string
+  /** Override auto-detected request correlation ID */
+  correlationId?: string
 }
 
 /** Filters for querying audit logs */
@@ -79,9 +85,11 @@ const formatAuditLog = (log: AuditLogEntry): string => {
 }
 
 /**
- * Log an audit event and optionally emit to console.
+ * Log an audit event, store in memory, and emit one structured JSON line (with correlationId when available).
  */
-export const logAuditEvent = (event: LogAuditEventInput): AuditLogEntry => {
+export const logAuditEvent = async (
+  event: LogAuditEventInput
+): Promise<AuditLogEntry> => {
   const {
     level = AUDIT_LEVELS.INFO,
     category = AUDIT_CATEGORIES.SYSTEM,
@@ -92,7 +100,11 @@ export const logAuditEvent = (event: LogAuditEventInput): AuditLogEntry => {
     resource = null,
     details = {},
     outcome = "success",
+    correlationId: correlationIdOverride,
   } = event
+
+  const correlationId =
+    correlationIdOverride ?? (await getRequestCorrelationId()) ?? undefined
 
   const auditLog: AuditLogEntry = {
     id: generateAuditId(),
@@ -106,6 +118,7 @@ export const logAuditEvent = (event: LogAuditEventInput): AuditLogEntry => {
     resource,
     details,
     outcome,
+    ...(correlationId ? { correlationId } : {}),
   }
 
   const key = `${category}-${level}`
@@ -116,16 +129,34 @@ export const logAuditEvent = (event: LogAuditEventInput): AuditLogEntry => {
   }
   auditLogs.set(key, logs)
 
-  const logMessage = formatAuditLog(auditLog)
+  const structured = {
+    type: "audit" as const,
+    auditId: auditLog.id,
+    ts: auditLog.timestamp,
+    level: auditLog.level,
+    category: auditLog.category,
+    action: auditLog.action,
+    outcome: auditLog.outcome,
+    userId: auditLog.userId,
+    ipAddress: auditLog.ipAddress,
+    resource: auditLog.resource,
+    ...(auditLog.correlationId ? { correlationId: auditLog.correlationId } : {}),
+  }
+  const line = JSON.stringify(structured)
+
   if (
     level === AUDIT_LEVELS.CRITICAL ||
     level === AUDIT_LEVELS.ERROR
   ) {
-    console.error(logMessage)
+    console.error(line)
   } else if (level === AUDIT_LEVELS.WARN) {
-    console.warn(logMessage)
+    console.warn(line)
   } else {
-    console.log(logMessage)
+    console.log(line)
+  }
+
+  if (process.env.NODE_ENV === "development") {
+    console.debug(formatAuditLog(auditLog))
   }
 
   return auditLog

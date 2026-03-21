@@ -1,8 +1,14 @@
+import type { Metadata } from "next"
+import { getTranslations } from "next-intl/server"
+
 import SignUpClient from "./SignUpClient"
 
-export const metadata = {
-  title: "Sign Up | New Smell",
-  description: "Create your account.",
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("auth.signUp")
+  return {
+    title: t("title"),
+    description: t("description"),
+  }
 }
 
 type PageProps = {
