@@ -48,6 +48,12 @@ export interface AuthRateLimits {
   signIn: RateLimitConfig
 }
 
+export interface UserMutationRateLimits {
+  changePassword: RateLimitConfig
+  reviewsPost: RateLimitConfig
+  ratingsPost: RateLimitConfig
+}
+
 let contactMessageLimitsCache: ContactMessageRateLimits | null = null
 
 export const getContactMessageRateLimits = (): ContactMessageRateLimits => {
