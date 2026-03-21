@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import {
+  clearSeasonVote,
   getSeasonVoteAggregates,
   getUserSeasonVote,
   selectionFromVoteRow,
@@ -85,7 +86,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (!hasAnySeasonSelected(selection)) {
-      return NextResponse.json({ error: "Select at least one season" }, { status: 400 })
+      await clearSeasonVote(authResult.user!.id, perfumeId)
+      return NextResponse.json({ message: "Season vote cleared successfully" })
     }
 
     await upsertSeasonVote(authResult.user!.id, perfumeId, selection)

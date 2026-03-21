@@ -9,7 +9,6 @@ import type {
 } from "@/components/Containers/Perfume/perfume-detail-types"
 import { useSaveSeasonVote } from "@/lib/mutations/seasonVotes"
 import {
-  hasAnySeasonSelected,
   SEASON_KEYS,
   type SeasonKey,
   type SeasonSelection,
@@ -80,16 +79,19 @@ const PerfumeSeasonVote = ({
     setAggregates(initialAggregates)
   }, [initialAggregates])
 
-  /** Primitives only — avoid resetting local selection when the parent passes a new object reference for the same server vote (e.g. after re-render). */
-  const serverVoteFingerprint =
-    userSeasonVote == null
-      ? "none"
-      : `${userSeasonVote.winter}-${userSeasonVote.spring}-${userSeasonVote.summer}-${userSeasonVote.fall}`
+  const serverWinter = userSeasonVote?.winter ?? false
+  const serverSpring = userSeasonVote?.spring ?? false
+  const serverSummer = userSeasonVote?.summer ?? false
+  const serverFall = userSeasonVote?.fall ?? false
 
   useEffect(() => {
-    setSelection(userSeasonVote ?? emptySelection())
-    // Intentionally omit userSeasonVote: its reference can change every parent render while booleans stay the same.
-  }, [perfumeId, serverVoteFingerprint])
+    setSelection({
+      winter: serverWinter,
+      spring: serverSpring,
+      summer: serverSummer,
+      fall: serverFall,
+    })
+  }, [perfumeId, serverWinter, serverSpring, serverSummer, serverFall])
 
   const refreshAggregates = useCallback(async () => {
     setIsRefreshing(true)
@@ -123,9 +125,9 @@ const PerfumeSeasonVote = ({
   const persist = useCallback(
     (next: SeasonSelection) => {
       if (!isInteractive || !userId || userId === "anonymous") return
-      if (!hasAnySeasonSelected(next)) return
 
       const previous = selectionRef.current
+      selectionRef.current = next
       setSelection(next)
 
       saveVote.mutate(
@@ -150,18 +152,13 @@ const PerfumeSeasonVote = ({
     if (!isInteractive) return
     const prev = selectionRef.current
     const next = { ...prev, [key]: !prev[key] }
-    if (!hasAnySeasonSelected(next)) {
-      setSelection(next)
-      selectionRef.current = next
-      return
-    }
     persist(next)
   }
 
   const toggleAll = () => {
     if (!isInteractive) return
     if (allSelected) {
-      setSelection(emptySelection())
+      persist(emptySelection())
       return
     }
     persist({

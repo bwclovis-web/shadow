@@ -66,6 +66,15 @@ export async function upsertSeasonVote(
   })
 }
 
+export async function clearSeasonVote(userId: string, perfumeId: string) {
+  await prisma.userPerfumeSeasonVote.deleteMany({
+    where: {
+      userId,
+      perfumeId,
+    },
+  })
+}
+
 export async function getSeasonVoteAggregates(perfumeId: string): Promise<SeasonVoteAggregates> {
   const votes = await prisma.userPerfumeSeasonVote.findMany({
     where: { perfumeId },
