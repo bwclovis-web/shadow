@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import { Suspense } from "react"
 import { getTranslations } from "next-intl/server"
 
 import { getAvailablePerfumesForDecantingPaginated } from "@/models/perfume.server"
@@ -66,19 +65,11 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
   }
 
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-[60vh] items-center justify-center" aria-busy="true">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-noir-gold border-t-transparent" />
-        </div>
-      }
-    >
-      <TheExchangeClient
-        availablePerfumes={availablePerfumes}
-        pagination={pagination}
-        searchQuery={searchQuery}
-      />
-    </Suspense>
+    <TheExchangeClient
+      availablePerfumes={availablePerfumes}
+      pagination={pagination}
+      searchQuery={searchQuery}
+    />
   )
 }
 

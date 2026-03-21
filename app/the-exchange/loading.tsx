@@ -1,7 +1,5 @@
-const TheExchangeLoading = () => (
-  <div className="flex min-h-[60vh] items-center justify-center" aria-busy="true" aria-label="Loading exchange">
-    <div className="h-10 w-10 animate-spin rounded-full border-2 border-noir-gold border-t-transparent" />
-  </div>
-)
+import { ExchangeRouteSkeleton } from "@/components/Molecules/RouteNavSkeletons/RouteNavSkeletons"
 
-export default TheExchangeLoading
+export default function TheExchangeLoading() {
+  return <ExchangeRouteSkeleton />
+}

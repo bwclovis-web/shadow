@@ -1,8 +1,8 @@
 "use client"
 
 import { useCallback } from "react"
-import { Link } from "next-view-transitions"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { Link, useTransitionRouter } from "next-view-transitions"
+import { usePathname, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button"
@@ -59,7 +59,7 @@ const TheExchangeClient = ({
 }: ExchangePageData) => {
   const t = useTranslations("tradingPost")
   const tPrefs = useTranslations("traderProfile.preferences")
-  const router = useRouter()
+  const router = useTransitionRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 

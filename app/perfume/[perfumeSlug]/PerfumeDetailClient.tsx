@@ -1,8 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { Link } from "next-view-transitions"
-import { useRouter } from "next/navigation"
+import { Link, useTransitionRouter } from "next-view-transitions"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button"
@@ -59,7 +58,7 @@ const PerfumeDetailClient = ({
   selectedLetter,
 }: PerfumeDetailClientProps) => {
   const { data: perfume } = usePerfume(initialPerfume.slug, initialPerfume)
-  const router = useRouter()
+  const router = useTransitionRouter()
   const t = useTranslations("singlePerfume")
   const tHouse = useTranslations("singleHouse")
   const { closeModal } = useSessionStore()
