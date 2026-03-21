@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 
 import { getPerfumeDetailPayload } from "@/models/perfumeDetail.server"
+import { selectionFromVoteRow } from "@/models/perfumeSeasonVote.server"
 import { getPerfumeBySlug } from "@/models/perfume.server"
 import { rulesRecommendationService } from "@/services/recommendations"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
@@ -73,6 +74,12 @@ export default async function PerfumeDetailPage({
       isInUserWishlist={payload.isInUserWishlist}
       userRatings={payload.userRatings}
       averageRatings={payload.averageRatings}
+      seasonAggregates={payload.seasonAggregates}
+      userSeasonVote={
+        payload.userSeasonVote
+          ? selectionFromVoteRow(payload.userSeasonVote)
+          : null
+      }
       userReview={payload.userReview}
       reviewsData={payload.reviewsData}
       reviewsPageSize={REVIEWS_PAGE_SIZE}

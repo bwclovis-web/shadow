@@ -13,6 +13,7 @@ export interface UserWithCounts {
   _count: {
     UserPerfume: number
     UserPerfumeRating: number
+    UserPerfumeSeasonVote: number
     UserPerfumeReview: number
     UserPerfumeWishlist: number
     userPerfumeComments: number
@@ -39,6 +40,7 @@ export async function getAllUsersWithCounts(): Promise<UserWithCounts[]> {
           select: {
             UserPerfume: true,
             UserPerfumeRating: true,
+            UserPerfumeSeasonVote: true,
             UserPerfumeReview: true,
             UserPerfumeWishlist: true,
             userPerfumeComments: true,
@@ -76,6 +78,7 @@ export async function getUserWithCounts(userId: string): Promise<UserWithCounts 
           select: {
             UserPerfume: true,
             UserPerfumeRating: true,
+            UserPerfumeSeasonVote: true,
             UserPerfumeReview: true,
             UserPerfumeWishlist: true,
             userPerfumeComments: true,
@@ -151,6 +154,7 @@ export async function deleteUserSafely(
       // Delete all other related records
       await tx.userPerfumeComment.deleteMany({ where: { userId } })
       await tx.userPerfumeRating.deleteMany({ where: { userId } })
+      await tx.userPerfumeSeasonVote.deleteMany({ where: { userId } })
       await tx.userPerfumeReview.deleteMany({ where: { userId } })
       await tx.userPerfumeWishlist.deleteMany({ where: { userId } })
       await tx.userPerfume.deleteMany({ where: { userId } })

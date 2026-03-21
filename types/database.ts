@@ -29,6 +29,7 @@ export interface User {
   UserPerfume: UserPerfume[]
   userPerfumeComments: UserPerfumeComment[]
   UserPerfumeRating: UserPerfumeRating[]
+  UserPerfumeSeasonVote: UserPerfumeSeasonVote[]
   UserPerfumeReview: UserPerfumeReview[]
   UserPerfumeWishlist: UserPerfumeWishlist[]
   wishlistNotifications: WishlistNotification[]
@@ -80,6 +81,7 @@ export interface Perfume {
   userPerfume: UserPerfume[]
   userPerfumeComments: UserPerfumeComment[]
   userPerfumeRating: UserPerfumeRating[]
+  userPerfumeSeasonVote: UserPerfumeSeasonVote[]
   userPerfumeReview: UserPerfumeReview[]
   userPerfumeWishlist: UserPerfumeWishlist[]
   wishlistNotifications: WishlistNotification[]
@@ -246,6 +248,7 @@ export type CreateUserInput = Omit<
   | "UserPerfume"
   | "userPerfumeComments"
   | "UserPerfumeRating"
+  | "UserPerfumeSeasonVote"
   | "UserPerfumeReview"
   | "UserPerfumeWishlist"
   | "wishlistNotifications"
@@ -267,6 +270,7 @@ export type CreatePerfumeInput = Omit<
   | "userPerfume"
   | "userPerfumeComments"
   | "userPerfumeRating"
+  | "userPerfumeSeasonVote"
   | "userPerfumeReview"
   | "userPerfumeWishlist"
   | "wishlistNotifications"

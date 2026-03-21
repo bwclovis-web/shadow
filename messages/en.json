@@ -777,6 +777,22 @@
         }
       }
     },
+    "seasonVote": {
+      "titleVote": "Best season for this perfume",
+      "titleCommunity": "Community season picks",
+      "subtitle": "Choose every season you think this scent shines. “All seasons” selects all four.",
+      "loginToVote": "Please log in to share your season picks",
+      "rankingTitle": "How the community ranked the seasons",
+      "noVotesYet": "No season votes yet.",
+      "totalVoters": "{count, plural, one {# voter} other {# voters}}",
+      "allSeasons": "All seasons",
+      "season": {
+        "winter": "Winter",
+        "spring": "Spring",
+        "summer": "Summer",
+        "fall": "Fall"
+      }
+    },
     "review": {
       "failedToCreateReview": "Failed to create review",
       "heading": "Reviews",

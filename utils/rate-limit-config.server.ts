@@ -10,6 +10,7 @@
  * - Change password: CHANGE_PASSWORD_RATE_LIMIT_MAX, CHANGE_PASSWORD_RATE_LIMIT_WINDOW_MINUTES
  * - Reviews POST: REVIEWS_POST_RATE_LIMIT_MAX, REVIEWS_POST_RATE_LIMIT_WINDOW_MINUTES
  * - Ratings POST: RATINGS_POST_RATE_LIMIT_MAX, RATINGS_POST_RATE_LIMIT_WINDOW_MINUTES
+ * - Season votes POST: SEASON_VOTES_POST_RATE_LIMIT_MAX, SEASON_VOTES_POST_RATE_LIMIT_WINDOW_MINUTES
  */
 
 const HOUR_MS = 60 * 60 * 1000
@@ -52,6 +53,7 @@ export interface UserMutationRateLimits {
   changePassword: RateLimitConfig
   reviewsPost: RateLimitConfig
   ratingsPost: RateLimitConfig
+  seasonVotesPost: RateLimitConfig
 }
 
 let contactMessageLimitsCache: ContactMessageRateLimits | null = null
@@ -151,6 +153,13 @@ export const getUserMutationRateLimits = (): UserMutationRateLimits => {
       max: parseIntEnv(process.env.RATINGS_POST_RATE_LIMIT_MAX, 120),
       windowMs:
         parseIntEnv(process.env.RATINGS_POST_RATE_LIMIT_WINDOW_MINUTES, 15) *
+        60 *
+        1000,
+    },
+    seasonVotesPost: {
+      max: parseIntEnv(process.env.SEASON_VOTES_POST_RATE_LIMIT_MAX, 120),
+      windowMs:
+        parseIntEnv(process.env.SEASON_VOTES_POST_RATE_LIMIT_WINDOW_MINUTES, 15) *
         60 *
         1000,
     },

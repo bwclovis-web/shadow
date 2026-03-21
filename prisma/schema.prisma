@@ -31,6 +31,7 @@ model User {
   UserPerfume           UserPerfume[]
   userPerfumeComments   UserPerfumeComment[]
   UserPerfumeRating     UserPerfumeRating[]
+  UserPerfumeSeasonVote UserPerfumeSeasonVote[]
   UserPerfumeReview     UserPerfumeReview[]
   UserPerfumeWishlist   UserPerfumeWishlist[]
   wishlistNotifications WishlistNotification[]
@@ -81,6 +82,7 @@ model Perfume {
   userPerfume           UserPerfume[]
   userPerfumeComments   UserPerfumeComment[]
   userPerfumeRating     UserPerfumeRating[]
+  userPerfumeSeasonVote UserPerfumeSeasonVote[]
   userPerfumeReview     UserPerfumeReview[]
   userPerfumeWishlist   UserPerfumeWishlist[]
   wishlistNotifications WishlistNotification[]
@@ -128,6 +130,23 @@ model UserPerfumeRating {
 
   @@unique([userId, perfumeId])
   @@index([perfumeId, overall], name: "idx_rating_perfume_overall")
+}
+
+model UserPerfumeSeasonVote {
+  id        String   @id @default(cuid())
+  userId    String
+  perfumeId String
+  winter    Boolean  @default(false)
+  spring    Boolean  @default(false)
+  summer    Boolean  @default(false)
+  fall      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  perfume   Perfume  @relation(fields: [perfumeId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, perfumeId])
+  @@index([perfumeId], name: "idx_season_vote_perfume")
 }
 
 model UserPerfumeReview {

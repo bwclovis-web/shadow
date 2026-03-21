@@ -732,6 +732,22 @@
         }
       }
     },
+    "seasonVote": {
+      "titleVote": "Meilleure saison pour ce parfum",
+      "titleCommunity": "Saisons choisies par la communauté",
+      "subtitle": "Indiquez chaque saison où ce parfum vous semble brillant. « Toutes les saisons » sélectionne les quatre.",
+      "loginToVote": "Connectez-vous pour indiquer vos saisons préférées",
+      "rankingTitle": "Classement des saisons par la communauté",
+      "noVotesYet": "Pas encore de votes par saison.",
+      "totalVoters": "{count, plural, one {# votant} other {# votants}}",
+      "allSeasons": "Toutes les saisons",
+      "season": {
+        "winter": "Hiver",
+        "spring": "Printemps",
+        "summer": "Été",
+        "fall": "Automne"
+      }
+    },
     "review": {
       "failedToCreateReview": "Échec de la création de la critique",
       "heading": "Critiques",
