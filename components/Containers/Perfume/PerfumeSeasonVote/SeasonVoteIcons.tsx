@@ -36,19 +36,21 @@ export function SpringSeasonIcon({ filled, className = "w-12 h-12" }: IconProps)
   const f = fill(filled)
   return (
     <svg viewBox="0 0 40 40" className={className} aria-hidden fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M20 28V12M20 12c-4 0-7-2.5-7-6s3-6 7-6 7 2.5 7 6-3 6-7 6z"
-        stroke={s}
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-        fill={filled ? "rgba(212, 175, 55, 0.15)" : "none"}
-      />
-      <path
-        d="M12 22c2.5 3 5 4 8 4s5.5-1 8-4M14 26c2 2 4 3 6 3s4-1 6-3"
-        stroke={s}
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
+      <g transform="translate(0, 3)">
+        <path
+          d="M20 28V12M20 12c-4 0-7-2.5-7-6s3-6 7-6 7 2.5 7 6-3 6-7 6z"
+          stroke={s}
+          strokeWidth="1.6"
+          strokeLinejoin="round"
+          fill={filled ? "rgba(212, 175, 55, 0.15)" : "none"}
+        />
+        <path
+          d="M12 22c2.5 3 5 4 8 4s5.5-1 8-4M14 26c2 2 4 3 6 3s4-1 6-3"
+          stroke={s}
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+      </g>
     </svg>
   )
 }
