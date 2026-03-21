@@ -40,7 +40,7 @@
 |-------|----------|
 | ~~No query-string length limits on `/api/getTag`, `/api/perfume-houses`, `/api/perfume` (DoS vector)~~ **Done:** `parseRequiredAutocompleteQuery` / `parseOptionalAutocompleteQuery` (200 chars) in `api-route-helpers.server.ts` | **P1** ✅ |
 | ~~`traderId` / `perfumeId` / related ids not validated before DB queries~~ **Done:** `isValidPrismaRecordId` in `utils/prisma-record-id.ts` (Prisma `cuid` + UUID); applied to `/api/trader-feedback`, `/api/ratings`, `/api/reviews`, `/api/user-perfumes`, and wishlist Zod | **P1** ✅ |
-| `sortBy` in `/api/perfumeSortLoader` is cast without validation | **P2** |
+| ~~`sortBy` in `/api/perfumeSortLoader` is cast without validation~~ **Done:** allowlisted `sortBy`, validated `cursor` / `take` (`app/api/perfumeSortLoader/route.ts`) | **P2** ✅ |
 
 **Fixes (non-breaking):**
 
@@ -87,8 +87,8 @@ There is **no root `middleware.ts`**. Adding one is optional but recommended.
 | Issue | Location | Priority |
 |-------|----------|----------|
 | ~~`getUserByProfileSlug` loads **all users** into memory~~ **Fixed:** indexed `profileSlug` query | `models/user.query.ts` | **P0** ✅ |
-| `getAllPerfumes` has a hard cap of 5000 rows with no cursor pagination | `models/perfume.server.ts` | **P1** |
-| `getAllPerfumesWithOptions` has no `take` limit — unbounded result set | `models/perfume.server.ts` | **P1** |
+| ~~`getAllPerfumes` has a hard cap of 5000 rows with no cursor pagination~~ **Done:** cursor + `take` (clamped); `fetchAllPerfumesForCatalog` stitches up to 5000 for `/api/user-perfumes` | `models/perfume.server.ts` | **P1** ✅ |
+| ~~`getAllPerfumesWithOptions` has no `take` limit~~ **Done:** cursor pagination, default/max `take` in `perfume-cursor-order.server.ts` | `models/perfume.server.ts` | **P1** ✅ |
 | `getAvailablePerfumesForDecanting` has no pagination | `models/perfume.server.ts` | **P2** |
 | Scraper import uploads images to R2 sequentially in a `for` loop | `app/api/admin/scraper/import/route.ts` | **P1** |
 | Note resolution in CSV import calls `getOrCreateNote` + `upsertNoteRelation` per note sequentially | `lib/import-perfume-csv.ts` | **P2** |
@@ -97,7 +97,7 @@ There is **no root `middleware.ts`**. Adding one is optional but recommended.
 **Fixes (non-breaking):**
 
 - ~~**`getUserByProfileSlug`**: Add a `slug` column…~~ **Done** (indexed column / direct query).
-- **`getAllPerfumes` / `getAllPerfumesWithOptions`**: Add cursor-based pagination; keep the current API as a backwards-compatible default with a reasonable `take` limit.
+- ~~**`getAllPerfumes` / `getAllPerfumesWithOptions`**: Add cursor-based pagination…~~ **Done:** `getAllPerfumes` / `getAllPerfumesWithOptions` return `{ items, nextCursor }`; `/api/perfumeSortLoader` returns `{ perfumes, nextCursor }` (breaking); `type-asc` sorts by `perfumeHouse.type`.
 - **Scraper R2 uploads**: Use `Promise.all` with a concurrency limiter (e.g. `p-limit(5)`).
 - **Note resolution**: Batch `findMany({ where: { name: { in: [...] } } })` first, then only create missing notes.
 - ~~**Prisma singleton**: Replace `new PrismaClient()` in the import route with the shared `prisma` from `lib/db.ts`.~~ **Done** (do not call `$disconnect()` on the shared client).
@@ -107,8 +107,8 @@ There is **no root `middleware.ts`**. Adding one is optional but recommended.
 | What | Current State | Recommendation | Priority |
 |------|---------------|----------------|----------|
 | Perfume/house by slug | `unstable_cache` with 3600s TTL | Good — keep | — |
-| `getAllPerfumes`, `getAllHouses` | No caching | Wrap in `unstable_cache` with tags | **P1** |
-| Tag invalidation on mutations | Missing | Call `revalidateTag("perfume")` / `revalidateTag("house")` after create/update/delete | **P1** |
+| `getAllPerfumes`, `getAllPerfumesWithOptions`, `getAllHouses` | `unstable_cache` (3600s) + tags `perfume` / `house` | Invalidate via `revalidatePerfumeDataCache` / `revalidateHouseDataCache` after writes | **P1** ✅ |
+| Tag invalidation on mutations | `revalidateTag("perfume")` / `revalidateTag("house")` from server actions + delete API routes | Good — keep | — |
 | The Vault initial data | Fetched entirely on client | Server-render the first page of perfumes and pass as `initialData` | **P1** |
 | API GET routes | No `Cache-Control` headers | Add `s-maxage` / `stale-while-revalidate` headers for public data endpoints | **P2** |
 
@@ -272,9 +272,9 @@ Over 30 usages of `any` across models and components. Key files:
 - [x] Add rate limiting to `/api/change-password`, `/api/reviews` POST, `/api/ratings` POST
 - [ ] Add root `middleware.ts` with security headers (HSTS, X-Frame-Options, etc.)
 - [x] Replace `new PrismaClient()` in scraper import with shared singleton from `lib/db.ts`
-- [ ] Add pagination / `take` limit to `getAllPerfumes` and `getAllPerfumesWithOptions`
-- [ ] Add `revalidateTag()` calls after perfume and house create/update/delete mutations
-- [ ] Wrap `getAllPerfumes`, `getAllHouses` in `unstable_cache` with tag-based invalidation
+- [x] Add pagination / `take` limit to `getAllPerfumes` and `getAllPerfumesWithOptions`
+- [x] Add `revalidateTag()` calls after perfume and house create/update/delete mutations (`utils/server/revalidate-catalog-cache.server.ts` + admin actions, delete routes, house image retry)
+- [x] Wrap `getAllPerfumes`, `getAllPerfumesWithOptions`, `getAllHouses` in `unstable_cache` with tag-based invalidation
 - [ ] Fetch first page of data server-side for The Vault and pass as `initialData`
 - [ ] Add `loading.tsx` for admin, messages, profile, vault routes
 - [ ] Add `error.tsx` for admin and messages routes
@@ -282,7 +282,7 @@ Over 30 usages of `any` across models and components. Key files:
 - [ ] Adopt `withApiErrorHandling` / `safeAsync` in API routes for consistent error responses
 - [ ] Adopt structured logging (Pino) — at least for API routes and critical paths
 - [ ] Ensure `react-icons` imports use sub-path imports (e.g. `react-icons/fi`)
-- [ ] Add `sitemap.ts` and `robots.ts` in the app directory
+- [x] Add `sitemap.ts` and `robots.ts` in the app directory
 
 ### P2 — Nice-to-Have / Iterative
 

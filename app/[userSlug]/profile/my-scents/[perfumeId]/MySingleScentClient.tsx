@@ -18,7 +18,7 @@ import { usePerfumeComments } from "@/hooks/usePerfumeComments"
 import { useSessionStore } from "@/hooks/sessionStore"
 import type { Comment } from "@/types/comments"
 import type { PerfumeI, UserPerfumeI } from "@/types"
-import { validImageRegex } from "@/utils/styleUtils"
+import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
 
 const BOTTLE_BANNER = "/images/single-bottle.webp"
 const USER_PERFUMES_API = "/api/user-perfumes"
@@ -225,9 +225,10 @@ const MySingleScentClient = ({
   }
 
   const perfume = finalPerfume.perfume as { id: string; name: string | null; image: string | null }
+  const normalizedBanner = normalizeRemoteImageSrc(perfume?.image)
   const imageSrc =
-    perfume?.image && !validImageRegex.test(perfume.image)
-      ? perfume.image
+    normalizedBanner && !validImageRegex.test(normalizedBanner)
+      ? normalizedBanner
       : BOTTLE_BANNER
 
   // Total amount owned and remaining (after destashes) for this perfume

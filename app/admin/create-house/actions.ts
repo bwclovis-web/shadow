@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 
 import { createPerfumeHouse } from "@/models/house.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+import { revalidateHouseDataCache } from "@/utils/server/revalidate-catalog-cache.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { CreatePerfumeHouseSchema } from "@/utils/validation/formValidationSchemas"
 
@@ -43,6 +44,7 @@ export const createHouseAction = async (
 
   const res = await createPerfumeHouse(formData)
   if (res.success) {
+    revalidateHouseDataCache()
     redirect("/houses")
   }
 

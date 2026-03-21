@@ -8,6 +8,14 @@
 export interface PerfumeFilters {
   sortBy?: "name-asc" | "name-desc" | "created-desc" | "created-asc" | "type-asc"
   houseId?: string
+  /** Cursor pagination: last perfume `id` from previous page */
+  cursor?: string | null
+  take?: number
+}
+
+export interface PerfumeSortLoaderResponse {
+  perfumes: any[]
+  nextCursor: string | null
 }
 
 export interface PerfumePagination {
@@ -137,17 +145,24 @@ export const getMorePerfumes = async (
 }
 
 /**
- * Fetch perfumes with sorting and filtering.
- *
- * @param filters - Filter and sorting options
- * @returns Promise resolving to perfumes array
+ * Fetch perfumes with sorting and cursor pagination (`/api/perfumeSortLoader`).
  */
-export const getPerfumeSort = async (filters: PerfumeFilters = {}): Promise<any[]> => {
-  const { sortBy = "created-desc" } = filters
-  const url = `/api/perfumeSortLoader?${new URLSearchParams({ sortBy })}`
-  const response = await fetch(url)
-  if (!response.ok) throw new Error(`Failed to fetch perfumes: ${response.statusText}`)
+export const getPerfumeSort = async (
+  filters: PerfumeFilters = {}
+): Promise<PerfumeSortLoaderResponse> => {
+  const { sortBy = "created-desc", cursor, take } = filters
+  const params = new URLSearchParams({ sortBy })
+  if (cursor) params.set("cursor", cursor)
+  if (take != null) params.set("take", String(take))
+
+  const response = await fetch(`/api/perfumeSortLoader?${params}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch perfumes: ${response.statusText}`)
+  }
   const data = await response.json()
-  return Array.isArray(data) ? data : data.perfumes ?? data.result ?? []
+  return {
+    perfumes: Array.isArray(data.perfumes) ? data.perfumes : [],
+    nextCursor: data.nextCursor ?? null,
+  }
 }
 

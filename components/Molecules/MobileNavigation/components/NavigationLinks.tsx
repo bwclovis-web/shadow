@@ -1,6 +1,6 @@
 "use client"
 
-import { Link } from "next-view-transitions"
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 
@@ -36,7 +36,7 @@ const NavigationLinks = ({
         </li>
         {mainNavigation.map(item => (
           <li key={item.id}>
-            <Link
+            <PrefetchLink
               href={item.path}
               onClick={onNavClick}
               className={styleMerge(
@@ -46,7 +46,7 @@ const NavigationLinks = ({
               )}
             >
               {t(item.key)}
-            </Link>
+            </PrefetchLink>
           </li>
         ))}
 

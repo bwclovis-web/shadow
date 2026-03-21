@@ -1,4 +1,4 @@
-import { Link } from "next-view-transitions"
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { useState } from "react"
 
 import { HOUSE_DETAIL_PATH } from "@/constants/routes"
@@ -156,12 +156,13 @@ const HousesWithNoPerfumes = ({ stats }: HousesWithNoPerfumesProps) => {
                 className="hover:bg-purple-50"
               >
                 <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                  <Link
+                  <PrefetchLink
                     href={`${HOUSE_DETAIL_PATH}/${createUrlSlug(house.name)}`}
+                    prefetch={false}
                     className="text-purple-700 hover:text-purple-900 hover:underline"
                   >
                     {house.name}
-                  </Link>
+                  </PrefetchLink>
                 </td>
                 {!filteredData.showMissingFields && house.type && (
                   <td className="px-4 py-3 text-sm text-gray-700 capitalize">

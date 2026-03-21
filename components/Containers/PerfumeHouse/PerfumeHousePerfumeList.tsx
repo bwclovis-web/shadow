@@ -1,9 +1,9 @@
 import { useTranslations } from "next-intl"
-import { Link } from "next-view-transitions"
 
 import { Button } from "@/components/Atoms/Button"
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { PERFUME_PATH } from "@/constants/routes"
-import { validImageRegex } from "@/utils/styleUtils"
+import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
 import Image from "next/image"
 interface PaginationState {
   currentPage: number
@@ -49,18 +49,20 @@ const PerfumeHousePerfumeList = ({
             const href = selectedLetter
               ? `${PERFUME_PATH}/${perfume.slug}?letter=${selectedLetter}`
               : `${PERFUME_PATH}/${perfume.slug}`
+            const bottleSrc = normalizeRemoteImageSrc(perfume.image)
             return (
             <li key={perfume.id} className="h-full">
               <div className="relative w-full h-full noir-border overflow-hidden transition-all duration-300 ease-in-out">
-              <Link
+              <PrefetchLink
                 href={href}
+                prefetch={false}
                 className="block p-2 h-full relative w-full transition-colors duration-300 ease-in-out"
               >
                 <h3 className="text-center block text-lg tracking-wide py-2 font-semibold text-noir-gold leading-6 capitalize">
                   {perfume.name}
                 </h3>
                   <Image
-                    src={perfume.image && !validImageRegex.test(perfume.image) ? perfume.image : "/images/single-bottle.webp"}
+                    src={bottleSrc && !validImageRegex.test(bottleSrc) ? bottleSrc : "/images/single-bottle.webp"}
                     alt={tSingleHouse("perfumeBottleAltText", { name: perfume.name })}
                     priority={index < 6}
                     width={192}
@@ -70,7 +72,7 @@ const PerfumeHousePerfumeList = ({
                     sizes="(max-width: 768px) 50vw, 33vw"
                     style={{ viewTransitionName: `perfume-image-${perfume.id}` } as React.CSSProperties}
                   />
-              </Link>
+              </PrefetchLink>
               </div>
             </li>
           )})}

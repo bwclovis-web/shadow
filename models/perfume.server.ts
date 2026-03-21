@@ -7,37 +7,88 @@ import { deleteFromR2, getR2KeyFromPublicUrl } from "@/lib/r2"
 import { migratePerfumeImageToR2 } from "@/lib/r2-migrate"
 import { transformNotesForDisplay } from "@/models/perfume-notes-helpers"
 import { calculateRelevanceScore } from "@/utils/calculateRelevanceScore"
-import { buildNameOrderBy } from "@/utils/server/order-by.server"
+import {
+  buildPerfumeCatalogNameOrderBy,
+  buildPerfumeCursorOrderBy,
+  clampPerfumeListTake,
+  PERFUME_LIST_AGGREGATE_MAX_ROWS,
+  PERFUME_LIST_MAX_TAKE,
+  type PerfumeListSortBy,
+} from "@/utils/server/perfume-cursor-order.server"
 import { sanitizeText } from "@/utils/server/sanitize.server"
 import { createUrlSlug } from "@/utils/slug"
 
-/** Max rows returned by getAllPerfumes to avoid unbounded queries. Callers needing more should use a paginated API. */
-const GET_ALL_PERFUMES_TAKE_LIMIT = 5000
-
-export const getAllPerfumes = async () => {
-  const perfumes = await prisma.perfume.findMany({
+const perfumeListSelect = {
+  id: true,
+  name: true,
+  description: true,
+  image: true,
+  slug: true,
+  perfumeHouseId: true,
+  createdAt: true,
+  updatedAt: true,
+  perfumeHouse: {
     select: {
       id: true,
       name: true,
-      description: true,
-      image: true,
       slug: true,
-      perfumeHouseId: true,
-      createdAt: true,
-      updatedAt: true,
-      perfumeHouse: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          type: true,
-        },
-      },
+      type: true,
     },
-    orderBy: { name: "asc" },
-    take: GET_ALL_PERFUMES_TAKE_LIMIT,
-  })
-  return perfumes
+  },
+} satisfies Prisma.PerfumeSelect
+
+export type PerfumeListRow = Prisma.PerfumeGetPayload<{ select: typeof perfumeListSelect }>
+
+export interface PerfumeListPage {
+  items: PerfumeListRow[]
+  nextCursor: string | null
+}
+
+const PERFUME_BY_SLUG_REVALIDATE = 3600
+
+/**
+ * Cursor-paginated perfumes, fixed sort: name asc, id asc (stable).
+ */
+export const getAllPerfumes = async (options?: {
+  take?: number
+  cursor?: string | null
+}): Promise<PerfumeListPage> => {
+  const take = clampPerfumeListTake(options?.take)
+  const cursor = options?.cursor ?? ""
+  return unstable_cache(
+    async () => {
+      const orderBy = buildPerfumeCatalogNameOrderBy()
+      const rows = await prisma.perfume.findMany({
+        select: perfumeListSelect,
+        orderBy,
+        take,
+        ...(cursor
+          ? { cursor: { id: cursor }, skip: 1 }
+          : {}),
+      })
+      const nextCursor = rows.length === take ? rows[rows.length - 1]!.id : null
+      return { items: rows, nextCursor }
+    },
+    ["get-all-perfumes", String(take), cursor],
+    { revalidate: PERFUME_BY_SLUG_REVALIDATE, tags: ["perfume"] }
+  )()
+}
+
+/**
+ * Stitch catalog pages until exhausted or `PERFUME_LIST_AGGREGATE_MAX_ROWS` (for legacy full-list responses).
+ */
+export const fetchAllPerfumesForCatalog = async (): Promise<PerfumeListRow[]> => {
+  const all: PerfumeListRow[] = []
+  let cursor: string | null = null
+  const pageSize = PERFUME_LIST_MAX_TAKE
+
+  while (all.length < PERFUME_LIST_AGGREGATE_MAX_ROWS) {
+    const { items, nextCursor } = await getAllPerfumes({ take: pageSize, cursor })
+    all.push(...items)
+    if (!nextCursor || items.length === 0) break
+    cursor = nextCursor
+  }
+  return all
 }
 
 export const getSingleUserPerfumeById = async (userPerfumeId: string, userId: string) => {
@@ -92,35 +143,33 @@ export const getSingleUserPerfumeById = async (userPerfumeId: string, userId: st
 }
 
 export const getAllPerfumesWithOptions = async (options?: {
-  sortBy?: "name-asc" | "name-desc" | "created-desc" | "created-asc" | "type-asc"
-}) => {
-  const { sortBy } = options || {}
-  const orderBy = buildNameOrderBy(sortBy) as Prisma.PerfumeOrderByWithRelationInput
+  sortBy?: PerfumeListSortBy
+  take?: number
+  cursor?: string | null
+}): Promise<PerfumeListPage> => {
+  const sortBy = options?.sortBy
+  const take = clampPerfumeListTake(options?.take)
+  const cursor = options?.cursor ?? ""
+  const sortKey = sortBy ?? "created-desc"
 
-  return prisma.perfume.findMany({
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      image: true,
-      slug: true,
-      perfumeHouseId: true,
-      createdAt: true,
-      updatedAt: true,
-      perfumeHouse: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          type: true,
-        },
-      },
+  return unstable_cache(
+    async () => {
+      const orderBy = buildPerfumeCursorOrderBy(sortBy)
+      const rows = await prisma.perfume.findMany({
+        select: perfumeListSelect,
+        orderBy,
+        take,
+        ...(cursor
+          ? { cursor: { id: cursor }, skip: 1 }
+          : {}),
+      })
+      const nextCursor = rows.length === take ? rows[rows.length - 1]!.id : null
+      return { items: rows, nextCursor }
     },
-    orderBy,
-  })
+    ["get-all-perfumes-with-options", sortKey, String(take), cursor],
+    { revalidate: PERFUME_BY_SLUG_REVALIDATE, tags: ["perfume"] }
+  )()
 }
-
-const PERFUME_BY_SLUG_REVALIDATE = 3600
 
 export const getPerfumeBySlug = cache(async (slug: string) => {
   return unstable_cache(

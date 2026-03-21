@@ -1,7 +1,6 @@
-import { Link } from "next-view-transitions"
-
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { HOUSE_DETAIL_PATH, PERFUME_PATH } from "@/constants/routes"
-import { validImageRegex } from "@/utils/styleUtils"
+import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
 import Image from "next/image"
 
 interface LinkCardProps {
@@ -27,14 +26,16 @@ const LinkCard = ({
   sourcePage,
 }: LinkCardProps) => {
   const basePath = type === "house" ? HOUSE_DETAIL_PATH : PERFUME_PATH
+  const cardImage = normalizeRemoteImageSrc(data.image)
   const href = selectedLetter
     ? `${basePath}/${data.slug}?letter=${selectedLetter}`
     : `${basePath}/${data.slug}`
 
   return (
     <div className="relative w-full h-full group noir-border overflow-hidden transition-all duration-300 ease-in-out bg-noir-dark/70 backdrop-blur-sm">
-      <Link
+      <PrefetchLink
         href={href}
+        prefetch={false}
         className="p-4 flex flex-col overflow-hidden justify-between items-center group transition-all duration-300 ease-in-out"
       >
         <div className="text-center">
@@ -51,9 +52,9 @@ const LinkCard = ({
           )}
         </div>
         <div className="relative rounded-lg">
-          {data.image && !validImageRegex.test(data.image) ? (
+          {cardImage && !validImageRegex.test(cardImage) ? (
             <Image
-              src={data.image}
+              src={cardImage}
               alt={data.name}
               width={300}
               height={400}
@@ -81,7 +82,7 @@ const LinkCard = ({
             />
           )}
         </div>
-      </Link>
+      </PrefetchLink>
       {children && (
         <div className="absolute bottom-0 left-0 right-0 bg-noir-dark/80 p-2 border-t border-noir-gold">
           {children}

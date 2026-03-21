@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 
 import { retryPerfumeHouseImageUpload, updatePerfumeHouse } from "@/models/house.server"
+import { revalidateHouseDataCache } from "@/utils/server/revalidate-catalog-cache.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { UpdatePerfumeHouseSchema } from "@/utils/validation/formValidationSchemas"
@@ -99,6 +100,7 @@ export const retryHouseImageAction = async (
     return { status: "error", error: result.error ?? "Retry failed" }
   }
 
+  revalidateHouseDataCache()
   return { status: "success", message: "Image upload retried successfully." }
 }
 

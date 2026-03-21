@@ -1,12 +1,12 @@
 import { useState } from "react"
 import { useTranslations } from "next-intl"
 import Image from "next/image"
-import { Link } from "next-view-transitions"
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { IoMdCloseCircle } from "react-icons/io"
 
 import VooDooCheck from "@/components/Atoms/VooDooCheck/VooDooCheck"
 import { useToggleWishlist } from "@/lib/mutations/wishlist"
-import { styleMerge } from "@/utils/styleUtils"
+import { normalizeRemoteImageSrc, styleMerge } from "@/utils/styleUtils"
 
 import {
   wishlistAddedVariants,
@@ -81,7 +81,7 @@ const WishlistItemCard = ({
         </div>
       )}
       <Image
-        src={item.perfume.image || "/placeholder-perfume.jpg"}
+        src={normalizeRemoteImageSrc(item.perfume.image) || "/placeholder-perfume.jpg"}
         alt={item.perfume.name}
         width={400}
         height={192}
@@ -111,12 +111,13 @@ const WishlistItemCard = ({
               Added on {new Date(item.createdAt).toLocaleDateString("en-US")}
             </span>
             <div className="flex items-center gap-2">
-              <Link
+              <PrefetchLink
                 href={`/perfume/${item.perfume.slug}`}
+                prefetch={false}
                 className="text-sm font-medium text-noir-blue/90 hover:text-noir-blue"
               >
                 View Details
-              </Link>
+              </PrefetchLink>
             </div>
           </div>
 

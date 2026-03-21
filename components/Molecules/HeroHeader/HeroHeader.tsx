@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
 import Image from "next/image"
 
-import { styleMerge, validImageRegex } from "@/utils/styleUtils"
+import { normalizeRemoteImageSrc, styleMerge, validImageRegex } from "@/utils/styleUtils"
 
 interface HeroHeaderProps {
   title: string
@@ -51,9 +51,10 @@ const HeroHeader = ({
   imageQuality = 85,
   priority = true,
 }: HeroHeaderProps) => {
+  const normalized = normalizeRemoteImageSrc(image)
   const imageSrc =
-    image && !validImageRegex.test(image)
-      ? image
+    normalized && !validImageRegex.test(normalized)
+      ? normalized
       : type === "house"
         ? "/images/house-soon.webp"
         : "/images/single-bottle.webp"

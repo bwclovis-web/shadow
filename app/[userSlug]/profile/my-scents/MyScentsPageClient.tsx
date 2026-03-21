@@ -13,7 +13,7 @@ import type { OptimisticCollectionItem } from "@/hooks/useMyScentsForm"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import { getPerfumeTypeLabel } from "@/data/SelectTypes"
 import { useResponsivePageSize } from "@/hooks/useMediaQuery"
-import { validImageRegex } from "@/utils/styleUtils"
+import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
 
 const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
 const USER_PERFUMES_API = "/api/user-perfumes"
@@ -268,9 +268,10 @@ const MyScentsPageClient = ({
             <ul className="w-full animate-fade-in grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[auto-fill_minmax(900px,1fr)] gap-4">
               {paginatedPerfumes.map((userPerfume) => {
                 const { perfume } = userPerfume
+                const normalized = normalizeRemoteImageSrc(perfume.image)
                 const imageSrc =
-                  perfume.image && !validImageRegex.test(perfume.image)
-                    ? perfume.image
+                  normalized && !validImageRegex.test(normalized)
+                    ? normalized
                     : BOTTLE_PLACEHOLDER
                 const bottleCount = countBottlesForPerfume(bottleEntries, userPerfume.perfumeId)
                 const bottleLabel = buildBottleLabel(userPerfume, bottleCount)

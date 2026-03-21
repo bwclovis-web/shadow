@@ -1,7 +1,9 @@
 "use client"
 
 import { useCallback } from "react"
-import { Link, useTransitionRouter } from "next-view-transitions"
+import { useTransitionRouter } from "next-view-transitions"
+
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
@@ -175,12 +177,13 @@ const TheExchangeClient = ({
                         </p>
                         {perfume.userPerfume.map((userPerfume) => (
                           <div key={userPerfume.id} className="mb-1">
-                            <Link
+                            <PrefetchLink
                               href={`/trader-profile/${userPerfume.userId}`}
+                              prefetch={false}
                               className="text-sm font-semibold text-blue-300 hover:text-noir-blue underline"
                             >
                               {getTraderDisplayName(userPerfume.user)}:
-                            </Link>
+                            </PrefetchLink>
                             <span className="text-sm ml-2 text-noir-gold-100">
                               {getPerfumeTypeLabel(userPerfume.type ?? undefined) || "Unknown Type"}{" "}
                               {userPerfume.available} ml

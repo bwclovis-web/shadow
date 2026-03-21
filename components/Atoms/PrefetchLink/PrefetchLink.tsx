@@ -1,5 +1,6 @@
 "use client"
 
+import { PrefetchKind } from "next/dist/client/components/router-reducer/router-reducer-types"
 import { Link } from "next-view-transitions"
 import { useTransitionRouter } from "next-view-transitions"
 import type { ComponentProps } from "react"
@@ -19,14 +20,23 @@ const getPrefetchPath = (href: NextLinkProps["href"]): string | null => {
 const PrefetchLink = (props: NextLinkProps) => {
   const router = useTransitionRouter()
   const path = getPrefetchPath(props.href)
-  const { onMouseEnter, ...rest } = props
+  const { onMouseEnter, onTouchStart, ...rest } = props
+
+  const prefetchFullRoute = () => {
+    if (!path) return
+    router.prefetch(path, { kind: PrefetchKind.FULL })
+  }
 
   return (
     <Link
       {...rest}
       onMouseEnter={(e) => {
-        if (path) router.prefetch(path)
+        prefetchFullRoute()
         onMouseEnter?.(e)
+      }}
+      onTouchStart={(e) => {
+        prefetchFullRoute()
+        onTouchStart?.(e)
       }}
     />
   )

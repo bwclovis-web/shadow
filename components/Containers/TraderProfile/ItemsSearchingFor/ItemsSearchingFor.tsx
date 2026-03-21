@@ -1,4 +1,6 @@
 import Image from "next/image"
+
+import { normalizeRemoteImageSrc } from "@/utils/styleUtils"
 import { useTranslations } from "next-intl"
 import { BsHeartFill } from "react-icons/bs"
 
@@ -45,39 +47,42 @@ const ItemsSearchingFor = ({ wishlistItems }: ItemsSearchingForProps) => {
   return (
     <div className="mt-6">
       <ul className="space-y-4">
-        {wishlistItems.map(item => (
-          <li
-            key={item.id}
-            className="border bg-noir-gold/10 border-noir-gold rounded p-3 flex items-center gap-3 relative"
-          >
-            <div className="flex items-center gap-0.5">
-              {item.perfume.image && (
-                <Image
-                  src={item.perfume.image}
-                  alt={item.perfume.name}
-                  width={48}
-                  height={48}
-                  quality={70}
-                  className="w-12 h-12 object-cover rounded"
-                  sizes="48px"
-                />
-              )}
-            </div>
-            <div className="flex-1">
-              <h3 className="font-medium text-noir-gold">{item.perfume.name}</h3>
-              {item.perfume.perfumeHouse && (
-                <p className="text-sm text-noir-gold-100">
-                  by {item.perfume.perfumeHouse.name}
+        {wishlistItems.map(item => {
+          const thumb = normalizeRemoteImageSrc(item.perfume.image)
+          return (
+            <li
+              key={item.id}
+              className="border bg-noir-gold/10 border-noir-gold rounded p-3 flex items-center gap-3 relative"
+            >
+              <div className="flex items-center gap-0.5">
+                {thumb && (
+                  <Image
+                    src={thumb}
+                    alt={item.perfume.name}
+                    width={48}
+                    height={48}
+                    quality={70}
+                    className="w-12 h-12 object-cover rounded"
+                    sizes="48px"
+                  />
+                )}
+              </div>
+              <div className="flex-1">
+                <h3 className="font-medium text-noir-gold">{item.perfume.name}</h3>
+                {item.perfume.perfumeHouse && (
+                  <p className="text-sm text-noir-gold-100">
+                    by {item.perfume.perfumeHouse.name}
+                  </p>
+                )}
+              </div>
+              <div className="flex-shrink-0 absolute right-1 bottom-0">
+                <p className="text-xs text-noir-gold-500">
+                  Added {new Date(item.createdAt).toLocaleDateString("en-US")}
                 </p>
-              )}
-            </div>
-            <div className="flex-shrink-0 absolute right-1 bottom-0">
-              <p className="text-xs text-noir-gold-500">
-                Added {new Date(item.createdAt).toLocaleDateString("en-US")}
-              </p>
-            </div>
-          </li>
-        ))}
+              </div>
+            </li>
+          )
+        })}
       </ul>
     </div>
   )

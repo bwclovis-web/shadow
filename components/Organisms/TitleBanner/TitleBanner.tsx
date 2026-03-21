@@ -1,6 +1,8 @@
 import { type ReactNode } from "react"
 import Image from "next/image"
 
+import { normalizeRemoteImageSrc } from "@/utils/styleUtils"
+
 interface TitleBannerProps {
   image: string
   heading: string
@@ -18,11 +20,12 @@ const TitleBanner = ({
   imagePos = "object-center",
   flipImage,
 }: TitleBannerProps) => {
+  const bannerSrc = normalizeRemoteImageSrc(image) ?? image
   return (
     <header className="relative w-full title-banner flex items-end py-6 justify-center overflow-hidden">
       <div className="absolute inset-0 bg-noir-black/30 mask-t-from-5% mask-t-to-100% mask"></div>
       <Image
-        src={image}
+        src={bannerSrc}
         alt=""
         width={1200}
         height={600}

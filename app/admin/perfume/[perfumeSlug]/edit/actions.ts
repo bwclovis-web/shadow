@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 
 import { updatePerfume } from "@/models/perfume.server"
+import { revalidatePerfumeDataCache } from "@/utils/server/revalidate-catalog-cache.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { UpdatePerfumeSchema } from "@/utils/validation/formValidationSchemas"
@@ -54,6 +55,7 @@ export const editPerfumeAction = async (
 
   if (res.success && res.data) {
     const slug = res.data.slug
+    revalidatePerfumeDataCache()
     revalidatePath(`/perfume/${slug}`)
     redirect(`/perfume/${slug}`)
   }

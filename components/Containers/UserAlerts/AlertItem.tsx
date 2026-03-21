@@ -1,4 +1,4 @@
-import { Link } from "next-view-transitions"
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import {
   BsBell,
   BsBoxArrowUpRight,
@@ -116,13 +116,14 @@ export const AlertItem = ({
                 <span className="text-xs text-gray-500" suppressHydrationWarning>
                   {formatTimeAgo(alert.createdAt)}
                 </span>
-                <Link
+                <PrefetchLink
                   href={alertLink(alert)}
+                  prefetch={false}
                   className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
                 >
                   {linkText(alert.alertType)}{" "}
                   <BsBoxArrowUpRight className="h-3 w-3" />
-                </Link>
+                </PrefetchLink>
               </div>
             </div>
 
@@ -196,8 +197,9 @@ export const AlertItem = ({
               {alert.alertType !== "pending_submission_approval" && alert.Perfume && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <span>Perfume:</span>
-                  <Link
+                  <PrefetchLink
                     href={perfumeLink(alert.Perfume.slug)}
+                    prefetch={false}
                     className="font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1"
                   >
                     {alert.Perfume.name}
@@ -207,7 +209,7 @@ export const AlertItem = ({
                       </span>
                     )}
                     <BsBoxArrowUpRight className="h-3 w-3" />
-                  </Link>
+                  </PrefetchLink>
                 </div>
               )}
 
@@ -232,15 +234,16 @@ export const AlertItem = ({
                               },
                               index: number
                             ) => (
-                              <Link
+                              <PrefetchLink
                                 key={trader.userId ?? index}
                                 href={`/trader-profile/${trader.userId}`}
+                                prefetch={false}
                                 className="block text-blue-600 hover:text-blue-800"
                               >
                                 {trader.displayName ??
                                   trader.email ??
                                   "Unknown Trader"}
-                              </Link>
+                              </PrefetchLink>
                             )
                           )}
                         </div>

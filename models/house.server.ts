@@ -10,6 +10,8 @@ import { buildNameOrderBy } from "@/utils/server/order-by.server"
 import { sanitizeText } from "@/utils/server/sanitize.server"
 import { createUrlSlug } from "@/utils/slug"
 
+const HOUSE_BY_SLUG_REVALIDATE = 3600
+
 export const getAllHousesWithOptions = async (options?: {
   sortByType?: boolean
   houseType?: string
@@ -152,41 +154,52 @@ export const getAllHouses = async (options?: {
   includeEmpty?: boolean
 }) => {
   const { skip, take, selectFields, includeEmpty = false } = options || {}
-
-  const where: Prisma.PerfumeHouseWhereInput = {}
-
-  // Only include houses that have at least one perfume (unless includeEmpty is true)
-  if (!includeEmpty) {
-    where.perfumes = {
-      some: {},
-    }
-  }
-
-  if (selectFields) {
-    return prisma.perfumeHouse.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      skip,
-      take,
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-        type: true,
-        country: true,
-        founded: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    })
-  }
-
-  return prisma.perfumeHouse.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    skip,
-    take,
+  const cacheKey = JSON.stringify({
+    skip: skip ?? null,
+    take: take ?? null,
+    selectFields: Boolean(selectFields),
+    includeEmpty,
   })
+
+  return unstable_cache(
+    async () => {
+      const where: Prisma.PerfumeHouseWhereInput = {}
+
+      if (!includeEmpty) {
+        where.perfumes = {
+          some: {},
+        }
+      }
+
+      if (selectFields) {
+        return prisma.perfumeHouse.findMany({
+          where,
+          orderBy: { createdAt: "desc" },
+          skip,
+          take,
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            type: true,
+            country: true,
+            founded: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        })
+      }
+
+      return prisma.perfumeHouse.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take,
+      })
+    },
+    ["get-all-houses", cacheKey],
+    { revalidate: HOUSE_BY_SLUG_REVALIDATE, tags: ["house"] }
+  )()
 }
 
 export const getHousesByLetter = async (letter: string, includeEmpty = false) => prisma.perfumeHouse.findMany({
@@ -285,8 +298,6 @@ export const getHousesByLetterPaginated = async (
     count: totalCount,
   }
 }
-
-const HOUSE_BY_SLUG_REVALIDATE = 3600
 
 export const getPerfumeHouseBySlug = cache(
   async (slug: string, opts?: { skip?: number; take?: number }) => {

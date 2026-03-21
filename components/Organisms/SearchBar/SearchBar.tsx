@@ -1,7 +1,7 @@
 "use client"
 
 import { type VariantProps } from "class-variance-authority"
-import { Link } from "next-view-transitions"
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import {
   type ChangeEvent,
   type HTMLProps,
@@ -97,13 +97,14 @@ export default function SearchBar({
         : `/perfume/${item.slug}`
 
     return (
-      <Link
+      <PrefetchLink
         href={routePath}
+        prefetch={false}
         className="block w-full h-full capitalize"
         onClick={clearResults}
       >
         {highlightSearchTerm(item.name, searchValue)}
-      </Link>
+      </PrefetchLink>
     )
   }
 

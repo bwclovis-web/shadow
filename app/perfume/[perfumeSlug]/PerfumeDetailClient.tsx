@@ -1,7 +1,9 @@
 "use client"
 
 import Image from "next/image"
-import { Link, useTransitionRouter } from "next-view-transitions"
+import { useTransitionRouter } from "next-view-transitions"
+
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button"
@@ -18,7 +20,7 @@ import { HOUSE_DETAIL_PATH } from "@/constants/routes"
 import { usePerfume } from "@/hooks/usePerfume"
 import { useSessionStore } from "@/hooks/sessionStore"
 import { useDeletePerfume } from "@/lib/mutations/perfumes"
-import { validImageRegex } from "@/utils/styleUtils"
+import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
 
 const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
 
@@ -107,12 +109,12 @@ const PerfumeDetailClient = ({
         <h1 className="capitalize">{perfume.name}</h1>
         <p className="text-lg tracking-wide mt-2 text-noir-gold-500">
           {t("subheading")}
-          <Link
+          <PrefetchLink
             className="text-blue-200 hover:underline font-semibold underline"
             href={`${HOUSE_DETAIL_PATH}/${perfume.perfumeHouse?.slug}`}
           >
             {perfume.perfumeHouse?.name}
-          </Link>
+          </PrefetchLink>
         </p>
       </HeroHeader>
 
@@ -180,37 +182,42 @@ const PerfumeDetailClient = ({
               {t("similarPerfumes", { defaultValue: "Similar perfumes" })}
             </h2>
             <ul className="grid grid-cols-1 md:grid-cols-4 gap-4 p-2">
-              {similarPerfumes.map((similar) => (
-                <li key={similar.id}>
-                  <Link
-                    href={`/perfume/${similar.slug}${selectedLetter ? `?letter=${selectedLetter}` : ""}`}
-                    className="block p-2 h-full noir-border relative w-full transition-colors duration-300 ease-in-out hover:bg-white/5"
-                  >
-                    <h3 className="text-center block text-sm tracking-wide py-2 font-semibold text-noir-gold leading-tight capitalize line-clamp-2">
-                      {similar.name}
-                    </h3>
-                    <Image
-                      src={
-                        (!validImageRegex.test(similar.image ?? "") ? similar.image : null) ??
-                        BOTTLE_PLACEHOLDER
-                      }
-                      alt={tHouse("perfumeBottleAltText", { name: similar.name })}
-                      priority={false}
-                      width={128}
-                      height={128}
-                      quality={75}
-                      className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-lg mb-2 mx-auto dark:brightness-90"
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
-                      style={{ viewTransitionName: `perfume-image-${similar.id}` } as React.CSSProperties}
-                    />
-                    {similar.perfumeHouse && (
-                      <p className="text-center text-xs text-noir-gold-500/80 truncate">
-                        {similar.perfumeHouse.name}
-                      </p>
-                    )}
-                  </Link>
-                </li>
-              ))}
+              {similarPerfumes.map((similar) => {
+                const similarSrc = normalizeRemoteImageSrc(similar.image)
+                const similarImageSrc =
+                  similarSrc && !validImageRegex.test(similarSrc)
+                    ? similarSrc
+                    : BOTTLE_PLACEHOLDER
+                return (
+                  <li key={similar.id}>
+                    <PrefetchLink
+                      href={`/perfume/${similar.slug}${selectedLetter ? `?letter=${selectedLetter}` : ""}`}
+                      prefetch={false}
+                      className="block p-2 h-full noir-border relative w-full transition-colors duration-300 ease-in-out hover:bg-white/5"
+                    >
+                      <h3 className="text-center block text-sm tracking-wide py-2 font-semibold text-noir-gold leading-tight capitalize line-clamp-2">
+                        {similar.name}
+                      </h3>
+                      <Image
+                        src={similarImageSrc}
+                        alt={tHouse("perfumeBottleAltText", { name: similar.name })}
+                        priority={false}
+                        width={128}
+                        height={128}
+                        quality={75}
+                        className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-lg mb-2 mx-auto dark:brightness-90"
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                        style={{ viewTransitionName: `perfume-image-${similar.id}` } as React.CSSProperties}
+                      />
+                      {similar.perfumeHouse && (
+                        <p className="text-center text-xs text-noir-gold-500/80 truncate">
+                          {similar.perfumeHouse.name}
+                        </p>
+                      )}
+                    </PrefetchLink>
+                  </li>
+                )
+              })}
             </ul>
           </div>
         )}

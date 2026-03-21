@@ -9,6 +9,10 @@ import {
 import { createPerfume } from "@/models/perfume.server"
 import { createPerfumeHouse } from "@/models/house.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+import {
+  revalidateHouseDataCache,
+  revalidatePerfumeDataCache,
+} from "@/utils/server/revalidate-catalog-cache.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 
@@ -73,12 +77,14 @@ export const processPendingSubmissionAction = async (
           }
         })
         await createPerfume(perfumeFormData)
+        revalidatePerfumeDataCache()
       } else {
         const houseFormData = new FormData()
         Object.entries(data).forEach(([key, value]) => {
           houseFormData.append(key, value as string)
         })
         await createPerfumeHouse(houseFormData)
+        revalidateHouseDataCache()
       }
 
       await updatePendingSubmissionStatus(
