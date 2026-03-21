@@ -31,6 +31,7 @@ import type {
   ScraperRunRequest,
   ScraperRunResponse,
 } from "@/types/scraper"
+import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 import { requireAdminOrEditorApi } from "@/utils/server/requireAdminOrEditorApi.server"
 
 // ---------------------------------------------------------------------------
@@ -155,6 +156,24 @@ function validateBody(body: unknown): body is ScraperRunRequest {
 export async function POST(request: NextRequest): Promise<Response> {
   const auth = await requireAdminOrEditorApi(request)
   if (!auth.allowed) return auth.response
+
+  try {
+    await requireCSRF(request)
+  } catch (error) {
+    if (error instanceof CSRFError) {
+      return NextResponse.json(
+        {
+          ok: false,
+          scrapedCount: 0,
+          records: [],
+          csvContent: "",
+          errors: [error.message],
+        } satisfies ScraperRunResponse,
+        { status: 403 },
+      )
+    }
+    throw error
+  }
 
   let body: unknown
   try {

@@ -22,6 +22,7 @@ import type {
   ScraperImportRequest,
   ScraperImportResponse,
 } from "@/types/scraper"
+import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 import { requireAdminOrEditorApi } from "@/utils/server/requireAdminOrEditorApi.server"
 
 // ---------------------------------------------------------------------------
@@ -49,6 +50,23 @@ function isValidRecord(r: unknown): r is PerfumeCsvRecord {
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const auth = await requireAdminOrEditorApi(request)
   if (!auth.allowed) return auth.response
+
+  try {
+    await requireCSRF(request)
+  } catch (error) {
+    if (error instanceof CSRFError) {
+      return NextResponse.json(
+        {
+          ok: false,
+          importedCount: 0,
+          r2UploadCount: 0,
+          errors: [error.message],
+        } satisfies ScraperImportResponse,
+        { status: 403 },
+      )
+    }
+    throw error
+  }
 
   let body: unknown
   try {

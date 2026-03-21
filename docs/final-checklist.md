@@ -24,15 +24,15 @@
 | Issue | Route | Priority |
 |-------|-------|----------|
 | `/api/data-quality-houses` returns all houses (including email, phone, address) with **no auth check** | `app/api/data-quality-houses/route.ts` | **P0** |
-| `/api/cron/cleanup-messages` runs without auth if `CRON_SECRET` is unset | `app/api/cron/cleanup-messages/route.ts` | **P0** |
-| Admin scraper routes (`/api/admin/scraper/import`, `/run`) lack CSRF protection | `app/api/admin/scraper/*/route.ts` | **P1** |
-| `/api/ratings` POST is missing CSRF protection | `app/api/ratings/route.ts` | **P1** |
+| ~~`/api/cron/cleanup-messages` ran without auth if `CRON_SECRET` was unset~~ Fixed: returns 500 if unset | `app/api/cron/cleanup-messages/route.ts` | **P0** ✅ |
+| ~~Admin scraper routes (`/api/admin/scraper/import`, `/run`) lack CSRF protection~~ Fixed: `requireCSRF` in POST | `app/api/admin/scraper/import/route.ts`, `run/route.ts` | **P1** ✅ |
+| ~~`/api/ratings` POST is missing CSRF protection~~ Fixed: `requireCSRF` in POST | `app/api/ratings/route.ts` | **P1** ✅ |
 
 **Fixes (non-breaking):**
 
 - Add `requireAdminOrEditorApi` to `/api/data-quality-houses`.
-- Make `/api/cron/cleanup-messages` fail early when `CRON_SECRET` is not set.
-- Add CSRF validation (`validateCsrfToken`) to the admin scraper routes and `/api/ratings` POST.
+- ~~Make `/api/cron/cleanup-messages` fail early when `CRON_SECRET` is not set.~~ **Done.**
+- CSRF (`requireCSRF`) on `/api/ratings` POST and admin scraper import/run — **Done.**
 
 ### 1.2 Input Validation
 
@@ -86,7 +86,7 @@ There is **no root `middleware.ts`**. Adding one is optional but recommended.
 
 | Issue | Location | Priority |
 |-------|----------|----------|
-| `getUserByProfileSlug` loads **all users** into memory to find a slug match | `models/user.query.ts` | **P0** |
+| ~~`getUserByProfileSlug` loads **all users** into memory~~ **Fixed:** indexed `profileSlug` query | `models/user.query.ts` | **P0** ✅ |
 | `getAllPerfumes` has a hard cap of 5000 rows with no cursor pagination | `models/perfume.server.ts` | **P1** |
 | `getAllPerfumesWithOptions` has no `take` limit — unbounded result set | `models/perfume.server.ts` | **P1** |
 | `getAvailablePerfumesForDecanting` has no pagination | `models/perfume.server.ts` | **P2** |
@@ -96,7 +96,7 @@ There is **no root `middleware.ts`**. Adding one is optional but recommended.
 
 **Fixes (non-breaking):**
 
-- **`getUserByProfileSlug`**: Add a `slug` column to the `User` table (or a computed/stored slug) with a unique index. Query directly instead of loading all users. *This requires a migration — plan carefully.*
+- ~~**`getUserByProfileSlug`**: Add a `slug` column…~~ **Done** (indexed column / direct query).
 - **`getAllPerfumes` / `getAllPerfumesWithOptions`**: Add cursor-based pagination; keep the current API as a backwards-compatible default with a reasonable `take` limit.
 - **Scraper R2 uploads**: Use `Promise.all` with a concurrency limiter (e.g. `p-limit(5)`).
 - **Note resolution**: Batch `findMany({ where: { name: { in: [...] } } })` first, then only create missing notes.
@@ -257,16 +257,16 @@ Over 30 usages of `any` across models and components. Key files:
 ### P0 — Must-Fix Before Launch
 
 - [x] Add auth (`requireAdminOrEditorApi`) to `/api/data-quality-houses`
-- [ ] Make `/api/cron/cleanup-messages` fail if `CRON_SECRET` is not set
+- [x] Make `/api/cron/cleanup-messages` fail if `CRON_SECRET` is not set
 - [x] Add rate limiting to `/api/auth/refresh`, sign-in, and sign-up endpoints
-- [ ] Fix `getUserByProfileSlug` to avoid loading all users into memory (add slug column + index, or use a `WHERE` with `LOWER()`)
+- [x] Fix `getUserByProfileSlug` to avoid loading all users into memory (add slug column + index, or use a `WHERE` with `LOWER()`)
 - [x] Verify auth cookies set `Secure`, `HttpOnly`, `SameSite=Strict` in production
 - [ ] Ensure `JWT_SECRET` is ≥ 32 characters in production environment
 
 ### P1 — Strongly Recommended
 
-- [ ] Add CSRF protection to `/api/ratings` POST
-- [ ] Add CSRF protection to admin scraper import/run routes
+- [x] Add CSRF protection to `/api/ratings` POST
+- [x] Add CSRF protection to admin scraper import/run routes
 - [ ] Add query param length limits on `/api/getTag`, `/api/perfume-houses`, `/api/perfume`
 - [ ] Validate UUID format on `traderId`, `perfumeId`, etc. before DB queries
 - [ ] Add rate limiting to `/api/change-password`, `/api/reviews` POST, `/api/ratings` POST

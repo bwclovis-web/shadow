@@ -12,19 +12,24 @@ export const maxDuration = 60
 
 /**
  * Deletes trader contact messages older than MESSAGE_RETENTION_DAYS.
- * Secure with CRON_SECRET: call with Authorization: Bearer <CRON_SECRET> or ?secret=<CRON_SECRET>.
+ * Requires CRON_SECRET to be set. Call with Authorization: Bearer <CRON_SECRET> or ?secret=<CRON_SECRET>.
  */
 export async function GET(request: NextRequest) {
-  const cronSecret = process.env.CRON_SECRET
-  if (cronSecret) {
-    const authHeader = request.headers.get("authorization")
-    const bearer = authHeader?.startsWith("Bearer ")
-      ? authHeader.slice(7)
-      : null
-    const querySecret = request.nextUrl.searchParams.get("secret")
-    if (bearer !== cronSecret && querySecret !== cronSecret) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+  const cronSecret = process.env.CRON_SECRET?.trim()
+  if (!cronSecret) {
+    return NextResponse.json(
+      { error: "CRON_SECRET is not configured" },
+      { status: 500 }
+    )
+  }
+
+  const authHeader = request.headers.get("authorization")
+  const bearer = authHeader?.startsWith("Bearer ")
+    ? authHeader.slice(7)
+    : null
+  const querySecret = request.nextUrl.searchParams.get("secret")
+  if (bearer !== cronSecret && querySecret !== cronSecret) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   const cutoff = new Date()

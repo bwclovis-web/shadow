@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await parseFormData(request)
+    await requireCSRF(request, formData)
     const perfumeId = formData.required("perfumeId")
     const category = formData.required("category")
     const rating = formData.getInt("rating")

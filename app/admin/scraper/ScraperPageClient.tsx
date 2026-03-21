@@ -4,6 +4,7 @@ import { type ChangeEvent, type FormEvent, useEffect, useState } from "react"
 
 import { Button } from "@/components/Atoms/Button/Button"
 import HouseTypeahead from "@/components/Molecules/HouseTypeahead/HouseTypeahead"
+import { useCSRF } from "@/hooks/useCSRF"
 import type {
   PerfumeCsvRecord,
   ScraperImportResponse,
@@ -84,6 +85,8 @@ function inputClass(extra = "") {
 // Component
 // ---------------------------------------------------------------------------
 export function ScraperPageClient() {
+  const { addToHeaders } = useCSRF()
+
   // -- scraper config state --
   const [houseName, setHouseName] = useState("")
   const [collectionUrlsRaw, setCollectionUrlsRaw] = useState("")
@@ -366,12 +369,13 @@ export function ScraperPageClient() {
     try {
       const res = await fetch("/api/admin/scraper/import", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: addToHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({
           records: scrapeResult.records,
           uploadImagesToR2,
           overwriteImageUrls,
         }),
+        credentials: "include",
       })
       const data = (await res.json()) as ScraperImportResponse
 
