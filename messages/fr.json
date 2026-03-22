@@ -26,13 +26,30 @@
     "pageOf": "Page {current} sur {total}"
   },
   "compare": {
+    "meta": {
+      "title": "Comparer des parfums - Shadow and Sillage",
+      "description": "Comparez notes, notes moyennes, disponibilité sur l’échange et maisons."
+    },
     "trayAriaLabel": "Parfums sélectionnés pour comparaison",
     "trayTitle": "Comparer ({count} sur {max})",
     "clearAll": "Tout effacer",
+    "openCompare": "Ouvrir la comparaison",
     "removeItem": "Retirer {name} de la comparaison",
     "toggleAdd": "Ajouter à la comparaison",
     "toggleRemove": "Retirer de la comparaison",
-    "maxReached": "Le bac de comparaison est plein (maximum {max} parfums)"
+    "maxReached": "Le bac de comparaison est plein (maximum {max} parfums)",
+    "pageHeading": "Comparer",
+    "pageSubheading": "Notes, avis, disponibilité et maison",
+    "emptyTitle": "Aucun parfum à comparer",
+    "emptyBody": "Ajoutez jusqu’à trois parfums depuis Le Coffre via le bouton comparer sur chaque carte.",
+    "emptyCta": "Parcourir Le Coffre",
+    "loadError": "Impossible de charger ce parfum.",
+    "retry": "Réessayer",
+    "byHouse": "Par :",
+    "houseUnknown": "Maison non renseignée",
+    "availability": "Sur l’échange",
+    "listingCount": "{count, plural, =0 {Aucune annonce active} one {# annonce} other {# annonces}}",
+    "viewOnExchange": "Rechercher sur The Exchange"
   },
   "admin": {
     "navigation": {

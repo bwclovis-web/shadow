@@ -59,6 +59,8 @@ const renderCategorizedNotes = ({
   const sortedHeart = sortNotesAlphabetically(perfumeNotesHeart)
   const sortedClose = sortNotesAlphabetically(perfumeNotesClose)
 
+  //TODO: add prop to make these one or two column layout
+
   return (
     <div className=" p-4 bg-noir-dark text-noir-gold-100 grid grid-cols-1 md:grid-cols-3 gap-4">
       {hasOpen && (

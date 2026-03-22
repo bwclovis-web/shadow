@@ -26,13 +26,30 @@
     "pageOf": "Pagina {current} di {total}"
   },
   "compare": {
+    "meta": {
+      "title": "Confronta profumi - Shadow and Sillage",
+      "description": "Confronta note, valutazioni, disponibilità sull’exchange e case profumi."
+    },
     "trayAriaLabel": "Profumi selezionati per il confronto",
     "trayTitle": "Confronta ({count} di {max})",
     "clearAll": "Cancella tutto",
+    "openCompare": "Apri confronto",
     "removeItem": "Rimuovi {name} dal confronto",
     "toggleAdd": "Aggiungi al confronto",
     "toggleRemove": "Rimuovi dal confronto",
-    "maxReached": "Il vassoio di confronto è pieno (massimo {max} profumi)"
+    "maxReached": "Il vassoio di confronto è pieno (massimo {max} profumi)",
+    "pageHeading": "Confronta",
+    "pageSubheading": "Note, valutazioni, disponibilità e casa",
+    "emptyTitle": "Nessun profumo da confrontare",
+    "emptyBody": "Aggiungi fino a tre profumi dalla Volta con il controllo confronta su ogni scheda.",
+    "emptyCta": "Sfoglia la Volta",
+    "loadError": "Impossibile caricare questo profumo.",
+    "retry": "Riprova",
+    "byHouse": "Di:",
+    "houseUnknown": "Casa non indicata",
+    "availability": "Sull’exchange",
+    "listingCount": "{count, plural, =0 {Nessun annuncio attivo} one {# annuncio} other {# annunci}}",
+    "viewOnExchange": "Cerca su The Exchange"
   },
   "admin": {
     "navigation": {

@@ -22,13 +22,30 @@
     "pageOf": "Page {current} of {total}"
   },
   "compare": {
+    "meta": {
+      "title": "Compare perfumes - Shadow and Sillage",
+      "description": "Compare notes, community ratings, exchange availability, and perfume houses side by side."
+    },
     "trayAriaLabel": "Perfumes selected for comparison",
     "trayTitle": "Compare ({count} of {max})",
     "clearAll": "Clear all",
+    "openCompare": "Open compare",
     "removeItem": "Remove {name} from compare",
     "toggleAdd": "Add to compare",
     "toggleRemove": "Remove from compare",
-    "maxReached": "Compare tray is full (maximum {max} perfumes)"
+    "maxReached": "Compare tray is full (maximum {max} perfumes)",
+    "pageHeading": "Compare",
+    "pageSubheading": "Notes, ratings, exchange availability, and house",
+    "emptyTitle": "No perfumes to compare",
+    "emptyBody": "Add up to three perfumes from The Vault using the compare control on each card.",
+    "emptyCta": "Browse The Vault",
+    "loadError": "We couldn't load this perfume.",
+    "retry": "Try again",
+    "byHouse": "By:",
+    "houseUnknown": "House not listed",
+    "availability": "On the exchange",
+    "listingCount": "{count, plural, =0 {No active listings} one {# listing} other {# listings}}",
+    "viewOnExchange": "Search on The Exchange"
   },
   "admin": {
     "navigation": {
