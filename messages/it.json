@@ -25,6 +25,15 @@
     "next": "Successivo",
     "pageOf": "Pagina {current} di {total}"
   },
+  "compare": {
+    "trayAriaLabel": "Profumi selezionati per il confronto",
+    "trayTitle": "Confronta ({count} di {max})",
+    "clearAll": "Cancella tutto",
+    "removeItem": "Rimuovi {name} dal confronto",
+    "toggleAdd": "Aggiungi al confronto",
+    "toggleRemove": "Rimuovi dal confronto",
+    "maxReached": "Il vassoio di confronto è pieno (massimo {max} profumi)"
+  },
   "admin": {
     "navigation": {
       "dashboard": "Dashboard",

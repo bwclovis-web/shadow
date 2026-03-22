@@ -21,6 +21,15 @@
     "next": "Next",
     "pageOf": "Page {current} of {total}"
   },
+  "compare": {
+    "trayAriaLabel": "Perfumes selected for comparison",
+    "trayTitle": "Compare ({count} of {max})",
+    "clearAll": "Clear all",
+    "removeItem": "Remove {name} from compare",
+    "toggleAdd": "Add to compare",
+    "toggleRemove": "Remove from compare",
+    "maxReached": "Compare tray is full (maximum {max} perfumes)"
+  },
   "admin": {
     "navigation": {
       "dashboard": "Dashboard",

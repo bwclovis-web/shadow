@@ -1,4 +1,5 @@
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
+import { PerfumeCompareToggle } from "@/components/Molecules/PerfumeCompareToggle/PerfumeCompareToggle"
 import { HOUSE_DETAIL_PATH, PERFUME_PATH } from "@/constants/routes"
 import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
 import Image from "next/image"
@@ -90,6 +91,16 @@ const LinkCard = ({
           )}
         </div>
       </PrefetchLink>
+      {type === "perfume" && (
+        <PerfumeCompareToggle
+          item={{
+            id: data.id,
+            slug: data.slug,
+            name: data.name,
+            image: data.image,
+          }}
+        />
+      )}
       {children && (
         <div className="absolute bottom-0 left-0 right-0 bg-noir-dark/80 p-2 border-t border-noir-gold">
           {children}

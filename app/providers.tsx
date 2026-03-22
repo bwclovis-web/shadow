@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
 import { useState } from 'react'
 
+import { CompareTray } from '@/components/Molecules/CompareTray/CompareTray'
 import { TokenRefresh } from '@/components/TokenRefresh'
 
 const ReactQueryDevtools = dynamic(
@@ -19,6 +20,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <TokenRefresh />
       {children}
+      <CompareTray />
       {process.env.NODE_ENV === 'development' && (
         <ReactQueryDevtools initialIsOpen={false} />
       )}
