@@ -25,6 +25,15 @@
     "next": "Suivant",
     "pageOf": "Page {current} sur {total}"
   },
+  "compare": {
+    "trayAriaLabel": "Parfums sélectionnés pour comparaison",
+    "trayTitle": "Comparer ({count} sur {max})",
+    "clearAll": "Tout effacer",
+    "removeItem": "Retirer {name} de la comparaison",
+    "toggleAdd": "Ajouter à la comparaison",
+    "toggleRemove": "Retirer de la comparaison",
+    "maxReached": "Le bac de comparaison est plein (maximum {max} parfums)"
+  },
   "admin": {
     "navigation": {
       "dashboard": "Tableau de bord",

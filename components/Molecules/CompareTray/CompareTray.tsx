@@ -1,0 +1,114 @@
+"use client"
+
+import Image from "next/image"
+import { useTranslations } from "next-intl"
+import { useLayoutEffect, useRef } from "react"
+import { IoMdCloseCircle } from "react-icons/io"
+
+import { Button } from "@/components/Atoms/Button/Button"
+import { COMPARE_MAX_ITEMS, useCompareStore } from "@/hooks/compareStore"
+import { normalizeRemoteImageSrc, styleMerge, validImageRegex } from "@/utils/styleUtils"
+
+/** Synced to `body` padding in `app/globals.css` when the tray is visible. */
+export const COMPARE_TRAY_PAD_VAR = "--compare-tray-pad"
+
+function CompareThumb({ image, alt }: { image?: string; alt: string }) {
+  const normalized = normalizeRemoteImageSrc(image)
+  const showRemote = normalized && !validImageRegex.test(normalized)
+  const src = showRemote ? normalized : "/images/single-bottle.webp"
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      width={36}
+      height={36}
+      className="h-9 w-9 shrink-0 rounded-sm object-cover"
+    />
+  )
+}
+
+/**
+ * Fixed compare tray; mounted from `app/providers.tsx`.
+ * @see docs/compare-client.md
+ */
+export function CompareTray() {
+  const t = useTranslations("compare")
+  const items = useCompareStore((s) => s.items)
+  const remove = useCompareStore((s) => s.remove)
+  const clear = useCompareStore((s) => s.clear)
+  const trayRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const root = document.documentElement
+    if (items.length === 0) {
+      root.style.removeProperty(COMPARE_TRAY_PAD_VAR)
+      return
+    }
+    const el = trayRef.current
+    if (!el) return
+
+    const apply = () => {
+      const h = el.getBoundingClientRect().height
+      root.style.setProperty(COMPARE_TRAY_PAD_VAR, `${Math.ceil(h)}px`)
+    }
+    apply()
+    const ro = new ResizeObserver(apply)
+    ro.observe(el)
+    return () => {
+      ro.disconnect()
+      root.style.removeProperty(COMPARE_TRAY_PAD_VAR)
+    }
+  }, [items.length])
+
+  if (items.length === 0) return null
+
+  return (
+    <div
+      ref={trayRef}
+      role="region"
+      aria-label={t("trayAriaLabel")}
+      className={styleMerge(
+        "fixed bottom-0 left-0 right-0 z-50",
+        "bg-noir-dark/95 backdrop-blur-md border-t border-noir-light/20 mobile-safe-bottom",
+        "px-3 py-3 shadow-lg"
+      )}
+    >
+      <div className="mx-auto flex max-w-6xl flex-col gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-semibold text-noir-gold">
+            {t("trayTitle", {
+              count: items.length,
+              max: COMPARE_MAX_ITEMS,
+            })}
+          </p>
+          <Button type="button" variant="secondary" size="sm" onClick={clear}>
+            {t("clearAll")}
+          </Button>
+        </div>
+        <ul className="flex list-none flex-wrap gap-2 p-0 m-0">
+          {items.map((item) => (
+            <li
+              key={item.id}
+              className="flex items-center gap-2 rounded-sm border border-noir-gold/40 bg-noir-black/60 py-1 pl-1 pr-0.5"
+            >
+              <CompareThumb image={item.image} alt={item.name} />
+              <span className="max-w-40 truncate text-sm text-noir-light">
+                {item.name}
+              </span>
+              <Button
+                type="button"
+                variant="icon"
+                size="sm"
+                className="p-1! shrink-0 text-noir-gold hover:text-noir-gold-100"
+                aria-label={t("removeItem", { name: item.name })}
+                onClick={() => remove(item.id)}
+              >
+                <IoMdCloseCircle className="h-5 w-5" aria-hidden />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}

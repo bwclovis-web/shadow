@@ -25,6 +25,15 @@
     "next": "Siguiente",
     "pageOf": "Página {current} de {total}"
   },
+  "compare": {
+    "trayAriaLabel": "Perfumes seleccionados para comparar",
+    "trayTitle": "Comparar ({count} de {max})",
+    "clearAll": "Vaciar todo",
+    "removeItem": "Quitar {name} de la comparación",
+    "toggleAdd": "Añadir a comparar",
+    "toggleRemove": "Quitar de comparar",
+    "maxReached": "La bandeja de comparación está llena (máximo {max} perfumes)"
+  },
   "admin": {
     "navigation": {
       "dashboard": "Panel",

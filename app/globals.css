@@ -41,6 +41,11 @@ body {
   }
 }
 
+/* Space for fixed compare tray (`CompareTray` sets `--compare-tray-pad` from store + tray height). */
+body {
+  padding-bottom: var(--compare-tray-pad, 0px);
+}
+
 /* Optimize font rendering with better performance */
 h1,
 h2,
