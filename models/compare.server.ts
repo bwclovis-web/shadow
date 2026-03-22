@@ -2,7 +2,6 @@
  * Batch data for the compare page (CF-002) and GET /api/compare (CF-003-ready).
  */
 
-import { COMPARE_MAX_ITEMS } from "@/constants/compare"
 import { prisma } from "@/lib/db"
 import type { PerfumeWithNotes } from "@/models/perfume-notes-helpers"
 import { transformNotesForDisplay } from "@/models/perfume-notes-helpers"
@@ -47,22 +46,7 @@ export type ComparePerfumeDto = {
   exchangeListingCount: number
 }
 
-/** Trim, drop empties, dedupe preserving first occurrence. */
-export function normalizeCompareIds(ids: string[]): string[] {
-  const seen = new Set<string>()
-  const out: string[] = []
-  for (const raw of ids) {
-    const id = typeof raw === "string" ? raw.trim() : ""
-    if (!id || seen.has(id)) continue
-    seen.add(id)
-    out.push(id)
-  }
-  return out
-}
-
-export function compareIdsExceedMax(ids: string[]): boolean {
-  return ids.length > COMPARE_MAX_ITEMS
-}
+export { compareIdsExceedMax, normalizeCompareIds } from "@/utils/compare-ids"
 
 /**
  * Exchange-eligible listing counts per perfume (same rule as `availableForDecantingWhere`).

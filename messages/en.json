@@ -45,7 +45,14 @@
     "houseUnknown": "House not listed",
     "availability": "On the exchange",
     "listingCount": "{count, plural, =0 {No active listings} one {# listing} other {# listings}}",
-    "viewOnExchange": "Search on The Exchange"
+    "viewOnExchange": "Search on The Exchange",
+    "copyShareLink": "Copy compare link",
+    "linkCopied": "Link copied",
+    "copyLinkError": "Could not copy — try copying the address bar.",
+    "invalidCompareUrl": "This compare link lists too many perfumes. You can compare up to three at a time.",
+    "personalizeHint": "Sign in to see which perfume best matches your scent profile.",
+    "bestForYouTitle": "Best for you",
+    "bestForYouBody": "Aligned with your scent profile (quiz and activity). Notes you’ve shown interest in: {noteList}."
   },
   "admin": {
     "navigation": {
@@ -667,35 +674,55 @@
     }
   },
   "quiz": {
+    "meta": {
+      "title": "Scent Quiz - Shadow and Sillage",
+      "description": "Tell us your scent preferences so we can recommend perfumes you'll love."
+    },
+    "banner": {
+      "heading": "Scent quiz",
+      "subheading": "Help us personalize your experience (optional)"
+    },
+    "welcome": {
+      "body": "Answer a few quick questions about the notes and styles you like. You can skip this and we'll learn from your ratings and collection instead.",
+      "start": "Start quiz",
+      "skip": "Skip for now"
+    },
+    "notes": {
+      "prompt": "Pick {min}–{max} note families you like (e.g. floral, woody, citrus).",
+      "selected": "Selected: {count} / {max}",
+      "likedLabel": "Notes you like",
+      "searchLabel": "Search notes",
+      "maxReached": "Maximum {max} notes selected. Remove one to add another."
+    },
+    "avoid": {
+      "prompt": "Any notes you'd rather avoid? (optional)",
+      "fieldLabel": "Notes to avoid",
+      "searchLabel": "Search notes to avoid"
+    },
+    "season": {
+      "prompt": "When do you wear fragrance most? (optional, select all that apply)",
+      "toggleHint": "Tap a season to include it. “All seasons” selects all four — same as on perfume pages."
+    },
+    "browse": {
+      "prompt": "How do you like to browse? (optional)",
+      "explorer": "Explorer – I like to discover new scents",
+      "focused": "Focused – I know what I like",
+      "trader": "Trader – I swap and trade often"
+    },
+    "nav": {
+      "back": "Back",
+      "next": "Next",
+      "save": "Save preferences"
+    },
+    "errors": {
+      "mustSignIn": "You must be signed in to save scent preferences.",
+      "minNotes": "Please select at least {min} notes you like.",
+      "maxNotes": "Please select at most {max} notes."
+    },
     "success": {
       "heading": "You're all set!",
       "subheading": "We'll use your preferences to recommend perfumes you'll love.",
       "cta": "Go to home"
-    },
-    "notePreferences": {
-      "heading": "Note Preferences",
-      "subheading": "Pick 3–{{max}} note families you like (e.g. floral, woody, citrus).",
-      "cta": "Next"
-    },
-    "avoidNotes": {
-      "heading": "Avoid Notes",
-      "subheading": "Pick 3–{{max}} note families you don't like (e.g. floral, woody, citrus).",
-      "cta": "Next"
-    },
-    "seasonPreferences": {
-      "heading": "Season Preferences",
-      "subheading": "Pick 3–{{max}} seasons you like (e.g. spring, summer, fall, winter).",
-      "cta": "Next"
-    },
-    "browsingStyle": {
-      "heading": "Browsing Style",
-      "subheading": "Pick your browsing style.",
-      "cta": "Next"
-    },
-    "welcome": {
-      "heading": "Welcome to the Scent Quiz",
-      "subheading": "Answer a few quick questions about the notes and styles you like.",
-      "cta": "Start quiz"
     }
   },
   "recommendations": {

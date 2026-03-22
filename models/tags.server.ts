@@ -1,8 +1,29 @@
+import { unstable_cache } from "next/cache"
+
 import { prisma } from "@/lib/db"
 import {
   isDisplayableScentNote,
   validateNoteForApi,
 } from "@/utils/validation/note-validation.server"
+
+/** Invalidate when displayable notes change (e.g. admin tooling). */
+export const SCENT_QUIZ_NOTES_CACHE_TAG = "scent-quiz-displayable-notes" as const
+
+/**
+ * Displayable notes for the scent quiz, cached across requests.
+ * Reduces DB load; revalidates every few minutes (see `revalidate`).
+ */
+export const getCachedDisplayableNotesForQuiz = unstable_cache(
+  async (): Promise<{ id: string; name: string }[]> => {
+    const tags = await prisma.perfumeNotes.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    })
+    return tags.filter((tag) => isDisplayableScentNote(tag.name))
+  },
+  ["scent-quiz-displayable-notes"],
+  { revalidate: 300, tags: [SCENT_QUIZ_NOTES_CACHE_TAG] }
+)
 
 const MAX_SEARCH_TERM_LENGTH = 100
 

@@ -8,49 +8,16 @@ import type {
   PerfumeDetailUserSeasonVoteProp,
 } from "@/components/Containers/Perfume/perfume-detail-types"
 import { useSaveSeasonVote } from "@/lib/mutations/seasonVotes"
-import {
-  SEASON_KEYS,
-  type SeasonKey,
-  type SeasonSelection,
-} from "@/types/perfume-season-vote"
+import { type SeasonSelection, emptySeasonSelection } from "@/types/perfume-season-vote"
 import { useErrorHandler } from "@/hooks/useErrorHandler"
 
-import {
-  AllSeasonsIcon,
-  FallSeasonIcon,
-  SpringSeasonIcon,
-  SummerSeasonIcon,
-  WinterSeasonIcon,
-} from "./SeasonVoteIcons"
-
-const emptySelection = (): SeasonSelection => ({
-  winter: false,
-  spring: false,
-  summer: false,
-  fall: false,
-})
+import { SeasonSelectionToggleRow } from "./SeasonSelectionToggleRow"
 
 type PerfumeSeasonVoteProps = {
   perfumeId: string
   userId?: string | null
   userSeasonVote: PerfumeDetailUserSeasonVoteProp
   seasonAggregates: PerfumeDetailSeasonAggregatesProp
-}
-
-const seasonIcon = (key: SeasonKey, filled: boolean) => {
-  const props = { filled, className: "w-11 h-11 sm:w-12 sm:h-12" }
-  switch (key) {
-    case "winter":
-      return <WinterSeasonIcon {...props} />
-    case "spring":
-      return <SpringSeasonIcon {...props} />
-    case "summer":
-      return <SummerSeasonIcon {...props} />
-    case "fall":
-      return <FallSeasonIcon {...props} />
-    default:
-      return null
-  }
 }
 
 const PerfumeSeasonVote = ({
@@ -63,7 +30,7 @@ const PerfumeSeasonVote = ({
   const { handleError } = useErrorHandler()
   const [aggregates, setAggregates] = useState(initialAggregates)
   const [selection, setSelection] = useState<SeasonSelection>(
-    () => userSeasonVote ?? emptySelection()
+    () => userSeasonVote ?? emptySeasonSelection()
   )
   const selectionRef = useRef(selection)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -109,7 +76,7 @@ const PerfumeSeasonVote = ({
       }
       if (data.aggregates) setAggregates(data.aggregates)
       if (Object.prototype.hasOwnProperty.call(data, "userSelection")) {
-        setSelection(data.userSelection ?? emptySelection())
+        setSelection(data.userSelection ?? emptySeasonSelection())
       }
     } catch (e) {
       console.error("Failed to refresh season votes", e)
@@ -119,8 +86,6 @@ const PerfumeSeasonVote = ({
   }, [perfumeId])
 
   const saveVote = useSaveSeasonVote()
-
-  const allSelected = SEASON_KEYS.every(k => selection[k])
 
   const persist = useCallback(
     (next: SeasonSelection) => {
@@ -148,27 +113,6 @@ const PerfumeSeasonVote = ({
     [isInteractive, userId, perfumeId, saveVote, refreshAggregates, handleError]
   )
 
-  const toggleSeason = (key: SeasonKey) => {
-    if (!isInteractive) return
-    const prev = selectionRef.current
-    const next = { ...prev, [key]: !prev[key] }
-    persist(next)
-  }
-
-  const toggleAll = () => {
-    if (!isInteractive) return
-    if (allSelected) {
-      persist(emptySelection())
-      return
-    }
-    persist({
-      winter: true,
-      spring: true,
-      summer: true,
-      fall: true,
-    })
-  }
-
   return (
     <div className="bg-noir-dark/20 rounded-lg p-6 mt-4">
       <h2 className="text-xl font-bold text-noir-gold mb-1 text-center">
@@ -181,41 +125,15 @@ const PerfumeSeasonVote = ({
 
       <p className="text-xs text-noir-gold-100/90 text-center mb-4">{t("subtitle")}</p>
 
-      <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-6">
-        {SEASON_KEYS.map(key => (
-          <button
-            key={key}
-            type="button"
-            disabled={!isInteractive || saveVote.isPending}
-            onClick={() => toggleSeason(key)}
-            className={`
-              flex flex-col items-center gap-1 rounded-lg p-2 transition-opacity
-              ${isInteractive ? "hover:opacity-90 cursor-pointer" : "opacity-80 cursor-default"}
-              ${selection[key] ? "ring-2 ring-noir-gold/70" : "ring-1 ring-white/10"}
-            `}
-            aria-pressed={selection[key]}
-            aria-label={t(`season.${key}`)}
-          >
-            {seasonIcon(key, selection[key])}
-            <span className="text-xs text-noir-gold-500">{t(`season.${key}`)}</span>
-          </button>
-        ))}
-
-        <button
-          type="button"
+      <div className="mb-6">
+        <SeasonSelectionToggleRow
+          selection={selection}
           disabled={!isInteractive || saveVote.isPending}
-          onClick={toggleAll}
-          className={`
-            flex flex-col items-center gap-1 rounded-lg p-2 transition-opacity
-            ${isInteractive ? "hover:opacity-90 cursor-pointer" : "opacity-80 cursor-default"}
-            ${allSelected ? "ring-2 ring-noir-gold/70" : "ring-1 ring-white/10"}
-          `}
-          aria-pressed={allSelected}
-          aria-label={t("allSeasons")}
-        >
-          <AllSeasonsIcon filled={allSelected} className="w-11 h-11 sm:w-12 sm:h-12" />
-          <span className="text-xs text-noir-gold-500">{t("allSeasons")}</span>
-        </button>
+          onChange={(next) => {
+            if (!isInteractive) return
+            persist(next)
+          }}
+        />
       </div>
 
       <div className="border-t border-white/10 pt-4">

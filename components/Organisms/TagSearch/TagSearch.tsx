@@ -15,8 +15,8 @@ import { tagSearchVariants } from "./tagsearch-variants"
 
 const TAG_SEARCH_API = "/api/getTag"
 
-const dropdownItemClasses =
-  "p-2 hover:bg-noir-gray hover:text-noir-light cursor-pointer last-of-type:rounded-b-md"
+export type TagSearchSurface = "light" | "dark"
+export type TagSearchSelectedLayout = "footer" | "flow"
 
 interface TagSearchProps
   extends Omit<HTMLProps<HTMLDivElement>, "onChange" | "data">,
@@ -25,7 +25,23 @@ interface TagSearchProps
   label?: string
   data?: Tag[]
   allowCreate?: boolean
+  /** When set, blocks adding tags beyond this count (existing tags can still be removed). */
+  maxSelections?: number
+  /** Defaults to `tag-search`. Use unique ids when multiple instances are mounted. */
+  inputId?: string
+  /** Label for the search input; defaults to `{label} search` or "Search". */
+  searchInputLabel?: string
+  /** footer: tag strip pinned to bottom (default). flow: tags stack under input (e.g. scent quiz). */
+  selectedLayout?: TagSearchSelectedLayout
+  /** dark: stone surfaces for dropdown and list (e.g. customer-facing pages). */
+  surface?: TagSearchSurface
 }
+
+const dropdownItemClassesLight =
+  "p-2 hover:bg-noir-gray hover:text-noir-light cursor-pointer last-of-type:rounded-b-md"
+
+const dropdownItemClassesDark =
+  "p-2 cursor-pointer text-noir-gold-100 last-of-type:rounded-b-md hover:bg-stone-700"
 
 const TagSearch: FC<TagSearchProps> = ({
   className,
@@ -33,6 +49,11 @@ const TagSearch: FC<TagSearchProps> = ({
   label,
   data,
   allowCreate = true,
+  maxSelections,
+  inputId = "tag-search",
+  searchInputLabel,
+  selectedLayout = "footer",
+  surface = "light",
 }) => {
   const initialTags = Array.isArray(data) ? data : []
   const [selectedTags, setSelectedTags] = useState<Tag[]>(initialTags)
@@ -74,6 +95,7 @@ const TagSearch: FC<TagSearchProps> = ({
 
   const handleItemClick = (item: Tag | { id: string; name?: string }) => {
     if (selectedTags.some(t => t.id === item.id)) return
+    if (maxSelections != null && selectedTags.length >= maxSelections) return
     const tag: Tag = { id: item.id, name: item.name ?? "" }
     const newTags = [...selectedTags, tag]
     setSelectedTags(newTags)
@@ -91,42 +113,58 @@ const TagSearch: FC<TagSearchProps> = ({
     setInputValue(evt.target.value)
   }
 
-  const searchLabel = label ? `${label} search` : "Search"
+  const searchLabel =
+    searchInputLabel ?? (label ? `${label} search` : "Search")
+  const isDark = surface === "dark"
+  const dropdownUl = styleMerge(
+    "w-full absolute z-10 rounded-b-md border shadow-lg",
+    isDark
+      ? "border-stone-600 bg-stone-800 text-noir-gold-100"
+      : "border-transparent bg-white"
+  )
+  const itemRowClass = isDark ? dropdownItemClassesDark : dropdownItemClassesLight
+  const mutedText = isDark ? "text-stone-400" : "text-gray-500"
+  const pulseText = isDark ? "text-noir-gold-300" : undefined
 
   return (
     <div
-      className={styleMerge(tagSearchVariants({ className }))}
+      className={styleMerge(
+        tagSearchVariants({ className }),
+        selectedLayout === "flow" && "min-h-0"
+      )}
       data-cy="TagSearch"
     >
-      <div className="flex flex-col mb-6">
-        <label htmlFor="tag-search" className="block-label">
+      <div className={styleMerge("flex flex-col", selectedLayout === "flow" ? "mb-2" : "mb-6")}>
+        <label htmlFor={inputId} className="block-label">
           {searchLabel}
         </label>
         <Input
           shading
           autoComplete="off"
-          id="tag-search"
+          id={inputId}
           value={inputValue}
           onChange={handleInputChange}
         />
         {showDropdown && (
-          <ul className="bg-white rounded-b-md w-full absolute z-10">
+          <ul className={dropdownUl}>
             {isLoading && (
               <li className="p-2 text-center">
-                <span className="animate-pulse">Searching...</span>
+                <span className={styleMerge("animate-pulse", pulseText)}>
+                  Searching...
+                </span>
               </li>
             )}
             {error && (
-              <li className="p-2 text-red-500 text-center">
+              <li className="p-2 text-center text-red-400">
                 <span>Search error: {error}</span>
               </li>
             )}
             {!isLoading &&
               !error &&
               results.map((item: Tag) => (
-                <li key={item.id} className={dropdownItemClasses}>
+                <li key={item.id} className={itemRowClass}>
                   <Button
-                    className="block w-full h-full"
+                    className="block h-full w-full text-left"
                     type="button"
                     onClick={() => handleItemClick(item)}
                   >
@@ -138,12 +176,12 @@ const TagSearch: FC<TagSearchProps> = ({
               !error &&
               results.length === 0 &&
               inputValue.length >= 1 && (
-                <li className="p-2 text-center text-gray-500">
+                <li className={styleMerge("p-2 text-center", mutedText)}>
                   <span>No tags found</span>
                 </li>
               )}
             {allowCreate && (
-              <li className={dropdownItemClasses}>
+              <li className={itemRowClass}>
                 <CreateTagButton
                   action={handleItemClick}
                   setOpenDropdown={closeDropdown}
@@ -157,6 +195,8 @@ const TagSearch: FC<TagSearchProps> = ({
         selectedTags={selectedTags}
         label={label}
         onRemoveTag={handleRemoveTag}
+        layout={selectedLayout === "flow" ? "flow" : "footer"}
+        surface={isDark ? "dark" : "light"}
       />
     </div>
   )

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { COMPARE_MAX_ITEMS } from "@/constants/compare"
-import { getComparePayload } from "@/models/compare.server"
+import { getComparePersonalization } from "@/models/compare-personalize.server"
+import { authenticateUser } from "@/utils/server/auth.server"
 import { compareIdsExceedMax, normalizeCompareIds } from "@/utils/compare-ids"
 
 export const dynamic = "force-dynamic"
@@ -15,10 +16,21 @@ function parseIdsFromRequest(request: NextRequest): string[] {
 }
 
 export const GET = async (request: NextRequest) => {
+  const auth = await authenticateUser(request)
+  if (!auth.success || !auth.user) {
+    return NextResponse.json(
+      { error: auth.error ?? "Unauthorized" },
+      { status: auth.status ?? 401 }
+    )
+  }
+
   const ids = parseIdsFromRequest(request)
 
   if (ids.length === 0) {
-    return NextResponse.json({ perfumes: [] satisfies unknown[] })
+    return NextResponse.json({
+      winnerId: null,
+      explainNotes: [],
+    })
   }
 
   if (compareIdsExceedMax(ids)) {
@@ -29,12 +41,12 @@ export const GET = async (request: NextRequest) => {
   }
 
   try {
-    const perfumes = await getComparePayload(ids)
-    return NextResponse.json({ perfumes })
+    const result = await getComparePersonalization(auth.user.id, ids)
+    return NextResponse.json(result)
   } catch (error) {
-    console.error("[api/compare]", error)
+    console.error("[api/compare/personalize]", error)
     return NextResponse.json(
-      { error: "Failed to load compare data" },
+      { error: "Failed to load personalization" },
       { status: 500 }
     )
   }

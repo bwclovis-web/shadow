@@ -49,7 +49,14 @@
     "houseUnknown": "Casa no indicada",
     "availability": "En el exchange",
     "listingCount": "{count, plural, =0 {Sin anuncios activos} one {# anuncio} other {# anuncios}}",
-    "viewOnExchange": "Buscar en The Exchange"
+    "viewOnExchange": "Buscar en The Exchange",
+    "copyShareLink": "Copiar enlace de comparación",
+    "linkCopied": "Enlace copiado",
+    "copyLinkError": "No se pudo copiar — copia la URL de la barra de direcciones.",
+    "invalidCompareUrl": "Este enlace incluye demasiados perfumes. Puedes comparar hasta tres a la vez.",
+    "personalizeHint": "Inicia sesión para ver qué perfume encaja mejor con tu perfil aromático.",
+    "bestForYouTitle": "Mejor para ti",
+    "bestForYouBody": "Encaja con tu perfil (cuestionario y actividad). Notas que te interesan: {noteList}."
   },
   "admin": {
     "navigation": {
@@ -658,6 +665,58 @@
       "wishlist": "Mi Lista de Deseos",
       "myScents": "Mis Aromas",
       "changePassword": "Cambiar Contraseña"
+    }
+  },
+  "quiz": {
+    "meta": {
+      "title": "Cuestionario de aromas - Shadow and Sillage",
+      "description": "Cuéntanos tus preferencias de aroma para recomendarte perfumes que te encantarán."
+    },
+    "banner": {
+      "heading": "Cuestionario de aromas",
+      "subheading": "Ayúdanos a personalizar tu experiencia (opcional)"
+    },
+    "welcome": {
+      "body": "Responde unas preguntas rápidas sobre las notas y estilos que te gustan. Puedes omitirlo y aprenderemos de tus valoraciones y tu colección.",
+      "start": "Empezar",
+      "skip": "Omitir por ahora"
+    },
+    "notes": {
+      "prompt": "Elige entre {min} y {max} familias de notas que te gusten (p. ej. floral, amaderado, cítrico).",
+      "selected": "Seleccionadas: {count} / {max}",
+      "likedLabel": "Notas que te gustan",
+      "searchLabel": "Buscar notas",
+      "maxReached": "Has elegido el máximo ({max}). Quita una para añadir otra."
+    },
+    "avoid": {
+      "prompt": "¿Hay notas que prefieras evitar? (opcional)",
+      "fieldLabel": "Notas a evitar",
+      "searchLabel": "Buscar notas a evitar"
+    },
+    "season": {
+      "prompt": "¿Cuándo sueles usar fragancia? (opcional, puedes elegir varias)",
+      "toggleHint": "Toca una estación para incluirla. «Todas las estaciones» marca las cuatro, igual que en las fichas de perfume."
+    },
+    "browse": {
+      "prompt": "¿Cómo te gusta explorar? (opcional)",
+      "explorer": "Explorador – Me gusta descubrir nuevos aromas",
+      "focused": "Enfocado – Sé lo que me gusta",
+      "trader": "Intercambio – Cambio e intercambio a menudo"
+    },
+    "nav": {
+      "back": "Atrás",
+      "next": "Siguiente",
+      "save": "Guardar preferencias"
+    },
+    "errors": {
+      "mustSignIn": "Debes iniciar sesión para guardar tus preferencias de aroma.",
+      "minNotes": "Selecciona al menos {min} notas que te gusten.",
+      "maxNotes": "Selecciona como máximo {max} notas."
+    },
+    "success": {
+      "heading": "¡Listo!",
+      "subheading": "Usaremos tus preferencias para recomendarte perfumes que te encantarán.",
+      "cta": "Ir al inicio"
     }
   },
   "recommendations": {

@@ -2,6 +2,10 @@ export const SEASON_KEYS = ["winter", "spring", "summer", "fall"] as const
 export type SeasonKey = (typeof SEASON_KEYS)[number]
 export type SeasonSelection = Record<SeasonKey, boolean>
 
+export function emptySeasonSelection(): SeasonSelection {
+  return { winter: false, spring: false, summer: false, fall: false }
+}
+
 export function hasAnySeasonSelected(s: SeasonSelection): boolean {
   return s.winter || s.spring || s.summer || s.fall
 }

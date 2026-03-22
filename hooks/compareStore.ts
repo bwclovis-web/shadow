@@ -1,6 +1,6 @@
 /**
  * Client-side compare list for perfume cards (CF-001). Persists to `localStorage`.
- * CF-002 should read from this store until CF-003 adds URL sync.
+ * CF-003: URL `?ids=` hydrates via `setItems`; tray stays in sync with `localStorage`.
  *
  * @see docs/compare-client.md
  */
@@ -27,6 +27,7 @@ export interface CompareItem {
 interface CompareState {
   items: CompareItem[]
   add: (item: CompareItem) => void
+  setItems: (items: CompareItem[]) => void
   remove: (id: string) => void
   toggle: (item: CompareItem) => void
   clear: () => void
@@ -47,6 +48,23 @@ export const useCompareStore = create<CompareState>()(
         }
         if (items.length >= COMPARE_MAX_ITEMS) return
         set({ items: [...items, item] })
+      },
+      setItems: (incoming) => {
+        const seen = new Set<string>()
+        const next: CompareItem[] = []
+        for (const item of incoming) {
+          const id = typeof item.id === "string" ? item.id.trim() : ""
+          if (!id || seen.has(id)) continue
+          seen.add(id)
+          next.push({
+            ...item,
+            id,
+            slug: item.slug?.trim() ?? "",
+            name: item.name?.trim() || id,
+          })
+          if (next.length >= COMPARE_MAX_ITEMS) break
+        }
+        set({ items: next })
       },
       remove: (id) => {
         set({ items: get().items.filter((i) => i.id !== id) })

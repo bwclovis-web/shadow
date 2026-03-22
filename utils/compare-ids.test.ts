@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import {
-  compareIdsExceedMax,
-  normalizeCompareIds,
-} from "@/models/compare.server"
+import { compareIdsExceedMax, normalizeCompareIds } from "@/utils/compare-ids"
 
 describe("normalizeCompareIds", () => {
   it("trims, drops empties, dedupes preserving order", () => {

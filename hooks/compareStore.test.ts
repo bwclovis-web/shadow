@@ -66,6 +66,20 @@ describe("compareStore", () => {
     expect(useCompareStore.getState().items).toHaveLength(0)
   })
 
+  it("setItems replaces list, dedupes, and enforces max", () => {
+    const s = useCompareStore.getState()
+    s.setItems([
+      sample(1),
+      sample(1),
+      sample(2),
+      sample(3),
+      sample(4),
+    ])
+    const items = useCompareStore.getState().items
+    expect(items).toHaveLength(COMPARE_MAX_ITEMS)
+    expect(items.map((i) => i.id)).toEqual(["id-1", "id-2", "id-3"])
+  })
+
   it("writes persisted slice to localStorage", () => {
     useCompareStore.getState().add(sample(1))
     const raw = localStorage.getItem(COMPARE_STORAGE_KEY)

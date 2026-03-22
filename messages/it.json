@@ -49,7 +49,14 @@
     "houseUnknown": "Casa non indicata",
     "availability": "Sull’exchange",
     "listingCount": "{count, plural, =0 {Nessun annuncio attivo} one {# annuncio} other {# annunci}}",
-    "viewOnExchange": "Cerca su The Exchange"
+    "viewOnExchange": "Cerca su The Exchange",
+    "copyShareLink": "Copia link confronto",
+    "linkCopied": "Link copiato",
+    "copyLinkError": "Impossibile copiare — copia l’URL dalla barra degli indirizzi.",
+    "invalidCompareUrl": "Questo link confronta troppi profumi. Puoi confrontarne al massimo tre.",
+    "personalizeHint": "Accedi per vedere quale profumo si adatta meglio al tuo profilo olfattivo.",
+    "bestForYouTitle": "Il più adatto a te",
+    "bestForYouBody": "In linea con il tuo profilo (quiz e attività). Note di tuo interesse: {noteList}."
   },
   "admin": {
     "navigation": {
@@ -651,11 +658,65 @@
     "traderAbout": "Informazioni sul venditore",
     "traderAboutPlaceholder": "Una breve bio mostrata sul tuo profilo venditore",
     "traderAboutHint": "Mostrato sul tuo profilo venditore. Massimo {max} caratteri.",
+    "scentPreferencesHint": "Personalizza i consigli sui profumi",
+    "scentQuizLink": "Quiz sulle preferenze olfattive",
     "navigation": {
       "profile": "Profilo",
       "wishlist": "La mia wishlist",
       "myScents": "I miei profumi",
       "changePassword": "Cambia password"
+    }
+  },
+  "quiz": {
+    "meta": {
+      "title": "Quiz olfattivo - Shadow and Sillage",
+      "description": "Raccontaci le tue preferenze per consigliarti profumi che ti piaceranno."
+    },
+    "banner": {
+      "heading": "Quiz olfattivo",
+      "subheading": "Aiutaci a personalizzare la tua esperienza (facoltativo)"
+    },
+    "welcome": {
+      "body": "Rispondi a poche domande sulle note e gli stili che preferisci. Puoi saltare questo passaggio: impareremo anche dalle tue valutazioni e dalla collezione.",
+      "start": "Inizia il quiz",
+      "skip": "Salta per ora"
+    },
+    "notes": {
+      "prompt": "Scegli tra {min} e {max} famiglie di note che ti piacciono (es. floreale, legnoso, agrumato).",
+      "selected": "Selezionate: {count} / {max}",
+      "likedLabel": "Note che ti piacciono",
+      "searchLabel": "Cerca note",
+      "maxReached": "Hai raggiunto il massimo ({max}). Rimuovine una per aggiungerne un'altra."
+    },
+    "avoid": {
+      "prompt": "Note da evitare? (facoltativo)",
+      "fieldLabel": "Note da evitare",
+      "searchLabel": "Cerca note da evitare"
+    },
+    "season": {
+      "prompt": "Quando usi soprattutto il profumo? (facoltativo, scelta multipla)",
+      "toggleHint": "Tocca una stagione per includerla. «Tutte le stagioni» seleziona tutte e quattro, come sulle pagine profumo."
+    },
+    "browse": {
+      "prompt": "Come ti piace esplorare? (facoltativo)",
+      "explorer": "Esploratore – Mi piace scoprire nuove fragranze",
+      "focused": "Mirato – So cosa mi piace",
+      "trader": "Scambio – Scambio e baratto spesso"
+    },
+    "nav": {
+      "back": "Indietro",
+      "next": "Avanti",
+      "save": "Salva preferenze"
+    },
+    "errors": {
+      "mustSignIn": "Accedi per salvare le preferenze olfattive.",
+      "minNotes": "Seleziona almeno {min} note che ti piacciono.",
+      "maxNotes": "Seleziona al massimo {max} note."
+    },
+    "success": {
+      "heading": "Fatto!",
+      "subheading": "Useremo le tue preferenze per consigliarti profumi adatti a te.",
+      "cta": "Vai alla home"
     }
   },
   "singleHouse": {

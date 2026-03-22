@@ -85,7 +85,11 @@ export function CompareTray() {
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <PrefetchLink
-              href="/compare"
+              href={
+                items.length > 0
+                  ? `/compare?ids=${items.map((i) => encodeURIComponent(i.id)).join(",")}`
+                  : "/compare"
+              }
               className={styleMerge(
                 buttonVariants({ variant: "primary", size: "sm" }),
                 "inline-flex items-center justify-center no-underline"
