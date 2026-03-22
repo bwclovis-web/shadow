@@ -5,7 +5,9 @@ import { useTranslations } from "next-intl"
 import { useLayoutEffect, useRef } from "react"
 import { IoMdCloseCircle } from "react-icons/io"
 
+import { buttonVariants } from "@/components/Atoms/Button/button-variants"
 import { Button } from "@/components/Atoms/Button/Button"
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { COMPARE_MAX_ITEMS, useCompareStore } from "@/hooks/compareStore"
 import { normalizeRemoteImageSrc, styleMerge, validImageRegex } from "@/utils/styleUtils"
 
@@ -81,9 +83,20 @@ export function CompareTray() {
               max: COMPARE_MAX_ITEMS,
             })}
           </p>
-          <Button type="button" variant="secondary" size="sm" onClick={clear}>
-            {t("clearAll")}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <PrefetchLink
+              href="/compare"
+              className={styleMerge(
+                buttonVariants({ variant: "primary", size: "sm" }),
+                "inline-flex items-center justify-center no-underline"
+              )}
+            >
+              {t("openCompare")}
+            </PrefetchLink>
+            <Button type="button" variant="secondary" size="sm" onClick={clear}>
+              {t("clearAll")}
+            </Button>
+          </div>
         </div>
         <ul className="flex list-none flex-wrap gap-2 p-0 m-0">
           {items.map((item) => (

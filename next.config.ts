@@ -50,6 +50,11 @@ const nextConfig: NextConfig = {
         hostname: 'cdn-content-oz2.storbie.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'basenotes.com',
+        pathname: '/**',
+      },
     ],
   },
 }

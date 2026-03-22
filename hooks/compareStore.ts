@@ -4,13 +4,14 @@
  *
  * @see docs/compare-client.md
  */
+import {
+  COMPARE_MAX_ITEMS,
+  COMPARE_STORAGE_KEY,
+} from "@/constants/compare"
 import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 
-export const COMPARE_MAX_ITEMS = 3
-
-/** Persist key in localStorage; keep stable for CF-003 migration. */
-export const COMPARE_STORAGE_KEY = "shadows-compare-tray"
+export { COMPARE_MAX_ITEMS, COMPARE_STORAGE_KEY }
 
 export interface CompareItem {
   /** Perfume id — unique key for dedupe */

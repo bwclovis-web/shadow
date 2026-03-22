@@ -6,7 +6,7 @@ Customer-facing roadmap focused on discovery quality, trust, and retention loops
 
 ### Compare Mode
 
-- [ ] **CF-001** Add compare tray to perfume cards (add/remove items). Implementation: see [`docs/compare-client.md`](./compare-client.md).
+- [x] **CF-001** Add compare tray to perfume cards (add/remove items). Implementation: see [`docs/compare-client.md`](./compare-client.md).
 - [ ] **CF-002** Compare page with notes, ratings, availability, and house context
 - [ ] **CF-003** Share compare URL with embedded state
 - [ ] **CF-004** "Best for you" highlight based on profile signals
