@@ -719,6 +719,17 @@
       "cta": "Vai alla home"
     }
   },
+  "recommendations": {
+    "recommendedForYou": "Consigliati per te",
+    "reason": {
+      "similarNotes": "Mostrato perché condivide {notes} con questa fragranza.",
+      "similarNotesFallback": "Mostrato perché condivide accordi con questa fragranza.",
+      "profileMatch": "Mostrato perché include {notes} che hai indicato tra i tuoi gusti nel profilo.",
+      "profileMatchFallback": "Mostrato perché si adatta al tuo profilo olfattivo.",
+      "popular": "Mostrati perché queste scelte sono popolari nella community.",
+      "recent": "Mostrati perché sono stati aggiunti di recente al catalogo."
+    }
+  },
   "singleHouse": {
     "meta": {
       "title": "Dettagli casa - Shadow and Sillage",
@@ -937,6 +948,29 @@
       "placeholder": "Cerca profumi disponibili...",
       "noResults": "Nessun profumo trovato",
       "tryDifferent": "Prova un altro termine"
+    },
+    "filters": {
+      "toggle": "Filtri",
+      "notesTitle": "Note",
+      "notesDescription": "Includi profumi che contengono almeno una nota selezionata.",
+      "notesSearchLabel": "Note",
+      "seasonTitle": "Stagione",
+      "seasonDescription": "Includi profumi per cui la community ha votato una stagione selezionata.",
+      "houseTitle": "Casa",
+      "houseSearchLabel": "Cerca nome casa",
+      "houseClear": "Rimuovi",
+      "priceTitle": "Prezzo inserzione",
+      "priceDescription": "Filtra per prezzo indicato dal venditore (solo parte numerica).",
+      "minLabel": "Min",
+      "maxLabel": "Max",
+      "clearAll": "Reimposta filtri",
+      "activeFiltersAria": "Filtri attivi",
+      "removeFilterAria": "Rimuovi filtro: {label}",
+      "unknownNote": "Nota",
+      "unknownHouse": "Casa",
+      "priceChipMin": "Min {min}",
+      "priceChipMax": "Max {max}",
+      "priceChipRange": "{min}–{max}"
     }
   },
   "traderProfile": {

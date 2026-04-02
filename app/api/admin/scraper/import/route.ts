@@ -25,6 +25,9 @@ import type {
 import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 import { requireAdminOrEditorApi } from "@/utils/server/requireAdminOrEditorApi.server"
 
+/** Allow long imports when R2 migration runs for many products (align with scraper run). */
+export const maxDuration = 300
+
 // ---------------------------------------------------------------------------
 // Validation
 // ---------------------------------------------------------------------------

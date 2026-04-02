@@ -1,8 +1,8 @@
-import { fireEvent, screen, waitFor } from "@testing-library/react"
+import { fireEvent, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
-import { renderWithProviders } from "../../../../test/utils/test-utils"
+import { renderWithProviders } from "@/test/utils/test-utils"
 import { ChangePasswordForm } from "./ChangePasswordForm"
 
 // Mock PasswordStrengthIndicator
@@ -13,15 +13,6 @@ vi.mock("~/components/Organisms/PasswordStrengthIndicator", () => ({
     </div>
   ),
 }))
-
-// Mock react-router Form to avoid data router requirement
-vi.mock("react-router", async () => {
-  const actual = await vi.importActual("react-router")
-  return {
-    ...actual,
-    Form: ({ children, ...props }: any) => <form {...props}>{children}</form>,
-  }
-})
 
 describe("ChangePasswordForm", () => {
   describe("Rendering", () => {

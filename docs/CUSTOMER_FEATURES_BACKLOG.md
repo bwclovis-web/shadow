@@ -13,10 +13,10 @@ Customer-facing roadmap focused on discovery quality, trust, and retention loops
 
 ### Advanced Discovery
 
-- [ ] **CF-010** Unified filter panel (notes, season, house, price range)
-- [ ] **CF-011** Filter chips with quick remove/reset
-- [ ] **CF-012** Persist filter state per user/session
-- [ ] **CF-013** Explain recommendation reason in UI ("shown because...")
+- [x] **CF-010** Unified filter panel (notes, season, house, price range)
+- [x] **CF-011** Filter chips with quick remove/reset (`FilterChipStrip` + `/the-exchange` chip row)
+- [x] **CF-012** Persist filter state per user/session (URL: session + shareable links; per-account storage still CF-020)
+- [x] **CF-013** Explain recommendation reason in UI ("shown because..."). Server attaches `reason` on `RecommendationPerfume`; `RecommendationReasonLine` on profile (`RecommendedForYou`) and perfume detail similar grid.
 
 ### Saved Searches and Alerts
 

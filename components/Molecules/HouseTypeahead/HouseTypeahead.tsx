@@ -1,19 +1,11 @@
-import {
-  type ChangeEvent,
-  type KeyboardEvent,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-} from "react"
-import { createPortal } from "react-dom"
+"use client"
 
+import { useEffect, useId, useState } from "react"
+
+import SearchTypeahead from "@/components/Molecules/SearchTypeahead"
 import { styleMerge } from "@/utils/styleUtils"
 
-interface PerfumeHouseOption {
-  id: string
-  name: string
-}
+type PerfumeHouseOption = { id: string; name: string }
 
 interface HouseTypeaheadProps {
   label?: string
@@ -21,7 +13,6 @@ interface HouseTypeaheadProps {
   defaultId?: string
   defaultName?: string
   className?: string
-  /** Called whenever the visible text value changes (typed or selected from dropdown). */
   onNameChange?: (name: string) => void
 }
 
@@ -33,161 +24,64 @@ const HouseTypeahead = ({
   className,
   onNameChange,
 }: HouseTypeaheadProps) => {
-  const [results, setResults] = useState<PerfumeHouseOption[]>([])
-  const [searchValue, setSearchValue] = useState(defaultName ?? "")
+  const uid = useId()
+  const fieldInputId = `house-typeahead-${uid}`
+  const [text, setText] = useState(defaultName ?? "")
   const [selectedId, setSelectedId] = useState(defaultId ?? "")
-  const [dropdownPosition, setDropdownPosition] = useState({
-    top: 0,
-    left: 0,
-    width: 0,
-  })
-  const [showDropdown, setShowDropdown] = useState(false)
-  const inputId = useId()
-  const dropdownId = `${inputId}-listbox`
-  const wrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (defaultName) {
-      setSearchValue(defaultName)
-    }
-    if (defaultId) {
-      setSelectedId(defaultId)
-    }
+    if (defaultName !== undefined) setText(defaultName)
+    if (defaultId !== undefined) setSelectedId(defaultId)
   }, [defaultName, defaultId])
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-        setShowDropdown(false)
-        setResults([])
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
-
-  const handleSearch = async (query: string) => {
-    if (query.length < 2) {
-      setResults([])
-      setShowDropdown(false)
-      return
-    }
-    try {
-      const res = await fetch(`/api/perfume-houses?name=${encodeURIComponent(query)}`)
-      const data = await res.json()
-      const list = Array.isArray(data) ? data : []
-      setResults(list)
-      if (list.length > 0) {
-        const input = document.getElementById(inputId) as HTMLInputElement
-        if (input) {
-          const rect = input.getBoundingClientRect()
-          setDropdownPosition({
-            top: rect.bottom + window.scrollY,
-            left: rect.left + window.scrollX,
-            width: rect.width,
-          })
-          setShowDropdown(true)
-        }
-      } else {
-        setShowDropdown(false)
-      }
-    } catch (error) {
-      console.error("Search error:", error)
-      setResults([])
-      setShowDropdown(false)
-    }
-  }
-
-  const handleKeyUp = async (evt: KeyboardEvent<HTMLInputElement>) => {
-    const query = (evt.target as HTMLInputElement).value
-    await handleSearch(query)
-  }
-
-  const handleChange = async (evt: ChangeEvent<HTMLInputElement>) => {
-    const query = evt.target.value
-    const previousSearchValue = searchValue
-    setSearchValue(query)
-    onNameChange?.(query)
-    // Clear selection if user manually types (value differs from selected)
-    if (selectedId && query !== previousSearchValue) {
-      setSelectedId("")
-    }
-    await handleSearch(query)
-  }
-
-  const handleSelect = (item: PerfumeHouseOption) => {
-    setSearchValue(item.name)
-    setSelectedId(item.id)
-    onNameChange?.(item.name)
-    setShowDropdown(false)
-    setResults([])
+  const searchFn = async (query: string) => {
+    const res = await fetch(`/api/perfume-houses?name=${encodeURIComponent(query)}`)
+    if (!res.ok) throw new Error("House search failed")
+    const data = await res.json()
+    return (Array.isArray(data) ? data : []) as PerfumeHouseOption[]
   }
 
   return (
-    <div ref={wrapperRef} className={styleMerge("relative w-full", className)}>
-      {label && (
-        <label
-          htmlFor={inputId}
-          className="block text-sm font-medium text-noir-gold-100 mb-2"
-        >
-          {label}
-        </label>
-      )}
-      <input
-        type="text"
-        id={inputId}
-        autoComplete="off"
-        aria-expanded={showDropdown}
-        aria-haspopup="listbox"
-        aria-controls={dropdownId}
-        onChange={handleChange}
-        value={searchValue}
+    <div className={styleMerge("relative w-full", className)}>
+      <SearchTypeahead<PerfumeHouseOption>
+        inputId={fieldInputId}
+        listboxId={`${fieldInputId}-listbox`}
+        label={label ?? "House"}
+        labelClassName={label ? undefined : "sr-only"}
         placeholder="Search for a perfume house..."
-        onKeyUp={handleKeyUp}
-        className={styleMerge(
+        searchFn={searchFn}
+        minLength={2}
+        delay={300}
+        inputValue={text}
+        onInputChange={(query: string) => {
+          setText(query)
+          onNameChange?.(query)
+          if (selectedId) setSelectedId("")
+        }}
+        onSelect={(item: PerfumeHouseOption) => {
+          setText(item.name)
+          setSelectedId(item.id)
+          onNameChange?.(item.name)
+        }}
+        clearInputOnSelect={false}
+        placement="portal"
+        surface="hero"
+        inputClassName={styleMerge(
           "w-full px-4 py-2 bg-noir-dark/50 border-2 rounded-md text-noir-gold-100 placeholder-noir-gold-100/50 focus:outline-none transition-colors",
           selectedId
             ? "border-green-500/50"
             : "border-noir-gold/30 focus:border-noir-gold"
         )}
+        messages={{
+          loading: "Searching…",
+          empty: "No houses found",
+          formatError: (err: string) => `Search error: ${err}`,
+        }}
       />
       <input type="hidden" name={name} value={selectedId} />
-      {selectedId && <p className="text-xs text-green-400 mt-1">✓ House selected</p>}
-
-      {results.length > 0 &&
-        showDropdown &&
-        createPortal(
-          <ul
-            id={dropdownId}
-            role="listbox"
-            className="bg-noir-dark rounded-b-md border-l-8 border-b-8 absolute border-r-8 border-noir-gold/80 border-double z-99999 max-h-52 overflow-y-auto shadow-2xl"
-            style={{
-              top: dropdownPosition.top,
-              left: dropdownPosition.left,
-              width: dropdownPosition.width,
-            }}
-          >
-            {results.map((item) => (
-              <li
-                key={item.id}
-                role="option"
-                className="p-2 text-noir-gold-100 hover:bg-noir-gold hover:text-noir-black font-semibold cursor-pointer last-of-type:rounded-b-md transition-colors"
-              >
-                <button
-                  type="button"
-                  className="block min-w-full text-left"
-                  onMouseDown={event => {
-                    event.preventDefault()
-                    handleSelect(item)
-                  }}
-                >
-                  {item.name}
-                </button>
-              </li>
-            ))}
-          </ul>,
-          document.body
-        )}
+      {selectedId ? (
+        <p className="text-xs text-green-400 mt-1">✓ House selected</p>
+      ) : null}
     </div>
   )
 }

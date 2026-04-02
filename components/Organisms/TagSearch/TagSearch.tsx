@@ -1,12 +1,9 @@
 import { type VariantProps } from "class-variance-authority"
-import type { ChangeEvent } from "react"
 import { type FC, type HTMLProps, useCallback, useEffect, useState } from "react"
 
-import { Button } from "@/components/Atoms/Button/Button"
-import Input from "@/components/Atoms/Input/Input"
-import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
+import SearchTypeahead from "@/components/Molecules/SearchTypeahead"
+import { typeaheadItemRowClasses } from "@/components/Molecules/SearchTypeahead/search-typeahead-surfaces"
 import type { Tag } from "@/lib/queries/tags"
-import { highlightSearchTerm } from "@/utils/highlightSearchTerm"
 import { styleMerge } from "@/utils/styleUtils"
 
 import CreateTagButton from "./Partials/CreateTagButton"
@@ -25,23 +22,12 @@ interface TagSearchProps
   label?: string
   data?: Tag[]
   allowCreate?: boolean
-  /** When set, blocks adding tags beyond this count (existing tags can still be removed). */
   maxSelections?: number
-  /** Defaults to `tag-search`. Use unique ids when multiple instances are mounted. */
   inputId?: string
-  /** Label for the search input; defaults to `{label} search` or "Search". */
   searchInputLabel?: string
-  /** footer: tag strip pinned to bottom (default). flow: tags stack under input (e.g. scent quiz). */
   selectedLayout?: TagSearchSelectedLayout
-  /** dark: stone surfaces for dropdown and list (e.g. customer-facing pages). */
   surface?: TagSearchSurface
 }
-
-const dropdownItemClassesLight =
-  "p-2 hover:bg-noir-gray hover:text-noir-light cursor-pointer last-of-type:rounded-b-md"
-
-const dropdownItemClassesDark =
-  "p-2 cursor-pointer text-noir-gold-100 last-of-type:rounded-b-md hover:bg-stone-700"
 
 const TagSearch: FC<TagSearchProps> = ({
   className,
@@ -73,26 +59,6 @@ const TagSearch: FC<TagSearchProps> = ({
     return (await res.json()) as Tag[]
   }, [])
 
-  const {
-    searchValue: inputValue,
-    setSearchValue: setInputValue,
-    results,
-    isLoading,
-    error,
-    clearResults,
-  } = useDebouncedSearch(searchFunction, { delay: 300, minLength: 1 })
-
-  const showDropdown =
-    results.length > 0 ||
-    isLoading ||
-    !!error ||
-    (inputValue.length >= 1 && results.length === 0)
-
-  const closeDropdown = useCallback(() => {
-    setInputValue("")
-    clearResults()
-  }, [clearResults, setInputValue])
-
   const handleItemClick = (item: Tag | { id: string; name?: string }) => {
     if (selectedTags.some(t => t.id === item.id)) return
     if (maxSelections != null && selectedTags.length >= maxSelections) return
@@ -100,7 +66,6 @@ const TagSearch: FC<TagSearchProps> = ({
     const newTags = [...selectedTags, tag]
     setSelectedTags(newTags)
     onChange?.(newTags)
-    closeDropdown()
   }
 
   const handleRemoveTag = (tagId: string) => {
@@ -109,22 +74,11 @@ const TagSearch: FC<TagSearchProps> = ({
     onChange?.(newTags)
   }
 
-  const handleInputChange = (evt: ChangeEvent<HTMLInputElement>) => {
-    setInputValue(evt.target.value)
-  }
-
   const searchLabel =
     searchInputLabel ?? (label ? `${label} search` : "Search")
   const isDark = surface === "dark"
-  const dropdownUl = styleMerge(
-    "w-full absolute z-10 rounded-b-md border shadow-lg",
-    isDark
-      ? "border-stone-600 bg-stone-800 text-noir-gold-100"
-      : "border-transparent bg-white"
-  )
-  const itemRowClass = isDark ? dropdownItemClassesDark : dropdownItemClassesLight
-  const mutedText = isDark ? "text-stone-400" : "text-gray-500"
-  const pulseText = isDark ? "text-noir-gold-300" : undefined
+  const surfaceKey = isDark ? "dark" : "light"
+  const itemRowClass = typeaheadItemRowClasses[surfaceKey]
 
   return (
     <div
@@ -134,62 +88,47 @@ const TagSearch: FC<TagSearchProps> = ({
       )}
       data-cy="TagSearch"
     >
-      <div className={styleMerge("flex flex-col", selectedLayout === "flow" ? "mb-2" : "mb-6")}>
-        <label htmlFor={inputId} className="block-label">
-          {searchLabel}
-        </label>
-        <Input
-          shading
-          autoComplete="off"
-          id={inputId}
-          value={inputValue}
-          onChange={handleInputChange}
-        />
-        {showDropdown && (
-          <ul className={dropdownUl}>
-            {isLoading && (
-              <li className="p-2 text-center">
-                <span className={styleMerge("animate-pulse", pulseText)}>
-                  Searching...
-                </span>
-              </li>
-            )}
-            {error && (
-              <li className="p-2 text-center text-red-400">
-                <span>Search error: {error}</span>
-              </li>
-            )}
-            {!isLoading &&
-              !error &&
-              results.map((item: Tag) => (
-                <li key={item.id} className={itemRowClass}>
-                  <Button
-                    className="block h-full w-full text-left"
-                    type="button"
-                    onClick={() => handleItemClick(item)}
-                  >
-                    {highlightSearchTerm(item.name, inputValue)}
-                  </Button>
-                </li>
-              ))}
-            {!isLoading &&
-              !error &&
-              results.length === 0 &&
-              inputValue.length >= 1 && (
-                <li className={styleMerge("p-2 text-center", mutedText)}>
-                  <span>No tags found</span>
-                </li>
-              )}
-            {allowCreate && (
-              <li className={itemRowClass}>
-                <CreateTagButton
-                  action={handleItemClick}
-                  setOpenDropdown={closeDropdown}
-                />
-              </li>
-            )}
-          </ul>
+      <div
+        className={styleMerge(
+          "flex flex-col",
+          selectedLayout === "flow" ? "mb-2" : "mb-6"
         )}
+      >
+        <SearchTypeahead<Tag>
+          inputId={inputId}
+          listboxId={`${inputId}-listbox`}
+          label={searchLabel}
+          searchFn={searchFunction}
+          minLength={1}
+          delay={300}
+          defaultInputValue=""
+          onSelect={(item: Tag) => {
+            handleItemClick(item)
+          }}
+          clearInputOnSelect
+          placement="inline"
+          surface={surfaceKey}
+          useShadedInput
+          messages={{
+            loading: "Searching...",
+            empty: "No tags found",
+            formatError: err => `Search error: ${err}`,
+          }}
+          footerSlot={
+            allowCreate
+              ? ({ clearList }: { clearList: () => void }) => (
+                  <li className={itemRowClass}>
+                    <CreateTagButton
+                      action={handleItemClick}
+                      setOpenDropdown={open => {
+                        if (!open) clearList()
+                      }}
+                    />
+                  </li>
+                )
+              : undefined
+          }
+        />
       </div>
       <TagList
         selectedTags={selectedTags}

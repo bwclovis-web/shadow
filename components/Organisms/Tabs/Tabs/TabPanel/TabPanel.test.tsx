@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react"
-import { describe, expect, it } from "vitest"
+import { cleanup, render, screen } from "@testing-library/react"
+import { afterEach, describe, expect, it } from "vitest"
 
 import TabItem from "../TabItem/TabItem"
 import TabPanel from "./TabPanel"
@@ -7,6 +7,10 @@ import TabPanel from "./TabPanel"
 const getTabItem = (label: string, content: string) => (
   <TabItem label={label} content={content} />
 )
+
+afterEach(() => {
+  cleanup()
+})
 
 describe("TabPanel", () => {
   it("renders the content of the child TabItem", () => {

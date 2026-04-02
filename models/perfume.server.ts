@@ -15,6 +15,7 @@ import {
   PERFUME_LIST_MAX_TAKE,
   type PerfumeListSortBy,
 } from "@/utils/server/perfume-cursor-order.server"
+import type { PerfumeDiscoveryFilters } from "@/utils/discovery-filters"
 import { sanitizeText } from "@/utils/server/sanitize.server"
 import { createUrlSlug } from "@/utils/slug"
 
@@ -638,27 +639,108 @@ interface GetAvailablePerfumesForDecantingPaginatedOptions {
   skip?: number
   take?: number
   search?: string
+  discovery?: PerfumeDiscoveryFilters
+}
+
+/**
+ * Text search + structured discovery filters for exchange listings (CF-010).
+ * Exported for unit tests.
+ */
+export function buildExchangeDiscoveryWhereFragments(
+  discovery: PerfumeDiscoveryFilters | undefined,
+  search: string | undefined
+): Prisma.PerfumeWhereInput[] {
+  const parts: Prisma.PerfumeWhereInput[] = []
+  const q = (search ?? "").trim()
+  if (q) {
+    parts.push({
+      OR: [
+        { name: { contains: q, mode: "insensitive" as const } },
+        { perfumeHouse: { name: { contains: q, mode: "insensitive" as const } } },
+      ],
+    })
+  }
+  if (!discovery) return parts
+
+  if (discovery.noteIds.length > 0) {
+    parts.push({
+      perfumeNoteRelations: { some: { noteId: { in: discovery.noteIds } } },
+    })
+  }
+  if (discovery.seasons.length > 0) {
+    parts.push({
+      OR: discovery.seasons.map(s => ({
+        userPerfumeSeasonVote: { some: { [s]: true } },
+      })),
+    })
+  }
+  if (discovery.houseId) {
+    parts.push({ perfumeHouseId: discovery.houseId })
+  }
+  return parts
+}
+
+/**
+ * Perfumes that have at least one in-stock listing whose `price` parses to the given numeric range.
+ */
+async function fetchPerfumeIdsWithListingPriceInRange(
+  minPrice: number | null,
+  maxPrice: number | null
+): Promise<string[]> {
+  if (minPrice == null && maxPrice == null) return []
+
+  const parts: Prisma.Sql[] = [
+    Prisma.sql`up."available" <> '0'`,
+    Prisma.sql`up.price IS NOT NULL`,
+    Prisma.sql`TRIM(up.price) <> ''`,
+    Prisma.sql`(NULLIF(REGEXP_REPLACE(TRIM(up.price), '[^0-9.]', '', 'g'), '')) ~ '^[0-9]+(\\.[0-9]+)?$'`,
+  ]
+  if (minPrice != null) {
+    parts.push(
+      Prisma.sql`(NULLIF(REGEXP_REPLACE(TRIM(up.price), '[^0-9.]', '', 'g'), ''))::numeric >= ${minPrice}`
+    )
+  }
+  if (maxPrice != null) {
+    parts.push(
+      Prisma.sql`(NULLIF(REGEXP_REPLACE(TRIM(up.price), '[^0-9.]', '', 'g'), ''))::numeric <= ${maxPrice}`
+    )
+  }
+  const whereClause = Prisma.join(parts, " AND ")
+  const rows = await prisma.$queryRaw<{ id: string }[]>`
+    SELECT DISTINCT p.id AS id
+    FROM "Perfume" p
+    INNER JOIN "UserPerfume" up ON up."perfumeId" = p.id
+    WHERE ${whereClause}
+  `
+  return rows.map(r => r.id)
 }
 
 export const getAvailablePerfumesForDecantingPaginated = async ({
   skip = 0,
   take = 16,
   search,
+  discovery,
 }: GetAvailablePerfumesForDecantingPaginatedOptions = {}) => {
-  // Build where clause with optional search filter
-  const whereClause = search
-    ? {
-        AND: [
-          availableForDecantingWhere,
-          {
-            OR: [
-              { name: { contains: search, mode: "insensitive" as const } },
-              { perfumeHouse: { name: { contains: search, mode: "insensitive" as const } } },
-            ],
-          },
-        ],
-      }
-    : availableForDecantingWhere
+  const discoveryFragments = buildExchangeDiscoveryWhereFragments(discovery, search)
+
+  const andParts: Prisma.PerfumeWhereInput[] = [
+    availableForDecantingWhere,
+    ...discoveryFragments,
+  ]
+
+  if (
+    discovery &&
+    (discovery.minPrice != null || discovery.maxPrice != null)
+  ) {
+    const priceIds = await fetchPerfumeIdsWithListingPriceInRange(
+      discovery.minPrice,
+      discovery.maxPrice
+    )
+    andParts.push({ id: { in: priceIds } })
+  }
+
+  const whereClause: Prisma.PerfumeWhereInput =
+    andParts.length === 1 ? andParts[0]! : { AND: andParts }
 
   const [perfumes, totalCount] = await Promise.all([
     prisma.perfume.findMany({

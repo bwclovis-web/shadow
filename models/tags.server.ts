@@ -96,6 +96,19 @@ export const getTagsByName = async (name: string) => {
     .slice(0, 10)
 }
 
+/** Resolve note tags by id for discovery filters / URL hydration (displayable notes only). */
+export const getPerfumeNotesByIds = async (ids: string[]) => {
+  const unique = [...new Set(ids.filter(Boolean))]
+  if (unique.length === 0) return []
+
+  const rows = await prisma.perfumeNotes.findMany({
+    where: { id: { in: unique } },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  })
+  return rows.filter((tag) => isDisplayableScentNote(tag.name))
+}
+
 export type CreateTagResult =
   | { success: true; tag: { id: string; name: string } }
   | { success: false; reason: string }

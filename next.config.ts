@@ -55,6 +55,11 @@ const nextConfig: NextConfig = {
         hostname: 'basenotes.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.xerjoff.com',
+        pathname: '/**',
+      },
     ],
   },
 }

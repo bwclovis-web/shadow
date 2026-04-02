@@ -155,6 +155,188 @@ function stripNotesFromDescription(description: string, notes: string[]): string
   return text.trim()
 }
 
+function uniqueNotes(notes: string[]): string[] {
+  return [...new Set(notes.map(n => n.trim().toLowerCase()).filter(Boolean))]
+}
+
+function splitNoteList(text: string): string[] {
+  if (!text?.trim()) return []
+  return uniqueNotes(
+    text
+      .replace(/\r/g, "\n")
+      .replace(/[•·]/g, ",")
+      .replace(/\s+\|\s+/g, ", ")
+      .replace(/\s+\/\s+/g, ", ")
+      .replace(/\s*;\s*/g, ", ")
+      .replace(/\band\b/gi, ",")
+      .split(/[\n,]+/)
+      .map(part => part.trim())
+      .map(part => part.replace(/^[\-\u2022*:\s]+/, "").replace(/[.:\-\s]+$/, ""))
+      .filter(Boolean),
+  )
+}
+
+function normalizeForVerification(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+function verificationCandidates(note: string): string[] {
+  const normalized = normalizeForVerification(note)
+  if (!normalized) return []
+  const out = new Set([normalized])
+  if (!normalized.includes(" ")) {
+    if (normalized.endsWith("ies") && normalized.length > 3) out.add(`${normalized.slice(0, -3)}y`)
+    if (normalized.endsWith("es") && normalized.length > 2) out.add(normalized.slice(0, -2))
+    if (normalized.endsWith("s") && normalized.length > 1) out.add(normalized.slice(0, -1))
+    out.add(`${normalized}s`)
+    out.add(`${normalized}es`)
+  }
+  return [...out]
+}
+
+function noteAppearsInSource(note: string, source: string): boolean {
+  const haystack = ` ${normalizeForVerification(source)} `
+  if (!haystack.trim()) return false
+  return verificationCandidates(note).some(candidate => haystack.includes(` ${candidate} `))
+}
+
+function verifyNotesAgainstSource(
+  notes: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] },
+  source: string,
+): { openNotes: string[]; heartNotes: string[]; baseNotes: string[] } {
+  if (!source?.trim()) return { openNotes: [], heartNotes: [], baseNotes: [] }
+  return {
+    openNotes: uniqueNotes(notes.openNotes.filter(note => noteAppearsInSource(note, source))),
+    heartNotes: uniqueNotes(notes.heartNotes.filter(note => noteAppearsInSource(note, source))),
+    baseNotes: uniqueNotes(notes.baseNotes.filter(note => noteAppearsInSource(note, source))),
+  }
+}
+
+function stripTrailingNonNoteSections(text: string): string {
+  return text
+    .replace(/\s+(?:additional information|ingredients|how to use|customer reviews?|reviews?)\b[\s\S]*$/i, "")
+    .trim()
+}
+
+function classifyNoteLayer(label: string): "open" | "heart" | "base" | null {
+  const normalized = label.trim().toLowerCase().replace(/\s+/g, " ")
+  if (/^(top|open|opening|head)(?: notes?)?$/.test(normalized)) return "open"
+  if (/^(heart|middle|mid|core)(?: notes?)?$/.test(normalized)) return "heart"
+  if (/^(base|dry down|drydown|end)(?: notes?)?$/.test(normalized)) return "base"
+  return null
+}
+
+function extractInlineLayeredNotes(text: string): {
+  openNotes: string[]
+  heartNotes: string[]
+  baseNotes: string[]
+} {
+  const empty = { openNotes: [] as string[], heartNotes: [] as string[], baseNotes: [] as string[] }
+  const source = stripTrailingNonNoteSections(text.replace(/\r/g, "\n").replace(/\s+/g, " ").trim())
+  if (!source) return empty
+
+  const sectionRe = /\b(top(?:\s+notes?)?|open(?:ing)?(?:\s+notes?)?|head(?:\s+notes?)?|heart(?:\s+notes?)?|middle(?:\s+notes?)?|mid(?:\s+notes?)?|core(?:\s+notes?)?|base(?:\s+notes?)?|dry\s*down(?:\s+notes?)?|drydown(?:\s+notes?)?|end(?:\s+notes?)?)\s*:/gi
+  const matches = [...source.matchAll(sectionRe)]
+  if (matches.length === 0) return empty
+
+  const openNotes: string[] = []
+  const heartNotes: string[] = []
+  const baseNotes: string[] = []
+
+  for (let i = 0; i < matches.length; i += 1) {
+    const match = matches[i]
+    const label = match[1] ?? ""
+    const layer = classifyNoteLayer(label)
+    if (!layer || match.index == null) continue
+    const start = match.index + match[0].length
+    const end = i + 1 < matches.length && matches[i + 1].index != null
+      ? matches[i + 1].index!
+      : source.length
+    const chunk = stripTrailingNonNoteSections(source.slice(start, end))
+    const parsed = splitNoteList(chunk).filter(isDisplayableScentNote)
+    if (layer === "open") openNotes.push(...parsed)
+    if (layer === "heart") heartNotes.push(...parsed)
+    if (layer === "base") baseNotes.push(...parsed)
+  }
+
+  return {
+    openNotes: uniqueNotes(openNotes),
+    heartNotes: uniqueNotes(heartNotes),
+    baseNotes: uniqueNotes(baseNotes),
+  }
+}
+
+function extractNotesFromStructuredText(text: string): {
+  openNotes: string[]
+  heartNotes: string[]
+  baseNotes: string[]
+} {
+  const empty = { openNotes: [] as string[], heartNotes: [] as string[], baseNotes: [] as string[] }
+  const source = text?.trim()
+  if (!source) return empty
+
+  const inlineNotes = extractInlineLayeredNotes(source)
+  if (inlineNotes.openNotes.length || inlineNotes.heartNotes.length || inlineNotes.baseNotes.length) {
+    return inlineNotes
+  }
+
+  const lines = source
+    .replace(/\r/g, "\n")
+    .split(/\n+/)
+    .map(line => line.trim())
+    .filter(Boolean)
+
+  const openNotes: string[] = []
+  const heartNotes: string[] = []
+  const baseNotes: string[] = []
+  const unlayered: string[] = []
+
+  for (const line of lines) {
+    const normalized = line.replace(/\s+/g, " ").trim()
+    const openMatch = normalized.match(/^(?:top|open|opening|head)(?:\s+notes?)?\s*[:\-]\s*(.+)$/i)
+    if (openMatch) {
+      openNotes.push(...splitNoteList(openMatch[1]))
+      continue
+    }
+    const heartMatch = normalized.match(/^(?:heart|middle|mid|core)(?:\s+notes?)?\s*[:\-]\s*(.+)$/i)
+    if (heartMatch) {
+      heartNotes.push(...splitNoteList(heartMatch[1]))
+      continue
+    }
+    const baseMatch = normalized.match(/^(?:base|dry\s*down|drydown|end)(?:\s+notes?)?\s*[:\-]\s*(.+)$/i)
+    if (baseMatch) {
+      baseNotes.push(...splitNoteList(baseMatch[1]))
+      continue
+    }
+    unlayered.push(...splitNoteList(normalized))
+  }
+
+  const result = {
+    openNotes: uniqueNotes(openNotes),
+    heartNotes: uniqueNotes(heartNotes),
+    baseNotes: uniqueNotes(baseNotes),
+  }
+
+  if (result.openNotes.length || result.heartNotes.length || result.baseNotes.length) {
+    return result
+  }
+
+  // If the selector captured a plain note list with no layer labels, keep it literal.
+  const plainNotes = uniqueNotes(unlayered).filter(isDisplayableScentNote)
+  if (plainNotes.length > 0) {
+    return { openNotes: plainNotes, heartNotes: [], baseNotes: [] }
+  }
+
+  return empty
+}
+
 // ---------------------------------------------------------------------------
 // LLM note-extraction helper
 // ---------------------------------------------------------------------------
@@ -433,16 +615,27 @@ function buildGraph(
       const resolvedName = resolveProductName(item)
       const name = cleanTitle(resolvedName, opts)
       const notesSource = item.notesText ?? item.description
-      let notes = await extractNotesFromDescription(llm, notesSource, name || resolvedName)
-      const totalFromDescription =
+      const verificationSource = notesSource?.trim() ? notesSource : ""
+      let notes = extractNotesFromStructuredText(notesSource)
+      const totalParsedDirectly = notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
+      if (totalParsedDirectly === 0 && verificationSource) {
+        notes = await extractNotesFromDescription(llm, notesSource, name || resolvedName)
+      }
+      if (verificationSource) {
+        notes = verifyNotesAgainstSource(notes, verificationSource)
+      }
+
+      const totalAfterPipeline =
         notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
-      if (totalFromDescription === 0 && (name || resolvedName)?.trim()) {
-        const fallbackNotes = await extractNotesFallbackLookup(llm, name || resolvedName, item.perfumeHouse ?? state.houseName)
-        const totalFallback =
-          fallbackNotes.openNotes.length +
-          fallbackNotes.heartNotes.length +
-          fallbackNotes.baseNotes.length
-        if (totalFallback > 0) notes = fallbackNotes
+      if (totalAfterPipeline === 0) {
+        const fallbackName = name || resolvedName
+        if (fallbackName?.trim()) {
+          notes = await extractNotesFallbackLookup(
+            llm,
+            fallbackName,
+            item.perfumeHouse ?? state.houseName,
+          )
+        }
       }
 
       // If only one layer has notes, consolidate everything into openNotes so they are always visible.

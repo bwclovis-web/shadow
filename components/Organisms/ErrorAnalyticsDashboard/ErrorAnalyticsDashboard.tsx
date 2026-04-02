@@ -5,8 +5,9 @@
  * Provides insights into error patterns, trends, and affected users.
  */
 
-import React, { useState } from "react"
-import { useFetcher } from "react-router"
+"use client"
+
+import React, { useCallback, useState } from "react"
 
 import type { ErrorAnalyticsReport } from "~/utils/errorAnalytics.server"
 
@@ -19,18 +20,33 @@ type TimeRange = "hour" | "day" | "week" | "month" | "all"
 export function ErrorAnalyticsDashboard({
   initialData,
 }: ErrorAnalyticsDashboardProps) {
-  const fetcher = useFetcher<{
-    success: boolean
-    data: ErrorAnalyticsReport
-  }>()
   const [timeRange, setTimeRange] = useState<TimeRange>("day")
+  const [report, setReport] = useState<ErrorAnalyticsReport | undefined>(
+    initialData
+  )
+  const [isLoading, setIsLoading] = useState(false)
 
-  const data = fetcher.data?.data || initialData
-  const isLoading = fetcher.state === "loading"
+  const loadRange = useCallback(async (range: TimeRange) => {
+    setIsLoading(true)
+    try {
+      const res = await fetch(`/api/error-analytics?timeRange=${range}`)
+      const json = (await res.json()) as {
+        success: boolean
+        data?: ErrorAnalyticsReport
+      }
+      if (json.success && json.data) {
+        setReport(json.data)
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  const data = report ?? initialData
 
   const handleTimeRangeChange = (newRange: TimeRange) => {
     setTimeRange(newRange)
-    fetcher.load(`/api/error-analytics?timeRange=${newRange}`)
+    void loadRange(newRange)
   }
 
   const handleExport = () => {

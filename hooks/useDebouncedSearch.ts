@@ -7,14 +7,37 @@ export interface UseDebouncedSearchOptions {
   minLength?: number
   /** Sync from external source (e.g. URL search param). When this changes, searchValue is updated. */
   initialValue?: string
+  /**
+   * Controlled query string. When set, the hook uses `value` for debounced fetches and calls
+   * `onValueChange` from `setSearchValue` instead of internal state.
+   */
+  value?: string
+  onValueChange?: (next: string) => void
 }
 
 export function useDebouncedSearch<T = unknown>(
   searchFn: (query: string) => Promise<T[]>,
   options: UseDebouncedSearchOptions = {}
 ) {
-  const { delay = 300, minLength = 2, initialValue } = options
-  const [searchValue, setSearchValue] = useState(initialValue ?? "")
+  const { delay = 300, minLength = 2, initialValue, value, onValueChange } =
+    options
+  const [uncontrolledValue, setUncontrolledValue] = useState(
+    initialValue ?? ""
+  )
+  const controlled = value !== undefined
+  const searchValue = controlled ? value : uncontrolledValue
+
+  const setSearchValue = useCallback(
+    (next: string) => {
+      if (controlled) {
+        onValueChange?.(next)
+      } else {
+        setUncontrolledValue(next)
+      }
+    },
+    [controlled, onValueChange]
+  )
+
   const [results, setResults] = useState<T[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -22,10 +45,10 @@ export function useDebouncedSearch<T = unknown>(
   const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
-    if (initialValue !== undefined) {
-      setSearchValue(initialValue)
+    if (!controlled && initialValue !== undefined) {
+      setUncontrolledValue(initialValue)
     }
-  }, [initialValue])
+  }, [initialValue, controlled])
 
   const clearResults = useCallback(() => {
     setResults([])
@@ -56,9 +79,10 @@ export function useDebouncedSearch<T = unknown>(
       return
     }
 
+    setIsLoading(true)
+    setError(null)
+
     timeoutRef.current = setTimeout(async () => {
-      setIsLoading(true)
-      setError(null)
       try {
         const data = await searchFn(trimmed)
         setResults(Array.isArray(data) ? data : [])

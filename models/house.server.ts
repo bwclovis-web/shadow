@@ -332,6 +332,13 @@ export const getPerfumeHouseBySlug = cache(
   }
 )
 
+export const getPerfumeHouseSummaryById = async (id: string) => {
+  return prisma.perfumeHouse.findUnique({
+    where: { id },
+    select: { id: true, name: true },
+  })
+}
+
 export const getPerfumeHouseById = async (
   id: string,
   opts?: { skip?: number; take?: number }

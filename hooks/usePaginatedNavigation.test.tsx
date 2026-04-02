@@ -72,6 +72,7 @@ describe("usePaginatedNavigation", () => {
 
     expect(navigate).toHaveBeenCalledWith("/path?page=1", {
       preventScrollReset: true,
+      replace: false,
     })
   })
 })

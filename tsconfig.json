@@ -27,5 +27,13 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "**/*.test.ts", "**/*.test.tsx", "scripts", "prisma/seed.ts"]
+  "exclude": [
+    "node_modules",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "scripts",
+    "prisma/seed.ts",
+    "test/**",
+    "vitest.setup.ts"
+  ]
 }

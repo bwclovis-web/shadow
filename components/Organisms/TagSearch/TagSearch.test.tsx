@@ -1,16 +1,35 @@
-import { fireEvent, render, screen } from "@testing-library/react"
-import { createRef } from "react"
-import { describe, expect, it, vi } from "vitest"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import type { PropsWithChildren } from "react"
+import { afterEach, describe, expect, it, vi } from "vitest"
+
+vi.mock("next-view-transitions", () => ({
+  useTransitionRouter: () => ({
+    push: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  Link: ({
+    children,
+    href,
+    ...rest
+  }: PropsWithChildren<{ href: string }>) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
+}))
 
 import TagSearch from "./TagSearch"
 
+afterEach(() => {
+  cleanup()
+})
+
 describe("TagSearch", () => {
   it("renders a tagsearch", () => {
-    const inputRef = createRef<HTMLInputElement>()
-    const data = []
+    const data: { id: string; name: string }[] = []
     const onChange = () => {}
     render(<TagSearch data={data} onChange={onChange} label="Test Tags" />)
-    expect(screen.getByText("Test Tags search")).toBeInTheDocument()
+    expect(screen.getByText("Test Tags search")).toBeTruthy()
   })
 
   it("renders selected tags with remove buttons", () => {
@@ -21,8 +40,8 @@ describe("TagSearch", () => {
     const onChange = () => {}
     render(<TagSearch data={data} onChange={onChange} label="Test Tags" />)
 
-    expect(screen.getByText("Vanilla")).toBeInTheDocument()
-    expect(screen.getByText("Rose")).toBeInTheDocument()
+    expect(screen.getByText("Vanilla")).toBeTruthy()
+    expect(screen.getByText("Rose")).toBeTruthy()
     expect(screen.getAllByText("×")).toHaveLength(2)
   })
 
@@ -34,8 +53,7 @@ describe("TagSearch", () => {
     const onChange = vi.fn()
     render(<TagSearch data={data} onChange={onChange} label="Test Tags" />)
 
-    const removeButtons = screen.getAllByText("×")
-    fireEvent.click(removeButtons[0])
+    fireEvent.click(screen.getByTitle("Remove Vanilla"))
 
     expect(onChange).toHaveBeenCalledWith([{ id: "2", name: "Rose" }])
   })

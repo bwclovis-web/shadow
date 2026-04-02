@@ -18,6 +18,10 @@ import type {
   ScraperRunRequest,
   ScraperRunResponse,
 } from "@/types/scraper"
+import {
+  chunkPerfumeCsvRecordsForImport,
+  chunkPerfumeCsvRecordsForRetryR2,
+} from "@/utils/scraper-import-chunking"
 
 // ---------------------------------------------------------------------------
 // Persist last successful result so you can restore after closing tab / failed import
@@ -428,28 +432,76 @@ export function ScraperPageClient() {
     setImportResult(null)
     setImportError(null)
 
-    try {
-      const res = await fetch("/api/admin/scraper/import", {
-        method: "POST",
-        headers: addToHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify({
-          records: scrapeResult.records,
-          uploadImagesToR2,
-          overwriteImageUrls,
-        }),
-        credentials: "include",
-      })
-      const data = (await res.json()) as ScraperImportResponse
+    const batches = chunkPerfumeCsvRecordsForImport(
+      scrapeResult.records,
+      uploadImagesToR2,
+      overwriteImageUrls,
+    )
 
-      if (!res.ok || !data.ok) {
-        setImportError(data.errors?.join("\n") ?? `Server error ${res.status}`)
-      } else {
-        setImportResult(data)
-        setRetryR2Result(null)
-        setRetryR2Error(null)
+    try {
+      let importedCount = 0
+      let r2UploadCount = 0
+      const errors: string[] = []
+      const failedR2Names: string[] = []
+
+      for (let i = 0; i < batches.length; i++) {
+        const res = await fetch("/api/admin/scraper/import", {
+          method: "POST",
+          headers: addToHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({
+            records: batches[i],
+            uploadImagesToR2,
+            overwriteImageUrls,
+          }),
+          credentials: "include",
+        })
+        let data: ScraperImportResponse
+        try {
+          data = (await res.json()) as ScraperImportResponse
+        } catch {
+          setImportError(
+            batches.length > 1
+              ? `Import batch ${i + 1} of ${batches.length}: server returned an invalid response (status ${res.status}).`
+              : `Server returned an invalid response (status ${res.status}).`,
+          )
+          return
+        }
+
+        if (!res.ok || !data.ok) {
+          const prefix =
+            batches.length > 1 ? `Batch ${i + 1} of ${batches.length}: ` : ""
+          setImportError(
+            prefix + (data.errors?.join("\n") ?? `Server error ${res.status}`),
+          )
+          return
+        }
+
+        importedCount += data.importedCount
+        r2UploadCount += data.r2UploadCount
+        if (data.errors?.length) errors.push(...data.errors)
+        if (data.failedR2Names?.length) failedR2Names.push(...data.failedR2Names)
       }
+
+      setImportResult({
+        ok: true,
+        importedCount,
+        r2UploadCount,
+        errors,
+        failedR2Names: failedR2Names.length > 0 ? failedR2Names : undefined,
+      })
+      setRetryR2Result(null)
+      setRetryR2Error(null)
     } catch (err) {
-      setImportError(err instanceof Error ? err.message : "Unknown error")
+      const raw = err instanceof Error ? err.message : "Unknown error"
+      if (raw === "Failed to fetch") {
+        setImportError(
+          "Failed to fetch — the import request was dropped before the server responded.\n\n" +
+            "Common causes: POST body too large for your host/proxy, or a network timeout. " +
+            "This page splits large imports into multiple requests; if it still fails, run the scraper on fewer products per batch or import from a stable local dev session.",
+        )
+      } else {
+        setImportError(raw)
+      }
     } finally {
       setImporting(false)
       setImportConfirmed(false)
@@ -463,21 +515,65 @@ export function ScraperPageClient() {
     setRetryR2Result(null)
     setRetryR2Error(null)
 
+    const batches = chunkPerfumeCsvRecordsForRetryR2(scrapeResult.records)
+
     try {
-      const res = await fetch("/api/admin/scraper/retry-r2", {
-        method: "POST",
-        headers: addToHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify({ records: scrapeResult.records }),
-        credentials: "include",
-      })
-      const data = (await res.json()) as ScraperRetryR2Response
-      if (!res.ok || !data.ok) {
-        setRetryR2Error(data.errors?.join("\n") ?? `Server error ${res.status}`)
-      } else {
-        setRetryR2Result(data)
+      let attemptedCount = 0
+      let uploadedCount = 0
+      let skippedCount = 0
+      const errors: string[] = []
+      const failedR2Names: string[] = []
+
+      for (let i = 0; i < batches.length; i++) {
+        const res = await fetch("/api/admin/scraper/retry-r2", {
+          method: "POST",
+          headers: addToHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({ records: batches[i] }),
+          credentials: "include",
+        })
+        let data: ScraperRetryR2Response
+        try {
+          data = (await res.json()) as ScraperRetryR2Response
+        } catch {
+          setRetryR2Error(
+            batches.length > 1
+              ? `R2 retry batch ${i + 1} of ${batches.length}: invalid response (status ${res.status}).`
+              : `Invalid response (status ${res.status}).`,
+          )
+          return
+        }
+        if (!res.ok || !data.ok) {
+          const prefix =
+            batches.length > 1 ? `Batch ${i + 1} of ${batches.length}: ` : ""
+          setRetryR2Error(
+            prefix + (data.errors?.join("\n") ?? `Server error ${res.status}`),
+          )
+          return
+        }
+        attemptedCount += data.attemptedCount
+        uploadedCount += data.uploadedCount
+        skippedCount += data.skippedCount
+        if (data.errors?.length) errors.push(...data.errors)
+        if (data.failedR2Names?.length) failedR2Names.push(...data.failedR2Names)
       }
+
+      setRetryR2Result({
+        ok: true,
+        attemptedCount,
+        uploadedCount,
+        skippedCount,
+        errors,
+        failedR2Names: failedR2Names.length > 0 ? failedR2Names : undefined,
+      })
     } catch (err) {
-      setRetryR2Error(err instanceof Error ? err.message : "Unknown error")
+      const raw = err instanceof Error ? err.message : "Unknown error"
+      if (raw === "Failed to fetch") {
+        setRetryR2Error(
+          "Failed to fetch — request was dropped (often payload size or network). Retry again; large result sets are sent in multiple batches automatically.",
+        )
+      } else {
+        setRetryR2Error(raw)
+      }
     } finally {
       setRetryingR2(false)
     }

@@ -23,19 +23,14 @@ import { HOUSE_DETAIL_PATH } from "@/constants/routes"
 import { usePerfume } from "@/hooks/usePerfume"
 import { useSessionStore } from "@/hooks/sessionStore"
 import { useDeletePerfume } from "@/lib/mutations/perfumes"
+import type { RecommendationPerfume } from "@/services/recommendations"
 import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
+
+import { RecommendationReasonLine } from "@/components/Containers/Recommendations/RecommendationReasonLine"
 
 const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
 
 const VAULT_PATH = "/the-vault"
-
-type SimilarPerfume = {
-  id: string
-  name: string
-  slug: string
-  image?: string | null
-  perfumeHouse?: { name: string; slug: string } | null
-}
 
 type PerfumeDetailClientProps = {
   initialPerfume: Awaited<ReturnType<typeof import("@/models/perfume.server").getPerfumeBySlug>> & { id: string }
@@ -48,7 +43,7 @@ type PerfumeDetailClientProps = {
   userReview: unknown
   reviewsData: unknown
   reviewsPageSize: number
-  similarPerfumes: SimilarPerfume[]
+  similarPerfumes: RecommendationPerfume[]
   selectedLetter: string | null
 }
 
@@ -227,6 +222,7 @@ const PerfumeDetailClient = ({
                           {similar.perfumeHouse.name}
                         </p>
                       )}
+                      <RecommendationReasonLine reason={similar.reason} />
                     </PrefetchLink>
                   </li>
                 )

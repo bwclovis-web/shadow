@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { Form } from "react-router"
 
 import { Button } from "~/components/Atoms/Button"
 import PasswordStrengthIndicator from "~/components/Organisms/PasswordStrengthIndicator"
@@ -50,7 +49,7 @@ export default function ChangePasswordForm({
     passwordsMatch
 
   return (
-    <Form method="post" className={`space-y-6 ${className}`}>
+    <form method="post" className={`space-y-6 ${className}`}>
       <FormHeader />
 
       {/* Current Password */}
@@ -157,6 +156,6 @@ export default function ChangePasswordForm({
           {isSubmitting ? "Changing Password..." : "Change Password"}
         </Button>
       </div>
-    </Form>
+    </form>
   )
 }

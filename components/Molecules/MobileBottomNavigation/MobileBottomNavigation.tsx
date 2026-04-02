@@ -1,13 +1,15 @@
+"use client"
+
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
+import { SIGN_IN } from "@/constants/routes"
+import { mainNavigation } from "@/data/navigation"
+import { getProfilePathForUser } from "@/utils/user"
+import { styleMerge } from "@/utils/styleUtils"
+import { usePathname } from "next/navigation"
 import { type FC, type HTMLProps } from "react"
 import { AiFillHome } from "react-icons/ai"
 import { FaBars, FaHeart, FaUser } from "react-icons/fa"
 import { LuSearch } from "react-icons/lu"
-import { NavLink } from "react-router"
-
-import { SIGN_IN } from "~/constants/routes"
-import { mainNavigation } from "~/data/navigation"
-import { getProfilePathForUser } from "~/utils/user"
-import { styleMerge } from "~/utils/styleUtils"
 
 interface MobileBottomNavigationProps extends HTMLProps<HTMLDivElement> {
   user?: {
@@ -18,91 +20,95 @@ interface MobileBottomNavigationProps extends HTMLProps<HTMLDivElement> {
   onMenuOpen?: () => void
 }
 
+const navItemClass = (active: boolean) =>
+  styleMerge(
+    "flex flex-col items-center gap-1 p-2 mobile-touch-target transition-colors duration-200",
+    active ? "text-noir-light" : "text-noir-gold hover:text-noir-light"
+  )
+
+function useIsActive() {
+  const pathname = usePathname()
+
+  const isActive = (href: string, exact?: boolean) => {
+    if (exact) return pathname === href
+    return pathname === href || pathname.startsWith(`${href}/`)
+  }
+
+  return { isActive }
+}
+
 const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
   className,
   user,
   onMenuOpen,
-}) => (
-  <div
-    className={styleMerge(
-      "md:hidden fixed bottom-0 left-0 right-0 z-40 bg-noir-dark/95 backdrop-blur-md border-t border-noir-light/20 mobile-safe-bottom",
-      className
-    )}
-  >
-    <nav className="flex justify-around items-center py-2">
-      {/* Home */}
-      <NavLink
-        to="/"
-        className={({ isActive }: { isActive: boolean }) => styleMerge(
-            "flex flex-col items-center gap-1 p-2 mobile-touch-target transition-colors duration-200",
-            isActive ? "text-noir-light" : "text-noir-gold hover:text-noir-light"
-          )
-        }
-      >
-        <AiFillHome size={20} />
-        <span className="text-xs font-medium">Home</span>
-      </NavLink>
+}) => {
+  const { isActive } = useIsActive()
+  const perfumesPath =
+    mainNavigation.find(nav => nav.key === "perfumes")?.path || "/the-vault"
+  const profileHref = user?.id
+    ? getProfilePathForUser({
+        id: user.id,
+        username: user.username ?? null,
+      })
+    : SIGN_IN
 
-      {/* Search - Quick access to main search */}
-      <button
-        onClick={() => {
-          const searchInput = document.querySelector('input[type="search"], input[placeholder*="search"], input[placeholder*="Search"]') as HTMLInputElement
-          if (searchInput) {
-            searchInput.focus()
-          }
-        }}
-        className="flex flex-col items-center gap-1 p-2 mobile-touch-target transition-colors duration-200 text-noir-gold hover:text-noir-light"
-      >
-        <LuSearch size={20} />
-        <span className="text-xs font-medium">Search</span>
-      </button>
+  return (
+    <div
+      className={styleMerge(
+        "md:hidden fixed bottom-0 left-0 right-0 z-40 bg-noir-dark/95 backdrop-blur-md border-t border-noir-light/20 mobile-safe-bottom",
+        className
+      )}
+    >
+      <nav className="flex justify-around items-center py-2">
+        <PrefetchLink href="/" className={navItemClass(isActive("/", true))}>
+          <AiFillHome size={20} />
+          <span className="text-xs font-medium">Home</span>
+        </PrefetchLink>
 
-      {/* Quick access to perfumes */}
-      <NavLink
-        to={
-          mainNavigation.find(nav => nav.key === "perfumes")?.path || "/the-vault"
-        }
-        className={({ isActive }: { isActive: boolean }) => styleMerge(
-            "flex flex-col items-center gap-1 p-2 mobile-touch-target transition-colors duration-200",
-            isActive ? "text-noir-light" : "text-noir-gold hover:text-noir-light"
-          )
-        }
-      >
-        <FaHeart size={20} />
-        <span className="text-xs font-medium">Perfumes</span>
-      </NavLink>
+        <button
+          type="button"
+          onClick={() => {
+            const searchInput = document.querySelector(
+              'input[type="search"], input[placeholder*="search"], input[placeholder*="Search"]'
+            ) as HTMLInputElement | null
+            searchInput?.focus()
+          }}
+          className="flex flex-col items-center gap-1 p-2 mobile-touch-target transition-colors duration-200 text-noir-gold hover:text-noir-light"
+        >
+          <LuSearch size={20} />
+          <span className="text-xs font-medium">Search</span>
+        </button>
 
-      {/* User/Profile */}
-      <NavLink
-        to={
-            user?.id
-              ? getProfilePathForUser({
-                  id: user.id,
-                  username: user.username ?? null,
-                })
-              : SIGN_IN
-          }
-        className={({ isActive }: { isActive: boolean }) => styleMerge(
-            "flex flex-col items-center gap-1 p-2 mobile-touch-target transition-colors duration-200",
-            isActive ? "text-noir-light" : "text-noir-gold hover:text-noir-light"
-          )
-        }
-      >
-        <FaUser size={20} />
-        <span className="text-xs font-medium">{user ? "Profile" : "Sign In"}</span>
-      </NavLink>
+        <PrefetchLink
+          href={perfumesPath}
+          className={navItemClass(isActive(perfumesPath))}
+        >
+          <FaHeart size={20} />
+          <span className="text-xs font-medium">Perfumes</span>
+        </PrefetchLink>
 
-      {/* Menu */}
-      <button
-        onClick={onMenuOpen}
-        className="flex flex-col items-center gap-1 p-2 mobile-touch-target transition-colors duration-200 text-noir-gold hover:text-noir-light"
-        aria-label="Open menu"
-      >
-        <FaBars size={20} />
-        <span className="text-xs font-medium">Menu</span>
-      </button>
-    </nav>
-  </div>
-)
+        <PrefetchLink
+          href={profileHref}
+          className={navItemClass(
+            user?.id ? isActive(profileHref) : isActive(SIGN_IN, true)
+          )}
+        >
+          <FaUser size={20} />
+          <span className="text-xs font-medium">{user ? "Profile" : "Sign In"}</span>
+        </PrefetchLink>
+
+        <button
+          type="button"
+          onClick={onMenuOpen}
+          className="flex flex-col items-center gap-1 p-2 mobile-touch-target transition-colors duration-200 text-noir-gold hover:text-noir-light"
+          aria-label="Open menu"
+        >
+          <FaBars size={20} />
+          <span className="text-xs font-medium">Menu</span>
+        </button>
+      </nav>
+    </div>
+  )
+}
 
 export default MobileBottomNavigation

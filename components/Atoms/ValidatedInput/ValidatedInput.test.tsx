@@ -1,6 +1,6 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { createRef } from "react"
-import { describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { z } from "zod"
 
 import { useFieldValidation } from "~/hooks/useValidation"
@@ -16,32 +16,33 @@ const mockUseFieldValidation = vi.mocked(useFieldValidation)
 
 // Mock FormField component
 vi.mock("../FormField/FormField", () => ({
-  default: ({
-    children,
-    label,
-    error,
-    success,
-    required,
-    disabled,
-    className,
-    labelClassName,
-    fieldClassName,
-    helpText,
-    showValidationIcon,
-  }: any) => (
-    <div className={className}>
-      {label && <label className={labelClassName}>{label}</label>}
-      <div className={fieldClassName}>
-        {children}
-        {error && <div data-testid="error-message">{error}</div>}
-        {success && <div data-testid="success-message">{success}</div>}
-        {helpText && <div data-testid="help-text">{helpText}</div>}
-        {showValidationIcon && (error || success) && (
-          <div data-testid="validation-icon">icon</div>
-        )}
+  default: (props: any) => {
+    const {
+      children,
+      label,
+      error,
+      success,
+      className,
+      labelClassName,
+      fieldClassName,
+      helpText,
+      showValidationIcon,
+    } = props
+    return (
+      <div className={className}>
+        {label && <label className={labelClassName}>{label}</label>}
+        <div className={fieldClassName}>
+          {children}
+          {error && <div data-testid="error-message">{error}</div>}
+          {success && <div data-testid="success-message">{success}</div>}
+          {helpText && <div data-testid="help-text">{helpText}</div>}
+          {showValidationIcon && (error || success) && (
+            <div data-testid="validation-icon">icon</div>
+          )}
+        </div>
       </div>
-    </div>
-  ),
+    )
+  },
 }))
 
 describe("ValidatedInput", () => {

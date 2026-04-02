@@ -10,6 +10,8 @@ import type {
 } from "@/types/scraper"
 import { requireAdminOrEditorApi } from "@/utils/server/requireAdminOrEditorApi.server"
 
+export const maxDuration = 300
+
 function validateBody(body: unknown): body is ScraperRetryR2Request {
   if (!body || typeof body !== "object") return false
   const b = body as Record<string, unknown>

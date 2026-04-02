@@ -1,9 +1,12 @@
 import Image from "next/image"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { useTranslations } from "next-intl"
+import { useMemo } from "react"
 
 import type { RecommendationPerfume } from "@/services/recommendations"
 import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
+
+import { RecommendationReasonLine } from "./RecommendationReasonLine"
 
 const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
 
@@ -20,6 +23,13 @@ const RecommendedForYou = ({ perfumes, limit = PERFUME_LIMIT }: RecommendedForYo
   const tSingleHouse = useTranslations("singleHouse")
   const list = (perfumes ?? []).slice(0, limit)
 
+  const sharedListReason = useMemo(() => {
+    const first = list[0]?.reason
+    if (!first || (first.kind !== "popular" && first.kind !== "recent")) return null
+    if (!list.every(p => p.reason?.kind === first.kind)) return null
+    return first
+  }, [list])
+
   if (list.length === 0) return null
 
   return (
@@ -27,6 +37,12 @@ const RecommendedForYou = ({ perfumes, limit = PERFUME_LIMIT }: RecommendedForYo
       <h2 className="text-center mb-4 text-noir-gold-500">
         {tRecommendations("recommendedForYou")}
       </h2>
+      {sharedListReason && (
+        <RecommendationReasonLine
+          reason={sharedListReason}
+          className="text-center text-sm text-noir-gold-500/75 mb-4 px-2 leading-snug max-w-2xl mx-auto"
+        />
+      )}
       <ul className="grid grid-cols-1 md:grid-cols-3 gap-4 p-2">
         {list.map((similar, index) => {
           const recSrc = normalizeRemoteImageSrc(similar.image)
@@ -60,6 +76,7 @@ const RecommendedForYou = ({ perfumes, limit = PERFUME_LIMIT }: RecommendedForYo
                     {similar.perfumeHouse.name}
                   </p>
                 )}
+                {!sharedListReason && <RecommendationReasonLine reason={similar.reason} />}
               </PrefetchLink>
             </li>
           )

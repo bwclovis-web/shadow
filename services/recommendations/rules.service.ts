@@ -3,7 +3,11 @@ import {
   getNoteIdsForPerfume,
   getOrCreateScentProfile,
 } from "@/models/scent-profile.server"
-import type { RecommendationPerfume, RecommendationService } from "./types"
+import type {
+  RecommendationPerfume,
+  RecommendationReason,
+  RecommendationService,
+} from "./types"
 
 const PERFUME_SELECT = {
   id: true,
@@ -62,12 +66,22 @@ async function getSimilarPerfumes(
       noteId: { in: noteIds },
       perfumeId: { not: perfumeId },
     },
-    select: { perfumeId: true },
+    select: { perfumeId: true, noteId: true },
   })
 
-  const overlapCount: Record<string, number> = {}
+  const sharedByPerfume = new Map<string, Set<string>>()
   for (const r of relations) {
-    overlapCount[r.perfumeId] = (overlapCount[r.perfumeId] ?? 0) + 1
+    let set = sharedByPerfume.get(r.perfumeId)
+    if (!set) {
+      set = new Set()
+      sharedByPerfume.set(r.perfumeId, set)
+    }
+    set.add(r.noteId)
+  }
+
+  const overlapCount: Record<string, number> = {}
+  for (const [pid, set] of sharedByPerfume) {
+    overlapCount[pid] = set.size
   }
 
   const sortedIds = Object.entries(overlapCount)
@@ -77,6 +91,12 @@ async function getSimilarPerfumes(
 
   if (sortedIds.length === 0) return []
 
+  const noteNameRows = await prisma.perfumeNotes.findMany({
+    where: { id: { in: noteIds } },
+    select: { id: true, name: true },
+  })
+  const idToName = new Map(noteNameRows.map(n => [n.id, n.name]))
+
   const perfumes = (await prisma.perfume.findMany({
     where: { id: { in: sortedIds } },
     select: PERFUME_SELECT,
@@ -84,9 +104,26 @@ async function getSimilarPerfumes(
 
   const byId = new Map(perfumes.map(p => [p.id, p]))
   return sortedIds
-    .map(id => byId.get(id))
-    .filter((p): p is PerfumeRow => p != null)
-    .map(toRecommendationPerfume)
+    .map((id): RecommendationPerfume | null => {
+      const p = byId.get(id)
+      if (!p) return null
+      const sharedSet = sharedByPerfume.get(id)
+      const sharedCount = sharedSet?.size ?? 0
+      const sharedNoteNames = sharedSet
+        ? [...sharedSet]
+            .map(nid => idToName.get(nid))
+            .filter((n): n is string => !!n)
+            .sort((a, b) => a.localeCompare(b))
+            .slice(0, 4)
+        : []
+      const reason: RecommendationReason = {
+        kind: "similar_notes",
+        sharedNoteNames,
+        sharedCount,
+      }
+      return { ...toRecommendationPerfume(p), reason }
+    })
+    .filter((p): p is RecommendationPerfume => p != null)
 }
 
 /**
@@ -115,9 +152,14 @@ async function getPersonalizedForUser(
   })
 
   const scoreByPerfume: Record<string, number> = {}
+  const contribByPerfume: Record<string, Record<string, number>> = {}
   for (const r of relations) {
     const w = weights[r.noteId] ?? 0
-    if (w > 0) scoreByPerfume[r.perfumeId] = (scoreByPerfume[r.perfumeId] ?? 0) + w
+    if (w <= 0) continue
+    scoreByPerfume[r.perfumeId] = (scoreByPerfume[r.perfumeId] ?? 0) + w
+    if (!contribByPerfume[r.perfumeId]) contribByPerfume[r.perfumeId] = {}
+    contribByPerfume[r.perfumeId][r.noteId] =
+      (contribByPerfume[r.perfumeId][r.noteId] ?? 0) + w
   }
 
   let candidateIds = Object.keys(scoreByPerfume)
@@ -137,6 +179,12 @@ async function getPersonalizedForUser(
 
   if (sortedIds.length === 0) return getPopularPerfumesFallback(limit)
 
+  const noteNameRows = await prisma.perfumeNotes.findMany({
+    where: { id: { in: preferredNoteIds } },
+    select: { id: true, name: true },
+  })
+  const idToName = new Map(noteNameRows.map(n => [n.id, n.name]))
+
   const perfumes = (await prisma.perfume.findMany({
     where: { id: { in: sortedIds } },
     select: PERFUME_SELECT,
@@ -144,9 +192,24 @@ async function getPersonalizedForUser(
 
   const byId = new Map(perfumes.map(p => [p.id, p]))
   return sortedIds
-    .map(id => byId.get(id))
-    .filter((p): p is PerfumeRow => p != null)
-    .map(toRecommendationPerfume)
+    .map((id): RecommendationPerfume | null => {
+      const p = byId.get(id)
+      if (!p) return null
+      const contrib = contribByPerfume[id] ?? {}
+      const topNoteIds = Object.entries(contrib)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 4)
+        .map(([noteId]) => noteId)
+      const matchedNoteNames = topNoteIds
+        .map(nid => idToName.get(nid))
+        .filter((n): n is string => !!n)
+      const reason: RecommendationReason = {
+        kind: "profile_match",
+        matchedNoteNames,
+      }
+      return { ...toRecommendationPerfume(p), reason }
+    })
+    .filter((p): p is RecommendationPerfume => p != null)
 }
 
 /**
@@ -170,7 +233,12 @@ async function getPopularPerfumesFallback(
       orderBy: { createdAt: "desc" },
       select: PERFUME_SELECT,
     })) as PerfumeRow[]
-    return recent.map(toRecommendationPerfume)
+    return recent.map(
+      (p): RecommendationPerfume => ({
+        ...toRecommendationPerfume(p),
+        reason: { kind: "recent" },
+      })
+    )
   }
 
   const perfumes = (await prisma.perfume.findMany({
@@ -179,9 +247,15 @@ async function getPopularPerfumesFallback(
   })) as PerfumeRow[]
   const byId = new Map(perfumes.map(p => [p.id, p]))
   return perfumeIds
-    .map(id => byId.get(id))
-    .filter((p): p is PerfumeRow => p != null)
-    .map(toRecommendationPerfume)
+    .map((id): RecommendationPerfume | null => {
+      const p = byId.get(id)
+      if (!p) return null
+      return {
+        ...toRecommendationPerfume(p),
+        reason: { kind: "popular" },
+      }
+    })
+    .filter((p): p is RecommendationPerfume => p != null)
 }
 
 export const rulesRecommendationService: RecommendationService = {

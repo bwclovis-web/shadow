@@ -96,6 +96,10 @@ const INVALID_SELECTOR_PATTERNS = [
   { pattern: /\n|\r/, message: "Selectors cannot contain newlines" },
   { pattern: /:contains\s*\(/i, message: ":contains() is not valid CSS (Selenium uses standard CSS; use attribute selectors instead)" },
   { pattern: /:first(?!-)/i, message: ":first is jQuery-only; use :first-child or :nth-child(1)" },
+  {
+    pattern: /(^|[\s>+~,])rte(?=$|[\s>+~,:#[.])/i,
+    message: "Selector contains bare `rte`, which is usually Shopify's `.rte` class. Use `.product__accordion__inner .rte` instead of `.product__accordion__inner rte`.",
+  },
   // Tailwind arbitrary-value pattern e.g. pt-[3.25rem] — looks like an attribute selector but isn't valid
   {
     pattern: /\[[\d.]/,

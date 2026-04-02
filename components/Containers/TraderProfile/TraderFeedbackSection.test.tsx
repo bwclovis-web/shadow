@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { TraderFeedbackResponse } from "~/lib/queries/traderFeedback"
 
-import { renderWithProviders } from "../../../../test/utils/test-utils"
+import { renderWithProviders } from "@/test/utils/test-utils"
 import TraderFeedbackSection from "./TraderFeedbackSection"
 
 vi.mock("react-i18next", () => ({

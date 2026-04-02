@@ -66,7 +66,7 @@ const MyScentsModal = ({
             variant="animated"
             searchType="perfume"
             className="mt-4"
-            action={(item: UserPerfumeI) => handleClick(item)}
+            action={item => handleClick(item as unknown as UserPerfumeI)}
           />
         )}
       </div>

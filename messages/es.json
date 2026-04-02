@@ -720,7 +720,15 @@
     }
   },
   "recommendations": {
-    "recommendedForYou": "Recomendado para ti"
+    "recommendedForYou": "Recomendado para ti",
+    "reason": {
+      "similarNotes": "Te lo mostramos porque comparte {notes} con esta fragancia.",
+      "similarNotesFallback": "Te lo mostramos porque comparte acordes con esta fragancia.",
+      "profileMatch": "Te lo mostramos porque incluye {notes} que marcaste como gustos en tu perfil.",
+      "profileMatchFallback": "Te lo mostramos porque encaja con tu perfil olfativo.",
+      "popular": "Te los mostramos porque son populares en la comunidad.",
+      "recent": "Te los mostramos porque se añadieron recientemente al catálogo."
+    }
   },
   "singleHouse": {
     "meta": {
@@ -941,6 +949,29 @@
       "placeholder": "Busca perfumes disponibles...",
       "noResults": "No se encontraron perfumes",
       "tryDifferent": "Prueba con un término de búsqueda diferente"
+    },
+    "filters": {
+      "toggle": "Filtros",
+      "notesTitle": "Notas",
+      "notesDescription": "Coincidir con perfumes que incluyan alguna nota seleccionada.",
+      "notesSearchLabel": "Notas",
+      "seasonTitle": "Estación",
+      "seasonDescription": "Coincidir con perfumes donde la comunidad votó por alguna estación seleccionada.",
+      "houseTitle": "Casa",
+      "houseSearchLabel": "Buscar nombre de la casa",
+      "houseClear": "Quitar",
+      "priceTitle": "Precio del anuncio",
+      "priceDescription": "Filtrar por el precio del vendedor (solo parte numérica).",
+      "minLabel": "Mín",
+      "maxLabel": "Máx",
+      "clearAll": "Restablecer filtros",
+      "activeFiltersAria": "Filtros activos",
+      "removeFilterAria": "Quitar filtro: {label}",
+      "unknownNote": "Nota",
+      "unknownHouse": "Casa",
+      "priceChipMin": "Mín {min}",
+      "priceChipMax": "Máx {max}",
+      "priceChipRange": "{min}–{max}"
     }
   },
   "traderProfile": {

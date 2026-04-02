@@ -1,8 +1,32 @@
-import { fireEvent, render, screen } from "@testing-library/react"
+import { screen } from "@testing-library/react"
+import type { PropsWithChildren } from "react"
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { renderWithProviders } from "../../../../test/utils/test-utils"
+const mockPathname = vi.fn(() => "/")
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => mockPathname(),
+}))
+
+vi.mock("next-view-transitions", () => ({
+  useTransitionRouter: () => ({
+    push: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  Link: ({
+    children,
+    href,
+    className,
+    ...rest
+  }: PropsWithChildren<{ href: string; className?: string }>) => (
+    <a href={href} className={className} {...rest}>
+      {children}
+    </a>
+  ),
+}))
+
+import { renderWithProviders } from "@/test/utils/test-utils"
 import MobileBottomNavigation from "./MobileBottomNavigation"
 
 describe("MobileBottomNavigation", () => {
@@ -83,7 +107,7 @@ describe("MobileBottomNavigation", () => {
     })
 
     it("displays home icon", () => {
-      const { container } = renderWithProviders(<MobileBottomNavigation />)
+      renderWithProviders(<MobileBottomNavigation />)
       const homeLink = screen.getByRole("link", { name: /home/i })
       const icon = homeLink.querySelector("svg")
       expect(icon).toBeInTheDocument()
@@ -152,7 +176,7 @@ describe("MobileBottomNavigation", () => {
     })
 
     it("displays search icon", () => {
-      const { container } = renderWithProviders(<MobileBottomNavigation />)
+      renderWithProviders(<MobileBottomNavigation />)
       const searchButton = screen.getByRole("button", { name: /search/i })
       const icon = searchButton.querySelector("svg")
       expect(icon).toBeInTheDocument()
@@ -167,7 +191,7 @@ describe("MobileBottomNavigation", () => {
     })
 
     it("displays heart icon for perfumes", () => {
-      const { container } = renderWithProviders(<MobileBottomNavigation />)
+      renderWithProviders(<MobileBottomNavigation />)
       const perfumesLink = screen.getByRole("link", { name: /perfumes/i })
       const icon = perfumesLink.querySelector("svg")
       expect(icon).toBeInTheDocument()
@@ -207,7 +231,7 @@ describe("MobileBottomNavigation", () => {
     })
 
     it("displays user icon", () => {
-      const { container } = renderWithProviders(<MobileBottomNavigation />)
+      renderWithProviders(<MobileBottomNavigation />)
       const userLink = screen.getByRole("link", { name: /sign in/i })
       const icon = userLink.querySelector("svg")
       expect(icon).toBeInTheDocument()
@@ -248,7 +272,7 @@ describe("MobileBottomNavigation", () => {
     })
 
     it("displays bars icon", () => {
-      const { container } = renderWithProviders(<MobileBottomNavigation />)
+      renderWithProviders(<MobileBottomNavigation />)
       const menuButton = screen.getByRole("button", { name: /open menu/i })
       const icon = menuButton.querySelector("svg")
       expect(icon).toBeInTheDocument()
@@ -257,17 +281,15 @@ describe("MobileBottomNavigation", () => {
 
   describe("Active State Styling", () => {
     it("applies active styles to current route", () => {
-      renderWithProviders(<MobileBottomNavigation />, {
-        initialEntries: ["/"],
-      })
+      mockPathname.mockReturnValue("/")
+      renderWithProviders(<MobileBottomNavigation />)
       const homeLink = screen.getByRole("link", { name: /home/i })
       expect(homeLink).toHaveClass("text-noir-light")
     })
 
     it("applies inactive styles to non-active routes", () => {
-      renderWithProviders(<MobileBottomNavigation />, {
-        initialEntries: ["/about"],
-      })
+      mockPathname.mockReturnValue("/about")
+      renderWithProviders(<MobileBottomNavigation />)
       const perfumesLink = screen.getByRole("link", { name: /perfumes/i })
       expect(perfumesLink).toHaveClass("text-noir-gold")
     })
@@ -465,12 +487,12 @@ describe("MobileBottomNavigation", () => {
       expect(profileLink).toHaveAttribute("href")
     })
 
-    it("integrates with router correctly", () => {
-      const { history } = renderWithProviders(<MobileBottomNavigation />, {
-        initialEntries: ["/"],
-      })
-
-      expect(history.location.pathname).toBe("/")
+    it("marks the home link active when the path is root", () => {
+      mockPathname.mockReturnValue("/")
+      renderWithProviders(<MobileBottomNavigation />)
+      expect(screen.getByRole("link", { name: /home/i })).toHaveClass(
+        "text-noir-light"
+      )
     })
   })
 })

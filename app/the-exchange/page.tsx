@@ -1,7 +1,10 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
+import { getPerfumeHouseSummaryById } from "@/models/house.server"
 import { getAvailablePerfumesForDecantingPaginated } from "@/models/perfume.server"
+import { getPerfumeNotesByIds } from "@/models/tags.server"
+import { parseDiscoveryFiltersFromSearchParams } from "@/utils/discovery-filters"
 
 import TheExchangeClient from "./TheExchangeClient"
 
@@ -18,22 +21,38 @@ export const generateMetadata = async (): Promise<Metadata> => {
 }
 
 type PageProps = {
-  searchParams: Promise<{ q?: string; pg?: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
 const TheExchangePage = async ({ searchParams }: PageProps) => {
   const params = await searchParams
-  const pageParam = parseInt(params.pg ?? "1", 10)
-  const searchQuery = (params.q ?? "").trim()
+  const pageParam = parseInt(
+    typeof params.pg === "string" ? params.pg : (params.pg?.[0] ?? "1"),
+    10
+  )
+  const searchQuery = (
+    typeof params.q === "string" ? params.q : (params.q?.[0] ?? "")
+  ).trim()
+  const discovery = parseDiscoveryFiltersFromSearchParams(params)
   const initialPage = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
   const initialSkip = (initialPage - 1) * PAGE_SIZE
 
-  let { perfumes: availablePerfumes, meta: pagination } =
-    await getAvailablePerfumesForDecantingPaginated({
+  const [perfumePage, initialNoteTags, initialHouse] = await Promise.all([
+    getAvailablePerfumesForDecantingPaginated({
       skip: initialSkip,
       take: PAGE_SIZE,
       search: searchQuery || undefined,
-    })
+      discovery,
+    }),
+    discovery.noteIds.length > 0
+      ? getPerfumeNotesByIds(discovery.noteIds)
+      : Promise.resolve([]),
+    discovery.houseId
+      ? getPerfumeHouseSummaryById(discovery.houseId)
+      : Promise.resolve(null),
+  ])
+
+  let { perfumes: availablePerfumes, meta: pagination } = perfumePage
 
   const needsRefetch =
     pagination.totalCount > 0 &&
@@ -48,6 +67,7 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
       skip: adjustedSkip,
       take: PAGE_SIZE,
       search: searchQuery || undefined,
+      discovery,
     })
     availablePerfumes = adjusted.perfumes
     pagination = adjusted.meta
@@ -69,6 +89,8 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
       availablePerfumes={availablePerfumes}
       pagination={pagination}
       searchQuery={searchQuery}
+      initialNoteTags={initialNoteTags}
+      initialHouse={initialHouse}
     />
   )
 }
