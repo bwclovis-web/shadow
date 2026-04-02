@@ -197,11 +197,14 @@ const PerfumeDetailClient = ({
                     ? similarSrc
                     : BOTTLE_PLACEHOLDER
                 return (
-                  <li key={similar.id}>
+                  <li
+                    key={similar.id}
+                    className="h-full noir-border relative w-full transition-colors duration-300 ease-in-out hover:bg-white/5 flex flex-col"
+                  >
                     <PrefetchLink
                       href={`/perfume/${similar.slug}${selectedLetter ? `?letter=${selectedLetter}` : ""}`}
                       prefetch={false}
-                      className="block p-2 h-full noir-border relative w-full transition-colors duration-300 ease-in-out hover:bg-white/5"
+                      className="block p-2 flex-1 min-h-0"
                     >
                       <h3 className="text-center block text-sm tracking-wide py-2 font-semibold text-noir-gold leading-tight capitalize line-clamp-2">
                         {similar.name}
@@ -222,8 +225,12 @@ const PerfumeDetailClient = ({
                           {similar.perfumeHouse.name}
                         </p>
                       )}
-                      <RecommendationReasonLine reason={similar.reason} />
                     </PrefetchLink>
+                    {similar.reason != null && (
+                      <div className="flex justify-center pb-2 px-2">
+                        <RecommendationReasonLine reason={similar.reason} />
+                      </div>
+                    )}
                   </li>
                 )
               })}

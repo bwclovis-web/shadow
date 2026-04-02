@@ -721,6 +721,7 @@
   },
   "recommendations": {
     "recommendedForYou": "Recommandé pour vous",
+    "whyThesePicksAriaLabel": "Pourquoi ces parfums sont proposés",
     "reason": {
       "similarNotes": "Affiché parce qu'il partage {notes} avec ce parfum.",
       "similarNotesFallback": "Affiché parce qu'il partage des accords avec ce parfum.",

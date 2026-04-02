@@ -38,10 +38,12 @@ const RecommendedForYou = ({ perfumes, limit = PERFUME_LIMIT }: RecommendedForYo
         {tRecommendations("recommendedForYou")}
       </h2>
       {sharedListReason && (
-        <RecommendationReasonLine
-          reason={sharedListReason}
-          className="text-center text-sm text-noir-gold-500/75 mb-4 px-2 leading-snug max-w-2xl mx-auto"
-        />
+        <div className="flex justify-center mb-4">
+          <RecommendationReasonLine
+            reason={sharedListReason}
+            panelClassName="max-w-2xl text-center"
+          />
+        </div>
       )}
       <ul className="grid grid-cols-1 md:grid-cols-3 gap-4 p-2">
         {list.map((similar, index) => {
@@ -49,11 +51,14 @@ const RecommendedForYou = ({ perfumes, limit = PERFUME_LIMIT }: RecommendedForYo
           const recImageSrc =
             recSrc && !validImageRegex.test(recSrc) ? recSrc : BOTTLE_PLACEHOLDER
           return (
-            <li key={similar.id}>
+            <li
+              key={similar.id}
+              className="h-full noir-border relative w-full transition-colors duration-300 ease-in-out hover:bg-white/5 flex flex-col"
+            >
               <PrefetchLink
                 href={`/perfume/${similar.slug}`}
                 prefetch={false}
-                className="block p-2 h-full noir-border relative w-full transition-colors duration-300 ease-in-out hover:bg-white/5"
+                className="block p-2 flex-1 min-h-0"
               >
                 <h3 className="text-center block text-sm tracking-wide py-2 font-semibold text-noir-gold leading-tight capitalize line-clamp-2">
                   {similar.name}
@@ -76,8 +81,12 @@ const RecommendedForYou = ({ perfumes, limit = PERFUME_LIMIT }: RecommendedForYo
                     {similar.perfumeHouse.name}
                   </p>
                 )}
-                {!sharedListReason && <RecommendationReasonLine reason={similar.reason} />}
               </PrefetchLink>
+              {!sharedListReason && similar.reason != null && (
+                <div className="flex justify-center pb-2 px-2">
+                  <RecommendationReasonLine reason={similar.reason} />
+                </div>
+              )}
             </li>
           )
         })}
