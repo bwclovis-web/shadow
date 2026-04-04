@@ -5,7 +5,10 @@ import { redirect } from "next/navigation"
 
 import { createPerfume } from "@/models/perfume.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
-import { revalidatePerfumeDataCache } from "@/utils/server/revalidate-catalog-cache.server"
+import {
+  revalidateHouseDataCache,
+  revalidatePerfumeDataCache,
+} from "@/utils/server/revalidate-catalog-cache.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { CreatePerfumeSchema } from "@/utils/validation/formValidationSchemas"
@@ -52,6 +55,7 @@ export const createPerfumeAction = async (
   try {
     const newPerfume = await createPerfume(formData)
     revalidatePerfumeDataCache()
+    revalidateHouseDataCache()
     redirect(`/perfume/${newPerfume.slug}`)
   } catch (error) {
     if (isRedirectError(error)) throw error

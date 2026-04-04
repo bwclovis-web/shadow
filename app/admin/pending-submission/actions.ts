@@ -78,6 +78,7 @@ export const processPendingSubmissionAction = async (
         })
         await createPerfume(perfumeFormData)
         revalidatePerfumeDataCache()
+        revalidateHouseDataCache()
       } else {
         const houseFormData = new FormData()
         Object.entries(data).forEach(([key, value]) => {

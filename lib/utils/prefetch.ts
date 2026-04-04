@@ -9,10 +9,17 @@ const isValidLetter = (letter: string): boolean =>
   !!letter && LETTER_REGEX.test(letter)
 
 const createGetNextPageParam = (pageSize: number) =>
-  (lastPage: { meta?: { hasMore?: boolean; skip?: number; take?: number } }) =>
-    lastPage.meta?.hasMore
-      ? (lastPage.meta.skip ?? 0) + (lastPage.meta.take ?? pageSize)
-      : undefined
+  (lastPage: {
+    meta?: { hasMore?: boolean; skip?: number; take?: number }
+    perfumes?: unknown[]
+    houses?: unknown[]
+  }) => {
+    if (!lastPage.meta?.hasMore) return undefined
+    const skip = lastPage.meta.skip ?? 0
+    const rows = lastPage.perfumes ?? lastPage.houses
+    const returned = Array.isArray(rows) ? rows.length : 0
+    return skip + (returned > 0 ? returned : (lastPage.meta.take ?? pageSize))
+  }
 
 /**
  * Prefetch houses by letter on hover for better UX.

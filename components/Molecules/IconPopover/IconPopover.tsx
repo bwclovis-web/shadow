@@ -1,7 +1,5 @@
-"use client"
-
 import type { ReactNode } from "react"
-import { useCallback, useEffect, useId, useRef, useState } from "react"
+import { useId } from "react"
 
 import { Button, type ButtonProps } from "@/components/Atoms/Button/Button"
 import { styleMerge } from "@/utils/styleUtils"
@@ -17,12 +15,8 @@ export type IconPopoverProps = {
 }
 
 const defaultPanelClassName =
-  "noir-border p-4 bg-noir-dark/95 text-noir-gold-100 text-sm max-w-sm rounded-sm"
+  "noir-border p-4 bg-noir-dark/95 text-noir-gold-100 text-sm rounded-sm m-0 w-max max-w-[min(24rem,calc(100vw-1.5rem))]"
 
-/**
- * React `useId()` can include `:` (and other characters). Those IDs are invalid or unreliable
- * for `popoverTarget` / `id` matching in some browsers, and declarative invokers can fail silently.
- */
 function popoverSafeId(reactId: string) {
   return `icon-popover-${reactId.replace(/[^a-zA-Z0-9_-]/g, "")}`
 }
@@ -37,33 +31,18 @@ export default function IconPopover({
   background,
 }: IconPopoverProps) {
   const popoverId = popoverSafeId(useId())
-  const panelRef = useRef<HTMLDivElement>(null)
-  const [expanded, setExpanded] = useState(false)
-
-  useEffect(() => {
-    const el = panelRef.current
-    if (!el) return
-    const sync = () => {
-      try {
-        setExpanded(el.matches(":popover-open"))
-      } catch {
-        setExpanded(false)
-      }
-    }
-    el.addEventListener("toggle", sync)
-    sync()
-    return () => el.removeEventListener("toggle", sync)
-  }, [])
-
-  const handleTriggerClick = useCallback(() => {
-    const el = panelRef.current
-    if (el && typeof el.togglePopover === "function") {
-      el.togglePopover()
-    }
-  }, [])
+  const anchorName = `--anchor-${popoverId}`
 
   return (
     <span className={styleMerge("inline-flex items-center", className)}>
+      <style>{`
+        [data-anchor="${popoverId}"] { anchor-name: ${anchorName}; }
+        #${popoverId} {
+          position-anchor: ${anchorName};
+          position-area: top;
+          position-try-options: flip-block, flip-inline;
+        }
+      `}</style>
       <Button
         type="button"
         variant="icon"
@@ -71,15 +50,14 @@ export default function IconPopover({
         background={background}
         className={styleMerge("max-w-max shrink-0", buttonClassName)}
         aria-label={ariaLabel}
-        aria-expanded={expanded}
-        aria-controls={popoverId}
-        onClick={handleTriggerClick}
+        popoverTarget={popoverId}
+        popoverTargetAction="toggle"
         leftIcon={icon}
+        data-anchor={popoverId}
       />
       <div
-        ref={panelRef}
         id={popoverId}
-        popover="auto"
+        popover="hint"
         className={styleMerge(defaultPanelClassName, panelClassName)}
       >
         {children}

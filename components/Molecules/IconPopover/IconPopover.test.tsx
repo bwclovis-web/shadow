@@ -21,10 +21,10 @@ describe("IconPopover", () => {
 
     const panel = container.querySelector("[popover]")
     expect(panel).toBeInTheDocument()
-    expect(panel).toHaveAttribute("popover", "auto")
+    expect(panel).toHaveAttribute("popover", "hint")
   })
 
-  it("links button aria-controls to panel id", () => {
+  it("links button popovertarget to panel id", () => {
     const { container } = render(
       <IconPopover ariaLabel="Help" icon={<MdInfoOutline size={20} />}>
         Content
@@ -35,6 +35,6 @@ describe("IconPopover", () => {
     const panel = container.querySelector("[popover]")
 
     expect(panel?.id).toBeTruthy()
-    expect(button.getAttribute("aria-controls")).toBe(panel?.id)
+    expect(button.getAttribute("popovertarget")).toBe(panel?.id)
   })
 })

@@ -8,12 +8,26 @@ import {
 
 const STALE_TIME_5_MIN = 5 * 60 * 1000
 
+/** Next skip for offset pagination must match how many rows the previous page actually contained, not the requested `take` (can differ from SSR/hydration). */
+const countReturnedPerfumes = (lastPage: {
+  perfumes?: unknown[]
+  meta?: { take?: number }
+}) => {
+  if (Array.isArray(lastPage.perfumes)) return lastPage.perfumes.length
+  return lastPage.meta?.take ?? 0
+}
+
 const getNextPageParam =
   (pageSize: number) =>
-  (lastPage: { meta?: { hasMore?: boolean; skip?: number; take?: number } }) =>
-    lastPage.meta?.hasMore
-      ? (lastPage.meta.skip ?? 0) + (lastPage.meta.take ?? pageSize)
-      : undefined
+  (lastPage: {
+    meta?: { hasMore?: boolean; skip?: number; take?: number }
+    perfumes?: unknown[]
+  }) => {
+    if (!lastPage.meta?.hasMore) return undefined
+    const skip = lastPage.meta.skip ?? 0
+    const returned = countReturnedPerfumes(lastPage)
+    return skip + (returned > 0 ? returned : (lastPage.meta.take ?? pageSize))
+  }
 
 interface UseInfinitePerfumesByLetterOptions {
   letter: string | null
@@ -72,7 +86,8 @@ export const useInfinitePerfumesByLetter = (
               meta: {
                 letter: letter || "",
                 skip: 0,
-                take: pageSize,
+                take:
+                  initialData.length > 0 ? initialData.length : pageSize,
                 hasMore: totalCount > initialData.length,
                 totalCount,
               },
@@ -125,7 +140,8 @@ export const useInfinitePerfumesByHouse = (
               meta: {
                 houseName: "",
                 skip: 0, // First page starts at 0
-                take: pageSize,
+                take:
+                  initialData.length > 0 ? initialData.length : pageSize,
                 hasMore: derivedInitialTotal > initialData.length,
                 count: initialData.length,
                 totalCount: derivedInitialTotal,

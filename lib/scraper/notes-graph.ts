@@ -176,48 +176,6 @@ function splitNoteList(text: string): string[] {
   )
 }
 
-function normalizeForVerification(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/&/g, " and ")
-    .replace(/[^a-z0-9]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-}
-
-function verificationCandidates(note: string): string[] {
-  const normalized = normalizeForVerification(note)
-  if (!normalized) return []
-  const out = new Set([normalized])
-  if (!normalized.includes(" ")) {
-    if (normalized.endsWith("ies") && normalized.length > 3) out.add(`${normalized.slice(0, -3)}y`)
-    if (normalized.endsWith("es") && normalized.length > 2) out.add(normalized.slice(0, -2))
-    if (normalized.endsWith("s") && normalized.length > 1) out.add(normalized.slice(0, -1))
-    out.add(`${normalized}s`)
-    out.add(`${normalized}es`)
-  }
-  return [...out]
-}
-
-function noteAppearsInSource(note: string, source: string): boolean {
-  const haystack = ` ${normalizeForVerification(source)} `
-  if (!haystack.trim()) return false
-  return verificationCandidates(note).some(candidate => haystack.includes(` ${candidate} `))
-}
-
-function verifyNotesAgainstSource(
-  notes: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] },
-  source: string,
-): { openNotes: string[]; heartNotes: string[]; baseNotes: string[] } {
-  if (!source?.trim()) return { openNotes: [], heartNotes: [], baseNotes: [] }
-  return {
-    openNotes: uniqueNotes(notes.openNotes.filter(note => noteAppearsInSource(note, source))),
-    heartNotes: uniqueNotes(notes.heartNotes.filter(note => noteAppearsInSource(note, source))),
-    baseNotes: uniqueNotes(notes.baseNotes.filter(note => noteAppearsInSource(note, source))),
-  }
-}
 
 function stripTrailingNonNoteSections(text: string): string {
   return text
@@ -296,7 +254,6 @@ function extractNotesFromStructuredText(text: string): {
   const openNotes: string[] = []
   const heartNotes: string[] = []
   const baseNotes: string[] = []
-  const unlayered: string[] = []
 
   for (const line of lines) {
     const normalized = line.replace(/\s+/g, " ").trim()
@@ -315,7 +272,6 @@ function extractNotesFromStructuredText(text: string): {
       baseNotes.push(...splitNoteList(baseMatch[1]))
       continue
     }
-    unlayered.push(...splitNoteList(normalized))
   }
 
   const result = {
@@ -326,12 +282,6 @@ function extractNotesFromStructuredText(text: string): {
 
   if (result.openNotes.length || result.heartNotes.length || result.baseNotes.length) {
     return result
-  }
-
-  // If the selector captured a plain note list with no layer labels, keep it literal.
-  const plainNotes = uniqueNotes(unlayered).filter(isDisplayableScentNote)
-  if (plainNotes.length > 0) {
-    return { openNotes: plainNotes, heartNotes: [], baseNotes: [] }
   }
 
   return empty
@@ -355,9 +305,14 @@ Layer detection:
 - When in doubt, prefer putting a note in heartNotes rather than omitting it.
 
 Rules:
-- Extract ALL notes mentioned — do not skip any. Include every ingredient or scent descriptor (e.g. vanilla, rose, black pepper, sandalwood, bergamot, jasmine, musk, amber, oud).
-- Notes must be lowercase. Remove duplicates within each array.
-- Omit only pure marketing fluff that is not a note (e.g. "luscious", "irresistible", "seductive" as standalone words). Adjectives that describe a note (e.g. "warm vanilla", "fresh bergamot") → keep the note (vanilla, bergamot).
+- Extract ALL fragrance notes mentioned — do not skip any. Include every scent ingredient (e.g. vanilla, rose, black pepper, sandalwood, bergamot, jasmine, musk, amber, oud).
+- Notes must be lowercase and in ENGLISH. Translate any non-English note names: "santal" → "sandalwood", "musc" / "musc blanc" → "white musk", "vanille" → "vanilla", "ambre" → "amber", "bois" → "wood", "rose" → "rose", "fleur" → "flower", "tabac" → "tobacco", "encens" → "incense".
+- Remove duplicates within each array.
+- Adjectives that describe a note (e.g. "warm vanilla", "fresh bergamot") → keep the note as a phrase (warm vanilla, fresh bergamot).
+- Omit pure marketing fluff that is not a note (e.g. "luscious", "irresistible", "seductive", "sensual", "confidence", "courage", "healing", "balance", "vitality" as standalone words).
+- NEVER include crystals, gemstones, or minerals as notes (e.g. quartz, amethyst, herkimer diamond, topaz, tourmaline, moonstone, labradorite, gem magic, citrine, obsidian, selenite). These are not fragrance notes.
+- NEVER include carrier oils or base ingredients as notes (e.g. sunflower oil, jojoba oil, shea butter, coconut oil, sweet almond oil, argan oil). These are not fragrance notes.
+- If the product is clearly NOT a fragrance (e.g. jewelry, necklace, candle, body scrub, hair product, supplement), return all empty arrays: {"openNotes":[],"heartNotes":[],"baseNotes":[]}.
 - Return only the JSON object — no explanation, no markdown fences.`
 
 const NAME_ONLY_PROMPT = `You are a master perfumer extracting fragrance notes from a product name.
@@ -599,6 +554,89 @@ Write a unique, film noir styled description for this perfume (2–3 sentences).
 }
 
 // ---------------------------------------------------------------------------
+// Junk note filtering
+// ---------------------------------------------------------------------------
+
+const JUNK_NOTE_PATTERNS: RegExp[] = [
+  /[.!?;:(){}\[\]"]/, // punctuation → sentence fragment or copy
+  /\d{2,}/, // numbers like sizes, prices, percentages
+  /\b(buy|shop|order|add to cart|checkout|shipping|delivery|free|sale|discount)\b/i,
+  /\b(livrare|cumpara|adauga|comanda|rapid|gratuit)\b/i, // Romanian commerce
+  /\b(livraison|acheter|commande|gratuit)\b/i, // French commerce
+  /\b(extrait|parfum|eau de|huile|spray|ml|oz)\b/i,
+  /\b(discover|explore|experience|transform|reinvent|secret|powerful|irresistible|seductive|sensual|intense|long-lasting|unisex|pure)\b/i,
+  /\b(it is|you will|you can|this is|that is|with every|just a)\b/i,
+  /\b(evokes?|creates?|inspires?|crafts?)\b/i,
+  /\b(calm|calming|magnetic|luminous|confident|abundant|abundance|courage|vitality|clarity|motivation|amplification|prosperity|healing|grounding|balance)\b/i,
+  // Crystals / gemstones — not fragrance notes
+  /\b(quartz|amethyst|herkimer|tourmaline|labradorite|malachite|selenite|fluorite|pyrite|citrine|obsidian|moonstone|agate|jasper|onyx|garnet|gem\s*magic|crystal\s*magic)\b/i,
+  // Carrier / base oils — not fragrance notes
+  /\b(sunflower|jojoba|argan|sweet\s+almond|avocado)\s+oil\b/i,
+  /\bshea\s+butter\b/i,
+  // Non-fragrance product signals
+  /\b(necklace|bracelet|earring|ring|pendant|jewel|crystal\s+chip|chain)\b/i,
+  // French note names that slip through ASCII detection
+  /\b(musc\s+blanc|musc\s+noir|bois\s+de|eau\s+de|huile\s+de|fleur\s+de|note\s+de)\b/i,
+]
+
+function looksLikeJunkNote(note: string): boolean {
+  if (!note?.trim()) return true
+  const n = note.trim().toLowerCase()
+  if (n.split(/\s+/).length > 4) return true
+  return JUNK_NOTE_PATTERNS.some(p => p.test(n))
+}
+
+// ---------------------------------------------------------------------------
+// Note translation (non-English → English)
+// ---------------------------------------------------------------------------
+
+// ASCII-only check is insufficient for French (musc, santal, vanille are all ASCII).
+// We also flag known non-English perfumery words explicitly.
+const KNOWN_NON_ENGLISH_NOTE_WORDS = new Set([
+  "musc", "vanille", "ambre", "bois", "encens", "tabac", "cèdre", "cedre",
+  "santal", "feve", "fève", "oud", "fleur", "violette", "neroli",
+  "trandafir", "mosc", "vanilie", "lemn", "iasomie", "ambra",
+  "rosa", "ámbar", "sándalo", "madera", "almizle",
+])
+
+function allNotesEnglish(notes: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] }): boolean {
+  const all = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
+  if (all.length === 0) return true
+  return all.every(n => {
+    const trimmed = n.trim().toLowerCase()
+    // Non-ASCII characters → definitely non-English
+    if (/[^\x00-\x7f]/.test(trimmed)) return false
+    // Check each word against known non-English perfumery vocabulary
+    return !trimmed.split(/\s+/).some(word => KNOWN_NON_ENGLISH_NOTE_WORDS.has(word))
+  })
+}
+
+async function translateNotesToEnglish(
+  llm: ChatOpenAI,
+  notes: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] },
+): Promise<{ openNotes: string[]; heartNotes: string[]; baseNotes: string[] }> {
+  const all = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
+  if (all.length === 0 || allNotesEnglish(notes)) return notes
+  try {
+    const response = await llm.invoke([
+      {
+        role: "system",
+        content: `Translate these perfume/fragrance note names to English. Return ONLY a JSON object: {"openNotes": string[], "heartNotes": string[], "baseNotes": string[]}. Keep notes that are already English as-is. Translate each note to its standard English perfumery term (e.g. "trandafir" → "rose", "mosc" → "musk", "vanilie" → "vanilla", "tutun" → "tobacco", "paciuli" → "patchouli", "iasomie" → "jasmine", "ambra" → "amber", "lemn de santal" → "sandalwood"). Lowercase only. No explanation.`,
+      },
+      {
+        role: "user",
+        content: JSON.stringify({ openNotes: notes.openNotes, heartNotes: notes.heartNotes, baseNotes: notes.baseNotes }),
+      },
+    ])
+    const translated = parseNotesFromLlmResponse(response.content)
+    const total = translated.openNotes.length + translated.heartNotes.length + translated.baseNotes.length
+    return total > 0 ? translated : notes
+  } catch {
+    return notes
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Graph node
 // ---------------------------------------------------------------------------
 
@@ -615,40 +653,42 @@ function buildGraph(
       const resolvedName = resolveProductName(item)
       const name = cleanTitle(resolvedName, opts)
       const notesSource = item.notesText ?? item.description
-      const verificationSource = notesSource?.trim() ? notesSource : ""
+      // Step 1: try structured/inline parser first (literal Top/Heart/Base sections).
       let notes = extractNotesFromStructuredText(notesSource)
       const totalParsedDirectly = notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
-      if (totalParsedDirectly === 0 && verificationSource) {
+
+      // Step 2: LLM extraction from description text when no structured sections found.
+      if (totalParsedDirectly === 0 && notesSource?.trim()) {
         notes = await extractNotesFromDescription(llm, notesSource, name || resolvedName)
       }
-      if (verificationSource) {
-        notes = verifyNotesAgainstSource(notes, verificationSource)
-      }
 
-      const totalAfterPipeline =
-        notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
-      if (totalAfterPipeline === 0) {
+      // Step 2b: last-resort name-based lookup when no description text yielded notes.
+      const totalAfterLlm = notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
+      if (totalAfterLlm === 0 && !notesSource?.trim()) {
         const fallbackName = name || resolvedName
         if (fallbackName?.trim()) {
-          notes = await extractNotesFallbackLookup(
-            llm,
-            fallbackName,
-            item.perfumeHouse ?? state.houseName,
-          )
+          notes = await extractNotesFallbackLookup(llm, fallbackName, item.perfumeHouse ?? state.houseName)
         }
       }
 
-      // If only one layer has notes, consolidate everything into openNotes so they are always visible.
+      // Step 3: translate any non-English notes to English.
+      if (!allNotesEnglish(notes)) {
+        notes = await translateNotesToEnglish(llm, notes)
+      }
+
+      // If only one layer has notes, consolidate into openNotes so they are always visible.
       const layersWithNotes = [notes.openNotes, notes.heartNotes, notes.baseNotes].filter(a => a.length > 0)
       if (layersWithNotes.length === 1 && layersWithNotes[0] !== notes.openNotes) {
         notes = { openNotes: layersWithNotes[0], heartNotes: [], baseNotes: [] }
       }
 
-      // Run extracted notes through the note validator (same rules as tags/scent quiz).
+      // Step 4: final filter — remove junk phrases, marketing copy, and non-displayable strings
+      // from ALL notes regardless of which extraction path was used.
+      const cleanNote = (n: string) => isDisplayableScentNote(n) && !looksLikeJunkNote(n)
       notes = {
-        openNotes: notes.openNotes.filter(isDisplayableScentNote),
-        heartNotes: notes.heartNotes.filter(isDisplayableScentNote),
-        baseNotes: notes.baseNotes.filter(isDisplayableScentNote),
+        openNotes: notes.openNotes.filter(cleanNote),
+        heartNotes: notes.heartNotes.filter(cleanNote),
+        baseNotes: notes.baseNotes.filter(cleanNote),
       }
 
       const allNoteStrs = [
