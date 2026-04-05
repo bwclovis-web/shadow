@@ -683,7 +683,7 @@ export function buildExchangeDiscoveryWhereFragments(
 /**
  * Perfumes that have at least one in-stock listing whose `price` parses to the given numeric range.
  */
-async function fetchPerfumeIdsWithListingPriceInRange(
+export async function fetchPerfumeIdsWithListingPriceInRange(
   minPrice: number | null,
   maxPrice: number | null
 ): Promise<string[]> {
