@@ -36,6 +36,7 @@ const KNOWN_BAD_PATTERNS = [
   /\s+but\s+not\s+in$/i,
   /^\d+\s*ml\b/i,
   /^test\s+/i,
+  /\bgift\s+ideas\b/i,
 ]
 
 const VALID_WORD_COUNT = { min: 1, max: 5 }

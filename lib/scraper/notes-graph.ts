@@ -575,6 +575,8 @@ const JUNK_NOTE_PATTERNS: RegExp[] = [
   /\bshea\s+butter\b/i,
   // Non-fragrance product signals
   /\b(necklace|bracelet|earring|ring|pendant|jewel|crystal\s+chip|chain)\b/i,
+  // E‑commerce / collection nav copy (e.g. Shopify “cosy gift ideas” blocks), not ingredients
+  /\bgift\s+ideas\b/i,
   // French note names that slip through ASCII detection
   /\b(musc\s+blanc|musc\s+noir|bois\s+de|eau\s+de|huile\s+de|fleur\s+de|note\s+de)\b/i,
 ]
