@@ -1,6 +1,9 @@
 import { Prisma } from "@prisma/client"
 
 import { prisma } from "@/lib/db"
+import { computeTraderReputationV1 } from "@/services/reputation/computeReputation"
+import { loadTraderMessageReplyStats } from "@/services/reputation/loadReputationInputs.server"
+import type { TraderReputationV1 } from "@/services/reputation/types"
 import { validateRating } from "@/utils/server/api-route-helpers.server"
 
 /** Default number of feedback items returned in list endpoints */
@@ -50,6 +53,7 @@ export interface TraderFeedbackProfileData {
   summary: TraderFeedbackSummary
   comments: TraderFeedbackListItem[]
   viewerFeedback: TraderFeedbackViewerEntry | null
+  reputation: TraderReputationV1
 }
 
 const isMissingFeedbackTableError = (error: unknown): boolean =>
@@ -234,7 +238,7 @@ export async function getTraderFeedbackForProfile(
     includeList = true,
   } = options
 
-  const [summary, comments, viewerRecord] = await Promise.all([
+  const [summary, comments, viewerRecord, messageStats] = await Promise.all([
     getTraderFeedbackSummary(traderId),
     includeList
       ? getTraderFeedbackList(traderId, { limit: listLimit, offset: listOffset })
@@ -242,6 +246,7 @@ export async function getTraderFeedbackForProfile(
     viewerId && viewerId !== traderId
       ? getTraderFeedbackByReviewer(traderId, viewerId)
       : Promise.resolve(null),
+    loadTraderMessageReplyStats(traderId),
   ])
 
   const viewerFeedback: TraderFeedbackViewerEntry | null = viewerRecord
@@ -255,5 +260,14 @@ export async function getTraderFeedbackForProfile(
       }
     : null
 
-  return { summary, comments, viewerFeedback }
+  const reputation = computeTraderReputationV1({
+    feedback: {
+      traderId: summary.traderId,
+      averageRating: summary.averageRating,
+      totalReviews: summary.totalReviews,
+    },
+    messageStats,
+  })
+
+  return { summary, comments, viewerFeedback, reputation }
 }

@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server"
 import { getPerfumeHouseSummaryById } from "@/models/house.server"
 import { getAvailablePerfumesForDecantingPaginated } from "@/models/perfume.server"
 import { getPerfumeNotesByIds } from "@/models/tags.server"
+import { loadTraderReputationsForUserIds } from "@/services/reputation/loadReputationInputs.server"
 import { parseDiscoveryFiltersFromSearchParams } from "@/utils/discovery-filters"
 
 import TheExchangeClient from "./TheExchangeClient"
@@ -84,6 +85,13 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
     }
   }
 
+  const traderIds = [
+    ...new Set(availablePerfumes.flatMap((p) => p.userPerfume.map((up) => up.userId))),
+  ]
+  const reputationMap =
+    traderIds.length > 0 ? await loadTraderReputationsForUserIds(traderIds) : new Map()
+  const traderReputationByUserId = Object.fromEntries(reputationMap)
+
   return (
     <TheExchangeClient
       availablePerfumes={availablePerfumes}
@@ -91,6 +99,7 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
       searchQuery={searchQuery}
       initialNoteTags={initialNoteTags}
       initialHouse={initialHouse}
+      traderReputationByUserId={traderReputationByUserId}
     />
   )
 }

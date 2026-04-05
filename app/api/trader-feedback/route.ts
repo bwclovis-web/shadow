@@ -37,19 +37,16 @@ export async function GET(request: NextRequest) {
       viewerId = v
     }
 
-    const { summary, comments, viewerFeedback } = await getTraderFeedbackForProfile(
-      traderId,
-      viewerId && viewerId !== traderId ? viewerId : null,
-      {
+    const { summary, comments, viewerFeedback, reputation } =
+      await getTraderFeedbackForProfile(traderId, viewerId && viewerId !== traderId ? viewerId : null, {
         includeList: includeComments,
         ...(includeComments && {
           listLimit: pagination.limit,
           listOffset: pagination.skip,
         }),
-      }
-    )
+      })
 
-    return NextResponse.json({ success: true, summary, comments, viewerFeedback })
+    return NextResponse.json({ success: true, summary, comments, viewerFeedback, reputation })
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Failed to fetch feedback"
     return NextResponse.json({ error: msg }, { status: 400 })

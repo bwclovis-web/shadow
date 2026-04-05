@@ -2,9 +2,28 @@ import { screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { TraderFeedbackResponse } from "~/lib/queries/traderFeedback"
+import { REPUTATION_V1_VERSION } from "@/services/reputation/v1-constants"
 
 import { renderWithProviders } from "@/test/utils/test-utils"
 import TraderFeedbackSection from "./TraderFeedbackSection"
+
+function mockReputation(
+  traderId: string,
+  overrides: Partial<TraderFeedbackResponse["reputation"]> = {}
+): TraderFeedbackResponse["reputation"] {
+  return {
+    version: REPUTATION_V1_VERSION,
+    traderId,
+    score: null,
+    insufficientDataReason: "noReviews",
+    averageRating: null,
+    totalReviews: 0,
+    medianFirstReplyHours: null,
+    replySampleCount: 0,
+    badges: [],
+    ...overrides,
+  }
+}
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -95,6 +114,13 @@ describe("TraderFeedbackSection", () => {
         totalReviews: 12,
         badgeEligible: true,
       },
+      reputation: mockReputation("trader-1", {
+        score: 88,
+        insufficientDataReason: "none",
+        averageRating: 4.5,
+        totalReviews: 12,
+        badges: ["topReviewed", "reliableTrader"],
+      }),
       comments: [
         {
           id: "feedback-1",
@@ -125,9 +151,7 @@ describe("TraderFeedbackSection", () => {
     renderWithProviders(<TraderFeedbackSection traderId="trader-1" viewerId="user-1" />)
 
     expect(screen.getByText("Trader Feedback")).toBeInTheDocument()
-    expect(screen.getByText("Trusted Trader")).toBeInTheDocument()
-    expect(screen.getByText("4.5")).toBeInTheDocument()
-    expect(screen.getByText("12 reviews")).toBeInTheDocument()
+    expect(screen.getByText("5/5")).toBeInTheDocument()
     expect(screen.getByText("Great trade experience!")).toBeInTheDocument()
     expect(screen.getByText("alex-smith")).toBeInTheDocument()
   })
@@ -140,6 +164,7 @@ describe("TraderFeedbackSection", () => {
         totalReviews: 0,
         badgeEligible: false,
       },
+      reputation: mockReputation("trader-2"),
       comments: [],
       viewerFeedback: null,
     }
@@ -165,6 +190,7 @@ describe("TraderFeedbackSection", () => {
         totalReviews: 4,
         badgeEligible: false,
       },
+      reputation: mockReputation("trader-3"),
       comments: [],
       viewerFeedback: {
         traderId: "trader-3",

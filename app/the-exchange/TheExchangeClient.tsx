@@ -17,6 +17,7 @@ import { getPerfumeTypeLabel } from "@/data/SelectTypes"
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
 import useMediaQuery from "@/hooks/useMediaQuery"
 import type { Tag } from "@/lib/queries/tags"
+import type { TraderReputationV1 } from "@/services/reputation/types"
 import {
   discoveryFiltersActive,
   discoveryFiltersToSearchParams,
@@ -68,6 +69,7 @@ export type ExchangePageData = {
   searchQuery: string
   initialNoteTags: Tag[]
   initialHouse: { id: string; name: string } | null
+  traderReputationByUserId?: Record<string, TraderReputationV1>
 }
 
 const TheExchangeClient = ({
@@ -76,9 +78,11 @@ const TheExchangeClient = ({
   searchQuery,
   initialNoteTags,
   initialHouse,
+  traderReputationByUserId = {},
 }: ExchangePageData) => {
   const t = useTranslations("tradingPost")
   const tf = useTranslations("tradingPost.filters")
+  const tRep = useTranslations("traderProfile.reputation")
   const tSeason = useTranslations("singlePerfume.seasonVote.season")
   const tPrefs = useTranslations("traderProfile.preferences")
   const router = useTransitionRouter()
@@ -361,7 +365,18 @@ const TheExchangeClient = ({
                                   prefetch={false}
                                   className="text-sm font-semibold text-blue-300 hover:text-noir-blue underline"
                                 >
-                                  {getTraderDisplayName(userPerfume.user)}:
+                                  {getTraderDisplayName(userPerfume.user)}
+                                  {traderReputationByUserId[userPerfume.userId]?.score != null ? (
+                                    <span className="text-noir-gold-500 font-normal">
+                                      {" "}
+                                      (
+                                      {tRep("exchangeTrust", {
+                                        score: traderReputationByUserId[userPerfume.userId]!.score!,
+                                      })}
+                                      )
+                                    </span>
+                                  ) : null}
+                                  :
                                 </PrefetchLink>
                                 <span className="text-sm ml-2 text-noir-gold-100">
                                   {getPerfumeTypeLabel(

@@ -1001,6 +1001,29 @@
       "trade": "Solo Intercambio",
       "both": "Efectivo o Intercambio"
     },
+    "reputation": {
+      "ariaLabel": "Confianza y reputación del comerciante",
+      "title": "Resumen de confianza",
+      "subtitle": "Puntuación v1 explicable a partir de opiniones y tiempo de respuesta típico.",
+      "scoreLabel": "Reputación",
+      "scoreOutOf": "{score}/100",
+      "insufficientNoReviews": "Comerciante nuevo — aún sin reseñas.",
+      "insufficientTooFew": "Aún no hay suficientes reseñas para una puntuación (se necesitan al menos {min}).",
+      "reviewCountOnly": "{count, plural, one {# reseña} other {# reseñas}}",
+      "noReviewsDetail": "Aún no hay reseñas entre pares.",
+      "badgesAria": "Insignias de reputación",
+      "badges": {
+        "topReviewed": "Muy reseñado",
+        "reliableTrader": "Comerciante fiable",
+        "fastResponder": "Responde rápido"
+      },
+      "explainTitle": "Qué significa esto",
+      "explainIntro": "Esta puntuación es transparente y visible para todos. Resume cómo otros miembros valoran a este comerciante y la rapidez con que suele contestar mensajes de contacto.",
+      "explainScore": "Solo mostramos un número tras al menos {minReviews} reseñas entre pares. Con datos suficientes de tiempos de respuesta, las valoraciones pesan un 75% y la velocidad típica de primera respuesta un 25%; si no, solo las valoraciones.",
+      "explainBadges": "Las insignias son independientes: Muy reseñado = al menos 5 reseñas y media ≥ 4,5. Comerciante fiable = al menos 10 reseñas y media ≥ 4,6. Responde rápido = al menos 5 intervalos medidos y mediana bajo 48 horas.",
+      "explainMessaging": "Los tiempos de respuesta se infieren de mensajes de contacto; no hay hilos formales, es una señal aproximada.",
+      "exchangeTrust": "{score}/100"
+    },
     "feedback": {
       "title": "Comentarios del Comerciante",
       "subtitle": "Construye confianza con calificaciones y comentarios de la comunidad.",

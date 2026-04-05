@@ -1,8 +1,25 @@
+import type { TraderReputationV1 } from "@/services/reputation/types"
+import { REPUTATION_V1_VERSION } from "@/services/reputation/v1-constants"
+
 export interface TraderFeedbackSummary {
   traderId: string
   averageRating: number | null
   totalReviews: number
   badgeEligible: boolean
+}
+
+function fallbackReputation(traderId: string): TraderReputationV1 {
+  return {
+    version: REPUTATION_V1_VERSION,
+    traderId,
+    score: null,
+    insufficientDataReason: "noReviews",
+    averageRating: null,
+    totalReviews: 0,
+    medianFirstReplyHours: null,
+    replySampleCount: 0,
+    badges: [],
+  }
 }
 
 export interface TraderFeedbackComment {
@@ -34,6 +51,7 @@ export interface TraderFeedbackResponse {
   summary: TraderFeedbackSummary
   comments: TraderFeedbackComment[]
   viewerFeedback: TraderFeedbackViewerEntry | null
+  reputation: TraderReputationV1
 }
 
 export interface TraderFeedbackQueryParams {
@@ -88,6 +106,7 @@ export async function getTraderFeedback(params: TraderFeedbackQueryParams): Prom
     },
     comments: data.comments ?? [],
     viewerFeedback: data.viewerFeedback ?? null,
+    reputation: data.reputation ?? fallbackReputation(traderId),
   }
 }
 

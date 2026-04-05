@@ -123,15 +123,6 @@ const TraderFeedbackSection = memo(function TraderFeedbackSection({
     t,
   ])
 
-  const totalReviews = data?.summary?.totalReviews ?? 0
-  const hasRatings =
-    (data?.summary?.averageRating ?? null) !== null && totalReviews > 0
-
-  const averageDisplay = useMemo(() => {
-    if (!hasRatings) return t("noRatings")
-    return Number(data?.summary?.averageRating ?? 0).toFixed(1)
-  }, [data?.summary?.averageRating, hasRatings, t])
-
   const isViewerTrader = Boolean(viewerId && viewerId === traderId)
   const hasViewerFeedback = Boolean(data?.viewerFeedback)
 
@@ -173,33 +164,12 @@ const TraderFeedbackSection = memo(function TraderFeedbackSection({
   }, [traderId, viewerId, deleteFeedback])
 
   const anonymousLabel = t("anonymousReviewer")
-  const averageRating = data?.summary?.averageRating ?? 0
 
   return (
     <section className="noir-border relative w-full p-4 space-y-6 bg-noir-black/40">
-      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h2>{t("title")}</h2>
-          <p className="text-noir-gold-100">{t("subtitle")}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          {hasRatings ? (
-            <div className="flex items-center gap-1 text-noir-gold">
-              <StarDisplay value={averageRating} />
-              <span className="text-2xl font-bold">{averageDisplay}</span>
-            </div>
-          ) : (
-            <span className="text-sm text-noir-gold-100">{averageDisplay}</span>
-          )}
-          <div className="text-sm text-noir-gold-500">
-            {t("reviewCount", { count: totalReviews })}
-          </div>
-          {data?.summary?.badgeEligible && (
-            <span className="inline-flex items-center px-3 py-1 text-xs font-semibold uppercase tracking-wide bg-noir-gold text-noir-black rounded-full">
-              {t("badgeLabel")}
-            </span>
-          )}
-        </div>
+      <header>
+        <h2>{t("title")}</h2>
+        <p className="text-noir-gold-100">{t("subtitle")}</p>
       </header>
 
       {isLoading && (

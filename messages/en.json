@@ -1010,6 +1010,29 @@
       "trade": "Trade Only",
       "both": "Cash or Trade"
     },
+    "reputation": {
+      "ariaLabel": "Trader trust and reputation",
+      "title": "Trust summary",
+      "subtitle": "Explainable v1 score from peer feedback and typical reply speed.",
+      "scoreLabel": "Reputation",
+      "scoreOutOf": "{score}/100",
+      "insufficientNoReviews": "New trader — no reviews yet.",
+      "insufficientTooFew": "Not enough reviews for a reputation score yet (need at least {min}).",
+      "reviewCountOnly": "{count, plural, one {# review} other {# reviews}}",
+      "noReviewsDetail": "No peer reviews yet.",
+      "badgesAria": "Reputation badges",
+      "badges": {
+        "topReviewed": "Top reviewed",
+        "reliableTrader": "Reliable trader",
+        "fastResponder": "Fast responder"
+      },
+      "explainTitle": "What this means",
+      "explainIntro": "This score is rule-based and visible to everyone. It summarizes how other members rate this trader and how quickly they usually answer contact messages.",
+      "explainScore": "We show a number only after at least {minReviews} peer reviews. When enough reply-timing data exists, peer ratings count for 75% of the score and typical first-reply speed for 25%; otherwise the score reflects ratings only.",
+      "explainBadges": "Badges are independent: Top reviewed means at least 5 reviews with a 4.5+ average. Reliable trader means at least 10 reviews with a 4.6+ average. Fast responder means at least 5 measured reply intervals with a median under 48 hours.",
+      "explainMessaging": "Reply times are inferred from contact messages; there is no formal thread id, so timing is an approximate signal.",
+      "exchangeTrust": "{score}/100"
+    },
     "feedback": {
       "title": "Trader Feedback",
       "subtitle": "Build trust with ratings and comments from the community.",

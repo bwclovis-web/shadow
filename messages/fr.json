@@ -1000,6 +1000,29 @@
       "trade": "Échange uniquement",
       "both": "Espèces ou échange"
     },
+    "reputation": {
+      "ariaLabel": "Confiance et réputation du vendeur",
+      "title": "Synthèse de confiance",
+      "subtitle": "Score v1 explicable à partir des avis et du délai de réponse habituel.",
+      "scoreLabel": "Réputation",
+      "scoreOutOf": "{score}/100",
+      "insufficientNoReviews": "Nouveau vendeur — pas encore d'avis.",
+      "insufficientTooFew": "Pas assez d'avis pour un score (il en faut au moins {min}).",
+      "reviewCountOnly": "{count, plural, one {# avis} other {# avis}}",
+      "noReviewsDetail": "Pas encore d'avis entre pairs.",
+      "badgesAria": "Badges de réputation",
+      "badges": {
+        "topReviewed": "Très bien noté",
+        "reliableTrader": "Vendeur fiable",
+        "fastResponder": "Réponse rapide"
+      },
+      "explainTitle": "Ce que cela signifie",
+      "explainIntro": "Ce score est clair et visible par tous. Il résume comment les autres membres évaluent ce vendeur et la rapidité habituelle de réponse aux messages.",
+      "explainScore": "Un nombre n'apparaît qu'après au moins {minReviews} avis. Avec assez de données de délai de réponse, les avis comptent pour 75 % et la vitesse de première réponse pour 25 % ; sinon, seulement les avis.",
+      "explainBadges": "Les badges sont indépendants : Très bien noté = au moins 5 avis et moyenne ≥ 4,5. Vendeur fiable = au moins 10 avis et moyenne ≥ 4,6. Réponse rapide = au moins 5 intervalles mesurés et médiane sous 48 h.",
+      "explainMessaging": "Les délais sont déduits des messages de contact ; sans fil formel, c'est une estimation.",
+      "exchangeTrust": "{score}/100"
+    },
     "feedback": {
       "title": "Avis sur le vendeur",
       "subtitle": "Construisez la confiance avec les avis de la communauté.",

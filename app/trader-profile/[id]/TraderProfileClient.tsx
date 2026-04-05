@@ -10,6 +10,7 @@ import {
 } from "@/components/Containers/TraderProfile"
 import ContactTraderButton from "@/components/Containers/TraderProfile/ContactTraderButton"
 import TraderFeedbackSection from "@/components/Containers/TraderProfile/TraderFeedbackSection"
+import TraderTrustSummary from "@/components/Containers/TraderProfile/TraderTrustSummary"
 import { useTrader } from "@/hooks/useTrader"
 import type { TraderResponse } from "@/lib/queries/user"
 import type { TraderFeedbackResponse } from "@/lib/queries/traderFeedback"
@@ -41,7 +42,6 @@ export default function TraderProfileClient({
   }
 
   const traderName = getTraderDisplayName(trader)
-  console.log(trader.username)
 
   return (
     <section>
@@ -61,6 +61,7 @@ export default function TraderProfileClient({
               </p>
             </div>
           ) : null}
+          <TraderTrustSummary reputation={feedback.reputation} />
           <TraderFeedbackSection
             traderId={trader.id}
             viewerId={viewer?.id}

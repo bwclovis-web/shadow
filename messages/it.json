@@ -1000,6 +1000,29 @@
       "trade": "Solo scambio",
       "both": "Contanti o scambio"
     },
+    "reputation": {
+      "ariaLabel": "Affidabilità e reputazione del trader",
+      "title": "Riepilogo fiducia",
+      "subtitle": "Punteggio v1 spiegabile da feedback e tempi di risposta tipici.",
+      "scoreLabel": "Reputazione",
+      "scoreOutOf": "{score}/100",
+      "insufficientNoReviews": "Trader nuovo — ancora nessuna recensione.",
+      "insufficientTooFew": "Recensioni insufficienti per un punteggio (servono almeno {min}).",
+      "reviewCountOnly": "{count, plural, one {# recensione} other {# recensioni}}",
+      "noReviewsDetail": "Ancora nessuna recensione tra pari.",
+      "badgesAria": "Badge di reputazione",
+      "badges": {
+        "topReviewed": "Molto recensito",
+        "reliableTrader": "Trader affidabile",
+        "fastResponder": "Risponde in fretta"
+      },
+      "explainTitle": "Cosa significa",
+      "explainIntro": "Questo punteggio è chiaro e visibile a tutti. Riassume come altri membri valutano questo trader e quanto velocemente di solito risponde ai messaggi.",
+      "explainScore": "Mostriamo un numero solo dopo almeno {minReviews} recensioni. Con dati sufficienti sui tempi di risposta, le valutazioni pesano il 75% e la velocità di prima risposta il 25%; altrimenti solo le valutazioni.",
+      "explainBadges": "I badge sono indipendenti: Molto recensito = almeno 5 recensioni e media ≥ 4,5. Trader affidabile = almeno 10 recensioni e media ≥ 4,6. Risponde in fretta = almeno 5 intervalli misurati e mediana sotto 48 ore.",
+      "explainMessaging": "I tempi si deducono dai messaggi di contatto; senza thread formali è un segnale approssimativo.",
+      "exchangeTrust": "{score}/100"
+    },
     "feedback": {
       "title": "Feedback venditore",
       "subtitle": "Costruisci fiducia con valutazioni e commenti.",
