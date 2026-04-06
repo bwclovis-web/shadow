@@ -13,6 +13,7 @@ export const GET = async (request: NextRequest) => {
       select: {
         id: true,
         name: true,
+        slug: true,
         description: true,
         image: true,
         website: true,

@@ -1,184 +1,113 @@
 # Data Quality Dashboard Improvement Plan
 
 ## Goal
+
 Improve the admin data quality dashboard so it is secure, reliable, actionable, and easy to use for ongoing cleanup operations.
+
+---
+
+## Database schema (trend snapshots)
+
+The `DataQualityDailySnapshot` model in [`prisma/schema.prisma`](../prisma/schema.prisma) powers trend history on the dashboard.
+
+**This repo uses `prisma db push` (not `migrate`) to sync schema.** After pulling changes that touch Prisma:
+
+```bash
+npx prisma db push
+npx prisma generate
+```
+
+Schedule `GET /api/cron/data-quality-snapshot` daily (with `CRON_SECRET`) so `historyData` is populated.
 
 ---
 
 ## Quick Wins (1 Day)
 
 ### P0: Secure Admin Endpoints
-- Add auth/session and role checks to:
-  - `GET /api/data-quality`
-  - `GET /api/data-quality-houses`
+
+- Add auth/session and role checks to `GET /api/data-quality` and `GET /api/data-quality-houses`.
 - Ensure only `admin` and `editor` can access dashboard data.
 
-**Acceptance Criteria**
-- Unauthenticated request returns unauthorized behavior (`401` or redirect flow used by your app).
-- Authenticated non-admin/editor returns `403` (or app-standard unauthorized response).
-- Admin/editor receives `200` with valid payload.
-- Full house export is not publicly accessible.
-
----
+**Status:** Implemented (`requireAdminOrEditorApi` on both routes).
 
 ### P0: Stabilize CSV Upload Flow
-- Current upload posts to `/api/update-house-info`.
-- Implement that route or temporarily disable/hide upload UI until route is ready.
 
-**Acceptance Criteria**
-- Upload action never results in 404.
-- Valid CSV returns structured success response.
-- Invalid CSV returns row-level errors (clear enough for user correction).
+- `POST /api/update-house-info` with CSRF + admin/editor auth, CSV validation, row-level results.
 
----
+**Status:** Implemented.
 
 ### P1: Improve Loading UX
-- Use full-page loading only for initial fetch (`isLoading`).
-- During background refetch (`isFetching`), keep content visible and show subtle refreshing indicator.
 
-**Acceptance Criteria**
-- Changing timeframe does not blank the dashboard.
-- User sees existing data while refresh is in progress.
-- Refresh state is clearly visible but non-disruptive.
+- Full-page loading only on initial load; subtle “Refreshing…” on refetch (`keepPreviousData`).
 
----
+**Status:** Implemented.
 
-### P1: Align Missing-Info Rules Across API + UI
-- Define one canonical required-fields list for “missing info”.
-- Ensure API logic and UI copy refer to the same fields.
+### P1: Align Missing-Info Rules
 
-**Acceptance Criteria**
-- Counts in summary cards match table/filter behavior.
-- UI text accurately reflects backend validation fields.
-- Spot-checking sample records confirms metric correctness.
+- Canonical rules in [`lib/data-quality/rules.ts`](../lib/data-quality/rules.ts) (perfume + house fields).
 
----
+**Status:** Implemented; UI copy aligned via i18n and `housesWithMissingHouseInfo`.
 
 ### P1: Replace Alert/Reload Pattern
-- Replace `alert()` and `window.location.reload()` with inline status/toasts + query invalidation.
 
-**Acceptance Criteria**
-- Upload success and error messages appear in-app.
-- Dashboard refreshes data without hard page reload.
-- User context (selected filter/timeframe) is preserved after upload.
+- Inline status on CSV upload/download; query refresh instead of `window.location.reload()`.
+
+**Status:** Implemented.
 
 ---
 
-## Phase 2 Roadmap (2-4 Weeks)
+## Phase 2 (partially done)
 
-### Data Correctness Hardening
-- Normalize duplicate detection keys (`trim`, lowercase, collapse whitespace).
-- Consider optional punctuation-insensitive matching.
-
-**Acceptance Criteria**
-- Variations like `Acqua Di Gio` vs `acqua  di gio` are grouped as duplicates.
+- Daily snapshots + cron: **done** (model, `upsertTodayDataQualitySnapshot`, `/api/cron/data-quality-snapshot`).
+- Trend empty state: **done** (`TrendChart`).
+- Admin edit + public links with `slug`: **done** (`HousesWithNoPerfumes`).
+- Optional severity scoring / default sort: **not implemented** (future).
 
 ---
 
-### Actionable Diagnostics
-- Return missing field names per house (`missingFields: string[]`) instead of just counts.
+## Phase 3
 
-**Acceptance Criteria**
-- Table shows exactly which fields are missing for each house.
-- Admin can resolve issues without guessing.
-
----
-
-### Real Trend History
-- Persist daily quality snapshots.
-- Populate `historyData` from real historical records.
-
-**Acceptance Criteria**
-- Trend chart displays actual week/month/all trajectories.
-- Data remains consistent across page reloads and deployments.
-
----
-
-### Localization Pass
-- Move hardcoded dashboard copy to `next-intl` messages.
-
-**Acceptance Criteria**
-- Card labels, tab labels, table headers, button text, and helper text are translatable.
-- Dashboard follows current locale.
-
----
-
-### Type Safety Cleanup
-- Remove `any` from dashboard-related components and API response handling.
-- Share DTO/types between API and UI where appropriate.
-
-**Acceptance Criteria**
-- Type errors catch shape mismatches before runtime.
-- Dashboard compiles cleanly with strict TypeScript checks.
-
----
-
-### Prioritization UX
-- Add severity scoring for issues.
-- Default sort by highest-impact records first.
-
-**Acceptance Criteria**
-- Top entries represent highest cleanup impact.
-- Severity rationale is clear and documented.
-
----
-
-## Recommended Execution Order
-1. Secure endpoints.
-2. Fix upload route availability.
-3. Improve loading/refetch behavior.
-4. Align missing-info definitions.
-5. Replace alert/reload interactions.
-6. Add missing field details and typing.
-7. Add trend snapshot persistence.
-8. Add severity-based prioritization.
-9. Complete localization.
+- i18n (`en` / `es` / `fr` / `it` under `dataQuality.*`): **done**.
+- Shared DTO in [`lib/queries/dataQuality.ts`](../lib/queries/dataQuality.ts): **done**.
+- Tests: dashboard + chart utils + config updated; optional dedicated API route tests for `update-house-info` still optional.
 
 ---
 
 ## Implementation Checklist
 
-### Phase 1 (Quick Wins)
-- [ ] Add admin/editor auth guard to `GET /api/data-quality`.
-- [ ] Add admin/editor auth guard to `GET /api/data-quality-houses`.
-- [ ] Add tests (or manual verification notes) for 401/403/200 route behavior.
-- [ ] Implement `/api/update-house-info` OR disable upload button until implemented.
-- [ ] Validate uploaded CSV schema and return row-level errors.
-- [ ] Update dashboard loading logic: first-load spinner only.
-- [ ] Add non-blocking “Refreshing...” indicator during refetch.
-- [ ] Define canonical required fields for “missing house info”.
-- [ ] Update API logic to use canonical required fields.
-- [ ] Update UI text to exactly match canonical required fields.
-- [ ] Replace `alert()` usage in CSV flow with inline status/toast.
-- [ ] Remove `window.location.reload()` and refresh via query invalidation.
+### Phase 1
 
-### Phase 2 (Quality + Scale)
-- [ ] Normalize duplicate key generation (trim/lower/collapse whitespace).
-- [ ] Add optional stronger normalization rules (if needed).
-- [ ] Return `missingFields` array per house from API.
-- [ ] Render missing fields in house issues table.
-- [ ] Persist daily data-quality snapshots.
-- [ ] Populate `historyData` from persisted snapshots.
-- [ ] Internationalize all dashboard hardcoded strings.
-- [ ] Remove `any` from dashboard and API response consumers.
-- [ ] Add shared response types for data-quality endpoints.
-- [ ] Add severity score model and default sorting by severity.
+- [x] Admin/editor auth on `GET /api/data-quality` and `GET /api/data-quality-houses`
+- [x] `POST /api/update-house-info` with validation and row results
+- [x] Dashboard loading: initial spinner only; refetch indicator
+- [x] Canonical missing-field rules + structured `housesWithMissingHouseInfo`
+- [x] Duplicate key normalization
+- [x] CSV: no `alert` / no full-page reload for success path
 
-### Verification Checklist
-- [ ] Unauthorized users cannot access data-quality API payloads.
-- [ ] Admin users can view and export data successfully.
-- [ ] Upload path is stable (no 404) and returns useful errors.
-- [ ] Timeframe switches do not blank dashboard content.
-- [ ] Metrics and explanatory text are consistent with backend rules.
-- [ ] Trend chart displays real history (when snapshots are enabled).
-- [ ] Dashboard works in supported locales.
-- [ ] No TypeScript or lint regressions introduced.
+### Phase 2
+
+- [x] Normalize duplicate keys
+- [x] `missingFields` per house in API + UI
+- [x] Persist snapshots (`DataQualityDailySnapshot`) — apply schema with **`prisma db push`**
+- [x] `historyData` from snapshots
+- [x] Trend empty-state copy
+- [x] Internationalize dashboard strings
+- [x] Shared `DataQualityStats` / `DataQualityHouseRow` types
+- [ ] Severity score + default sort (optional)
+
+### Verification
+
+- [x] Metrics consistent with `lib/data-quality/rules.ts`
+- [x] Timeframe change does not blank dashboard (placeholder data)
+- [ ] Manual: cron + `CRON_SECRET` on deployed environment
+- [x] Supported locales include `dataQuality` strings
 
 ---
 
 ## Done Definition
-- Admin-only access is enforced for all data-quality endpoints.
+
+- Admin/editor access is enforced for data-quality endpoints.
 - Dashboard stays usable during refetch and upload operations.
-- Metrics are trustworthy, consistent, and documented.
-- Upload/download workflows are reliable and actionable.
-- Team can prioritize and resolve highest-impact issues efficiently.
+- Metrics match documented rules; schema for snapshots applied via **`db push`** in this project.
+- Upload/download workflows return actionable errors.
+- Operators can open admin edit links from house issue rows.

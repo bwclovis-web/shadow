@@ -288,7 +288,78 @@
   },
   "dataQuality": {
     "heading": "Data Quality Dashboard",
-    "subheading": "Monitor the quality of the data in our database."
+    "subheading": "Monitor the quality of the data in our database.",
+    "dashboardTitle": "Perfume Data Quality Dashboard",
+    "noData": "No data available.",
+    "timePeriod": "Time Period",
+    "refreshing": "Refreshing…",
+    "lastUpdatedLabel": "Last updated:",
+    "timeframes": {
+      "week": "Last Week",
+      "month": "Last Month",
+      "all": "All Time"
+    },
+    "charts": {
+      "pluginTitle": "Data Quality Metrics",
+      "topBrandsMissing": "Top Brands with Missing Data",
+      "topBrandsDuplicates": "Top Brands with Duplicates",
+      "topHousesMissingInfo": "Top Houses Missing Info",
+      "breakdownTitle": "Breakdown by House",
+      "houseColumn": "House",
+      "missingFieldsColumn": "Missing fields"
+    },
+    "datasetLabels": {
+      "missingInformation": "Missing Information",
+      "duplicateEntries": "Duplicate Entries",
+      "missingHouseInfo": "Missing House Info"
+    },
+    "trends": {
+      "heading": "Data Quality Trends",
+      "pluginTitle": "Quality Trends Over Time",
+      "empty": "No trend history yet. Daily snapshots are recorded when the data-quality snapshot cron job runs (see /api/cron/data-quality-snapshot)."
+    },
+    "summary": {
+      "missingTitle": "Missing Information",
+      "missingHint": "Perfumes missing a description or a linked perfume house.",
+      "duplicatesTitle": "Duplicate Entries",
+      "duplicatesHint": "Extra rows for the same house and perfume name (normalized).",
+      "missingHouseTitle": "Missing House Info",
+      "missingHouseHint": "Houses missing description, website, or email.",
+      "emptyHousesTitle": "Empty Houses",
+      "emptyHousesHint": "Houses with no perfumes listed."
+    },
+    "csv": {
+      "download": "Download House Info CSV",
+      "upload": "Upload Edited CSV",
+      "downloadEmpty": "No houses found to export.",
+      "downloadFailed": "Failed to download CSV.",
+      "uploadSuccess": "Successfully updated {count} house(s).",
+      "uploadPartial": "Uploaded with issues: {success} updated, {errors} row error(s).",
+      "uploadNone": "No rows were updated."
+    },
+    "fieldLabels": {
+      "description": "Description",
+      "website": "Website",
+      "email": "Email"
+    },
+    "houseIssues": {
+      "title": "House data issues ({noPerfumes} no perfumes, {missingInfo} missing core fields)",
+      "tabNoPerfumes": "No Perfumes ({count})",
+      "tabMissingInfo": "Missing Info ({count})",
+      "tabAll": "All Issues ({count})",
+      "hintNoPerfumes": "These perfume houses exist in the database but have no perfumes listed.",
+      "hintMissingInfo": "These houses are missing at least one of: description, website, or email.",
+      "hintAll": "All houses with either no perfumes or missing core profile fields.",
+      "colHouse": "House Name",
+      "colType": "Type",
+      "colMissingFields": "Missing Fields",
+      "colIssue": "Issue",
+      "colCreated": "Created",
+      "colActions": "Actions",
+      "badgeNoPerfumes": "No Perfumes",
+      "badgeMissingInfo": "Missing Info",
+      "editAdmin": "Edit (admin)"
+    }
   },
   "sortOptions": {
     "created-desc": "Newest First",

@@ -292,7 +292,78 @@
   },
   "dataQuality": {
     "heading": "Tableau de bord qualité des données",
-    "subheading": "Surveillez la qualité des données de la base."
+    "subheading": "Surveillez la qualité des données de la base.",
+    "dashboardTitle": "Tableau de bord qualité des données — parfums",
+    "noData": "Aucune donnée disponible.",
+    "timePeriod": "Période",
+    "refreshing": "Actualisation…",
+    "lastUpdatedLabel": "Dernière mise à jour :",
+    "timeframes": {
+      "week": "Semaine dernière",
+      "month": "Mois dernier",
+      "all": "Tout"
+    },
+    "charts": {
+      "pluginTitle": "Indicateurs de qualité des données",
+      "topBrandsMissing": "Marques avec le plus de données manquantes",
+      "topBrandsDuplicates": "Marques avec le plus de doublons",
+      "topHousesMissingInfo": "Maisons avec le plus d'informations manquantes",
+      "breakdownTitle": "Répartition par maison",
+      "houseColumn": "Maison",
+      "missingFieldsColumn": "Champs manquants"
+    },
+    "datasetLabels": {
+      "missingInformation": "Informations manquantes",
+      "duplicateEntries": "Entrées en double",
+      "missingHouseInfo": "Informations maison manquantes"
+    },
+    "trends": {
+      "heading": "Tendances de la qualité des données",
+      "pluginTitle": "Évolution de la qualité dans le temps",
+      "empty": "Pas encore d'historique. Les instantanés quotidiens sont enregistrés lorsque le cron d'instantanés s'exécute (voir /api/cron/data-quality-snapshot)."
+    },
+    "summary": {
+      "missingTitle": "Informations manquantes",
+      "missingHint": "Parfums sans description ou sans maison liée.",
+      "duplicatesTitle": "Entrées en double",
+      "duplicatesHint": "Lignes en trop pour la même maison et le même nom de parfum (normalisé).",
+      "missingHouseTitle": "Informations maison manquantes",
+      "missingHouseHint": "Maisons sans description, site web ou e-mail.",
+      "emptyHousesTitle": "Maisons vides",
+      "emptyHousesHint": "Maisons sans parfums listés."
+    },
+    "csv": {
+      "download": "Télécharger le CSV des maisons",
+      "upload": "Importer un CSV modifié",
+      "downloadEmpty": "Aucune maison à exporter.",
+      "downloadFailed": "Échec du téléchargement du CSV.",
+      "uploadSuccess": "{count} maison(s) mise(s) à jour avec succès.",
+      "uploadPartial": "Import avec anomalies : {success} mises à jour, {errors} ligne(s) en erreur.",
+      "uploadNone": "Aucune ligne mise à jour."
+    },
+    "fieldLabels": {
+      "description": "Description",
+      "website": "Site web",
+      "email": "E-mail"
+    },
+    "houseIssues": {
+      "title": "Problèmes de données des maisons ({noPerfumes} sans parfums, {missingInfo} champs de base manquants)",
+      "tabNoPerfumes": "Sans parfums ({count})",
+      "tabMissingInfo": "Infos manquantes ({count})",
+      "tabAll": "Tous les problèmes ({count})",
+      "hintNoPerfumes": "Ces maisons existent en base mais n'ont aucun parfum listé.",
+      "hintMissingInfo": "Il manque au moins un des éléments suivants : description, site web ou e-mail.",
+      "hintAll": "Toutes les maisons sans parfums ou avec des champs de base incomplets.",
+      "colHouse": "Nom de la maison",
+      "colType": "Type",
+      "colMissingFields": "Champs manquants",
+      "colIssue": "Problème",
+      "colCreated": "Créé",
+      "colActions": "Actions",
+      "badgeNoPerfumes": "Sans parfums",
+      "badgeMissingInfo": "Infos manquantes",
+      "editAdmin": "Modifier (admin)"
+    }
   },
   "sortOptions": {
     "created-desc": "Plus récents d'abord",

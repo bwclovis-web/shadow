@@ -64,6 +64,17 @@ model PerfumeHouse {
   @@index([type, name], name: "idx_house_type_name")
 }
 
+/// One row per UTC calendar day; written by cron for trend charts on the data quality dashboard.
+model DataQualityDailySnapshot {
+  id                    String   @id @default(cuid())
+  snapshotDate          DateTime @unique @db.Date
+  totalMissing          Int
+  totalDuplicates       Int
+  totalMissingHouseInfo Int
+  totalHousesNoPerfumes Int
+  createdAt             DateTime @default(now())
+}
+
 model Perfume {
   id                    String                 @id @default(cuid())
   name                  String

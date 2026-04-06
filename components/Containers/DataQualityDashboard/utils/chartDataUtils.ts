@@ -1,51 +1,44 @@
-export type DataQualityStats = {
-  totalMissing: number
-  totalDuplicates: number
-  missingByBrand: Record<string, number>
-  duplicatesByBrand: Record<string, number>
-  lastUpdated: string
-  historyData?: {
-    dates: string[]
-    missing: number[]
-    duplicates: number[]
-  }
-  totalMissingHouseInfo?: number
-  missingHouseInfoByBrand?: Record<string, number>
-  totalHousesNoPerfumes?: number
-  housesNoPerfumes?: Array<{
-    id: string
-    name: string
-    type: string
-    createdAt: string
-  }>
+import type { DataQualityStats } from "@/lib/queries/dataQuality"
+
+export type { DataQualityStats }
+
+export type ChartDatasetLabels = {
+  missingInformation: string
+  duplicateEntries: string
+  missingHouseInfo: string
 }
 
-// Helper to generate breakdown for missing house info
-export const getMissingHouseInfoBreakdown = 
-  (stats: DataQualityStats | null): Record<string, string[]> => {
-  if (!stats || !stats.missingHouseInfoByBrand) {
-    return {}
+const defaultChartLabels: ChartDatasetLabels = {
+  missingInformation: "Missing Information",
+  duplicateEntries: "Duplicate Entries",
+  missingHouseInfo: "Missing House Info",
+}
+
+export const getMissingHouseInfoBreakdown = (
+  stats: DataQualityStats | null
+): Record<string, string[]> => {
+  if (!stats) return {}
+  if (stats.housesWithMissingHouseInfo?.length) {
+    return Object.fromEntries(stats.housesWithMissingHouseInfo.map(h => [h.name, h.missingFields]))
   }
-  // This assumes backend returns missingHouseInfoByBrand as { houseName: number }
-  // For a more detailed breakdown, backend should return { houseName: [fields] }
-  // For now, we infer missing fields by showing count as array of 'Field missing'
-  return Object.fromEntries(Object.entries(stats.missingHouseInfoByBrand)
-  .map(([house, count]) => [
+  if (!stats.missingHouseInfoByBrand) return {}
+  return Object.fromEntries(
+    Object.entries(stats.missingHouseInfoByBrand).map(([house, count]) => [
       house,
-      Array(count).fill("Field missing"),
-    ]))
+      Array(count).fill("unknown"),
+    ])
+  )
 }
 
-export const prepareMissingChartData = (stats: DataQualityStats | null) => ({
-  labels: stats?.missingByBrand
-    ? Object.keys(stats.missingByBrand).slice(0, 10)
-    : [],
+export const prepareMissingChartData = (
+  stats: DataQualityStats | null,
+  labels: ChartDatasetLabels = defaultChartLabels
+) => ({
+  labels: stats?.missingByBrand ? Object.keys(stats.missingByBrand).slice(0, 10) : [],
   datasets: [
     {
-      label: "Missing Information",
-      data: stats?.missingByBrand
-        ? Object.values(stats.missingByBrand).slice(0, 10)
-        : [],
+      label: labels.missingInformation,
+      data: stats?.missingByBrand ? Object.values(stats.missingByBrand).slice(0, 10) : [],
       backgroundColor: "rgba(255, 99, 132, 0.5)",
       borderColor: "rgb(255, 99, 132)",
       borderWidth: 1,
@@ -53,8 +46,10 @@ export const prepareMissingChartData = (stats: DataQualityStats | null) => ({
   ],
 })
 
-export const prepareMissingHouseInfoChartData = 
-(stats: DataQualityStats | null): {
+export const prepareMissingHouseInfoChartData = (
+  stats: DataQualityStats | null,
+  labels: ChartDatasetLabels = defaultChartLabels
+): {
   labels: string[]
   datasets: {
     label: string
@@ -65,12 +60,10 @@ export const prepareMissingHouseInfoChartData =
   }[]
 } => ({
   labels:
-    stats && stats.missingHouseInfoByBrand
-      ? Object.keys(stats.missingHouseInfoByBrand).slice(0, 10)
-      : [],
+    stats && stats.missingHouseInfoByBrand ? Object.keys(stats.missingHouseInfoByBrand).slice(0, 10) : [],
   datasets: [
     {
-      label: "Missing House Info",
+      label: labels.missingHouseInfo,
       data:
         stats && stats.missingHouseInfoByBrand
           ? Object.values(stats.missingHouseInfoByBrand).slice(0, 10)
@@ -82,16 +75,15 @@ export const prepareMissingHouseInfoChartData =
   ],
 })
 
-export const prepareDuplicateChartData = (stats: DataQualityStats | null) => ({
-  labels: stats?.duplicatesByBrand
-    ? Object.keys(stats.duplicatesByBrand).slice(0, 10)
-    : [],
+export const prepareDuplicateChartData = (
+  stats: DataQualityStats | null,
+  labels: ChartDatasetLabels = defaultChartLabels
+) => ({
+  labels: stats?.duplicatesByBrand ? Object.keys(stats.duplicatesByBrand).slice(0, 10) : [],
   datasets: [
     {
-      label: "Duplicate Entries",
-      data: stats?.duplicatesByBrand
-        ? Object.values(stats.duplicatesByBrand).slice(0, 10)
-        : [],
+      label: labels.duplicateEntries,
+      data: stats?.duplicatesByBrand ? Object.values(stats.duplicatesByBrand).slice(0, 10) : [],
       backgroundColor: "rgba(53, 162, 235, 0.5)",
       borderColor: "rgb(53, 162, 235)",
       borderWidth: 1,
@@ -99,11 +91,20 @@ export const prepareDuplicateChartData = (stats: DataQualityStats | null) => ({
   ],
 })
 
-export const prepareTrendChartData = (stats: DataQualityStats | null) => {
-  if (!stats?.historyData) {
+export const prepareTrendChartData = (
+  stats: DataQualityStats | null,
+  labels: ChartDatasetLabels = defaultChartLabels
+) => {
+  if (!stats?.historyData?.dates?.length) {
     return {
-      labels: [],
-      datasets: [],
+      labels: [] as string[],
+      datasets: [] as {
+        label: string
+        data: number[]
+        borderColor: string
+        backgroundColor: string
+        tension: number
+      }[],
     }
   }
 
@@ -111,14 +112,14 @@ export const prepareTrendChartData = (stats: DataQualityStats | null) => {
     labels: stats.historyData.dates || [],
     datasets: [
       {
-        label: "Missing Information",
+        label: labels.missingInformation,
         data: stats.historyData.missing || [],
         borderColor: "rgb(255, 99, 132)",
         backgroundColor: "rgba(255, 99, 132, 0.5)",
         tension: 0.1,
       },
       {
-        label: "Duplicate Entries",
+        label: labels.duplicateEntries,
         data: stats.historyData.duplicates || [],
         borderColor: "rgb(53, 162, 235)",
         backgroundColor: "rgba(53, 162, 235, 0.5)",
@@ -128,10 +129,13 @@ export const prepareTrendChartData = (stats: DataQualityStats | null) => {
   }
 }
 
-export const prepareAllChartData = (stats: DataQualityStats | null) => ({
-  missingChartData: prepareMissingChartData(stats),
-  duplicateChartData: prepareDuplicateChartData(stats),
-  missingHouseInfoChartData: prepareMissingHouseInfoChartData(stats),
-  trendChartData: prepareTrendChartData(stats),
+export const prepareAllChartData = (
+  stats: DataQualityStats | null,
+  labels: ChartDatasetLabels = defaultChartLabels
+) => ({
+  missingChartData: prepareMissingChartData(stats, labels),
+  duplicateChartData: prepareDuplicateChartData(stats, labels),
+  missingHouseInfoChartData: prepareMissingHouseInfoChartData(stats, labels),
+  trendChartData: prepareTrendChartData(stats, labels),
   missingHouseInfoBreakdown: getMissingHouseInfoBreakdown(stats),
 })

@@ -1,10 +1,11 @@
+import { useTranslations } from "next-intl"
+
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { useState } from "react"
 
 import { HOUSE_DETAIL_PATH } from "@/constants/routes"
-import { createUrlSlug } from "@/utils/slug"
 
-import { type DataQualityStats } from "../utils/chartDataUtils"
+import { type DataQualityStats } from "@/lib/queries/dataQuality"
 
 interface HousesWithNoPerfumesProps {
   stats: DataQualityStats
@@ -13,56 +14,52 @@ interface HousesWithNoPerfumesProps {
 type FilterType = "no-perfumes" | "missing-info" | "all"
 
 const HousesWithNoPerfumes = ({ stats }: HousesWithNoPerfumesProps) => {
+  const t = useTranslations("dataQuality.houseIssues")
+  const tf = useTranslations("dataQuality.fieldLabels")
+  const housesNoPerfumes = stats.housesNoPerfumes || []
+  const withMissing = stats.housesWithMissingHouseInfo || []
+
   const [filter, setFilter] = useState<FilterType>("no-perfumes")
 
-  const housesNoPerfumes = stats.housesNoPerfumes || []
-  const missingHouseInfoByBrand = stats.missingHouseInfoByBrand || {}
+  const translateField = (key: string) => {
+    if (key === "description" || key === "website" || key === "email") {
+      return tf(key)
+    }
+    return key
+  }
 
-  // Get houses with missing info
-  const housesWithMissingInfo = 
-    Object.entries(missingHouseInfoByBrand).map(([name, count]) => ({
-      name,
-      missingFieldsCount: count,
-    }))
-
-  // Determine which data to show based on filter
   const getFilteredData = () => {
     switch (filter) {
       case "no-perfumes":
         return {
           houses: housesNoPerfumes,
           count: housesNoPerfumes.length,
-          showMissingFields: false,
+          mode: "no-perfumes" as const,
         }
       case "missing-info":
         return {
-          houses: housesWithMissingInfo,
-          count: housesWithMissingInfo.length,
-          showMissingFields: true,
+          houses: withMissing,
+          count: withMissing.length,
+          mode: "missing-info" as const,
         }
-      case "all":
-        // Combine both - houses with no perfumes OR missing info
-        { const allIssues = [
-          ...housesNoPerfumes.map(house => ({ ...house, issue: "No Perfumes" })),
-          ...housesWithMissingInfo.map(house => ({
-            ...house,
-            issue: "Missing Info",
-          })),
-        ]
+      case "all": {
+        const noPerf = housesNoPerfumes.map(h => ({ ...h, issue: "no-perfumes" as const }))
+        const miss = withMissing.map(h => ({ ...h, issue: "missing-info" as const }))
+        const allIssues = [...noPerf, ...miss]
         return {
           houses: allIssues,
           count: allIssues.length,
-          showMissingFields: false,
-          showIssueType: true,
-        } }
+          mode: "all" as const,
+        }
+      }
       default:
-        return { houses: [], count: 0, showMissingFields: false }
+        return { houses: [], count: 0, mode: "no-perfumes" as const }
     }
   }
 
   const filteredData = getFilteredData()
 
-  if (housesNoPerfumes.length === 0 && housesWithMissingInfo.length === 0) {
+  if (housesNoPerfumes.length === 0 && withMissing.length === 0) {
     return null
   }
 
@@ -70,15 +67,17 @@ const HousesWithNoPerfumes = ({ stats }: HousesWithNoPerfumesProps) => {
     <div className="mt-8 bg-purple-50 border border-purple-200 rounded-lg p-6">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-semibold text-purple-900">
-          House Data Issues ({stats.totalHousesNoPerfumes || 0} no perfumes,{" "}
-          {stats.totalMissingHouseInfo || 0} missing info)
+          {t("title", {
+            noPerfumes: stats.totalHousesNoPerfumes || 0,
+            missingInfo: stats.totalMissingHouseInfo || 0,
+          })}
         </h3>
       </div>
 
-      {/* Filter Tabs */}
       <div className="mb-4 border-b border-purple-200">
         <nav className="flex space-x-4">
           <button
+            type="button"
             onClick={() => setFilter("no-perfumes")}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               filter === "no-perfumes"
@@ -86,9 +85,10 @@ const HousesWithNoPerfumes = ({ stats }: HousesWithNoPerfumesProps) => {
                 : "border-transparent text-purple-600 hover:text-purple-900 hover:border-purple-300"
             }`}
           >
-            No Perfumes ({housesNoPerfumes.length})
+            {t("tabNoPerfumes", { count: housesNoPerfumes.length })}
           </button>
           <button
+            type="button"
             onClick={() => setFilter("missing-info")}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               filter === "missing-info"
@@ -96,9 +96,10 @@ const HousesWithNoPerfumes = ({ stats }: HousesWithNoPerfumesProps) => {
                 : "border-transparent text-purple-600 hover:text-purple-900 hover:border-purple-300"
             }`}
           >
-            Missing Info ({housesWithMissingInfo.length})
+            {t("tabMissingInfo", { count: withMissing.length })}
           </button>
           <button
+            type="button"
             onClick={() => setFilter("all")}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               filter === "all"
@@ -106,18 +107,15 @@ const HousesWithNoPerfumes = ({ stats }: HousesWithNoPerfumesProps) => {
                 : "border-transparent text-purple-600 hover:text-purple-900 hover:border-purple-300"
             }`}
           >
-            All Issues ({housesNoPerfumes.length + housesWithMissingInfo.length})
+            {t("tabAll", { count: housesNoPerfumes.length + withMissing.length })}
           </button>
         </nav>
       </div>
 
       <p className="text-sm text-purple-700 mb-4">
-        {filter === "no-perfumes" &&
-          "These perfume houses exist in the database but have no perfumes listed."}
-        {filter === "missing-info" &&
-          "These perfume houses are missing information like description, website, founded date, or image."}
-        {filter === "all" &&
-          "All houses with either no perfumes or missing information."}
+        {filter === "no-perfumes" && t("hintNoPerfumes")}
+        {filter === "missing-info" && t("hintMissingInfo")}
+        {filter === "all" && t("hintAll")}
       </p>
 
       <div className="max-h-96 overflow-y-auto">
@@ -125,76 +123,88 @@ const HousesWithNoPerfumes = ({ stats }: HousesWithNoPerfumesProps) => {
           <thead className="bg-purple-100 sticky top-0">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-purple-900 uppercase tracking-wider">
-                House Name
+                {t("colHouse")}
               </th>
-              {!filteredData.showMissingFields && (
+              {filteredData.mode === "no-perfumes" && (
                 <th className="px-4 py-3 text-left text-xs font-medium text-purple-900 uppercase tracking-wider">
-                  Type
+                  {t("colType")}
                 </th>
               )}
-              {filteredData.showMissingFields && (
+              {filteredData.mode === "missing-info" && (
                 <th className="px-4 py-3 text-left text-xs font-medium text-purple-900 uppercase tracking-wider">
-                  Missing Fields
+                  {t("colMissingFields")}
                 </th>
               )}
-              {filteredData.showIssueType && (
+              {filteredData.mode === "all" && (
                 <th className="px-4 py-3 text-left text-xs font-medium text-purple-900 uppercase tracking-wider">
-                  Issue
+                  {t("colIssue")}
                 </th>
               )}
-              {!filteredData.showMissingFields && (
+              {filteredData.mode === "no-perfumes" && (
                 <th className="px-4 py-3 text-left text-xs font-medium text-purple-900 uppercase tracking-wider">
-                  Created At
+                  {t("colCreated")}
                 </th>
               )}
+              <th className="px-4 py-3 text-left text-xs font-medium text-purple-900 uppercase tracking-wider">
+                {t("colActions")}
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-purple-100">
-            {filteredData.houses.map((house: any, index) => (
-              <tr
-                key={house.id || house.name || index}
-                className="hover:bg-purple-50"
-              >
-                <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                  <PrefetchLink
-                    href={`${HOUSE_DETAIL_PATH}/${createUrlSlug(house.name)}`}
-                    prefetch={false}
-                    className="text-purple-700 hover:text-purple-900 hover:underline"
-                  >
-                    {house.name}
-                  </PrefetchLink>
-                </td>
-                {!filteredData.showMissingFields && house.type && (
-                  <td className="px-4 py-3 text-sm text-gray-700 capitalize">
-                    {house.type}
-                  </td>
-                )}
-                {filteredData.showMissingFields && house.missingFieldsCount && (
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {house.missingFieldsCount} field
-                    {house.missingFieldsCount > 1 ? "s" : ""}
-                  </td>
-                )}
-                {filteredData.showIssueType && house.issue && (
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        house.issue === "No Perfumes"
-                          ? "bg-purple-100 text-purple-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
+            {filteredData.houses.map((house, index) => {
+              const rowKey = "issue" in house ? `${house.id}-${house.issue}` : house.id || index
+              const slug = house.slug
+              const publicHref = `${HOUSE_DETAIL_PATH}/${slug}`
+
+              return (
+                <tr key={rowKey} className="hover:bg-purple-50">
+                  <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                    <PrefetchLink
+                      href={publicHref}
+                      prefetch={false}
+                      className="text-purple-700 hover:text-purple-900 hover:underline"
                     >
-                      {house.issue}
-                    </span>
+                      {house.name}
+                    </PrefetchLink>
                   </td>
-                )}
-                {!filteredData.showMissingFields && house.createdAt && (
-                  <td className="px-4 py-3 text-sm text-gray-500">
-                    {new Date(house.createdAt).toLocaleDateString("en-US")}
+                  {filteredData.mode === "no-perfumes" && "type" in house && (
+                    <td className="px-4 py-3 text-sm text-gray-700 capitalize">{house.type}</td>
+                  )}
+                  {filteredData.mode === "missing-info" && "missingFields" in house && (
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {house.missingFields.map(translateField).join(", ")}
+                    </td>
+                  )}
+                  {filteredData.mode === "all" && "issue" in house && (
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          house.issue === "no-perfumes"
+                            ? "bg-purple-100 text-purple-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {house.issue === "no-perfumes" ? t("badgeNoPerfumes") : t("badgeMissingInfo")}
+                      </span>
+                    </td>
+                  )}
+                  {filteredData.mode === "no-perfumes" && "createdAt" in house && house.createdAt && (
+                    <td className="px-4 py-3 text-sm text-gray-500">
+                      {new Date(house.createdAt).toLocaleDateString()}
+                    </td>
+                  )}
+                  <td className="px-4 py-3 text-sm">
+                    <PrefetchLink
+                      href={`/admin/perfume-house/${slug}/edit`}
+                      prefetch={false}
+                      className="text-purple-700 hover:text-purple-900 hover:underline"
+                    >
+                      {t("editAdmin")}
+                    </PrefetchLink>
                   </td>
-                )}
-              </tr>
-            ))}
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

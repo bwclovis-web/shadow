@@ -1,23 +1,41 @@
-import { render, screen, waitFor } from "@testing-library/react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { cleanup, render, screen, waitFor } from "@testing-library/react"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => {
+    if (key === "noData") return "No data available."
+    return key
+  },
+}))
 
 import DataQualityDashboard from "./DataQualityDashboardRefactored"
 
-// Mock the child components
 vi.mock("./components/AdminCSVControls", () => ({
-  default: ({ onUploadComplete }: any) => (
+  default: ({ onUploadComplete }: { onUploadComplete: () => void }) => (
     <div data-testid="admin-csv-controls">
-      <button onClick={onUploadComplete}>Upload Complete</button>
+      <button type="button" onClick={onUploadComplete}>
+        Upload Complete
+      </button>
     </div>
   ),
 }))
 
 vi.mock("./components/DashboardContent", () => ({
-  default: ({ stats, timeframe, setTimeframe }: any) => (
+  default: ({
+    stats,
+    timeframe,
+    setTimeframe,
+  }: {
+    stats: Record<string, unknown>
+    timeframe: string
+    setTimeframe: (v: string) => void
+  }) => (
     <div data-testid="dashboard-content">
       <div>Stats: {JSON.stringify(stats)}</div>
       <div>Timeframe: {timeframe}</div>
-      <button onClick={() => setTimeframe("week")}>Set Week</button>
+      <button type="button" onClick={() => setTimeframe("week")}>
+        Set Week
+      </button>
     </div>
   ),
 }))
@@ -31,14 +49,15 @@ vi.mock("./components/TrendChart", () => ({
 }))
 
 vi.mock("./components/ErrorDisplay", () => ({
-  default: ({ message }: any) => <div data-testid="error-display">{message}</div>,
+  default: ({ message }: { message: string }) => (
+    <div data-testid="error-display">{message}</div>
+  ),
 }))
 
 vi.mock("./components/LoadingIndicator", () => ({
   default: () => <div data-testid="loading-indicator">Loading...</div>,
 }))
 
-// Mock the custom hook
 const mockForceRefresh = vi.fn()
 vi.mock("./hooks", () => ({
   useFetchDataQualityStats: vi.fn(),
@@ -46,17 +65,22 @@ vi.mock("./hooks", () => ({
 
 import { useFetchDataQualityStats } from "./hooks"
 
-const mockUseFetchDataQualityStats = useFetchDataQualityStats as any
+const mockUseFetchDataQualityStats = useFetchDataQualityStats as unknown as ReturnType<typeof vi.fn>
 
 describe("DataQualityDashboard", () => {
+  afterEach(() => {
+    cleanup()
+  })
+
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it("should render loading indicator when loading", () => {
+  it("should render loading indicator on initial load", () => {
     mockUseFetchDataQualityStats.mockReturnValue({
       stats: null,
-      loading: true,
+      isInitialLoad: true,
+      isFetching: true,
       error: null,
       forceRefresh: mockForceRefresh,
     })
@@ -71,7 +95,8 @@ describe("DataQualityDashboard", () => {
     const errorMessage = "Failed to fetch data"
     mockUseFetchDataQualityStats.mockReturnValue({
       stats: null,
-      loading: false,
+      isInitialLoad: false,
+      isFetching: false,
       error: errorMessage,
       forceRefresh: mockForceRefresh,
     })
@@ -83,10 +108,11 @@ describe("DataQualityDashboard", () => {
     expect(screen.queryByTestId("dashboard-content")).not.toBeInTheDocument()
   })
 
-  it('should render "No data available" when stats is null', () => {
+  it('should render "No data available" when stats is null after load', () => {
     mockUseFetchDataQualityStats.mockReturnValue({
       stats: null,
-      loading: false,
+      isInitialLoad: false,
+      isFetching: false,
       error: null,
       forceRefresh: mockForceRefresh,
     })
@@ -108,7 +134,8 @@ describe("DataQualityDashboard", () => {
 
     mockUseFetchDataQualityStats.mockReturnValue({
       stats: mockStats,
-      loading: false,
+      isInitialLoad: false,
+      isFetching: false,
       error: null,
       forceRefresh: mockForceRefresh,
     })
@@ -130,12 +157,13 @@ describe("DataQualityDashboard", () => {
 
     mockUseFetchDataQualityStats.mockReturnValue({
       stats: mockStats,
-      loading: false,
+      isInitialLoad: false,
+      isFetching: false,
       error: null,
       forceRefresh: mockForceRefresh,
     })
 
-    render(<DataQualityDashboard isAdmin={true} />)
+    render(<DataQualityDashboard isAdmin />)
 
     expect(screen.getByTestId("admin-csv-controls")).toBeInTheDocument()
   })
@@ -151,7 +179,8 @@ describe("DataQualityDashboard", () => {
 
     mockUseFetchDataQualityStats.mockReturnValue({
       stats: mockStats,
-      loading: false,
+      isInitialLoad: false,
+      isFetching: false,
       error: null,
       forceRefresh: mockForceRefresh,
     })
@@ -172,15 +201,17 @@ describe("DataQualityDashboard", () => {
 
     mockUseFetchDataQualityStats.mockReturnValue({
       stats: mockStats,
-      loading: false,
+      isInitialLoad: false,
+      isFetching: false,
       error: null,
       forceRefresh: mockForceRefresh,
     })
 
-    render(<DataQualityDashboard isAdmin={true} />)
+    const { container } = render(<DataQualityDashboard isAdmin />)
 
-    const uploadButton = screen.getByText("Upload Complete")
-    uploadButton.click()
+    const uploadBtn = container.querySelector('[data-testid="admin-csv-controls"] button')
+    expect(uploadBtn).toBeTruthy()
+    uploadBtn!.dispatchEvent(new MouseEvent("click", { bubbles: true }))
 
     await waitFor(() => {
       expect(mockForceRefresh).toHaveBeenCalledWith(true)
@@ -198,13 +229,37 @@ describe("DataQualityDashboard", () => {
 
     mockUseFetchDataQualityStats.mockReturnValue({
       stats: mockStats,
-      loading: false,
+      isInitialLoad: false,
+      isFetching: false,
+      error: null,
+      forceRefresh: mockForceRefresh,
+    })
+
+    const { container } = render(<DataQualityDashboard />)
+
+    expect(container.textContent).toContain("Timeframe: month")
+  })
+
+  it("keeps dashboard visible during background refetch", () => {
+    const mockStats = {
+      totalMissing: 10,
+      totalDuplicates: 5,
+      missingByBrand: {},
+      duplicatesByBrand: {},
+      lastUpdated: "2024-01-01",
+    }
+
+    mockUseFetchDataQualityStats.mockReturnValue({
+      stats: mockStats,
+      isInitialLoad: false,
+      isFetching: true,
       error: null,
       forceRefresh: mockForceRefresh,
     })
 
     render(<DataQualityDashboard />)
 
-    expect(screen.getByText("Timeframe: month")).toBeInTheDocument()
+    expect(screen.queryByTestId("loading-indicator")).not.toBeInTheDocument()
+    expect(screen.getByTestId("dashboard-content")).toBeInTheDocument()
   })
 })

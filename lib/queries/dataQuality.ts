@@ -1,11 +1,25 @@
 /**
  * Query functions and query keys for Data Quality
- * 
- * This module provides query functions for fetching data quality statistics
- * and related data from the API.
  */
 
 export type DataQualityTimeframe = "week" | "month" | "all"
+
+export interface DataQualityHouseRow {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  image: string | null
+  website: string | null
+  country: string | null
+  founded: string | null
+  type: string
+  email: string | null
+  phone: string | null
+  address: string | null
+  createdAt: string
+  updatedAt: string
+}
 
 export interface DataQualityStats {
   totalMissing: number
@@ -24,40 +38,33 @@ export interface DataQualityStats {
   housesNoPerfumes?: Array<{
     id: string
     name: string
+    slug: string
     type: string
     createdAt: string
   }>
+  /** Houses missing description, website, or email (canonical rules in lib/data-quality/rules). */
+  housesWithMissingHouseInfo?: Array<{
+    id: string
+    name: string
+    slug: string
+    type: string
+    missingFields: string[]
+  }>
 }
 
-/**
- * Query key factory for data quality queries.
- * Uses hierarchical structure for easy invalidation.
- */
 export const queryKeys = {
   dataQuality: {
     all: ["dataQuality"] as const,
-    stats: (timeframe: DataQualityTimeframe, force?: boolean) => [
-        ...queryKeys.dataQuality.all,
-        "stats",
-        timeframe,
-        force,
-      ] as const,
+    stats: (timeframe: DataQualityTimeframe, force?: boolean) =>
+      [...queryKeys.dataQuality.all, "stats", timeframe, force] as const,
     houses: () => [...queryKeys.dataQuality.all, "houses"] as const,
   },
 } as const
 
-/**
- * Fetch data quality statistics.
- *
- * @param timeframe - Timeframe for the statistics: "week", "month", or "all"
- * @param force - Force regeneration of reports (default: false)
- * @returns Promise resolving to data quality stats
- */
 export const getDataQualityStats = async (
   timeframe: DataQualityTimeframe = "month",
   force: boolean = false
 ): Promise<DataQualityStats> => {
-  // Add cache-busting timestamp to ensure fresh data when needed
   const cacheBuster = Date.now()
   const params = new URLSearchParams({
     timeframe,
@@ -75,30 +82,26 @@ export const getDataQualityStats = async (
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => "")
-    throw new Error(`Failed to fetch data quality stats: ${response.statusText}${errorText ? ` - ${errorText}` : ""}`)
+    throw new Error(
+      `Failed to fetch data quality stats: ${response.statusText}${errorText ? ` - ${errorText}` : ""}`
+    )
   }
 
   return (await response.json()) as DataQualityStats
 }
 
-/**
- * Fetch all houses for data quality purposes (CSV export, etc.).
- * 
- * @returns Promise resolving to houses array
- */
-export const getDataQualityHouses = async (): Promise<any[]> => {
+export const getDataQualityHouses = async (): Promise<DataQualityHouseRow[]> => {
   const response = await fetch("/api/data-quality-houses", {
-    cache: "no-store", // Always fetch fresh data for data quality
+    cache: "no-store",
   })
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    throw new Error(errorData.message ||
-        errorData.error ||
-        `Failed to fetch data quality houses: ${response.statusText}`)
+    const errorData = await response.json().catch(() => ({})) as { message?: string; error?: string }
+    throw new Error(
+      errorData.message || errorData.error || `Failed to fetch data quality houses: ${response.statusText}`
+    )
   }
 
-  const data = await response.json()
-  return Array.isArray(data) ? data : []
+  const data: unknown = await response.json()
+  return Array.isArray(data) ? (data as DataQualityHouseRow[]) : []
 }
-

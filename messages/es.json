@@ -292,7 +292,78 @@
   },
   "dataQuality": {
     "heading": "Panel de Calidad de Datos",
-    "subheading": "Monitorea la calidad de los datos en nuestra base de datos."
+    "subheading": "Monitorea la calidad de los datos en nuestra base de datos.",
+    "dashboardTitle": "Panel de calidad de datos de perfumes",
+    "noData": "No hay datos disponibles.",
+    "timePeriod": "Periodo",
+    "refreshing": "Actualizando…",
+    "lastUpdatedLabel": "Última actualización:",
+    "timeframes": {
+      "week": "Última semana",
+      "month": "Último mes",
+      "all": "Todo el tiempo"
+    },
+    "charts": {
+      "pluginTitle": "Métricas de calidad de datos",
+      "topBrandsMissing": "Marcas con más datos faltantes",
+      "topBrandsDuplicates": "Marcas con más duplicados",
+      "topHousesMissingInfo": "Casas con más información faltante",
+      "breakdownTitle": "Desglose por casa",
+      "houseColumn": "Casa",
+      "missingFieldsColumn": "Campos faltantes"
+    },
+    "datasetLabels": {
+      "missingInformation": "Información faltante",
+      "duplicateEntries": "Entradas duplicadas",
+      "missingHouseInfo": "Información de casa faltante"
+    },
+    "trends": {
+      "heading": "Tendencias de calidad de datos",
+      "pluginTitle": "Tendencias de calidad en el tiempo",
+      "empty": "Aún no hay historial de tendencias. Las instantáneas diarias se guardan cuando se ejecuta el cron de instantáneas (véase /api/cron/data-quality-snapshot)."
+    },
+    "summary": {
+      "missingTitle": "Información faltante",
+      "missingHint": "Perfumes sin descripción o sin casa vinculada.",
+      "duplicatesTitle": "Entradas duplicadas",
+      "duplicatesHint": "Filas extra para el mismo nombre de casa y perfume (normalizado).",
+      "missingHouseTitle": "Información de casa faltante",
+      "missingHouseHint": "Casas sin descripción, sitio web o correo.",
+      "emptyHousesTitle": "Casas vacías",
+      "emptyHousesHint": "Casas sin perfumes listados."
+    },
+    "csv": {
+      "download": "Descargar CSV de casas",
+      "upload": "Subir CSV editado",
+      "downloadEmpty": "No hay casas para exportar.",
+      "downloadFailed": "Error al descargar el CSV.",
+      "uploadSuccess": "Se actualizaron {count} casa(s) correctamente.",
+      "uploadPartial": "Carga con incidencias: {success} actualizadas, {errors} fila(s) con error.",
+      "uploadNone": "No se actualizó ninguna fila."
+    },
+    "fieldLabels": {
+      "description": "Descripción",
+      "website": "Sitio web",
+      "email": "Correo"
+    },
+    "houseIssues": {
+      "title": "Problemas de datos de casas ({noPerfumes} sin perfumes, {missingInfo} con campos básicos faltantes)",
+      "tabNoPerfumes": "Sin perfumes ({count})",
+      "tabMissingInfo": "Información faltante ({count})",
+      "tabAll": "Todos los problemas ({count})",
+      "hintNoPerfumes": "Estas casas perfumeras existen pero no tienen perfumes listados.",
+      "hintMissingInfo": "Les falta al menos uno de: descripción, sitio web o correo.",
+      "hintAll": "Todas las casas sin perfumes o con campos básicos incompletos.",
+      "colHouse": "Nombre de la casa",
+      "colType": "Tipo",
+      "colMissingFields": "Campos faltantes",
+      "colIssue": "Problema",
+      "colCreated": "Creado",
+      "colActions": "Acciones",
+      "badgeNoPerfumes": "Sin perfumes",
+      "badgeMissingInfo": "Info faltante",
+      "editAdmin": "Editar (admin)"
+    }
   },
   "sortOptions": {
     "created-desc": "Más Nuevos Primero",

@@ -32,6 +32,12 @@ describe("chartConfig", () => {
       expect(config.plugins.title.text).toBe("Data Quality Metrics")
     })
 
+    it("should accept custom title text", () => {
+      const config = createChartConfig("Custom Title")
+
+      expect(config.plugins.title.text).toBe("Custom Title")
+    })
+
     it("should return a new object on each call", () => {
       const config1 = createChartConfig()
       const config2 = createChartConfig()

@@ -1,8 +1,9 @@
 import { type Dispatch, type FC, type SetStateAction } from "react"
+import { useTranslations } from "next-intl"
 
 import { createChartConfig } from "../utils/chartConfig"
-import { type DataQualityStats } from "../utils/chartDataUtils"
 import { prepareAllChartData } from "../utils/chartDataUtils"
+import type { DataQualityStats } from "@/lib/queries/dataQuality"
 import ChartVisualizations from "./ChartVisualizations"
 import HousesWithNoPerfumes from "./HousesWithNoPerfumes"
 import SummaryStats from "./SummaryStats"
@@ -13,30 +14,41 @@ interface DashboardContentProps {
   stats: DataQualityStats
   timeframe: "week" | "month" | "all"
   setTimeframe: Dispatch<SetStateAction<"week" | "month" | "all">>
+  isFetching?: boolean
 }
 
 const DashboardContent: FC<DashboardContentProps> = ({
   stats,
   timeframe,
   setTimeframe,
+  isFetching = false,
 }) => {
-  // Get chart configuration and data
-  const chartOptions = createChartConfig()
-  const chartData = prepareAllChartData(stats)
+  const t = useTranslations("dataQuality")
+
+  const chartOptions = createChartConfig(t("charts.pluginTitle"))
+  const chartData = prepareAllChartData(stats, {
+    missingInformation: t("datasetLabels.missingInformation"),
+    duplicateEntries: t("datasetLabels.duplicateEntries"),
+    missingHouseInfo: t("datasetLabels.missingHouseInfo"),
+  })
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-4">
-        Perfume Data Quality Dashboard
-      </h2>
+      <h2 className="text-2xl font-bold text-gray-900 mb-4">{t("dashboardTitle")}</h2>
 
-      {/* Timeframe Selector */}
-      <TimeframeSelector timeframe={timeframe} setTimeframe={setTimeframe} />
+      <TimeframeSelector
+        timeframe={timeframe}
+        setTimeframe={setTimeframe}
+        isFetching={isFetching}
+        timePeriodLabel={t("timePeriod")}
+        refreshingLabel={t("refreshing")}
+        lastWeekLabel={t("timeframes.week")}
+        lastMonthLabel={t("timeframes.month")}
+        allTimeLabel={t("timeframes.all")}
+      />
 
-      {/* Summary Stats */}
       <SummaryStats stats={stats} />
 
-      {/* Chart Visualizations */}
       <ChartVisualizations
         missingChartData={chartData.missingChartData}
         duplicateChartData={chartData.duplicateChartData}
@@ -46,15 +58,12 @@ const DashboardContent: FC<DashboardContentProps> = ({
         timeframe={timeframe}
       />
 
-      {/* Trend Chart */}
       <TrendChart trendChartData={chartData.trendChartData} timeframe={timeframe} />
 
-      {/* Houses with No Perfumes */}
       <HousesWithNoPerfumes stats={stats} />
 
-      {/* Last Updated */}
       <div className="mt-8 text-right text-sm text-gray-500">
-        Last updated: {stats.lastUpdated}
+        {t("lastUpdatedLabel")} {stats.lastUpdated}
       </div>
     </div>
   )

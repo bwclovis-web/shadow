@@ -2,6 +2,7 @@
 import "./utils/chartSetup"
 
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 
 import AdminCSVControls from "./components/AdminCSVControls"
 import DashboardContent from "./components/DashboardContent"
@@ -10,21 +11,21 @@ import LoadingIndicator from "./components/LoadingIndicator"
 import { useFetchDataQualityStats } from "./hooks"
 
 interface DataQualityDashboardProps {
-  user?: any
+  user?: unknown
   isAdmin?: boolean
 }
 
 const DataQualityDashboard = ({ isAdmin }: DataQualityDashboardProps) => {
+  const t = useTranslations("dataQuality")
   const [timeframe, setTimeframe] = useState<"week" | "month" | "all">("month")
-  const { stats, loading, error, forceRefresh } = useFetchDataQualityStats(timeframe)
+  const { stats, isInitialLoad, isFetching, error, forceRefresh } =
+    useFetchDataQualityStats(timeframe)
 
   const handleUploadComplete = () => {
-    // Force refresh with force=true to regenerate reports immediately
-    forceRefresh(true)
+    void forceRefresh(true)
   }
 
-  // Render component based on loading/error state
-  if (loading) {
+  if (isInitialLoad) {
     return <LoadingIndicator />
   }
 
@@ -33,7 +34,7 @@ const DataQualityDashboard = ({ isAdmin }: DataQualityDashboardProps) => {
   }
 
   if (!stats) {
-    return <div>No data available.</div>
+    return <div>{t("noData")}</div>
   }
 
   return (
@@ -43,6 +44,7 @@ const DataQualityDashboard = ({ isAdmin }: DataQualityDashboardProps) => {
         stats={stats}
         timeframe={timeframe}
         setTimeframe={setTimeframe}
+        isFetching={isFetching}
       />
     </>
   )

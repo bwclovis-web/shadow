@@ -1,4 +1,4 @@
-export const createChartConfig = () => ({
+export const createChartConfig = (titleText = "Data Quality Metrics") => ({
   responsive: true,
   plugins: {
     legend: {
@@ -6,7 +6,7 @@ export const createChartConfig = () => ({
     },
     title: {
       display: true,
-      text: "Data Quality Metrics",
+      text: titleText,
     },
   },
   scales: {

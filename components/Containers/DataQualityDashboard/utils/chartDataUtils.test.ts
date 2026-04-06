@@ -46,25 +46,42 @@ describe("chartDataUtils", () => {
       expect(result).toEqual({})
     })
 
-    it("should return empty object when missingHouseInfoByBrand is undefined", () => {
-      const stats = { ...mockStats, missingHouseInfoByBrand: undefined }
+    it("should return empty object when both breakdown sources are absent", () => {
+      const stats = {
+        ...mockStats,
+        missingHouseInfoByBrand: undefined,
+        housesWithMissingHouseInfo: undefined,
+      }
       const result = getMissingHouseInfoBreakdown(stats)
       expect(result).toEqual({})
     })
 
-    it("should return breakdown with field missing arrays", () => {
-      const result = getMissingHouseInfoBreakdown(mockStats)
-      expect(result).toEqual({
-        "House A": [
-          "Field missing",
-          "Field missing",
-          "Field missing",
-          "Field missing",
-          "Field missing",
+    it("should prefer housesWithMissingHouseInfo when present", () => {
+      const stats: DataQualityStats = {
+        ...mockStats,
+        housesWithMissingHouseInfo: [
+          {
+            id: "1",
+            name: "House A",
+            slug: "house-a",
+            type: "indie",
+            missingFields: ["description", "email"],
+          },
         ],
-        "House B": ["Field missing", "Field missing", "Field missing"],
-        "House C": ["Field missing", "Field missing"],
+      }
+      const result = getMissingHouseInfoBreakdown(stats)
+      expect(result).toEqual({
+        "House A": ["description", "email"],
       })
+    })
+
+    it("should fall back to missingHouseInfoByBrand with placeholder tokens", () => {
+      const result = getMissingHouseInfoBreakdown({
+        ...mockStats,
+        housesWithMissingHouseInfo: undefined,
+      })
+      expect(result["House A"]?.length).toBe(5)
+      expect(result["House A"]?.every(f => f === "unknown")).toBe(true)
     })
   })
 
@@ -77,23 +94,17 @@ describe("chartDataUtils", () => {
 
     it("should prepare chart data from stats", () => {
       const result = prepareMissingChartData(mockStats)
-      expect(result.labels).toEqual([
-        "Brand A",
-        "Brand B",
-        "Brand C",
-        "Brand D",
-        "Brand E",
-      ])
-      expect(result.datasets[0].data).toEqual([
-30, 25, 20, 15, 10
-])
+      expect(result.labels).toEqual(["Brand A", "Brand B", "Brand C", "Brand D", "Brand E"])
+      expect(result.datasets[0].data).toEqual([30, 25, 20, 15, 10])
       expect(result.datasets[0].label).toBe("Missing Information")
     })
 
     it("should limit to top 10 brands", () => {
       const statsWithManyBrands = {
         ...mockStats,
-        missingByBrand: Object.fromEntries(Array.from({ length: 15 }, (_, i) => [`Brand ${i}`, 100 - i])),
+        missingByBrand: Object.fromEntries(
+          Array.from({ length: 15 }, (_, i) => [`Brand ${i}`, 100 - i])
+        ),
       }
       const result = prepareMissingChartData(statsWithManyBrands)
       expect(result.labels.length).toBe(10)
@@ -138,7 +149,7 @@ describe("chartDataUtils", () => {
       expect(result.datasets).toEqual([])
     })
 
-    it("should return empty arrays when historyData is undefined", () => {
+    it("should return empty when historyData is undefined", () => {
       const stats = { ...mockStats, historyData: undefined }
       const result = prepareTrendChartData(stats)
       expect(result.labels).toEqual([])
@@ -175,7 +186,3 @@ describe("chartDataUtils", () => {
     })
   })
 })
-
-
-
-
