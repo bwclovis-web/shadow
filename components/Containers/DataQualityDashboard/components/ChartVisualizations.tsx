@@ -1,12 +1,13 @@
+import type { ChartData, ChartOptions } from "chart.js"
 import React from "react"
 import { useTranslations } from "next-intl"
 import { Bar } from "react-chartjs-2"
 
 interface ChartVisualizationsProps {
-  missingChartData: Record<string, unknown>
-  duplicateChartData: Record<string, unknown>
-  missingHouseInfoChartData: Record<string, unknown>
-  chartOptions: Record<string, unknown>
+  missingChartData: ChartData<"bar">
+  duplicateChartData: ChartData<"bar">
+  missingHouseInfoChartData: ChartData<"bar">
+  chartOptions: ChartOptions<"bar">
   missingHouseInfoBreakdown?: Record<string, string[]>
   timeframe: "week" | "month" | "all"
 }
