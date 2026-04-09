@@ -3,6 +3,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 ## Project Docs
 
 - Production schema/table sync guide: `docs/production-schema-sync.md`
+- New machine onboarding guide: `docs/new computer set up.md`
 
 ## Special Scripts (Maintenance / Data)
 
