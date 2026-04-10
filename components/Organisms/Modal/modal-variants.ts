@@ -37,18 +37,22 @@ export const modalBackgroundVariant = cva(
 )
 
 export const modalContentVariant = cva(
-  ["fixed max-h-full z-30 rounded transition-all delay-300 py-2 pb-10 xl:p-8 duration-500 w-full lg:w-4/5 xl:w-2/5 pointer-none flex"],
+  [
+    "fixed z-30 flex min-h-0 flex-col pointer-events-auto rounded py-2 pb-10 transition-all delay-300 duration-500 xl:p-8",
+  ],
   {
     compoundVariants: [
       {
         animate: false,
         animateStart: "top",
-        className: "top-[0%]",
+        className:
+          "left-1/2 top-1/2 max-h-[min(90vh,100dvh)] w-full -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain",
       },
       {
         animate: true,
         animateStart: "top",
-        className: "top-[20%] md:top-[30%] max-h-[80vh] overflow-y-auto fixed",
+        className:
+          "left-1/2 top-1/2 max-h-[min(90vh,100dvh)] w-full -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain",
       },
       {
         animate: false,
@@ -85,7 +89,7 @@ export const modalContentVariant = cva(
         bottom:
           "w-full sm:w-11/12 lg:w-4/5 xl:w-2/5 duration-500 rounded mx-2 sm:mx-4",
         left: "w-full lg:w-1/3 xl2:w-1/4 right-0 top-0 duration-300 h-full",
-        top: "w-full sm:w-11/12 lg:w-4/5 xl:w-3/5 duration-500 rounded mx-2 sm:mx-4",
+        top: "w-full sm:w-11/12 lg:w-4/5 xl:w-3/5 duration-500 rounded",
       },
       innerType: {
         default: "bg-noir-light text-gray-900 p-4 sm:p-6",
