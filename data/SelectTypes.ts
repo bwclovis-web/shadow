@@ -21,6 +21,7 @@ export const perfumeTypes = [
   { id: "extraitOil", name: "extraitOil", label: "Extrait Oil" },
   { id: "waterMist", name: "waterMist", label: "Water Mist" },
   { id: "ipmSpray", name: "ipmSpray", label: "IPM Spray" },
+  { id: "hairOil", name: "hairOil", label: "Hair Oil" },
 ]
 
 export const getPerfumeTypeLabel = (typeName: string | undefined): string | undefined => {

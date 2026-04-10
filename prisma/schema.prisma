@@ -412,6 +412,7 @@ enum PerfumeType {
   oil
   waterMist
   ipmSpray
+  hairOil
 }
 
 enum TradePreference {
