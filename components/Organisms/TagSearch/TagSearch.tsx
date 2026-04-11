@@ -1,5 +1,4 @@
-import { type VariantProps } from "class-variance-authority"
-import { type FC, type HTMLProps, useCallback, useEffect, useState } from "react"
+import { type HTMLProps, useCallback, useEffect, useState } from "react"
 
 import SearchTypeahead from "@/components/Molecules/SearchTypeahead"
 import { typeaheadItemRowClasses } from "@/components/Molecules/SearchTypeahead/search-typeahead-surfaces"
@@ -15,9 +14,7 @@ const TAG_SEARCH_API = "/api/getTag"
 export type TagSearchSurface = "light" | "dark"
 export type TagSearchSelectedLayout = "footer" | "flow"
 
-interface TagSearchProps
-  extends Omit<HTMLProps<HTMLDivElement>, "onChange" | "data">,
-    VariantProps<typeof tagSearchVariants> {
+interface TagSearchProps extends Omit<HTMLProps<HTMLDivElement>, "onChange" | "data"> {
   onChange?: (tags: Tag[]) => void
   label?: string
   data?: Tag[]
@@ -29,7 +26,7 @@ interface TagSearchProps
   surface?: TagSearchSurface
 }
 
-const TagSearch: FC<TagSearchProps> = ({
+const TagSearch = ({
   className,
   onChange,
   label,
@@ -40,7 +37,7 @@ const TagSearch: FC<TagSearchProps> = ({
   searchInputLabel,
   selectedLayout = "footer",
   surface = "light",
-}) => {
+}: TagSearchProps) => {
   const initialTags = Array.isArray(data) ? data : []
   const [selectedTags, setSelectedTags] = useState<Tag[]>(initialTags)
 
@@ -76,22 +73,23 @@ const TagSearch: FC<TagSearchProps> = ({
 
   const searchLabel =
     searchInputLabel ?? (label ? `${label} search` : "Search")
-  const isDark = surface === "dark"
-  const surfaceKey = isDark ? "dark" : "light"
+  const surfaceKey = surface === "dark" ? "dark" : "light"
+  const layoutKey = selectedLayout === "flow" ? "flow" : "footer"
   const itemRowClass = typeaheadItemRowClasses[surfaceKey]
+  const createFieldId = `${inputId}-create`
 
   return (
     <div
       className={styleMerge(
-        tagSearchVariants({ className }),
-        selectedLayout === "flow" && "min-h-0"
+        tagSearchVariants({ surface: surfaceKey, layout: layoutKey }),
+        className
       )}
       data-cy="TagSearch"
     >
       <div
         className={styleMerge(
-          "flex flex-col",
-          selectedLayout === "flow" ? "mb-2" : "mb-6"
+          "relative z-20 flex min-h-0 flex-col",
+          selectedLayout === "flow" ? "gap-2" : "gap-1"
         )}
       >
         <SearchTypeahead<Tag>
@@ -110,7 +108,7 @@ const TagSearch: FC<TagSearchProps> = ({
           surface={surfaceKey}
           useShadedInput
           messages={{
-            loading: "Searching...",
+            loading: "Searching…",
             empty: "No tags found",
             formatError: err => `Search error: ${err}`,
           }}
@@ -119,6 +117,8 @@ const TagSearch: FC<TagSearchProps> = ({
               ? ({ clearList }: { clearList: () => void }) => (
                   <li className={itemRowClass}>
                     <CreateTagButton
+                      createInputId={createFieldId}
+                      surface={surfaceKey}
                       action={handleItemClick}
                       setOpenDropdown={open => {
                         if (!open) clearList()
@@ -135,7 +135,7 @@ const TagSearch: FC<TagSearchProps> = ({
         label={label}
         onRemoveTag={handleRemoveTag}
         layout={selectedLayout === "flow" ? "flow" : "footer"}
-        surface={isDark ? "dark" : "light"}
+        surface={surfaceKey}
       />
     </div>
   )

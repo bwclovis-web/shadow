@@ -2,19 +2,30 @@ import { useState } from "react"
 
 import { Button } from "@/components/Atoms/Button/Button"
 import { useCSRF } from "@/hooks/useCSRF"
+import { styleMerge } from "@/utils/styleUtils"
 
 type CreatedTag = { id: string; name?: string }
 
 type CreateTagButtonProps = {
   action: (res: CreatedTag) => void
   setOpenDropdown: (open: boolean) => void
+  /** Must be unique vs the main tag search input (e.g. `${inputId}-create`). */
+  createInputId: string
+  surface?: "light" | "dark"
 }
 
-const CreateTagButton = ({ action, setOpenDropdown }: CreateTagButtonProps) => {
+const CreateTagButton = ({
+  action,
+  setOpenDropdown,
+  createInputId,
+  surface = "light",
+}: CreateTagButtonProps) => {
   const [tagValue, setTagValue] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { addToHeaders, getTokenWithFallback } = useCSRF()
+
+  const isDark = surface === "dark"
 
   const handleCreateTag = async () => {
     const trimmed = tagValue.trim()
@@ -40,7 +51,8 @@ const CreateTagButton = ({ action, setOpenDropdown }: CreateTagButtonProps) => {
 
       if (!response.ok) {
         const body = await response.json().catch(() => ({}))
-        const message = body?.error ?? body?.message ?? `Failed to create tag (${response.status})`
+        const message =
+          body?.error ?? body?.message ?? `Failed to create tag (${response.status})`
         setError(message)
         return
       }
@@ -63,29 +75,58 @@ const CreateTagButton = ({ action, setOpenDropdown }: CreateTagButtonProps) => {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor="tag-search">Create new tag</label>
+    <div
+      className={styleMerge(
+        "flex flex-col gap-3 rounded-lg border p-3",
+        isDark
+          ? "border-stone-600/80 bg-stone-900/50"
+          : "border-stone-200/90 bg-white/60"
+      )}
+    >
+      <label
+        htmlFor={createInputId}
+        className={styleMerge(
+          "text-sm font-semibold tracking-wide",
+          isDark ? "text-noir-gold-100" : "text-stone-700"
+        )}
+      >
+        Create new tag
+      </label>
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+        <p
+          className={styleMerge(
+            "text-sm",
+            isDark ? "text-red-400" : "text-red-600"
+          )}
+          role="alert"
+        >
           {error}
         </p>
       )}
       <input
+        id={createInputId}
         type="text"
+        name="create-tag"
         autoComplete="off"
-        id="tag-search"
         value={tagValue}
         onChange={evt => setTagValue(evt.target.value)}
-        className="w-full rounded-sm border border-gray-500 px-2 py-1 text-lg mt-1 transition-all focus:bg-white/20 focus:outline-none focus:ring-2 focus:ring-noir-gold focus:border-transparent focus:ring-offset-2 dark:bg-noir-gray dark:text-white dark:focus:bg-noir-gray/20 dark:focus:ring-offset-noir-gray"
+        className={styleMerge(
+          "w-full rounded-md border px-3 py-2 text-sm transition-colors",
+          "focus:border-transparent focus:outline-none focus:ring-2 focus:ring-noir-gold/80 focus:ring-offset-0",
+          isDark
+            ? "border-stone-600 bg-stone-950/80 text-noir-gold-100 placeholder:text-stone-500"
+            : "border-stone-300 bg-white text-stone-900 placeholder:text-stone-400"
+        )}
+        placeholder="Type a name…"
       />
       <Button
-        className="block w-full h-full max-w-max mt-2"
+        className="w-full sm:w-auto sm:self-start"
         type="button"
         size="md"
         disabled={isSubmitting}
         onClick={handleCreateTag}
       >
-        {isSubmitting ? "Creating…" : "Create Tag"}
+        {isSubmitting ? "Creating…" : "Create tag"}
       </Button>
     </div>
   )

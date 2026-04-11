@@ -15,11 +15,11 @@ interface TagListProps {
   surface?: TagListSurface
 }
 
-const listItemClassesLight =
-  "flex items-center gap-1 p-2 hover:bg-noir-gray hover:text-noir-light cursor-pointer last-of-type:rounded-b-md whitespace-nowrap"
+const chipLight =
+  "inline-flex max-w-full items-center gap-1.5 rounded-full border border-noir-gold/20 bg-noir-gold/[0.06] px-3 py-1 text-sm font-medium text-stone-800 shadow-sm"
 
-const listItemClassesDark =
-  "flex items-center gap-1 rounded border border-stone-500 bg-stone-900/60 px-2 py-1 text-sm text-noir-gold-100 whitespace-nowrap"
+const chipDark =
+  "inline-flex max-w-full items-center gap-1.5 rounded-full border border-noir-gold/30 bg-stone-900/70 px-3 py-1 text-sm font-medium text-noir-gold-100"
 
 export const TagList = ({
   selectedTags,
@@ -38,52 +38,70 @@ export const TagList = ({
       : isFlow
         ? "Selected"
         : "Selected tags"
-  const listItemClasses = isDark ? listItemClassesDark : listItemClassesLight
+
+  const chipClass = isDark ? chipDark : chipLight
   const removeBtnClass = isDark
-    ? "ml-1 p-1 text-red-400 hover:text-red-300 hover:bg-stone-700 rounded-full"
-    : "ml-1 p-1 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-full"
+    ? "shrink-0 rounded-full p-0.5 text-red-400 transition-colors hover:bg-stone-800 hover:text-red-300"
+    : "shrink-0 rounded-full p-0.5 text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
+
+  const headingClass = styleMerge(
+    isFlow
+      ? styleMerge(
+          "text-xs font-semibold uppercase tracking-wider",
+          isDark ? "text-noir-gold-100/90" : "text-stone-600"
+        )
+      : "block-label"
+  )
 
   return (
     <div
       className={
         isFlow
           ? "flex w-full flex-col gap-2"
-          : "absolute bottom-0 flex h-20 w-full flex-col gap-2"
+          : styleMerge(
+              "absolute bottom-0 left-0 right-0 z-10 flex max-h-24 flex-col gap-1.5 border-t pt-2",
+              isDark ? "border-stone-600/60" : "border-noir-gold"
+            )
       }
     >
-      <span
-        className={styleMerge(
-          isFlow ? "text-sm font-medium text-noir-gold-100" : "block-label"
-        )}
-        aria-hidden
-      >
-        {heading}
-      </span>
+      <p className={headingClass}>{heading}</p>
       <ul
         className={
           isFlow
             ? styleMerge(
-                "flex min-h-10 w-full flex-wrap gap-2 rounded-md border p-2",
+                "flex min-h-10 w-full flex-wrap gap-2 rounded-lg border p-3",
                 isDark
-                  ? "border-stone-600 bg-stone-800/80"
-                  : "border-stone-200 bg-white"
+                  ? "border-stone-600 bg-stone-900/40 shadow-inner"
+                : "border-noir-goldbg-white/80 shadow-sm"
               )
             : styleMerge(
-                "flex h-full w-full overflow-x-auto rounded-b-md",
-                isDark ? "bg-stone-800/90" : "bg-white"
+                "flex h-full w-full gap-2 overflow-x-auto overflow-y-hidden rounded-md px-1 py-1",
+                isDark ? "bg-stone-900/30" : "bg-stone-50/80"
               )
         }
         role="list"
+        aria-label={heading}
       >
-        {selectedTags.map((item) => (
-          <li key={item.id} className={listItemClasses}>
-            <span>{item.name}</span>
+        {selectedTags.length === 0 && isFlow && (
+          <li
+            className={styleMerge(
+              "w-full py-2 text-center text-sm italic",
+              isDark ? "text-stone-500" : "text-stone-400"
+            )}
+          >
+            No tags selected yet
+          </li>
+        )}
+        {selectedTags.map(item => (
+          <li key={item.id} className={chipClass}>
+            <span className="min-w-0 truncate">{item.name}</span>
             {onRemoveTag && (
               <Button
                 type="button"
                 className={removeBtnClass}
                 onClick={() => onRemoveTag(item.id)}
                 title={`Remove ${item.name}`}
+                aria-label={`Remove ${item.name}`}
               >
                 ×
               </Button>

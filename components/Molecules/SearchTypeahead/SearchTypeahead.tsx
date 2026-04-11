@@ -359,7 +359,7 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
             >
               <button
                 type="button"
-                className="block min-w-full text-left capitalize"
+                className="block min-w-full text-left capitalize p-2 hover:bg-noir-dark hover:text-noir-light cursor-pointer"
                 onMouseDown={e => e.preventDefault()}
                 onClick={() => handleSelect(item)}
               >
