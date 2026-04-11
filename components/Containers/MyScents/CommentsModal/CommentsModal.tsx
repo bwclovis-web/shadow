@@ -8,7 +8,7 @@ import { useSessionStore } from "@/hooks/sessionStore"
 import type { CommentsModalProps } from "@/types/comments"
 import { sanitizeString } from "@/utils/validation"
 
-const CommentsModal = ({ perfume, onCommentAdded, addComment }: CommentsModalProps) => {
+const CommentsModal = ({ perfume: _perfume, onCommentAdded, addComment }: CommentsModalProps) => {
   const t = useTranslations("myScents.comments")
   const { closeModal: closeModalStore } = useSessionStore()
   const [isPublic, setIsPublic] = useState(true)

@@ -1,11 +1,6 @@
-import { Prisma, type PrismaClient } from "@prisma/client"
+import { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/db"
 import type { AlertType, UserAlertPreferences } from "@/types/database"
-
-type PrismaTx = Omit<
-  PrismaClient,
-  "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
->
 
 const ALERT_DEDUPE_WINDOW_MS = 24 * 60 * 60 * 1000
 

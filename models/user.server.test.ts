@@ -31,7 +31,7 @@ vi.mock("@/utils/profile-slug.server", () => ({
   allocateUniqueProfileSlug: vi.fn().mockResolvedValue("noirshadow-7"),
 }))
 
-import { createUser, FreeSignupLimitReachedError } from "./user.server"
+import { createUser } from "./user.server"
 import { allocateUniqueProfileSlug } from "@/utils/profile-slug.server"
 import { generateUniqueUsername } from "@/utils/username-generator.server"
 import { canSignupForFree } from "@/utils/server/user-limit.server"

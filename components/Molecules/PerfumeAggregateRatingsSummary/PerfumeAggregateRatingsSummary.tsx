@@ -7,14 +7,6 @@ import { styleMerge } from "@/utils/styleUtils"
 
 import type { RatingData } from "@/hooks/useRatingSystem"
 
-const CATEGORY_KEYS: (keyof RatingData)[] = [
-  "longevity",
-  "sillage",
-  "gender",
-  "priceValue",
-  "overall",
-]
-
 export type PerfumeAggregateRatingsSummaryProps = {
   averageRatings: CompareAverageRatingsDto | null
   className?: string

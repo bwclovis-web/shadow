@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import type { ZodError, ZodSchema } from "zod"
+import type { ZodSchema } from "zod"
 import { z } from "zod"
 
 // Validation hook types
@@ -332,7 +332,7 @@ debouncedValues, validateOnChange, isDirty, validate, debounceMs
   // Update values when initialValues change
   useEffect(() => {
     setValues(initialValues)
-  }, [initialValues])
+  }, [initialValues, setValues])
 
   return {
     values,

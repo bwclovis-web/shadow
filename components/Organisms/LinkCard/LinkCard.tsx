@@ -27,7 +27,7 @@ const LinkCard = ({
   type,
   children,
   selectedLetter,
-  sourcePage,
+  sourcePage: _sourcePage,
   imageAlt,
   imagePriority = false,
 }: LinkCardProps) => {

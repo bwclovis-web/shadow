@@ -1,4 +1,4 @@
-import React, { Component, type ErrorInfo, type ReactNode } from "react"
+import React, { Component, type ErrorInfo } from "react"
 
 import {
   AppError,

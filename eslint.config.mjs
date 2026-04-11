@@ -7,6 +7,16 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          args: "after-used",
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+        },
+      ],
       "@typescript-eslint/no-explicit-any": "off",
       // Valid patterns (isMounted, sync props→state, etc.) often trigger these:
       "react-hooks/set-state-in-effect": "off",

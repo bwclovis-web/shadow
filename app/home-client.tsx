@@ -15,7 +15,7 @@ interface HomeClientProps {
   counts: { users: number; houses: number; perfumes: number }
 }
 
-export default function HomeClient({ features, counts }: HomeClientProps) {
+export default function HomeClient({ features: _features, counts }: HomeClientProps) {
   const [searchType, setSearchType] = useState<"perfume-house" | "perfume">("perfume")
   const container = useRef<HTMLDivElement>(null)
   const tHome = useTranslations("home")

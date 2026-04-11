@@ -107,17 +107,13 @@ export async function verifyRefreshToken(token: string): Promise<{ userId: strin
 }
 
 // Create new session (simplified - no database storage)
-export async function createSession({
-  userId,
-  tokenVersion: tokenVersionOpt,
-  userAgent,
-  ipAddress,
-}: {
+export async function createSession(params: {
   userId: string
   tokenVersion?: number
   userAgent?: string
   ipAddress?: string
 }) {
+  const { userId, tokenVersion: tokenVersionOpt } = params
   const tokenVersion =
     tokenVersionOpt !== undefined ? tokenVersionOpt : (await getUserTokenVersion(userId)) ?? 0
 
@@ -159,6 +155,7 @@ export async function refreshAccessToken(refreshToken: string) {
 
 // Invalidate a single session by id. No-op: we do not store sessions server-side; only "invalidate all" per user is supported via invalidateAllUserSessions(userId).
 export async function invalidateSession(sessionId: string) {
+  void sessionId
   // No database operation; call invalidateAllUserSessions(userId) to revoke all tokens for a user.
 }
 
@@ -172,6 +169,7 @@ export async function invalidateAllUserSessions(userId: string) {
 
 // Get active session (simplified - no database lookup)
 export async function getActiveSession(sessionId: string) {
+  void sessionId
   // In a cookie-based system, we don't store sessions in the database
   // Return null to indicate no database session
   return null
@@ -186,6 +184,7 @@ export async function cleanupExpiredSessions() {
 
 // Get user's active sessions (simplified - no database lookup)
 export async function getUserActiveSessions(userId: string) {
+  void userId
   // In a cookie-based system, we don't track sessions in the database
   // Return empty array
   return []

@@ -15,7 +15,7 @@ export function usePrefetchNextPage(
   hasNextPage: boolean,
   fetchNextPage: (options?: { pageParam?: unknown }) => Promise<any>,
   enabled: boolean = true,
-  threshold: number = 0.8
+  _threshold: number = 0.8
 ) {
   const queryClient = useQueryClient()
   const prefetchedRef = useRef(false)

@@ -1,4 +1,4 @@
-import { getFormProps, getInputProps, useForm } from "@conform-to/react"
+import { getFormProps, useForm } from "@conform-to/react"
 import { getZodConstraint, parseWithZod } from "@conform-to/zod"
 import { useEffect, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
@@ -32,7 +32,7 @@ interface ContactTraderFormProps {
 
 const ContactTraderForm = ({
   recipientId,
-  recipientName,
+  recipientName: _recipientName,
   lastResult,
   onSubmit,
   onSuccess,
@@ -84,7 +84,7 @@ const ContactTraderForm = ({
     }
   }, [result, onSuccess, t])
 
-  const [form, { recipientId: recipientIdField, subject, message }] = useForm({
+  const [form, { recipientId: _recipientIdField, subject, message }] = useForm({
     id: itemInfo ? `contact-item-form-${itemInfo.userPerfumeId}` : "contact-trader-form",
     lastResult: result || null,
     constraint: getZodConstraint(ContactTraderSchema),

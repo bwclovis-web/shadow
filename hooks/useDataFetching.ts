@@ -381,9 +381,7 @@ url, fetchFn, fetchWithRetry, transform, onSuccess, onError, cacheKey
       }
       abortControllerRef.current?.abort()
     }
-  }, [
-enabled, ...deps, performFetch, debounceMs
-])
+  }, [enabled, ...deps, performFetch, debounceMs]) // eslint-disable-line react-hooks/exhaustive-deps -- caller spreads deps
 
   return {
     data,

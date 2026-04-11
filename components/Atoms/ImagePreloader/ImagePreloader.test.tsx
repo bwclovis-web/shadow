@@ -50,7 +50,7 @@ describe("ImagePreloader", () => {
     })
 
     // Mock requestIdleCallback and cancelIdleCallback (Node/test env may not define cancelIdleCallback)
-    mockRequestIdleCallback.mockImplementation((cb: () => void) => 1)
+    mockRequestIdleCallback.mockImplementation((_cb: () => void) => 1)
     Object.defineProperty(window, "requestIdleCallback", {
       writable: true,
       configurable: true,

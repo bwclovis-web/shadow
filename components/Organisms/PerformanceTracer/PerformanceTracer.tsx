@@ -270,7 +270,7 @@ const PerformanceTracer: React.FC<PerformanceTracerProps> = ({
     return () => {
       stopTracing()
     }
-  }, [enabled, autoStart])
+  }, [enabled, autoStart]) // eslint-disable-line react-hooks/exhaustive-deps -- start/stop tied to effect lifecycle
 
   // Expose methods globally for debugging
   useEffect(() => {

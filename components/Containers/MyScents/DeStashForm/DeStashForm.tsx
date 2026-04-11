@@ -38,25 +38,21 @@ const DeStashForm = ({
   maxAvailable,
 }: DeStashFormProps) => {
   const t = useTranslations("myScents.listItem")
+  const available = userPerfume?.available || "0"
+  const tradePriceVal = userPerfume?.tradePrice || ""
+  const tradePreferenceVal =
+    (userPerfume?.tradePreference as "cash" | "trade" | "both") || "cash"
+  const tradeOnlyVal = userPerfume?.tradeOnly || false
+
   const initialValues = useMemo(
-    () => {
-      return {
-        deStashAmount: isCreating ? "0" : (userPerfume?.available || "0"),
-        price: userPerfume?.tradePrice || "",
-        tradePreference:
-          (userPerfume?.tradePreference as "cash" | "trade" | "both") || "cash",
-        tradeOnly: userPerfume?.tradeOnly || false,
-        createNew: isCreating,
-      };
-    },
-    [
-      userPerfume?.id || "",
-      userPerfume?.available || "0",
-      userPerfume?.tradePrice || "",
-      userPerfume?.tradePreference || "cash",
-      userPerfume?.tradeOnly || false,
-      isCreating,
-    ]
+    () => ({
+      deStashAmount: isCreating ? "0" : available,
+      price: tradePriceVal,
+      tradePreference: tradePreferenceVal,
+      tradeOnly: tradeOnlyVal,
+      createNew: isCreating,
+    }),
+    [available, tradePriceVal, tradePreferenceVal, tradeOnlyVal, isCreating]
   )
 
   const validate = useCallback(

@@ -33,7 +33,6 @@ export function WinterSeasonIcon({ filled, className = "w-12 h-12" }: IconProps)
 
 export function SpringSeasonIcon({ filled, className = "w-12 h-12" }: IconProps) {
   const s = stroke(filled)
-  const f = fill(filled)
   return (
     <svg viewBox="0 0 40 40" className={className} aria-hidden fill="none" xmlns="http://www.w3.org/2000/svg">
       <g transform="translate(0, 3)">
@@ -79,7 +78,6 @@ export function SummerSeasonIcon({ filled, className = "w-12 h-12" }: IconProps)
 
 export function FallSeasonIcon({ filled, className = "w-12 h-12" }: IconProps) {
   const s = stroke(filled)
-  const f = fill(filled)
   return (
     <svg viewBox="0 0 40 40" className={className} aria-hidden fill="none" xmlns="http://www.w3.org/2000/svg">
       <path

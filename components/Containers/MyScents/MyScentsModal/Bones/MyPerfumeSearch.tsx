@@ -1,7 +1,5 @@
 "use client"
 
-import type { ReactNode } from "react"
-
-export default function MyPerfumeSearch(_props: { children?: ReactNode }) {
+export default function MyPerfumeSearch() {
   return null
 }

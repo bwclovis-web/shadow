@@ -10,7 +10,7 @@ import { FaUser } from "react-icons/fa6"
 
 import LanguageSwitcher from "@/components/Organisms/LanguageSwitcher/LanguageSwitcher"
 import { mainNavigation } from "@/data/navigation"
-import { ADMIN_PATH, SIGN_IN } from "@/constants/routes"
+import { SIGN_IN } from "@/constants/routes"
 import { getProfilePathForUser } from "@/utils/user"
 import { styleMerge } from "@/utils/styleUtils"
 
@@ -34,9 +34,6 @@ const navLinkBase =
   "text-noir-gold hover:text-noir-light font-semibold text-lg px-2 py-1 border border-transparent transition-colors duration-400"
 const navLinkActive =
   "text-noir-light bg-noir-black/30 rounded-full border-noir-light/90"
-const navLinkActiveAdmin =
-  "text-noir-light bg-noir-gold rounded-full border-noir-light/90"
-
 function GlobalNavigationContent({ user }: GlobalNavigationProps) {
   const t = useTranslations("navigation")
   const pathname = usePathname()

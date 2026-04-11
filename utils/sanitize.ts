@@ -21,9 +21,6 @@ export const REVIEW_HTML_ALLOWED_TAGS = [
   "h6",
 ] as const
 
-/** Tags that must never appear in review HTML (blocklist overrides allowlist). */
-const REVIEW_FORBID_TAGS = ["script", "iframe", "object", "embed", "form", "input", "button"]
-
 /**
  * Detect HTML that is explicitly dangerous and should be rejected (not just sanitized).
  * Use this for server-side validation so requests containing scripts/embeds fail fast.

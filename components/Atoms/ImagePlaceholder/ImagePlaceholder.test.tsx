@@ -78,7 +78,7 @@ describe("ImagePlaceholder", () => {
   describe("Icon variant", () => {
     it("should render icon variant with custom icon", () => {
       const customIcon = <span data-testid="custom-icon">📷</span>
-      const { container } = render(<ImagePlaceholder variant="icon" icon={customIcon} />)
+      render(<ImagePlaceholder variant="icon" icon={customIcon} />)
 
       expect(screen.getByTestId("custom-icon")).toBeInTheDocument()
       expect(screen.getByTestId("custom-icon")).toHaveTextContent("📷")
@@ -86,7 +86,7 @@ describe("ImagePlaceholder", () => {
 
     it("should render icon with proper styling", () => {
       const customIcon = <span data-testid="custom-icon">📷</span>
-      const { container } = render(<ImagePlaceholder variant="icon" icon={customIcon} />)
+      render(<ImagePlaceholder variant="icon" icon={customIcon} />)
 
       const iconContainer = screen.getByTestId("custom-icon").parentElement
       expect(iconContainer).toHaveClass(
@@ -262,7 +262,7 @@ describe("ImagePlaceholder", () => {
         </div>
       )
 
-      const { container } = render(<ImagePlaceholder variant="icon" icon={complexIcon} />)
+      render(<ImagePlaceholder variant="icon" icon={complexIcon} />)
 
       expect(screen.getByTestId("complex-icon")).toBeInTheDocument()
       expect(screen.getByTestId("complex-icon").querySelector("svg")).toBeInTheDocument()

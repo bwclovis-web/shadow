@@ -10,7 +10,7 @@ interface CriticalErrorProps {
 }
 
 const CriticalError: FC<CriticalErrorProps> = ({
-  error,
+  error: _error,
   errorId,
   onRetry,
   onReportError,

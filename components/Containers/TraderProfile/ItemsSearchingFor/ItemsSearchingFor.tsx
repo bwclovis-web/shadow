@@ -2,7 +2,6 @@ import Image from "next/image"
 
 import { normalizeRemoteImageSrc } from "@/utils/styleUtils"
 import { useTranslations } from "next-intl"
-import { BsHeartFill } from "react-icons/bs"
 
 interface WishlistItem {
   id: string

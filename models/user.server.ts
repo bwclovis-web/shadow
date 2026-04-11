@@ -17,7 +17,7 @@ import {
 import { allocateUniqueProfileSlug } from "@/utils/profile-slug.server"
 import { generateUniqueUsername } from "@/utils/username-generator.server"
 
-import { getUserByEmail, getUserByName } from "./user.query"
+import { getUserByEmail } from "./user.query"
 
 /** Thrown when free signup limit is reached during atomic create (race condition). */
 export class FreeSignupLimitReachedError extends Error {
@@ -363,51 +363,6 @@ export const getUserPerfumeById = async (userPerfumeId: string) => {
   },
 })
   return userPerfume
-}
-
-interface HandleExistingPerfumeParams {
-  existingPerfume: any
-  amount?: string
-  price?: string
-  placeOfPurchase?: string
-}
-
-// Helper function to handle existing perfume update
-const handleExistingPerfume = async ({
-  existingPerfume,
-  amount,
-  price,
-  placeOfPurchase,
-}: HandleExistingPerfumeParams) => {
-  // If the perfume exists and we need to update it
-  const updateData: any = {}
-  let shouldUpdate = false
-
-  if (amount && existingPerfume.amount !== amount) {
-    updateData.amount = amount
-    shouldUpdate = true
-  }
-
-  if (price && existingPerfume.price !== price) {
-    updateData.price = price
-    shouldUpdate = true
-  }
-
-  if (placeOfPurchase && existingPerfume.placeOfPurchase !== placeOfPurchase) {
-    updateData.placeOfPurchase = placeOfPurchase
-    shouldUpdate = true
-  }
-
-  if (shouldUpdate) {
-    const updatedPerfume = await prisma.userPerfume.update({
-      where: { id: existingPerfume.id },
-      data: updateData,
-      include: { perfume: true },
-    })
-    return { success: true, userPerfume: updatedPerfume, updated: true }
-  }
-
-  return { success: false, error: "Perfume already in your collection" }
 }
 
 interface AddUserPerfumeParams {

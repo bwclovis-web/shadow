@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
         if (amount && parseFloat(amount) > 0) {
           try {
             await processWishlistAvailabilityAlerts(perfumeId, user.id)
-          } catch (_) {}
+          } catch {}
         }
         break
       }
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
         if (amount && parseFloat(amount) > 0 && perfumeId) {
           try {
             await processWishlistAvailabilityAlerts(perfumeId, user.id)
-          } catch (_) {}
+          } catch {}
         }
         break
       }
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
         if (availableAmount && parseFloat(availableAmount) > 0) {
           try {
             await processWishlistAvailabilityAlerts(perfumeId, user.id)
-          } catch (_) {}
+          } catch {}
         }
         break
       }

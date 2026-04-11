@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
       if (isPublic) {
         try {
           await processDecantInterestAlerts(perfumeId, userId, true)
-        } catch (_) {}
+        } catch {}
       }
       return NextResponse.json(result)
     }
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       if (isPublic) {
         try {
           await processDecantInterestAlerts(perfumeId, userId, true)
-        } catch (_) {}
+        } catch {}
       }
       return NextResponse.json(result)
     }

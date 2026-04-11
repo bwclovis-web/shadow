@@ -22,7 +22,7 @@ interface AlertBellProps {
 
 export const AlertBell = ({
   unreadCount,
-  userId,
+  userId: _userId,
   alerts,
   onMarkAsRead,
   onDismissAlert,

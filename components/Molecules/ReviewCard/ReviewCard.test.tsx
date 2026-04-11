@@ -1,5 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
+import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import ReviewCard from "./ReviewCard"
@@ -7,7 +6,7 @@ import { useSessionStore } from "@/hooks/sessionStore"
 
 // Mock date-fns
 vi.mock("date-fns", () => ({
-  formatDistanceToNow: vi.fn((date: Date, options?: { addSuffix?: boolean }) => {
+  formatDistanceToNow: vi.fn((date: Date, _options?: { addSuffix?: boolean }) => {
     // Check if date is invalid
     if (isNaN(date.getTime())) {
       throw new Error("Invalid date")
@@ -226,7 +225,6 @@ describe("ReviewCard", () => {
     })
 
     it("calls onEdit with review id when edit is clicked", async () => {
-      const user = userEvent.setup()
       const onEdit = vi.fn()
       render(<ReviewCard review={mockReview} currentUserId="user-1" onEdit={onEdit} />)
 
@@ -360,7 +358,6 @@ describe("ReviewCard", () => {
     })
 
     it("calls onModerate with true when approve is clicked", async () => {
-      const user = userEvent.setup()
       const onModerate = vi.fn()
       render(<ReviewCard
           review={mockReview}
@@ -378,7 +375,6 @@ describe("ReviewCard", () => {
     })
 
     it("calls onModerate with false when reject is clicked", async () => {
-      const user = userEvent.setup()
       const onModerate = vi.fn()
       render(<ReviewCard
           review={mockReview}
@@ -515,7 +511,7 @@ describe("ReviewCard", () => {
   describe("Style Classes", () => {
     it("applies correct text colors to status indicators", () => {
       const approvedReview = { ...mockReview, isApproved: true }
-      const { container } = render(<ReviewCard review={approvedReview} showModerationActions={true} />)
+      render(<ReviewCard review={approvedReview} showModerationActions={true} />)
 
       const approvedStatus = screen.getByText(/✓ Approved/)
       expect(approvedStatus).toHaveClass("text-green-600")

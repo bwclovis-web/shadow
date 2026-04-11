@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 
@@ -57,7 +57,10 @@ const MySingleScentClient = ({
   const { modalOpen, modalId, closeModal } = useSessionStore()
   const { addToFormData } = useCSRF()
 
-  const safeAllUserPerfumes = initialAllUserPerfumes ?? []
+  const safeAllUserPerfumes = useMemo(
+    () => initialAllUserPerfumes ?? [],
+    [initialAllUserPerfumes]
+  )
   const thisPerfume = ((): UserPerfumeI => {
     const foundById = safeAllUserPerfumes.find(
       (up) => (up as { id: string }).id === initialUserPerfume.id
@@ -83,15 +86,12 @@ const MySingleScentClient = ({
   const [fetchedComments, setFetchedComments] = useState<Comment[]>([])
   const [commentsRefetchedForId, setCommentsRefetchedForId] = useState<string | null>(null)
   const [isRemoving, setIsRemoving] = useState(false)
-  const [commentsLoading, setCommentsLoading] = useState(false)
-
   const thisPerfumeId = thisPerfume.id
   const initialId = initialUserPerfume.id
   const perfumeId = (thisPerfume.perfume as { id: string }).id
 
   useEffect(() => {
     if (thisPerfumeId !== initialId && thisPerfumeId) {
-      setCommentsLoading(true)
       const formData = new FormData()
       formData.append("action", "get-comments")
       formData.append("userPerfumeId", thisPerfumeId)
@@ -111,7 +111,6 @@ const MySingleScentClient = ({
           }
         })
         .catch(() => setFetchedComments([]))
-        .finally(() => setCommentsLoading(false))
     } else {
       setFetchedComments([])
       setCommentsRefetchedForId(null)

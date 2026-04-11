@@ -11,7 +11,7 @@ const PerfumeHouseHero = ({
   name,
   image,
   transitionKey,
-  type
+  type: _type,
 }: PerfumeHouseHeroProps) => (
   <HeroHeader
     title={name}

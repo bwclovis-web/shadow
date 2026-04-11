@@ -33,10 +33,6 @@ const ContactTraderModal = ({
 }: ContactTraderModalProps) => {
   const t = useTranslations("contactTrader")
 
-  const title = itemInfo
-    ? t("itemTitle")
-    : t("title")
-
   const heading = itemInfo
     ? t("itemTitle")
     : t("heading")

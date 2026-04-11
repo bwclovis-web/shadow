@@ -3,7 +3,7 @@
  * Integrates with the validation system and provides form state management
  */
 
-import React, { useCallback, useEffect } from "react"
+import React, { useCallback } from "react"
 import type { ZodSchema } from "zod"
 
 import { useValidation } from "~/hooks/useValidation"

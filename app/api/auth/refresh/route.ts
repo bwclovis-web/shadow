@@ -11,13 +11,6 @@ import { getTokensFromCookieHeader } from "@/utils/session-from-request.server"
 const ACCESS_TOKEN_MAX_AGE = 60 * 60 // 1 hour
 const REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
 
-const cookieOptions = {
-  httpOnly: true,
-  path: "/",
-  sameSite: "lax" as const,
-  secure: process.env.NODE_ENV === "production",
-}
-
 /**
  * POST /api/auth/refresh
  * Reads refresh token from cookie, issues new access + refresh tokens, sets new cookies.

@@ -511,13 +511,6 @@ describe("useCSRF", () => {
         expect(result.current.csrfToken).toBe("token")
       })
 
-      const initialFunctions = {
-        getToken: result.current.getToken,
-        addToFormData: result.current.addToFormData,
-        addToHeaders: result.current.addToHeaders,
-        submitForm: result.current.submitForm,
-      }
-
       rerender()
 
       // Functions should be recreated but still work

@@ -131,7 +131,6 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
             isOpen={showConfirmModal}
             deleteType={deleteType}
             isSubmitting={isSubmitting}
-            onConfirm={() => {}}
             onCancel={cancelDelete}
           />
 

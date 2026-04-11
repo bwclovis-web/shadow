@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 export interface UseDebounceOptions {
   delay?: number
@@ -29,13 +29,13 @@ export const useDebounce = <T>(
   const [isDebouncing, setIsDebouncing] = useState(false)
   const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null)
 
-  const cancel = () => {
+  const cancel = useCallback(() => {
     if (timeoutId) {
       clearTimeout(timeoutId)
       setTimeoutId(null)
       setIsDebouncing(false)
     }
-  }
+  }, [timeoutId])
 
   useEffect(() => {
     // Clear existing timeout

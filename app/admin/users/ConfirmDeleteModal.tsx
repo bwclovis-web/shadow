@@ -9,13 +9,11 @@ const ConfirmDeleteModal = ({
   isOpen,
   deleteType,
   isSubmitting,
-  onConfirm,
   onCancel,
 }: {
   isOpen: boolean
   deleteType: "delete" | "soft-delete"
   isSubmitting: boolean
-  onConfirm: () => void
   onCancel: () => void
 }) => {
   const [mounted, setMounted] = useState(false)

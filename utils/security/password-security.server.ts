@@ -137,7 +137,7 @@ export async function verifyPassword(
   try {
     // Check if it's the new format (salt:hash) or old format (just hash)
     if (storedPassword.includes(":")) {
-      const [salt, hash] = storedPassword.split(":")
+      const [, hash] = storedPassword.split(":")
       return await bcrypt.compare(password, hash)
     } else {
       // Legacy format - direct bcrypt comparison

@@ -17,7 +17,7 @@ const languageOptions = [
 const LanguageSwitcher = () => {
   const locale = useLocale()
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [_isPending, startTransition] = useTransition()
 
   const handleLanguageChange = (evt: ChangeEvent<HTMLSelectElement>) => {
     const newLocale = evt.target.value

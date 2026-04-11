@@ -46,7 +46,7 @@ export interface UseQueryErrorOptions {
   variant?: "inline" | "card" | "banner"
 }
 
-export interface UseQueryErrorReturn<TData, TError> {
+export interface UseQueryErrorReturn<TError> {
 
   /**
    * Whether the query has an error
@@ -109,7 +109,7 @@ export function useQueryError<TData, TError>(
     "error" | "isError" | "refetch" | "isFetching"
   >,
   options: UseQueryErrorOptions = {}
-): UseQueryErrorReturn<TData, TError> {
+): UseQueryErrorReturn<TError> {
   const {
     title,
     showDetails = false,

@@ -50,7 +50,6 @@ export function validateData<T>(
   const opts = { ...defaultOptions, ...options }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = schema.parse(data, { abortEarly: opts.abortEarly } as any)
 
     return {
@@ -95,7 +94,7 @@ export async function validateJsonData<T>(
   try {
     const data = await request.json()
     return validateData(schema, data, options)
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: "Invalid JSON data",

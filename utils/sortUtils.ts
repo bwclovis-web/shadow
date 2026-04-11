@@ -1,5 +1,3 @@
-/* eslint-disable max-len */
-
 export type SortOption =
   | "name-asc"
   | "name-desc"

@@ -24,7 +24,7 @@ interface MessagesClientProps {
 }
 
 export default function MessagesClient({
-  userId,
+  userId: _userId,
   initialConversations: conversations,
 }: MessagesClientProps) {
   const t = useTranslations("messagesPage")

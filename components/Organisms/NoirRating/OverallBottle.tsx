@@ -2,7 +2,7 @@ import React from "react"
 
 const OverallBottle = ({
   filled,
-  rating,
+  rating: _rating,
   liquidRef,
 }: {
   filled: boolean

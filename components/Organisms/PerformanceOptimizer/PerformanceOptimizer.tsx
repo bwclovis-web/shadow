@@ -185,6 +185,8 @@ const PerformanceOptimizer: React.FC<PerformanceOptimizerProps> = ({
     },
   ]
 
+  // defaultRules is recreated each render; we only want to react to customRules from props.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const rules = useMemo(() => [...defaultRules, ...customRules], [customRules])
 
   const runOptimization = useCallback(
@@ -258,7 +260,7 @@ const PerformanceOptimizer: React.FC<PerformanceOptimizerProps> = ({
       const timer = setTimeout(runAllOptimizations, 2000) // Wait 2 seconds after page load
       return () => clearTimeout(timer)
     }
-  }, [enabled, autoOptimize])
+  }, [enabled, autoOptimize]) // eslint-disable-line react-hooks/exhaustive-deps -- runAllOptimizations changes with rules
 
   const getImpactColor = (impact: string) => {
     switch (impact) {
