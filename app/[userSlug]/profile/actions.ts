@@ -57,6 +57,7 @@ export const updateProfileAction = async (
     email,
     traderAbout,
   })
-  const { password: _pw, ...safeUser } = updated
+  const { password, ...safeUser } = updated
+  void password
   return { success: true, user: safeUser as SessionUser }
 }
