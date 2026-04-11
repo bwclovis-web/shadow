@@ -43,7 +43,16 @@ export interface RecommendationPerfume {
  * Recommendation service interface for similar and personalized perfumes.
  * Implementations: rules-based (note overlap), or future ML-based.
  */
+export type GetSimilarPerfumesOptions = {
+  /** When set, excludes perfumes in this user’s collection or destash. */
+  userId?: string
+}
+
 export interface RecommendationService {
-  getSimilarPerfumes(perfumeId: string, limit: number): Promise<RecommendationPerfume[]>
+  getSimilarPerfumes(
+    perfumeId: string,
+    limit: number,
+    options?: GetSimilarPerfumesOptions
+  ): Promise<RecommendationPerfume[]>
   getPersonalizedForUser(userId: string, limit: number): Promise<RecommendationPerfume[]>
 }

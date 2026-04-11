@@ -57,7 +57,9 @@ export default async function PerfumeDetailPage({
       REVIEWS_PAGE_SIZE
     ),
     rulesRecommendationService
-      .getSimilarPerfumes(perfume.id, SIMILAR_PERFUMES_LIMIT)
+      .getSimilarPerfumes(perfume.id, SIMILAR_PERFUMES_LIMIT, {
+        userId: session?.userId,
+      })
       .catch((err) => {
         console.warn(
           "[perfume] getSimilarPerfumes failed, showing none:",

@@ -345,6 +345,29 @@ export const getUserPerfumes = async (userId: string) => {
   return userPerfumes
 }
 
+/**
+ * Perfume IDs the user tracks in My Scents (non–destash-only row) or active destash (available ml > 0).
+ * Used to omit those from recommendations.
+ */
+export const getUserCollectionOrDestashPerfumeIds = async (
+  userId: string
+): Promise<Set<string>> => {
+  const rows = await prisma.userPerfume.findMany({
+    where: { userId },
+    select: { perfumeId: true, amount: true, available: true },
+  })
+  const out = new Set<string>()
+  for (const r of rows) {
+    const inCollection = r.amount !== "0"
+    const availNum = parseFloat(
+      (r.available ?? "").replace(/[^0-9.]/g, "") || "0"
+    )
+    const inDestash = availNum > 0
+    if (inCollection || inDestash) out.add(r.perfumeId)
+  }
+  return out
+}
+
 // Helper function to find a user perfume
 const findUserPerfume = async (userId: string, perfumeId: string) => prisma.userPerfume.findFirst({
     where: { userId, perfumeId },

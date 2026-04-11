@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/db"
 import { fetchPerfumeIdsWithListingPriceInRange } from "@/models/perfume.server"
+import { getUserCollectionOrDestashPerfumeIds } from "@/models/user.server"
 import {
   getNoteIdsForPerfume,
   getOrCreateScentProfile,
@@ -18,6 +19,7 @@ import type {
   RecommendationPerfume,
   RecommendationReason,
   RecommendationService,
+  GetSimilarPerfumesOptions,
 } from "./types"
 
 /** Weight for season vote signal relative to note score (personalized). */
@@ -138,7 +140,8 @@ function compareSimilarRows(a: SimilarRankRow, b: SimilarRankRow): number {
  */
 async function getSimilarPerfumes(
   perfumeId: string,
-  limit: number
+  limit: number,
+  options?: GetSimilarPerfumesOptions
 ): Promise<RecommendationPerfume[]> {
   const noteIdsArr = await getNoteIdsForPerfume(perfumeId)
   if (noteIdsArr.length === 0) return []
@@ -219,7 +222,17 @@ async function getSimilarPerfumes(
   }
 
   ranked.sort(compareSimilarRows)
-  const picked = pickWithHouseCap(ranked, limit, SIMILAR_MAX_PER_HOUSE)
+
+  const excludeSimilar =
+    options?.userId != null && options.userId !== ""
+      ? await getUserCollectionOrDestashPerfumeIds(options.userId)
+      : new Set<string>()
+  const rankedForPick =
+    excludeSimilar.size > 0
+      ? ranked.filter((r) => !excludeSimilar.has(r.id))
+      : ranked
+
+  const picked = pickWithHouseCap(rankedForPick, limit, SIMILAR_MAX_PER_HOUSE)
   const sortedIds = picked.map(p => p.id)
 
   const noteNameRows = await prisma.perfumeNotes.findMany({
@@ -287,6 +300,8 @@ async function getPersonalizedForUser(
   userId: string,
   limit: number
 ): Promise<RecommendationPerfume[]> {
+  const excludeOwned = await getUserCollectionOrDestashPerfumeIds(userId)
+
   const profile = await getOrCreateScentProfile(userId)
   const weights = profile.noteWeights as Record<string, number>
   const avoidIds = (profile.avoidNoteIds as string[]) ?? []
@@ -296,7 +311,7 @@ async function getPersonalizedForUser(
     .map(([id]) => id)
 
   if (preferredNoteIds.length === 0) {
-    return getPopularPerfumesFallback(limit)
+    return getPopularPerfumesFallback(limit, excludeOwned)
   }
 
   const relations = await prisma.perfumeNoteRelation.findMany({
@@ -326,7 +341,9 @@ async function getPersonalizedForUser(
     candidateIds = candidateIds.filter(id => !avoidPerfumeIds.has(id))
   }
 
-  if (candidateIds.length === 0) return getPopularPerfumesFallback(limit)
+  candidateIds = candidateIds.filter((id) => !excludeOwned.has(id))
+
+  if (candidateIds.length === 0) return getPopularPerfumesFallback(limit, excludeOwned)
 
   const widenTake = Math.max(limit * WIDENED_POOL_FACTOR, WIDENED_POOL_MIN)
   const widenedIds = [...candidateIds]
@@ -429,7 +446,8 @@ async function getPersonalizedForUser(
   const picked = pickWithHouseCap(ranked, limit, PROFILE_MAX_PER_HOUSE)
   const sortedIds = picked.map(p => p.id)
 
-  if (sortedIds.length === 0) return getPopularPerfumesFallback(limit)
+  if (sortedIds.length === 0)
+    return getPopularPerfumesFallback(limit, excludeOwned)
 
   const noteNameRows = await prisma.perfumeNotes.findMany({
     where: { id: { in: preferredNoteIds } },
@@ -468,24 +486,36 @@ async function getPersonalizedForUser(
  * Fallback when user has no profile data: return perfumes by most ratings.
  */
 async function getPopularPerfumesFallback(
-  limit: number
+  limit: number,
+  excludeIds: ReadonlySet<string> = new Set()
 ): Promise<RecommendationPerfume[]> {
   const rated = await prisma.userPerfumeRating.groupBy({
     by: ["perfumeId"],
     _count: { perfumeId: true },
   })
-  const perfumeIds = rated
-    .sort((a, b) => (b._count.perfumeId ?? 0) - (a._count.perfumeId ?? 0))
-    .slice(0, limit)
-    .map(r => r.perfumeId)
+  const sortedRated = [...rated].sort(
+    (a, b) => (b._count.perfumeId ?? 0) - (a._count.perfumeId ?? 0)
+  )
+  const perfumeIds: string[] = []
+  for (const r of sortedRated) {
+    if (perfumeIds.length >= limit) break
+    if (excludeIds.has(r.perfumeId)) continue
+    perfumeIds.push(r.perfumeId)
+  }
 
   if (perfumeIds.length === 0) {
+    const notIn = [...excludeIds]
+    const take = Math.max(limit * 4, limit + notIn.length)
     const recent = (await prisma.perfume.findMany({
-      take: limit,
+      where: notIn.length > 0 ? { id: { notIn } } : undefined,
+      take,
       orderBy: { createdAt: "desc" },
       select: PERFUME_SELECT,
     })) as PerfumeRow[]
-    return recent.map(
+    const filtered = recent
+      .filter((p) => !excludeIds.has(p.id))
+      .slice(0, limit)
+    return filtered.map(
       (p): RecommendationPerfume => ({
         ...toRecommendationPerfume(p),
         reason: { kind: "recent" },
