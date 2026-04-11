@@ -24,6 +24,12 @@ interface TagSearchProps extends Omit<HTMLProps<HTMLDivElement>, "onChange" | "d
   searchInputLabel?: string
   selectedLayout?: TagSearchSelectedLayout
   surface?: TagSearchSurface
+  /**
+   * Suggestion list layering. Default `portal` keeps the list above adjacent grid
+   * columns and stacked cards (inline would sit under the next column’s cards).
+   * Pass `inline` only in a single-column layout where nothing can overlap the panel.
+   */
+  typeaheadPlacement?: "inline" | "portal"
 }
 
 const TagSearch = ({
@@ -37,7 +43,9 @@ const TagSearch = ({
   searchInputLabel,
   selectedLayout = "footer",
   surface = "light",
+  typeaheadPlacement,
 }: TagSearchProps) => {
+  const resolvedTypeaheadPlacement = typeaheadPlacement ?? "portal"
   const initialTags = Array.isArray(data) ? data : []
   const [selectedTags, setSelectedTags] = useState<Tag[]>(initialTags)
 
@@ -104,7 +112,7 @@ const TagSearch = ({
             handleItemClick(item)
           }}
           clearInputOnSelect
-          placement="inline"
+          placement={resolvedTypeaheadPlacement}
           surface={surfaceKey}
           useShadedInput
           messages={{

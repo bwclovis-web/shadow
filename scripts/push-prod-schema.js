@@ -1,9 +1,13 @@
 /**
  * Production schema sync (no row/data migration).
  *
- * This does NOT run `prisma db push`. It executes ONE additive SQL file:
+ * This does NOT run `prisma migrate` or `prisma db push`. It executes ONE additive SQL file:
  *   prisma/migrations/APPLY_TO_REMOTE_DB.sql
  * via `prisma db execute` against REMOTE_DATABASE_URL.
+ *
+ * Regenerating the client (`npx prisma generate`) is optional here: verification uses raw SQL.
+ * Run `prisma generate` separately when you need an updated @prisma/client after schema changes
+ * (avoid running it while `next dev` / Studio hold the query engine on Windows — EPERM on rename).
  *
  * When you add a new Prisma model locally, you must append the matching DDL
  * (table, indexes, uniques, FKs) to APPLY_TO_REMOTE_DB.sql or production will
@@ -101,7 +105,16 @@ async function verifySchema() {
         EXISTS (
           SELECT 1 FROM information_schema.tables
           WHERE table_schema = 'public' AND table_name = 'UserPerfumeSeasonVote'
-        ) AS "hasUserPerfumeSeasonVote"
+        ) AS "hasUserPerfumeSeasonVote",
+        EXISTS (
+          SELECT 1 FROM information_schema.tables
+          WHERE table_schema = 'public' AND table_name = 'DataQualityDailySnapshot'
+        ) AS "hasDataQualityDailySnapshot",
+        EXISTS (
+          SELECT 1 FROM pg_enum e
+          JOIN pg_type t ON e.enumtypid = t.oid
+          WHERE t.typname = 'PerfumeType' AND e.enumlabel = 'hairGloss'
+        ) AS "hasPerfumeTypeHairGloss"
     `)
 
     const result = Array.isArray(checks) ? checks[0] : checks

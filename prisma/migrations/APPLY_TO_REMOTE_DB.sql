@@ -79,6 +79,18 @@ DO $$ BEGIN
     END IF;
 END $$;
 
+-- PerfumeType: hairGloss (matches prisma/schema.prisma)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_enum e
+        JOIN pg_type t ON e.enumtypid = t.oid
+        WHERE t.typname = 'PerfumeType' AND e.enumlabel = 'hairGloss'
+    ) THEN
+        ALTER TYPE "PerfumeType" ADD VALUE 'hairGloss';
+        RAISE NOTICE 'Added hairGloss to PerfumeType enum';
+    END IF;
+END $$;
+
 -- ============================================================================
 -- 2. CREATE MISSING TABLES
 -- ============================================================================
@@ -226,6 +238,19 @@ CREATE TABLE IF NOT EXISTS "UserPerfumeSeasonVote" (
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "UserPerfumeSeasonVote_pkey" PRIMARY KEY ("id")
+);
+
+-- DataQualityDailySnapshot (cron / data quality dashboard trends; matches Prisma model)
+CREATE TABLE IF NOT EXISTS "DataQualityDailySnapshot" (
+    "id" TEXT NOT NULL,
+    "snapshotDate" DATE NOT NULL,
+    "totalMissing" INTEGER NOT NULL,
+    "totalDuplicates" INTEGER NOT NULL,
+    "totalMissingHouseInfo" INTEGER NOT NULL,
+    "totalHousesNoPerfumes" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "DataQualityDailySnapshot_pkey" PRIMARY KEY ("id")
 );
 
 -- ============================================================================
@@ -496,6 +521,13 @@ END $$;
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'User_profileSlug_key') THEN
         CREATE UNIQUE INDEX "User_profileSlug_key" ON "User"("profileSlug");
+    END IF;
+END $$;
+
+-- DataQualityDailySnapshot.snapshotDate @unique (matches Prisma)
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'DataQualityDailySnapshot_snapshotDate_key') THEN
+        CREATE UNIQUE INDEX "DataQualityDailySnapshot_snapshotDate_key" ON "DataQualityDailySnapshot"("snapshotDate");
     END IF;
 END $$;
 
