@@ -1049,7 +1049,14 @@
       "title": "Annunci per {name}",
       "traderCount": "{count, plural, one {# venditore} other {# venditori}}",
       "summary": "{count, plural, one {# venditore ha questo disponibile} other {# venditori hanno questo disponibile}}",
-      "unknownType": "Tipo sconosciuto"
+      "unknownType": "Tipo sconosciuto",
+      "filterPreferenceLabel": "Preferenza",
+      "filterPreferenceAll": "Tutte",
+      "sortLabel": "Ordina",
+      "sortDefault": "Ordine predefinito",
+      "sortPriceHighLow": "Prezzo (dal più alto al più basso)",
+      "sortScoreHighLow": "Punteggio venditore (dal più alto al più basso)",
+      "noTradersMatchFilter": "Nessun annuncio corrisponde a questa preferenza. Prova con « Tutte »."
     }
   },
   "traderProfile": {

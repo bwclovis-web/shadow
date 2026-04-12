@@ -1049,7 +1049,14 @@
       "title": "Annonces pour {name}",
       "traderCount": "{count, plural, one {# vendeur} other {# vendeurs}}",
       "summary": "{count, plural, one {# vendeur propose ce parfum} other {# vendeurs proposent ce parfum}}",
-      "unknownType": "Type inconnu"
+      "unknownType": "Type inconnu",
+      "filterPreferenceLabel": "Préférence",
+      "filterPreferenceAll": "Toutes",
+      "sortLabel": "Trier",
+      "sortDefault": "Ordre par défaut",
+      "sortPriceHighLow": "Prix (du plus élevé au plus bas)",
+      "sortScoreHighLow": "Score vendeur (du plus élevé au plus bas)",
+      "noTradersMatchFilter": "Aucune annonce ne correspond à cette préférence. Essayez « Toutes »."
     }
   },
   "traderProfile": {

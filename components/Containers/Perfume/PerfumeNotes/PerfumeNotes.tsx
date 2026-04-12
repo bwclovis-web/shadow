@@ -64,11 +64,11 @@ const renderCategorizedNotes = ({
   return (
     <div className=" p-4 bg-noir-dark text-noir-gold-100 grid grid-cols-1 md:grid-cols-3 gap-4">
       {hasOpen && (
-        <div className="flex flex-col items-start gap-1 border-r-4 md:border-r-noir-gold pr-4">
-          <span className="font-medium tracking-wide pb-1 text-2xl text-noir-gold">
+        <div className="flex flex-col items-start gap-1 lg:border-r-4 lg:border-r-noir-gold pr-4">
+          <span className="font-medium tracking-wide text-lg text-noir-gold">
             {t("opening")}
           </span>
-          <ul className="flex capitalize flex-wrap mb-2.5">
+          <ul className="flex capitalize flex-wrap mb-1">
             {sortedOpen.map((note, idx) => (
               <li key={note.id}>
                 {note.name}
@@ -79,11 +79,11 @@ const renderCategorizedNotes = ({
         </div>
       )}
       {hasHeart && (
-        <div className="flex flex-col items-start border-r-2 md:border-r-noir-gold-100 pr-4 last-of-type:border-r-0">
-          <span className="font-medium tracking-wide pb-1 text-2xl text-noir-gold">
+        <div className="flex flex-col items-start lg:border-r-2 lg:border-r-noir-gold-100 pr-4 last-of-type:border-r-0">
+          <span className="font-medium tracking-wide text-lg text-noir-gold">
             {t("mid")}
           </span>
-          <ul className="flex font-semibold capitalize flex-wrap mb-2">
+          <ul className="flex font-semibold capitalize flex-wrap mb-1">
             {sortedHeart.map((note, idx) => (
               <li key={note.id}>
                 {note.name}
@@ -94,11 +94,11 @@ const renderCategorizedNotes = ({
         </div>
       )}
       {hasClose && (
-        <div className="flex flex-col items-start border-r-2 md:border-r-noir-gold-100 pr-4 last-of-type:border-r-0">
-          <span className="font-medium tracking-wide pb-1 text-2xl text-noir-gold">
+        <div className="flex flex-col items-start lg:border-r-2 lg:border-r-noir-gold-100 pr-4 last-of-type:border-r-0">
+          <span className="font-medium tracking-wide text-lg text-noir-gold">
             {t("end")}{" "}
           </span>
-          <ul className="flex  font-semibold capitalize flex-wrap">
+          <ul className="flex  font-semibold capitalize flex-wrap mb-1">
             {sortedClose.map((note, idx) => (
               <li key={note.id}>
                 {note.name}

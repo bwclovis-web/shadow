@@ -1050,7 +1050,14 @@
       "title": "Anuncios de {name}",
       "traderCount": "{count, plural, one {# comerciante} other {# comerciantes}}",
       "summary": "{count, plural, one {# comerciante tiene esto disponible} other {# comerciantes tienen esto disponible}}",
-      "unknownType": "Tipo desconocido"
+      "unknownType": "Tipo desconocido",
+      "filterPreferenceLabel": "Preferencia",
+      "filterPreferenceAll": "Todas",
+      "sortLabel": "Ordenar",
+      "sortDefault": "Orden predeterminado",
+      "sortPriceHighLow": "Precio (mayor a menor)",
+      "sortScoreHighLow": "Puntuación (mayor a menor)",
+      "noTradersMatchFilter": "Ningún anuncio coincide con esta preferencia. Prueba con «Todas»."
     }
   },
   "traderProfile": {

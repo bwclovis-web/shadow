@@ -246,12 +246,11 @@ export async function POST(request: NextRequest): Promise<Response> {
       let stderrBuffer = ""
 
       const scriptPath = path.join(process.cwd(), "scraper", "run_scraper.py")
-      // Use SCRAPER_PYTHON if set; on Windows prefer Python launcher so same interpreter as `py -3 -m pip install`
-      const pythonCmd =
-        process.env.SCRAPER_PYTHON ||
-        (process.platform === "win32" ? "py" : "python3")
-      const pythonArgs =
-        process.env.SCRAPER_PYTHON ? [scriptPath] : (process.platform === "win32" ? ["-3", scriptPath] : [scriptPath])
+      const venvPython = process.platform === "win32"
+        ? path.join(process.cwd(), "scraper", ".venv", "Scripts", "python.exe")
+        : path.join(process.cwd(), "scraper", ".venv", "bin", "python")
+      const pythonCmd = process.env.SCRAPER_PYTHON || venvPython
+      const pythonArgs = [scriptPath]
       const child = spawn(pythonCmd, pythonArgs, { stdio: ["pipe", "pipe", "pipe"] })
 
       child.stdout.on("data", (chunk: Buffer) => {

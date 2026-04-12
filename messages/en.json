@@ -1059,7 +1059,14 @@
       "title": "Listings for {name}",
       "traderCount": "{count, plural, one {# trader} other {# traders}}",
       "summary": "{count, plural, one {# trader has this available} other {# traders have this available}}",
-      "unknownType": "Unknown type"
+      "unknownType": "Unknown type",
+      "filterPreferenceLabel": "Preference",
+      "filterPreferenceAll": "All",
+      "sortLabel": "Sort",
+      "sortDefault": "Default order",
+      "sortPriceHighLow": "Price (high to low)",
+      "sortScoreHighLow": "Trader score (high to low)",
+      "noTradersMatchFilter": "No listings match this preference. Try the All option above."
     }
   },
   "traderProfile": {
