@@ -92,7 +92,7 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
         </div>
       </div>
       <nav
-        className="hidden lg:flex justify-between inner-container"
+        className="relative z-10 hidden lg:flex justify-between inner-container"
         data-cy="GlobalNavigation"
       >
         <PrefetchLink href="/" className="px-2 block">

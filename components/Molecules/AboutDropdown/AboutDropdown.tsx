@@ -82,7 +82,7 @@ const AboutDropdown = ({
         onClick={() => setIsOpen(!isOpen)}
         className={styleMerge(
           baseClasses,
-          "flex items-center gap-2",
+          "flex items-center gap-2 cursor-pointer",
           isOpen && "text-noir-light bg-noir-black/30 border-noir-light/90"
         )}
         aria-expanded={isOpen}

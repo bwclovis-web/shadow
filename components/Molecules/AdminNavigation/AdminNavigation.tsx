@@ -37,7 +37,7 @@ const AdminNavigation = ({ className, user, onNavClick }: AdminNavigationProps) 
     exact ? pathname === path : pathname === path || pathname.startsWith(path + "/")
 
   return (
-    <nav className="z-20 w-full text-noir-light pt-4">
+    <nav className="w-full text-noir-light pt-4">
       <ul
         className={styleMerge(adminNavigationVariants({ className }))}
         data-cy="AdminNavigation"
