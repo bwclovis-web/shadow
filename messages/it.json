@@ -1043,6 +1043,13 @@
       "priceChipMin": "Min {min}",
       "priceChipMax": "Max {max}",
       "priceChipRange": "{min}–{max}"
+    },
+    "listings": {
+      "openButton": "Vedi venditori e annunci",
+      "title": "Annunci per {name}",
+      "traderCount": "{count, plural, one {# venditore} other {# venditori}}",
+      "summary": "{count, plural, one {# venditore ha questo disponibile} other {# venditori hanno questo disponibile}}",
+      "unknownType": "Tipo sconosciuto"
     }
   },
   "traderProfile": {

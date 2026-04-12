@@ -1044,6 +1044,13 @@
       "priceChipMin": "Mín {min}",
       "priceChipMax": "Máx {max}",
       "priceChipRange": "{min}–{max}"
+    },
+    "listings": {
+      "openButton": "Ver comerciantes y anuncios",
+      "title": "Anuncios de {name}",
+      "traderCount": "{count, plural, one {# comerciante} other {# comerciantes}}",
+      "summary": "{count, plural, one {# comerciante tiene esto disponible} other {# comerciantes tienen esto disponible}}",
+      "unknownType": "Tipo desconocido"
     }
   },
   "traderProfile": {

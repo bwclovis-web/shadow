@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTransitionRouter } from "next-view-transitions"
 
-import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
@@ -12,12 +11,11 @@ import { FilterChipStrip } from "@/components/Molecules/FilterChipStrip"
 import { DiscoveryFiltersPanel } from "@/components/Organisms/DiscoveryFiltersPanel"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import LinkCard from "@/components/Organisms/LinkCard"
+import Modal from "@/components/Organisms/Modal"
 import TitleBanner from "@/components/Organisms/TitleBanner"
-import { getPerfumeTypeLabel } from "@/data/SelectTypes"
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
 import useMediaQuery from "@/hooks/useMediaQuery"
-import type { Tag } from "@/lib/queries/tags"
-import type { TraderReputationV1 } from "@/services/reputation/types"
+import { useSessionStore } from "@/hooks/sessionStore"
 import {
   discoveryFiltersActive,
   discoveryFiltersToSearchParams,
@@ -25,52 +23,16 @@ import {
   parseDiscoveryFiltersFromSearchParams,
   type PerfumeDiscoveryFilters,
 } from "@/utils/discovery-filters"
-import { getTraderDisplayName } from "@/utils/user"
-
 import { buildExchangeDiscoveryChipItems } from "./buildExchangeDiscoveryChipItems"
+import ExchangeTradersModalContent from "./ExchangeTradersModalContent"
+import type { ExchangePageData } from "./exchange-types"
+
+export type { ExchangePageData } from "./exchange-types"
 
 const ROUTE_PATH = "/the-exchange"
 const BANNER_IMAGE = "/images/exchange.webp"
 const DESKTOP_MEDIA = "(min-width: 1024px)"
-
-type PaginationMeta = {
-  totalCount: number
-  pageSize: number
-  currentPage: number
-  totalPages: number
-  hasMore: boolean
-  hasNextPage: boolean
-  hasPrevPage: boolean
-}
-
-export type ExchangePageData = {
-  availablePerfumes: Array<{
-    id: string
-    name: string
-    slug: string
-    image?: string | null
-    perfumeHouse?: { id: string; name: string; slug: string; type: string } | null
-    userPerfume: Array<{
-      id: string
-      userId: string
-      available: string
-      type: string | null
-      tradePreference: string | null
-      user: {
-        id: string
-        firstName: string | null
-        lastName: string | null
-        username: string | null
-        email: string | null
-      }
-    }>
-  }>
-  pagination: PaginationMeta
-  searchQuery: string
-  initialNoteTags: Tag[]
-  initialHouse: { id: string; name: string } | null
-  traderReputationByUserId?: Record<string, TraderReputationV1>
-}
+const EXCHANGE_TRADERS_MODAL_ID = "exchange-traders"
 
 const TheExchangeClient = ({
   availablePerfumes,
@@ -81,15 +43,25 @@ const TheExchangeClient = ({
   traderReputationByUserId = {},
 }: ExchangePageData) => {
   const t = useTranslations("tradingPost")
+  const tListings = useTranslations("tradingPost.listings")
   const tf = useTranslations("tradingPost.filters")
-  const tRep = useTranslations("traderProfile.reputation")
   const tSeason = useTranslations("singlePerfume.seasonVote.season")
-  const tPrefs = useTranslations("traderProfile.preferences")
   const router = useTransitionRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const isLg = useMediaQuery(DESKTOP_MEDIA)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const exchangeTradersTriggerRef = useRef<HTMLButtonElement | null>(null)
+  const { modalOpen, modalId, modalData, toggleModal, closeModal } =
+    useSessionStore()
+
+  useEffect(() => {
+    return () => {
+      if (useSessionStore.getState().modalId === EXCHANGE_TRADERS_MODAL_ID) {
+        closeModal()
+      }
+    }
+  }, [closeModal])
 
   const searchParamsKey = searchParams.toString()
   const discoveryFromUrl = useMemo(
@@ -160,18 +132,23 @@ const TheExchangeClient = ({
     [searchParams, pushUrlFromSearchParams]
   )
 
-  const getTradePreferenceLabel = (preference: string | null | undefined) => {
-    switch (preference) {
-      case "cash":
-        return tPrefs("cash")
-      case "trade":
-        return tPrefs("trade")
-      case "both":
-        return tPrefs("both")
-      default:
-        return tPrefs("cash")
-    }
-  }
+  const exchangeModalPerfume = useMemo(() => {
+    if (!modalOpen || modalId !== EXCHANGE_TRADERS_MODAL_ID) return null
+    const rawId = modalData?.perfumeId
+    const perfumeId = typeof rawId === "string" ? rawId : null
+    if (!perfumeId) return null
+    return availablePerfumes.find(p => p.id === perfumeId) ?? null
+  }, [modalOpen, modalId, modalData, availablePerfumes])
+
+  const openExchangeTradersModal = useCallback(
+    (perfumeId: string, trigger: HTMLButtonElement | null) => {
+      exchangeTradersTriggerRef.current = trigger
+      toggleModal(exchangeTradersTriggerRef, EXCHANGE_TRADERS_MODAL_ID, {
+        perfumeId,
+      })
+    },
+    [toggleModal]
+  )
 
   const handlePageChange = (page: number) => {
     cancelPending()
@@ -354,48 +331,27 @@ const TheExchangeClient = ({
                           }}
                           type="perfume"
                         >
-                          <div className="mt-2 rounded-md">
-                            <p className="text-base font-medium text-noir-gold mb-1">
-                              {t("availableFrom")}:
+                          <div className="mt-2 rounded-md space-y-2">
+                            <p className="text-base font-medium text-noir-gold">
+                              {tListings("summary", {
+                                count: perfume.userPerfume.length,
+                              })}
                             </p>
-                            {perfume.userPerfume.map(userPerfume => (
-                              <div key={userPerfume.id} className="mb-1">
-                                <PrefetchLink
-                                  href={`/trader-profile/${userPerfume.userId}`}
-                                  prefetch={false}
-                                  className="text-sm font-semibold text-blue-300 hover:text-noir-blue underline"
-                                >
-                                  {getTraderDisplayName(userPerfume.user)}
-                                  {traderReputationByUserId[userPerfume.userId]?.score != null ? (
-                                    <span className="text-noir-gold-500 font-normal">
-                                      {" "}
-                                      (
-                                      {tRep("exchangeTrust", {
-                                        score: traderReputationByUserId[userPerfume.userId]!.score!,
-                                      })}
-                                      )
-                                    </span>
-                                  ) : null}
-                                  :
-                                </PrefetchLink>
-                                <span className="text-sm ml-2 text-noir-gold-100">
-                                  {getPerfumeTypeLabel(
-                                    userPerfume.type ?? undefined
-                                  ) || "Unknown Type"}{" "}
-                                  {userPerfume.available} ml
-                                </span>
-                                {userPerfume.tradePreference && (
-                                  <span className="text-sm ml-2 text-noir-gold-500 font-medium">
-                                    •{" "}
-                                    {getTradePreferenceLabel(
-                                      userPerfume.tradePreference !== null
-                                        ? userPerfume.tradePreference
-                                        : undefined
-                                    )}
-                                  </span>
-                                )}
-                              </div>
-                            ))}
+                            <Button
+                              type="button"
+                              variant="secondary"
+                              size="sm"
+                              background="gold"
+                              className="w-full max-w-full"
+                              onClick={e =>
+                                openExchangeTradersModal(
+                                  perfume.id,
+                                  e.currentTarget
+                                )
+                              }
+                            >
+                              {tListings("openButton")}
+                            </Button>
                           </div>
                         </LinkCard>
                       </li>
@@ -423,6 +379,24 @@ const TheExchangeClient = ({
               )}
             </div>
           )}
+
+          {modalOpen &&
+            modalId === EXCHANGE_TRADERS_MODAL_ID &&
+            exchangeModalPerfume && (
+              <Modal innerType="dark" animateStart="panelLeft">
+                <div
+                  role="dialog"
+                  aria-modal
+                  aria-labelledby="exchange-traders-modal-title"
+                  className="min-h-0 flex-1"
+                >
+                  <ExchangeTradersModalContent
+                    perfume={exchangeModalPerfume}
+                    traderReputationByUserId={traderReputationByUserId}
+                  />
+                </div>
+              </Modal>
+            )}
         </>
       )}
     </section>

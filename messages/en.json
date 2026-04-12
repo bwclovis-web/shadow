@@ -1053,6 +1053,13 @@
       "priceChipMin": "Min {min}",
       "priceChipMax": "Max {max}",
       "priceChipRange": "{min}–{max}"
+    },
+    "listings": {
+      "openButton": "View traders & listings",
+      "title": "Listings for {name}",
+      "traderCount": "{count, plural, one {# trader} other {# traders}}",
+      "summary": "{count, plural, one {# trader has this available} other {# traders have this available}}",
+      "unknownType": "Unknown type"
     }
   },
   "traderProfile": {

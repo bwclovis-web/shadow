@@ -1043,6 +1043,13 @@
       "priceChipMin": "Min {min}",
       "priceChipMax": "Max {max}",
       "priceChipRange": "{min}–{max}"
+    },
+    "listings": {
+      "openButton": "Voir les vendeurs et annonces",
+      "title": "Annonces pour {name}",
+      "traderCount": "{count, plural, one {# vendeur} other {# vendeurs}}",
+      "summary": "{count, plural, one {# vendeur propose ce parfum} other {# vendeurs proposent ce parfum}}",
+      "unknownType": "Type inconnu"
     }
   },
   "traderProfile": {

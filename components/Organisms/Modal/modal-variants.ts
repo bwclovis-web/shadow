@@ -25,6 +25,7 @@ export const modalBackgroundVariant = cva(
       animateStart: {
         bottom: "bottom-0",
         left: "right-0",
+        panelLeft: "left-0 top-0",
         top: "top-0",
       },
       background: {
@@ -74,6 +75,18 @@ export const modalContentVariant = cva(
         animateStart: "left",
         className: "translate-x-[0%] delay-200",
       },
+      {
+        animate: false,
+        animateStart: "panelLeft",
+        className:
+          "left-0 top-0 h-full max-h-[100dvh] w-full -translate-x-full overflow-y-auto overscroll-contain",
+      },
+      {
+        animate: true,
+        animateStart: "panelLeft",
+        className:
+          "left-0 top-0 h-full max-h-[100dvh] w-full translate-x-0 overflow-y-auto overscroll-contain delay-200",
+      },
     ],
     defaultVariants: {
       animate: false,
@@ -89,6 +102,8 @@ export const modalContentVariant = cva(
         bottom:
           "w-full sm:w-11/12 lg:w-4/5 xl:w-2/5 duration-500 rounded mx-2 sm:mx-4",
         left: "w-full lg:w-1/3 xl2:w-1/4 right-0 top-0 duration-300 h-full",
+        panelLeft:
+          "w-full min-w-0 sm:max-w-md lg:max-w-lg duration-300 rounded-r-md sm:rounded-r-lg",
         top: "w-full sm:w-11/12 lg:w-4/5 xl:w-3/5 duration-500 rounded",
       },
       innerType: {
