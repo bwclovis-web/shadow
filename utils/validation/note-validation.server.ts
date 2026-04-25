@@ -26,6 +26,33 @@ const PLACEHOLDER_PHRASES = new Set([
 
 const TRAILING_FRAGMENT_REGEX = /\s+(of|in|with|to|for|and|or|from|by|as|at|on|that|which|who|when|where|a|an|the)$/i
 
+/** EU/IFRA-style allergens and raw synthesis materials — not consumer-facing scent notes. */
+const INCI_LIKE_PATTERNS: RegExp[] = [
+  /\bsalicylate\b/i,
+  /\bbenzoate\b/i,
+  /\bphthalate\b/i,
+  /\bbenzoic acid\b/i,
+  /\bparaben\b/i,
+  /\b(?:alpha|beta)[-\s]?isomethyl ionone\b/i,
+  /\bmethyl ionone\b/i,
+  /\bhydroxycitronellal\b/i,
+  /\bfarnesol\b/i,
+  /\beugenol\b/i,
+  /\blinalool\b/i,
+  /\blimonene\b/i,
+  /\bcitronellol\b/i,
+  /\bgeraniol\b/i,
+  /\bcitral\b/i,
+  /\bcoumarin\b/i,
+  /\blinalyl acetate\b/i,
+  /\bgeranyl acetate\b/i,
+  /\bneryl acetate\b/i,
+  /\bethyl acetate\b/i,
+  /\bethyl vanillin\b/i,
+  /\b(amyl|benzyl|butyl|ethyl|hexyl|methyl|propyl|isopropyl|cetyl|stearyl|isobutyl|phenethyl|anisyl)\s+(alcohol|salicylate|benzoate|cinnamate|cinnamal|paraben|lactate|acetate)\b/i,
+  /\b(hexyl|amyl|benzyl|methyl|ethyl|isobutyl)\s+cinnamal\b/i,
+]
+
 const KNOWN_BAD_PATTERNS = [
   /^two\s+differences?\s*1$/i,
   /^limited\s+time\s+only$/i,
@@ -33,6 +60,7 @@ const KNOWN_BAD_PATTERNS = [
   /^\d+\s*ml\b/i,
   /^test\s+/i,
   /\bgift\s+ideas\b/i,
+  ...INCI_LIKE_PATTERNS,
 ]
 
 const VALID_WORD_COUNT = { min: 1, max: 5 } as const

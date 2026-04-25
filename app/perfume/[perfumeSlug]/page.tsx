@@ -12,7 +12,7 @@ import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import PerfumeDetailClient from "./PerfumeDetailClient"
 
 const REVIEWS_PAGE_SIZE = 5
-const SIMILAR_PERFUMES_LIMIT = 4
+const SIMILAR_PERFUMES_LIMIT = 6
 
 type Props = {
   params: Promise<{ perfumeSlug: string }>

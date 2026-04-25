@@ -2,6 +2,7 @@
 
 import { GrEdit } from "react-icons/gr"
 import { MdDeleteForever } from "react-icons/md"
+import { useTranslations } from "next-intl"
 
 import { Button, VooDooLink } from "@/components/Atoms/Button"
 
@@ -15,36 +16,40 @@ const PerfumeHouseAdminActions = ({
   houseName,
   houseSlug,
   onDeleteClick,
-}: PerfumeHouseAdminActionsProps) => (
-  <div>
-    <h2 className="text-lg font-semibold text-center text-noir-gold-500 mb-2">
-      Admin
-    </h2>
-    <div className="flex flex-col items-center justify-between gap-2">
-      <VooDooLink
-        aria-label={`edit perfume house ${houseName}`}
-        variant="icon"
-        background="gold"
-        size="sm"
-        className="flex items-center justify-between gap-2"
-        url={`/admin/perfume-house/${houseSlug}/edit`}
-      >
-        <span>Edit Perfume House</span>
-        <GrEdit size={22} />
-      </VooDooLink>
-      <Button
-        onClick={onDeleteClick}
-        aria-label={`delete perfume house ${houseName}`}
-        variant="icon"
-        className="flex items-center justify-between gap-2"
-        background="gold"
-        size="sm"
-      >
-        <span>Delete Perfume House</span>
-        <MdDeleteForever size={22} />
-      </Button>
+}: PerfumeHouseAdminActionsProps) => {
+  const t = useTranslations("admin.perfumeHouse")
+
+  return (
+    <div>
+      <h2 className="text-center mb-2">
+        {t("sectionHeading")}
+      </h2>
+      <div className="flex flex-col items-center justify-between gap-2">
+        <VooDooLink
+          aria-label={`edit perfume house ${houseName}`}
+          variant="icon"
+          background="gold"
+          size="sm"
+          className="flex items-center justify-between gap-2"
+          url={`/admin/perfume-house/${houseSlug}/edit`}
+        >
+          <span>Edit Perfume House</span>
+          <GrEdit size={22} />
+        </VooDooLink>
+        <Button
+          onClick={onDeleteClick}
+          aria-label={`delete perfume house ${houseName}`}
+          variant="icon"
+          className="flex items-center justify-between gap-2"
+          background="gold"
+          size="sm"
+        >
+          <span>Delete Perfume House</span>
+          <MdDeleteForever size={22} />
+        </Button>
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
 export default PerfumeHouseAdminActions

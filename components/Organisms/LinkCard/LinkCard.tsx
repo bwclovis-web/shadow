@@ -46,9 +46,9 @@ const LinkCard = ({
         className="flex flex-col overflow-hidden justify-between items-center group transition-all duration-300 ease-in-out"
       >
         <div className="text-center relative z-10 bg-noir-dark/50 backdrop-blur-sm w-full p-4">
-          <h2 className="text-wrap wrap-break-word card-title ">{data.name}</h2>
+          <h2 className="text-wrap wrap-break-word card-title">{data.name}</h2>
           {data?.perfumeHouse?.name && (
-            <p className="text-md font-semibold text-noir-gold-100">
+            <p className="text-sm text-noir-gold-100 leading-tight">
               {data.perfumeHouse.name}
             </p>
           )}
@@ -102,7 +102,7 @@ const LinkCard = ({
         />
       )}
       {children && (
-        <div className="absolute bottom-0 left-0 right-0 bg-noir-dark/80 p-2 border-t border-noir-gold">
+        <div className="absolute bottom-0 left-0 right-0 z-0 bg-noir-dark/80 p-2 border-t border-noir-gold">
           {children}
         </div>
       )}

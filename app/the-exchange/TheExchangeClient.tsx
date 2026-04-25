@@ -305,8 +305,8 @@ const TheExchangeClient = ({
                   />
                 </div>
                 {availablePerfumes.length === 0 ? (
-                  <div className="text-center py-8 bg-noir-gray/80 rounded-md border-2 border-noir-light animate-fade-in">
-                    <h2 className="text-noir-light font-black text-xl text-shadow-md text-shadow-noir-dark">
+                  <div className="text-center py-8 bg-noir-dark/80 rounded-md border-2 border-noir-gold animate-fade-in">
+                    <h2>
                       {t("search.noResults")}
                     </h2>
                     <p className="text-noir-gold-100 mt-2">
@@ -332,7 +332,7 @@ const TheExchangeClient = ({
                           type="perfume"
                         >
                           <div className="mt-2 rounded-md space-y-2">
-                            <p className="text-base font-medium text-noir-gold">
+                            <p className="text-sm font-medium text-noir-gold">
                               {tListings("summary", {
                                 count: perfume.userPerfume.length,
                               })}

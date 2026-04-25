@@ -135,6 +135,35 @@ function compareSimilarRows(a: SimilarRankRow, b: SimilarRankRow): number {
   return a.name.localeCompare(b.name)
 }
 
+/** When note overlap cannot rank picks, show other perfumes from the same house. */
+async function getSameHouseSimilar(
+  perfumeId: string,
+  limit: number,
+  excludeIds: ReadonlySet<string>,
+): Promise<RecommendationPerfume[]> {
+  const self = await prisma.perfume.findUnique({
+    where: { id: perfumeId },
+    select: { perfumeHouseId: true },
+  })
+  if (!self?.perfumeHouseId) return []
+
+  const exclude = new Set(excludeIds)
+  exclude.add(perfumeId)
+
+  const rows = (await prisma.perfume.findMany({
+    where: { perfumeHouseId: self.perfumeHouseId, id: { not: perfumeId } },
+    take: Math.max(48, limit * 6),
+    orderBy: { name: "asc" },
+    select: PERFUME_SELECT,
+  })) as PerfumeRow[]
+
+  const filtered = rows.filter((r) => !exclude.has(r.id)).slice(0, limit)
+  return filtered.map((p) => ({
+    ...toRecommendationPerfume(p),
+    reason: { kind: "same_house" as const },
+  }))
+}
+
 /**
  * Get perfumes most similar by IDF-weighted cosine note similarity.
  */
@@ -143,8 +172,15 @@ async function getSimilarPerfumes(
   limit: number,
   options?: GetSimilarPerfumesOptions
 ): Promise<RecommendationPerfume[]> {
+  const excludeSimilar =
+    options?.userId != null && options.userId !== ""
+      ? await getUserCollectionOrDestashPerfumeIds(options.userId)
+      : new Set<string>()
+
   const noteIdsArr = await getNoteIdsForPerfume(perfumeId)
-  if (noteIdsArr.length === 0) return []
+  if (noteIdsArr.length === 0) {
+    return getSameHouseSimilar(perfumeId, limit, excludeSimilar)
+  }
   const sourceNoteIds = new Set(noteIdsArr)
 
   const relations = await prisma.perfumeNoteRelation.findMany({
@@ -166,7 +202,9 @@ async function getSimilarPerfumes(
   }
 
   const candidateIds = [...sharedByPerfume.keys()]
-  if (candidateIds.length === 0) return []
+  if (candidateIds.length === 0) {
+    return getSameHouseSimilar(perfumeId, limit, excludeSimilar)
+  }
 
   const candidateNoteRows = await prisma.perfumeNoteRelation.findMany({
     where: { perfumeId: { in: candidateIds } },
@@ -223,17 +261,22 @@ async function getSimilarPerfumes(
 
   ranked.sort(compareSimilarRows)
 
-  const excludeSimilar =
-    options?.userId != null && options.userId !== ""
-      ? await getUserCollectionOrDestashPerfumeIds(options.userId)
-      : new Set<string>()
-  const rankedForPick =
+  let rankedForPick =
     excludeSimilar.size > 0
       ? ranked.filter((r) => !excludeSimilar.has(r.id))
       : ranked
+  // If the user already tracks every note-overlapping candidate, still show overlaps
+  // (otherwise the carousel disappears entirely for heavy collectors).
+  if (rankedForPick.length === 0 && ranked.length > 0) {
+    rankedForPick = ranked
+  }
 
   const picked = pickWithHouseCap(rankedForPick, limit, SIMILAR_MAX_PER_HOUSE)
   const sortedIds = picked.map(p => p.id)
+
+  if (sortedIds.length === 0) {
+    return getSameHouseSimilar(perfumeId, limit, excludeSimilar)
+  }
 
   const noteNameRows = await prisma.perfumeNotes.findMany({
     where: { id: { in: noteIdsArr } },
@@ -247,7 +290,7 @@ async function getSimilarPerfumes(
   })) as PerfumeRow[]
 
   const byId = new Map(perfumes.map(p => [p.id, p]))
-  return sortedIds
+  const fromNotes = sortedIds
     .map((id): RecommendationPerfume | null => {
       const p = byId.get(id)
       if (!p) return null
@@ -268,6 +311,11 @@ async function getSimilarPerfumes(
       return { ...toRecommendationPerfume(p), reason }
     })
     .filter((p): p is RecommendationPerfume => p != null)
+
+  if (fromNotes.length === 0) {
+    return getSameHouseSimilar(perfumeId, limit, excludeSimilar)
+  }
+  return fromNotes
 }
 
 type ProfileRankRow = {

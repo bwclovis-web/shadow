@@ -72,6 +72,9 @@
       "errorAnalytics": "Analyse des erreurs",
       "pendingSubmissions": "Soumissions en attente",
       "houseScraper": "Scraper de maisons"
+    },
+    "perfumeHouse": {
+      "sectionHeading": "Administration"
     }
   },
   "pendingSubmissions": {
@@ -660,6 +663,14 @@
       "placeholder": "Rechercher vos parfums...",
       "noResults": "Aucun parfum trouvé",
       "tryDifferent": "Essayez un autre terme"
+    },
+    "filters": {
+      "sort": "Trier",
+      "house": "Maison",
+      "allHouses": "Toutes les maisons",
+      "minAmount": "Min (ml)",
+      "maxAmount": "Max (ml)",
+      "clearAll": "Effacer les filtres"
     }
   },
   "navigation": {
@@ -799,7 +810,8 @@
       "profileMatch": "Affiché parce qu'il contient {notes} que vous avez indiqués comme aimés dans votre profil.",
       "profileMatchFallback": "Affiché parce qu'il correspond à votre profil olfactif.",
       "popular": "Affichés parce que ces choix sont populaires auprès de la communauté.",
-      "recent": "Affichés parce qu'ils ont été récemment ajoutés au catalogue."
+      "recent": "Affichés parce qu'ils ont été récemment ajoutés au catalogue.",
+      "sameHouse": "Affichés parce qu'ils proviennent de la même maison de parfum que cette fragrance."
     }
   },
   "singleHouse": {

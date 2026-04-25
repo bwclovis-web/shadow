@@ -282,18 +282,31 @@ async function importOneRecord(
     if (extractedNotes.length > 0) openNotes = extractedNotes
   }
 
+  // Deduplicate notes across layers so the same note is only written once
+  // (first layer wins: open → heart → base).
+  const seenNotes = new Set<string>()
+  const deduped = (arr: string[]) => arr.filter(n => {
+    const key = n.trim().toLowerCase()
+    if (!key || seenNotes.has(key)) return false
+    seenNotes.add(key)
+    return true
+  })
+  const openNotesDeduped = deduped(openNotes)
+  const heartNotesDeduped = deduped(heartNotes)
+  const baseNotesDeduped = deduped(baseNotes)
+
   // Replace all note relations (CSV is source of truth)
   await prisma.perfumeNoteRelation.deleteMany({ where: { perfumeId: perfume.id } })
 
-  for (const n of openNotes) {
+  for (const n of openNotesDeduped) {
     const note = await getOrCreateNote(prisma, n)
     if (note) await upsertNoteRelation(prisma, perfume.id, note.id, "open")
   }
-  for (const n of heartNotes) {
+  for (const n of heartNotesDeduped) {
     const note = await getOrCreateNote(prisma, n)
     if (note) await upsertNoteRelation(prisma, perfume.id, note.id, "heart")
   }
-  for (const n of baseNotes) {
+  for (const n of baseNotesDeduped) {
     const note = await getOrCreateNote(prisma, n)
     if (note) await upsertNoteRelation(prisma, perfume.id, note.id, "base")
   }

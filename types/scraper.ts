@@ -3,6 +3,9 @@
  * Used by the admin form, API routes, and LangGraph note-extraction pipeline.
  */
 
+/** How to trim product names at the first spaced hyphen ` - ` in the note-extraction pipeline. */
+export type TitleDashSegment = "none" | "before" | "after"
+
 /**
  * Configuration submitted via the admin form to drive the generic scraper.
  */
@@ -74,7 +77,15 @@ export interface ScraperConfig {
   baseUrl?: string
 
   /**
-   * If true, use only the part of the product name before the first " - " (e.g. "Scent Name - 50ml" → "Scent Name").
+   * How to trim the product name at the first spaced hyphen sequence ` - ` (common on Shopify).
+   * - `before` — keep only text before the first ` - ` (e.g. "Velvet Vanilla - 50ml" → "Velvet Vanilla").
+   * - `after` — keep only text after the first ` - ` (e.g. "Brand - Night Rose" → "Night Rose").
+   * - `none` — keep the full title.
+   */
+  titleDashSegment?: TitleDashSegment
+
+  /**
+   * @deprecated Prefer `titleDashSegment`. When `titleDashSegment` is omitted, `true` means the same as `titleDashSegment: "before"`.
    */
   titleTakeBeforeDash?: boolean
 

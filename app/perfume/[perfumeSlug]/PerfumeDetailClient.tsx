@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import { useTransitionRouter } from "next-view-transitions"
 
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
@@ -24,11 +23,8 @@ import { usePerfume } from "@/hooks/usePerfume"
 import { useSessionStore } from "@/hooks/sessionStore"
 import { useDeletePerfume } from "@/lib/mutations/perfumes"
 import type { RecommendationPerfume } from "@/services/recommendations"
-import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
 
-import { RecommendationReasonLine } from "@/components/Containers/Recommendations/RecommendationReasonLine"
-
-const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
+import SimilarPerfumesCarousel from "@/components/Containers/Recommendations/SimilarPerfumesCarousel"
 
 const VAULT_PATH = "/the-vault"
 
@@ -64,7 +60,6 @@ const PerfumeDetailClient = ({
   const { data: perfume } = usePerfume(initialPerfume.slug, initialPerfume)
   const router = useTransitionRouter()
   const t = useTranslations("singlePerfume")
-  const tHouse = useTranslations("singleHouse")
   const { closeModal } = useSessionStore()
   const deletePerfume = useDeletePerfume()
 
@@ -185,57 +180,10 @@ const PerfumeDetailClient = ({
         </div>
 
         {similarPerfumes.length > 0 && (
-          <div className="w-full max-w-6xl">
-            <h2 className="text-center mb-4 text-noir-gold-500">
-              {t("similarPerfumes", { defaultValue: "Similar perfumes" })}
-            </h2>
-            <ul className="grid grid-cols-1 md:grid-cols-4 gap-4 p-2">
-              {similarPerfumes.map((similar) => {
-                const similarSrc = normalizeRemoteImageSrc(similar.image)
-                const similarImageSrc =
-                  similarSrc && !validImageRegex.test(similarSrc)
-                    ? similarSrc
-                    : BOTTLE_PLACEHOLDER
-                return (
-                  <li
-                    key={similar.id}
-                    className="h-full noir-border relative w-full transition-colors duration-300 ease-in-out hover:bg-white/5 flex flex-col"
-                  >
-                    <PrefetchLink
-                      href={`/perfume/${similar.slug}${selectedLetter ? `?letter=${selectedLetter}` : ""}`}
-                      prefetch={false}
-                      className="block p-2 flex-1 min-h-0"
-                    >
-                      <h3 className="text-center block text-sm tracking-wide py-2 font-semibold text-noir-gold leading-tight capitalize line-clamp-2">
-                        {similar.name}
-                      </h3>
-                      <Image
-                        src={similarImageSrc}
-                        alt={tHouse("perfumeBottleAltText", { name: similar.name })}
-                        priority={false}
-                        width={128}
-                        height={128}
-                        quality={75}
-                        className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-lg mb-2 mx-auto dark:brightness-90"
-                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
-                        style={{ viewTransitionName: `perfume-image-${similar.id}` } as React.CSSProperties}
-                      />
-                      {similar.perfumeHouse && (
-                        <p className="text-center text-xs text-noir-gold-500/80 truncate">
-                          {similar.perfumeHouse.name}
-                        </p>
-                      )}
-                    </PrefetchLink>
-                    {similar.reason != null && (
-                      <div className="flex justify-center pb-2 px-2">
-                        <RecommendationReasonLine reason={similar.reason} />
-                      </div>
-                    )}
-                  </li>
-                )
-              })}
-            </ul>
-          </div>
+          <SimilarPerfumesCarousel
+            similarPerfumes={similarPerfumes}
+            selectedLetter={selectedLetter}
+          />
         )}
       </div>
     </section>

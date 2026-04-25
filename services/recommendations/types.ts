@@ -18,6 +18,8 @@ export type RecommendationReason =
     }
   | { kind: "popular" }
   | { kind: "recent" }
+  /** Shown when note overlap is missing but picks are from the same house. */
+  | { kind: "same_house" }
 
 /**
  * Minimal perfume shape returned by recommendation services.

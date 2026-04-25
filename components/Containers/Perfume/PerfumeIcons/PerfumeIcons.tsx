@@ -158,7 +158,7 @@ const PerfumeIcons = ({
         <AddToCollectionModal type="icon" perfume={perfume} />
         {isAdmin && (
           <div>
-            <h2 className="text-lg font-semibold text-center text-noir-gold-500 mb-2">
+            <h2 className="text-center mb-2">
               Admin
             </h2>
             <div className="flex flex-col items-center justify-between gap-2">

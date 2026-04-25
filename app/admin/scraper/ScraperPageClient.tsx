@@ -17,6 +17,7 @@ import type {
   ScraperRetryR2Response,
   ScraperRunRequest,
   ScraperRunResponse,
+  TitleDashSegment,
 } from "@/types/scraper"
 import {
   chunkPerfumeCsvRecordsForImport,
@@ -152,7 +153,7 @@ export function ScraperPageClient() {
     "set, sample, sampler, collection, collections",
   )
   const [baseUrl, setBaseUrl] = useState("")
-  const [titleTakeBeforeDash, setTitleTakeBeforeDash] = useState(true)
+  const [titleDashSegment, setTitleDashSegment] = useState<TitleDashSegment>("before")
   const [titleStripNumbers, setTitleStripNumbers] = useState(true)
   const [titleOmitWordsRaw, setTitleOmitWordsRaw] = useState(
     "eau de toilette, eau de parfum, edt, edp, travel size",
@@ -313,7 +314,7 @@ export function ScraperPageClient() {
       imageSelector,
       skipKeywords,
       baseUrl: baseUrl || undefined,
-      titleTakeBeforeDash,
+      titleDashSegment,
       titleStripNumbers,
       titleOmitWords: titleOmitWords.length > 0 ? titleOmitWords : undefined,
       generateNoirDescriptions,
@@ -859,22 +860,55 @@ export function ScraperPageClient() {
             Clean product names and choose how descriptions are generated. Notes are always extracted;
             you can strip them from the source text and have LangGraph write new film noir themed copy.
           </p>
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              className="mt-0.5"
-              checked={titleTakeBeforeDash}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setTitleTakeBeforeDash(e.target.checked)
-              }
-            />
-            <span className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium">Take only text before first &quot; - &quot; in name</span>
-              <span className="text-xs text-muted-foreground">
-                e.g. &quot;Velvet Vanilla - 50ml&quot; → &quot;Velvet Vanilla&quot;
+          <fieldset className="flex flex-col gap-2 border-0 p-0">
+            <legend className="text-sm font-medium">First spaced hyphen in product name (<code className="text-xs"> - </code>)</legend>
+            <p className="text-xs text-muted-foreground">
+              Many shops use <code className="text-xs">Title - subtitle or size</code>. Choose which side to keep for the imported perfume name.
+            </p>
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="radio"
+                className="mt-0.5"
+                name="titleDashSegment"
+                checked={titleDashSegment === "none"}
+                onChange={() => setTitleDashSegment("none")}
+              />
+              <span className="flex flex-col gap-0.5">
+                <span className="text-sm">Keep full title</span>
+                <span className="text-xs text-muted-foreground">No split on the first &quot; - &quot;.</span>
               </span>
-            </span>
-          </label>
+            </label>
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="radio"
+                className="mt-0.5"
+                name="titleDashSegment"
+                checked={titleDashSegment === "before"}
+                onChange={() => setTitleDashSegment("before")}
+              />
+              <span className="flex flex-col gap-0.5">
+                <span className="text-sm">Use text before first &quot; - &quot;</span>
+                <span className="text-xs text-muted-foreground">
+                  e.g. &quot;Velvet Vanilla - 50ml&quot; → &quot;Velvet Vanilla&quot;
+                </span>
+              </span>
+            </label>
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="radio"
+                className="mt-0.5"
+                name="titleDashSegment"
+                checked={titleDashSegment === "after"}
+                onChange={() => setTitleDashSegment("after")}
+              />
+              <span className="flex flex-col gap-0.5">
+                <span className="text-sm">Use text after first &quot; - &quot;</span>
+                <span className="text-xs text-muted-foreground">
+                  e.g. &quot;House - Night Rose&quot; → &quot;Night Rose&quot;
+                </span>
+              </span>
+            </label>
+          </fieldset>
           <label className="flex cursor-pointer items-start gap-3">
             <input
               type="checkbox"

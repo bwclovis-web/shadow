@@ -18,12 +18,14 @@
 import { Annotation, StateGraph } from "@langchain/langgraph"
 import { ChatOpenAI } from "@langchain/openai"
 
-import type { PerfumeCsvRecord, ScrapedItem } from "@/types/scraper"
+import type { PerfumeCsvRecord, ScrapedItem, TitleDashSegment } from "@/types/scraper"
 import { isDisplayableScentNote } from "@/utils/validation/note-validation.server"
 
 /** Options for title cleaning and description generation. */
 export interface ScraperPipelineOptions {
-  /** Use only the part of the product name before the first " - ". */
+  /** Trim at the first ` - `: before, after, or keep full title (`none`). */
+  titleDashSegment?: TitleDashSegment
+  /** @deprecated Use `titleDashSegment: "before"` instead. */
   titleTakeBeforeDash?: boolean
   /** Remove numbers and size patterns (e.g. 30ml, 1.7 fl oz) from product names. */
   titleStripNumbers?: boolean
@@ -105,6 +107,22 @@ function takeBeforeDash(name: string): string {
   return idx >= 0 ? name.slice(0, idx).trim() : name.trim()
 }
 
+/** Keep only the part after the first " - " and trim; if no delimiter, keep full string trimmed. */
+function takeAfterDash(name: string): string {
+  const idx = name.indexOf(" - ")
+  return idx >= 0 ? name.slice(idx + 3).trim() : name.trim()
+}
+
+const resolveTitleDashSegment = (opts: {
+  titleDashSegment?: TitleDashSegment
+  titleTakeBeforeDash?: boolean
+}): TitleDashSegment => {
+  if (opts.titleDashSegment === "before" || opts.titleDashSegment === "after" || opts.titleDashSegment === "none") {
+    return opts.titleDashSegment
+  }
+  return opts.titleTakeBeforeDash === true ? "before" : "none"
+}
+
 /** Remove numbers and common size patterns (30ml, 1.7 fl oz, etc.) from product name. */
 function stripNumbersFromTitle(name: string): string {
   return name
@@ -128,13 +146,16 @@ function omitWordsFromTitle(name: string, words: string[]): string {
 function cleanTitle(
   name: string,
   opts: {
+    titleDashSegment?: TitleDashSegment
     titleTakeBeforeDash?: boolean
     titleStripNumbers?: boolean
     titleOmitWords?: string[]
   },
 ): string {
   let out = name
-  if (opts.titleTakeBeforeDash) out = takeBeforeDash(out)
+  const seg = resolveTitleDashSegment(opts)
+  if (seg === "before") out = takeBeforeDash(out)
+  else if (seg === "after") out = takeAfterDash(out)
   if (opts.titleStripNumbers) out = stripNumbersFromTitle(out)
   if (opts.titleOmitWords?.length) out = omitWordsFromTitle(out, opts.titleOmitWords)
   return out.replace(/\s+/g, " ").trim() || name
@@ -159,19 +180,58 @@ function uniqueNotes(notes: string[]): string[] {
   return [...new Set(notes.map(n => n.trim().toLowerCase()).filter(Boolean))]
 }
 
+function dedupeNotesAcrossLayers(notes: {
+  openNotes: string[]
+  heartNotes: string[]
+  baseNotes: string[]
+}): {
+  openNotes: string[]
+  heartNotes: string[]
+  baseNotes: string[]
+} {
+  const seen = new Set<string>()
+  const keepFirstSeen = (arr: string[]): string[] => {
+    const out: string[] = []
+    for (const note of arr) {
+      const normalized = note.trim().toLowerCase()
+      if (!normalized || seen.has(normalized)) continue
+      seen.add(normalized)
+      out.push(normalized)
+    }
+    return out
+  }
+
+  return {
+    openNotes: keepFirstSeen(notes.openNotes),
+    heartNotes: keepFirstSeen(notes.heartNotes),
+    baseNotes: keepFirstSeen(notes.baseNotes),
+  }
+}
+
 function splitNoteList(text: string): string[] {
   if (!text?.trim()) return []
   return uniqueNotes(
     text
+      .replace(/\\u003c/gi, "<")
+      .replace(/\\u003e/gi, ">")
+      .replace(/\\\//g, "/")
+      .replace(/\\u0026amp;/gi, "&")
+      .replace(/\\u0026/gi, "&")
+      .replace(/\\n|\\t/g, " ")
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&amp;/gi, "&")
+      .replace(/&nbsp;/gi, " ")
       .replace(/\r/g, "\n")
       .replace(/[•·]/g, ",")
       .replace(/\s+\|\s+/g, ", ")
       .replace(/\s+\/\s+/g, ", ")
       .replace(/\s*;\s*/g, ", ")
+      .replace(/\s*&\s*/g, ", ")
       .replace(/\band\b/gi, ",")
       .split(/[\n,]+/)
       .map(part => part.trim())
-      .map(part => part.replace(/^[\-\u2022*:\s]+/, "").replace(/[.:\-\s]+$/, ""))
+      .map(part => part.replace(/^[&\-\u2022*:\s]+/, "").replace(/[.:\-\s]+$/, ""))
+      .filter(part => !/^amp$/i.test(part))
       .filter(Boolean),
   )
 }
@@ -231,6 +291,30 @@ function extractInlineLayeredNotes(text: string): {
   }
 }
 
+/**
+ * Detect flat "NOTES: X, Y, Z" or "Notes: X, Y, Z" patterns (no top/heart/base breakdown).
+ * Places all notes into openNotes so the LLM volatility-spreading step can redistribute them,
+ * and so they're always visible even when layer structure is unknown.
+ */
+function extractFlatNotes(text: string): string[] {
+  const source = text?.trim()
+  if (!source) return []
+  // Match standalone "notes: ..." or "notes - ...". We intentionally avoid lookbehind here
+  // so parsing is stable across runtimes/transpilers.
+  const flatNoteRe = /(?:^|[\s.!?\n])notes?\s*[:\-]\s*([^\n]+)/gi
+  const found: string[] = []
+  let match: RegExpExecArray | null
+  while ((match = flatNoteRe.exec(source)) !== null) {
+    const rawPrefix = source.slice(Math.max(0, match.index - 24), match.index).toLowerCase()
+    // Skip "top/open/heart/base notes: ..." since those are layered sections.
+    if (/(?:top|open|opening|head|heart|middle|mid|core|base|dry\s*down)\s+$/.test(rawPrefix)) continue
+    const chunk = match[1] ?? ""
+    const parsed = splitNoteList(chunk).filter(isDisplayableScentNote)
+    found.push(...parsed)
+  }
+  return uniqueNotes(found)
+}
+
 function extractNotesFromStructuredText(text: string): {
   openNotes: string[]
   heartNotes: string[]
@@ -274,14 +358,36 @@ function extractNotesFromStructuredText(text: string): {
     }
   }
 
-  const result = {
+  const layeredResult = {
     openNotes: uniqueNotes(openNotes),
     heartNotes: uniqueNotes(heartNotes),
     baseNotes: uniqueNotes(baseNotes),
   }
 
-  if (result.openNotes.length || result.heartNotes.length || result.baseNotes.length) {
-    return result
+  // Flat "NOTES: X, Y, Z" can coexist with partial layered sections. Parse it regardless and merge.
+  const flatNotes = extractFlatNotes(source)
+  if (flatNotes.length > 0 && !(layeredResult.openNotes.length || layeredResult.heartNotes.length || layeredResult.baseNotes.length)) {
+    return { openNotes: flatNotes, heartNotes: [], baseNotes: [] }
+  }
+
+  if (flatNotes.length > 0) {
+    const alreadyLayered = new Set([
+      ...layeredResult.openNotes,
+      ...layeredResult.heartNotes,
+      ...layeredResult.baseNotes,
+    ])
+    const toAdd = flatNotes.filter(n => !alreadyLayered.has(n))
+    if (toAdd.length > 0) {
+      return {
+        openNotes: uniqueNotes([...layeredResult.openNotes, ...toAdd]),
+        heartNotes: layeredResult.heartNotes,
+        baseNotes: layeredResult.baseNotes,
+      }
+    }
+  }
+
+  if (layeredResult.openNotes.length || layeredResult.heartNotes.length || layeredResult.baseNotes.length) {
+    return layeredResult
   }
 
   return empty
@@ -692,6 +798,7 @@ function buildGraph(
         heartNotes: notes.heartNotes.filter(cleanNote),
         baseNotes: notes.baseNotes.filter(cleanNote),
       }
+      notes = dedupeNotesAcrossLayers(notes)
 
       const allNoteStrs = [
         ...notes.openNotes,

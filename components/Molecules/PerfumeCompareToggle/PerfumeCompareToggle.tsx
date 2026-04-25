@@ -33,16 +33,24 @@ export function PerfumeCompareToggle({ item }: PerfumeCompareToggleProps) {
     : selected
       ? t("toggleRemove")
       : t("toggleAdd")
+  const itemTooltip = `${label}: ${item.name}`
 
   return (
-    <div className="pointer-events-auto absolute bottom-2 right-2 z-20">
+    <div className="pointer-events-auto absolute bottom-2 right-2 z-30 group/compare">
+      <span
+        className="pointer-events-none absolute -top-9 right-0 whitespace-nowrap rounded-sm border border-noir-gold/50 bg-noir-black/95 px-2 py-1 text-xs text-noir-gold opacity-0 shadow transition-opacity duration-150 group-hover/compare:opacity-100 group-focus-within/compare:opacity-100"
+        role="tooltip"
+        aria-hidden
+      >
+        {itemTooltip}
+      </span>
       <Button
         type="button"
         variant="secondary"
         size="sm"
         aria-pressed={selected}
         disabled={disabled}
-        title={label}
+        title={itemTooltip}
         aria-label={label}
         className={styleMerge(
           "!p-2 border-noir-gold",

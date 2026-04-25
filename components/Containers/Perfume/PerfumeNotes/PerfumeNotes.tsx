@@ -131,26 +131,38 @@ const PerfumeNotes = ({
   perfumeNotesClose,
 }: PerfumeNotesProps) => {
   const t = useTranslations("singlePerfume.notes")
+
+  // Deduplicate across layers so a note shown in Opening isn't repeated in Mid/End.
+  const seenIds = new Set<string>()
+  const dedupe = (arr: PerfumeNote[]) => arr.filter(n => {
+    if (seenIds.has(n.id)) return false
+    seenIds.add(n.id)
+    return true
+  })
+  const dedupedOpen = dedupe(perfumeNotesOpen)
+  const dedupedHeart = dedupe(perfumeNotesHeart)
+  const dedupedClose = dedupe(perfumeNotesClose)
+
   const { hasOpen, hasHeart, hasClose, noteTypesCount } = useNotesLogic(
-    perfumeNotesOpen,
-    perfumeNotesHeart,
-    perfumeNotesClose
+    dedupedOpen,
+    dedupedHeart,
+    dedupedClose
   )
 
   if (noteTypesCount === 1) {
     const allNotes = [
-      ...perfumeNotesOpen,
-      ...perfumeNotesHeart,
-      ...perfumeNotesClose,
+      ...dedupedOpen,
+      ...dedupedHeart,
+      ...dedupedClose,
     ]
     return renderSingleNotesList(allNotes, t)
   }
 
   // Show separate categories when multiple types have notes
   return renderCategorizedNotes({
-    perfumeNotesOpen,
-    perfumeNotesHeart,
-    perfumeNotesClose,
+    perfumeNotesOpen: dedupedOpen,
+    perfumeNotesHeart: dedupedHeart,
+    perfumeNotesClose: dedupedClose,
     hasOpen,
     hasHeart,
     hasClose,

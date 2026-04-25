@@ -109,7 +109,7 @@ const MyScentsModal = ({
                 <Select
                   selectData={perfumeTypes}
                   name="type"
-                  size="default"
+                  size="compact"
                   label={t("typeLabel")}
                   selectId="type"
                   value={perfumeData.type}

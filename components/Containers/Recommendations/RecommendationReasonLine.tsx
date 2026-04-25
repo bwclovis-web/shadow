@@ -66,6 +66,8 @@ export function RecommendationReasonLine({
         return tReason("popular")
       case "recent":
         return tReason("recent")
+      case "same_house":
+        return tReason("sameHouse")
       default:
         return null
     }

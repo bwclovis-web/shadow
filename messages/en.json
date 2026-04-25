@@ -68,6 +68,9 @@
       "errorAnalytics": "Error Analytics",
       "pendingSubmissions": "Pending Submissions",
       "houseScraper": "House Scraper"
+    },
+    "perfumeHouse": {
+      "sectionHeading": "Admin"
     }
   },
   "pendingSubmissions": {
@@ -666,6 +669,14 @@
       "placeholder": "Search your perfumes...",
       "noResults": "No perfumes found",
       "tryDifferent": "Try a different search term"
+    },
+    "filters": {
+      "sort": "Sort",
+      "house": "House",
+      "allHouses": "All Houses",
+      "minAmount": "Min (ml)",
+      "maxAmount": "Max (ml)",
+      "clearAll": "Clear Filters"
     }
   },
   "navigation": {
@@ -805,7 +816,8 @@
       "profileMatch": "Shown because it includes {notes} you marked as liked in your profile.",
       "profileMatchFallback": "Shown because it fits your scent profile.",
       "popular": "Shown because these picks are popular with the community.",
-      "recent": "Shown because these were recently added to the catalog."
+      "recent": "Shown because these were recently added to the catalog.",
+      "sameHouse": "Shown because they are from the same perfume house as this fragrance."
     }
   },
   "singleHouse": {

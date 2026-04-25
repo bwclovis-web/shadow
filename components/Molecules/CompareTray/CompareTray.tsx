@@ -8,11 +8,9 @@ import { IoMdCloseCircle } from "react-icons/io"
 import { buttonVariants } from "@/components/Atoms/Button/button-variants"
 import { Button } from "@/components/Atoms/Button/Button"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
+import { COMPARE_TRAY_PAD_VAR } from "@/constants/compare"
 import { COMPARE_MAX_ITEMS, useCompareStore } from "@/hooks/compareStore"
 import { normalizeRemoteImageSrc, styleMerge, validImageRegex } from "@/utils/styleUtils"
-
-/** Synced to `body` padding in `app/globals.css` when the tray is visible. */
-export const COMPARE_TRAY_PAD_VAR = "--compare-tray-pad"
 
 function CompareThumb({ image, alt }: { image?: string; alt: string }) {
   const normalized = normalizeRemoteImageSrc(image)
@@ -66,16 +64,18 @@ export function CompareTray() {
 
   return (
     <div
-      ref={trayRef}
       role="region"
       aria-label={t("trayAriaLabel")}
       className={styleMerge(
-        "fixed bottom-0 left-0 right-0 z-50",
+        "fixed bottom-0 left-0 right-0 z-50 pointer-events-none",
         "bg-noir-dark/95 backdrop-blur-md border-t border-noir-light/20 mobile-safe-bottom",
-        "px-3 py-3 shadow-lg"
+        "shadow-lg"
       )}
     >
-      <div className="mx-auto flex max-w-6xl flex-col gap-3">
+      <div
+        ref={trayRef}
+        className="mx-auto flex max-w-6xl flex-col gap-3 px-3 py-3 pointer-events-auto"
+      >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-semibold text-noir-gold">
             {t("trayTitle", {

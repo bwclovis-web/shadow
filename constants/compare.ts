@@ -3,3 +3,6 @@ export const COMPARE_MAX_ITEMS = 3
 
 /** Persist key in localStorage; stable for CF-003 URL sync. */
 export const COMPARE_STORAGE_KEY = "shadows-compare-tray"
+
+/** Synced to `document.documentElement` by `CompareTray`; read in `globals.css` and layout helpers. */
+export const COMPARE_TRAY_PAD_VAR = "--compare-tray-pad"

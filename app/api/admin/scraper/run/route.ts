@@ -30,6 +30,7 @@ import type {
   ScrapedItem,
   ScraperRunRequest,
   ScraperRunResponse,
+  TitleDashSegment,
 } from "@/types/scraper"
 import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 import { requireAdminOrEditorApi } from "@/utils/server/requireAdminOrEditorApi.server"
@@ -135,6 +136,12 @@ function validateSelectors(body: ScraperRunRequest): string | null {
   return null
 }
 
+const resolveTitleDashSegment = (body: ScraperRunRequest): TitleDashSegment => {
+  const s = body.titleDashSegment
+  if (s === "before" || s === "after" || s === "none") return s
+  return body.titleTakeBeforeDash === true ? "before" : "none"
+}
+
 function validateBody(body: unknown): body is ScraperRunRequest {
   if (!body || typeof body !== "object") return false
   const b = body as Record<string, unknown>
@@ -150,6 +157,7 @@ function validateBody(body: unknown): body is ScraperRunRequest {
   )
     return false
   if (b.titleOmitWords !== undefined && !Array.isArray(b.titleOmitWords)) return false
+  if (b.titleDashSegment !== undefined && typeof b.titleDashSegment !== "string") return false
   return true
 }
 
@@ -373,7 +381,7 @@ export async function POST(request: NextRequest): Promise<Response> {
           }
 
           const pipelineOptions = {
-            titleTakeBeforeDash: body.titleTakeBeforeDash ?? false,
+            titleDashSegment: resolveTitleDashSegment(body),
             titleStripNumbers: body.titleStripNumbers ?? false,
             titleOmitWords: Array.isArray(body.titleOmitWords) ? body.titleOmitWords : [],
             generateNoirDescriptions: body.generateNoirDescriptions ?? true,
