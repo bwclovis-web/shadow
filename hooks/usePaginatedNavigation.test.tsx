@@ -75,6 +75,32 @@ describe("usePaginatedNavigation", () => {
       replace: false,
     })
   })
+
+  it("clamps goToPage to totalPages when provided", () => {
+    const navigate = vi.fn()
+    const buildPath = vi.fn(noopBuildPath)
+
+    const { result } = renderHook(props => usePaginatedNavigation(props), {
+      initialProps: {
+        currentPage: 2,
+        hasNextPage: true,
+        hasPrevPage: true,
+        navigate,
+        buildPath,
+        totalPages: 5,
+      },
+    })
+
+    act(() => {
+      result.current.goToPage(100)
+    })
+
+    expect(buildPath).toHaveBeenCalledWith(5)
+    expect(navigate).toHaveBeenCalledWith("/path?page=5", {
+      preventScrollReset: true,
+      replace: false,
+    })
+  })
 })
 
 describe("usePreserveScrollPosition", () => {

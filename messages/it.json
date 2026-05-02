@@ -23,7 +23,10 @@
     "add": "Aggiungi",
     "previous": "Precedente",
     "next": "Successivo",
-    "pageOf": "Pagina {current} di {total}"
+    "pageOf": "Pagina {current} di {total}",
+    "paginationNav": "Paginazione",
+    "paginationFirst": "Prima",
+    "paginationLast": "Ultima"
   },
   "compare": {
     "meta": {

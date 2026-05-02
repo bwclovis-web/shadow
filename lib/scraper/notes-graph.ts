@@ -326,6 +326,71 @@ const truncateAtShopMetaLabels = (s: string): string => {
   return s.trim()
 }
 
+// ---------------------------------------------------------------------------
+// Junk / keep rules (needed before structured extraction — long accords fail isDisplayableScentNote)
+// ---------------------------------------------------------------------------
+
+const JUNK_NOTE_PATTERNS: RegExp[] = [
+  /[.!?;:(){}\[\]"]/, // punctuation → sentence fragment or copy
+  /\d{2,}/, // numbers like sizes, prices, percentages
+  /\b(buy|shop|order|add to cart|checkout|shipping|delivery|free|sale|discount)\b/i,
+  /\b(livrare|cumpara|adauga|comanda|rapid|gratuit)\b/i, // Romanian commerce
+  /\b(livraison|acheter|commande|gratuit)\b/i, // French commerce
+  /\b(extrait|parfum|eau de|huile|spray|ml|oz)\b/i,
+  /\b(discover|explore|experience|transform|reinvent|secret|powerful|irresistible|seductive|sensual|intense|long-lasting|unisex|pure)\b/i,
+  /\b(it is|you will|you can|this is|that is|with every|just a)\b/i,
+  /\b(evokes?|creates?|inspires?|crafts?)\b/i,
+  /\b(calm|calming|magnetic|luminous|confident|abundant|abundance|courage|vitality|clarity|motivation|amplification|prosperity|healing|grounding|balance)\b/i,
+  // Crystals / gemstones — not fragrance notes
+  /\b(quartz|amethyst|herkimer|tourmaline|labradorite|malachite|selenite|fluorite|pyrite|citrine|obsidian|moonstone|agate|jasper|onyx|garnet|gem\s*magic|crystal\s*magic)\b/i,
+  // Carrier / base oils — not fragrance notes
+  /\b(sunflower|jojoba|argan|sweet\s+almond|avocado)\s+oil\b/i,
+  /\bshea\s+butter\b/i,
+  // Non-fragrance product signals
+  /\b(necklace|bracelet|earring|ring|pendant|jewel|crystal\s+chip|chain)\b/i,
+  // E‑commerce / collection nav copy (e.g. Shopify “cosy gift ideas” blocks), not ingredients
+  /\bgift\s+ideas\b/i,
+  // French note names that slip through ASCII detection
+  /\b(musc\s+blanc|musc\s+noir|bois\s+de|eau\s+de|huile\s+de|fleur\s+de|note\s+de)\b/i,
+]
+
+/** Junk checks for typical short notes — excludes the punctuation rule so accord phrases with () survive. */
+const JUNK_NOTE_PATTERNS_NO_PUNCT: RegExp[] = JUNK_NOTE_PATTERNS.slice(1)
+
+const looksLikeJunkNote = (note: string): boolean => {
+  if (!note?.trim()) return true
+  const n = note.trim().toLowerCase()
+  if (n.split(/\s+/).length > 4) return true
+  return JUNK_NOTE_PATTERNS.some(p => p.test(n))
+}
+
+/**
+ * Etsy / Pattern listings: long accord lines ("Mesoamerican Incense (Copal & Palo Santo) Accord").
+ * Those fail `isDisplayableScentNote` (5 words / 50 char caps for quiz UI).
+ */
+const isScraperExtendedAccordNote = (note: string): boolean => {
+  const t = note.trim()
+  if (!t) return false
+  if (!/\baccord\b/i.test(t)) return false
+  const lower = t.toLowerCase()
+  const words = lower.split(/\s+/).filter(Boolean)
+  if (words.length < 2 || words.length > 18) return false
+  if (lower.length < 2 || lower.length > 140) return false
+  return !JUNK_NOTE_PATTERNS_NO_PUNCT.some(p => p.test(lower))
+}
+
+const isScraperKeptNote = (note: string): boolean => {
+  const t = note.trim()
+  if (!t) return false
+  if (isDisplayableScentNote(t) && !looksLikeJunkNote(t)) return true
+  if (isScraperExtendedAccordNote(t)) return true
+  return false
+}
+
+/** Candidates from labeled Top/Middle/Base list lines (parentheticals, long accords). */
+const filterStructuredNoteParts = (parts: string[]): string[] =>
+  parts.map(p => p.trim()).filter(p => p && isScraperKeptNote(p))
+
 function classifyNoteLayer(label: string): "open" | "heart" | "base" | null {
   const normalized = label.trim().toLowerCase().replace(/\s+/g, " ")
   if (/^(top|open|opening|head)(?: notes?)?$/.test(normalized)) return "open"
@@ -363,7 +428,7 @@ function extractInlineLayeredNotes(text: string): {
       ? matches[i + 1].index!
       : source.length
     const chunk = truncateAtShopMetaLabels(stripTrailingNonNoteSections(source.slice(start, end)))
-    const parsed = splitNoteList(chunk).filter(isDisplayableScentNote)
+    const parsed = filterStructuredNoteParts(splitNoteList(chunk))
     if (layer === "open") openNotes.push(...parsed)
     if (layer === "heart") heartNotes.push(...parsed)
     if (layer === "base") baseNotes.push(...parsed)
@@ -394,7 +459,7 @@ function extractFlatNotes(text: string): string[] {
     // Skip "top/open/heart/base notes: ..." since those are layered sections.
     if (/(?:top|open|opening|head|heart|middle|mid|core|base|dry\s*down)\s+$/.test(rawPrefix)) continue
     const chunk = match[1] ?? ""
-    const parsed = splitNoteList(chunk).filter(isDisplayableScentNote)
+    const parsed = filterStructuredNoteParts(splitNoteList(chunk))
     found.push(...parsed)
   }
   return uniqueNotes(found)
@@ -430,17 +495,17 @@ function extractNotesFromStructuredText(text: string): {
     const normalized = line.replace(/\s+/g, " ").trim()
     const openMatch = normalized.match(/^(?:top|open|opening|head)(?:\s+notes?)?\s*[:\-]\s*(.+)$/i)
     if (openMatch) {
-      openNotes.push(...splitNoteList(truncateAtShopMetaLabels(openMatch[1])))
+      openNotes.push(...filterStructuredNoteParts(splitNoteList(truncateAtShopMetaLabels(openMatch[1]))))
       continue
     }
     const heartMatch = normalized.match(/^(?:heart|middle|mid|core)(?:\s+notes?)?\s*[:\-]\s*(.+)$/i)
     if (heartMatch) {
-      heartNotes.push(...splitNoteList(truncateAtShopMetaLabels(heartMatch[1])))
+      heartNotes.push(...filterStructuredNoteParts(splitNoteList(truncateAtShopMetaLabels(heartMatch[1]))))
       continue
     }
     const baseMatch = normalized.match(/^(?:base|dry\s*down|drydown|end)(?:\s+notes?)?\s*[:\-]\s*(.+)$/i)
     if (baseMatch) {
-      baseNotes.push(...splitNoteList(truncateAtShopMetaLabels(baseMatch[1])))
+      baseNotes.push(...filterStructuredNoteParts(splitNoteList(truncateAtShopMetaLabels(baseMatch[1]))))
       continue
     }
   }
@@ -635,7 +700,12 @@ Full product text:
     const before = noteLayerCount(structured)
     const after = noteLayerCount(merged)
     if (after === 0 || after < Math.ceil(before * 0.5)) return structured
-    return merged
+    // Never drop structured layer content when the model omits a tier (common with base).
+    return {
+      openNotes: uniqueNotes([...structured.openNotes, ...merged.openNotes]),
+      heartNotes: uniqueNotes([...structured.heartNotes, ...merged.heartNotes]),
+      baseNotes: uniqueNotes([...structured.baseNotes, ...merged.baseNotes]),
+    }
   } catch {
     return structured
   }
@@ -791,68 +861,6 @@ Write a unique, film noir styled description for this perfume (2–3 sentences).
 }
 
 // ---------------------------------------------------------------------------
-// Junk note filtering
-// ---------------------------------------------------------------------------
-
-const JUNK_NOTE_PATTERNS: RegExp[] = [
-  /[.!?;:(){}\[\]"]/, // punctuation → sentence fragment or copy
-  /\d{2,}/, // numbers like sizes, prices, percentages
-  /\b(buy|shop|order|add to cart|checkout|shipping|delivery|free|sale|discount)\b/i,
-  /\b(livrare|cumpara|adauga|comanda|rapid|gratuit)\b/i, // Romanian commerce
-  /\b(livraison|acheter|commande|gratuit)\b/i, // French commerce
-  /\b(extrait|parfum|eau de|huile|spray|ml|oz)\b/i,
-  /\b(discover|explore|experience|transform|reinvent|secret|powerful|irresistible|seductive|sensual|intense|long-lasting|unisex|pure)\b/i,
-  /\b(it is|you will|you can|this is|that is|with every|just a)\b/i,
-  /\b(evokes?|creates?|inspires?|crafts?)\b/i,
-  /\b(calm|calming|magnetic|luminous|confident|abundant|abundance|courage|vitality|clarity|motivation|amplification|prosperity|healing|grounding|balance)\b/i,
-  // Crystals / gemstones — not fragrance notes
-  /\b(quartz|amethyst|herkimer|tourmaline|labradorite|malachite|selenite|fluorite|pyrite|citrine|obsidian|moonstone|agate|jasper|onyx|garnet|gem\s*magic|crystal\s*magic)\b/i,
-  // Carrier / base oils — not fragrance notes
-  /\b(sunflower|jojoba|argan|sweet\s+almond|avocado)\s+oil\b/i,
-  /\bshea\s+butter\b/i,
-  // Non-fragrance product signals
-  /\b(necklace|bracelet|earring|ring|pendant|jewel|crystal\s+chip|chain)\b/i,
-  // E‑commerce / collection nav copy (e.g. Shopify “cosy gift ideas” blocks), not ingredients
-  /\bgift\s+ideas\b/i,
-  // French note names that slip through ASCII detection
-  /\b(musc\s+blanc|musc\s+noir|bois\s+de|eau\s+de|huile\s+de|fleur\s+de|note\s+de)\b/i,
-]
-
-/** Junk checks for typical short notes (commerce, crystals, etc.) — excludes the punctuation rule so accord phrases with () survive. */
-const JUNK_NOTE_PATTERNS_NO_PUNCT: RegExp[] = JUNK_NOTE_PATTERNS.slice(1)
-
-function looksLikeJunkNote(note: string): boolean {
-  if (!note?.trim()) return true
-  const n = note.trim().toLowerCase()
-  if (n.split(/\s+/).length > 4) return true
-  return JUNK_NOTE_PATTERNS.some(p => p.test(n))
-}
-
-/**
- * Etsy / indie listings often use long accord labels ("mesoamerican incense (copal & palo santo) accord").
- * Those fail `isDisplayableScentNote` (word/length caps) and `looksLikeJunkNote` (parens + word count).
- * Keep them when they still look like perfumery, not storefront copy.
- */
-const isScraperExtendedAccordNote = (note: string): boolean => {
-  const t = note.trim()
-  if (!t) return false
-  if (!/\baccord\b/i.test(t)) return false
-  const lower = t.toLowerCase()
-  const words = lower.split(/\s+/).filter(Boolean)
-  if (words.length < 2 || words.length > 14) return false
-  if (lower.length < 2 || lower.length > 120) return false
-  return !JUNK_NOTE_PATTERNS_NO_PUNCT.some(p => p.test(lower))
-}
-
-const isScraperKeptNote = (note: string): boolean => {
-  const t = note.trim()
-  if (!t) return false
-  if (isDisplayableScentNote(t) && !looksLikeJunkNote(t)) return true
-  if (isScraperExtendedAccordNote(t)) return true
-  return false
-}
-
-// ---------------------------------------------------------------------------
 // Note translation (non-English → English)
 // ---------------------------------------------------------------------------
 
@@ -928,7 +936,7 @@ function buildGraph(
         notes = await extractNotesFromDescription(llm, notesSource, name || resolvedName)
       } else if (
         totalParsedDirectly > 0 &&
-        (notesSource?.length ?? 0) > 350 &&
+        (notesSource?.length ?? 0) > 100 &&
         notesSource?.trim()
       ) {
         // Long pages often repeat accords in "Note Structure" and list real notes only in prose/title

@@ -226,8 +226,7 @@ const AllHousesClient = ({
     []
   )
 
-  const { handleLetterClick, handleNextPage, handlePrevPage } =
-    useAlphabeticalBrowserState({
+  const { handleLetterClick, goToPage } = useAlphabeticalBrowserState({
       letter: letterFromUrl,
       pageFromUrl,
       basePathForSync: ROUTE_PATH,
@@ -281,8 +280,7 @@ const AllHousesClient = ({
         selectedLetter={letterFromUrl}
         sourcePage="houses"
         pagination={pagination}
-        onNextPage={handleNextPage}
-        onPrevPage={handlePrevPage}
+        onPageChange={goToPage}
       />
     </section>
   )

@@ -8,6 +8,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation"
 
 import { Button } from "@/components/Atoms/Button"
 import Select from "@/components/Atoms/Select/Select"
+import { PaginationBar } from "@/components/Molecules/PaginationBar"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import AddToCollectionModal from "@/components/Organisms/AddToCollectionModal"
 import type { OptimisticCollectionItem } from "@/hooks/useMyScentsForm"
@@ -297,10 +298,6 @@ const MyScentsPageClient = ({
     [basePath, router, searchParams],
   )
 
-  const hasPrevPage = currentPage > 1
-  const hasNextPage = currentPage < totalPages
-  const tCommon = useTranslations("common")
-
   return (
     <section>
       <TitleBanner
@@ -459,32 +456,12 @@ const MyScentsPageClient = ({
               })}
             </ul>
             {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-4 py-6">
-                {hasPrevPage && (
-                  <Button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    variant="secondary"
-                    size="sm"
-                  >
-                    {tCommon("previous")}
-                  </Button>
-                )}
-                <span className="text-noir-gold/80">
-                  {tCommon("pageOf", {
-                    current: currentPage,
-                    total: totalPages,
-                  })}
-                </span>
-                {hasNextPage && (
-                  <Button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    variant="secondary"
-                    size="sm"
-                  >
-                    {tCommon("next")}
-                  </Button>
-                )}
-              </div>
+              <PaginationBar
+                className="py-6"
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
             )}
           </div>
         )}

@@ -1,7 +1,10 @@
+"use client"
+
 import { useTranslations } from "next-intl"
 
-import { Button } from "@/components/Atoms/Button"
+import { PaginationBar } from "@/components/Molecules/PaginationBar"
 import LinkCard from "@/components/Organisms/LinkCard"
+
 interface PaginationState {
   currentPage: number
   totalPages: number
@@ -15,8 +18,7 @@ interface PerfumeHousePerfumeListProps {
   perfumes: any[]
   loading: boolean
   pagination: PaginationState
-  onNextPage: () => void
-  onPrevPage: () => void
+  onPageChange: (page: number) => void
   selectedLetter?: string | null
   queryError?: Error | null
 }
@@ -25,8 +27,7 @@ const PerfumeHousePerfumeList = ({
   perfumes,
   loading,
   pagination,
-  onNextPage,
-  onPrevPage,
+  onPageChange,
   selectedLetter,
   queryError,
 }: PerfumeHousePerfumeListProps) => {
@@ -37,7 +38,10 @@ const PerfumeHousePerfumeList = ({
       <h2 className="text-center mb-4">{tSingleHouse("perfumes")}</h2>
 
       {loading && perfumes.length === 0 ? (
-        <div className="text-center py-6 min-h-[320px] flex items-center justify-center" aria-busy="true">
+        <div
+          className="text-center py-6 min-h-[320px] flex items-center justify-center"
+          aria-busy="true"
+        >
           {tSingleHouse("loadingPerfumes")}
         </div>
       ) : perfumes.length > 0 ? (
@@ -53,16 +57,16 @@ const PerfumeHousePerfumeList = ({
                   image: perfume.image,
                 }}
                 selectedLetter={selectedLetter}
-                imageAlt={tSingleHouse("perfumeBottleAltText", { name: perfume.name })}
+                imageAlt={tSingleHouse("perfumeBottleAltText", {
+                  name: perfume.name,
+                })}
                 imagePriority={index < 6}
               />
             </li>
           ))}
         </ul>
       ) : (
-        <div className="text-center py-6">
-          {tSingleHouse("noPerfumes")}
-        </div>
+        <div className="text-center py-6">{tSingleHouse("noPerfumes")}</div>
       )}
 
       {queryError && (
@@ -72,26 +76,15 @@ const PerfumeHousePerfumeList = ({
       )}
 
       {pagination.totalPages > 1 && (
-        <div className="flex justify-center items-center gap-4 py-6">
-          {pagination.hasPrevPage && (
-            <Button onClick={onPrevPage} variant="secondary" size="sm">
-              Previous
-            </Button>
-          )}
-          <span className="text-noir-gold/80">
-            Page {pagination.currentPage} of {pagination.totalPages}
-          </span>
-          {pagination.hasNextPage && (
-            <Button onClick={onNextPage} variant="secondary" size="sm">
-              Next
-            </Button>
-          )}
-        </div>
+        <PaginationBar
+          className="py-6"
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          onPageChange={onPageChange}
+        />
       )}
     </div>
   )
 }
 
 export default PerfumeHousePerfumeList
-
-

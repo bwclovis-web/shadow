@@ -144,12 +144,13 @@ export default function HouseDetailClient({
 
   const houseSlug = (perfumeHouse ?? initialPerfumeHouse)?.slug ?? ""
 
-  const { handleNextPage, handlePrevPage } = usePaginatedNavigation({
+  const { goToPage } = usePaginatedNavigation({
     currentPage: pagination.currentPage,
     hasNextPage: pagination.hasNextPage,
     hasPrevPage: pagination.hasPrevPage,
     navigate,
     buildPath: (page) => buildHouseDetailPath(houseSlug, page, selectedLetter),
+    totalPages: pagination.totalPages,
   })
 
   useEffect(() => {
@@ -263,8 +264,7 @@ export default function HouseDetailClient({
             perfumes={perfumes}
             loading={loading}
             pagination={pagination}
-            onNextPage={handleNextPage}
-            onPrevPage={handlePrevPage}
+            onPageChange={goToPage}
             selectedLetter={selectedLetter}
             queryError={listError ?? undefined}
           />

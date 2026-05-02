@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl"
 
-import { Button } from "@/components/Atoms/Button/Button"
+import { PaginationBar } from "@/components/Molecules/PaginationBar"
 
 import LinkCard from "../LinkCard/LinkCard"
 
@@ -13,21 +13,32 @@ type DisplayItem = {
   perfumeHouse?: { name: string } | null
 }
 
-interface DataDisplaySectionProps {
+type PaginationSlice = {
+  currentPage: number
+  totalPages: number
+  hasNextPage: boolean
+  hasPrevPage: boolean
+}
+
+interface DataDisplaySectionBaseProps {
   data: DisplayItem[]
   isLoading: boolean
   type: "house" | "perfume"
   selectedLetter: string | null
   sourcePage?: string
-  pagination?: {
-    currentPage: number
-    totalPages: number
-    hasNextPage: boolean
-    hasPrevPage: boolean
-  }
-  onNextPage?: () => void
-  onPrevPage?: () => void
 }
+
+type DataDisplaySectionProps = DataDisplaySectionBaseProps &
+  (
+    | {
+        pagination?: undefined
+        onPageChange?: undefined
+      }
+    | {
+        pagination: PaginationSlice
+        onPageChange: (page: number) => void
+      }
+  )
 
 const itemNameByType = (type: "house" | "perfume") =>
   type === "house" ? "houses" : "perfumes"
@@ -39,8 +50,7 @@ const DataDisplaySection = ({
   selectedLetter,
   sourcePage,
   pagination,
-  onNextPage,
-  onPrevPage,
+  onPageChange,
 }: DataDisplaySectionProps) => {
   const tDataDisplay = useTranslations("components.dataDisplaySection")
   const tCommon = useTranslations("common")
@@ -60,7 +70,7 @@ const DataDisplaySection = ({
   }
 
   const showPagination =
-    pagination && pagination.totalPages > 1
+    pagination !== undefined && pagination.totalPages > 1
 
   return (
     <div className="inner-container my-6 h-60vh" id="data-list">
@@ -84,35 +94,13 @@ const DataDisplaySection = ({
         </ul>
       )}
 
-      {showPagination && pagination && (
-        <div className="flex justify-center items-center space-x-4 mt-8">
-          {pagination.hasPrevPage && (
-            <Button
-              onClick={() => onPrevPage?.()}
-              variant="secondary"
-              size="sm"
-            >
-              {tCommon("previous")}
-            </Button>
-          )}
-
-          <span className="text-noir-gold/80">
-            {tCommon("pageOf", {
-              current: pagination.currentPage,
-              total: pagination.totalPages,
-            })}
-          </span>
-
-          {pagination.hasNextPage && (
-            <Button
-              onClick={() => onNextPage?.()}
-              variant="secondary"
-              size="sm"
-            >
-              {tCommon("next")}
-            </Button>
-          )}
-        </div>
+      {showPagination && pagination && onPageChange && (
+        <PaginationBar
+          className="mt-8"
+          currentPage={pagination.currentPage}
+          totalPages={pagination.totalPages}
+          onPageChange={onPageChange}
+        />
       )}
     </div>
   )

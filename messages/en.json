@@ -19,7 +19,10 @@
     "adding": "Adding...",
     "previous": "Previous",
     "next": "Next",
-    "pageOf": "Page {current} of {total}"
+    "pageOf": "Page {current} of {total}",
+    "paginationNav": "Pagination",
+    "paginationFirst": "First",
+    "paginationLast": "Last"
   },
   "compare": {
     "meta": {

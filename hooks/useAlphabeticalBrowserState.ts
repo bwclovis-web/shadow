@@ -14,6 +14,7 @@ const SCROLL_ADDITIONAL_OFFSET = 32
 
 export interface AlphabeticalBrowserStatePagination {
   currentPage: number
+  totalPages: number
   hasNextPage: boolean
   hasPrevPage: boolean
 }
@@ -38,6 +39,7 @@ export interface UseAlphabeticalBrowserStateResult {
   handleLetterClick: (letter: string | null) => void
   handleNextPage: () => void
   handlePrevPage: () => void
+  goToPage: (page: number) => void
 }
 
 /**
@@ -69,12 +71,13 @@ export function useAlphabeticalBrowserState({
     [router]
   )
 
-  const { handleNextPage, handlePrevPage } = usePaginatedNavigation({
+  const { handleNextPage, handlePrevPage, goToPage } = usePaginatedNavigation({
     currentPage: pagination.currentPage,
     hasNextPage: pagination.hasNextPage,
     hasPrevPage: pagination.hasPrevPage,
     navigate,
     buildPath,
+    totalPages: pagination.totalPages,
   })
 
   usePreserveScrollPosition(loading)
@@ -111,5 +114,6 @@ export function useAlphabeticalBrowserState({
     handleLetterClick,
     handleNextPage,
     handlePrevPage,
+    goToPage,
   }
 }

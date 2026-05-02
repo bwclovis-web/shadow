@@ -17,6 +17,8 @@ interface UsePaginatedNavigationOptions {
   navigate: NavigateFn
   buildPath: BuildPathFn
   navigateOptions?: { replace?: boolean; preventScrollReset?: boolean }
+  /** When set and positive, `goToPage` clamps to this upper bound. */
+  totalPages?: number
 }
 
 interface UsePaginatedNavigationResult {
@@ -32,15 +34,18 @@ export const usePaginatedNavigation = ({
   navigate,
   buildPath,
   navigateOptions,
+  totalPages,
 }: UsePaginatedNavigationOptions): UsePaginatedNavigationResult => {
   const goToPage = useCallback(
     (page: number) => {
-      const targetPage = Math.max(1, page)
+      const upper =
+        totalPages !== undefined && totalPages > 0 ? totalPages : Infinity
+      const targetPage = Math.min(Math.max(1, page), upper)
       const to = buildPath(targetPage)
       const options = navigateOptions ?? DEFAULT_NAVIGATE_OPTIONS
       navigate(to, options)
     },
-    [buildPath, navigate, navigateOptions]
+    [buildPath, navigate, navigateOptions, totalPages]
   )
 
   const handleNextPage = useCallback(() => {

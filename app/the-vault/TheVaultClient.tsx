@@ -122,8 +122,7 @@ const TheVaultClient = ({
     []
   )
 
-  const { handleLetterClick, handleNextPage, handlePrevPage } =
-    useAlphabeticalBrowserState({
+  const { handleLetterClick, goToPage } = useAlphabeticalBrowserState({
       letter: letterFromUrl,
       pageFromUrl,
       basePathForSync: letterFromUrl
@@ -178,8 +177,7 @@ const TheVaultClient = ({
         selectedLetter={letterFromUrl}
         sourcePage="vault"
         pagination={pagination}
-        onNextPage={handleNextPage}
-        onPrevPage={handlePrevPage}
+        onPageChange={goToPage}
       />
     </section>
   )

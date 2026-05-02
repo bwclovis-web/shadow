@@ -7,6 +7,7 @@ import { usePathname, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button"
+import { PaginationBar } from "@/components/Molecules/PaginationBar"
 import { FilterChipStrip } from "@/components/Molecules/FilterChipStrip"
 import { DiscoveryFiltersPanel } from "@/components/Organisms/DiscoveryFiltersPanel"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
@@ -164,14 +165,6 @@ const TheExchangeClient = ({
     if (page > 1) nextSearch.set("pg", page.toString())
     else nextSearch.delete("pg")
     pushUrlFromSearchParams(nextSearch)
-  }
-
-  const handleNextPage = () => {
-    if (pagination.hasNextPage) handlePageChange(pagination.currentPage + 1)
-  }
-
-  const handlePrevPage = () => {
-    if (pagination.hasPrevPage) handlePageChange(pagination.currentPage - 1)
   }
 
   const totalCount = pagination.totalCount ?? availablePerfumes.length
@@ -363,21 +356,12 @@ const TheExchangeClient = ({
           </div>
 
           {pagination.totalPages > 1 && (
-            <div className="flex justify-center items-center gap-4 py-6">
-              {pagination.hasPrevPage && (
-                <Button onClick={handlePrevPage} variant="secondary" size="sm">
-                  Previous
-                </Button>
-              )}
-              <span className="text-noir-gold/80">
-                Page {pagination.currentPage} of {pagination.totalPages}
-              </span>
-              {pagination.hasNextPage && (
-                <Button onClick={handleNextPage} variant="secondary" size="sm">
-                  Next
-                </Button>
-              )}
-            </div>
+            <PaginationBar
+              className="py-6"
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              onPageChange={handlePageChange}
+            />
           )}
 
           {modalOpen &&
