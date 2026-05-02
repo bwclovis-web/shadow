@@ -64,6 +64,10 @@ const KNOWN_BAD_PATTERNS = [
   /^\d+\s*ml\b/i,
   /^test\s+/i,
   /\bgift\s+ideas\b/i,
+  /\bpower source\b/i,
+  /\bextra info\b/i,
+  /\bif you'?re\s+curious\b/i,
+  /\bbelow\s+if\s+you\b/i,
   ...INCI_LIKE_PATTERNS,
 ]
 

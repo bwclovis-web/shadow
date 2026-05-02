@@ -5,7 +5,7 @@
  * and returns PerfumeCsvRecord[] with openNotes / heartNotes / baseNotes
  * extracted from each product description using an LLM.
  *
- * Optional: clean product names (take before " - ", strip numbers), strip
+ * Optional: clean product names (take before first of ` - `, `~`, `.`, `|`, strip numbers), strip
  * extracted notes from description text, and generate film noir themed
  * descriptions from notes + original prose.
  *
@@ -23,7 +23,7 @@ import { isDisplayableScentNote } from "@/utils/validation/note-validation.serve
 
 /** Options for title cleaning and description generation. */
 export interface ScraperPipelineOptions {
-  /** Trim at the first ` - `: before, after, or keep full title (`none`). */
+  /** Trim at the first ` - `, `~`, `.`, or `|`: before, after, or keep full title (`none`). */
   titleDashSegment?: TitleDashSegment
   /** @deprecated Use `titleDashSegment: "before"` instead. */
   titleTakeBeforeDash?: boolean
@@ -107,7 +107,7 @@ function resolveProductName(item: ScrapedItem): string {
 // Title cleaning (no LLM)
 // ---------------------------------------------------------------------------
 
-const TITLE_SEGMENT_DELIMITER = /\s*[-~.]\s*/
+const TITLE_SEGMENT_DELIMITER = /\s*[-~.|]\s*/
 const TITLE_COLON_DELIMITER = /\s*:\s*/
 
 /** Keep only the part before the first segment delimiter and trim. */
@@ -304,6 +304,7 @@ function splitNoteList(text: string): string[] {
 function stripTrailingNonNoteSections(text: string): string {
   return text
     .replace(/\s+(?:additional information|ingredients|how to use|customer reviews?|reviews?)\b[\s\S]*$/i, "")
+    .replace(/\s+extra info\b[\s\S]*$/i, "")
     .trim()
 }
 
@@ -319,9 +320,22 @@ const splitGluedLayerLabels = (text: string): string =>
       " ",
     )
 
+/**
+ * Shopify accordions (e.g. Parfums de Marly) often use "Top notes" as a heading with the list on the
+ * next line. After `get_text` / whitespace collapse that becomes "Top notes Almond, Bergamot …"
+ * without a colon, so layered parsers miss it — insert "Label: " before the list.
+ */
+const normalizeImplicitLayerColons = (text: string): string =>
+  text.replace(
+    /\b(top|open(?:ing)?|head|heart|middle|mid|core|base|dry[\s-]*down|drydown|end)\s+notes?\s+(?!(?:of|and|with|from|to|in|the|a|an|is|are)\b)(?=[A-Za-z])/gi,
+    "$1: ",
+  )
+
 /** Stop last layer chunk before Pattern/Etsy listing meta (avoids ':' in tokens → junk filter drops all base notes). */
 const truncateAtShopMetaLabels = (s: string): string => {
-  const m = s.match(/\s+(?:series|perfume\s+family|unisex|contains\s+true\s+animalics|scent\s+strength)\s*:/i)
+  const m = s.match(
+    /\s+(?:series|perfume\s+family|unisex|contains\s+true\s+animalics|scent\s+strength|extra info)\s*:?/i,
+  )
   if (m?.index != null) return s.slice(0, m.index).trim()
   return s.trim()
 }
@@ -352,6 +366,18 @@ const JUNK_NOTE_PATTERNS: RegExp[] = [
   /\bgift\s+ideas\b/i,
   // French note names that slip through ASCII detection
   /\b(musc\s+blanc|musc\s+noir|bois\s+de|eau\s+de|huile\s+de|fleur\s+de|note\s+de)\b/i,
+  // Pattern / Etsy section fluff & non-fragrance “accords” (electronics, boilerplate)
+  /\bpower source\b/i,
+  /\bextra info\b/i,
+  /\bif you'?re\s+curious\b/i,
+  /\bbelow\s+if\s+you\b/i,
+  // Site quotes / marketing leaked into note lists (e.g. Parfums de Marly founder blurbs, car copy)
+  /\bfounder\b/i,
+  /\ban iconic\b/i,
+  /\btransmission\b/i,
+  /\bcontinues the narrative\b/i,
+  /\bexhilarates the senses\b/i,
+  /^\bmystery\b$/i,
 ]
 
 /** Junk checks for typical short notes — excludes the punctuation rule so accord phrases with () survive. */
@@ -387,9 +413,13 @@ const isScraperKeptNote = (note: string): boolean => {
   return false
 }
 
+/** Strip leading prose wrappers before note tokens (e.g. "Notes of cinnamon" → "cinnamon"). */
+const stripNoteListProsePrefix = (p: string): string =>
+  p.replace(/^\s*notes\s+of\s+/i, "").replace(/^\s*note\s+of\s+/i, "").trim()
+
 /** Candidates from labeled Top/Middle/Base list lines (parentheticals, long accords). */
 const filterStructuredNoteParts = (parts: string[]): string[] =>
-  parts.map(p => p.trim()).filter(p => p && isScraperKeptNote(p))
+  parts.map(p => stripNoteListProsePrefix(p.trim())).filter(p => p && isScraperKeptNote(p))
 
 function classifyNoteLayer(label: string): "open" | "heart" | "base" | null {
   const normalized = label.trim().toLowerCase().replace(/\s+/g, " ")
@@ -442,6 +472,22 @@ function extractInlineLayeredNotes(text: string): {
 }
 
 /**
+ * After whitespace collapse, "Notes: a, b, c Sweet as a slow…" becomes one line; capturing [^\n]+
+ * pulls in the full PDP and splitNoteList's "and" → comma rule turns prose into fake notes.
+ * Cut before common marketing / body-copy starters (Squarespace, Shopify, etc.).
+ */
+const FLAT_NOTE_PROSE_BOUNDARY =
+  /\s+(?:Sweet |Sipping |Read about|Beneath |Among |Caught |In the |A sudden |A whisper |A worn |A dusty |A low |A shimmering |A porcelain |A delicate |Fingers |Rain-soaked |Cloaked |Under the |Twist-top |Variation:|Join |Sign up|Select |Add to |Image \d+\s+of\s+\d+|Shop all|Skip to)\b/i
+
+const truncateFlatNotesChunk = (chunk: string): string => {
+  let s = chunk.trim()
+  if (!s) return s
+  const m = FLAT_NOTE_PROSE_BOUNDARY.exec(s)
+  if (m?.index != null && m.index >= 8) s = s.slice(0, m.index).trim()
+  return s.replace(/,\s*$/, "").trim()
+}
+
+/**
  * Detect flat "NOTES: X, Y, Z" or "Notes: X, Y, Z" patterns (no top/heart/base breakdown).
  * Places all notes into openNotes so the LLM volatility-spreading step can redistribute them,
  * and so they're always visible even when layer structure is unknown.
@@ -449,16 +495,17 @@ function extractInlineLayeredNotes(text: string): {
 function extractFlatNotes(text: string): string[] {
   const source = text?.trim()
   if (!source) return []
-  // Match standalone "notes: ..." or "notes - ...". We intentionally avoid lookbehind here
-  // so parsing is stable across runtimes/transpilers.
-  const flatNoteRe = /(?:^|[\s.!?\n])notes?\s*[:\-]\s*([^\n]+)/gi
+  // Standalone "notes:", "fragrance notes:", "notes –" (incl. Unicode dashes). Avoid lookbehind
+  // for transpiler compatibility.
+  const flatNoteRe =
+    /(?:^|[\s.!?\n])(?:fragrance\s+)?notes?\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi
   const found: string[] = []
   let match: RegExpExecArray | null
   while ((match = flatNoteRe.exec(source)) !== null) {
-    const rawPrefix = source.slice(Math.max(0, match.index - 24), match.index).toLowerCase()
+    const rawPrefix = source.slice(Math.max(0, match.index - 40), match.index).toLowerCase()
     // Skip "top/open/heart/base notes: ..." since those are layered sections.
     if (/(?:top|open|opening|head|heart|middle|mid|core|base|dry\s*down)\s+$/.test(rawPrefix)) continue
-    const chunk = match[1] ?? ""
+    const chunk = truncateFlatNotesChunk(match[1] ?? "")
     const parsed = filterStructuredNoteParts(splitNoteList(chunk))
     found.push(...parsed)
   }
@@ -471,9 +518,8 @@ function extractNotesFromStructuredText(text: string): {
   baseNotes: string[]
 } {
   const empty = { openNotes: [] as string[], heartNotes: [] as string[], baseNotes: [] as string[] }
-  const source = splitGluedLayerLabels(
-    (text ?? "").replace(/\r/g, "\n").replace(/\s+/g, " ").trim(),
-  )
+  const collapsed = (text ?? "").replace(/\r/g, "\n").replace(/\s+/g, " ").trim()
+  const source = splitGluedLayerLabels(normalizeImplicitLayerColons(collapsed))
   if (!source) return empty
 
   const inlineNotes = extractInlineLayeredNotes(source)
@@ -563,6 +609,7 @@ Layer detection:
 - When in doubt, prefer putting a note in heartNotes rather than omitting it.
 
 Rules:
+- If the text has an explicit note list line (e.g. "Notes:", "Note:", "Fragrance notes:") with comma- or slash-separated materials, treat that list as authoritative: include every item verbatim (lowercase, English). Do NOT substitute different notes because marketing prose below mentions chocolate, caramel, or other gourmand imagery — the labeled list wins.
 - Extract ALL fragrance notes mentioned — do not skip any. Include every scent ingredient (e.g. vanilla, rose, black pepper, sandalwood, bergamot, jasmine, musk, amber, oud).
 - Notes must be lowercase and in ENGLISH. Translate any non-English note names: "santal" → "sandalwood", "musc" / "musc blanc" → "white musk", "vanille" → "vanilla", "ambre" → "amber", "bois" → "wood", "rose" → "rose", "fleur" → "flower", "tabac" → "tobacco", "encens" → "incense".
 - Remove duplicates within each array.
@@ -570,6 +617,8 @@ Rules:
 - Omit pure marketing fluff that is not a note (e.g. "luscious", "irresistible", "seductive", "sensual", "confidence", "courage", "healing", "balance", "vitality" as standalone words).
 - NEVER include crystals, gemstones, or minerals as notes (e.g. quartz, amethyst, herkimer diamond, topaz, tourmaline, moonstone, labradorite, gem magic, citrine, obsidian, selenite). These are not fragrance notes.
 - NEVER include carrier oils or base ingredients as notes (e.g. sunflower oil, jojoba oil, shea butter, coconut oil, sweet almond oil, argan oil). These are not fragrance notes.
+- NEVER treat storefront section headers or specs as notes (e.g. "Extra Info Below if You're Curious", "power source accord", battery/USB copy). These are not fragrance notes.
+- NEVER treat people, roles, or quote fluff as notes (e.g. founder, iconic, transmission, "continues the narrative", attributions like perfumer names).
 - If the product is clearly NOT a fragrance (e.g. jewelry, necklace, candle, body scrub, hair product, supplement), return all empty arrays: {"openNotes":[],"heartNotes":[],"baseNotes":[]}.
 - Return only the JSON object — no explanation, no markdown fences.`
 
@@ -670,7 +719,9 @@ Rules:
 - Every note in the provided structured arrays MUST still appear in your output (same spelling intent; lowercase).
 - Add any additional real fragrance notes from the title or narrative (bergamot, jasmine, honey, musk, etc.) into the correct volatility layer.
 - No duplicates across layers, no marketing sentences, lowercase only.
-- Carrier oils, gemstones, and SKU/meta lines are not notes.`
+- Carrier oils, gemstones, and SKU/meta lines are not notes.
+- Never add section boilerplate or product specs: "extra info", "if you're curious", "power source accord", etc.
+- Never add quote or brand fluff: founder, iconic, transmission, narrative, perfumer names, or similar — only real scent materials.`
 
 const noteLayerCount = (n: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] }): number =>
   n.openNotes.length + n.heartNotes.length + n.baseNotes.length
@@ -932,12 +983,28 @@ function buildGraph(
       const totalParsedDirectly = notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
 
       // Step 2: LLM extraction from description when no structured sections found.
+      const layersWithParsedNotes = [
+        notes.openNotes.length > 0,
+        notes.heartNotes.length > 0,
+        notes.baseNotes.length > 0,
+      ].filter(Boolean).length
+      const parsedNoteCount = noteLayerCount(notes)
+      // Full top/heart/base pyramids (e.g. Parfums de Marly) need no prose merge — long copy is often noir/quote and poisons the list.
+      // Flat-only "Notes: a, b, c, …" blocks (Squarespace, many indies): merging long marketing prose re-introduces junk and contradicts the list.
+      const flatListingOnly =
+        notes.openNotes.length >= 3 &&
+        notes.heartNotes.length === 0 &&
+        notes.baseNotes.length === 0
+      const skipStructuredLlmMerge =
+        (layersWithParsedNotes === 3 && parsedNoteCount >= 5) || flatListingOnly
+
       if (totalParsedDirectly === 0 && notesSource?.trim()) {
         notes = await extractNotesFromDescription(llm, notesSource, name || resolvedName)
       } else if (
         totalParsedDirectly > 0 &&
         (notesSource?.length ?? 0) > 100 &&
-        notesSource?.trim()
+        notesSource?.trim() &&
+        !skipStructuredLlmMerge
       ) {
         // Long pages often repeat accords in "Note Structure" and list real notes only in prose/title
         // (e.g. Pattern by Etsy). Merge so bergamot, jasmine, honey, etc. are not skipped.

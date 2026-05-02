@@ -867,9 +867,9 @@ export function ScraperPageClient() {
             you can strip them from the source text and have LangGraph write new film noir themed copy.
           </p>
           <fieldset className="flex flex-col gap-2 border-0 p-0">
-            <legend className="text-sm font-medium">First title separator (<code className="text-xs"> - </code>, <code className="text-xs">~</code>, <code className="text-xs">.</code>)</legend>
+            <legend className="text-sm font-medium">First title separator (<code className="text-xs"> - </code>, <code className="text-xs">~</code>, <code className="text-xs">.</code>, <code className="text-xs">|</code>)</legend>
             <p className="text-xs text-muted-foreground">
-              Many shops use <code className="text-xs">Title - subtitle or size</code>. Choose which side to keep for the imported perfume name.
+              Many shops use <code className="text-xs">Title - subtitle or size</code> or <code className="text-xs">Title | variant</code>. Choose which side to keep for the imported perfume name.
             </p>
             <label className="flex cursor-pointer items-start gap-3">
               <input
@@ -881,7 +881,7 @@ export function ScraperPageClient() {
               />
               <span className="flex flex-col gap-0.5">
                 <span className="text-sm">Keep full title</span>
-                <span className="text-xs text-muted-foreground">No split on the first &quot; - &quot;.</span>
+                <span className="text-xs text-muted-foreground">No split on the first separator.</span>
               </span>
             </label>
             <label className="flex cursor-pointer items-start gap-3">
@@ -893,7 +893,7 @@ export function ScraperPageClient() {
                 onChange={() => setTitleDashSegment("before")}
               />
               <span className="flex flex-col gap-0.5">
-                <span className="text-sm">Use text before first &quot; - &quot;</span>
+                <span className="text-sm">Use text before first separator</span>
                 <span className="text-xs text-muted-foreground">
                   e.g. &quot;Velvet Vanilla - 50ml&quot; → &quot;Velvet Vanilla&quot;
                 </span>
@@ -908,7 +908,7 @@ export function ScraperPageClient() {
                 onChange={() => setTitleDashSegment("after")}
               />
               <span className="flex flex-col gap-0.5">
-                <span className="text-sm">Use text after first &quot; - &quot;</span>
+                <span className="text-sm">Use text after first separator</span>
                 <span className="text-xs text-muted-foreground">
                   e.g. &quot;House - Night Rose&quot; → &quot;Night Rose&quot;
                 </span>
