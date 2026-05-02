@@ -154,6 +154,9 @@ export function ScraperPageClient() {
   )
   const [baseUrl, setBaseUrl] = useState("")
   const [titleDashSegment, setTitleDashSegment] = useState<TitleDashSegment>("before")
+  const [titleColonSegment, setTitleColonSegment] = useState<TitleDashSegment>("none")
+  const [titleTakeAfterFirstComma, setTitleTakeAfterFirstComma] = useState(false)
+  const [titleTakeBeforeFirstComma, setTitleTakeBeforeFirstComma] = useState(false)
   const [titleStripNumbers, setTitleStripNumbers] = useState(true)
   const [titleOmitWordsRaw, setTitleOmitWordsRaw] = useState(
     "eau de toilette, eau de parfum, edt, edp, travel size",
@@ -315,6 +318,9 @@ export function ScraperPageClient() {
       skipKeywords,
       baseUrl: baseUrl || undefined,
       titleDashSegment,
+      titleColonSegment,
+      titleTakeAfterFirstComma,
+      titleTakeBeforeFirstComma,
       titleStripNumbers,
       titleOmitWords: titleOmitWords.length > 0 ? titleOmitWords : undefined,
       generateNoirDescriptions,
@@ -861,7 +867,7 @@ export function ScraperPageClient() {
             you can strip them from the source text and have LangGraph write new film noir themed copy.
           </p>
           <fieldset className="flex flex-col gap-2 border-0 p-0">
-            <legend className="text-sm font-medium">First spaced hyphen in product name (<code className="text-xs"> - </code>)</legend>
+            <legend className="text-sm font-medium">First title separator (<code className="text-xs"> - </code>, <code className="text-xs">~</code>, <code className="text-xs">.</code>)</legend>
             <p className="text-xs text-muted-foreground">
               Many shops use <code className="text-xs">Title - subtitle or size</code>. Choose which side to keep for the imported perfume name.
             </p>
@@ -909,6 +915,91 @@ export function ScraperPageClient() {
               </span>
             </label>
           </fieldset>
+          <fieldset className="flex flex-col gap-2 border-0 p-0">
+            <legend className="text-sm font-medium">First colon in product name (<code className="text-xs">:</code>)</legend>
+            <p className="text-xs text-muted-foreground">
+              Use this independently from the separator rule above for formats like <code className="text-xs">Title: Subtitle</code>.
+            </p>
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="radio"
+                className="mt-0.5"
+                name="titleColonSegment"
+                checked={titleColonSegment === "none"}
+                onChange={() => setTitleColonSegment("none")}
+              />
+              <span className="flex flex-col gap-0.5">
+                <span className="text-sm">Keep full title</span>
+                <span className="text-xs text-muted-foreground">No split on the first colon.</span>
+              </span>
+            </label>
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="radio"
+                className="mt-0.5"
+                name="titleColonSegment"
+                checked={titleColonSegment === "before"}
+                onChange={() => setTitleColonSegment("before")}
+              />
+              <span className="flex flex-col gap-0.5">
+                <span className="text-sm">Use text before first colon</span>
+                <span className="text-xs text-muted-foreground">
+                  e.g. &quot;Velvet Vanilla: extrait&quot; → &quot;Velvet Vanilla&quot;
+                </span>
+              </span>
+            </label>
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="radio"
+                className="mt-0.5"
+                name="titleColonSegment"
+                checked={titleColonSegment === "after"}
+                onChange={() => setTitleColonSegment("after")}
+              />
+              <span className="flex flex-col gap-0.5">
+                <span className="text-sm">Use text after first colon</span>
+                <span className="text-xs text-muted-foreground">
+                  e.g. &quot;House: Night Rose&quot; → &quot;Night Rose&quot;
+                </span>
+              </span>
+            </label>
+          </fieldset>
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={titleTakeBeforeFirstComma}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                const checked = e.target.checked
+                setTitleTakeBeforeFirstComma(checked)
+                if (checked) setTitleTakeAfterFirstComma(false)
+              }}
+            />
+            <span className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium">Use text before first comma</span>
+              <span className="text-xs text-muted-foreground">
+                Independent control. e.g. &quot;Brand, Night Rose&quot; → &quot;Brand&quot;.
+              </span>
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={titleTakeAfterFirstComma}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                const checked = e.target.checked
+                setTitleTakeAfterFirstComma(checked)
+                if (checked) setTitleTakeBeforeFirstComma(false)
+              }}
+            />
+            <span className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium">Use text after first comma</span>
+              <span className="text-xs text-muted-foreground">
+                Independent control. e.g. &quot;Brand, Night Rose&quot; → &quot;Night Rose&quot;.
+              </span>
+            </span>
+          </label>
           <label className="flex cursor-pointer items-start gap-3">
             <input
               type="checkbox"

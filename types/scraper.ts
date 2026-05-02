@@ -3,7 +3,7 @@
  * Used by the admin form, API routes, and LangGraph note-extraction pipeline.
  */
 
-/** How to trim product names at the first spaced hyphen ` - ` in the note-extraction pipeline. */
+/** How to trim product names around the first delimiter in the note-extraction pipeline. */
 export type TitleDashSegment = "none" | "before" | "after"
 
 /**
@@ -88,6 +88,26 @@ export interface ScraperConfig {
    * @deprecated Prefer `titleDashSegment`. When `titleDashSegment` is omitted, `true` means the same as `titleDashSegment: "before"`.
    */
   titleTakeBeforeDash?: boolean
+
+  /**
+   * How to trim the product name at the first colon `:` (common "Title: subtitle" format).
+   * - `before` — keep only text before the first `:`.
+   * - `after` — keep only text after the first `:`.
+   * - `none` — keep the full title.
+   */
+  titleColonSegment?: TitleDashSegment
+
+  /**
+   * If true, keep only text after the first comma in the product name.
+   * Applied independently of other delimiter settings.
+   */
+  titleTakeAfterFirstComma?: boolean
+
+  /**
+   * If true, keep only text before the first comma in the product name.
+   * Applied independently of other delimiter settings.
+   */
+  titleTakeBeforeFirstComma?: boolean
 
   /**
    * If true, remove numbers and size patterns (e.g. 30ml, 1.7 fl oz) from product names.

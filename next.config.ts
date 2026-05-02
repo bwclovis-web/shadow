@@ -60,6 +60,21 @@ const nextConfig: NextConfig = {
         hostname: 'www.xerjoff.com',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.shopify.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'theduabrand.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.theduabrand.com',
+        pathname: '/**',
+      },
     ],
   },
 }

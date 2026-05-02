@@ -158,6 +158,9 @@ function validateBody(body: unknown): body is ScraperRunRequest {
     return false
   if (b.titleOmitWords !== undefined && !Array.isArray(b.titleOmitWords)) return false
   if (b.titleDashSegment !== undefined && typeof b.titleDashSegment !== "string") return false
+  if (b.titleColonSegment !== undefined && typeof b.titleColonSegment !== "string") return false
+  if (b.titleTakeAfterFirstComma !== undefined && typeof b.titleTakeAfterFirstComma !== "boolean") return false
+  if (b.titleTakeBeforeFirstComma !== undefined && typeof b.titleTakeBeforeFirstComma !== "boolean") return false
   return true
 }
 
@@ -382,6 +385,12 @@ export async function POST(request: NextRequest): Promise<Response> {
 
           const pipelineOptions = {
             titleDashSegment: resolveTitleDashSegment(body),
+            titleColonSegment:
+              body.titleColonSegment === "before" || body.titleColonSegment === "after" || body.titleColonSegment === "none"
+                ? body.titleColonSegment
+                : "none",
+            titleTakeAfterFirstComma: body.titleTakeAfterFirstComma === true,
+            titleTakeBeforeFirstComma: body.titleTakeBeforeFirstComma === true,
             titleStripNumbers: body.titleStripNumbers ?? false,
             titleOmitWords: Array.isArray(body.titleOmitWords) ? body.titleOmitWords : [],
             generateNoirDescriptions: body.generateNoirDescriptions ?? true,

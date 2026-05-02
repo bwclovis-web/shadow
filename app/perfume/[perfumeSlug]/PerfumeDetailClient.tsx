@@ -69,7 +69,11 @@ const PerfumeDetailClient = ({
 
     // Optimistic redirect: navigate immediately instead of waiting for API response.
     closeModal()
-    router.push(vaultPath)
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back()
+    } else {
+      router.push(vaultPath)
+    }
 
     deletePerfume.mutate(
       { perfumeId: perfume.id },

@@ -27,6 +27,12 @@ export interface ScraperPipelineOptions {
   titleDashSegment?: TitleDashSegment
   /** @deprecated Use `titleDashSegment: "before"` instead. */
   titleTakeBeforeDash?: boolean
+  /** Trim at the first `:`: before, after, or keep full title (`none`). */
+  titleColonSegment?: TitleDashSegment
+  /** Keep only text after the first comma when true. */
+  titleTakeAfterFirstComma?: boolean
+  /** Keep only text before the first comma when true. */
+  titleTakeBeforeFirstComma?: boolean
   /** Remove numbers and size patterns (e.g. 30ml, 1.7 fl oz) from product names. */
   titleStripNumbers?: boolean
   /** Words or phrases to strip from the title (case-insensitive). */
@@ -101,16 +107,49 @@ function resolveProductName(item: ScrapedItem): string {
 // Title cleaning (no LLM)
 // ---------------------------------------------------------------------------
 
-/** Keep only the part before the first " - " and trim. */
-function takeBeforeDash(name: string): string {
-  const idx = name.indexOf(" - ")
-  return idx >= 0 ? name.slice(0, idx).trim() : name.trim()
+const TITLE_SEGMENT_DELIMITER = /\s*[-~.]\s*/
+const TITLE_COLON_DELIMITER = /\s*:\s*/
+
+/** Keep only the part before the first segment delimiter and trim. */
+const takeBeforeDash = (name: string): string => {
+  const parts = name.split(TITLE_SEGMENT_DELIMITER, 2)
+  return (parts[0] ?? name).trim()
 }
 
-/** Keep only the part after the first " - " and trim; if no delimiter, keep full string trimmed. */
-function takeAfterDash(name: string): string {
-  const idx = name.indexOf(" - ")
-  return idx >= 0 ? name.slice(idx + 3).trim() : name.trim()
+/** Keep only the part after the first segment delimiter and trim; if no delimiter, keep full string trimmed. */
+const takeAfterDash = (name: string): string => {
+  const idx = name.search(TITLE_SEGMENT_DELIMITER)
+  if (idx < 0) return name.trim()
+  const match = name.slice(idx).match(TITLE_SEGMENT_DELIMITER)
+  const delimiterLength = match?.[0]?.length ?? 0
+  return name.slice(idx + delimiterLength).trim()
+}
+
+/** Keep only the part before the first colon and trim. */
+const takeBeforeColon = (name: string): string => {
+  const parts = name.split(TITLE_COLON_DELIMITER, 2)
+  return (parts[0] ?? name).trim()
+}
+
+/** Keep only the part after the first colon and trim; if no delimiter, keep full string trimmed. */
+const takeAfterColon = (name: string): string => {
+  const idx = name.search(TITLE_COLON_DELIMITER)
+  if (idx < 0) return name.trim()
+  const match = name.slice(idx).match(TITLE_COLON_DELIMITER)
+  const delimiterLength = match?.[0]?.length ?? 0
+  return name.slice(idx + delimiterLength).trim()
+}
+
+/** Keep only the part after the first comma and trim; if no delimiter, keep full string trimmed. */
+const takeAfterFirstComma = (name: string): string => {
+  const idx = name.indexOf(",")
+  return idx >= 0 ? name.slice(idx + 1).trim() : name.trim()
+}
+
+/** Keep only the part before the first comma and trim; if no delimiter, keep full string trimmed. */
+const takeBeforeFirstComma = (name: string): string => {
+  const idx = name.indexOf(",")
+  return idx >= 0 ? name.slice(0, idx).trim() : name.trim()
 }
 
 const resolveTitleDashSegment = (opts: {
@@ -148,6 +187,9 @@ function cleanTitle(
   opts: {
     titleDashSegment?: TitleDashSegment
     titleTakeBeforeDash?: boolean
+    titleColonSegment?: TitleDashSegment
+    titleTakeAfterFirstComma?: boolean
+    titleTakeBeforeFirstComma?: boolean
     titleStripNumbers?: boolean
     titleOmitWords?: string[]
   },
@@ -156,6 +198,10 @@ function cleanTitle(
   const seg = resolveTitleDashSegment(opts)
   if (seg === "before") out = takeBeforeDash(out)
   else if (seg === "after") out = takeAfterDash(out)
+  if (opts.titleColonSegment === "before") out = takeBeforeColon(out)
+  else if (opts.titleColonSegment === "after") out = takeAfterColon(out)
+  if (opts.titleTakeBeforeFirstComma) out = takeBeforeFirstComma(out)
+  else if (opts.titleTakeAfterFirstComma) out = takeAfterFirstComma(out)
   if (opts.titleStripNumbers) out = stripNumbersFromTitle(out)
   if (opts.titleOmitWords?.length) out = omitWordsFromTitle(out, opts.titleOmitWords)
   return out.replace(/\s+/g, " ").trim() || name
@@ -208,28 +254,46 @@ function dedupeNotesAcrossLayers(notes: {
   }
 }
 
+/** Mask `(...)` so `&` / `and` splitting does not break parenthetical accords (E.g. Pattern by Etsy). */
+const maskParenGroups = (s: string): { masked: string; groups: string[] } => {
+  const groups: string[] = []
+  const masked = s.replace(/\([^()]*\)/g, m => {
+    groups.push(m)
+    return `«p${groups.length - 1}»`
+  })
+  return { masked, groups }
+}
+
+const unmaskParenGroups = (s: string, groups: string[]): string =>
+  s.replace(/«p(\d+)»/g, (_, i) => groups[Number(i)] ?? "")
+
 function splitNoteList(text: string): string[] {
   if (!text?.trim()) return []
+  const normalized = text
+    .replace(/\\u003c/gi, "<")
+    .replace(/\\u003e/gi, ">")
+    .replace(/\\\//g, "/")
+    .replace(/\\u0026amp;/gi, "&")
+    .replace(/\\u0026/gi, "&")
+    .replace(/\\n|\\t/g, " ")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/\r/g, "\n")
+    .replace(/[•·]/g, ",")
+
+  const { masked, groups } = maskParenGroups(normalized)
+  const splitReady = masked
+    .replace(/\s+\|\s+/g, ", ")
+    .replace(/\s+\/\s+/g, ", ")
+    .replace(/\s*;\s*/g, ", ")
+    .replace(/\s*&\s*/g, ", ")
+    .replace(/\band\b/gi, ",")
+
   return uniqueNotes(
-    text
-      .replace(/\\u003c/gi, "<")
-      .replace(/\\u003e/gi, ">")
-      .replace(/\\\//g, "/")
-      .replace(/\\u0026amp;/gi, "&")
-      .replace(/\\u0026/gi, "&")
-      .replace(/\\n|\\t/g, " ")
-      .replace(/<[^>]*>/g, " ")
-      .replace(/&amp;/gi, "&")
-      .replace(/&nbsp;/gi, " ")
-      .replace(/\r/g, "\n")
-      .replace(/[•·]/g, ",")
-      .replace(/\s+\|\s+/g, ", ")
-      .replace(/\s+\/\s+/g, ", ")
-      .replace(/\s*;\s*/g, ", ")
-      .replace(/\s*&\s*/g, ", ")
-      .replace(/\band\b/gi, ",")
+    splitReady
       .split(/[\n,]+/)
-      .map(part => part.trim())
+      .map(part => unmaskParenGroups(part.trim(), groups))
       .map(part => part.replace(/^[&\-\u2022*:\s]+/, "").replace(/[.:\-\s]+$/, ""))
       .filter(part => !/^amp$/i.test(part))
       .filter(Boolean),
@@ -241,6 +305,25 @@ function stripTrailingNonNoteSections(text: string): string {
   return text
     .replace(/\s+(?:additional information|ingredients|how to use|customer reviews?|reviews?)\b[\s\S]*$/i, "")
     .trim()
+}
+
+/** Pattern-by-Etsy and minified HTML glue layer headers: "AccordMiddle Notes:" → "Accord Middle Notes:" */
+const splitGluedLayerLabels = (text: string): string =>
+  text
+    .replace(
+      /(?<=[A-Za-z0-9)])(?=(?:top|open(?:ing)?|head|heart|middle|mid|core|base|dry[\s-]*down|drydown|end)(?:\s+notes?)?\s*:)/gi,
+      " ",
+    )
+    .replace(
+      /(?<=[A-Za-z0-9)])(?=(?:series|perfume\s+family|unisex|contains\s+true\s+animalics|scent\s+strength)\s*:)/gi,
+      " ",
+    )
+
+/** Stop last layer chunk before Pattern/Etsy listing meta (avoids ':' in tokens → junk filter drops all base notes). */
+const truncateAtShopMetaLabels = (s: string): string => {
+  const m = s.match(/\s+(?:series|perfume\s+family|unisex|contains\s+true\s+animalics|scent\s+strength)\s*:/i)
+  if (m?.index != null) return s.slice(0, m.index).trim()
+  return s.trim()
 }
 
 function classifyNoteLayer(label: string): "open" | "heart" | "base" | null {
@@ -257,7 +340,9 @@ function extractInlineLayeredNotes(text: string): {
   baseNotes: string[]
 } {
   const empty = { openNotes: [] as string[], heartNotes: [] as string[], baseNotes: [] as string[] }
-  const source = stripTrailingNonNoteSections(text.replace(/\r/g, "\n").replace(/\s+/g, " ").trim())
+  const source = splitGluedLayerLabels(
+    stripTrailingNonNoteSections(text.replace(/\r/g, "\n").replace(/\s+/g, " ").trim()),
+  )
   if (!source) return empty
 
   const sectionRe = /\b(top(?:\s+notes?)?|open(?:ing)?(?:\s+notes?)?|head(?:\s+notes?)?|heart(?:\s+notes?)?|middle(?:\s+notes?)?|mid(?:\s+notes?)?|core(?:\s+notes?)?|base(?:\s+notes?)?|dry\s*down(?:\s+notes?)?|drydown(?:\s+notes?)?|end(?:\s+notes?)?)\s*:/gi
@@ -277,7 +362,7 @@ function extractInlineLayeredNotes(text: string): {
     const end = i + 1 < matches.length && matches[i + 1].index != null
       ? matches[i + 1].index!
       : source.length
-    const chunk = stripTrailingNonNoteSections(source.slice(start, end))
+    const chunk = truncateAtShopMetaLabels(stripTrailingNonNoteSections(source.slice(start, end)))
     const parsed = splitNoteList(chunk).filter(isDisplayableScentNote)
     if (layer === "open") openNotes.push(...parsed)
     if (layer === "heart") heartNotes.push(...parsed)
@@ -321,7 +406,9 @@ function extractNotesFromStructuredText(text: string): {
   baseNotes: string[]
 } {
   const empty = { openNotes: [] as string[], heartNotes: [] as string[], baseNotes: [] as string[] }
-  const source = text?.trim()
+  const source = splitGluedLayerLabels(
+    (text ?? "").replace(/\r/g, "\n").replace(/\s+/g, " ").trim(),
+  )
   if (!source) return empty
 
   const inlineNotes = extractInlineLayeredNotes(source)
@@ -343,17 +430,17 @@ function extractNotesFromStructuredText(text: string): {
     const normalized = line.replace(/\s+/g, " ").trim()
     const openMatch = normalized.match(/^(?:top|open|opening|head)(?:\s+notes?)?\s*[:\-]\s*(.+)$/i)
     if (openMatch) {
-      openNotes.push(...splitNoteList(openMatch[1]))
+      openNotes.push(...splitNoteList(truncateAtShopMetaLabels(openMatch[1])))
       continue
     }
     const heartMatch = normalized.match(/^(?:heart|middle|mid|core)(?:\s+notes?)?\s*[:\-]\s*(.+)$/i)
     if (heartMatch) {
-      heartNotes.push(...splitNoteList(heartMatch[1]))
+      heartNotes.push(...splitNoteList(truncateAtShopMetaLabels(heartMatch[1])))
       continue
     }
     const baseMatch = normalized.match(/^(?:base|dry\s*down|drydown|end)(?:\s+notes?)?\s*[:\-]\s*(.+)$/i)
     if (baseMatch) {
-      baseNotes.push(...splitNoteList(baseMatch[1]))
+      baseNotes.push(...splitNoteList(truncateAtShopMetaLabels(baseMatch[1])))
       continue
     }
   }
@@ -507,6 +594,50 @@ function parseNotesFromLlmResponse(responseContent: unknown): {
     }
   } catch {
     return empty
+  }
+}
+
+const MERGE_STRUCTURED_SUPPLEMENT_PROMPT = `You enrich a perfume note list that was already parsed from labeled Top/Middle/Base lines on the page.
+
+Return ONLY JSON: {"openNotes": string[], "heartNotes": string[], "baseNotes": string[]}.
+
+Rules:
+- Every note in the provided structured arrays MUST still appear in your output (same spelling intent; lowercase).
+- Add any additional real fragrance notes from the title or narrative (bergamot, jasmine, honey, musk, etc.) into the correct volatility layer.
+- No duplicates across layers, no marketing sentences, lowercase only.
+- Carrier oils, gemstones, and SKU/meta lines are not notes.`
+
+const noteLayerCount = (n: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] }): number =>
+  n.openNotes.length + n.heartNotes.length + n.baseNotes.length
+
+const mergeStructuredNotesWithLlm = async (
+  llm: ChatOpenAI,
+  structured: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] },
+  fullText: string,
+  productName: string,
+): Promise<{ openNotes: string[]; heartNotes: string[]; baseNotes: string[] }> => {
+  if (noteLayerCount(structured) === 0 || !fullText?.trim()) return structured
+  const user = `Product: "${productName.slice(0, 200)}"
+
+Structured notes already found (you must keep all of these; add more if the text mentions others):
+openNotes: ${JSON.stringify(structured.openNotes)}
+heartNotes: ${JSON.stringify(structured.heartNotes)}
+baseNotes: ${JSON.stringify(structured.baseNotes)}
+
+Full product text:
+"${fullText.slice(0, 3500)}"`
+  try {
+    const response = await llm.invoke([
+      { role: "system", content: MERGE_STRUCTURED_SUPPLEMENT_PROMPT },
+      { role: "user", content: user },
+    ])
+    const merged = parseNotesFromLlmResponse(response.content)
+    const before = noteLayerCount(structured)
+    const after = noteLayerCount(merged)
+    if (after === 0 || after < Math.ceil(before * 0.5)) return structured
+    return merged
+  } catch {
+    return structured
   }
 }
 
@@ -687,11 +818,38 @@ const JUNK_NOTE_PATTERNS: RegExp[] = [
   /\b(musc\s+blanc|musc\s+noir|bois\s+de|eau\s+de|huile\s+de|fleur\s+de|note\s+de)\b/i,
 ]
 
+/** Junk checks for typical short notes (commerce, crystals, etc.) — excludes the punctuation rule so accord phrases with () survive. */
+const JUNK_NOTE_PATTERNS_NO_PUNCT: RegExp[] = JUNK_NOTE_PATTERNS.slice(1)
+
 function looksLikeJunkNote(note: string): boolean {
   if (!note?.trim()) return true
   const n = note.trim().toLowerCase()
   if (n.split(/\s+/).length > 4) return true
   return JUNK_NOTE_PATTERNS.some(p => p.test(n))
+}
+
+/**
+ * Etsy / indie listings often use long accord labels ("mesoamerican incense (copal & palo santo) accord").
+ * Those fail `isDisplayableScentNote` (word/length caps) and `looksLikeJunkNote` (parens + word count).
+ * Keep them when they still look like perfumery, not storefront copy.
+ */
+const isScraperExtendedAccordNote = (note: string): boolean => {
+  const t = note.trim()
+  if (!t) return false
+  if (!/\baccord\b/i.test(t)) return false
+  const lower = t.toLowerCase()
+  const words = lower.split(/\s+/).filter(Boolean)
+  if (words.length < 2 || words.length > 14) return false
+  if (lower.length < 2 || lower.length > 120) return false
+  return !JUNK_NOTE_PATTERNS_NO_PUNCT.some(p => p.test(lower))
+}
+
+const isScraperKeptNote = (note: string): boolean => {
+  const t = note.trim()
+  if (!t) return false
+  if (isDisplayableScentNote(t) && !looksLikeJunkNote(t)) return true
+  if (isScraperExtendedAccordNote(t)) return true
+  return false
 }
 
 // ---------------------------------------------------------------------------
@@ -765,9 +923,17 @@ function buildGraph(
       let notes = extractNotesFromStructuredText(notesSource)
       const totalParsedDirectly = notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
 
-      // Step 2: LLM extraction from description text when no structured sections found.
+      // Step 2: LLM extraction from description when no structured sections found.
       if (totalParsedDirectly === 0 && notesSource?.trim()) {
         notes = await extractNotesFromDescription(llm, notesSource, name || resolvedName)
+      } else if (
+        totalParsedDirectly > 0 &&
+        (notesSource?.length ?? 0) > 350 &&
+        notesSource?.trim()
+      ) {
+        // Long pages often repeat accords in "Note Structure" and list real notes only in prose/title
+        // (e.g. Pattern by Etsy). Merge so bergamot, jasmine, honey, etc. are not skipped.
+        notes = await mergeStructuredNotesWithLlm(llm, notes, notesSource, name || resolvedName)
       }
 
       // Step 2b: last-resort name-based lookup when no description text yielded notes.
@@ -792,7 +958,7 @@ function buildGraph(
 
       // Step 4: final filter — remove junk phrases, marketing copy, and non-displayable strings
       // from ALL notes regardless of which extraction path was used.
-      const cleanNote = (n: string) => isDisplayableScentNote(n) && !looksLikeJunkNote(n)
+      const cleanNote = (n: string) => isScraperKeptNote(n)
       notes = {
         openNotes: notes.openNotes.filter(cleanNote),
         heartNotes: notes.heartNotes.filter(cleanNote),
