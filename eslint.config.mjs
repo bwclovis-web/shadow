@@ -34,6 +34,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "scripts/**",
     "crews/**",
+    // Python venvs (Selenium and other vendor JS are not valid for our ESLint parser)
+    "**/.venv/**",
   ]),
 ]);
 
