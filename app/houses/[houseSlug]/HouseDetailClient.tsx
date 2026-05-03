@@ -1,6 +1,6 @@
 "use client"
 
-import { type ChangeEvent, useEffect, useMemo, useState } from "react"
+import { type ChangeEvent, useCallback, useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -240,6 +240,20 @@ const HouseDetailClient = ({
     totalPages: pagination.totalPages,
   })
 
+  const onPrefetchNext = useCallback(() => {
+    if (!hasNextPage) return
+    void fetchNextPage()
+  }, [fetchNextPage, hasNextPage])
+
+  const onPrefetchPage = useCallback(
+    (targetPage: number) => {
+      if (targetPage <= pagination.currentPage) return
+      if (!hasNextPage) return
+      void fetchNextPage()
+    },
+    [fetchNextPage, hasNextPage, pagination.currentPage]
+  )
+
   useEffect(() => {
     if (pagination.totalPages > 0 && currentPage > pagination.totalPages) {
       router.replace(
@@ -405,6 +419,8 @@ const HouseDetailClient = ({
             onPageChange={goToPage}
             selectedLetter={selectedLetter}
             queryError={listError ?? undefined}
+            onPrefetchNext={onPrefetchNext}
+            onPrefetchPage={onPrefetchPage}
           />
         </div>
       </section>

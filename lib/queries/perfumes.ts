@@ -68,11 +68,12 @@ export const queryKeys = {
       [...queryKeys.perfumes.all, "byLetter", letter, houseType] as const,
     byLetterPaginated: (letter: string, houseType: string, skip: number, take: number) =>
       [...queryKeys.perfumes.all, "byLetter", letter, houseType, skip, take] as const,
-    byLetterInfinite: (letter: string, houseType: string) =>
-      [...queryKeys.perfumes.all, "byLetterInfinite", letter, houseType] as const,
+    /** `pageSize` is part of the key so each `take` uses a consistent cache (breakpoint changes = new query). */
+    byLetterInfinite: (letter: string, houseType: string, pageSize: number) =>
+      [...queryKeys.perfumes.all, "byLetterInfinite", letter, houseType, pageSize] as const,
     byHouse: (houseSlug: string) => [...queryKeys.perfumes.all, "byHouse", houseSlug] as const,
-    byHouseInfinite: (houseSlug: string, sortBy?: string, q?: string) =>
-      [...queryKeys.perfumes.all, "byHouseInfinite", houseSlug, sortBy ?? "", q ?? ""] as const,
+    byHouseInfinite: (houseSlug: string, sortBy: string | undefined, q: string | undefined, pageSize: number) =>
+      [...queryKeys.perfumes.all, "byHouseInfinite", houseSlug, sortBy ?? "", q ?? "", pageSize] as const,
   },
 } as const
 

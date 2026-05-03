@@ -46,7 +46,7 @@ export const useInfiniteHouses = (options: UseInfiniteHousesOptions) => {
   const totalCount = initialTotalCount ?? initialData?.length ?? 0
 
   return useInfiniteQuery({
-    queryKey: queryKeys.houses.byLetterInfinite(letter ?? "", houseType),
+    queryKey: queryKeys.houses.byLetterInfinite(letter ?? "", houseType, pageSize),
     queryFn: ({ pageParam }) =>
       getHousesByLetterPaginated(letter!, houseType, pageParam as number, pageSize),
     enabled: isLetterValid,

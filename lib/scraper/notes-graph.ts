@@ -307,7 +307,10 @@ function splitNoteList(text: string): string[] {
 
 function stripTrailingNonNoteSections(text: string): string {
   return text
-    .replace(/\s+(?:additional information|ingredients|how to use|customer reviews?|reviews?)\b[\s\S]*$/i, "")
+    .replace(
+      /\s+(?:additional information|ingredients|how to use|directions(?:\s+for\s+use)?|customer reviews?|reviews?|specifications|size [Gg]uide|care [Ii]nstructions|warnings?|disclaimer)\b[\s\S]*$/i,
+      "",
+    )
     .replace(/\s+extra info\b[\s\S]*$/i, "")
     .trim()
 }
@@ -493,8 +496,8 @@ function extractInlineLayeredNotes(text: string): {
 const FLAT_NOTE_PROSE_BOUNDARY_RES: RegExp[] = [
   /\s+(?:Sweet |Sipping |Read about|Beneath |Among |Caught |In the |A sudden |A whisper |A worn |A dusty |A low |A shimmering |A porcelain |A delicate |Fingers |Rain-soaked |Cloaked |Under the |Twist-top |Variation:|Join |Sign up|Select |Add to |Image \d+\s+of\s+\d+|Shop all|Skip to)\b/i,
   /\s+(?:Available in |Originally (?:a |the )?|Our oil perfume|NOTE:|Packaging:|How to use|Shipping:|Return [Pp]olicy|Subscribe(?:\s+now|\s+today)?|You may also|Customers also|Related products|Complete the look|Pairs well|Also available|More from|Write a review|Questions\?|Leave a review)\b/i,
-  /\s+#{1,6}\s*(?:Ingredients|How to use|Shipping|Returns?|FAQ|Details)\b/i,
-  /\s+(?:Ingredients|Cruelty[- ]free|Vegan |Dermatologist|Clinically tested)\b/i,
+  /\s+#{1,6}\s*(?:Ingredients|How to use|Shipping|Returns?|FAQ|Details|Directions|Warnings?|Disclaimer|Specifications|Size [Gg]uide|Care [Ii]nstructions)\b/i,
+  /\s+(?:Ingredients|Cruelty[- ]free|Vegan |Dermatologist|Clinically tested|Prop(?:osition|\.)?\s*65|FDA disclaimer)\b/i,
 ]
 
 const MIN_FLAT_CHUNK_BEFORE_TRUNCATE = 8
@@ -529,8 +532,12 @@ const shouldSkipFlatNotesMatch = (source: string, matchIndex: number, prefixChar
 }
 
 /**
- * Flat list patterns (no top/heart/base). Each `/gi` regex must expose capture group 1 as the list.
- * Extend this array when new storefront copy styles appear — keeps behavior data-driven.
+ * Flat list patterns (no top/heart/base). Each `/gi` regex must expose **capture group 1** as the
+ * comma-/“and”-separated list (same contract as `splitNoteList`). Patterns run on whitespace-collapsed
+ * text; `truncateFlatNotesChunk` + `shouldSkipFlatNotesMatch` limit bleed into marketing copy.
+ *
+ * **Adding a new house:** reproduce the product-page phrase in a unit test, then append a regex here
+ * (or a prose boundary in `FLAT_NOTE_PROSE_BOUNDARY_RES` if the list runs into accordion text).
  */
 const FLAT_NOTE_LIST_PATTERNS: RegExp[] = [
   // "Notes:", "Fragrance notes – …" (line to newline)
@@ -545,6 +552,14 @@ const FLAT_NOTE_LIST_PATTERNS: RegExp[] = [
   /(?:^|[\s.!?\n*])(?:perfume|fragrance|scent|aroma|olfactory)\s+notes?\s+consist(?:s|ed)?\s+of\s+([^.!?\n*]+)/gi,
   // "Key notes:", "Featured notes – …" (line; often at line start without leading space)
   /(?:^|[\s.!?\n*])(?:key|main|primary|featured|signature|dominant)\s+notes?\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi,
+  // "Olfactory/scent/fragrance profile (or composition, pyramid) – …" (single-line collapsed PDPs)
+  /(?:^|[\s.!?\n*])(?:olfactory|scent|fragrance|aroma|perfume)\s+(?:profile|composition|pyramid)\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi,
+  // "Key accords:" / "Accords – …" (many niche brands label materials this way)
+  /(?:^|[\s.!?\n*])(?:key\s+)?accords?\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi,
+  // "With notes of …" (marketing sentence; stop at sentence end)
+  /(?:^|[\s.!?\n*])\bwith\s+notes?\s+of\s+([^.!?\n*]+)/gi,
+  // "The fragrance composition includes …"
+  /(?:^|[\s.!?\n*])(?:the\s+)?(?:fragrance|scent|perfume)\s+composition\s+(?:includes|features|contains)\s+([^.!?\n*]+)/gi,
 ]
 
 /**

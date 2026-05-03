@@ -9,12 +9,11 @@ import { useTranslations } from "next-intl"
 import { FaUser } from "react-icons/fa6"
 
 import LanguageSwitcher from "@/components/Organisms/LanguageSwitcher/LanguageSwitcher"
-import { mainNavigation } from "@/data/navigation"
+import { MainNavigationLinks } from "@/components/Molecules/MainNavigationLinks/MainNavigationLinks"
 import { SIGN_IN } from "@/constants/routes"
 import { getProfilePathForUser } from "@/utils/user"
 import { styleMerge } from "@/utils/styleUtils"
 
-import AboutDropdown from "../AboutDropdown/AboutDropdown"
 import LogoutButton from "../LogoutButton/LogoutButton"
 import { globalNavigationVariants } from "./globalNavigation-variants"
 import AdminNavigation from "../AdminNavigation/AdminNavigation"
@@ -34,6 +33,7 @@ const navLinkBase =
   "text-noir-gold hover:text-noir-light text-lg px-2 py-1 border border-transparent transition-colors duration-400"
 const navLinkActive =
   "text-noir-light bg-noir-black/30 rounded-full border-noir-light/90"
+
 function GlobalNavigationContent({ user }: GlobalNavigationProps) {
   const t = useTranslations("navigation")
   const pathname = usePathname()
@@ -47,7 +47,7 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
 
   return (
     <header
-      className="fixed z-30 w-full h-auto bg-noir-dark/60 backdrop-blur-md top-0"
+      className="fixed z-30 w-full h-auto bg-noir-dark/60 backdrop-blur-md top-0 hidden lg:block"
       data-sticky-header="global-navigation"
     >
       <div className="flex justify-end items-center px-30 bg-noir-black/60 backdrop-blur-md w-full gap-4">
@@ -92,7 +92,7 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
         </div>
       </div>
       <nav
-        className="relative z-10 hidden lg:flex justify-between inner-container"
+        className="relative z-10 hidden lg:flex justify-between px-30 items-center justify-around"
         data-cy="GlobalNavigation"
       >
         <PrefetchLink href="/" className="px-2 block">
@@ -107,39 +107,7 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
           />
         </PrefetchLink>
         <ul className="flex gap-4 items-center tracking-wide max-w-max">
-          <li>
-            <AboutDropdown variant="desktop" />
-          </li>
-          {mainNavigation.map((item) => (
-            <li key={item.id}>
-              <PrefetchLink
-                href={item.path}
-                className={styleMerge(
-                  navLinkBase,
-                  "block text-center leading-5",
-                  isActive(item.path) && navLinkActive
-                )}
-              >
-                {t(item.key)}
-              </PrefetchLink>
-            </li>
-          ))}
-          {user && (
-            <>
-              <li>
-                <PrefetchLink
-                  href="/messages"
-                  className={styleMerge(
-                    navLinkBase,
-                    "block text-center leading-5",
-                    isActive("/messages") && navLinkActive
-                  )}
-                >
-                  {t("messages")}
-                </PrefetchLink>
-              </li>
-            </>
-          )}
+          <MainNavigationLinks variant="desktop" user={user} />
         </ul>
       </nav>
       {user && (

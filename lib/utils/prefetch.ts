@@ -32,7 +32,7 @@ export const prefetchHousesByLetter = async (
   if (!isValidLetter(letter)) return
 
   await queryClient.prefetchInfiniteQuery({
-    queryKey: houseQueryKeys.houses.byLetterInfinite(letter, houseType),
+    queryKey: houseQueryKeys.houses.byLetterInfinite(letter, houseType, pageSize),
     queryFn: ({ pageParam }) =>
       getHousesByLetterPaginated(letter, houseType, pageParam as number, pageSize),
     initialPageParam: 0,
@@ -52,7 +52,7 @@ export const prefetchPerfumesByLetter = async (
   if (!isValidLetter(letter)) return
 
   await queryClient.prefetchInfiniteQuery({
-    queryKey: perfumeQueryKeys.perfumes.byLetterInfinite(letter, houseType),
+    queryKey: perfumeQueryKeys.perfumes.byLetterInfinite(letter, houseType, pageSize),
     queryFn: ({ pageParam }) =>
       getPerfumesByLetter(letter, houseType, pageParam as number, pageSize),
     initialPageParam: 0,

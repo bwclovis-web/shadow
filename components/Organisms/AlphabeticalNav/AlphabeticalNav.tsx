@@ -11,6 +11,8 @@ interface AlphabeticalNavProps {
   className?: string
   prefetchType?: "houses" | "perfumes"
   houseType?: string
+  /** Must match `useInfinite*` / `get*Paginated` `take` so hover prefetch hits the same cache. */
+  pageSize?: number
 }
 
 const AlphabeticalNav = ({
@@ -19,6 +21,7 @@ const AlphabeticalNav = ({
   className = "",
   prefetchType,
   houseType = "all",
+  pageSize = 16,
 }: AlphabeticalNavProps) => {
   const letters = getAlphabetLetters()
 
@@ -30,11 +33,11 @@ const AlphabeticalNav = ({
 
     // Prefetch on hover for better UX
     if (prefetchType === "houses") {
-      prefetchHousesByLetter(letter, houseType).catch(() => {
+      prefetchHousesByLetter(letter, houseType, pageSize).catch(() => {
         // Silently fail - prefetch is just an optimization
       })
     } else if (prefetchType === "perfumes") {
-      prefetchPerfumesByLetter(letter, houseType).catch(() => {
+      prefetchPerfumesByLetter(letter, houseType, pageSize).catch(() => {
         // Silently fail - prefetch is just an optimization
       })
     }

@@ -37,7 +37,7 @@ const AdminNavigation = ({ className, user, onNavClick }: AdminNavigationProps) 
     exact ? pathname === path : pathname === path || pathname.startsWith(path + "/")
 
   return (
-    <nav className="w-full text-noir-light pt-4">
+    <nav className="w-full text-noir-light">
       <ul
         className={styleMerge(adminNavigationVariants({ className }))}
         data-cy="AdminNavigation"
@@ -47,14 +47,14 @@ const AdminNavigation = ({ className, user, onNavClick }: AdminNavigationProps) 
           adminNavigation.map((item: (typeof adminNavigation)[number]) => (
             <li
               key={item.id}
-              className="capitalize font-semibold text-shadow-sm text-shadow-noir-dark/70 leading-5"
+              className="capitalize font-semibold text-sm text-shadow-sm text-shadow-noir-dark/70 leading-5"
             >
               <Link
                 href={item.path}
                 onClick={onNavClick}
                 className={styleMerge(linkBase, isActive(item.path) && linkActive)}
               >
-                <span className="pl-2" suppressHydrationWarning>
+                <span suppressHydrationWarning>
                   {tAdmin("navigation." + item.key)}
                 </span>
               </Link>
@@ -68,17 +68,17 @@ const AdminNavigation = ({ className, user, onNavClick }: AdminNavigationProps) 
           }).map(item => (
             <li
               key={item.id}
-              className="capitalize font-semibold text-shadow-sm text-shadow-noir-dark/70 leading-5"
+              className="capitalize text-sm text-shadow-sm text-shadow-noir-dark/70 leading-5"
             >
               <Link
                 href={item.path}
                 onClick={onNavClick}
                 className={styleMerge(
-                  "text-noir-gold py-2 hover:text-noir-gold-500 transition-colors duration-200 hover:bg-noir-dark/80 block w-full",
+                  "text-noir-gold p-2 hover:text-noir-gold-500 transition-colors duration-200 hover:bg-noir-dark/80 w-full",
                   isActive(item.path, true) && linkActive
                 )}
               >
-                <span className="pl-2" suppressHydrationWarning>
+                <span suppressHydrationWarning>
                   {tProfile("navigation." + item.key)}
                 </span>
               </Link>

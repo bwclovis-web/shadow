@@ -58,11 +58,14 @@ export const queryKeys = {
 ...queryKeys.houses.all, "byLetter", letter, houseType
 ] as const,
     paginated: (filters: HouseFilters) => [...queryKeys.houses.all, "paginated", filters] as const,
-    // For infinite queries - don't include pagination params in key
-    // All pages share the same cache entry
-    byLetterInfinite: (letter: string, houseType: string) => [
-...queryKeys.houses.all, "byLetterInfinite", letter, houseType
-] as const,
+    /** `pageSize` is part of the key so each `take` uses a consistent cache (breakpoint changes = new query). */
+    byLetterInfinite: (letter: string, houseType: string, pageSize: number) => [
+      ...queryKeys.houses.all,
+      "byLetterInfinite",
+      letter,
+      houseType,
+      pageSize,
+    ] as const,
   },
 } as const
 

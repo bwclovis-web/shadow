@@ -17,6 +17,10 @@ export interface PaginationBarProps {
    */
   siblingCount?: number
   className?: string
+  /** Warm next infinite-query chunk on hover (e.g. `fetchNextPage`). */
+  onPrefetchNext?: () => void
+  /** Warm data for a target UI page on hover (e.g. forward `fetchNextPage` until slice covers). */
+  onPrefetchPage?: (page: number) => void
 }
 
 /**
@@ -29,6 +33,8 @@ export const PaginationBar = ({
   onPageChange,
   siblingCount = 1,
   className,
+  onPrefetchNext,
+  onPrefetchPage,
 }: PaginationBarProps) => {
   const t = useTranslations("common")
 
@@ -50,6 +56,19 @@ export const PaginationBar = ({
     }
   }
 
+  const prefetchPageIfNeeded = (page: number) => {
+    const p = Math.min(Math.max(1, page), totalPages)
+    if (p === safeCurrent) return
+    onPrefetchPage?.(p)
+  }
+
+  const prefetchNext = () => {
+    onPrefetchNext?.()
+    if (!onPrefetchNext) {
+      prefetchPageIfNeeded(safeCurrent + 1)
+    }
+  }
+
   return (
     <nav
       aria-label={t("paginationNav")}
@@ -62,6 +81,7 @@ export const PaginationBar = ({
           size="sm"
           disabled={safeCurrent <= 1}
           onClick={() => go(1)}
+          onMouseEnter={() => prefetchPageIfNeeded(1)}
           aria-label={t("paginationFirst")}
         >
           {t("paginationFirst")}
@@ -72,6 +92,7 @@ export const PaginationBar = ({
           size="sm"
           disabled={safeCurrent <= 1}
           onClick={() => go(safeCurrent - 1)}
+          onMouseEnter={() => prefetchPageIfNeeded(safeCurrent - 1)}
         >
           {t("previous")}
         </Button>
@@ -93,6 +114,7 @@ export const PaginationBar = ({
               size="sm"
               className="px-2"
               onClick={() => go(item)}
+              onMouseEnter={() => prefetchPageIfNeeded(item)}
               aria-current={item === safeCurrent ? "page" : undefined}
             >
               {item}
@@ -106,6 +128,7 @@ export const PaginationBar = ({
           size="sm"
           disabled={safeCurrent >= totalPages}
           onClick={() => go(safeCurrent + 1)}
+          onMouseEnter={prefetchNext}
         >
           {t("next")}
         </Button>
@@ -115,6 +138,12 @@ export const PaginationBar = ({
           size="sm"
           disabled={safeCurrent >= totalPages}
           onClick={() => go(totalPages)}
+          onMouseEnter={() => {
+            onPrefetchPage?.(totalPages)
+            if (!onPrefetchPage) {
+              prefetchNext()
+            }
+          }}
           aria-label={t("paginationLast")}
         >
           {t("paginationLast")}

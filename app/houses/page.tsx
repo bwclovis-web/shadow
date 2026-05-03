@@ -5,7 +5,8 @@ import { getHousesByLetterPaginated } from "@/models/house.server"
 
 import AllHousesClient from "./AllHousesClient"
 
-const DEFAULT_PAGE_SIZE = 16
+/** Matches `useResponsivePageSize` initial state (8) until `matchMedia` runs. */
+const DEFAULT_PAGE_SIZE = 8
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("allHouses.meta")

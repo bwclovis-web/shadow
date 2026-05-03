@@ -5,7 +5,8 @@ import { getPerfumesByLetterPaginated } from "@/models/perfume.server"
 
 import TheVaultClient from "../TheVaultClient"
 
-const DEFAULT_PAGE_SIZE = 16
+/** Matches `useResponsivePageSize` initial state (8) until `matchMedia` runs. */
+const DEFAULT_PAGE_SIZE = 8
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("allPerfumes.meta")

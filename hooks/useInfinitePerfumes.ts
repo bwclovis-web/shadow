@@ -71,7 +71,7 @@ export const useInfinitePerfumesByLetter = (
   const totalCount = initialTotalCount ?? initialData?.length ?? 0
 
   return useInfiniteQuery({
-    queryKey: queryKeys.perfumes.byLetterInfinite(letter || "", houseType),
+    queryKey: queryKeys.perfumes.byLetterInfinite(letter || "", houseType, pageSize),
     queryFn: ({ pageParam }) =>
       getPerfumesByLetter(letter!, houseType, pageParam as number, pageSize),
     enabled: !!letter && /^[A-Za-z]$/.test(letter),
@@ -133,7 +133,7 @@ export const useInfinitePerfumesByHouse = (
   const derivedInitialTotal = initialTotalCount ?? initialData?.length ?? 0
 
   return useInfiniteQuery({
-    queryKey: queryKeys.perfumes.byHouseInfinite(houseSlug, sortBy, q),
+    queryKey: queryKeys.perfumes.byHouseInfinite(houseSlug, sortBy, q, pageSize),
     queryFn: ({ pageParam }) =>
       getMorePerfumes(houseSlug, {
         skip: pageParam as number,

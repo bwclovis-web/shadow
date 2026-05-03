@@ -42,7 +42,7 @@ const MobileNavigation = ({
   }
 
   return (
-    <div className={styleMerge("mobile-nav lg:hidden fixed w-full z-30", className)}>
+    <div className={styleMerge("mobile-nav lg:hidden fixed w-full z-30 top-0", className)}>
       <MobileHeader
         logoText={t("logo")}
         menuButtonRef={menuButtonRef as RefObject<HTMLButtonElement>}

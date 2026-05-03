@@ -68,8 +68,8 @@ const AboutDropdown = ({
 
   const baseClasses =
     variant === "mobile"
-      ? "block text-noir-gold hover:text-noir-light font-semibold text-lg py-4 px-4 border border-transparent transition-colors duration-400 rounded-lg mobile-touch-target hover:bg-noir-black/30"
-      : "text-noir-gold hover:text-noir-light font-semibold text-lg px-2 py-1 border border-transparent transition-colors duration-400 block text-center"
+      ? "block text-noir-gold hover:text-noir-light text-lg lg:py-4 py-1 px-4 border border-transparent transition-colors duration-400 rounded-lg mobile-touch-target hover:bg-noir-black/30"
+      : "text-noir-gold hover:text-noir-light text-lg px-2 py-1 border border-transparent transition-colors duration-400 block text-center"
 
   const dropdownClasses =
     variant === "mobile"
@@ -107,8 +107,8 @@ const AboutDropdown = ({
                   onClick={handleNavClick}
                   className={styleMerge(
                     variant === "mobile"
-                      ? "block text-noir-gold hover:text-noir-light font-semibold text-lg py-3 px-4 transition-colors duration-400 hover:bg-noir-black/30"
-                      : "block text-noir-gold hover:text-noir-light font-semibold text-base py-2 px-4 transition-colors duration-400 hover:bg-noir-black/30",
+                      ? "block text-noir-gold hover:text-noir-light text-lg py-3 px-4 transition-colors duration-400 hover:bg-noir-black/30"
+                      : "block text-noir-gold hover:text-noir-light text-base py-2 px-4 transition-colors duration-400 hover:bg-noir-black/30",
                     isActive(item.path) && "text-noir-light bg-noir-black/30"
                   )}
                 >

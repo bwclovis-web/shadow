@@ -58,21 +58,19 @@ export function useInfinitePagination<TPage, TItem>({
   const loading = isLoading || isFetchingNextPage
 
   /**
-   * Prefetch enough API pages to cover the current UI page. Important when
-   * `pageSize` changes after hydration (e.g. useResponsivePageSize 8 → 16):
-   * SSR/first chunk may be smaller than the desktop page window, and we must
-   * not rely on `safeCurrentPage <= pages.length` (that conflates UI pages with
-   * API pages and skips fetches on page 1).
+   * Prefetch enough API pages to cover the current UI page, plus one extra
+   * chunk when more data exists (`hasNextPage`) so "Next" often hits cache.
+   * Important when `pageSize` changes after hydration (e.g. useResponsivePageSize 8 → 16).
    */
   useEffect(() => {
     if (!hasNextPage) return
 
-    const requiredLength = Math.min(
+    const targetLength = Math.min(
       totalCount,
-      safeCurrentPage * pageSize
+      safeCurrentPage * pageSize + pageSize
     )
 
-    if (allItems.length >= requiredLength) return
+    if (allItems.length >= targetLength) return
 
     fetchNextPage().catch(() => {
       // Errors surface via the query; avoid unhandled rejection

@@ -45,7 +45,7 @@ const LinkCard = ({
         prefetch={false}
         className="flex flex-col overflow-hidden justify-between items-center group transition-all duration-300 ease-in-out"
       >
-        <div className="text-center relative z-10 bg-noir-dark/50 backdrop-blur-sm w-full p-4">
+        <div className="text-center relative z-10 bg-noir-dark/50 backdrop-blur-sm w-full p-2">
           <h2 className="text-wrap wrap-break-word card-title">{data.name}</h2>
           {data?.perfumeHouse?.name && (
             <p className="text-sm text-noir-gold-100 leading-tight">

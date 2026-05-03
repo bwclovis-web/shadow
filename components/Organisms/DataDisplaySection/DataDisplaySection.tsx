@@ -33,10 +33,14 @@ type DataDisplaySectionProps = DataDisplaySectionBaseProps &
     | {
         pagination?: undefined
         onPageChange?: undefined
+        onPrefetchNext?: undefined
+        onPrefetchPage?: undefined
       }
     | {
         pagination: PaginationSlice
         onPageChange: (page: number) => void
+        onPrefetchNext?: () => void
+        onPrefetchPage?: (page: number) => void
       }
   )
 
@@ -51,6 +55,8 @@ const DataDisplaySection = ({
   sourcePage,
   pagination,
   onPageChange,
+  onPrefetchNext,
+  onPrefetchPage,
 }: DataDisplaySectionProps) => {
   const tDataDisplay = useTranslations("components.dataDisplaySection")
   const tCommon = useTranslations("common")
@@ -100,6 +106,8 @@ const DataDisplaySection = ({
           currentPage={pagination.currentPage}
           totalPages={pagination.totalPages}
           onPageChange={onPageChange}
+          onPrefetchNext={onPrefetchNext}
+          onPrefetchPage={onPrefetchPage}
         />
       )}
     </div>

@@ -21,6 +21,8 @@ interface PerfumeHousePerfumeListProps {
   onPageChange: (page: number) => void
   selectedLetter?: string | null
   queryError?: Error | null
+  onPrefetchNext?: () => void
+  onPrefetchPage?: (page: number) => void
 }
 
 const PerfumeHousePerfumeList = ({
@@ -30,6 +32,8 @@ const PerfumeHousePerfumeList = ({
   onPageChange,
   selectedLetter,
   queryError,
+  onPrefetchNext,
+  onPrefetchPage,
 }: PerfumeHousePerfumeListProps) => {
   const tSingleHouse = useTranslations("singleHouse")
 
@@ -81,6 +85,8 @@ const PerfumeHousePerfumeList = ({
           currentPage={pagination.currentPage}
           totalPages={pagination.totalPages}
           onPageChange={onPageChange}
+          onPrefetchNext={onPrefetchNext}
+          onPrefetchPage={onPrefetchPage}
         />
       )}
     </div>

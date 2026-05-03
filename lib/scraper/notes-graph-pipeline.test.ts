@@ -201,4 +201,44 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
     expect(open).toContain("lemon")
     expect(open).toContain("cedar")
   })
+
+  it("parses profile / accords / with-notes-of / composition phrasing without LLM", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const collapsed = [
+      "Olfactory profile: iris, ambrette, and white musk.",
+      "Key accords: tobacco, honey, vanilla.",
+      "With notes of lime, mandarin, and sea salt.",
+      "The fragrance composition features cedarwood, oakmoss, and vetiver.",
+      "Shipping info follows.",
+    ].join(" ")
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Multi phrase",
+        description: collapsed,
+        image: "",
+        detailURL: "https://example.com/p/multi",
+        perfumeHouse: "House",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run")
+    })
+
+    const records = await extractNotesForItems(items, "House", { generateNoirDescriptions: false })
+
+    expect(invokeMock).not.toHaveBeenCalled()
+    const all = [
+      ...JSON.parse(records[0].openNotes),
+      ...JSON.parse(records[0].heartNotes),
+      ...JSON.parse(records[0].baseNotes),
+    ] as string[]
+    expect(all).toContain("iris")
+    expect(all).toContain("tobacco")
+    expect(all).toContain("lime")
+    expect(all).toContain("mandarin")
+    expect(all).toContain("cedarwood")
+  })
 })

@@ -59,11 +59,11 @@ const AdminDropdown = ({
   }
 
   const baseClasses =
-    "block text-noir-gold hover:text-noir-light font-semibold text-lg py-4 px-4 border border-transparent transition-colors duration-400 rounded-lg mobile-touch-target hover:bg-noir-black/30 w-full text-left"
+    "block text-noir-gold hover:text-noir-light text-lg lg:py-4 py-1 px-4 border border-transparent transition-colors duration-400 rounded-lg mobile-touch-target hover:bg-noir-black/30 w-full text-left"
   const dropdownClasses =
     "absolute top-full left-0 w-full bg-noir-dark border border-noir-light/20 rounded-lg shadow-lg z-50"
   const linkClasses =
-    "block text-noir-gold hover:text-noir-light font-semibold text-base py-3 px-4 transition-colors duration-400 hover:bg-noir-black/30"
+    "block text-noir-gold hover:text-noir-light text-base py-3 px-4 transition-colors duration-400 hover:bg-noir-black/30"
   const activeLinkClasses =
     "text-noir-dark text-shadow-none bg-noir-gold/80 border-2 border-noir-gold"
 

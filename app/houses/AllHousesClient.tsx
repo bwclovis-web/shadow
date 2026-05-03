@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
@@ -134,7 +134,15 @@ const useHousesData = (
       (page as { count?: number })?.count,
   })
 
-  return { houses, pagination, loading, error, data }
+  return {
+    houses,
+    pagination,
+    loading,
+    error,
+    data,
+    fetchNextPage,
+    hasNextPage: hasNextPage ?? false,
+  }
 }
 
 const buildHousesPath = (
@@ -180,13 +188,34 @@ const AllHousesClient = ({
   const filters = useHouseFilters(t)
   const handlers = useHouseHandlers(setSelectedHouseType, setSelectedSort)
 
-  const { houses, pagination, loading, error } = useHousesData(
+  const {
+    houses,
+    pagination,
+    loading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+  } = useHousesData(
     letterFromUrl,
     selectedHouseType,
     pageFromUrl,
     pageSize,
     useInitialData ? initialHouses : undefined,
     useInitialData ? initialHousesTotal : undefined
+  )
+
+  const onPrefetchNext = useCallback(() => {
+    if (!hasNextPage) return
+    void fetchNextPage()
+  }, [fetchNextPage, hasNextPage])
+
+  const onPrefetchPage = useCallback(
+    (targetPage: number) => {
+      if (targetPage <= pagination.currentPage) return
+      if (!hasNextPage) return
+      void fetchNextPage()
+    },
+    [fetchNextPage, hasNextPage, pagination.currentPage]
   )
 
   const normalizedHouses = useMemo(
@@ -270,6 +299,7 @@ const AllHousesClient = ({
         onLetterSelect={handleLetterClick}
         prefetchType="houses"
         houseType={selectedHouseType}
+        pageSize={pageSize}
         className="mb-8"
       />
 
@@ -281,6 +311,8 @@ const AllHousesClient = ({
         sourcePage="houses"
         pagination={pagination}
         onPageChange={goToPage}
+        onPrefetchNext={onPrefetchNext}
+        onPrefetchPage={onPrefetchPage}
       />
     </section>
   )

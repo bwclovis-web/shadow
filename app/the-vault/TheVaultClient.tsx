@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { useParams, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
@@ -135,6 +135,20 @@ const TheVaultClient = ({
       itemCount: perfumes.length,
     })
 
+  const onPrefetchNext = useCallback(() => {
+    if (!hasNextPage) return
+    void fetchNextPage()
+  }, [fetchNextPage, hasNextPage])
+
+  const onPrefetchPage = useCallback(
+    (targetPage: number) => {
+      if (targetPage <= pagination.currentPage) return
+      if (!hasNextPage) return
+      void fetchNextPage()
+    },
+    [fetchNextPage, hasNextPage, pagination.currentPage]
+  )
+
   if (error) {
     return (
       <div>
@@ -167,6 +181,7 @@ const TheVaultClient = ({
         onLetterSelect={handleLetterClick}
         prefetchType="perfumes"
         houseType="all"
+        pageSize={pageSize}
         className="mb-8"
       />
 
@@ -178,6 +193,8 @@ const TheVaultClient = ({
         sourcePage="vault"
         pagination={pagination}
         onPageChange={goToPage}
+        onPrefetchNext={onPrefetchNext}
+        onPrefetchPage={onPrefetchPage}
       />
     </section>
   )
