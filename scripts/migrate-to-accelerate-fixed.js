@@ -9,6 +9,9 @@
 //   --batch-size=N   Process records in batches of N (default: 100)
 //   --full           Force full migration (ignore migration state)
 //   --help           Show this help message
+//
+// User, PerfumeHouse, Perfume, and PerfumeNotes upsert on primary key (id) so local IDs match
+// remote; slug / name / email are written in update/create and stay consistent with local Postgres.
 
 import { PrismaClient } from "@prisma/client"
 import { Client } from "pg"
@@ -102,6 +105,17 @@ const acceleratePrisma = new PrismaClient({
 // Track migrated records for reference (used for foreign key mapping)
 const migratedHouses = new Map()
 const migratedPerfumes = new Map()
+/** Local user id → remote user id (when email matches but primary keys differ) */
+const migratedUsers = new Map()
+
+const mapUserId = localId =>
+  localId == null || localId === undefined ? null : migratedUsers.get(localId) ?? localId
+
+/** Local PerfumeNotes id → remote id (name-unique merge / split-brain) */
+const migratedNotes = new Map()
+
+const mapNoteId = localId =>
+  localId == null || localId === undefined ? null : migratedNotes.get(localId) ?? localId
 
 // Migration statistics
 const stats = {
@@ -175,6 +189,17 @@ const updateMigrationState = async (tableName, timestamp, recordCount) => {
   }
 }
 
+/** Only advance incremental checkpoint when every row in this table succeeded; otherwise failed rows drop out of the next incremental query forever. */
+const maybeUpdateMigrationState = async (tableName, timestamp, recordCount, errorsThisTable) => {
+  if (errorsThisTable > 0) {
+    console.log(
+      `  ⚠️  ${tableName}: ${errorsThisTable} error(s); checkpoint not advanced — fix remote/local data or use --full, then re-run`,
+    )
+    return
+  }
+  await updateMigrationState(tableName, timestamp, recordCount)
+}
+
 // ============================================================================
 // BATCH PROCESSING UTILITIES
 // ============================================================================
@@ -229,6 +254,16 @@ const migrateUsers = async () => {
 
   if (users.length === 0) {
     console.log("  ✅ No new users to migrate")
+    if (!DRY_RUN) {
+      const allLocalUsers = await localClient.query('SELECT id, email FROM "User"')
+      for (const u of allLocalUsers.rows) {
+        if (migratedUsers.has(u.id)) continue
+        const remote = await acceleratePrisma.user.findFirst({
+          where: { OR: [{ id: u.id }, { email: u.email }] },
+        })
+        if (remote) migratedUsers.set(u.id, remote.id)
+      }
+    }
     return
   }
 
@@ -239,39 +274,75 @@ const migrateUsers = async () => {
     return
   }
 
-  await processBatch(users, async user => {
+  const errorsAtStart = stats.errors
+  let processed = 0
+  for (const user of users) {
     try {
-      // Use email as the unique key, preserve local ID
-      await acceleratePrisma.user.upsert({
-        where: { email: user.email },
-        update: {
-          password: user.password,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          username: user.username,
-          role: user.role,
-          updatedAt: user.updatedAt,
-        },
-        create: {
-          id: user.id,  // Preserve local ID
-          email: user.email,
-          password: user.password,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          username: user.username,
-          role: user.role,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt,
-        },
+      const dataForUpdate = {
+        email: user.email,
+        password: user.password,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
+        role: user.role,
+        updatedAt: user.updatedAt,
+      }
+
+      const existingById = await acceleratePrisma.user.findUnique({
+        where: { id: user.id },
       })
-      stats.created++
+      if (existingById) {
+        await acceleratePrisma.user.update({
+          where: { id: user.id },
+          data: dataForUpdate,
+        })
+        migratedUsers.set(user.id, user.id)
+        stats.created++
+      } else {
+        const existingByEmail = await acceleratePrisma.user.findUnique({
+          where: { email: user.email },
+        })
+        if (existingByEmail) {
+          await acceleratePrisma.user.update({
+            where: { id: existingByEmail.id },
+            data: dataForUpdate,
+          })
+          migratedUsers.set(user.id, existingByEmail.id)
+          stats.created++
+        } else {
+          await acceleratePrisma.user.create({
+            data: {
+              id: user.id,
+              ...dataForUpdate,
+              createdAt: user.createdAt,
+              updatedAt: user.updatedAt,
+            },
+          })
+          migratedUsers.set(user.id, user.id)
+          stats.created++
+        }
+      }
     } catch (error) {
       stats.errors++
       console.error(`  ❌ Error migrating user ${user.email}:`, error.message)
     }
-  }, "User")
+    processed++
+    if (processed % 500 === 0) {
+      console.log(`  📊 Progress: ${processed}/${users.length} users processed`)
+    }
+  }
+  console.log(`  📊 Progress: ${processed}/${users.length} records processed`)
 
-  await updateMigrationState("User", migrationStart, users.length)
+  const allLocalUsers = await localClient.query('SELECT id, email FROM "User"')
+  for (const u of allLocalUsers.rows) {
+    if (migratedUsers.has(u.id)) continue
+    const remote = await acceleratePrisma.user.findFirst({
+      where: { OR: [{ id: u.id }, { email: u.email }] },
+    })
+    if (remote) migratedUsers.set(u.id, remote.id)
+  }
+
+  await maybeUpdateMigrationState("User", migrationStart, users.length, stats.errors - errorsAtStart)
   console.log("  ✅ Users migration completed")
 }
 
@@ -312,52 +383,91 @@ const migratePerfumeHouses = async () => {
     return
   }
 
+  const errorsAtStart = stats.errors
   let processed = 0
   for (const house of houses) {
     try {
-      const slug = createUrlSlug(house.name)
+      const slug =
+        (house.slug && String(house.slug).trim()) || createUrlSlug(house.name)
 
-      // Use slug as the unique key, preserve local ID
-      await acceleratePrisma.perfumeHouse.upsert({
-        where: { slug: slug },
-        update: {
-          name: house.name,
-          description: house.description,
-          image: house.image,
-          website: house.website,
-          country: house.country,
-          founded: house.founded,
-          email: house.email,
-          phone: house.phone,
-          address: house.address,
-          type: house.type,
-          updatedAt: house.updatedAt,
-        },
-        create: {
-          id: house.id,  // Preserve local ID
-          name: house.name,
-          slug: slug,
-          description: house.description,
-          image: house.image,
-          website: house.website,
-          country: house.country,
-          founded: house.founded,
-          email: house.email,
-          phone: house.phone,
-          address: house.address,
-          type: house.type,
-          createdAt: house.createdAt,
-          updatedAt: house.updatedAt,
-        },
+      const dataForUpdate = {
+        name: house.name,
+        slug,
+        description: house.description,
+        image: house.image,
+        website: house.website,
+        country: house.country,
+        founded: house.founded,
+        email: house.email,
+        phone: house.phone,
+        address: house.address,
+        type: house.type,
+        updatedAt: house.updatedAt,
+      }
+
+      const existingById = await acceleratePrisma.perfumeHouse.findUnique({
+        where: { id: house.id },
+      })
+      const existingByName = await acceleratePrisma.perfumeHouse.findUnique({
+        where: { name: house.name },
       })
 
-      migratedHouses.set(house.id, house.id)
-      stats.created++
+      // Split-brain: one remote row matches local id (wrong name), another matches name (different id).
+      // Updating the id row would violate unique(name). Prefer the name row as canonical; disambiguate the id row.
+      if (existingById && existingByName && existingById.id !== existingByName.id) {
+        await acceleratePrisma.perfumeHouse.update({
+          where: { id: existingByName.id },
+          data: dataForUpdate,
+        })
+        migratedHouses.set(house.id, existingByName.id)
+        const suffix = existingById.id.slice(0, 8)
+        const orphanName = `${house.name} (legacy ${suffix})`
+        const orphanSlug = `${createUrlSlug(house.name)}-legacy-${suffix}`
+        await acceleratePrisma.perfumeHouse.update({
+          where: { id: existingById.id },
+          data: {
+            name: orphanName,
+            slug: orphanSlug,
+            updatedAt: new Date(),
+          },
+        })
+        stats.created++
+      } else if (existingById) {
+        await acceleratePrisma.perfumeHouse.update({
+          where: { id: house.id },
+          data: dataForUpdate,
+        })
+        migratedHouses.set(house.id, house.id)
+        stats.created++
+      } else if (existingByName) {
+        await acceleratePrisma.perfumeHouse.update({
+          where: { id: existingByName.id },
+          data: dataForUpdate,
+        })
+        migratedHouses.set(house.id, existingByName.id)
+        stats.created++
+      } else {
+        await acceleratePrisma.perfumeHouse.create({
+          data: {
+            id: house.id,
+            ...dataForUpdate,
+            createdAt: house.createdAt,
+            updatedAt: house.updatedAt,
+          },
+        })
+        migratedHouses.set(house.id, house.id)
+        stats.created++
+      }
     } catch (error) {
       stats.errors++
+      const p2002 =
+        error.code === "P2002" && Array.isArray(error.meta?.target)
+          ? ` [unique: ${error.meta.target.join(", ")}]`
+          : ""
       // Only log first few errors to avoid flooding console
       if (stats.errors <= 10) {
-        console.error(`  ❌ Error migrating house ${house.name}:`, error.message?.substring(0, 100) || error)
+        const msg = (error.message?.substring(0, 200) || String(error)) + p2002
+        console.error(`  ❌ Error migrating house ${house.name}:`, msg)
       } else if (stats.errors === 11) {
         console.log(`  ⚠️  Suppressing further error messages...`)
       }
@@ -370,11 +480,17 @@ const migratePerfumeHouses = async () => {
   }
   console.log(`  📊 Final: ${processed}/${houses.length} houses processed (${stats.errors} errors)`)
 
-  // Populate map with all houses for foreign key references
-  const allHouses = await localClient.query('SELECT id FROM "PerfumeHouse"')
-  allHouses.rows.forEach(h => migratedHouses.set(h.id, h.id))
+  // Fill FK map for any local house not processed (e.g. error): resolve remote row by id or name — do not overwrite merged id mappings.
+  const allHouses = await localClient.query('SELECT id, name FROM "PerfumeHouse"')
+  for (const h of allHouses.rows) {
+    if (migratedHouses.has(h.id)) continue
+    const remote = await acceleratePrisma.perfumeHouse.findFirst({
+      where: { OR: [{ id: h.id }, { name: h.name }] },
+    })
+    if (remote) migratedHouses.set(h.id, remote.id)
+  }
 
-  await updateMigrationState("PerfumeHouse", migrationStart, houses.length)
+  await maybeUpdateMigrationState("PerfumeHouse", migrationStart, houses.length, stats.errors - errorsAtStart)
   console.log("  ✅ Perfume houses migration completed")
 }
 
@@ -414,36 +530,35 @@ const migratePerfumes = async () => {
     return
   }
 
-  // Track used slugs so duplicate names get unique slugs and every perfume gets its own row
-  const usedSlugs = new Set()
-  let duplicateSlugCount = 0
+  const errorsAtStart = stats.errors
   let processed = 0
 
   for (const perfume of perfumes) {
     try {
-      const baseSlug = createUrlSlug(perfume.name) || `perfume-${perfume.id}`
-      const slug = usedSlugs.has(baseSlug) ? `${baseSlug}-${perfume.id}` : baseSlug
-      if (usedSlugs.has(baseSlug)) duplicateSlugCount++
-      usedSlugs.add(slug)
+      const slug =
+        (perfume.slug && String(perfume.slug).trim()) ||
+        createUrlSlug(perfume.name) ||
+        `perfume-${perfume.id}`
 
-      const perfumeHouseId = perfume.perfumeHouseId && migratedHouses.has(perfume.perfumeHouseId)
-        ? perfume.perfumeHouseId
-        : null
+      const perfumeHouseId =
+        perfume.perfumeHouseId && migratedHouses.has(perfume.perfumeHouseId)
+          ? migratedHouses.get(perfume.perfumeHouseId)
+          : null
 
-      // Use slug as the unique key, preserve local ID (each perfume gets its own row)
       await acceleratePrisma.perfume.upsert({
-        where: { slug: slug },
+        where: { id: perfume.id },
         update: {
           name: perfume.name,
+          slug,
           description: perfume.description,
           image: perfume.image,
           perfumeHouseId: perfumeHouseId,
           updatedAt: perfume.updatedAt,
         },
         create: {
-          id: perfume.id,  // Preserve local ID
+          id: perfume.id,
           name: perfume.name,
-          slug: slug,
+          slug,
           description: perfume.description,
           image: perfume.image,
           perfumeHouseId: perfumeHouseId,
@@ -465,15 +580,11 @@ const migratePerfumes = async () => {
   }
   console.log(`  📊 Final: ${processed}/${perfumes.length} perfumes (${stats.errors} errors)`)
 
-  if (duplicateSlugCount > 0) {
-    console.log(`  ℹ️  ${duplicateSlugCount} perfumes had duplicate names and were given unique slugs (e.g. name-id)`)
-  }
-
   // Populate map with all perfumes for foreign key references
   const allPerfumes = await localClient.query('SELECT id FROM "Perfume"')
   allPerfumes.rows.forEach(p => migratedPerfumes.set(p.id, p.id))
 
-  await updateMigrationState("Perfume", migrationStart, perfumes.length)
+  await maybeUpdateMigrationState("Perfume", migrationStart, perfumes.length, stats.errors - errorsAtStart)
   console.log("  ✅ Perfumes migration completed")
 }
 
@@ -499,6 +610,16 @@ const migratePerfumeNotes = async () => {
 
   if (notes.length === 0) {
     console.log("  ✅ No new perfume notes to migrate")
+    if (!DRY_RUN) {
+      const allLocal = await localClient.query('SELECT id, name FROM "PerfumeNotes"')
+      for (const n of allLocal.rows) {
+        if (migratedNotes.has(n.id)) continue
+        const remote = await acceleratePrisma.perfumeNotes.findFirst({
+          where: { OR: [{ id: n.id }, { name: n.name }] },
+        })
+        if (remote) migratedNotes.set(n.id, remote.id)
+      }
+    }
     return
   }
 
@@ -509,23 +630,70 @@ const migratePerfumeNotes = async () => {
     return
   }
 
+  const errorsAtStart = stats.errors
   let processed = 0
   for (const note of notes) {
     try {
-      // Use name as the unique key, preserve local ID
-      await acceleratePrisma.perfumeNotes.upsert({
-        where: { name: note.name },
-        update: {
-          updatedAt: note.updatedAt,
-        },
-        create: {
-          id: note.id,  // Preserve local ID
-          name: note.name,
-          createdAt: note.createdAt,
-          updatedAt: note.updatedAt,
-        },
+      const dataForUpdate = {
+        name: note.name,
+        updatedAt: note.updatedAt,
+        perfumeOpenId: note.perfumeOpenId ?? note.perfumeopenid ?? null,
+        perfumeHeartId: note.perfumeHeartId ?? note.perfumeheartid ?? null,
+        perfumeCloseId: note.perfumeCloseId ?? note.perfumecloseid ?? null,
+      }
+
+      const existingById = await acceleratePrisma.perfumeNotes.findUnique({
+        where: { id: note.id },
       })
-      stats.created++
+      const existingByName = await acceleratePrisma.perfumeNotes.findUnique({
+        where: { name: note.name },
+      })
+
+      if (existingById && existingByName && existingById.id !== existingByName.id) {
+        await acceleratePrisma.perfumeNotes.update({
+          where: { id: existingByName.id },
+          data: dataForUpdate,
+        })
+        migratedNotes.set(note.id, existingByName.id)
+        const suffix = existingById.id.slice(0, 8)
+        const orphanName = `${note.name} (legacy ${suffix})`
+        await acceleratePrisma.perfumeNotes.update({
+          where: { id: existingById.id },
+          data: {
+            name: orphanName,
+            updatedAt: new Date(),
+          },
+        })
+        stats.created++
+      } else if (existingById) {
+        await acceleratePrisma.perfumeNotes.update({
+          where: { id: note.id },
+          data: dataForUpdate,
+        })
+        migratedNotes.set(note.id, note.id)
+        stats.created++
+      } else if (existingByName) {
+        await acceleratePrisma.perfumeNotes.update({
+          where: { id: existingByName.id },
+          data: dataForUpdate,
+        })
+        migratedNotes.set(note.id, existingByName.id)
+        stats.created++
+      } else {
+        await acceleratePrisma.perfumeNotes.create({
+          data: {
+            id: note.id,
+            name: note.name,
+            createdAt: note.createdAt,
+            updatedAt: note.updatedAt,
+            perfumeOpenId: dataForUpdate.perfumeOpenId,
+            perfumeHeartId: dataForUpdate.perfumeHeartId,
+            perfumeCloseId: dataForUpdate.perfumeCloseId,
+          },
+        })
+        migratedNotes.set(note.id, note.id)
+        stats.created++
+      }
     } catch (error) {
       stats.errors++
       console.error(`  ❌ Error migrating note ${note.name}:`, error.message)
@@ -537,7 +705,16 @@ const migratePerfumeNotes = async () => {
   }
   console.log(`  📊 Final: ${processed}/${notes.length} notes (${stats.errors} errors)`)
 
-  await updateMigrationState("PerfumeNotes", migrationStart, notes.length)
+  const allLocalNotes = await localClient.query('SELECT id, name FROM "PerfumeNotes"')
+  for (const n of allLocalNotes.rows) {
+    if (migratedNotes.has(n.id)) continue
+    const remote = await acceleratePrisma.perfumeNotes.findFirst({
+      where: { OR: [{ id: n.id }, { name: n.name }] },
+    })
+    if (remote) migratedNotes.set(n.id, remote.id)
+  }
+
+  await maybeUpdateMigrationState("PerfumeNotes", migrationStart, notes.length, stats.errors - errorsAtStart)
   console.log("  ✅ Perfume notes migration completed")
 }
 
@@ -571,36 +748,74 @@ const migratePerfumeNoteRelations = async () => {
     return
   }
 
-  // Only migrate relations where both perfume and note exist on remote (avoids FK violations
-  // when perfumes were deduplicated by slug or some perfumes failed to migrate)
+  // Require perfume and note on remote (note ids often diverge like houses — use migratedNotes)
   const validRelations = relations.filter(
-    r => migratedPerfumes.has(r.perfumeId)
+    r => migratedPerfumes.has(r.perfumeId) && migratedNotes.has(r.noteId),
   )
   const skipped = relations.length - validRelations.length
   if (skipped > 0) {
-    console.log(`  ⚠️  Skipping ${skipped} relations whose perfume is not on remote (would cause FK errors)`)
+    console.log(
+      `  ⚠️  Skipping ${skipped} relations missing perfume or note on remote (would cause FK errors)`,
+    )
   }
 
+  const errorsAtStart = stats.errors
   let processed = 0
   for (const relation of validRelations) {
     try {
-      await acceleratePrisma.perfumeNoteRelation.upsert({
+      const remoteNoteId = mapNoteId(relation.noteId)
+      const perfumeId = relation.perfumeId
+      const noteType = relation.noteType ?? relation.notetype
+      const dataForRow = {
+        perfumeId,
+        noteId: remoteNoteId,
+        noteType,
+        updatedAt: relation.updatedAt,
+      }
+
+      const existingById = await acceleratePrisma.perfumeNoteRelation.findUnique({
         where: { id: relation.id },
-        update: {
-          perfumeId: relation.perfumeId,
-          noteId: relation.noteId,
-          noteType: relation.noteType,
-          updatedAt: relation.updatedAt,
-        },
-        create: {
-          id: relation.id,
-          perfumeId: relation.perfumeId,
-          noteId: relation.noteId,
-          noteType: relation.noteType,
-          createdAt: relation.createdAt,
-          updatedAt: relation.updatedAt,
-        },
       })
+
+      if (existingById) {
+        await acceleratePrisma.perfumeNoteRelation.update({
+          where: { id: relation.id },
+          data: dataForRow,
+        })
+      } else {
+        const existingByTriple = await acceleratePrisma.perfumeNoteRelation.findFirst({
+          where: { perfumeId, noteId: remoteNoteId, noteType },
+        })
+        if (existingByTriple) {
+          // Same perfume+note+type already on remote under another id (after note-id remap).
+          await acceleratePrisma.$transaction([
+            acceleratePrisma.perfumeNoteRelation.delete({
+              where: { id: existingByTriple.id },
+            }),
+            acceleratePrisma.perfumeNoteRelation.create({
+              data: {
+                id: relation.id,
+                perfumeId,
+                noteId: remoteNoteId,
+                noteType,
+                createdAt: relation.createdAt,
+                updatedAt: relation.updatedAt,
+              },
+            }),
+          ])
+        } else {
+          await acceleratePrisma.perfumeNoteRelation.create({
+            data: {
+              id: relation.id,
+              perfumeId,
+              noteId: remoteNoteId,
+              noteType,
+              createdAt: relation.createdAt,
+              updatedAt: relation.updatedAt,
+            },
+          })
+        }
+      }
       stats.created++
     } catch (error) {
       stats.errors++
@@ -613,7 +828,7 @@ const migratePerfumeNoteRelations = async () => {
   }
   console.log(`  📊 Final: ${processed}/${validRelations.length} note relations (${stats.errors} errors)`)
 
-  await updateMigrationState("PerfumeNoteRelation", migrationStart, relations.length)
+  await maybeUpdateMigrationState("PerfumeNoteRelation", migrationStart, relations.length, stats.errors - errorsAtStart)
   console.log("  ✅ Perfume note relations migration completed")
 }
 
@@ -647,13 +862,14 @@ const migrateUserPerfumes = async () => {
     return
   }
 
+  const errorsAtStart = stats.errors
   let processed = 0
   for (const userPerfume of userPerfumes) {
     try {
       await acceleratePrisma.userPerfume.upsert({
         where: { id: userPerfume.id },
         update: {
-          userId: userPerfume.userId,
+          userId: mapUserId(userPerfume.userId),
           perfumeId: userPerfume.perfumeId,
           amount: userPerfume.amount,
           available: userPerfume.available,
@@ -667,7 +883,7 @@ const migrateUserPerfumes = async () => {
         },
         create: {
           id: userPerfume.id,
-          userId: userPerfume.userId,
+          userId: mapUserId(userPerfume.userId),
           perfumeId: userPerfume.perfumeId,
           amount: userPerfume.amount,
           available: userPerfume.available,
@@ -693,7 +909,7 @@ const migrateUserPerfumes = async () => {
   }
   console.log(`  📊 Final: ${processed}/${userPerfumes.length} user perfumes (${stats.errors} errors)`)
 
-  await updateMigrationState("UserPerfume", migrationStart, userPerfumes.length)
+  await maybeUpdateMigrationState("UserPerfume", migrationStart, userPerfumes.length, stats.errors - errorsAtStart)
   console.log("  ✅ User perfumes migration completed")
 }
 
@@ -727,13 +943,14 @@ const migrateUserPerfumeRatings = async () => {
     return
   }
 
+  const errorsAtStart = stats.errors
   let processed = 0
   for (const rating of ratings) {
     try {
       await acceleratePrisma.userPerfumeRating.upsert({
         where: { id: rating.id },
         update: {
-          userId: rating.userId,
+          userId: mapUserId(rating.userId),
           perfumeId: rating.perfumeId,
           gender: rating.gender,
           longevity: rating.longevity,
@@ -744,7 +961,7 @@ const migrateUserPerfumeRatings = async () => {
         },
         create: {
           id: rating.id,
-          userId: rating.userId,
+          userId: mapUserId(rating.userId),
           perfumeId: rating.perfumeId,
           gender: rating.gender,
           longevity: rating.longevity,
@@ -767,7 +984,7 @@ const migrateUserPerfumeRatings = async () => {
   }
   console.log(`  📊 Final: ${processed}/${ratings.length} ratings (${stats.errors} errors)`)
 
-  await updateMigrationState("UserPerfumeRating", migrationStart, ratings.length)
+  await maybeUpdateMigrationState("UserPerfumeRating", migrationStart, ratings.length, stats.errors - errorsAtStart)
   console.log("  ✅ User perfume ratings migration completed")
 }
 
@@ -801,13 +1018,14 @@ const migrateUserPerfumeReviews = async () => {
     return
   }
 
+  const errorsAtStart = stats.errors
   let processed = 0
   for (const review of reviews) {
     try {
       await acceleratePrisma.userPerfumeReview.upsert({
         where: { id: review.id },
         update: {
-          userId: review.userId,
+          userId: mapUserId(review.userId),
           perfumeId: review.perfumeId,
           review: review.review,
           isApproved: review.isApproved,
@@ -815,7 +1033,7 @@ const migrateUserPerfumeReviews = async () => {
         },
         create: {
           id: review.id,
-          userId: review.userId,
+          userId: mapUserId(review.userId),
           perfumeId: review.perfumeId,
           review: review.review,
           isApproved: review.isApproved,
@@ -835,7 +1053,7 @@ const migrateUserPerfumeReviews = async () => {
   }
   console.log(`  📊 Final: ${processed}/${reviews.length} reviews (${stats.errors} errors)`)
 
-  await updateMigrationState("UserPerfumeReview", migrationStart, reviews.length)
+  await maybeUpdateMigrationState("UserPerfumeReview", migrationStart, reviews.length, stats.errors - errorsAtStart)
   console.log("  ✅ User perfume reviews migration completed")
 }
 
@@ -869,20 +1087,21 @@ const migrateUserPerfumeWishlists = async () => {
     return
   }
 
+  const errorsAtStart = stats.errors
   let processed = 0
   for (const wishlist of wishlists) {
     try {
       await acceleratePrisma.userPerfumeWishlist.upsert({
         where: { id: wishlist.id },
         update: {
-          userId: wishlist.userId,
+          userId: mapUserId(wishlist.userId),
           perfumeId: wishlist.perfumeId,
           isPublic: wishlist.isPublic,
           updatedAt: wishlist.updatedAt,
         },
         create: {
           id: wishlist.id,
-          userId: wishlist.userId,
+          userId: mapUserId(wishlist.userId),
           perfumeId: wishlist.perfumeId,
           isPublic: wishlist.isPublic,
           createdAt: wishlist.createdAt,
@@ -896,7 +1115,7 @@ const migrateUserPerfumeWishlists = async () => {
     }
   }
 
-  await updateMigrationState("UserPerfumeWishlist", migrationStart, wishlists.length)
+  await maybeUpdateMigrationState("UserPerfumeWishlist", migrationStart, wishlists.length, stats.errors - errorsAtStart)
   console.log("  ✅ User perfume wishlists migration completed")
 }
 
@@ -930,13 +1149,14 @@ const migrateUserPerfumeComments = async () => {
     return
   }
 
+  const errorsAtStart = stats.errors
   let processed = 0
   for (const comment of comments) {
     try {
       await acceleratePrisma.userPerfumeComment.upsert({
         where: { id: comment.id },
         update: {
-          userId: comment.userId,
+          userId: mapUserId(comment.userId),
           perfumeId: comment.perfumeId,
           userPerfumeId: comment.userPerfumeId,
           comment: comment.comment,
@@ -945,7 +1165,7 @@ const migrateUserPerfumeComments = async () => {
         },
         create: {
           id: comment.id,
-          userId: comment.userId,
+          userId: mapUserId(comment.userId),
           perfumeId: comment.perfumeId,
           userPerfumeId: comment.userPerfumeId,
           comment: comment.comment,
@@ -961,7 +1181,7 @@ const migrateUserPerfumeComments = async () => {
     }
   }
 
-  await updateMigrationState("UserPerfumeComment", migrationStart, comments.length)
+  await maybeUpdateMigrationState("UserPerfumeComment", migrationStart, comments.length, stats.errors - errorsAtStart)
   console.log("  ✅ User perfume comments migration completed")
 }
 
@@ -995,20 +1215,21 @@ const migrateWishlistNotifications = async () => {
     return
   }
 
+  const errorsAtStart = stats.errors
   let processed = 0
   for (const notification of notifications) {
     try {
       await acceleratePrisma.wishlistNotification.upsert({
         where: { id: notification.id },
         update: {
-          userId: notification.userId,
+          userId: mapUserId(notification.userId),
           perfumeId: notification.perfumeId,
           notifiedAt: notification.notifiedAt,
           updatedAt: notification.updatedAt,
         },
         create: {
           id: notification.id,
-          userId: notification.userId,
+          userId: mapUserId(notification.userId),
           perfumeId: notification.perfumeId,
           notifiedAt: notification.notifiedAt,
           updatedAt: notification.updatedAt,
@@ -1026,7 +1247,7 @@ const migrateWishlistNotifications = async () => {
   }
   console.log(`  📊 Final: ${processed}/${notifications.length} notifications (${stats.errors} errors)`)
 
-  await updateMigrationState("WishlistNotification", migrationStart, notifications.length)
+  await maybeUpdateMigrationState("WishlistNotification", migrationStart, notifications.length, stats.errors - errorsAtStart)
   console.log("  ✅ Wishlist notifications migration completed")
 }
 

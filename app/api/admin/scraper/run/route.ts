@@ -19,7 +19,7 @@
  * Requires admin or editor role.
  */
 
-import { spawn } from "child_process"
+import { spawn, type ChildProcess } from "child_process"
 import path from "path"
 
 import { NextResponse, type NextRequest } from "next/server"
@@ -55,6 +55,10 @@ export const maxDuration = 300
 
 /** How often to send a keepalive '\n' to prevent browser idle-connection drops (ms). */
 const KEEPALIVE_INTERVAL_MS = 25_000
+
+const isAbortLike = (e: unknown): boolean =>
+  (e instanceof DOMException && e.name === "AbortError") ||
+  (e instanceof Error && e.name === "AbortError")
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -242,15 +246,14 @@ export async function POST(request: NextRequest): Promise<Response> {
     controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"))
   }
 
+  /** Set in stream start so `cancel` can mirror `request.signal` abort (fetch cancelled by client). */
+  let invokeClientAbort: (() => void) | null = null
+
   const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      const keepalive = setInterval(() => {
-        try {
-          sendLine(controller, { type: "log", message: "Still running…" })
-        } catch {
-          // stream already closed
-        }
-      }, KEEPALIVE_INTERVAL_MS)
+    start(controller) {
+      let scrapeClientAborted = false
+      let scrapeKillTimer: ReturnType<typeof setTimeout> | undefined
+      let keepaliveTimer: ReturnType<typeof setInterval> | undefined
 
       let stdout = ""
       let scraperLog = ""
@@ -262,12 +265,80 @@ export async function POST(request: NextRequest): Promise<Response> {
         : path.join(process.cwd(), "scraper", ".venv", "bin", "python")
       const pythonCmd = process.env.SCRAPER_PYTHON || venvPython
       const pythonArgs = [scriptPath]
-      const child = spawn(pythonCmd, pythonArgs, { stdio: ["pipe", "pipe", "pipe"] })
+      const childRef: { current: ChildProcess | null } = { current: null }
 
-      child.stdout.on("data", (chunk: Buffer) => {
+      const clearScrapeTimers = () => {
+        if (scrapeKillTimer !== undefined) {
+          clearTimeout(scrapeKillTimer)
+          scrapeKillTimer = undefined
+        }
+        if (keepaliveTimer !== undefined) {
+          clearInterval(keepaliveTimer)
+          keepaliveTimer = undefined
+        }
+      }
+
+      const killPythonIfRunning = () => {
+        const p = childRef.current
+        if (p && p.exitCode === null) {
+          try {
+            p.kill()
+          } catch {
+            // ignore
+          }
+        }
+      }
+
+      let clientAbortHandled = false
+      const onClientAbort = () => {
+        if (clientAbortHandled) return
+        clientAbortHandled = true
+        scrapeClientAborted = true
+        request.signal.removeEventListener("abort", onClientAbort)
+        clearScrapeTimers()
+        killPythonIfRunning()
+      }
+
+      invokeClientAbort = onClientAbort
+      request.signal.addEventListener("abort", onClientAbort)
+
+      keepaliveTimer = setInterval(() => {
+        try {
+          sendLine(controller, { type: "log", message: "Still running…" })
+        } catch {
+          // stream already closed
+        }
+      }, KEEPALIVE_INTERVAL_MS)
+
+      const child = spawn(pythonCmd, pythonArgs, { stdio: ["pipe", "pipe", "pipe"] })
+      childRef.current = child
+      const childStdin = child.stdin
+      const childStdout = child.stdout
+      const childStderr = child.stderr
+      if (childStdin === null || childStdout === null || childStderr === null) {
+        clearScrapeTimers()
+        request.signal.removeEventListener("abort", onClientAbort)
+        invokeClientAbort = null
+        const result: ScraperRunResponse = {
+          ok: false,
+          scrapedCount: 0,
+          records: [],
+          csvContent: "",
+          errors: ["Python subprocess did not expose stdin/stdout/stderr pipes."],
+        }
+        try {
+          sendLine(controller, { type: "result", data: result })
+          controller.close()
+        } catch {
+          // ignore
+        }
+        return
+      }
+
+      childStdout.on("data", (chunk: Buffer) => {
         stdout += chunk.toString("utf8")
       })
-      child.stderr.on("data", (chunk: Buffer) => {
+      childStderr.on("data", (chunk: Buffer) => {
         const text = chunk.toString("utf8")
         scraperLog += text
         stderrBuffer += text
@@ -285,11 +356,11 @@ export async function POST(request: NextRequest): Promise<Response> {
         }
       })
 
-      const timer = setTimeout(() => {
-        child.kill()
+      scrapeKillTimer = setTimeout(() => {
+        child?.kill()
       }, SCRAPER_TIMEOUT_MS)
 
-      child.stdin.write(
+      childStdin.write(
         JSON.stringify({
           houseName: body.houseName,
           collectionUrls: body.collectionUrls,
@@ -314,20 +385,40 @@ export async function POST(request: NextRequest): Promise<Response> {
               : undefined,
         }),
       )
-      child.stdin.end()
+      childStdin.end()
+
+      const detachAbortListener = () => {
+        request.signal.removeEventListener("abort", onClientAbort)
+      }
 
       child.on("close", async (code: number | null) => {
-        clearTimeout(timer)
-        clearInterval(keepalive)
-        // Release child stdio so the process can be fully reaped
+        clearScrapeTimers()
         try {
-          child.stdin?.destroy()
-          child.stdout?.destroy()
-          child.stderr?.destroy()
+          child?.stdin?.destroy()
+          child?.stdout?.destroy()
+          child?.stderr?.destroy()
         } catch {
           // ignore
         }
-        if (stderrBuffer.trim()) sendLine(controller, { type: "log", message: stderrBuffer.trim() })
+
+        if (scrapeClientAborted) {
+          detachAbortListener()
+          invokeClientAbort = null
+          try {
+            controller.close()
+          } catch {
+            // ignore
+          }
+          return
+        }
+
+        if (stderrBuffer.trim()) {
+          try {
+            sendLine(controller, { type: "log", message: stderrBuffer.trim() })
+          } catch {
+            // client gone
+          }
+        }
 
         let result: ScraperRunResponse
 
@@ -341,6 +432,8 @@ export async function POST(request: NextRequest): Promise<Response> {
               errors: [`Scraper exited with code ${code}. Stderr: ${scraperLog.slice(0, 1000)}`],
               scraperLog: scraperLog.trim() || undefined,
             }
+            detachAbortListener()
+            invokeClientAbort = null
             sendLine(controller, { type: "result", data: result })
             controller.close()
             return
@@ -356,6 +449,8 @@ export async function POST(request: NextRequest): Promise<Response> {
               errors: ["Scraper output is not a JSON array"],
               scraperLog: scraperLog.trim() || undefined,
             }
+            detachAbortListener()
+            invokeClientAbort = null
             sendLine(controller, { type: "result", data: result })
             controller.close()
             return
@@ -372,13 +467,29 @@ export async function POST(request: NextRequest): Promise<Response> {
               errors: ["Scraper ran successfully but found 0 products. Check your collection URLs and selectors."],
               scraperLog: scraperLog.trim() || undefined,
             }
+            detachAbortListener()
+            invokeClientAbort = null
             sendLine(controller, { type: "result", data: result })
             controller.close()
             return
           }
 
+          if (request.signal.aborted || scrapeClientAborted) {
+            detachAbortListener()
+            invokeClientAbort = null
+            try {
+              controller.close()
+            } catch {
+              // ignore
+            }
+            return
+          }
+
           try {
-            sendLine(controller, { type: "log", message: `Extracting notes from ${scrapedItems.length} products…` })
+            sendLine(controller, {
+              type: "log",
+              message: `Starting note extraction for ${scrapedItems.length} products (sequential LLM calls — progress lines "Notes pipeline i/n" follow).`,
+            })
           } catch {
             // ignore
           }
@@ -394,6 +505,14 @@ export async function POST(request: NextRequest): Promise<Response> {
             titleStripNumbers: body.titleStripNumbers ?? false,
             titleOmitWords: Array.isArray(body.titleOmitWords) ? body.titleOmitWords : [],
             generateNoirDescriptions: body.generateNoirDescriptions ?? true,
+            abortSignal: request.signal,
+            onProgress: (message: string) => {
+              try {
+                sendLine(controller, { type: "log", message })
+              } catch {
+                // stream closed
+              }
+            },
           }
           const records = await extractNotesForItems(scrapedItems, body.houseName, pipelineOptions)
 
@@ -405,9 +524,21 @@ export async function POST(request: NextRequest): Promise<Response> {
             errors: [],
             scraperLog: scraperLog.trim() || undefined,
           }
+          detachAbortListener()
+          invokeClientAbort = null
           sendLine(controller, { type: "result", data: result })
           controller.close()
         } catch (err) {
+          if (isAbortLike(err) && (scrapeClientAborted || request.signal.aborted)) {
+            detachAbortListener()
+            invokeClientAbort = null
+            try {
+              controller.close()
+            } catch {
+              // ignore
+            }
+            return
+          }
           const msg = err instanceof Error ? err.message : String(err)
           result = {
             ok: false,
@@ -418,6 +549,8 @@ export async function POST(request: NextRequest): Promise<Response> {
             scraperLog: scraperLog.trim() || undefined,
           }
           try {
+            detachAbortListener()
+            invokeClientAbort = null
             sendLine(controller, { type: "result", data: result })
             controller.close()
           } catch {
@@ -427,8 +560,9 @@ export async function POST(request: NextRequest): Promise<Response> {
       })
 
       child.on("error", (err: Error) => {
-        clearTimeout(timer)
-        clearInterval(keepalive)
+        clearScrapeTimers()
+        detachAbortListener()
+        invokeClientAbort = null
         const result: ScraperRunResponse = {
           ok: false,
           scrapedCount: 0,
@@ -443,6 +577,9 @@ export async function POST(request: NextRequest): Promise<Response> {
           // already closed
         }
       })
+    },
+    cancel() {
+      invokeClientAbort?.()
     },
   })
 

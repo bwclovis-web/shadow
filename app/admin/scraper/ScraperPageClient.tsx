@@ -5,6 +5,7 @@ import {
   type FormEvent,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react"
 
@@ -182,6 +183,10 @@ export function ScraperPageClient() {
   /** Saved result from a previous run (for restore after tab close / failed import) */
   const [savedScrapeResult, setSavedScrapeResult] = useState<ScraperRunResponse | null>(null)
 
+  const scrapeAbortRef = useRef<AbortController | null>(null)
+  const scrapeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const userCancelledScrapeRef = useRef(false)
+
   // On mount: check for saved result from a previous run
   useEffect(() => {
     const saved = loadScrapeResultFromStorage()
@@ -339,7 +344,9 @@ export function ScraperPageClient() {
 
     const SCRAPER_REQUEST_TIMEOUT_MS = 90 * 60 * 1000 // 90 min — match server; avoid client aborting early
     const ac = new AbortController()
-    const timeoutId = setTimeout(() => ac.abort(), SCRAPER_REQUEST_TIMEOUT_MS)
+    scrapeAbortRef.current = ac
+    userCancelledScrapeRef.current = false
+    scrapeTimeoutRef.current = setTimeout(() => ac.abort(), SCRAPER_REQUEST_TIMEOUT_MS)
 
     try {
       const res = await fetch("/api/admin/scraper/run", {
@@ -349,7 +356,10 @@ export function ScraperPageClient() {
         credentials: "include",
         signal: ac.signal,
       })
-      clearTimeout(timeoutId)
+      if (scrapeTimeoutRef.current != null) {
+        clearTimeout(scrapeTimeoutRef.current)
+        scrapeTimeoutRef.current = null
+      }
 
       if (!res.ok || !res.body) {
         const data = (await res.json().catch(() => ({}))) as ScraperRunResponse
@@ -410,10 +420,16 @@ export function ScraperPageClient() {
         setScrapeError("Stream ended without a result")
       }
     } catch (err) {
-      clearTimeout(timeoutId)
       const raw = err instanceof Error ? err.message : "Unknown error"
       const isAborted = err instanceof Error && err.name === "AbortError"
-      if (raw === "Failed to fetch" || isAborted) {
+      const userCancelled = userCancelledScrapeRef.current
+      userCancelledScrapeRef.current = false
+
+      if (userCancelled && isAborted) {
+        setScrapeError(
+          "Scrape cancelled. Your form settings are unchanged. The dev server keeps running; the Python scraper and note-extraction step for this run were stopped.",
+        )
+      } else if (raw === "Failed to fetch" || isAborted) {
         setScrapeError(
           (isAborted ? "Request timed out (90 min).\n\n" : "Failed to fetch\n\n") +
             "This usually means the run took too long and the connection was closed (browser, proxy, or server timeout).\n\n" +
@@ -425,8 +441,24 @@ export function ScraperPageClient() {
         setScrapeError(raw)
       }
     } finally {
+      if (scrapeTimeoutRef.current != null) {
+        clearTimeout(scrapeTimeoutRef.current)
+        scrapeTimeoutRef.current = null
+      }
+      scrapeAbortRef.current = null
       setScraping(false)
     }
+  }
+
+  const handleCancelScrape = () => {
+    if (!scraping) return
+    userCancelledScrapeRef.current = true
+    if (scrapeTimeoutRef.current != null) {
+      clearTimeout(scrapeTimeoutRef.current)
+      scrapeTimeoutRef.current = null
+    }
+    scrapeAbortRef.current?.abort()
+    setScrapeProgressLog(prev => [...prev, "— Cancelled by user —"])
   }
 
   // ---------------------------------------------------------------------------
@@ -1056,9 +1088,14 @@ export function ScraperPageClient() {
           <p className="animate-pulse font-medium text-center text-sm">
             Scraper is running — this may take several minutes for large houses…
           </p>
-          <p className="mt-2 text-center font-mono text-xs text-muted-foreground">
-            Elapsed: {Math.floor(scrapeElapsedSeconds / 60)}m {scrapeElapsedSeconds % 60}s
-          </p>
+          <div className="mt-3 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <p className="font-mono text-xs text-muted-foreground">
+              Elapsed: {Math.floor(scrapeElapsedSeconds / 60)}m {scrapeElapsedSeconds % 60}s
+            </p>
+            <Button type="button" variant="secondary" size="sm" onClick={handleCancelScrape}>
+              Cancel scrape
+            </Button>
+          </div>
           {scrapeProgressLog.length > 0 && (
             <div className="mt-4 rounded border border-border bg-black/30 p-3">
               <p className="mb-2 text-xs font-medium text-muted-foreground">Progress</p>

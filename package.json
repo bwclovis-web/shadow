@@ -101,7 +101,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
-      "eslint --fix --cache --cache-location ./node_modules/.cache/eslint"
+      "eslint --fix --cache --cache-location ./node_modules/.cache/eslint --no-warn-ignored"
     ]
   },
   "browserslist": [

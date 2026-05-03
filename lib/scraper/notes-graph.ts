@@ -39,6 +39,10 @@ export interface ScraperPipelineOptions {
   titleOmitWords?: string[]
   /** Generate film noir themed descriptions; if false, use original with notes stripped. */
   generateNoirDescriptions?: boolean
+  /** Optional hook for long runs (e.g. admin scraper NDJSON stream). Not serialized on API requests. */
+  onProgress?: (message: string) => void
+  /** When set (e.g. request.signal), the pipeline stops between products if the client cancels the scrape. */
+  abortSignal?: AbortSignal
 }
 
 // ---------------------------------------------------------------------------
@@ -312,7 +316,11 @@ function stripTrailingNonNoteSections(text: string): string {
 const splitGluedLayerLabels = (text: string): string =>
   text
     .replace(
-      /(?<=[A-Za-z0-9)])(?=(?:top|open(?:ing)?|head|heart|middle|mid|core|base|dry[\s-]*down|drydown|end)(?:\s+notes?)?\s*:)/gi,
+      /(?<=[A-Za-z0-9)])(?=(?:top|open(?:ing)?|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry[\s-]*down|drydown|end)(?:\s+notes?)?\s*:)/gi,
+      " ",
+    )
+    .replace(
+      /(?<=[A-Za-z0-9)])(?=(?:notes?\s+de\s+(?:tête|tete|cœur|coeur|fond))\s*:)/gi,
       " ",
     )
     .replace(
@@ -327,7 +335,7 @@ const splitGluedLayerLabels = (text: string): string =>
  */
 const normalizeImplicitLayerColons = (text: string): string =>
   text.replace(
-    /\b(top|open(?:ing)?|head|heart|middle|mid|core|base|dry[\s-]*down|drydown|end)\s+notes?\s+(?!(?:of|and|with|from|to|in|the|a|an|is|are)\b)(?=[A-Za-z])/gi,
+    /\b(top|open(?:ing)?|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry[\s-]*down|drydown|end)\s+notes?\s+(?!(?:of|and|with|from|to|in|the|a|an|is|are)\b)(?=[A-Za-z])/gi,
     "$1: ",
   )
 
@@ -423,9 +431,13 @@ const filterStructuredNoteParts = (parts: string[]): string[] =>
 
 function classifyNoteLayer(label: string): "open" | "heart" | "base" | null {
   const normalized = label.trim().toLowerCase().replace(/\s+/g, " ")
+  // French pyramid labels (sites often use these; "notes de X" is one header)
+  if (/^notes?\s+de\s+(tête|tete)$/.test(normalized)) return "open"
+  if (/^notes?\s+de\s+(cœur|coeur)$/.test(normalized)) return "heart"
+  if (/^notes?\s+de\s+fond$/.test(normalized)) return "base"
   if (/^(top|open|opening|head)(?: notes?)?$/.test(normalized)) return "open"
-  if (/^(heart|middle|mid|core)(?: notes?)?$/.test(normalized)) return "heart"
-  if (/^(base|dry down|drydown|end)(?: notes?)?$/.test(normalized)) return "base"
+  if (/^(heart|middle|mid|core|body|center|centre)(?: notes?)?$/.test(normalized)) return "heart"
+  if (/^(base|bottom|background|foundation|dry down|drydown|end)(?: notes?)?$/.test(normalized)) return "base"
   return null
 }
 
@@ -440,7 +452,8 @@ function extractInlineLayeredNotes(text: string): {
   )
   if (!source) return empty
 
-  const sectionRe = /\b(top(?:\s+notes?)?|open(?:ing)?(?:\s+notes?)?|head(?:\s+notes?)?|heart(?:\s+notes?)?|middle(?:\s+notes?)?|mid(?:\s+notes?)?|core(?:\s+notes?)?|base(?:\s+notes?)?|dry\s*down(?:\s+notes?)?|drydown(?:\s+notes?)?|end(?:\s+notes?)?)\s*:/gi
+  const sectionRe =
+    /\b(top(?:\s+notes?)?|open(?:ing)?(?:\s+notes?)?|head(?:\s+notes?)?|heart(?:\s+notes?)?|middle(?:\s+notes?)?|mid(?:\s+notes?)?|core(?:\s+notes?)?|body(?:\s+notes?)?|cent(?:er|re)(?:\s+notes?)?|base(?:\s+notes?)?|bottom(?:\s+notes?)?|background(?:\s+notes?)?|foundation(?:\s+notes?)?|dry\s*down(?:\s+notes?)?|drydown(?:\s+notes?)?|end(?:\s+notes?)?|notes?\s+de\s+(?:tête|tete)|notes?\s+de\s+(?:cœur|coeur)|notes?\s+de\s+fond)\s*:/gi
   const matches = [...source.matchAll(sectionRe)]
   if (matches.length === 0) return empty
 
@@ -504,7 +517,7 @@ function extractFlatNotes(text: string): string[] {
   while ((match = flatNoteRe.exec(source)) !== null) {
     const rawPrefix = source.slice(Math.max(0, match.index - 40), match.index).toLowerCase()
     // Skip "top/open/heart/base notes: ..." since those are layered sections.
-    if (/(?:top|open|opening|head|heart|middle|mid|core|base|dry\s*down)\s+$/.test(rawPrefix)) continue
+    if (/(?:top|open|opening|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry\s*down)\s+$/.test(rawPrefix)) continue
     const chunk = truncateFlatNotesChunk(match[1] ?? "")
     const parsed = filterStructuredNoteParts(splitNoteList(chunk))
     found.push(...parsed)
@@ -544,14 +557,29 @@ function extractNotesFromStructuredText(text: string): {
       openNotes.push(...filterStructuredNoteParts(splitNoteList(truncateAtShopMetaLabels(openMatch[1]))))
       continue
     }
-    const heartMatch = normalized.match(/^(?:heart|middle|mid|core)(?:\s+notes?)?\s*[:\-]\s*(.+)$/i)
+    const heartMatch = normalized.match(/^(?:heart|middle|mid|core|body|center|centre)(?:\s+notes?)?\s*[:\-]\s*(.+)$/i)
     if (heartMatch) {
       heartNotes.push(...filterStructuredNoteParts(splitNoteList(truncateAtShopMetaLabels(heartMatch[1]))))
       continue
     }
-    const baseMatch = normalized.match(/^(?:base|dry\s*down|drydown|end)(?:\s+notes?)?\s*[:\-]\s*(.+)$/i)
+    const baseMatch = normalized.match(/^(?:base|bottom|background|foundation|dry\s*down|drydown|end)(?:\s+notes?)?\s*[:\-]\s*(.+)$/i)
     if (baseMatch) {
       baseNotes.push(...filterStructuredNoteParts(splitNoteList(truncateAtShopMetaLabels(baseMatch[1]))))
+      continue
+    }
+    const openFr = normalized.match(/^notes?\s+de\s+(?:tête|tete)\s*[:\-]\s*(.+)$/iu)
+    if (openFr) {
+      openNotes.push(...filterStructuredNoteParts(splitNoteList(truncateAtShopMetaLabels(openFr[1]))))
+      continue
+    }
+    const heartFr = normalized.match(/^notes?\s+de\s+(?:cœur|coeur)\s*[:\-]\s*(.+)$/iu)
+    if (heartFr) {
+      heartNotes.push(...filterStructuredNoteParts(splitNoteList(truncateAtShopMetaLabels(heartFr[1]))))
+      continue
+    }
+    const baseFr = normalized.match(/^notes?\s+de\s+fond\s*[:\-]\s*(.+)$/iu)
+    if (baseFr) {
+      baseNotes.push(...filterStructuredNoteParts(splitNoteList(truncateAtShopMetaLabels(baseFr[1]))))
       continue
     }
   }
@@ -603,7 +631,7 @@ Return ONLY a JSON object with exactly these keys (use these exact names):
   "baseNotes":  string[] — base/dry-down notes (last to fade, depth)
 
 Layer detection:
-- If the text uses section headers (e.g. "Top:", "Heart:", "Base:" or "Opening:", "Mid:", "Dry down:" or "Head/Heart/Base"), put each note in the matching layer.
+- If the text uses section headers (e.g. "Top:", "Heart:", "Base:" or "Opening:", "Mid:", "Body:", "Center:", "Bottom:", "Background:", "Dry down:" or "Head/Heart/Base", or French "Notes de tête / de cœur / de fond"), put each note in the matching layer.
 - If it says "top notes include X, Y" or "heart: X, Y" or "base notes: X", follow that structure.
 - If there is no layering, spread notes by typical volatility: citrus, herbs, light florals → openNotes; florals, spices, fruits → heartNotes; woods, musk, vanilla, amber, resins → baseNotes.
 - When in doubt, prefer putting a note in heartNotes rather than omitting it.
@@ -669,8 +697,36 @@ Rules:
 
 /** Keys the LLM might use for each layer; we normalize to openNotes, heartNotes, baseNotes. */
 const OPEN_KEYS = ["openNotes", "open", "opening", "openingNotes", "topNotes", "top", "headNotes", "head"]
-const HEART_KEYS = ["heartNotes", "heart", "middleNotes", "middle", "midNotes", "mid", "coreNotes"]
-const BASE_KEYS = ["baseNotes", "base", "dryDownNotes", "dryDown", "dry-down", "endNotes", "end"]
+const HEART_KEYS = [
+  "heartNotes",
+  "heart",
+  "middleNotes",
+  "middle",
+  "midNotes",
+  "mid",
+  "coreNotes",
+  "bodyNotes",
+  "body",
+  "centerNotes",
+  "center",
+  "centreNotes",
+  "centre",
+]
+const BASE_KEYS = [
+  "baseNotes",
+  "base",
+  "dryDownNotes",
+  "dryDown",
+  "dry-down",
+  "endNotes",
+  "end",
+  "bottomNotes",
+  "bottom",
+  "backgroundNotes",
+  "background",
+  "foundationNotes",
+  "foundation",
+]
 
 function toNoteArray(val: unknown): string[] {
   if (!Array.isArray(val)) return []
@@ -965,6 +1021,26 @@ async function translateNotesToEnglish(
 // Graph node
 // ---------------------------------------------------------------------------
 
+const throwIfAborted = (sig: AbortSignal | undefined): void => {
+  if (sig?.aborted) {
+    throw new DOMException("Scrape request cancelled", "AbortError")
+  }
+}
+
+const isAbortError = (e: unknown): boolean =>
+  (e instanceof DOMException && e.name === "AbortError") ||
+  (e instanceof Error && e.name === "AbortError")
+
+/** Per OpenAI HTTP request in the admin scraper notes pipeline (avoids hanging forever on one product). */
+const resolveNotesPipelineLlmTimeoutMs = (): number => {
+  const raw = process.env.OPENAI_NOTES_PIPELINE_TIMEOUT_MS
+  if (typeof raw === "string" && /^\d+$/.test(raw)) {
+    const n = Number(raw)
+    if (n >= 15_000 && n <= 900_000) return n
+  }
+  return 180_000
+}
+
 function buildGraph(
   llm: ChatOpenAI,
   opts: ScraperPipelineOptions,
@@ -974,10 +1050,18 @@ function buildGraph(
     const results: PerfumeCsvRecord[] = []
     const previousOpenings: string[] = []
 
-    for (const item of state.items) {
+    const totalItems = state.items.length
+    const sig = opts.abortSignal
+    for (let idx = 0; idx < state.items.length; idx++) {
+      throwIfAborted(sig)
+      const item = state.items[idx]
       const resolvedName = resolveProductName(item)
       const name = cleanTitle(resolvedName, opts)
+      opts.onProgress?.(
+        `Notes pipeline ${idx + 1}/${totalItems}: ${(name || resolvedName || "product").slice(0, 72)}`,
+      )
       const notesSource = item.notesText ?? item.description
+      try {
       // Step 1: try structured/inline parser first (literal Top/Heart/Base sections).
       let notes = extractNotesFromStructuredText(notesSource)
       const totalParsedDirectly = notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
@@ -999,6 +1083,7 @@ function buildGraph(
         (layersWithParsedNotes === 3 && parsedNoteCount >= 5) || flatListingOnly
 
       if (totalParsedDirectly === 0 && notesSource?.trim()) {
+        throwIfAborted(sig)
         notes = await extractNotesFromDescription(llm, notesSource, name || resolvedName)
       } else if (
         totalParsedDirectly > 0 &&
@@ -1006,6 +1091,7 @@ function buildGraph(
         notesSource?.trim() &&
         !skipStructuredLlmMerge
       ) {
+        throwIfAborted(sig)
         // Long pages often repeat accords in "Note Structure" and list real notes only in prose/title
         // (e.g. Pattern by Etsy). Merge so bergamot, jasmine, honey, etc. are not skipped.
         notes = await mergeStructuredNotesWithLlm(llm, notes, notesSource, name || resolvedName)
@@ -1016,20 +1102,19 @@ function buildGraph(
       if (totalAfterLlm === 0 && !notesSource?.trim()) {
         const fallbackName = name || resolvedName
         if (fallbackName?.trim()) {
+          throwIfAborted(sig)
           notes = await extractNotesFallbackLookup(llm, fallbackName, item.perfumeHouse ?? state.houseName)
         }
       }
 
       // Step 3: translate any non-English notes to English.
       if (!allNotesEnglish(notes)) {
+        throwIfAborted(sig)
         notes = await translateNotesToEnglish(llm, notes)
       }
 
-      // If only one layer has notes, consolidate into openNotes so they are always visible.
-      const layersWithNotes = [notes.openNotes, notes.heartNotes, notes.baseNotes].filter(a => a.length > 0)
-      if (layersWithNotes.length === 1 && layersWithNotes[0] !== notes.openNotes) {
-        notes = { openNotes: layersWithNotes[0], heartNotes: [], baseNotes: [] }
-      }
+      // Keep heart/base (or open-only) as parsed: import maps each array to the correct DB layer.
+      // Previously, a single non-open layer was merged into openNotes, which emptied baseNotes/heartNotes in CSV.
 
       // Step 4: final filter — remove junk phrases, marketing copy, and non-displayable strings
       // from ALL notes regardless of which extraction path was used.
@@ -1049,6 +1134,7 @@ function buildGraph(
       let description = stripNotesFromDescription(item.description, allNoteStrs)
 
       if (opts.generateNoirDescriptions && noirLlm) {
+        throwIfAborted(sig)
         description = await generateNoirDescription(
           noirLlm,
           name,
@@ -1073,6 +1159,25 @@ function buildGraph(
         baseNotes: JSON.stringify(notes.baseNotes),
         detailURL: item.detailURL,
       })
+      } catch (itemErr: unknown) {
+        if (isAbortError(itemErr) || sig?.aborted) {
+          throw itemErr
+        }
+        const detail = itemErr instanceof Error ? itemErr.message : String(itemErr)
+        opts.onProgress?.(
+          `Notes pipeline ${idx + 1}/${totalItems} (${(name || resolvedName || "product").slice(0, 48)}): skipped LLM for this product — ${detail.slice(0, 280)}`,
+        )
+        results.push({
+          name,
+          description: (item.description ?? "").trim(),
+          image: item.image ?? "",
+          perfumeHouse: item.perfumeHouse ?? state.houseName,
+          openNotes: "[]",
+          heartNotes: "[]",
+          baseNotes: "[]",
+          detailURL: item.detailURL,
+        })
+      }
     }
 
     return { results }
@@ -1109,10 +1214,13 @@ export async function extractNotesForItems(
     throw new Error("OPENAI_API_KEY is not set. Note extraction requires an OpenAI key.")
   }
 
+  const llmTimeout = resolveNotesPipelineLlmTimeoutMs()
   const llm = new ChatOpenAI({
     model,
     temperature: 0.1,
     apiKey: process.env.OPENAI_API_KEY,
+    timeout: llmTimeout,
+    maxRetries: 0,
   })
 
   const noirLlm = options.generateNoirDescriptions
@@ -1120,6 +1228,8 @@ export async function extractNotesForItems(
         model,
         temperature: 0.7,
         apiKey: process.env.OPENAI_API_KEY,
+        timeout: llmTimeout,
+        maxRetries: 0,
       })
     : undefined
 
