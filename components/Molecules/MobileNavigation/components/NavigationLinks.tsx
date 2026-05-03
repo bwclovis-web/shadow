@@ -11,7 +11,7 @@ interface NavigationLinksProps {
 }
 
 const NavigationLinks = ({ user, onNavClick }: NavigationLinksProps) => (
-  <nav className="flex-1 px-4 pb-4">
+  <nav className="flex-1 lg:px-4 pb-4">
     <ul className="space-y-2">
       <MainNavigationLinks
         variant="mobile"
