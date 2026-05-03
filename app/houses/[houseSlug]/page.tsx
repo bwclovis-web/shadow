@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 
 import { getPerfumeHouseBySlug } from "@/models/house.server"
+import { houseDetailSortForApi } from "@/utils/house-perfumes-url-params"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 
@@ -11,7 +12,7 @@ const DEFAULT_PAGE_SIZE = 8
 
 type Props = {
   params: Promise<{ houseSlug: string }>
-  searchParams: Promise<{ pg?: string; letter?: string }>
+  searchParams: Promise<{ pg?: string; letter?: string; q?: string; sort?: string }>
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -39,6 +40,8 @@ export default async function HouseDetailPage({ params, searchParams }: Props) {
     getPerfumeHouseBySlug(houseSlug, {
       skip: 0,
       take: DEFAULT_PAGE_SIZE,
+      sortBy: houseDetailSortForApi(resolvedSearchParams.sort),
+      nameSearch: resolvedSearchParams.q ?? null,
     }),
     getCookieHeader(),
   ])
@@ -59,6 +62,8 @@ export default async function HouseDetailPage({ params, searchParams }: Props) {
       initialSearchParams={{
         pg: resolvedSearchParams.pg ?? "1",
         letter: resolvedSearchParams.letter ?? undefined,
+        q: resolvedSearchParams.q ?? undefined,
+        sort: resolvedSearchParams.sort ?? undefined,
       }}
     />
   )

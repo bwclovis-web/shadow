@@ -34,7 +34,8 @@ const getPageSize = (isTablet: boolean, isDesktop: boolean): number =>
  * - Desktop (1024px+): 16 items
  *
  * Uses a single effect and state so one re-render when crossing breakpoints.
- * Initial value is 6 for hydration safety until matchMedia runs on the client.
+ * Initial value is 8 to match server-side first chunks (e.g. house detail)
+ * until matchMedia runs on the client.
  *
  * @returns Page size based on current screen size
  */

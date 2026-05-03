@@ -487,41 +487,91 @@ function extractInlineLayeredNotes(text: string): {
 /**
  * After whitespace collapse, "Notes: a, b, c Sweet as a slow…" becomes one line; capturing [^\n]+
  * pulls in the full PDP and splitNoteList's "and" → comma rule turns prose into fake notes.
- * Cut before common marketing / body-copy starters (Squarespace, Shopify, etc.).
+ * Cut before marketing / accordion / cross-sell prose. Add new `RegExp` entries when a scrape
+ * still bleeds PDP tail into note lists (each is tested with `.match()` — no `/g` flag).
  */
-const FLAT_NOTE_PROSE_BOUNDARY =
-  /\s+(?:Sweet |Sipping |Read about|Beneath |Among |Caught |In the |A sudden |A whisper |A worn |A dusty |A low |A shimmering |A porcelain |A delicate |Fingers |Rain-soaked |Cloaked |Under the |Twist-top |Variation:|Join |Sign up|Select |Add to |Image \d+\s+of\s+\d+|Shop all|Skip to)\b/i
+const FLAT_NOTE_PROSE_BOUNDARY_RES: RegExp[] = [
+  /\s+(?:Sweet |Sipping |Read about|Beneath |Among |Caught |In the |A sudden |A whisper |A worn |A dusty |A low |A shimmering |A porcelain |A delicate |Fingers |Rain-soaked |Cloaked |Under the |Twist-top |Variation:|Join |Sign up|Select |Add to |Image \d+\s+of\s+\d+|Shop all|Skip to)\b/i,
+  /\s+(?:Available in |Originally (?:a |the )?|Our oil perfume|NOTE:|Packaging:|How to use|Shipping:|Return [Pp]olicy|Subscribe(?:\s+now|\s+today)?|You may also|Customers also|Related products|Complete the look|Pairs well|Also available|More from|Write a review|Questions\?|Leave a review)\b/i,
+  /\s+#{1,6}\s*(?:Ingredients|How to use|Shipping|Returns?|FAQ|Details)\b/i,
+  /\s+(?:Ingredients|Cruelty[- ]free|Vegan |Dermatologist|Clinically tested)\b/i,
+]
+
+const MIN_FLAT_CHUNK_BEFORE_TRUNCATE = 8
+/** "lemon, cedar — read more about …" / en-dash tails after lists (lower min — short lists still valid). */
+const FLAT_NOTE_EM_DASH_TAIL_RE = /\s+[\u2013\u2014–—]\s+/
+const MIN_FLAT_CHUNK_BEFORE_EM_DASH = 3
 
 const truncateFlatNotesChunk = (chunk: string): string => {
-  let s = chunk.trim()
+  let s = chunk.trim().replace(/\*+\s*$/, "").trim()
   if (!s) return s
-  const m = FLAT_NOTE_PROSE_BOUNDARY.exec(s)
-  if (m?.index != null && m.index >= 8) s = s.slice(0, m.index).trim()
+  let earliest = s.length
+  for (const re of FLAT_NOTE_PROSE_BOUNDARY_RES) {
+    const m = s.match(re)
+    if (m?.index != null && m.index >= MIN_FLAT_CHUNK_BEFORE_TRUNCATE && m.index < earliest) {
+      earliest = m.index
+    }
+  }
+  const em = s.match(FLAT_NOTE_EM_DASH_TAIL_RE)
+  if (em?.index != null && em.index >= MIN_FLAT_CHUNK_BEFORE_EM_DASH && em.index < earliest) {
+    earliest = em.index
+  }
+  if (earliest < s.length) s = s.slice(0, earliest).trim()
   return s.replace(/,\s*$/, "").trim()
 }
 
+/** True when the match is immediately preceded by a layered label (top/heart/base …). */
+const shouldSkipFlatNotesMatch = (source: string, matchIndex: number, prefixChars = 48): boolean => {
+  const rawPrefix = source.slice(Math.max(0, matchIndex - prefixChars), matchIndex)
+  return /(?:top|open|opening|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry\s*down)\s+$/i.test(
+    rawPrefix,
+  )
+}
+
 /**
- * Detect flat "NOTES: X, Y, Z" or "Notes: X, Y, Z" patterns (no top/heart/base breakdown).
+ * Flat list patterns (no top/heart/base). Each `/gi` regex must expose capture group 1 as the list.
+ * Extend this array when new storefront copy styles appear — keeps behavior data-driven.
+ */
+const FLAT_NOTE_LIST_PATTERNS: RegExp[] = [
+  // "Notes:", "Fragrance notes – …" (line to newline)
+  /(?:^|[\s.!?\n])(?:fragrance\s+)?notes?\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi,
+  // "Scent/fragrance/… notes include …" (sentence)
+  /(?:^|[\s.!?\n*])(?:perfume|fragrance|scent|aroma|olfactory)\s+notes?\s+include\s+([^.!?\n*]+)/gi,
+  // "The / our / these notes include …"
+  /(?:^|[\s.!?\n*])(?:the|these|this|our)\s+notes?\s+include\s+([^.!?\n*]+)/gi,
+  // "Fragrance notes are …" / "Scent notes is …" (some PDPs use singular)
+  /(?:^|[\s.!?\n*])(?:perfume|fragrance|scent|aroma|olfactory)\s+notes?\s+(?:are|is)\s+([^.!?\n*]+)/gi,
+  // "… notes consist(s) of …"
+  /(?:^|[\s.!?\n*])(?:perfume|fragrance|scent|aroma|olfactory)\s+notes?\s+consist(?:s|ed)?\s+of\s+([^.!?\n*]+)/gi,
+  // "Key notes:", "Featured notes – …" (line; often at line start without leading space)
+  /(?:^|[\s.!?\n*])(?:key|main|primary|featured|signature|dominant)\s+notes?\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi,
+]
+
+/**
+ * Detect flat "NOTES: X, Y, Z" and common PDP paraphrases (no top/heart/base breakdown).
  * Places all notes into openNotes so the LLM volatility-spreading step can redistribute them,
  * and so they're always visible even when layer structure is unknown.
  */
 function extractFlatNotes(text: string): string[] {
   const source = text?.trim()
   if (!source) return []
-  // Standalone "notes:", "fragrance notes:", "notes –" (incl. Unicode dashes). Avoid lookbehind
-  // for transpiler compatibility.
-  const flatNoteRe =
-    /(?:^|[\s.!?\n])(?:fragrance\s+)?notes?\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi
   const found: string[] = []
-  let match: RegExpExecArray | null
-  while ((match = flatNoteRe.exec(source)) !== null) {
-    const rawPrefix = source.slice(Math.max(0, match.index - 40), match.index).toLowerCase()
-    // Skip "top/open/heart/base notes: ..." since those are layered sections.
-    if (/(?:top|open|opening|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry\s*down)\s+$/.test(rawPrefix)) continue
-    const chunk = truncateFlatNotesChunk(match[1] ?? "")
+
+  const pushChunk = (raw: string) => {
+    const chunk = truncateFlatNotesChunk(raw ?? "")
     const parsed = filterStructuredNoteParts(splitNoteList(chunk))
     found.push(...parsed)
   }
+
+  for (const re of FLAT_NOTE_LIST_PATTERNS) {
+    re.lastIndex = 0
+    let match: RegExpExecArray | null
+    while ((match = re.exec(source)) !== null) {
+      if (shouldSkipFlatNotesMatch(source, match.index)) continue
+      pushChunk(match[1] ?? "")
+    }
+  }
+
   return uniqueNotes(found)
 }
 
@@ -1041,142 +1091,228 @@ const resolveNotesPipelineLlmTimeoutMs = (): number => {
   return 180_000
 }
 
+/**
+ * Parallel note extraction (Phase 1) worker count. Default 3; set to 1 for fully sequential (debug / rate limits).
+ * Env: NOTES_PIPELINE_CONCURRENCY (1–32). If OpenAI returns 429, lower this or use 1.
+ */
+const resolveNotesPipelineConcurrency = (): number => {
+  const raw = process.env.NOTES_PIPELINE_CONCURRENCY
+  if (typeof raw === "string" && /^\d+$/.test(raw)) {
+    const n = Number(raw)
+    if (n >= 1 && n <= 32) return n
+  }
+  return 3
+}
+
+type NotesLayers = { openNotes: string[]; heartNotes: string[]; baseNotes: string[] }
+
+type Phase1Ok = {
+  ok: true
+  index: number
+  item: ScrapedItem
+  name: string
+  notes: NotesLayers
+  /** stripNotesFromDescription output (untrimmed); noir uses `stripRaw || item.description` like the original pipeline. */
+  stripRaw: string
+  record: PerfumeCsvRecord
+}
+
+type Phase1Fail = { ok: false; index: number; record: PerfumeCsvRecord }
+
+type Phase1Result = Phase1Ok | Phase1Fail
+
+const processSingleProductPhase1 = async (
+  llm: ChatOpenAI,
+  opts: ScraperPipelineOptions,
+  houseName: string,
+  item: ScrapedItem,
+  index: number,
+  totalItems: number,
+): Promise<Phase1Result> => {
+  const sig = opts.abortSignal
+  const resolvedName = resolveProductName(item)
+  const name = cleanTitle(resolvedName, opts)
+  opts.onProgress?.(
+    `Notes pipeline ${index + 1}/${totalItems}: ${(name || resolvedName || "product").slice(0, 72)}`,
+  )
+  const notesSource = item.notesText ?? item.description
+  try {
+    let notes = extractNotesFromStructuredText(notesSource)
+    const totalParsedDirectly = notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
+
+    const layersWithParsedNotes = [
+      notes.openNotes.length > 0,
+      notes.heartNotes.length > 0,
+      notes.baseNotes.length > 0,
+    ].filter(Boolean).length
+    const parsedNoteCount = noteLayerCount(notes)
+    const flatListingOnly =
+      notes.openNotes.length >= 3 &&
+      notes.heartNotes.length === 0 &&
+      notes.baseNotes.length === 0
+    const skipStructuredLlmMerge =
+      (layersWithParsedNotes === 3 && parsedNoteCount >= 5) || flatListingOnly
+
+    if (totalParsedDirectly === 0 && notesSource?.trim()) {
+      throwIfAborted(sig)
+      notes = await extractNotesFromDescription(llm, notesSource, name || resolvedName)
+    } else if (
+      totalParsedDirectly > 0 &&
+      (notesSource?.length ?? 0) > 100 &&
+      notesSource?.trim() &&
+      !skipStructuredLlmMerge
+    ) {
+      throwIfAborted(sig)
+      notes = await mergeStructuredNotesWithLlm(llm, notes, notesSource, name || resolvedName)
+    }
+
+    const totalAfterLlm = notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
+    if (totalAfterLlm === 0 && !notesSource?.trim()) {
+      const fallbackName = name || resolvedName
+      if (fallbackName?.trim()) {
+        throwIfAborted(sig)
+        notes = await extractNotesFallbackLookup(llm, fallbackName, item.perfumeHouse ?? houseName)
+      }
+    }
+
+    if (!allNotesEnglish(notes)) {
+      throwIfAborted(sig)
+      notes = await translateNotesToEnglish(llm, notes)
+    }
+
+    const cleanNote = (n: string) => isScraperKeptNote(n)
+    notes = {
+      openNotes: notes.openNotes.filter(cleanNote),
+      heartNotes: notes.heartNotes.filter(cleanNote),
+      baseNotes: notes.baseNotes.filter(cleanNote),
+    }
+    notes = dedupeNotesAcrossLayers(notes)
+
+    const allNoteStrs = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
+    const stripRaw = stripNotesFromDescription(item.description, allNoteStrs)
+
+    let descriptionForRecord: string
+    if (stripRaw) descriptionForRecord = stripRaw.trim()
+    else descriptionForRecord = item.description ?? ""
+
+    const record: PerfumeCsvRecord = {
+      name,
+      description: descriptionForRecord,
+      image: item.image,
+      perfumeHouse: item.perfumeHouse ?? houseName,
+      openNotes: JSON.stringify(notes.openNotes),
+      heartNotes: JSON.stringify(notes.heartNotes),
+      baseNotes: JSON.stringify(notes.baseNotes),
+      detailURL: item.detailURL,
+    }
+
+    return {
+      ok: true,
+      index,
+      item,
+      name,
+      notes,
+      stripRaw,
+      record,
+    }
+  } catch (itemErr: unknown) {
+    if (isAbortError(itemErr) || sig?.aborted) {
+      throw itemErr
+    }
+    const detail = itemErr instanceof Error ? itemErr.message : String(itemErr)
+    opts.onProgress?.(
+      `Notes pipeline ${index + 1}/${totalItems} (${(name || resolvedName || "product").slice(0, 48)}): skipped LLM for this product — ${detail.slice(0, 280)}`,
+    )
+    return {
+      ok: false,
+      index,
+      record: {
+        name,
+        description: (item.description ?? "").trim(),
+        image: item.image ?? "",
+        perfumeHouse: item.perfumeHouse ?? houseName,
+        openNotes: "[]",
+        heartNotes: "[]",
+        baseNotes: "[]",
+        detailURL: item.detailURL,
+      },
+    }
+  }
+}
+
+const runPhase1WithConcurrency = async (
+  llm: ChatOpenAI,
+  opts: ScraperPipelineOptions,
+  houseName: string,
+  items: ScrapedItem[],
+  concurrency: number,
+): Promise<Phase1Result[]> => {
+  const n = items.length
+  const results: Phase1Result[] = new Array(n)
+  if (n === 0) return results
+
+  const sig = opts.abortSignal
+  let nextIndex = 0
+  const workerCount = Math.max(1, Math.min(concurrency, n))
+
+  const worker = async () => {
+    for (;;) {
+      throwIfAborted(sig)
+      const idx = nextIndex++
+      if (idx >= n) break
+      results[idx] = await processSingleProductPhase1(llm, opts, houseName, items[idx], idx, n)
+    }
+  }
+
+  await Promise.all(Array.from({ length: workerCount }, () => worker()))
+  return results
+}
+
 function buildGraph(
   llm: ChatOpenAI,
   opts: ScraperPipelineOptions,
   noirLlm?: ChatOpenAI,
 ) {
   const extractNotes = async (state: ScraperStateType): Promise<Partial<ScraperStateType>> => {
+    const totalItems = state.items.length
+    const sig = opts.abortSignal
+    const concurrency = resolveNotesPipelineConcurrency()
+
+    const phase1 = await runPhase1WithConcurrency(
+      llm,
+      opts,
+      state.houseName,
+      state.items,
+      concurrency,
+    )
+
     const results: PerfumeCsvRecord[] = []
     const previousOpenings: string[] = []
 
-    const totalItems = state.items.length
-    const sig = opts.abortSignal
-    for (let idx = 0; idx < state.items.length; idx++) {
+    for (let idx = 0; idx < totalItems; idx++) {
       throwIfAborted(sig)
-      const item = state.items[idx]
-      const resolvedName = resolveProductName(item)
-      const name = cleanTitle(resolvedName, opts)
-      opts.onProgress?.(
-        `Notes pipeline ${idx + 1}/${totalItems}: ${(name || resolvedName || "product").slice(0, 72)}`,
-      )
-      const notesSource = item.notesText ?? item.description
-      try {
-      // Step 1: try structured/inline parser first (literal Top/Heart/Base sections).
-      let notes = extractNotesFromStructuredText(notesSource)
-      const totalParsedDirectly = notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
-
-      // Step 2: LLM extraction from description when no structured sections found.
-      const layersWithParsedNotes = [
-        notes.openNotes.length > 0,
-        notes.heartNotes.length > 0,
-        notes.baseNotes.length > 0,
-      ].filter(Boolean).length
-      const parsedNoteCount = noteLayerCount(notes)
-      // Full top/heart/base pyramids (e.g. Parfums de Marly) need no prose merge — long copy is often noir/quote and poisons the list.
-      // Flat-only "Notes: a, b, c, …" blocks (Squarespace, many indies): merging long marketing prose re-introduces junk and contradicts the list.
-      const flatListingOnly =
-        notes.openNotes.length >= 3 &&
-        notes.heartNotes.length === 0 &&
-        notes.baseNotes.length === 0
-      const skipStructuredLlmMerge =
-        (layersWithParsedNotes === 3 && parsedNoteCount >= 5) || flatListingOnly
-
-      if (totalParsedDirectly === 0 && notesSource?.trim()) {
-        throwIfAborted(sig)
-        notes = await extractNotesFromDescription(llm, notesSource, name || resolvedName)
-      } else if (
-        totalParsedDirectly > 0 &&
-        (notesSource?.length ?? 0) > 100 &&
-        notesSource?.trim() &&
-        !skipStructuredLlmMerge
-      ) {
-        throwIfAborted(sig)
-        // Long pages often repeat accords in "Note Structure" and list real notes only in prose/title
-        // (e.g. Pattern by Etsy). Merge so bergamot, jasmine, honey, etc. are not skipped.
-        notes = await mergeStructuredNotesWithLlm(llm, notes, notesSource, name || resolvedName)
+      const p = phase1[idx]
+      if (!p.ok) {
+        results.push(p.record)
+        continue
       }
-
-      // Step 2b: last-resort name-based lookup when no description text yielded notes.
-      const totalAfterLlm = notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
-      if (totalAfterLlm === 0 && !notesSource?.trim()) {
-        const fallbackName = name || resolvedName
-        if (fallbackName?.trim()) {
-          throwIfAborted(sig)
-          notes = await extractNotesFallbackLookup(llm, fallbackName, item.perfumeHouse ?? state.houseName)
-        }
-      }
-
-      // Step 3: translate any non-English notes to English.
-      if (!allNotesEnglish(notes)) {
-        throwIfAborted(sig)
-        notes = await translateNotesToEnglish(llm, notes)
-      }
-
-      // Keep heart/base (or open-only) as parsed: import maps each array to the correct DB layer.
-      // Previously, a single non-open layer was merged into openNotes, which emptied baseNotes/heartNotes in CSV.
-
-      // Step 4: final filter — remove junk phrases, marketing copy, and non-displayable strings
-      // from ALL notes regardless of which extraction path was used.
-      const cleanNote = (n: string) => isScraperKeptNote(n)
-      notes = {
-        openNotes: notes.openNotes.filter(cleanNote),
-        heartNotes: notes.heartNotes.filter(cleanNote),
-        baseNotes: notes.baseNotes.filter(cleanNote),
-      }
-      notes = dedupeNotesAcrossLayers(notes)
-
-      const allNoteStrs = [
-        ...notes.openNotes,
-        ...notes.heartNotes,
-        ...notes.baseNotes,
-      ]
-      let description = stripNotesFromDescription(item.description, allNoteStrs)
 
       if (opts.generateNoirDescriptions && noirLlm) {
         throwIfAborted(sig)
-        description = await generateNoirDescription(
+        const noirDesc = await generateNoirDescription(
           noirLlm,
-          name,
-          notes,
-          description || item.description,
+          p.name,
+          p.notes,
+          p.stripRaw || p.item.description,
           previousOpenings,
         )
-        previousOpenings.push(openingFingerprint(description))
-      } else if (description) {
-        description = description.trim()
-      } else {
-        description = item.description
-      }
-
-      results.push({
-        name,
-        description,
-        image: item.image,
-        perfumeHouse: item.perfumeHouse ?? state.houseName,
-        openNotes: JSON.stringify(notes.openNotes),
-        heartNotes: JSON.stringify(notes.heartNotes),
-        baseNotes: JSON.stringify(notes.baseNotes),
-        detailURL: item.detailURL,
-      })
-      } catch (itemErr: unknown) {
-        if (isAbortError(itemErr) || sig?.aborted) {
-          throw itemErr
-        }
-        const detail = itemErr instanceof Error ? itemErr.message : String(itemErr)
-        opts.onProgress?.(
-          `Notes pipeline ${idx + 1}/${totalItems} (${(name || resolvedName || "product").slice(0, 48)}): skipped LLM for this product — ${detail.slice(0, 280)}`,
-        )
+        previousOpenings.push(openingFingerprint(noirDesc))
         results.push({
-          name,
-          description: (item.description ?? "").trim(),
-          image: item.image ?? "",
-          perfumeHouse: item.perfumeHouse ?? state.houseName,
-          openNotes: "[]",
-          heartNotes: "[]",
-          baseNotes: "[]",
-          detailURL: item.detailURL,
+          ...p.record,
+          description: noirDesc,
         })
+      } else {
+        results.push(p.record)
       }
     }
 
@@ -1203,6 +1339,9 @@ function buildGraph(
  * @param options - Optional title cleaning and film noir description generation
  * @param model - OpenAI model to use (default: gpt-4o-mini)
  * @returns Array of PerfumeCsvRecord ready for CSV serialisation or direct DB import
+ *
+ * Phase 1 (extract/merge/translate) uses limited parallelism (NOTES_PIPELINE_CONCURRENCY, default 3).
+ * Film noir (Phase 2) stays sequential so previousOpenings matches the original pipeline.
  */
 export async function extractNotesForItems(
   items: ScrapedItem[],

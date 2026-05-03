@@ -833,7 +833,9 @@
     "errorLoadingPerfumes": "Error loading perfumes.",
     "notFound": "Perfume house not found",
     "perfumes": "Perfumes",
-    
+    "searchPerfumesPlaceholder": "Search perfumes in this house…",
+    "sortPerfumes": "Sort",
+
     "summaryCard": {
       "totalPerfumeCount": "Total perfumes",
       "backToHouses": "Back to {selectedLetter}",

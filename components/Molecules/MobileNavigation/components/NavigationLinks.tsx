@@ -40,7 +40,7 @@ const NavigationLinks = ({
               href={item.path}
               onClick={onNavClick}
               className={styleMerge(
-                "block text-noir-gold hover:text-noir-light font-semibold text-lg py-4 px-4 border border-transparent transition-colors duration-400 rounded-lg mobile-touch-target hover:bg-noir-black/30",
+                "block text-noir-gold hover:text-noir-light text-lg py-4 px-4 border border-transparent transition-colors duration-400 rounded-lg mobile-touch-target hover:bg-noir-black/30",
                 isActive(item.path) &&
                   "text-noir-light bg-noir-black/30 border-noir-light/90"
               )}

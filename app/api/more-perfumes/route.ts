@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { prisma } from "@/lib/db"
 import { clampPagination } from "@/utils/api-pagination.server"
+import {
+  normalizeHousePerfumeNameSearch,
+  parseHousePerfumeSortByParam,
+} from "@/utils/house-perfumes-url-params"
+import {
+  buildHousePerfumesOrderBy,
+  buildPerfumesWhereForHouse,
+} from "@/utils/server/house-perfumes-query.server"
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -9,6 +17,8 @@ export async function GET(request: NextRequest) {
   const rawSkip = parseInt(searchParams.get("skip") || "0", 10)
   const rawTake = parseInt(searchParams.get("take") || "8", 10)
   const { skip, take } = clampPagination(isNaN(rawSkip) ? 0 : rawSkip, isNaN(rawTake) ? 8 : rawTake)
+  const sortBy = parseHousePerfumeSortByParam(searchParams.get("sortBy"))
+  const nameSearch = normalizeHousePerfumeNameSearch(searchParams.get("q"))
 
   if (!houseSlug) {
     return NextResponse.json(
@@ -28,14 +38,17 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    const perfumeWhere = buildPerfumesWhereForHouse(house.id, nameSearch)
+    const orderBy = buildHousePerfumesOrderBy(sortBy)
+
     const [perfumes, totalCount] = await Promise.all([
       prisma.perfume.findMany({
-        where: { perfumeHouseId: house.id },
-        orderBy: { createdAt: "desc" },
+        where: perfumeWhere,
+        orderBy,
         skip,
         take,
       }),
-      prisma.perfume.count({ where: { perfumeHouseId: house.id } }),
+      prisma.perfume.count({ where: perfumeWhere }),
     ])
 
     const hasMore = skip + perfumes.length < totalCount

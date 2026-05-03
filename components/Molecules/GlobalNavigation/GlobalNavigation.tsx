@@ -31,7 +31,7 @@ interface GlobalNavigationProps
 }
 
 const navLinkBase =
-  "text-noir-gold hover:text-noir-light font-semibold text-lg px-2 py-1 border border-transparent transition-colors duration-400"
+  "text-noir-gold hover:text-noir-light text-lg px-2 py-1 border border-transparent transition-colors duration-400"
 const navLinkActive =
   "text-noir-light bg-noir-black/30 rounded-full border-noir-light/90"
 function GlobalNavigationContent({ user }: GlobalNavigationProps) {

@@ -827,6 +827,8 @@
     "errorLoadingPerfumes": "Erreur lors du chargement.",
     "notFound": "Maison introuvable",
     "perfumes": "Parfums",
+    "searchPerfumesPlaceholder": "Rechercher des parfums de cette maison…",
+    "sortPerfumes": "Trier",
     "summaryCard": {
       "totalPerfumeCount": "Total des parfums",
       "backToHouses": "Retour à {selectedLetter}",

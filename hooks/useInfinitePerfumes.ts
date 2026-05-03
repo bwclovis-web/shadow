@@ -42,6 +42,9 @@ interface UseInfinitePerfumesByHouseOptions {
   pageSize?: number
   initialData?: any[]
   initialTotalCount?: number
+  /** Pass only when SSR first page matches these params (avoids wrong placeholder). */
+  sortBy?: string
+  q?: string
 }
 
 /**
@@ -119,13 +122,25 @@ export const useInfinitePerfumesByLetter = (
 export const useInfinitePerfumesByHouse = (
   options: UseInfinitePerfumesByHouseOptions
 ) => {
-  const { houseSlug, pageSize = 9, initialData, initialTotalCount } = options
+  const {
+    houseSlug,
+    pageSize = 9,
+    initialData,
+    initialTotalCount,
+    sortBy = "",
+    q = "",
+  } = options
   const derivedInitialTotal = initialTotalCount ?? initialData?.length ?? 0
 
   return useInfiniteQuery({
-    queryKey: queryKeys.perfumes.byHouseInfinite(houseSlug),
+    queryKey: queryKeys.perfumes.byHouseInfinite(houseSlug, sortBy, q),
     queryFn: ({ pageParam }) =>
-      getMorePerfumes(houseSlug, { skip: pageParam as number, take: pageSize }),
+      getMorePerfumes(houseSlug, {
+        skip: pageParam as number,
+        take: pageSize,
+        ...(sortBy ? { sortBy } : {}),
+        ...(q ? { q } : {}),
+      }),
     enabled: !!houseSlug,
     initialPageParam: 0,
     getNextPageParam: getNextPageParam(pageSize),

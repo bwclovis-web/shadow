@@ -6,6 +6,11 @@ import { prisma } from "@/lib/db"
 import { migrateHouseImageToR2 } from "@/lib/r2-migrate"
 import { calculateRelevanceScore } from "@/utils/calculateRelevanceScore"
 import { assertValid, validationError } from "@/utils/errorHandling.patterns"
+import {
+  buildHousePerfumesOrderBy,
+  normalizeHousePerfumeNameSearch,
+  parseHousePerfumeSortBy,
+} from "@/utils/server/house-perfumes-query.server"
 import { buildNameOrderBy } from "@/utils/server/order-by.server"
 import { sanitizeText } from "@/utils/server/sanitize.server"
 import { createUrlSlug } from "@/utils/slug"
@@ -300,22 +305,40 @@ export const getHousesByLetterPaginated = async (
 }
 
 export const getPerfumeHouseBySlug = cache(
-  async (slug: string, opts?: { skip?: number; take?: number }) => {
+  async (
+    slug: string,
+    opts?: {
+      skip?: number
+      take?: number
+      sortBy?: string | null
+      nameSearch?: string | null
+    }
+  ) => {
     const skip = opts?.skip ?? 0
     const take = opts?.take ?? 9
+    const sortBy = parseHousePerfumeSortBy(opts?.sortBy ?? undefined)
+    const nameSearch = normalizeHousePerfumeNameSearch(opts?.nameSearch ?? undefined)
+    const cacheSortKey = sortBy ?? ""
+    const cacheSearchKey = nameSearch ?? ""
+
     return unstable_cache(
       async () => {
+        const perfumeNameWhere = nameSearch
+          ? { name: { contains: nameSearch, mode: "insensitive" as const } }
+          : undefined
+
         const house = await prisma.perfumeHouse.findUnique({
           where: { slug },
           include: {
             perfumes: {
+              where: perfumeNameWhere,
               skip,
               take,
-              orderBy: { createdAt: "desc" },
+              orderBy: buildHousePerfumesOrderBy(sortBy),
             },
             _count: {
               select: {
-                perfumes: true,
+                perfumes: perfumeNameWhere ? { where: perfumeNameWhere } : true,
               },
             },
           },
@@ -323,7 +346,7 @@ export const getPerfumeHouseBySlug = cache(
         if (!house) return house
         return { ...house, perfumeCount: house._count.perfumes }
       },
-      ["house-by-slug", slug, String(skip), String(take)],
+      ["house-by-slug", slug, String(skip), String(take), cacheSortKey, cacheSearchKey],
       {
         revalidate: HOUSE_BY_SLUG_REVALIDATE,
         tags: ["house", `house-${slug}`],

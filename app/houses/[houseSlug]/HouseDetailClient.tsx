@@ -1,10 +1,11 @@
 "use client"
 
-import { useEffect } from "react"
+import { type ChangeEvent, useEffect, useMemo, useState } from "react"
 import dynamic from "next/dynamic"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
+import Select from "@/components/Atoms/Select/Select"
 import {
   PerfumeHouseHero,
   PerfumeHousePerfumeList,
@@ -18,6 +19,7 @@ const PerfumeHouseAdminActions = dynamic(
     })),
   { ssr: false }
 )
+import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import DangerModal from "@/components/Organisms/DangerModal"
 import Modal from "@/components/Organisms/Modal"
 import { useHouse } from "@/hooks/useHouse"
@@ -31,8 +33,15 @@ import {
 import { useScrollToDataList } from "@/hooks/useScrollToDataList"
 import { useDeleteHouse } from "@/lib/mutations/houses"
 import { useSessionStore } from "@/hooks/sessionStore"
+import {
+  DEFAULT_HOUSE_DETAIL_SORT,
+  normalizeHousePerfumeNameSearch,
+  parseHouseDetailSortOption,
+} from "@/utils/house-perfumes-url-params"
+import { getDefaultSortOptions, type SortOption } from "@/utils/sortUtils"
 
 const HOUSES_BASE_PATH = "/houses"
+const HOUSE_SEARCH_DEBOUNCE_MS = 400
 
 const getInitialPerfumeData = (house: {
   perfumes?: unknown[]
@@ -50,12 +59,18 @@ const getInitialPerfumeData = (house: {
 
 const buildHouseDetailPath = (
   slug: string,
-  page?: number,
-  letter?: string | null
-): string => {
+  opts: {
+    page?: number
+    letter?: string | null
+    q?: string
+    sort?: SortOption
+  } = {}
+) => {
   const params = new URLSearchParams()
-  if (letter) params.set("letter", letter)
-  if (page && page > 1) params.set("pg", page.toString())
+  if (opts.letter) params.set("letter", opts.letter)
+  if (opts.page && opts.page > 1) params.set("pg", String(opts.page))
+  if (opts.q) params.set("q", opts.q)
+  if (opts.sort && opts.sort !== DEFAULT_HOUSE_DETAIL_SORT) params.set("sort", opts.sort)
   const query = params.toString()
   return query ? `${HOUSES_BASE_PATH}/${slug}?${query}` : `${HOUSES_BASE_PATH}/${slug}`
 }
@@ -65,15 +80,16 @@ interface HouseDetailClientProps {
     ReturnType<typeof import("@/models/house.server").getPerfumeHouseBySlug>
   >
   user?: { id?: string; role?: string } | null
-  initialSearchParams: { pg: string; letter?: string }
+  initialSearchParams: { pg: string; letter?: string; q?: string; sort?: string }
 }
 
-export default function HouseDetailClient({
+const HouseDetailClient = ({
   initialPerfumeHouse,
   user,
   initialSearchParams,
-}: HouseDetailClientProps) {
+}: HouseDetailClientProps) => {
   const t = useTranslations("singleHouse")
+  const tSort = useTranslations("sortOptions")
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -104,12 +120,73 @@ export default function HouseDetailClient({
     10
   )
 
+  const sortParam = searchParams.get("sort")
+  const qParam = searchParams.get("q")
+
+  const sortOption = useMemo(
+    () => parseHouseDetailSortOption(sortParam),
+    [sortParam]
+  )
+
+  const qNormalized = useMemo(
+    () => normalizeHousePerfumeNameSearch(qParam) ?? "",
+    [qParam]
+  )
+
+  const urlQRaw = searchParams.get("q") ?? ""
+  const [qDraft, setQDraft] = useState(urlQRaw)
+
+  useEffect(() => {
+    setQDraft(urlQRaw)
+  }, [urlQRaw])
+
+  const qDraftNormalized = useMemo(
+    () => normalizeHousePerfumeNameSearch(qDraft) ?? "",
+    [qDraft]
+  )
+
   const currentPage =
     Number.isNaN(pageFromUrl) || pageFromUrl < 1 ? 1 : pageFromUrl
 
   const initialPerfumeData = initialPerfumeHouse
     ? getInitialPerfumeData(initialPerfumeHouse)
     : { perfumes: [] as unknown[], count: 0 }
+
+  const initialSortCanon = parseHouseDetailSortOption(initialSearchParams.sort)
+  const initialQNormalized =
+    normalizeHousePerfumeNameSearch(initialSearchParams.q) ?? ""
+
+  const ssrMatchesListUrl =
+    initialSortCanon === sortOption && initialQNormalized === qNormalized
+
+  const sortByForApi =
+    sortOption === DEFAULT_HOUSE_DETAIL_SORT ? "" : sortOption
+
+  const houseSlug = (perfumeHouse ?? initialPerfumeHouse)?.slug ?? ""
+
+  useEffect(() => {
+    if (!houseSlug) return
+    if (qDraftNormalized === qNormalized) return
+    const id = window.setTimeout(() => {
+      router.replace(
+        buildHouseDetailPath(houseSlug, {
+          page: 1,
+          letter: selectedLetter,
+          q: qDraftNormalized,
+          sort: sortOption,
+        }),
+        { scroll: false }
+      )
+    }, HOUSE_SEARCH_DEBOUNCE_MS)
+    return () => window.clearTimeout(id)
+  }, [
+    houseSlug,
+    qDraftNormalized,
+    qNormalized,
+    router,
+    selectedLetter,
+    sortOption,
+  ])
 
   const {
     data,
@@ -119,10 +196,16 @@ export default function HouseDetailClient({
     fetchNextPage,
     error,
   } = useInfinitePerfumesByHouse({
-    houseSlug: perfumeHouse?.slug ?? initialPerfumeHouse?.slug ?? "",
+    houseSlug,
     pageSize,
-    initialData: initialPerfumeData.perfumes as any[],
-    initialTotalCount: initialPerfumeData.count,
+    initialData: ssrMatchesListUrl
+      ? (initialPerfumeData.perfumes as any[])
+      : undefined,
+    initialTotalCount: ssrMatchesListUrl
+      ? initialPerfumeData.count
+      : undefined,
+    sortBy: sortByForApi,
+    q: qNormalized,
   })
 
   const {
@@ -142,29 +225,43 @@ export default function HouseDetailClient({
       page?.meta?.totalCount ?? page?._count?.perfumes ?? page?.count,
   })
 
-  const houseSlug = (perfumeHouse ?? initialPerfumeHouse)?.slug ?? ""
-
   const { goToPage } = usePaginatedNavigation({
     currentPage: pagination.currentPage,
     hasNextPage: pagination.hasNextPage,
     hasPrevPage: pagination.hasPrevPage,
     navigate,
-    buildPath: (page) => buildHouseDetailPath(houseSlug, page, selectedLetter),
+    buildPath: (page) =>
+      buildHouseDetailPath(houseSlug, {
+        page,
+        letter: selectedLetter,
+        q: qNormalized,
+        sort: sortOption,
+      }),
     totalPages: pagination.totalPages,
   })
 
   useEffect(() => {
     if (pagination.totalPages > 0 && currentPage > pagination.totalPages) {
       router.replace(
-        buildHouseDetailPath(houseSlug, pagination.totalPages, selectedLetter),
+        buildHouseDetailPath(houseSlug, {
+          page: pagination.totalPages,
+          letter: selectedLetter,
+          q: qNormalized,
+          sort: sortOption,
+        }),
         { scroll: false }
       )
     }
 
     if (pagination.totalCount === 0 && currentPage !== 1) {
-      router.replace(buildHouseDetailPath(houseSlug, undefined, selectedLetter), {
-        scroll: false,
-      })
+      router.replace(
+        buildHouseDetailPath(houseSlug, {
+          letter: selectedLetter,
+          q: qNormalized,
+          sort: sortOption,
+        }),
+        { scroll: false }
+      )
     }
   }, [
     currentPage,
@@ -173,6 +270,8 @@ export default function HouseDetailClient({
     pagination.totalCount,
     pagination.totalPages,
     selectedLetter,
+    qNormalized,
+    sortOption,
   ])
 
   usePreserveScrollPosition(loading)
@@ -210,6 +309,27 @@ export default function HouseDetailClient({
     toggleModal(buttonRef as React.RefObject<HTMLButtonElement>, "delete-perfume-house-item")
   }
 
+  const handleSortChange = (evt: ChangeEvent<HTMLSelectElement>) => {
+    const next = evt.target.value as SortOption
+    router.replace(
+      buildHouseDetailPath(houseSlug, {
+        page: 1,
+        letter: selectedLetter,
+        q: qNormalized,
+        sort: next,
+      }),
+      { scroll: false }
+    )
+  }
+
+  const sortOptions = useMemo(
+    () =>
+      getDefaultSortOptions((key: string) =>
+        tSort(key.replace("sortOptions.", ""))
+      ).filter((o) => o.id !== "type-asc"),
+    [tSort]
+  )
+
   const backPath =
     selectedLetter
       ? `${HOUSES_BASE_PATH}?letter=${selectedLetter}`
@@ -244,7 +364,7 @@ export default function HouseDetailClient({
           type="house"
         />
 
-        <div className="flex flex-col gap-10 lg:gap-20 mx-auto max-w-6xl inner-container">
+        <div className="flex flex-col gap-10 mx-auto max-w-6xl inner-container">
           {user?.role === "admin" && (
             <PerfumeHouseAdminActions
               houseName={house.name}
@@ -260,6 +380,24 @@ export default function HouseDetailClient({
             backPath={backPath}
           />
 
+          <div className="noir-border rounded-t-lg w-full p-4 flex flex-col md:flex-row gap-4 md:items-end md:justify-between">
+            <div className="w-full md:flex-1 md:max-w-md">
+              <SearchInput
+                value={qDraft}
+                onChange={setQDraft}
+                placeholder={t("searchPerfumesPlaceholder")}
+              />
+            </div>
+            <Select
+              selectId="house-perfumes-sort"
+              selectData={sortOptions}
+              action={handleSortChange}
+              defaultId={sortOption}
+              label={t("sortPerfumes")}
+              size="compact"
+            />
+          </div>
+
           <PerfumeHousePerfumeList
             perfumes={perfumes}
             loading={loading}
@@ -273,3 +411,5 @@ export default function HouseDetailClient({
     </>
   )
 }
+
+export default HouseDetailClient

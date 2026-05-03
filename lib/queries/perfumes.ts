@@ -21,6 +21,10 @@ export interface PerfumeSortLoaderResponse {
 export interface PerfumePagination {
   skip?: number
   take?: number
+  /** Allowlisted server sort (optional). */
+  sortBy?: string
+  /** Case-insensitive name contains, max length enforced server-side. */
+  q?: string
 }
 
 export interface PerfumesByLetterResponse {
@@ -67,7 +71,8 @@ export const queryKeys = {
     byLetterInfinite: (letter: string, houseType: string) =>
       [...queryKeys.perfumes.all, "byLetterInfinite", letter, houseType] as const,
     byHouse: (houseSlug: string) => [...queryKeys.perfumes.all, "byHouse", houseSlug] as const,
-    byHouseInfinite: (houseSlug: string) => [...queryKeys.perfumes.all, "byHouseInfinite", houseSlug] as const,
+    byHouseInfinite: (houseSlug: string, sortBy?: string, q?: string) =>
+      [...queryKeys.perfumes.all, "byHouseInfinite", houseSlug, sortBy ?? "", q ?? ""] as const,
   },
 } as const
 
@@ -129,12 +134,14 @@ export const getMorePerfumes = async (
   pagination: PerfumePagination = {}
 ): Promise<MorePerfumesResponse> => {
   if (!houseSlug) throw new Error("House slug is required")
-  const { skip = 0, take = 9 } = pagination
+  const { skip = 0, take = 9, sortBy, q } = pagination
   const params = new URLSearchParams({
     houseSlug,
     skip: skip.toString(),
     take: take.toString(),
   })
+  if (sortBy) params.set("sortBy", sortBy)
+  if (q) params.set("q", q)
   const response = await fetch(`/api/more-perfumes?${params}`)
   if (!response.ok) throw new Error(`Failed to fetch more perfumes: ${response.statusText}`)
   const data: MorePerfumesResponse = await response.json()

@@ -827,6 +827,8 @@
     "errorLoadingPerfumes": "Errore caricamento profumi.",
     "notFound": "Casa non trovata",
     "perfumes": "Profumi",
+    "searchPerfumesPlaceholder": "Cerca profumi di questa casa…",
+    "sortPerfumes": "Ordina",
     "summaryCard": {
       "totalPerfumeCount": "Totale profumi",
       "backToHouses": "Torna a {selectedLetter}",
