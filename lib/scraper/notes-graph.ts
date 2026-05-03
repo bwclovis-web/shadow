@@ -107,6 +107,19 @@ function resolveProductName(item: ScrapedItem): string {
   return fromUrl ?? raw
 }
 
+/**
+ * Use both optional notes-region scrape and main description for parsing. Some runs put the labeled
+ * "Scent notes include …" line in one field and noir/short copy in the other; `notesText ?? description`
+ * alone drops the authoritative list and the LLM invents a pyramid from prose.
+ */
+const resolveNotesSource = (item: ScrapedItem): string => {
+  const parts = [item.notesText, item.description]
+    .map(s => (typeof s === "string" ? s.trim() : ""))
+    .filter(Boolean)
+  if (parts.length === 0) return ""
+  return [...new Set(parts)].join("\n\n")
+}
+
 // ---------------------------------------------------------------------------
 // Title cleaning (no LLM)
 // ---------------------------------------------------------------------------
@@ -688,22 +701,25 @@ function extractNotesFromStructuredText(text: string): {
 // LLM note-extraction helper
 // ---------------------------------------------------------------------------
 
-const NOTE_SYSTEM_PROMPT = `You are a master perfumer. Extract every fragrance note from the product description and assign them to three layers.
+const NOTE_SYSTEM_PROMPT = `You are a master perfumer. Extract fragrance notes from the product text and assign them to three layers.
 
 Return ONLY a JSON object with exactly these keys (use these exact names):
   "openNotes":  string[] — top/opening notes (first impression, evaporates first)
   "heartNotes": string[] — middle/heart notes (core of the scent)
   "baseNotes":  string[] — base/dry-down notes (last to fade, depth)
 
-Layer detection:
+Authoritative lists (must follow first):
+- If the text contains a comma- or "and"-separated note list introduced by any of: "Scent notes include", "Fragrance notes are", "Fragrance notes:", "Notes:", "Note:", "Key notes:", "Featured notes", "Main notes:", "with notes of", or similar labeled lines, that list is the ONLY source of notes. Include every item verbatim (lowercase, English). Put them all in openNotes and set heartNotes and baseNotes to [] unless the same text explicitly defines Top/Heart/Base (or equivalent) grouping for those exact materials.
+- Do NOT add ingredients that appear only in marketing or storytelling sentences (e.g. sandalwood, musk, jasmine) if they are not in that labeled list.
+
+Layer detection (only when there is NO authoritative flat list as above):
 - If the text uses section headers (e.g. "Top:", "Heart:", "Base:" or "Opening:", "Mid:", "Body:", "Center:", "Bottom:", "Background:", "Dry down:" or "Head/Heart/Base", or French "Notes de tête / de cœur / de fond"), put each note in the matching layer.
 - If it says "top notes include X, Y" or "heart: X, Y" or "base notes: X", follow that structure.
 - If there is no layering, spread notes by typical volatility: citrus, herbs, light florals → openNotes; florals, spices, fruits → heartNotes; woods, musk, vanilla, amber, resins → baseNotes.
 - When in doubt, prefer putting a note in heartNotes rather than omitting it.
 
-Rules:
-- If the text has an explicit note list line (e.g. "Notes:", "Note:", "Fragrance notes:") with comma- or slash-separated materials, treat that list as authoritative: include every item verbatim (lowercase, English). Do NOT substitute different notes because marketing prose below mentions chocolate, caramel, or other gourmand imagery — the labeled list wins.
-- Extract ALL fragrance notes mentioned — do not skip any. Include every scent ingredient (e.g. vanilla, rose, black pepper, sandalwood, bergamot, jasmine, musk, amber, oud).
+Rules (when not using a single authoritative list):
+- Extract every fragrance note mentioned in the narrative — include every scent ingredient (e.g. vanilla, rose, black pepper, sandalwood, bergamot, jasmine, musk, amber, oud).
 - Notes must be lowercase and in ENGLISH. Translate any non-English note names: "santal" → "sandalwood", "musc" / "musc blanc" → "white musk", "vanille" → "vanilla", "ambre" → "amber", "bois" → "wood", "rose" → "rose", "fleur" → "flower", "tabac" → "tobacco", "encens" → "incense".
 - Remove duplicates within each array.
 - Adjectives that describe a note (e.g. "warm vanilla", "fresh bergamot") → keep the note as a phrase (warm vanilla, fresh bergamot).
@@ -832,13 +848,14 @@ function parseNotesFromLlmResponse(responseContent: unknown): {
   }
 }
 
-const MERGE_STRUCTURED_SUPPLEMENT_PROMPT = `You enrich a perfume note list that was already parsed from labeled Top/Middle/Base lines on the page.
+const MERGE_STRUCTURED_SUPPLEMENT_PROMPT = `You rebalance a perfume note list that was already parsed from the product page (labeled Top/Middle/Base and/or flat lists).
 
 Return ONLY JSON: {"openNotes": string[], "heartNotes": string[], "baseNotes": string[]}.
 
 Rules:
 - Every note in the provided structured arrays MUST still appear in your output (same spelling intent; lowercase).
-- Add any additional real fragrance notes from the title or narrative (bergamot, jasmine, honey, musk, etc.) into the correct volatility layer.
+- Do NOT add new notes from evocative marketing prose, noir-style storytelling, or mood copy. Only add a note if the full text contains another explicit labeled note list or clear Top/Heart/Base section naming that material.
+- If structured openNotes is non-empty and heartNotes and baseNotes are both empty (flat list), keep all notes in openNotes unless the full text explicitly defines a pyramid — do not invent heart/base layers from adjectives in prose.
 - No duplicates across layers, no marketing sentences, lowercase only.
 - Carrier oils, gemstones, and SKU/meta lines are not notes.
 - Never add section boilerplate or product specs: "extra info", "if you're curious", "power source accord", etc.
@@ -1150,7 +1167,7 @@ const processSingleProductPhase1 = async (
   opts.onProgress?.(
     `Notes pipeline ${index + 1}/${totalItems}: ${(name || resolvedName || "product").slice(0, 72)}`,
   )
-  const notesSource = item.notesText ?? item.description
+  const notesSource = resolveNotesSource(item)
   try {
     let notes = extractNotesFromStructuredText(notesSource)
     const totalParsedDirectly = notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
@@ -1162,7 +1179,7 @@ const processSingleProductPhase1 = async (
     ].filter(Boolean).length
     const parsedNoteCount = noteLayerCount(notes)
     const flatListingOnly =
-      notes.openNotes.length >= 3 &&
+      notes.openNotes.length >= 2 &&
       notes.heartNotes.length === 0 &&
       notes.baseNotes.length === 0
     const skipStructuredLlmMerge =

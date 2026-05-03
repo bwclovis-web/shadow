@@ -9,8 +9,8 @@ export const typeaheadPanelClasses = {
 
 export const typeaheadItemRowClasses = {
   hero: "p-2 text-noir-gold-100 hover:bg-noir-gold hover:text-noir-black font-semibold cursor-pointer last-of-type:rounded-b-md transition-colors",
-  dark: "p-2 cursor-pointer text-noir-gold-100 last-of-type:rounded-b-md hover:bg-stone-700",
-  light: "hover:bg-noir-dark/50 hover:text-noir-light last-of-type:rounded-b-md",
+  dark: "p-2 cursor-pointer text-noir-gold-100 last-of-type:rounded-b-md hover:bg-noir-gold/20 hover:text-noir-black",
+  light: "hover:bg-noir-dark/50 hover:text-noir-light last-of-type:rounded-b-md dark:hover:bg-noir-gold/20 dark:text-noir-dark",
 } as const
 
 export type TypeaheadSurface = keyof typeof typeaheadPanelClasses

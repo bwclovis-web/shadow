@@ -129,6 +129,50 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
     expect(records[1].description).toBe("N2")
   })
 
+  it("finds 'Scent notes include …' when it lives in notesText but description is noir-only (no LLM)", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const noirOnly =
+      "Beneath the wooden beams of a forgotten attic, dark red roses entwine with black pepper, while warm sandalwood and patchouli evoke a clandestine rendezvous. Soft musk and rich amber wrap around you."
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Attic Bedroom",
+        description: noirOnly,
+        notesText:
+          "Scent notes include dark red roses, labdanum, black pepper, light patchouli, plum, vanilla, benzoin, and golden amber.",
+        image: "",
+        detailURL: "https://www.littleandgrim.com/products/attic-bedroom-perfume-oil",
+        perfumeHouse: "Little And Grim",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when notesText carries the authoritative list")
+    })
+
+    const records = await extractNotesForItems(items, "Little And Grim", { generateNoirDescriptions: false })
+
+    expect(invokeMock).not.toHaveBeenCalled()
+    expect(records).toHaveLength(1)
+    const open = JSON.parse(records[0].openNotes) as string[]
+    expect(open).toEqual(
+      expect.arrayContaining([
+        "dark red roses",
+        "labdanum",
+        "black pepper",
+        "light patchouli",
+        "plum",
+        "vanilla",
+        "benzoin",
+        "golden amber",
+      ]),
+    )
+    expect(open.length).toBe(8)
+    expect(records[0].heartNotes).toBe("[]")
+    expect(records[0].baseNotes).toBe("[]")
+  })
+
   it("parses Shopify 'Scent notes include …' as flat open-only notes without calling the LLM", async () => {
     vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
 
