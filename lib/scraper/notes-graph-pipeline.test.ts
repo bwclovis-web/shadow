@@ -285,4 +285,87 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
     expect(all).toContain("mandarin")
     expect(all).toContain("cedarwood")
   })
+
+  it("drops solvent, CSS, and prose junk from merge LLM output while keeping structured pyramid notes", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    // >100 chars for merge LLM; exactly 3 layers with 4 parsed notes so skipStructuredLlmMerge is false
+    // (if total >= 5 with 3 layers, merge is skipped).
+    const notesText = `Top: bergamot peel oil infusion, pink peppercorn extract
+Heart: jasmine sambac grandiflorum
+Base: white musk`
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Room Spray PDP",
+        description: "",
+        notesText,
+        image: "",
+        detailURL: "https://example.com/p/spray",
+        perfumeHouse: "The Marvelous Candle Studio",
+      },
+    ]
+
+    invokeMock.mockImplementation(async (messages: unknown) => {
+      const msgs = messages as { role: string; content: string }[]
+      const sys = msgs.find(m => m.role === "system")?.content ?? ""
+      if (sys.includes("rebalance a perfume note list")) {
+        return {
+          content: JSON.stringify({
+            openNotes: [],
+            heartNotes: [],
+            baseNotes: [
+              "vegan augeo",
+              "1rem",
+              "made from renewable resources",
+              "clothing",
+              "which is colourless",
+              "cedar",
+            ],
+          }),
+        }
+      }
+      throw new Error(`Unexpected LLM call: ${sys.slice(0, 80)}`)
+    })
+
+    const records = await extractNotesForItems(items, "House", { generateNoirDescriptions: false })
+
+    expect(records).toHaveLength(1)
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    expect(base).toEqual(expect.arrayContaining(["white musk"]))
+    expect(base).not.toEqual(
+      expect.arrayContaining(["vegan augeo", "1rem", "clothing", "made from renewable resources"]),
+    )
+  })
+
+  it("strips prose wrappers like 'hints of' and 'enhanced by' from structured notes", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Wrapper phrases",
+        description: "",
+        notesText:
+          "Top: hints of bergamot Heart: jasmine Base: enhanced by sandalwood, creating a rich amber trail",
+        image: "",
+        detailURL: "https://example.com/p/wrappers",
+        perfumeHouse: "House",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run for this structured parse test")
+    })
+
+    const records = await extractNotesForItems(items, "House", { generateNoirDescriptions: false })
+    expect(invokeMock).not.toHaveBeenCalled()
+    expect(records).toHaveLength(1)
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+
+    expect(open).toContain("bergamot")
+    expect(base).toContain("sandalwood")
+    expect(base).not.toEqual(expect.arrayContaining(["enhanced by sandalwood", "creating a rich"]))
+  })
 })

@@ -16,6 +16,8 @@ const STOPWORDS = new Set([
   "null", "cut", "grey", "gray", "hot", "cold", "ups", "fedex", "usps", "yes", "no",
   "other", "various", "etc", "new", "old", "same", "different", "many", "some", "more",
   "most", "all", "any", "each", "every", "both", "such", "what", "which", "who",
+  // Product / copy tokens mistaken for pyramid notes (e.g. room-spray PDPs, noir “trench coat” prose)
+  "vegan", "clothing",
 ])
 
 const PLACEHOLDER_PHRASES = new Set([
@@ -64,6 +66,22 @@ const KNOWN_BAD_PATTERNS = [
   /\bextra info\b/i,
   /\bif you'?re\s+curious\b/i,
   /\bbelow\s+if\s+you\b/i,
+  // Solvent / carrier / Shopify spec lines (not scent materials)
+  /\baugeo\b/i,
+  /\brenewable resources\b/i,
+  /\bmade from renewable\b/i,
+  /\bwhich is (colourless|colorless)\b/i,
+  /\b(is vegan|colourless|colorless|odourless|odorless)\b/i,
+  /\broom sprays\b/i,
+  /\bwhat does\b.*\b(smell|smells)\b/i,
+  /\bmanly accord\b/i,
+  /\bopening with\b/i,
+  /\benhanced by\b/i,
+  /\benriched by\b/i,
+  /\bhints?\s+of\b/i,
+  /\bcreating a rich\b/i,
+  // Design tokens leaked from broken PDPs
+  /\d+(?:rem|em|ch|vw|vh|px|pt)\b/i,
   ...INCI_LIKE_PATTERNS,
 ]
 

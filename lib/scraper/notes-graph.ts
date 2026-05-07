@@ -371,6 +371,7 @@ const truncateAtShopMetaLabels = (s: string): string => {
 const JUNK_NOTE_PATTERNS: RegExp[] = [
   /[.!?;:(){}\[\]"]/, // punctuation → sentence fragment or copy
   /\d{2,}/, // numbers like sizes, prices, percentages
+  /\d+(?:rem|em|ch|vw|vh|px|pt)\b/i, // CSS / layout tokens (e.g. 1rem, 12px)
   /\b(buy|shop|order|add to cart|checkout|shipping|delivery|free|sale|discount)\b/i,
   /\b(livrare|cumpara|adauga|comanda|rapid|gratuit)\b/i, // Romanian commerce
   /\b(livraison|acheter|commande|gratuit)\b/i, // French commerce
@@ -402,6 +403,21 @@ const JUNK_NOTE_PATTERNS: RegExp[] = [
   /\bcontinues the narrative\b/i,
   /\bexhilarates the senses\b/i,
   /^\bmystery\b$/i,
+  // Room spray / candle PDP solvent copy and SEO blobs (not pyramid materials)
+  /\baugeo\b/i,
+  /\brenewable resources\b/i,
+  /\bmade from renewable\b/i,
+  /\bwhich is (colourless|colorless)\b/i,
+  /\b(is vegan|colourless|colorless|odourless|odorless)\b/i,
+  /\broom sprays\b/i,
+  /\bwhat does\b.*\b(smell|smells)\b/i,
+  /\bmanly accord\b/i,
+  /\bopening with\b/i,
+  /\benhanced by\b/i,
+  /\benriched by\b/i,
+  /\bhints?\s+of\b/i,
+  /\bcreating a rich\b/i,
+  /\bclothing\b/i,
 ]
 
 /** Junk checks for typical short notes — excludes the punctuation rule so accord phrases with () survive. */
@@ -439,7 +455,14 @@ const isScraperKeptNote = (note: string): boolean => {
 
 /** Strip leading prose wrappers before note tokens (e.g. "Notes of cinnamon" → "cinnamon"). */
 const stripNoteListProsePrefix = (p: string): string =>
-  p.replace(/^\s*notes\s+of\s+/i, "").replace(/^\s*note\s+of\s+/i, "").trim()
+  p
+    .replace(/^\s*notes\s+of\s+/i, "")
+    .replace(/^\s*note\s+of\s+/i, "")
+    .replace(/^\s*hints?\s+of\s+/i, "")
+    .replace(/^\s*enhanced\s+by\s+/i, "")
+    .replace(/^\s*enriched\s+by\s+/i, "")
+    .replace(/^\s*creating\s+a\s+rich\s+/i, "")
+    .trim()
 
 /** Candidates from labeled Top/Middle/Base list lines (parentheticals, long accords). */
 const filterStructuredNoteParts = (parts: string[]): string[] =>
@@ -727,6 +750,7 @@ Rules (when not using a single authoritative list):
 - NEVER include crystals, gemstones, or minerals as notes (e.g. quartz, amethyst, herkimer diamond, topaz, tourmaline, moonstone, labradorite, gem magic, citrine, obsidian, selenite). These are not fragrance notes.
 - NEVER include carrier oils or base ingredients as notes (e.g. sunflower oil, jojoba oil, shea butter, coconut oil, sweet almond oil, argan oil). These are not fragrance notes.
 - NEVER treat storefront section headers or specs as notes (e.g. "Extra Info Below if You're Curious", "power source accord", battery/USB copy). These are not fragrance notes.
+- NEVER treat solvent/carrier marketing as notes (e.g. "vegan augeo", "made from renewable resources", "colourless", "odourless", "is vegan", "room sprays", "what does X smell like" SEO lines). These are not fragrance pyramid materials.
 - NEVER treat people, roles, or quote fluff as notes (e.g. founder, iconic, transmission, "continues the narrative", attributions like perfumer names).
 - If the product is clearly NOT a fragrance (e.g. jewelry, necklace, candle, body scrub, hair product, supplement), return all empty arrays: {"openNotes":[],"heartNotes":[],"baseNotes":[]}.
 - Return only the JSON object — no explanation, no markdown fences.`
@@ -859,6 +883,7 @@ Rules:
 - No duplicates across layers, no marketing sentences, lowercase only.
 - Carrier oils, gemstones, and SKU/meta lines are not notes.
 - Never add section boilerplate or product specs: "extra info", "if you're curious", "power source accord", etc.
+- Never add solvent or listing filler: "vegan augeo", "renewable resources", "colourless/odourless", "is vegan", "room sprays", "what does … smell like", or clothing/fashion words from prose (e.g. "clothing", "trench coat") unless they are an explicit labeled scent accord.
 - Never add quote or brand fluff: founder, iconic, transmission, narrative, perfumer names, or similar — only real scent materials.`
 
 const noteLayerCount = (n: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] }): number =>
@@ -1138,6 +1163,40 @@ const resolveNotesPipelineConcurrency = (): number => {
 
 type NotesLayers = { openNotes: string[]; heartNotes: string[]; baseNotes: string[] }
 
+/**
+ * When the PDP has a labeled flat list (e.g. "Scent notes include …") but the model dropped a
+ * rare material (often labdanum) or echoed most of the list without the full set, prefer the
+ * regex-parsed list so exports match the merchant line on pages like
+ * https://www.littleandgrim.com/products/attic-bedroom-perfume-oil
+ */
+const preferAuthoritativeFlatNoteList = (notes: NotesLayers, flatAuth: string[]): NotesLayers => {
+  if (flatAuth.length < 3) return notes
+
+  const current = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
+  if (current.length === 0) {
+    return {
+      openNotes: uniqueNotes(flatAuth),
+      heartNotes: [],
+      baseNotes: [],
+    }
+  }
+
+  const currentLc = new Set(current.map(n => n.trim().toLowerCase()))
+  const flatLc = flatAuth.map(n => n.trim().toLowerCase())
+  const overlap = flatLc.filter(f => currentLc.has(f)).length
+  const missingFromCurrent = flatLc.filter(f => !currentLc.has(f))
+
+  if (missingFromCurrent.length <= 2 && overlap / flatAuth.length >= 0.85) {
+    return {
+      openNotes: uniqueNotes(flatAuth),
+      heartNotes: [],
+      baseNotes: [],
+    }
+  }
+
+  return notes
+}
+
 type Phase1Ok = {
   ok: true
   index: number
@@ -1211,6 +1270,8 @@ const processSingleProductPhase1 = async (
       throwIfAborted(sig)
       notes = await translateNotesToEnglish(llm, notes)
     }
+
+    notes = preferAuthoritativeFlatNoteList(notes, extractFlatNotes(notesSource))
 
     const cleanNote = (n: string) => isScraperKeptNote(n)
     notes = {
