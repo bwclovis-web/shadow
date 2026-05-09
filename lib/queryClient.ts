@@ -74,8 +74,6 @@ export const getRetryConfig = (queryType: QueryType = 'important'): RetryFunctio
  * - Query cache listener for error monitoring with metadata access
  * - Per-query-type retry strategies
  * 
- * @see app/lib/utils/backgroundRefetch.ts for refetch strategies
- * @see app/lib/utils/staleWhileRevalidate.ts for SWR pattern
  */
 const STALE_TIME = 5 * 60 * 1000   // 5 minutes
 const GC_TIME = 10 * 60 * 1000     // 10 minutes (garbage collection)

@@ -27,6 +27,80 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
     vi.unstubAllEnvs()
   })
 
+  it("Gallagher-style Featured Notes: skips merge LLM and uses merchant flat list in openNotes only", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const description = [
+      "Septamber opens with a bright blend of Apricot, Black Tea, and Tunisian Neroli.",
+      "Featured Notes : Apricot, Black Tea, Tunisian Neroli, Turkish Rose, Cabernet, Cognac, Oakwood, Honeyed Amber, Labdanum, Vanilla, Maple, Immortelle, Tobacco, Benzoin, Hay, and Leather.",
+      "Concentration: Eau de Parfum",
+    ].join(" ")
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Septamber - Apricot, Black Tea, Oakwood, Maple, Honeyed Amber",
+        description,
+        image: "",
+        detailURL: "https://gallagherfragrances.com/products/septamber",
+        perfumeHouse: "Gallagher Fragrances",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("merge / extract LLM must not run when Featured Notes list is authoritative")
+    })
+
+    const records = await extractNotesForItems(items, "Gallagher Fragrances", {
+      generateNoirDescriptions: false,
+      titleDashSegment: "before",
+    })
+
+    expect(invokeMock).not.toHaveBeenCalled()
+    expect(records[0].name).toBe("Septamber")
+    const open = JSON.parse(records[0].openNotes) as string[]
+    expect(open.length).toBeGreaterThanOrEqual(12)
+    expect(open).toContain("apricot")
+    expect(open).toContain("tunisian neroli")
+    expect(open).toContain("leather")
+    expect(records[0].heartNotes).toBe("[]")
+    expect(records[0].baseNotes).toBe("[]")
+  })
+
+  it("titleDashSegment before splits on en dash and em dash in product name (no LLM)", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Velvet Vanilla – 50ml",
+        description: "x",
+        notesText: NOTES_TEXT_NO_LLM,
+        image: "",
+        detailURL: "https://example.com/p/en",
+        perfumeHouse: "H",
+      },
+      {
+        name: "Night Rose — limited",
+        description: "x",
+        notesText: NOTES_TEXT_NO_LLM,
+        image: "",
+        detailURL: "https://example.com/p/em",
+        perfumeHouse: "H",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run")
+    })
+
+    const records = await extractNotesForItems(items, "H", {
+      generateNoirDescriptions: false,
+      titleDashSegment: "before",
+    })
+
+    expect(invokeMock).not.toHaveBeenCalled()
+    expect(records.map(r => r.name)).toEqual(["Velvet Vanilla", "Night Rose"])
+  })
+
   it("preserves result order and runs noir in index order when concurrency is 3", async () => {
     vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "3")
 

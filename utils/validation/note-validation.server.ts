@@ -18,12 +18,18 @@ const STOPWORDS = new Set([
   "most", "all", "any", "each", "every", "both", "such", "what", "which", "who",
   // Product / copy tokens mistaken for pyramid notes (e.g. room-spray PDPs, noir “trench coat” prose)
   "vegan", "clothing",
+  // CSS / layout tokens leaked from PDP DOM (e.g. Gallagher Fragrances scrape)
+  "padding", "margin", "border",
+  // Marketing / CTA fragments parsed as single-note “ingredients”
+  "again", "lively",
 ])
 
 const PLACEHOLDER_PHRASES = new Set([
   "few", "no name", "new name", "unknown", "unnamed", "untitled", "tbd", "todo", "n/a", "none",
   "to be determined", "not applicable", "placeholder", "test", "example", "sample", "delete me",
   "test update note", "test note", "update note", "null", "nul",
+  "to moments of pause",
+  "entering the vault",
 ])
 
 const TRAILING_FRAGMENT_REGEX = /\s+(of|in|with|to|for|and|or|from|by|as|at|on|that|which|who|when|where|a|an|the)$/i
@@ -82,6 +88,8 @@ const KNOWN_BAD_PATTERNS = [
   /\bcreating a rich\b/i,
   // Design tokens leaked from broken PDPs
   /\d+(?:rem|em|ch|vw|vh|px|pt)\b/i,
+  // Broken list merge / prose fragments (Gallagher-style scrapes)
+  /\bpatchouli\s+a\s+chocolate\s+orange\b/i,
   ...INCI_LIKE_PATTERNS,
 ]
 

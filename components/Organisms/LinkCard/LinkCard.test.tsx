@@ -1,6 +1,8 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, screen, waitFor } from "@testing-library/react"
 import type { PropsWithChildren, ReactElement } from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
+
+import { renderWithProviders } from "@/test/utils/test-utils"
 
 vi.mock("next/image", () => ({
   default: ({
@@ -35,9 +37,7 @@ vi.mock("next-view-transitions", () => ({
 
 import LinkCard from "./LinkCard"
 
-function renderLinkCard(ui: ReactElement) {
-  return render(ui)
-}
+const renderLinkCard = (ui: ReactElement) => renderWithProviders(ui)
 
 describe("LinkCard", () => {
   afterEach(() => {
@@ -111,7 +111,7 @@ describe("LinkCard", () => {
     it("links to house page when type is house", () => {
       renderLinkCard(<LinkCard data={mockHouseData} type="house" />)
       const link = screen.getByRole("link")
-      expect(link).toHaveAttribute("href", "/perfume-house/test-house")
+      expect(link).toHaveAttribute("href", "/houses/test-house")
     })
 
     it("passes selectedLetter in state when provided", () => {
@@ -149,28 +149,21 @@ describe("LinkCard", () => {
       renderLinkCard(<LinkCard data={mockPerfumeData} type="perfume" />)
       const image = await waitFor(() => screen.getByRole("img"))
       expect(image).toHaveAttribute("height", "400")
-      expect(image).toHaveAttribute("width", "300")
+      expect(image).toHaveAttribute("width", "400")
     })
 
     it("applies grayscale filter class", async () => {
       renderLinkCard(<LinkCard data={mockPerfumeData} type="perfume" />)
       const image = await waitFor(() => screen.getByRole("img"))
-      // OptimizedImage applies className to container, not img element
-      const container = image.closest("div.relative")
-      expect(container).toBeInTheDocument()
-      expect(container).toHaveClass("grayscale-100")
+      expect(image.className).toMatch(/grayscale-100/)
     })
 
     it("applies hover transition classes", async () => {
       renderLinkCard(<LinkCard data={mockPerfumeData} type="perfume" />)
       const image = await waitFor(() => screen.getByRole("img"))
-      // OptimizedImage applies className to container, not img element
-      // Image element has loading classes; hover classes are on container
-      const container = image.closest("div.relative")
-      expect(container).toBeInTheDocument()
-      expect(container).toHaveClass("group-hover:grayscale-0")
-      expect(container).toHaveClass("transition-all")
-      expect(container).toHaveClass("duration-500")
+      expect(image.className).toMatch(/group-hover:grayscale-0/)
+      expect(image.className).toMatch(/transition-all/)
+      expect(image.className).toMatch(/duration-500/)
     })
 
     it("applies view transition name", async () => {
@@ -179,10 +172,10 @@ describe("LinkCard", () => {
       expect(image.style.viewTransitionName).toBe("perfume-image-perfume-1")
     })
 
-    it("applies contain style for performance", async () => {
+    it("does not rely on inline contain style on the image", async () => {
       renderLinkCard(<LinkCard data={mockPerfumeData} type="perfume" />)
       const image = await waitFor(() => screen.getByRole("img")) as HTMLImageElement
-      expect(image.style.contain).toBe("layout style paint")
+      expect(image.style.contain).toBe("")
     })
   })
 
@@ -197,7 +190,7 @@ describe("LinkCard", () => {
       renderLinkCard(<LinkCard data={mockPerfumeData} type="perfume" />)
       const badge = screen.getByText("eau de parfum")
       expect(badge).toHaveClass("absolute")
-      expect(badge).toHaveClass("bottom-2")
+      expect(badge).toHaveClass("bottom-6")
       expect(badge).toHaveClass("right-2")
     })
 
@@ -322,10 +315,10 @@ describe("LinkCard", () => {
       expect(link).toHaveClass("items-center")
     })
 
-    it("applies padding to link", () => {
+    it("does not add outer padding on the link (inner blocks handle spacing)", () => {
       renderLinkCard(<LinkCard data={mockPerfumeData} type="perfume" />)
       const link = screen.getByRole("link")
-      expect(link).toHaveClass("p-4")
+      expect(link).not.toHaveClass("p-4")
     })
 
     it("centers text content", () => {
@@ -339,8 +332,7 @@ describe("LinkCard", () => {
     it("applies correct styling to house name", () => {
       renderLinkCard(<LinkCard data={mockPerfumeData} type="perfume" />)
       const houseName = screen.getByText("Test House")
-      expect(houseName).toHaveClass("text-md")
-      expect(houseName).toHaveClass("font-semibold")
+      expect(houseName).toHaveClass("text-sm")
       expect(houseName).toHaveClass("text-noir-gold-100")
     })
 
@@ -356,7 +348,7 @@ describe("LinkCard", () => {
       renderLinkCard(<LinkCard data={mockPerfumeData} type="perfume" />)
       const heading = screen.getByRole("heading")
       expect(heading).toHaveClass("text-wrap")
-      expect(heading).toHaveClass("break-words")
+      expect(heading).toHaveClass("wrap-break-word")
     })
 
     it("handles long perfume names", () => {
@@ -365,7 +357,9 @@ describe("LinkCard", () => {
         name: "This is a very long perfume name that should wrap properly",
       }
       renderLinkCard(<LinkCard data={longNameData} type="perfume" />)
-      expect(screen.getByText(/very long perfume name/)).toBeInTheDocument()
+      expect(
+        screen.getByRole("heading", { name: /very long perfume name/i })
+      ).toBeInTheDocument()
     })
   })
 

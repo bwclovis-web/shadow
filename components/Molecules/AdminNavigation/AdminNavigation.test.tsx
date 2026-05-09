@@ -31,6 +31,6 @@ describe("AdminNavigation", () => {
     const user = { role: "admin" }
     renderWithProviders(<AdminNavigation user={user} />)
     // Component renders translation keys, check for the link by href instead
-    expect(screen.getByRole("link", { name: /admin\.navigation\.createHouse/i })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /^create house$/i })).toBeInTheDocument()
   })
 })

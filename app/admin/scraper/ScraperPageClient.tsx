@@ -899,9 +899,9 @@ export function ScraperPageClient() {
             you can strip them from the source text and have LangGraph write new film noir themed copy.
           </p>
           <fieldset className="flex flex-col gap-2 border-0 p-0">
-            <legend className="text-sm font-medium">First title separator (<code className="text-xs"> - </code>, <code className="text-xs">~</code>, <code className="text-xs">.</code>, <code className="text-xs">|</code>)</legend>
+            <legend className="text-sm font-medium">First title separator (<code className="text-xs"> - </code>, <code className="text-xs">–</code>, <code className="text-xs">—</code>, <code className="text-xs">~</code>, <code className="text-xs">.</code>, <code className="text-xs">|</code>)</legend>
             <p className="text-xs text-muted-foreground">
-              Many shops use <code className="text-xs">Title - subtitle or size</code> or <code className="text-xs">Title | variant</code>. Choose which side to keep for the imported perfume name.
+              Many shops use <code className="text-xs">Title - subtitle or size</code> (or an en/em dash instead of hyphen) or <code className="text-xs">Title | variant</code>. Choose which side to keep for the imported perfume name.
             </p>
             <label className="flex cursor-pointer items-start gap-3">
               <input

@@ -26,12 +26,22 @@ describe("ErrorBoundary", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     reloadMock = vi.fn()
-    vi.spyOn(window.location, "reload").mockImplementation(reloadMock)
+    // jsdom: `location.reload` is not configurable — stub the whole global
+    vi.stubGlobal(
+      "location",
+      {
+        href: "http://localhost/",
+        assign: vi.fn(),
+        replace: vi.fn(),
+        reload: reloadMock,
+      } as Location
+    )
     // Suppress console.error for error boundary tests
     vi.spyOn(console, "error").mockImplementation(() => {})
   })
 
   afterEach(() => {
+    vi.unstubAllGlobals()
     vi.restoreAllMocks()
   })
 

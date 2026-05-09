@@ -77,7 +77,7 @@ export interface ScraperConfig {
   baseUrl?: string
 
   /**
-   * How to trim the product name at the first of: spaced hyphen ` - `, `~`, `.`, or `|` (whitespace around the character is optional).
+   * How to trim the product name at the first of: spaced hyphen ` - `, Unicode en/em dash (`–` `—`), other hyphen-like characters, `~`, `.`, or `|` (whitespace around the character is optional).
    * - `before` — keep only text before that delimiter (e.g. "Velvet Vanilla - 50ml" → "Velvet Vanilla").
    * - `after` — keep only text after that delimiter (e.g. "Brand - Night Rose" → "Night Rose").
    * - `none` — keep the full title.

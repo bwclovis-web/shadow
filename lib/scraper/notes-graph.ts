@@ -5,7 +5,7 @@
  * and returns PerfumeCsvRecord[] with openNotes / heartNotes / baseNotes
  * extracted from each product description using an LLM.
  *
- * Optional: clean product names (take before first of ` - `, `~`, `.`, `|`, strip numbers), strip
+ * Optional: clean product names (take before first of ` - ` / en or em dash, `~`, `.`, `|`, strip numbers), strip
  * extracted notes from description text, and generate film noir themed
  * descriptions from notes + original prose.
  *
@@ -23,7 +23,7 @@ import { isDisplayableScentNote } from "@/utils/validation/note-validation.serve
 
 /** Options for title cleaning and description generation. */
 export interface ScraperPipelineOptions {
-  /** Trim at the first ` - `, `~`, `.`, or `|`: before, after, or keep full title (`none`). */
+  /** Trim at the first ` - ` / `–` / `—` (ASCII or Unicode dashes), `~`, `.`, or `|`: before, after, or keep full title (`none`). */
   titleDashSegment?: TitleDashSegment
   /** @deprecated Use `titleDashSegment: "before"` instead. */
   titleTakeBeforeDash?: boolean
@@ -124,7 +124,9 @@ const resolveNotesSource = (item: ScrapedItem): string => {
 // Title cleaning (no LLM)
 // ---------------------------------------------------------------------------
 
-const TITLE_SEGMENT_DELIMITER = /\s*[-~.|]\s*/
+/** Hyphen-minus plus common shop-title dashes (en/em dash, hyphen, minus sign) so "Name – 50ml" splits like "Name - 50ml". */
+const TITLE_SEGMENT_DELIMITER =
+  /\s*[-\u2010\u2011\u2012\u2013\u2014\u2212~.|]\s*/
 const TITLE_COLON_DELIMITER = /\s*:\s*/
 
 /** Keep only the part before the first segment delimiter and trim. */
@@ -418,6 +420,9 @@ const JUNK_NOTE_PATTERNS: RegExp[] = [
   /\bhints?\s+of\b/i,
   /\bcreating a rich\b/i,
   /\bclothing\b/i,
+  // Shopify / theme copy: cookie banners, vault promos, prose fragments mis-parsed as notes
+  /\bmoments?\s+of\s+pause\b/i,
+  /\bentering\s+the\s+vault\b/i,
 ]
 
 /** Junk checks for typical short notes — excludes the punctuation rule so accord phrases with () survive. */
@@ -530,6 +535,8 @@ function extractInlineLayeredNotes(text: string): {
  * still bleeds PDP tail into note lists (each is tested with `.match()` — no `/g` flag).
  */
 const FLAT_NOTE_PROSE_BOUNDARY_RES: RegExp[] = [
+  // Shopify PDP specs after "Featured notes: …" (same paragraph when whitespace-collapsed)
+  /\s+(?:Concentration|Volume)\s*:/i,
   /\s+(?:Sweet |Sipping |Read about|Beneath |Among |Caught |In the |A sudden |A whisper |A worn |A dusty |A low |A shimmering |A porcelain |A delicate |Fingers |Rain-soaked |Cloaked |Under the |Twist-top |Variation:|Join |Sign up|Select |Add to |Image \d+\s+of\s+\d+|Shop all|Skip to)\b/i,
   /\s+(?:Available in |Originally (?:a |the )?|Our oil perfume|NOTE:|Packaging:|How to use|Shipping:|Return [Pp]olicy|Subscribe(?:\s+now|\s+today)?|You may also|Customers also|Related products|Complete the look|Pairs well|Also available|More from|Write a review|Questions\?|Leave a review)\b/i,
   /\s+#{1,6}\s*(?:Ingredients|How to use|Shipping|Returns?|FAQ|Details|Directions|Warnings?|Disclaimer|Specifications|Size [Gg]uide|Care [Ii]nstructions)\b/i,
@@ -636,6 +643,16 @@ function extractNotesFromStructuredText(text: string): {
   const source = splitGluedLayerLabels(normalizeImplicitLayerColons(collapsed))
   if (!source) return empty
 
+  /**
+   * Merchant labeled lists (Featured/Key/Scent notes include, etc.) beat inline “Top:/Heart:”
+   * heuristics that can misfire on prose (“warm notes of…”). Prefer the flat list whenever
+   * extraction finds enough items (matches merge skip threshold).
+   */
+  const authoritativeFlat = extractFlatNotes(source)
+  if (authoritativeFlat.length >= 5) {
+    return { openNotes: uniqueNotes(authoritativeFlat), heartNotes: [], baseNotes: [] }
+  }
+
   const inlineNotes = extractInlineLayeredNotes(source)
   if (inlineNotes.openNotes.length || inlineNotes.heartNotes.length || inlineNotes.baseNotes.length) {
     return inlineNotes
@@ -698,12 +715,12 @@ function extractNotesFromStructuredText(text: string): {
   }
 
   if (flatNotes.length > 0) {
-    const alreadyLayered = new Set([
-      ...layeredResult.openNotes,
-      ...layeredResult.heartNotes,
-      ...layeredResult.baseNotes,
-    ])
-    const toAdd = flatNotes.filter(n => !alreadyLayered.has(n))
+    const alreadyLayered = new Set(
+      [...layeredResult.openNotes, ...layeredResult.heartNotes, ...layeredResult.baseNotes].map(n =>
+        n.trim().toLowerCase(),
+      ),
+    )
+    const toAdd = flatNotes.filter(n => !alreadyLayered.has(n.trim().toLowerCase()))
     if (toAdd.length > 0) {
       return {
         openNotes: uniqueNotes([...layeredResult.openNotes, ...toAdd]),
@@ -879,6 +896,7 @@ Return ONLY JSON: {"openNotes": string[], "heartNotes": string[], "baseNotes": s
 Rules:
 - Every note in the provided structured arrays MUST still appear in your output (same spelling intent; lowercase).
 - Do NOT add new notes from evocative marketing prose, noir-style storytelling, or mood copy. Only add a note if the full text contains another explicit labeled note list or clear Top/Heart/Base section naming that material.
+- Do NOT output any material that is not already named in the structured arrays or in an explicit labeled note line in the full text (e.g. "Featured notes:", "Notes:"). Re-layer only; never invent plum/rose/musk from figurative sentences.
 - If structured openNotes is non-empty and heartNotes and baseNotes are both empty (flat list), keep all notes in openNotes unless the full text explicitly defines a pyramid — do not invent heart/base layers from adjectives in prose.
 - No duplicates across layers, no marketing sentences, lowercase only.
 - Carrier oils, gemstones, and SKU/meta lines are not notes.
@@ -889,6 +907,32 @@ Rules:
 const noteLayerCount = (n: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] }): number =>
   n.openNotes.length + n.heartNotes.length + n.baseNotes.length
 
+/** Regex + structured materials the merge step is allowed to keep; blocks LLM “invention” from marketing prose. */
+const buildLowercaseNoteUniverse = (
+  structured: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] },
+  fullText: string,
+): Set<string> => {
+  const u = new Set<string>()
+  for (const n of [...structured.openNotes, ...structured.heartNotes, ...structured.baseNotes]) {
+    const k = n.trim().toLowerCase()
+    if (k) u.add(k)
+  }
+  for (const n of extractFlatNotes(fullText)) {
+    const k = n.trim().toLowerCase()
+    if (k) u.add(k)
+  }
+  return u
+}
+
+const filterLayersToUniverse = (
+  layers: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] },
+  universe: Set<string>,
+): { openNotes: string[]; heartNotes: string[]; baseNotes: string[] } => ({
+  openNotes: layers.openNotes.filter(n => universe.has(n.trim().toLowerCase())),
+  heartNotes: layers.heartNotes.filter(n => universe.has(n.trim().toLowerCase())),
+  baseNotes: layers.baseNotes.filter(n => universe.has(n.trim().toLowerCase())),
+})
+
 const mergeStructuredNotesWithLlm = async (
   llm: ChatOpenAI,
   structured: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] },
@@ -896,6 +940,7 @@ const mergeStructuredNotesWithLlm = async (
   productName: string,
 ): Promise<{ openNotes: string[]; heartNotes: string[]; baseNotes: string[] }> => {
   if (noteLayerCount(structured) === 0 || !fullText?.trim()) return structured
+  const universe = buildLowercaseNoteUniverse(structured, fullText)
   const user = `Product: "${productName.slice(0, 200)}"
 
 Structured notes already found (you must keep all of these; add more if the text mentions others):
@@ -911,14 +956,15 @@ Full product text:
       { role: "user", content: user },
     ])
     const merged = parseNotesFromLlmResponse(response.content)
+    const mergedSanitized = filterLayersToUniverse(merged, universe)
     const before = noteLayerCount(structured)
-    const after = noteLayerCount(merged)
+    const after = noteLayerCount(mergedSanitized)
     if (after === 0 || after < Math.ceil(before * 0.5)) return structured
-    // Never drop structured layer content when the model omits a tier (common with base).
+    // Union only materials that already appeared in structured or regex flat extraction — never raw LLM hallucinations.
     return {
-      openNotes: uniqueNotes([...structured.openNotes, ...merged.openNotes]),
-      heartNotes: uniqueNotes([...structured.heartNotes, ...merged.heartNotes]),
-      baseNotes: uniqueNotes([...structured.baseNotes, ...merged.baseNotes]),
+      openNotes: uniqueNotes([...structured.openNotes, ...mergedSanitized.openNotes]),
+      heartNotes: uniqueNotes([...structured.heartNotes, ...mergedSanitized.heartNotes]),
+      baseNotes: uniqueNotes([...structured.baseNotes, ...mergedSanitized.baseNotes]),
     }
   } catch {
     return structured
@@ -1082,7 +1128,7 @@ Write a unique, film noir styled description for this perfume (2–3 sentences).
 // We also flag known non-English perfumery words explicitly.
 const KNOWN_NON_ENGLISH_NOTE_WORDS = new Set([
   "musc", "vanille", "ambre", "bois", "encens", "tabac", "cèdre", "cedre",
-  "santal", "feve", "fève", "oud", "fleur", "violette", "neroli",
+  "santal", "feve", "fève", "oud", "fleur", "violette",
   "trandafir", "mosc", "vanilie", "lemn", "iasomie", "ambra",
   "rosa", "ámbar", "sándalo", "madera", "almizle",
 ])
@@ -1172,6 +1218,19 @@ type NotesLayers = { openNotes: string[]; heartNotes: string[]; baseNotes: strin
 const preferAuthoritativeFlatNoteList = (notes: NotesLayers, flatAuth: string[]): NotesLayers => {
   if (flatAuth.length < 3) return notes
 
+  /**
+   * Long labeled lists ("Featured notes:", "Key notes:", etc.) are merchant-authored. When regex
+   * extracts many materials, use that list as openNotes only — do not keep LLM/merge pollution
+   * (e.g. plum/rose/honey echoed from marketing prose) mixed into base/heart.
+   */
+  if (flatAuth.length >= 7) {
+    return {
+      openNotes: uniqueNotes(flatAuth),
+      heartNotes: [],
+      baseNotes: [],
+    }
+  }
+
   const current = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
   if (current.length === 0) {
     return {
@@ -1228,6 +1287,7 @@ const processSingleProductPhase1 = async (
   )
   const notesSource = resolveNotesSource(item)
   try {
+    const flatAuthEarly = extractFlatNotes(notesSource)
     let notes = extractNotesFromStructuredText(notesSource)
     const totalParsedDirectly = notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
 
@@ -1241,8 +1301,12 @@ const processSingleProductPhase1 = async (
       notes.openNotes.length >= 2 &&
       notes.heartNotes.length === 0 &&
       notes.baseNotes.length === 0
+    /** Strong labeled list (Featured/Key notes, etc.) — skip LLM merge that reinvents pyramid from prose. */
+    const hasStrongFlatAuthoritativeList = flatAuthEarly.length >= 5
     const skipStructuredLlmMerge =
-      (layersWithParsedNotes === 3 && parsedNoteCount >= 5) || flatListingOnly
+      (layersWithParsedNotes === 3 && parsedNoteCount >= 5) ||
+      flatListingOnly ||
+      hasStrongFlatAuthoritativeList
 
     if (totalParsedDirectly === 0 && notesSource?.trim()) {
       throwIfAborted(sig)

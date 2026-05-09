@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react"
+import React, {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
 
 import { styleMerge } from "@/utils/styleUtils"
 
@@ -23,14 +29,46 @@ export interface PerformanceTracerProps {
   autoStart?: boolean
 }
 
+/** Stable default so `categories` is not a new array every render when omitted. */
+const DEFAULT_TRACE_CATEGORIES: string[] = [
+  "navigation",
+  "resource",
+  "paint",
+  "measure",
+  "mark",
+]
+
+/** Skips mark/measure entries that React/Next emit during render/commit and would feedback into this UI. */
+const shouldIgnoreTraceEntry = (entry: PerformanceEntry): boolean => {
+  const t = entry.entryType
+  if (t !== "mark" && t !== "measure") {
+    return false
+  }
+  const n = entry.name
+  if (n.includes("\u269B")) {
+    return true
+  }
+  if (/\b(Fiber|fiber)\b/.test(n)) {
+    return true
+  }
+  if (/^(React|__REACT|Scheduler|commit|Commit|hydrate|Hydration)/i.test(n)) {
+    return true
+  }
+  if (/\(HostInstance|Concurrent|Transition\)/.test(n)) {
+    return true
+  }
+  if (/\bnext\.js\b/i.test(n)) {
+    return true
+  }
+  return false
+}
+
 const PerformanceTracer: React.FC<PerformanceTracerProps> = ({
   enabled = process.env.NODE_ENV === "development",
   showUI = true,
   className = "",
   maxEvents = 1000,
-  categories = [
-"navigation", "resource", "paint", "measure", "mark"
-],
+  categories = DEFAULT_TRACE_CATEGORIES,
   autoStart = true,
 }) => {
   const [events, setEvents] = useState<TraceEvent[]>([])
@@ -43,6 +81,29 @@ const PerformanceTracer: React.FC<PerformanceTracerProps> = ({
   const [selectedEvent, setSelectedEvent] = useState<TraceEvent | null>(null)
   const observerRef = useRef<PerformanceObserver | null>(null)
   const eventCounterRef = useRef(0)
+  const maxEventsRef = useRef(maxEvents)
+  maxEventsRef.current = maxEvents
+  const tracingActiveRef = useRef(false)
+  const pendingBatchRef = useRef<TraceEvent[]>([])
+  const flushScheduledRef = useRef(false)
+  const rafIdRef = useRef<number | null>(null)
+
+  const flushPendingObserverEvents = useCallback(() => {
+    flushScheduledRef.current = false
+    rafIdRef.current = null
+    if (!tracingActiveRef.current) {
+      pendingBatchRef.current = []
+      return
+    }
+    const batch = pendingBatchRef.current
+    pendingBatchRef.current = []
+    if (batch.length === 0) {
+      return
+    }
+    startTransition(() => {
+      setEvents(prev => [...batch, ...prev].slice(0, maxEventsRef.current))
+    })
+  }, [])
 
   const startTracing = useCallback(() => {
     if (
@@ -56,12 +117,20 @@ const PerformanceTracer: React.FC<PerformanceTracerProps> = ({
     setIsTracing(true)
     setEvents([])
     eventCounterRef.current = 0
+    tracingActiveRef.current = true
+    pendingBatchRef.current = []
+    flushScheduledRef.current = false
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current)
+      rafIdRef.current = null
+    }
 
     try {
       observerRef.current = new PerformanceObserver(list => {
         const newEvents = list
           .getEntries()
           .filter(entry => categories.includes(entry.entryType))
+          .filter(entry => !shouldIgnoreTraceEntry(entry))
           .map((entry: PerformanceEntry): TraceEvent => {
             const event: TraceEvent = {
               id: `event-${++eventCounterRef.current}`,
@@ -117,20 +186,40 @@ const PerformanceTracer: React.FC<PerformanceTracerProps> = ({
             return event
           })
 
-        setEvents(prev => {
-          const updated = [...newEvents, ...prev]
-          return updated.slice(0, maxEvents)
-        })
+        if (newEvents.length === 0) {
+          return
+        }
+        pendingBatchRef.current.push(...newEvents)
+        if (!flushScheduledRef.current) {
+          flushScheduledRef.current = true
+          rafIdRef.current = requestAnimationFrame(() => {
+            flushPendingObserverEvents()
+          })
+        }
       })
 
       observerRef.current.observe({ entryTypes: categories })
     } catch (error) {
       console.error("Error starting performance tracing:", error)
+      tracingActiveRef.current = false
+      pendingBatchRef.current = []
+      flushScheduledRef.current = false
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current)
+        rafIdRef.current = null
+      }
       setIsTracing(false)
     }
-  }, [enabled, categories, maxEvents])
+  }, [enabled, categories, flushPendingObserverEvents])
 
   const stopTracing = useCallback(() => {
+    tracingActiveRef.current = false
+    pendingBatchRef.current = []
+    flushScheduledRef.current = false
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current)
+      rafIdRef.current = null
+    }
     if (observerRef.current) {
       observerRef.current.disconnect()
       observerRef.current = null

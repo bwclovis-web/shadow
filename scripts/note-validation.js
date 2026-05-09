@@ -21,12 +21,16 @@ const STOPWORDS = [
   'other', 'various', 'etc', 'new', 'old', 'same', 'different', 'many', 'some', 'more',
   'most', 'all', 'any', 'each', 'every', 'both', 'such', 'what', 'which', 'who',
   'vegan', 'clothing',
+  'padding', 'margin', 'border',
+  'again', 'lively',
 ]
 
 const PLACEHOLDER_PHRASES = [
   'few', 'no name', 'new name', 'unknown', 'unnamed', 'untitled', 'tbd', 'todo', 'n/a', 'none',
   'to be determined', 'not applicable', 'placeholder', 'test', 'example', 'sample', 'delete me',
   'test update note', 'test note', 'update note', 'null', 'nul',
+  'to moments of pause',
+  'entering the vault',
 ]
 
 const TRAILING_FRAGMENT_REGEX = /\s+(of|in|with|to|for|and|or|from|by|as|at|on|that|which|who|when|where|a|an|the)$/i
@@ -83,6 +87,7 @@ const KNOWN_BAD_PATTERNS = [
   /\bhints?\s+of\b/i,
   /\bcreating a rich\b/i,
   /\d+(?:rem|em|ch|vw|vh|px|pt)\b/i,
+  /\bpatchouli\s+a\s+chocolate\s+orange\b/i,
   ...INCI_LIKE_PATTERNS,
 ]
 

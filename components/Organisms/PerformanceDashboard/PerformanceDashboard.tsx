@@ -35,18 +35,21 @@ interface PerformanceData {
   timestamp: number
 }
 
+/** Stable default — inline `thresholds = { ... }` in props would be a new object every render and retrigger effects. */
+const DEFAULT_THRESHOLDS: NonNullable<PerformanceDashboardProps["thresholds"]> = {
+  lcp: 2500,
+  fid: 100,
+  cls: 0.1,
+  fcp: 1800,
+  tti: 3800,
+}
+
 const PerformanceDashboard = ({
   enabled = process.env.NODE_ENV === "development",
   showUI = true,
   className = "",
   refreshInterval = 5000,
-  thresholds = {
-    lcp: 2500,
-    fid: 100,
-    cls: 0.1,
-    fcp: 1800,
-    tti: 3800,
-  },
+  thresholds = DEFAULT_THRESHOLDS,
 }: PerformanceDashboardProps) => {
   const [performanceData, setPerformanceData] = useState<PerformanceData | null>(null)
   const [isCollecting, setIsCollecting] = useState(false)

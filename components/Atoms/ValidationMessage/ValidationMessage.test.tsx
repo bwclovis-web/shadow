@@ -86,7 +86,7 @@ describe("ValidationMessage", () => {
       const { container } = render(<ValidationMessage error="Error message" />)
 
       const alert = container.querySelector('[role="alert"]')
-      expect(alert).toHaveClass("bg-red-50", "border-red-200", "text-red-800")
+      expect(alert).toHaveClass("bg-red-500", "border-red-800", "text-white")
     })
 
     it("should apply success styling", () => {
@@ -167,14 +167,14 @@ describe("ValidationMessage", () => {
       const { container } = render(<ValidationMessage error="Error message" />)
 
       const svg = container.querySelector("svg")
-      expect(svg).toHaveClass("text-red-500")
+      expect(svg).toHaveClass("text-white")
     })
 
     it("should show correct icons for each type", () => {
       const { rerender, container } = render(<ValidationMessage error="Error" />)
       let svg = container.querySelector("svg")
       expect(svg).toBeInTheDocument()
-      expect(svg).toHaveClass("text-red-500")
+      expect(svg).toHaveClass("text-white")
 
       rerender(<ValidationMessage success="Success" />)
       svg = container.querySelector("svg")

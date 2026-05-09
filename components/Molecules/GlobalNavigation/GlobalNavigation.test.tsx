@@ -4,6 +4,12 @@ import { describe, expect, it, vi } from "vitest"
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/",
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    refresh: vi.fn(),
+  }),
 }))
 
 vi.mock("next-view-transitions", () => ({

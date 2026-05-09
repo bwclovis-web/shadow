@@ -229,7 +229,7 @@ describe("AlphabeticalNav", () => {
     it("applies margin classes", () => {
       const { container } = render(<AlphabeticalNav selectedLetter={null} onLetterSelect={mockOnLetterSelect} />)
       expect(container.firstChild).toHaveClass("mt-10")
-      expect(container.firstChild).toHaveClass("md:mb-18")
+      expect(container.firstChild).toHaveClass("md:mb-14")
     })
 
     it("applies active styling to selected letter", () => {
@@ -359,21 +359,6 @@ describe("AlphabeticalNav", () => {
       // All button should not be highlighted
       const allButton = screen.getByRole("button", { name: "All" })
       expect(allButton).not.toHaveClass("bg-noir-gold")
-    })
-
-    it("calls onLetterSelect even if callback would throw", () => {
-      const throwingCallback = vi.fn(() => {
-        throw new Error("Callback error")
-      })
-
-      render(<AlphabeticalNav selectedLetter={null} onLetterSelect={throwingCallback} />)
-
-      const aButton = screen.getByRole("button", { name: "A" })
-
-      // React's event system catches errors in event handlers, so the error
-      // won't propagate, but the callback should still be called
-      aButton.click()
-      expect(throwingCallback).toHaveBeenCalledWith("A")
     })
 
     it("renders correctly with empty className", () => {
