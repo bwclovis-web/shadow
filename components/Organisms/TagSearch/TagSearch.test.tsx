@@ -42,7 +42,8 @@ describe("TagSearch", () => {
 
     expect(screen.getByText("Vanilla")).toBeTruthy()
     expect(screen.getByText("Rose")).toBeTruthy()
-    expect(screen.getAllByText("×")).toHaveLength(2)
+    expect(screen.getByTitle("Remove Vanilla")).toBeTruthy()
+    expect(screen.getByTitle("Remove Rose")).toBeTruthy()
   })
 
   it("calls onChange when a tag is removed", () => {

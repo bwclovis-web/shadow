@@ -14,16 +14,11 @@ import {
 import { createPortal } from "react-dom"
 
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
-import Input from "@/components/Atoms/Input/Input"
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
 import { highlightSearchTerm } from "@/utils/highlightSearchTerm"
 import { styleMerge } from "@/utils/styleUtils"
 
-import {
-  type TypeaheadSurface,
-  typeaheadItemRowClasses,
-  typeaheadPanelClasses,
-} from "./search-typeahead-surfaces"
+import { typeaheadItemRowClass, typeaheadPanelClass } from "./search-typeahead-surfaces"
 
 export type TypeaheadItem = { id: string; name: string }
 
@@ -42,12 +37,7 @@ export type SearchTypeaheadProps<T extends TypeaheadItem = TypeaheadItem> = {
   onSelect?: (item: T) => void
   getOptionHref?: (item: T) => string
   optionMode?: "link" | "action"
-  placement: "inline" | "portal"
-  portalContainer?: Element | DocumentFragment | null
-  surface: TypeaheadSurface
   inputClassName?: string
-  useShadedInput?: boolean
-  inputWrapperClassName?: string
   messages: {
     loading: string
     empty: string
@@ -63,25 +53,24 @@ export type SearchTypeaheadProps<T extends TypeaheadItem = TypeaheadItem> = {
   "data-testid"?: string
 }
 
-function useTypeaheadPosition(
-  placement: "inline" | "portal",
+const useTypeaheadPosition = (
   open: boolean,
   inputRef: React.RefObject<HTMLInputElement | null>
-) {
+) => {
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 })
 
   useLayoutEffect(() => {
-    if (placement !== "portal" || !open || !inputRef.current) return
+    if (!open || !inputRef.current) return
     const rect = inputRef.current.getBoundingClientRect()
     setCoords({
       top: rect.bottom,
       left: rect.left,
       width: rect.width,
     })
-  }, [placement, open, inputRef])
+  }, [open])
 
   useEffect(() => {
-    if (placement !== "portal" || !open) return
+    if (!open) return
     const onResize = () => {
       if (!inputRef.current) return
       const rect = inputRef.current.getBoundingClientRect()
@@ -97,7 +86,7 @@ function useTypeaheadPosition(
       window.removeEventListener("scroll", onResize, true)
       window.removeEventListener("resize", onResize)
     }
-  }, [placement, open, inputRef])
+  }, [open])
 
   return coords
 }
@@ -117,12 +106,7 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
   onSelect,
   getOptionHref,
   optionMode,
-  placement,
-  portalContainer,
-  surface,
   inputClassName,
-  useShadedInput = false,
-  inputWrapperClassName,
   messages,
   footerSlot,
   clearInputOnSelect = false,
@@ -170,7 +154,7 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
   }, [results, isLoading, error])
 
   const selectableCount = results.length
-  const coords = useTypeaheadPosition(placement, listOpen, inputRef)
+  const coords = useTypeaheadPosition(listOpen, inputRef)
 
   const clearQuery = useCallback((clearInput = true, closeList = true) => {
     clearResults()
@@ -277,11 +261,6 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
     setSearchValue(e.target.value)
   }
 
-  const panelBase = typeaheadPanelClasses[surface]
-  const itemRow = typeaheadItemRowClasses[surface]
-  const mutedText = surface === "dark" ? "text-stone-400" : "text-gray-500"
-  const pulseText = surface === "dark" ? "text-noir-gold-300" : undefined
-
   const listbox = (
     <ul
       ref={listRef}
@@ -289,23 +268,16 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
       role="listbox"
       aria-label={label}
       tabIndex={-1}
-      className={styleMerge(
-        panelBase,
-        placement === "portal" ? "fixed z-[99999]" : "absolute left-0 right-0 z-50 mt-0"
-      )}
-      style={
-        placement === "portal"
-          ? {
-              top: coords.top,
-              left: coords.left,
-              width: coords.width,
-            }
-          : undefined
-      }
+      className={styleMerge(typeaheadPanelClass, "fixed z-[99999]")}
+      style={{
+        top: coords.top,
+        left: coords.left,
+        width: coords.width,
+      }}
     >
       {isLoading && (
         <li className="p-2 text-center" role="presentation">
-          <span className={styleMerge("animate-pulse", pulseText)}>
+          <span className="animate-pulse">
             {messages.loading}
           </span>
         </li>
@@ -323,7 +295,7 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
           const highlighted = highlightSearchTerm(item.name, searchValue)
 
           const rowClass = styleMerge(
-            itemRow,
+            typeaheadItemRowClass,
             isActive && "bg-noir-gold/20 ring-1 ring-inset ring-noir-gold/40"
           )
 
@@ -372,7 +344,7 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
         !error &&
         results.length === 0 && (
           <li
-            className={styleMerge("p-2 text-center", mutedText)}
+            className="p-2 text-center text-gray-500"
             role="presentation"
           >
             {messages.empty}
@@ -398,59 +370,30 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
     "aria-haspopup": "listbox" as const,
   }
 
-  const inputEl = useShadedInput ? (
-    <Input
-      shading
-      autoComplete={autoComplete}
-      inputId={inputId}
-      name={name}
-      value={searchValue}
-      onChange={onChange}
-      onKeyDown={onKeyDown}
-      placeholder={placeholder}
-      disabled={disabled}
-      inputRef={inputRef}
-      className={inputWrapperClassName}
-      inputType="text"
-      {...comboboxA11y}
-    />
-  ) : (
-    <input
-      ref={inputRef}
-      type="text"
-      id={inputId}
-      name={name}
-      autoComplete={autoComplete}
-      disabled={disabled}
-      {...comboboxA11y}
-      value={searchValue}
-      onChange={onChange}
-      onKeyDown={onKeyDown}
-      placeholder={placeholder}
-      className={inputClassName}
-      data-testid={dataTestId}
-    />
-  )
-
   return (
-    <div
-      ref={rootRef}
-      className={styleMerge(
-        "relative w-full",
-        placement === "inline" && "isolate"
-      )}
-    >
+    <div ref={rootRef} className="relative w-full">
       <label
         htmlFor={inputId}
         className={styleMerge("block-label", labelClassName)}
       >
         {label}
       </label>
-      {inputEl}
-      {listOpen &&
-        (placement === "portal"
-          ? createPortal(listbox, portalContainer ?? document.body)
-          : listbox)}
+      <input
+        ref={inputRef}
+        type="text"
+        id={inputId}
+        name={name}
+        autoComplete={autoComplete}
+        disabled={disabled}
+        {...comboboxA11y}
+        value={searchValue}
+        onChange={onChange}
+        onKeyDown={onKeyDown}
+        placeholder={placeholder}
+        className={inputClassName}
+        data-testid={dataTestId}
+      />
+      {listOpen && createPortal(listbox, document.body)}
     </div>
   )
 }

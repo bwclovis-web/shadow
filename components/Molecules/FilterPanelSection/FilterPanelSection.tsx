@@ -9,9 +9,7 @@ export type FilterPanelSectionProps = {
   className?: string
 }
 
-/**
- * Titled block for filter sidebars (CF-010); typography matches noir / exchange surfaces.
- */
+
 export const FilterPanelSection: FC<FilterPanelSectionProps> = ({
   title,
   description,
@@ -19,7 +17,7 @@ export const FilterPanelSection: FC<FilterPanelSectionProps> = ({
   className,
 }) => (
   <section className={styleMerge("space-y-2", className)}>
-    <h3 className="text-sm font-semibold uppercase tracking-wide text-noir-gold">
+    <h3 className="uppercase">
       {title}
     </h3>
     {description ? (

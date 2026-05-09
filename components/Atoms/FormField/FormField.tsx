@@ -32,6 +32,30 @@ type ChildProps = {
   disabled?: boolean
   "aria-invalid"?: boolean
   "aria-describedby"?: string
+  "aria-labelledby"?: string
+  inputId?: string
+  selectId?: string
+  id?: string
+  action?: { id?: string }
+}
+
+const getControlIdFromChild = (child: ReactElement<ChildProps>): string | undefined => {
+  const p = child.props
+  if (typeof p.inputId === "string" && p.inputId.length > 0) return p.inputId
+  if (typeof p.selectId === "string" && p.selectId.length > 0) return p.selectId
+  if (typeof p.id === "string" && p.id.length > 0) return p.id
+  const aid = p.action?.id
+  if (typeof aid === "string" && aid.length > 0) return aid
+  return undefined
+}
+
+const mergeAriaLabelledBy = (
+  existing: string | undefined,
+  addition: string | undefined
+): string | undefined => {
+  if (!addition) return existing
+  if (!existing) return addition
+  return `${addition} ${existing}`
 }
 
 const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
@@ -54,6 +78,7 @@ const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
     ref
   ) => {
     const helpTextId = useId()
+    const labelFallbackId = useId()
     const state = {
       hasError: !!error,
       hasSuccess: !!success,
@@ -78,6 +103,9 @@ const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
       .filter(Boolean)
       .join(" ")
 
+    const controlId = getControlIdFromChild(childElement)
+    const useLabelledByFallback = Boolean(label) && !controlId
+
     return (
       <div ref={ref} className={`space-y-1 ${className}`}>
         <FormFieldLabel
@@ -85,6 +113,8 @@ const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
           required={required}
           disabled={disabled}
           className={labelClassName}
+          htmlFor={label && controlId ? controlId : undefined}
+          id={useLabelledByFallback ? labelFallbackId : undefined}
         />
 
         <div className={`relative ${fieldClassName}`}>
@@ -93,6 +123,14 @@ const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
             disabled,
             "aria-invalid": state.hasError,
             "aria-describedby": ariaDescribedBy,
+            ...(useLabelledByFallback
+              ? {
+                  "aria-labelledby": mergeAriaLabelledBy(
+                    childElement.props["aria-labelledby"],
+                    labelFallbackId
+                  ),
+                }
+              : {}),
           })}
 
           {shouldShowValidationIcon && (

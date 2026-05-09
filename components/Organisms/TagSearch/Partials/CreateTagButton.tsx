@@ -11,21 +11,17 @@ type CreateTagButtonProps = {
   setOpenDropdown: (open: boolean) => void
   /** Must be unique vs the main tag search input (e.g. `${inputId}-create`). */
   createInputId: string
-  surface?: "light" | "dark"
 }
 
 const CreateTagButton = ({
   action,
   setOpenDropdown,
   createInputId,
-  surface = "light",
 }: CreateTagButtonProps) => {
   const [tagValue, setTagValue] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { addToHeaders, getTokenWithFallback } = useCSRF()
-
-  const isDark = surface === "dark"
 
   const handleCreateTag = async () => {
     const trimmed = tagValue.trim()
@@ -75,31 +71,15 @@ const CreateTagButton = ({
   }
 
   return (
-    <div
-      className={styleMerge(
-        "flex flex-col gap-3 rounded-lg border p-3",
-        isDark
-          ? "border-stone-600/80 bg-stone-900/50"
-          : "border-stone-200/90 bg-white/60"
-      )}
-    >
+    <div className="flex flex-col gap-3 rounded-lg border border-noir-gold/50 bg-noir-black/60 p-3">
       <label
         htmlFor={createInputId}
-        className={styleMerge(
-          "text-sm font-semibold tracking-wide",
-          isDark ? "text-noir-gold-100" : "text-stone-700"
-        )}
+        className="text-sm font-semibold tracking-wide text-noir-gold-100"
       >
         Create new tag
       </label>
       {error && (
-        <p
-          className={styleMerge(
-            "text-sm",
-            isDark ? "text-red-400" : "text-red-600"
-          )}
-          role="alert"
-        >
+        <p className="text-sm text-red-400" role="alert">
           {error}
         </p>
       )}
@@ -111,11 +91,8 @@ const CreateTagButton = ({
         value={tagValue}
         onChange={evt => setTagValue(evt.target.value)}
         className={styleMerge(
-          "w-full rounded-md border px-3 py-2 text-sm transition-colors",
-          "focus:border-transparent focus:outline-none focus:ring-2 focus:ring-noir-gold/80 focus:ring-offset-0",
-          isDark
-            ? "border-stone-600 bg-stone-950/80 text-noir-gold-100 placeholder:text-stone-500"
-            : "border-stone-300 bg-white text-stone-900 placeholder:text-stone-400"
+          "w-full rounded-md border border-noir-gold/40 bg-noir-black/80 px-3 py-2 text-sm text-noir-gold-100 placeholder:text-noir-gold-100/50 transition-colors",
+          "focus:border-noir-gold focus:outline-none focus:ring-2 focus:ring-noir-gold/50 focus:ring-offset-0"
         )}
         placeholder="Type a name…"
       />

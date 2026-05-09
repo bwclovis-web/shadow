@@ -64,7 +64,7 @@ const DataDisplaySection = ({
 
   if (!selectedLetter && data.length === 0) {
     return (
-      <div className="inner-container my-6 text-center py-12">
+      <div className="inner-container text-center pb-6">
         <h2 className="text-xl text-noir-gold mb-4">
           {tDataDisplay("heading", { itemName })}
         </h2>

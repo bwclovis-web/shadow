@@ -239,14 +239,13 @@ const ExchangeTradersModalContent = ({
                     {up.available} ml · {typeLabel}
                   </span>
                 </p>
-                {showPrice && up.price ? (
-                  <p className="mt-1">
-                    <span className="text-noir-gold-500">
-                      {tProfile("price")}:
-                    </span>{" "}
-                    <span className="text-noir-gold-100">${up.price}/ml</span>
-                  </p>
-                ) : null}
+                <div className="flex items-center justify-between">
+                <p className="mt-1">
+                  <span className="text-noir-gold-500">
+                    {tProfile("preference")}:
+                  </span>{" "}
+                  <span className="text-noir-gold-100">{prefLabel}</span>
+                </p>
                 {showTradePrice && up.tradePrice ? (
                   <p className="mt-1">
                     <span className="text-noir-gold-500">
@@ -257,18 +256,22 @@ const ExchangeTradersModalContent = ({
                     </span>
                   </p>
                 ) : null}
-                <p className="mt-1">
-                  <span className="text-noir-gold-500">
-                    {tProfile("preference")}:
-                  </span>{" "}
-                  <span className="text-noir-gold-100">{prefLabel}</span>
-                </p>
+                {showPrice && up.price ? (
+                  <p className="mt-1">
+                    <span className="text-noir-gold-500">
+                      {tProfile("price")}:
+                    </span>{" "}
+                    <span className="text-noir-gold-100">${up.price}/ml</span>
+                  </p>
+                ) : null}
+                
                 {up.tradeOnly ? (
                   <div className="mt-2 flex items-center gap-2 font-medium text-noir-gold-500">
                     <GiTrade size={18} className="shrink-0 fill-noir-gold-100" />
                     <span>{tProfile("tradeOnly")}</span>
                   </div>
-                ) : null}
+                ) : null}     
+                </div>
               </li>
             )
           })}

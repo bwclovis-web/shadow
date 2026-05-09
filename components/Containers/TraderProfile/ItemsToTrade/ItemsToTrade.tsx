@@ -40,7 +40,7 @@ const PerfumeHeader = ({ userPerfume }: { userPerfume: UserPerfumeI }) => (
 
 const PriceInfo = ({ userPerfume, t }: { userPerfume: UserPerfumeI; t: ReturnType<typeof useTranslations> }) => {
   return (
-    <p className="text-md text-noir-gold-100 mt-4">
+    <p className="text-sm text-noir-gold-100 mt-4 mb-1">
       {t("amount")}:{" "}
       <span className="text-noir-gold-500">{userPerfume.available || "0"}ml</span>
     </p>
@@ -50,20 +50,19 @@ const PriceInfo = ({ userPerfume, t }: { userPerfume: UserPerfumeI; t: ReturnTyp
 // Helper component for trade information
 const TradeInfo = ({ userPerfume, t }: { userPerfume: UserPerfumeI; t: ReturnType<typeof useTranslations> }) => {
   const tradePreference = userPerfume.tradePreference || "cash"
-  // Don't show price if tradeOnly is true
   const showPrice = !userPerfume.tradeOnly && (tradePreference === "cash" || tradePreference === "both") && userPerfume.price
   const showTradePrice = !userPerfume.tradeOnly && userPerfume.tradePrice
   
   return (
     <div className="text-sm text-noir-gold-300 space-y-1">
       {showPrice && (
-        <p className="font-medium text-noir-gold-100">
+        <p className="text-noir-gold-100">
           {t("price")}:
           <span className="text-noir-gold-500"> ${userPerfume.price}/ml</span>
         </p>
       )}
       {showTradePrice && (
-        <p className="font-medium text-noir-gold-100">
+        <p className="text-noir-gold-100">
           {t("tradePrice")}:
           <span className="text-noir-gold-500"> ${userPerfume.tradePrice}/ml</span>
         </p>
@@ -128,7 +127,7 @@ const ItemsToTrade = ({ userPerfume, trader, viewerId }: ItemsToTradeProps) => {
     key={userPerfume.id}
     className="mb-4 border bg-noir-gold/20 border-noir-gold rounded py-2 px-4"
   >
-    <div className="flex justify-between items-center">
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
     <PerfumeHeader userPerfume={userPerfume} />
     <div>
       <PriceInfo userPerfume={userPerfume} t={t} />

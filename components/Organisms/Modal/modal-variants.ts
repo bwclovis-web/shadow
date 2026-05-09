@@ -3,43 +3,27 @@ export type ModalBackgroundVariant = VariantProps<typeof modalBackgroundVariant>
 export type ModalContentVariant = VariantProps<typeof modalContentVariant>
 export type ModalProps = ModalBackgroundVariant & ModalContentVariant
 
-export const modalBackgroundVariant = cva(
-  ["fixed w-full h-full z-20 transition-all top-0 "],
-  {
-    compoundVariants: [
-      {
-        animateStart: "top",
-        background: "default",
-        className: "backdrop-blur-xs bg-noir-dark/50",
-      },
-    ],
-    defaultVariants: {
-      animate: false,
-      background: "default",
+export const modalBackgroundVariant = cva(["absolute inset-0 z-20 transition-all"], {
+  defaultVariants: {
+    animate: false,
+    background: "default",
+  },
+  variants: {
+    animate: {
+      false: "opacity-0",
+      true: "opacity-100 transition-all",
     },
-    variants: {
-      animate: {
-        false: "opacity-0",
-        true: "opacity-100 transition-all",
-      },
-      animateStart: {
-        bottom: "bottom-0",
-        left: "right-0",
-        panelLeft: "left-0 top-0",
-        top: "top-0",
-      },
-      background: {
-        default: "bg-noir-dark/50 backdrop-blur-xs",
-        light: "bg-white/80",
-        purple: "bg-purple-700/50",
-      },
+    background: {
+      default: "bg-noir-dark/50 backdrop-blur-xs",
+      light: "bg-white/80",
+      purple: "bg-purple-700/50",
     },
-  }
-)
+  },
+})
 
 export const modalContentVariant = cva(
   [
-    "fixed z-30 flex min-h-0 flex-col pointer-events-auto rounded py-2 pb-10 transition-all delay-300 duration-500 xl:p-8",
+    "z-30 flex min-h-0 flex-col pointer-events-auto rounded py-2 pb-10 transition-all delay-300 duration-500 xl:p-4",
   ],
   {
     compoundVariants: [
@@ -47,45 +31,45 @@ export const modalContentVariant = cva(
         animate: false,
         animateStart: "top",
         className:
-          "left-1/2 top-1/2 max-h-[min(90vh,100dvh)] w-full -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain",
+          "relative max-h-[min(90vh,100dvh)] w-full overflow-y-auto overscroll-contain",
       },
       {
         animate: true,
         animateStart: "top",
         className:
-          "left-1/2 top-1/2 max-h-[min(90vh,100dvh)] w-full -translate-x-1/2 -translate-y-1/2 overflow-y-auto overscroll-contain",
+          "relative max-h-[min(90vh,100dvh)] w-full overflow-y-auto overscroll-contain",
       },
       {
         animate: false,
         animateStart: "bottom",
-        className: "lg:translate-y-0 h-0",
+        className: "absolute lg:translate-y-0 h-0",
       },
       {
         animate: true,
         animateStart: "bottom",
-        className: "lg:translate-y-[150%] delay-200 top-[20%]",
+        className: "absolute lg:translate-y-[150%] delay-200 top-[20%]",
       },
       {
         animate: false,
         animateStart: "left",
-        className: "translate-x-[100%] h-0 h-full",
+        className: "absolute h-full translate-x-[100%]",
       },
       {
         animate: true,
         animateStart: "left",
-        className: "translate-x-[0%] delay-200",
+        className: "absolute translate-x-[0%] delay-200",
       },
       {
         animate: false,
         animateStart: "panelLeft",
         className:
-          "left-0 top-0 h-full max-h-[100dvh] w-full -translate-x-full overflow-y-auto overscroll-contain",
+          "absolute left-0 top-0 h-full max-h-[100dvh] w-full -translate-x-full overflow-y-auto overscroll-contain",
       },
       {
         animate: true,
         animateStart: "panelLeft",
         className:
-          "left-0 top-0 h-full max-h-[100dvh] w-full translate-x-0 overflow-y-auto overscroll-contain delay-200",
+          "absolute left-0 top-0 h-full max-h-[100dvh] w-full translate-x-0 overflow-y-auto overscroll-contain delay-200",
       },
     ],
     defaultVariants: {

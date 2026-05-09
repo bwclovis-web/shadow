@@ -4,6 +4,7 @@ import { type FC } from "react"
 
 import { Button } from "@/components/Atoms/Button/Button"
 import SearchTypeahead from "@/components/Molecules/SearchTypeahead"
+import { searchbarVariants } from "@/components/Molecules/SearchTypeahead/searchbar-variants"
 import { styleMerge } from "@/utils/styleUtils"
 
 export type HouseAutocompleteOption = { id: string; name: string }
@@ -42,7 +43,10 @@ export const HouseAutocomplete: FC<HouseAutocompleteProps> = ({
             type="text"
             readOnly
             value={selected.name}
-            className="w-full min-h-10 rounded-md border border-noir-light bg-noir-black/50 px-3 py-2 text-sm font-medium text-noir-gold-100"
+            className={styleMerge(
+              searchbarVariants({ size: "standard" }),
+              "cursor-default capitalize"
+            )}
           />
           <Button
             type="button"
@@ -64,15 +68,13 @@ export const HouseAutocomplete: FC<HouseAutocompleteProps> = ({
         listboxId={`${inputId}-listbox`}
         label={label}
         searchFn={searchFn}
-        minLength={1}
+        minLength={2}
         delay={300}
         defaultInputValue=""
         onSelect={(item: HouseAutocompleteOption) =>
           onSelect({ id: item.id, name: item.name })
         }
-        placement="inline"
-        surface="dark"
-        useShadedInput
+        inputClassName={searchbarVariants({ size: "standard" })}
         messages={{
           loading: "…",
           empty: "—",

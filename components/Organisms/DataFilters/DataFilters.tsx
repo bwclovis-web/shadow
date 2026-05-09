@@ -39,38 +39,36 @@ const DataFilters = ({
   const showTypeFilter = typeOptions != null && onTypeChange != null
 
   return (
-    <div className="p-4 pb-0 md:pb-4">
-      <div
-        className={styleMerge(
-          "space-y-6 inner-container py-4 flex flex-col gap-6 md:flex-row md:justify-between md:items-center noir-border",
-          className
-        )}
-      >
-        <div className="w-full lg:w-1/4 mb-0">
-          <SearchBar searchType={searchType} variant="animated" />
-        </div>
+    <div
+      className={styleMerge(
+        "inner-container lg:py-4 flex flex-col gap-6 lg:flex-row md:justify-between md:items-center noir-border mt-4 py-2",
+        className
+      )}
+    >
+      <div className="w-full mb-0">
+        <SearchBar searchType={searchType} variant="animated" />
+      </div>
 
-        <div className="flex gap-6 w-full md:w-3/4 justify-between md:justify-end items-end md:items-center">
-          {showTypeFilter && (
-            <Select
-              selectData={typeOptions}
-              action={onTypeChange}
-              className="flex-wrap"
-              selectId={`${searchType}-type`}
-              defaultId={selectedType}
-              label={t("filter.heading")}
-            />
-          )}
-
+      <div className="flex gap-6 w-full lg:w-3/4 justify-start lg:justify-end items-end md:items-center">
+        {showTypeFilter && (
           <Select
-            selectData={sortOptions}
-            action={onSortChange}
-            className="flex-wrap"
-            selectId={`${searchType}-sort`}
-            defaultId={selectedSort}
-            label={t("sort.heading")}
+            selectData={typeOptions}
+            action={onTypeChange}
+            className="flex-wrap w:1/2"
+            selectId={`${searchType}-type`}
+            defaultId={selectedType}
+            label={t("filter.heading")}
           />
-        </div>
+        )}
+
+        <Select
+          selectData={sortOptions}
+          action={onSortChange}
+          className="flex-wrap w:1/2"
+          selectId={`${searchType}-sort`}
+          defaultId={selectedSort}
+          label={t("sort.heading")}
+        />
       </div>
     </div>
   )

@@ -9,7 +9,7 @@ import { TRADER_FEEDBACK_RATING_OPTIONS } from "@/utils/constants"
 
 const RATING_OPTIONS_REVERSED = [...TRADER_FEEDBACK_RATING_OPTIONS].reverse()
 
-function StarDisplay({ value }: { value: number }) {
+const StarDisplay = ({ value }: { value: number }) => {
   const normalizedValue = Math.max(0, Math.min(5, value || 0))
   return (
     <>
@@ -48,7 +48,7 @@ type TraderTrustSummaryProps = {
   reputation: TraderReputationV1
 }
 
-export default function TraderTrustSummary({ reputation }: TraderTrustSummaryProps) {
+export const TraderTrustSummary = ({ reputation }: TraderTrustSummaryProps) => {
   const t = useTranslations("traderProfile.reputation")
 
   const hasAvg =
@@ -69,13 +69,12 @@ export default function TraderTrustSummary({ reputation }: TraderTrustSummaryPro
       className="noir-border relative w-full p-4 mb-4 bg-noir-black/50"
       aria-label={t("ariaLabel")}
     >
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+      <div className="flex flex-col gap-1  md:items-start md:justify-between">
+        <h2 className="text-lg font-semibold text-noir-gold">{t("title")}</h2>
+        <p className="text-sm text-noir-gold-100 mt-1">{t("subtitle")}</p>
         <div>
-          <h2 className="text-lg font-semibold text-noir-gold">{t("title")}</h2>
-          <p className="text-sm text-noir-gold-100 mt-1">{t("subtitle")}</p>
-        </div>
-        <div className="flex flex-col items-start gap-2 md:items-end">
-          {reputation.score !== null ? (
+
+        {reputation.score !== null ? (
             <div className="text-right">
               <div className="text-xs uppercase tracking-wide text-noir-gold-500">
                 {t("scoreLabel")}
@@ -89,6 +88,7 @@ export default function TraderTrustSummary({ reputation }: TraderTrustSummaryPro
               {insufficientCopy}
             </p>
           )}
+
           {hasAvg && avgDisplay !== null ? (
             <div className="flex flex-wrap items-center gap-2">
               <StarDisplay value={reputation.averageRating ?? 0} />
@@ -131,3 +131,5 @@ export default function TraderTrustSummary({ reputation }: TraderTrustSummaryPro
     </section>
   )
 }
+
+export default TraderTrustSummary

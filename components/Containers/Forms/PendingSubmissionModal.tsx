@@ -60,11 +60,11 @@ const PendingSubmissionModalInner = ({ submissionType, closeModal }: InnerProps)
   }, [state, closeModal, t])
 
   return (
-    <div className="p-6 max-h-[50vh] overflow-y-auto">
-      <h2 className="text-2xl font-bold text-noir-gold mb-4">
+    <div className="py-6 max-h-[50vh] overflow-y-auto">
+      <h2 className="mb-2">
         {t(`${section}.title`)}
       </h2>
-      <p className="text-noir-light mb-6">
+      <p className="text-noir-light mb-2">
         {t(`${section}.description`)}
       </p>
 
@@ -107,7 +107,7 @@ const PendingSubmissionModalInner = ({ submissionType, closeModal }: InnerProps)
           type="button"
           variant="secondary"
           onClick={closeModal}
-          className="max-w-max"
+          className="lg:max-w-max"
         >
           {t("cancelButton")}
         </Button>

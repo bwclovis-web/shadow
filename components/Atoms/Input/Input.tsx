@@ -107,7 +107,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       return (
         <div className="flex flex-col gap-1" data-input-has-label>
           <label
-            htmlFor={inputProps.id}
+            htmlFor={resolvedId}
             className="block text-sm font-medium text-noir-gold-100"
           >
             {label}

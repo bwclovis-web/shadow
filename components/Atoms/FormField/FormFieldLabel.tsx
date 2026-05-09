@@ -5,6 +5,10 @@ export interface FormFieldLabelProps {
   required?: boolean
   disabled?: boolean
   className?: string
+  /** Associates the label with a control (`id` on the control). */
+  htmlFor?: string
+  /** Stable id for `aria-labelledby` when `htmlFor` cannot be resolved. */
+  id?: string
 }
 
 const FormFieldLabel = ({
@@ -12,6 +16,8 @@ const FormFieldLabel = ({
   required = false,
   disabled = false,
   className = "",
+  htmlFor,
+  id,
 }: FormFieldLabelProps): ReactNode => {
   if (!label) {
     return null
@@ -19,6 +25,8 @@ const FormFieldLabel = ({
 
   return (
     <label
+      id={id}
+      htmlFor={htmlFor}
       className={`
         block text-sm font-medium text-noir-gold-100
         ${required ? 'after:content-["*"] after:ml-1 after:text-red-500' : ""}

@@ -38,14 +38,14 @@ const ContactUsClient = () => {
 
       <article className="inner-container py-12">
         <div className="max-w-4xl mx-auto md:px-4 md:max-w-full">
-          <div className="prose prose-lg prose-invert max-w-none">
-            <div className="flex flex-col lg:flex-row gap-12">
+          <div className="max-w-none">
+            <div className="flex flex-col lg:flex-row gap-6">
               {/* Contact Section */}
-              <section className="flex flex-col gap-6 border-b-4 lg:border-r-4 border-double border-noir-gold lg:px-6 pb-10 lg:pb-0 lg:border-b-0">
-                <h2 className="text-noir-gold text-3xl font-bold mb-4">
+              <section className="flex flex-col gap-6 border-b-4 lg:border-r-4 border-double border-noir-gold lg:px-6 pb-6 lg:pb-0 lg:border-b-0">
+                <h2>
                   {t("contact.title")}
                 </h2>
-                <div className="flex flex-col gap-4 text-noir-light leading-relaxed text-lg">
+                <div className="flex flex-col gap-2 text-noir-light leading-relaxed text-lg">
                   <p>{t("contact.description")}</p>
                   <div className="flex flex-col gap-2">
                     <p className="font-semibold text-noir-gold">
@@ -63,7 +63,7 @@ const ContactUsClient = () => {
 
               {/* FAQ Section */}
               <section className="flex flex-col gap-6">
-                <h2 className="text-noir-gold text-3xl font-bold mb-4">
+                <h2>
                   {t("faq.title")}
                 </h2>
                 <div className="flex flex-col gap-8">

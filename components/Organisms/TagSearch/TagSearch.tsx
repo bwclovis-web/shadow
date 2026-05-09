@@ -1,7 +1,8 @@
 import { type HTMLProps, useCallback, useEffect, useState } from "react"
 
 import SearchTypeahead from "@/components/Molecules/SearchTypeahead"
-import { typeaheadItemRowClasses } from "@/components/Molecules/SearchTypeahead/search-typeahead-surfaces"
+import { typeaheadItemRowClass } from "@/components/Molecules/SearchTypeahead/search-typeahead-surfaces"
+import { searchbarVariants } from "@/components/Molecules/SearchTypeahead/searchbar-variants"
 import type { Tag } from "@/lib/queries/tags"
 import { styleMerge } from "@/utils/styleUtils"
 
@@ -24,12 +25,6 @@ interface TagSearchProps extends Omit<HTMLProps<HTMLDivElement>, "onChange" | "d
   searchInputLabel?: string
   selectedLayout?: TagSearchSelectedLayout
   surface?: TagSearchSurface
-  /**
-   * Suggestion list layering. Default `portal` keeps the list above adjacent grid
-   * columns and stacked cards (inline would sit under the next column’s cards).
-   * Pass `inline` only in a single-column layout where nothing can overlap the panel.
-   */
-  typeaheadPlacement?: "inline" | "portal"
 }
 
 const TagSearch = ({
@@ -43,9 +38,7 @@ const TagSearch = ({
   searchInputLabel,
   selectedLayout = "footer",
   surface = "light",
-  typeaheadPlacement,
 }: TagSearchProps) => {
-  const resolvedTypeaheadPlacement = typeaheadPlacement ?? "portal"
   const initialTags = Array.isArray(data) ? data : []
   const [selectedTags, setSelectedTags] = useState<Tag[]>(initialTags)
 
@@ -83,7 +76,6 @@ const TagSearch = ({
     searchInputLabel ?? (label ? `${label} search` : "Search")
   const surfaceKey = surface === "dark" ? "dark" : "light"
   const layoutKey = selectedLayout === "flow" ? "flow" : "footer"
-  const itemRowClass = typeaheadItemRowClasses[surfaceKey]
   const createFieldId = `${inputId}-create`
 
   return (
@@ -105,16 +97,14 @@ const TagSearch = ({
           listboxId={`${inputId}-listbox`}
           label={searchLabel}
           searchFn={searchFunction}
-          minLength={1}
+          minLength={2}
           delay={300}
           defaultInputValue=""
           onSelect={(item: Tag) => {
             handleItemClick(item)
           }}
           clearInputOnSelect
-          placement={resolvedTypeaheadPlacement}
-          surface={surfaceKey}
-          useShadedInput
+          inputClassName={searchbarVariants({ size: "standard" })}
           messages={{
             loading: "Searching…",
             empty: "No tags found",
@@ -123,10 +113,9 @@ const TagSearch = ({
           footerSlot={
             allowCreate
               ? ({ clearList }: { clearList: () => void }) => (
-                  <li className={itemRowClass}>
+                  <li className={typeaheadItemRowClass}>
                     <CreateTagButton
                       createInputId={createFieldId}
-                      surface={surfaceKey}
                       action={handleItemClick}
                       setOpenDropdown={open => {
                         if (!open) clearList()

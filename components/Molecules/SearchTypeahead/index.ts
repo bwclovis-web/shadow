@@ -5,7 +5,6 @@ export {
 } from "./SearchTypeahead"
 export { SearchTypeahead as default } from "./SearchTypeahead"
 export {
-  typeaheadItemRowClasses,
-  typeaheadPanelClasses,
-  type TypeaheadSurface,
+  typeaheadItemRowClass,
+  typeaheadPanelClass,
 } from "./search-typeahead-surfaces"

@@ -13,12 +13,12 @@ import SearchTypeahead, {
 import { useMounted } from "@/hooks/useMounted"
 import { styleMerge } from "@/utils/styleUtils"
 
-import { searchbarVariants } from "./searchbar-variants"
+import { searchbarVariants } from "@/components/Molecules/SearchTypeahead/searchbar-variants"
 
 type SearchBarItem = TypeaheadItem & { slug: string }
 
 interface SearchBarProps
-  extends Omit<HTMLProps<HTMLDivElement>, "action">,
+  extends Omit<HTMLProps<HTMLDivElement>, "action" | "size">,
     VariantProps<typeof searchbarVariants> {
   searchType: "perfume-house" | "perfume"
   placeholder?: string
@@ -73,8 +73,6 @@ export default function SearchBar({
           searchFn={searchFunction}
           minLength={2}
           delay={300}
-          placement="portal"
-          surface="hero"
           inputClassName={styleMerge(searchbarVariants({ className, variant }))}
           onSelect={action}
           getOptionHref={action ? undefined : getOptionHref}

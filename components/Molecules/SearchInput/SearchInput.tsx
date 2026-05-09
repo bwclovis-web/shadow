@@ -2,6 +2,7 @@ import { type ChangeEvent } from "react"
 import { useTranslations } from "next-intl"
 import { LuSearch, LuX } from "react-icons/lu"
 
+import { searchbarVariants } from "@/components/Molecules/SearchTypeahead/searchbar-variants"
 import { styleMerge } from "@/utils/styleUtils"
 
 interface SearchInputProps {
@@ -38,7 +39,10 @@ const SearchInput = ({
         value={value}
         onChange={handleChange}
         placeholder={placeholder ?? t("search")}
-        className="w-full bg-noir-black/90 px-2 pl-10 pr-4 py-2 transition-all duration-300 text-noir-gold-100 border border-noir-gold rounded-sm font-semibold outline-none focus:outline-none focus:ring-2 focus:ring-noir-gold/50 focus:bg-noir-dark"
+        className={styleMerge(
+          searchbarVariants({ size: "standard" }),
+          "pl-10 pr-10 outline-none focus:ring-2 focus:ring-noir-gold/50 focus:bg-noir-dark"
+        )}
         aria-label={t("search")}
       />
       {value && (

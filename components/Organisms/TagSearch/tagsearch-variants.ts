@@ -10,9 +10,9 @@ export const tagSearchVariants = cva(
     variants: {
       surface: {
         light:
-          "rounded-xl border border-noir-gold/30 bg-gradient-to-b from-noir-black to-noir-dark p-4 shadow-sm ring-1 ring-noir-gold/20",
+          "border border-noir-gold/30 bg-gradient-to-b from-noir-black to-noir-dark p-4 shadow-sm ring-1 ring-noir-gold/20",
         dark:
-          "noir-border rounded-xl bg-gradient-to-b from-noir-black via-noir-black to-noir-dark p-4 shadow-lg ring-1 ring-noir-gold/20",
+          "noir-border bg-gradient-to-b from-noir-black via-noir-black to-noir-dark py-4 px-2  shadow-lg ring-1 ring-noir-gold/20",
       },
       layout: {
         /** Space for `TagList` absolutely positioned at the bottom */

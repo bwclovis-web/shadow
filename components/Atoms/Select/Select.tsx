@@ -63,7 +63,7 @@ const Select = ({
     >
       {!ariaLabel && (
         <label
-          className="font-semibold text-lg lg:text-2xl mb-1 capitalize text-noir-gold text-shadow-lg text-shadow-noir-black/60 tracking-wide"
+          className=" text-lg lg:text-xl mb-1 capitalize text-noir-gold text-shadow-lg text-shadow-noir-black/60 tracking-wide"
           htmlFor={selectId}
         >
           {label}

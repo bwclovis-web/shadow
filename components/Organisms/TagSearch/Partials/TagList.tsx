@@ -1,4 +1,4 @@
-import { Button } from "@/components/Atoms/Button/Button"
+import { RemovableChip } from "@/components/Molecules/RemovableChip"
 import { styleMerge } from "@/utils/styleUtils"
 
 type TagItem = { id: string; name: string }
@@ -14,12 +14,6 @@ interface TagListProps {
   layout?: TagListLayout
   surface?: TagListSurface
 }
-
-const chipLight =
-  "inline-flex max-w-full items-center gap-1.5 rounded-full border border-noir-gold/20 bg-noir-gold/[0.06] px-3 py-1 text-sm font-medium text-stone-800 shadow-sm"
-
-const chipDark =
-  "inline-flex max-w-full items-center gap-1.5 rounded-full border border-noir-gold/30 bg-stone-900/70 px-3 py-1 text-sm font-medium text-noir-gold-100"
 
 export const TagList = ({
   selectedTags,
@@ -39,11 +33,6 @@ export const TagList = ({
         ? "Selected"
         : "Selected tags"
 
-  const chipClass = isDark ? chipDark : chipLight
-  const removeBtnClass = isDark
-    ? "shrink-0 rounded-full p-0.5 text-red-400 transition-colors hover:bg-stone-800 hover:text-red-300"
-    : "shrink-0 rounded-full p-0.5 text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
-
   const headingClass = styleMerge(
     isFlow
       ? styleMerge(
@@ -60,7 +49,7 @@ export const TagList = ({
           ? "flex w-full flex-col gap-2"
           : styleMerge(
               "absolute bottom-0 left-0 right-0 z-10 flex max-h-24 flex-col gap-1.5 border-t pt-2",
-              isDark ? "border-stone-600/60" : "border-noir-gold"
+              isDark ? "border-noir-gold-100/60" : "border-noir-gold"
             )
       }
     >
@@ -69,14 +58,14 @@ export const TagList = ({
         className={
           isFlow
             ? styleMerge(
-                "flex min-h-10 w-full flex-wrap gap-2 rounded-lg border p-3",
+                "flex min-h-10 w-full flex-wrap gap-2 rounded-lg border p-3 mb-4",
                 isDark
-                  ? "border-stone-600 bg-stone-900/40 shadow-inner"
-                : "border-noir-goldbg-white/80 shadow-sm"
+                  ? "border-noir-gold-100  bg-noir-dark/40 shadow-inner"
+                : "border-noir-gold bg-noir-gold/10 shadow-sm"
               )
             : styleMerge(
                 "flex h-full w-full gap-2 overflow-x-auto overflow-y-hidden rounded-md px-1 py-1",
-                isDark ? "bg-stone-900/30" : "bg-stone-50/80"
+                isDark ? "bg-noir-dark/30" : "bg-noir-gold/10"
               )
         }
         role="list"
@@ -92,22 +81,26 @@ export const TagList = ({
             No tags selected yet
           </li>
         )}
-        {selectedTags.map(item => (
-          <li key={item.id} className={chipClass}>
-            <span className="min-w-0 truncate">{item.name}</span>
-            {onRemoveTag && (
-              <Button
-                type="button"
-                className={removeBtnClass}
-                onClick={() => onRemoveTag(item.id)}
-                title={`Remove ${item.name}`}
-                aria-label={`Remove ${item.name}`}
-              >
-                ×
-              </Button>
-            )}
-          </li>
-        ))}
+        {selectedTags.map(item =>
+          onRemoveTag ? (
+            <RemovableChip
+              key={item.id}
+              visual="tag"
+              tone={isDark ? "dark" : "light"}
+              label={item.name}
+              onRemove={() => onRemoveTag(item.id)}
+              removeAriaLabel={`Remove ${item.name}`}
+              removeTitle={`Remove ${item.name}`}
+            />
+          ) : (
+            <RemovableChip
+              key={item.id}
+              visual="tag"
+              tone={isDark ? "dark" : "light"}
+              label={item.name}
+            />
+          )
+        )}
       </ul>
     </div>
   )

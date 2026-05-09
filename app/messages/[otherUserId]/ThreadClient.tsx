@@ -92,14 +92,21 @@ export default function ThreadClient({
                   key={msg.id}
                   className={`rounded-lg p-4 max-w-[85%] ${
                     isFromMe
-                      ? "ml-auto bg-blue-50 border border-blue-100"
-                      : "mr-auto bg-gray-50 border border-gray-200"
+                      ? "ml-auto bg-noir-gold/50 border border-noir-gold-500"
+                      : "mr-auto bg-noir-dark border border-noir-gold-100"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="font-medium text-sm">{senderName}</span>
+                    <span className="font-medium text-sm">
+                      {senderName}{" "}
+                      {isFromMe && (
+                        <span className="text-xs">
+                          (You)
+                        </span>
+                      )}
+                    </span>
                     <time
-                      className="text-xs text-gray-500"
+                      className="text-xs text-noir-gold-100"
                       dateTime={
                         typeof msg.createdAt === "string"
                           ? msg.createdAt
@@ -110,7 +117,7 @@ export default function ThreadClient({
                     </time>
                   </div>
                   {msg.subject && (
-                    <p className="text-sm font-medium text-gray-700 mb-1">
+                    <p className="text-sm font-medium text-noir-gold-500 mb-1">
                       Re: {msg.subject}
                     </p>
                   )}

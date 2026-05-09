@@ -53,7 +53,7 @@ export default function MessagesClient({
               <li key={conv.otherUserId}>
                 <Link
                   href={`/messages/${conv.otherUserId}`}
-                  className="flex items-center justify-between gap-4 p-4 rounded-lg border bg-noir-dark group border-noir-gold hover:bg-noir-gold-100 transition-colors"
+                  className="flex items-center justify-between gap-4 p-2 lg:p-4 rounded-lg border bg-noir-dark group border-noir-gold hover:bg-noir-gold-100 transition-colors"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">

@@ -206,7 +206,7 @@ const PerfumeForm = ({
           />
         </FormField>
       )}
-      <div className="space-y-1">
+      <div className="space-y-1 mt-4">
         <HouseTypeahead
           name="house"
           label="Perfume House"

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["prisma/seed.ts"],
+  "ignoreBinaries": ["prisma-docs-generator"],
+  "rules": {
+    "duplicates": "warn",
+    "enumMembers": "warn",
+    "exports": "warn",
+    "files": "warn",
+    "namespaceMembers": "warn",
+    "types": "warn"
+  }
+}

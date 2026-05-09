@@ -3,6 +3,7 @@
 import { useEffect, useId, useState } from "react"
 
 import SearchTypeahead from "@/components/Molecules/SearchTypeahead"
+import { searchbarVariants } from "@/components/Molecules/SearchTypeahead/searchbar-variants"
 import { styleMerge } from "@/utils/styleUtils"
 
 type PerfumeHouseOption = { id: string; name: string }
@@ -64,13 +65,9 @@ const HouseTypeahead = ({
           onNameChange?.(item.name)
         }}
         clearInputOnSelect={false}
-        placement="portal"
-        surface="hero"
         inputClassName={styleMerge(
-          "w-full px-4 py-2 bg-noir-dark/50 border-2 rounded-md text-noir-gold-100 placeholder-noir-gold-100/50 focus:outline-none transition-colors",
-          selectedId
-            ? "border-green-500/50"
-            : "border-noir-gold/30 focus:border-noir-gold"
+          searchbarVariants({ size: "standard" }),
+          selectedId && "!border-green-500/50"
         )}
         messages={{
           loading: "Searching…",

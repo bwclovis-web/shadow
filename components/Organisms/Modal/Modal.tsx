@@ -65,16 +65,17 @@ const Modal = ({
     <div
       ref={ref}
       id="modalContainer"
-      className="fixed inset-0 z-9999 flex justify-center items-center isolate"
+      className="fixed inset-0 z-9999 flex items-center justify-center isolate p-4 sm:p-6"
       style={{ willChange: "opacity" }}
     >
       {modalOpen && (
         <div
-          className={styleMerge(modalBackgroundVariant({
+          className={styleMerge(
+            modalBackgroundVariant({
               animate,
-              animateStart,
               background,
-            }))}
+            })
+          )}
           tabIndex={0}
           role="button"
           onClick={handleClose}
@@ -100,6 +101,7 @@ const Modal = ({
           type="button"
           className="absolute top-5 right-5 max-w-max cursor-pointer z-20"
           onClick={handleClose}
+          aria-label="Close modal"
         >
           <IoMdCloseCircle
             size={34}

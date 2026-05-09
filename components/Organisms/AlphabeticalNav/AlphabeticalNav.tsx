@@ -45,7 +45,7 @@ const AlphabeticalNav = ({
 
   return (
     <div
-      className={`grid grid-cols-6 md:grid-cols-8 lg:grid-cols-9 gap-4 justify-center inner-container mt-10 md:mb-18 ${className}`}
+      className={`grid grid-cols-6 md:grid-cols-8 lg:grid-cols-9 gap-4 justify-center inner-container mt-10 md:mb-14 ${className}`}
     >
       <Button
         onClick={() => onLetterSelect(null)}

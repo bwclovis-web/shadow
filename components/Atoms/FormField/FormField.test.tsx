@@ -37,11 +37,10 @@ describe("FormField", () => {
           <input type="text" />
         </FormField>)
 
-      expect(screen.getByText("This is help text")).toBeInTheDocument()
-      expect(screen.getByText("This is help text")).toHaveAttribute(
-        "id",
-        "help-text"
-      )
+      const help = screen.getByText("This is help text")
+      expect(help).toBeInTheDocument()
+      expect(help).toHaveAttribute("id")
+      expect(help.id.length).toBeGreaterThan(0)
     })
   })
 
@@ -287,7 +286,9 @@ describe("FormField", () => {
         </FormField>)
 
       const input = screen.getByRole("textbox")
-      expect(input).toHaveAttribute("aria-describedby", "help-text")
+      const help = screen.getByText("Help text")
+      expect(help).toHaveAttribute("id")
+      expect(input).toHaveAttribute("aria-describedby", help.id)
     })
 
     it("should set aria-describedby with multiple ids", () => {
@@ -296,7 +297,11 @@ describe("FormField", () => {
         </FormField>)
 
       const input = screen.getByRole("textbox")
-      expect(input).toHaveAttribute("aria-describedby", "error-message help-text")
+      const help = screen.getByText("Help text")
+      expect(input).toHaveAttribute(
+        "aria-describedby",
+        `error-message ${help.id}`
+      )
     })
 
     it("should not set aria-describedby when no descriptions", () => {

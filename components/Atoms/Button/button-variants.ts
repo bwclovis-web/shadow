@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 export type ButtonVariants = VariantProps<typeof buttonVariants>
 
 export const buttonVariants = cva(
-  ["rounded-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:cursor-not-allowed border",],
+  ["rounded-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:cursor-not-allowed border w-full md:w-auto",],
   {
     compoundVariants: [{}],
     defaultVariants: {
