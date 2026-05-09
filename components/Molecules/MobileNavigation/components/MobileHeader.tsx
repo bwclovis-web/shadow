@@ -5,6 +5,8 @@ import { Link } from "next-view-transitions"
 import { AiFillHome } from "react-icons/ai"
 import { FaBars } from "react-icons/fa6"
 
+import { useDirectMessageUnreadCount } from "@/components/Molecules/DirectMessageUnread/DirectMessageUnreadProvider"
+
 interface MobileHeaderProps {
   logoText: string
   menuButtonRef: RefObject<HTMLButtonElement>
@@ -21,28 +23,45 @@ const MobileHeader = ({
   modalId,
   onMenuToggle,
   onNavClick,
-}: MobileHeaderProps) => (
-  <div className="flex justify-between items-center w-full py-4 px-4 bg-noir-dark/60 backdrop-blur-md">
-    <Link
-      href="/"
-      className="text-noir-gold hover:text-noir-light font-semibold text-lg px-2 py-1 border border-transparent transition-colors duration-400 flex items-center"
-      onClick={onNavClick}
-    >
-      <AiFillHome className="mr-2" size={20} />
-      <span className="hidden sm:inline">{logoText}</span>
-      <span className="sm:hidden">S&S</span>
-    </Link>
+}: MobileHeaderProps) => {
+  const directMessageUnread = useDirectMessageUnreadCount()
 
-    <button
-      ref={menuButtonRef}
-      onClick={onMenuToggle}
-      className="text-noir-gold hover:text-noir-gold-100 cursor-pointer p-3 transition-colors duration-200  mobile-touch-target rounded-lg hover:bg-noir-black/30"
-      aria-label="Open menu"
-      aria-expanded={modalOpen && modalId === "mobile-navigation-menu"}
-    > 
-      <FaBars size={34} />
-    </button>
-  </div>
-)
+  return (
+    <div className="flex justify-between items-center w-full py-4 px-4 bg-noir-dark/60 backdrop-blur-md">
+      <Link
+        href="/"
+        className="text-noir-gold hover:text-noir-light font-semibold text-lg px-2 py-1 border border-transparent transition-colors duration-400 flex items-center"
+        onClick={onNavClick}
+      >
+        <AiFillHome className="mr-2" size={20} />
+        <span className="hidden sm:inline">{logoText}</span>
+        <span className="sm:hidden">S&S</span>
+      </Link>
+
+      <div className="relative shrink-0">
+        <button
+          ref={menuButtonRef}
+          type="button"
+          onClick={onMenuToggle}
+          className="text-noir-gold hover:text-noir-gold-100 cursor-pointer p-3 transition-colors duration-200  mobile-touch-target rounded-lg hover:bg-noir-black/30"
+          aria-label={
+            directMessageUnread > 0
+              ? "Open menu, unread messages"
+              : "Open menu"
+          }
+          aria-expanded={modalOpen && modalId === "mobile-navigation-menu"}
+        >
+          <FaBars size={34} />
+        </button>
+        {directMessageUnread > 0 && (
+          <span
+            className="pointer-events-none absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-blue-600 ring-2 ring-noir-dark/60"
+            aria-hidden
+          />
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default MobileHeader

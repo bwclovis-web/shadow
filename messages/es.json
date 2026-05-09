@@ -223,7 +223,13 @@
       "threadTitle": "{name} — Mensajes — Shadow and Sillage",
       "threadDescription": "Conversación directa con {name}.",
       "threadFallbackTitle": "Mensajes — Shadow and Sillage"
-    }
+    },
+    "deleteConversationShort": "Eliminar",
+    "deleteConversationFull": "Eliminar conversación",
+    "deleteConversationAria": "Eliminar conversación con {name}",
+    "deleteConversationConfirm": "¿Eliminar toda la conversación con {name}? Se borrarán todos los mensajes para ambos. No se puede deshacer.",
+    "deleteConversationFailed": "No se pudo eliminar la conversación.",
+    "deleteConversationDeleting": "Eliminando…"
   },
   "subscribe": {
     "heading": "Suscribirse",

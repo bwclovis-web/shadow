@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { Link } from "next-view-transitions"
 import { useState } from "react"
+import { useTranslations } from "next-intl"
 
 import ContactTraderForm from "@/components/Containers/Forms/ContactTraderForm"
 import TitleBanner from "@/components/Organisms/TitleBanner"
@@ -36,7 +37,9 @@ export default function ThreadClient({
 }: ThreadClientProps) {
   const router = useRouter()
   const { addToHeaders } = useCSRF()
+  const tDm = useTranslations("directMessages")
   const [lastResult, setLastResult] = useState<{ success?: boolean; error?: string; message?: string } | null>(null)
+  const [isDeletingThread, setIsDeletingThread] = useState(false)
   const otherUserName =
     getTraderDisplayName({
       firstName: otherUser.firstName,
@@ -58,6 +61,33 @@ export default function ThreadClient({
     return data
   }
 
+  const handleDeleteConversation = async () => {
+    if (
+      !window.confirm(
+        tDm("deleteConversationConfirm", { name: otherUserName })
+      )
+    ) {
+      return
+    }
+    setIsDeletingThread(true)
+    try {
+      const response = await fetch(
+        `/api/messages?otherUserId=${encodeURIComponent(otherUser.id)}`,
+        { method: "DELETE", headers: addToHeaders() }
+      )
+      if (response.ok) {
+        router.push("/messages")
+        router.refresh()
+      } else {
+        window.alert(tDm("deleteConversationFailed"))
+      }
+    } catch {
+      window.alert(tDm("deleteConversationFailed"))
+    } finally {
+      setIsDeletingThread(false)
+    }
+  }
+
   return (
     <section>
       <TitleBanner
@@ -67,13 +97,23 @@ export default function ThreadClient({
       />
 
       <div className="inner-container py-8">
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex flex-wrap items-center gap-4 mb-6">
           <Link
             href="/messages"
             className="text-noir-gold-100 hover:text-noir-gold-500 flex items-center gap-1 transition-colors"
           >
             <span aria-hidden>←</span> Back to messages
           </Link>
+          <button
+            type="button"
+            disabled={isDeletingThread}
+            onClick={() => void handleDeleteConversation()}
+            className="text-sm text-noir-gold-100 hover:text-red-400 transition-colors disabled:opacity-50 ml-auto sm:ml-0"
+          >
+            {isDeletingThread
+              ? tDm("deleteConversationDeleting")
+              : tDm("deleteConversationFull")}
+          </button>
         </div>
 
         <div className="space-y-4 mb-8">

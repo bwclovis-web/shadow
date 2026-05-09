@@ -55,6 +55,12 @@ export async function createContactMessage(input: CreateContactMessageInput) {
   })
 }
 
+/** Total unread DMs received by the user (matches per-thread unread in getConversations). */
+export const getUnreadDirectMessageCount = async (userId: string): Promise<number> =>
+  prisma.traderContactMessage.count({
+    where: { recipientId: userId, read: false },
+  })
+
 /**
  * List conversations for a user: distinct other parties with last message and unread count.
  */
@@ -221,4 +227,28 @@ export async function markThreadAsRead(userId: string, otherUserId: string) {
     },
     data: { read: true },
   })
+}
+
+/**
+ * Permanently remove all messages between two users (both directions).
+ * Affects both parties' history for this thread.
+ */
+export const deleteConversationBetweenUsers = async (
+  userId: string,
+  otherUserId: string
+): Promise<{ deletedCount: number }> => {
+  if (userId === otherUserId) {
+    throw new Error("Invalid conversation")
+  }
+
+  const result = await prisma.traderContactMessage.deleteMany({
+    where: {
+      OR: [
+        { senderId: userId, recipientId: otherUserId },
+        { senderId: otherUserId, recipientId: userId },
+      ],
+    },
+  })
+
+  return { deletedCount: result.count }
 }
