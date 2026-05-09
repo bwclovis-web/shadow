@@ -1,0 +1,32 @@
+{
+  "houseName": "Fixture House",
+  "model": "gpt-4o-mini",
+  "options": {
+    "generateNoirDescriptions": false,
+    "titleTakeBeforeDash": true
+  },
+  "items": [
+    {
+      "name": "Septamber",
+      "description": "Softly illuminated by the flicker of a distant streetlamp, the intoxicating blend of ripe plum and blooming rose unfurls like a secret whispered in the night. Featured Notes : Apricot, Black Tea, Tunisian Neroli, Turkish Rose, Cabernet, Cognac, Oakwood, Honeyed Amber, Labdanum, Vanilla, Maple, Immortelle, Tobacco, Benzoin, Hay, and Leather. Concentration: Eau de Parfum",
+      "image": "",
+      "detailURL": "https://gallagherfragrances.com/products/septamber",
+      "perfumeHouse": "Gallagher Fragrances"
+    },
+    {
+      "name": "Lavender & Bourbon",
+      "description": "Beneath neon reflecting on rain-slick pavement, she wore a secret no one could name. Ripe plum and velvet rose open the story, brushed with brown sugar and golden honey, a warmth that clings like smoke in a dim hotel bar. Midnight waits in the wings; the city hums, indifferent, as amber light pools on lacquered wood.",
+      "image": "",
+      "detailURL": "https://gallagherfragrances.com/products/lavender-bourbon",
+      "perfumeHouse": "Gallagher Fragrances"
+    },
+    {
+      "name": "Attic Bedroom",
+      "description": "Beneath the wooden beams of a forgotten attic, dark red roses entwine with black pepper, while warm sandalwood and patchouli evoke a clandestine rendezvous.",
+      "notesText": "Scent notes include dark red roses, labdanum, black pepper, light patchouli, plum, vanilla, benzoin, and golden amber.",
+      "image": "",
+      "detailURL": "https://www.littleandgrim.com/products/attic-bedroom-perfume-oil",
+      "perfumeHouse": "Little And Grim"
+    }
+  ]
+}

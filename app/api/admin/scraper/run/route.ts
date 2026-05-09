@@ -505,6 +505,7 @@ export async function POST(request: NextRequest): Promise<Response> {
             titleStripNumbers: body.titleStripNumbers ?? false,
             titleOmitWords: Array.isArray(body.titleOmitWords) ? body.titleOmitWords : [],
             generateNoirDescriptions: body.generateNoirDescriptions ?? true,
+            fetchPdpNoteBootstrap: body.fetchPdpNoteBootstrap !== false,
             abortSignal: request.signal,
             onProgress: (message: string) => {
               try {

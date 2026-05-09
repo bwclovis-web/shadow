@@ -1,4 +1,4 @@
-import { styleMerge } from '../../../utils'
+import { styleMerge } from '@/utils/styleUtils'
 import { Button } from '../../Atoms/Button/Button'
 import { hasMeaningfulButtonChildren } from '../../Atoms/Button/buttonHelpers'
 import { Icon, type IconName } from '../../Atoms/Icons/Icons'
@@ -20,7 +20,7 @@ export interface PopOverHeaderProps {
 }
 
 const CloseButton = ({ ariaLabel, closeMenu }: { ariaLabel: string; closeMenu: () => void }) => (
-  <Button ariaLabel={ariaLabel} icon="x" onClick={closeMenu} size="xs" variant="tertiary" />
+  <Button aria-label={ariaLabel} icon="x" onClick={closeMenu} size="sm" variant="icon" />
 )
 
 export const PopOverHeader = ({

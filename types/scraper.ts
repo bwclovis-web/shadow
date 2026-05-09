@@ -127,6 +127,13 @@ export interface ScraperConfig {
   generateNoirDescriptions?: boolean
 
   /**
+   * When true (default for admin scraper runs), if scraped description + notesText lack a merchant note list,
+   * the Node pipeline fetches the product URL once and scans HTML for "Featured notes:" / similar blocks.
+   * Disable for offline tests or air-gapped runs.
+   */
+  fetchPdpNoteBootstrap?: boolean
+
+  /**
    * For Etsy only: open a visible browser window so you can solve CAPTCHA if Etsy shows it.
    * Use when running locally (e.g. npm run dev). Leave unchecked when running on a server.
    */

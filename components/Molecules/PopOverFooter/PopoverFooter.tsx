@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-import { styleMerge } from '../../../utils'
+import { styleMerge } from '@/utils/styleUtils'
 import { Button } from '../../Atoms/Button/Button'
 import {
   popOverFooterSpacingVariants,
@@ -46,7 +46,6 @@ export const PopoverFooter = ({
     const visibleName =
       typeof dismissButtonLabel === 'string' ? dismissButtonLabel.trim() : ''
     const explicitDismissAria =
-      closeButton !== false &&
       closeButton !== undefined &&
       typeof closeButton.ariaLabel === 'string' &&
       closeButton.ariaLabel.trim() !== ''
@@ -56,7 +55,7 @@ export const PopoverFooter = ({
       explicitDismissAria ?? (hasCloseIcon && !visibleName ? 'Close' : undefined)
 
     return (
-      <Button {...closeProps} ariaLabel={dismissAriaLabel} onClick={closeMenu} size={buttonSize}>
+      <Button {...closeProps} aria-label={dismissAriaLabel} onClick={closeMenu} size={buttonSize}>
         {dismissButtonLabel}
       </Button>
     )

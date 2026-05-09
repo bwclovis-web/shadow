@@ -21,8 +21,8 @@ export const popOverCloseButtonProps = (options: PopOverCloseButtonOptions | und
 
   return {
     variant: options?.variant ?? 'secondary',
-    size: options?.size ?? 'xs',
+    size: options?.size ?? 'sm',
     ...(icon ? { icon } : {}),
-    ...(trimmedAria ? { ariaLabel: trimmedAria } : {})
+    ...(trimmedAria ? { "aria-label": trimmedAria } : {})
   } as const
 }

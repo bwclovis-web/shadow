@@ -27,6 +27,240 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
     vi.unstubAllEnvs()
   })
 
+  it("Featured notes after long prelude: still extracts merchant list (augment + flat)", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const longProse =
+      "Softly illuminated by the flicker of a distant streetlamp, the intoxicating blend of ripe plum and blooming rose unfurls like a secret whispered in the night. "
+    const featured =
+      "Featured Notes : Apricot, Black Tea, Tunisian Neroli, Turkish Rose, Cabernet, Cognac, Oakwood, Honeyed Amber, Labdanum, Vanilla, Maple, Immortelle, Tobacco, Benzoin, Hay, and Leather."
+    const tail = " Concentration: Eau de Parfum"
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Septamber",
+        description: longProse + featured + tail,
+        image: "",
+        detailURL: "https://gallagherfragrances.com/products/septamber",
+        perfumeHouse: "Gallagher Fragrances",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM must not run when Featured Notes line is present")
+    })
+
+    const records = await extractNotesForItems(items, "Gallagher Fragrances", {
+      generateNoirDescriptions: false,
+      titleDashSegment: "before",
+    })
+
+    expect(invokeMock).not.toHaveBeenCalled()
+    const open = JSON.parse(records[0].openNotes) as string[]
+    expect(open).toContain("apricot")
+    expect(open).toContain("tunisian neroli")
+    expect(open).toContain("leather")
+    expect(open.length).toBeGreaterThanOrEqual(12)
+    expect(records[0].heartNotes).toBe("[]")
+    expect(records[0].baseNotes).toBe("[]")
+  })
+
+  it("metaphor prose with no labels: NOTE_SYSTEM is called and extracts the materials buried in the prose", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const noirOnly = [
+      "Beneath neon reflecting on rain-slick pavement, she wore a secret no one could name.",
+      "Ripe plum and velvet rose open the story, brushed with brown sugar and golden honey, a warmth that clings like smoke in a dim hotel bar.",
+      "Midnight waits in the wings; the city hums, indifferent, as amber light pools on lacquered wood.",
+    ].join(" ")
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Lavender & Bourbon",
+        description: noirOnly,
+        image: "",
+        detailURL: "https://gallagherfragrances.com/products/lavender-bourbon",
+        perfumeHouse: "Gallagher Fragrances",
+      },
+    ]
+
+    invokeMock.mockImplementation(async (messages: unknown) => {
+      const msgs = messages as { role: string; content: string }[]
+      const sys = msgs.find(m => m.role === "system")?.content ?? ""
+      if (!sys.includes("master perfumer")) {
+        throw new Error(`Expected NOTE_SYSTEM prompt; got system preview: "${sys.slice(0, 120)}"`)
+      }
+      return {
+        content: JSON.stringify({
+          openNotes: ["plum", "rose"],
+          heartNotes: ["brown sugar", "honey"],
+          baseNotes: ["amber", "wood"],
+        }),
+      }
+    })
+
+    const records = await extractNotesForItems(items, "Gallagher Fragrances", {
+      generateNoirDescriptions: false,
+      titleDashSegment: "before",
+    })
+
+    expect(invokeMock).toHaveBeenCalledTimes(1)
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    expect(open).toContain("plum")
+    expect(open).toContain("rose")
+    expect(heart).toContain("brown sugar")
+    expect(heart).toContain("honey")
+    expect(base).toContain("amber")
+    expect(base).toContain("wood")
+  })
+
+  it("prose-only description (no labels): LLM extracts materials and noir runs once notes are non-empty", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Smoked Oak",
+        description:
+          "Bourbon, smoked oak, and a whisper of vanilla unfurl as midnight settles over the empty street.",
+        image: "",
+        detailURL: "https://example.com/p/smoked-oak",
+        perfumeHouse: "Test House",
+      },
+    ]
+
+    let noteCalls = 0
+    let noirCalls = 0
+    let fallbackCalls = 0
+    invokeMock.mockImplementation(async (messages: unknown) => {
+      const msgs = messages as { role: string; content: string }[]
+      const sys = msgs.find(m => m.role === "system")?.content ?? ""
+      if (sys.includes("film noir")) {
+        noirCalls++
+        return { content: "A bourbon-soaked confession beneath flickering neon." }
+      }
+      if (sys.includes("fragrance encyclopedia")) {
+        fallbackCalls++
+        throw new Error("Fallback should not run when NOTE_SYSTEM extracts materials from prose")
+      }
+      if (sys.includes("master perfumer")) {
+        noteCalls++
+        return {
+          content: JSON.stringify({
+            openNotes: ["bourbon"],
+            heartNotes: ["oak"],
+            baseNotes: ["vanilla"],
+          }),
+        }
+      }
+      throw new Error(`Unexpected system prompt: ${sys.slice(0, 80)}`)
+    })
+
+    const records = await extractNotesForItems(items, "Test House", { generateNoirDescriptions: true })
+
+    expect(noteCalls).toBe(1)
+    expect(fallbackCalls).toBe(0)
+    expect(noirCalls).toBe(1)
+    expect(JSON.parse(records[0].openNotes)).toContain("bourbon")
+    expect(JSON.parse(records[0].heartNotes)).toContain("oak")
+    expect(JSON.parse(records[0].baseNotes)).toContain("vanilla")
+    expect(records[0].description).toContain("bourbon-soaked confession")
+  })
+
+  it("pure metaphor with no materials: NOTE_SYSTEM returns empty, name+house fallback runs and provides notes", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Shadow Work",
+        description:
+          "A secret carried in the dark, a promise traced in shadow, the city humming far below the open window.",
+        image: "",
+        detailURL: "https://example.com/p/shadow-work",
+        perfumeHouse: "Witch House",
+      },
+    ]
+
+    let noteCalls = 0
+    let fallbackCalls = 0
+    let noirCalls = 0
+    invokeMock.mockImplementation(async (messages: unknown) => {
+      const msgs = messages as { role: string; content: string }[]
+      const sys = msgs.find(m => m.role === "system")?.content ?? ""
+      if (sys.includes("film noir")) {
+        noirCalls++
+        return { content: "Smoke and incense curl across an unlit room." }
+      }
+      if (sys.includes("fragrance encyclopedia")) {
+        fallbackCalls++
+        return {
+          content: JSON.stringify({
+            openNotes: ["lavender"],
+            heartNotes: ["myrrh", "smoke"],
+            baseNotes: ["patchouli"],
+          }),
+        }
+      }
+      if (sys.includes("master perfumer")) {
+        noteCalls++
+        return {
+          content: JSON.stringify({ openNotes: [], heartNotes: [], baseNotes: [] }),
+        }
+      }
+      throw new Error(`Unexpected system prompt: ${sys.slice(0, 80)}`)
+    })
+
+    const records = await extractNotesForItems(items, "Witch House", { generateNoirDescriptions: true })
+
+    expect(noteCalls).toBeGreaterThanOrEqual(1)
+    expect(fallbackCalls).toBe(1)
+    expect(noirCalls).toBe(1)
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    expect(open).toContain("lavender")
+    expect(heart).toEqual(expect.arrayContaining(["myrrh", "smoke"]))
+    expect(base).toContain("patchouli")
+  })
+
+  it("under-2 notes after full ladder: noir is skipped and the original description is preserved", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const originalDescription =
+      "An evening that refuses to be told, a hush in the corner where the light cannot reach."
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Untellable",
+        description: originalDescription,
+        image: "",
+        detailURL: "https://example.com/p/untellable",
+        perfumeHouse: "Mystery House",
+      },
+    ]
+
+    let noirCalls = 0
+    invokeMock.mockImplementation(async (messages: unknown) => {
+      const msgs = messages as { role: string; content: string }[]
+      const sys = msgs.find(m => m.role === "system")?.content ?? ""
+      if (sys.includes("film noir")) {
+        noirCalls++
+        return { content: "this should never appear" }
+      }
+      // NOTE_SYSTEM and FALLBACK_LOOKUP both return empty so total notes stays at 0.
+      return { content: JSON.stringify({ openNotes: [], heartNotes: [], baseNotes: [] }) }
+    })
+
+    const records = await extractNotesForItems(items, "Mystery House", { generateNoirDescriptions: true })
+
+    expect(noirCalls).toBe(0)
+    expect(records[0].openNotes).toBe("[]")
+    expect(records[0].heartNotes).toBe("[]")
+    expect(records[0].baseNotes).toBe("[]")
+    expect(records[0].description).toBe(originalDescription)
+  })
+
   it("Gallagher-style Featured Notes: skips merge LLM and uses merchant flat list in openNotes only", async () => {
     vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
 

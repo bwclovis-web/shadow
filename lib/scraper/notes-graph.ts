@@ -43,6 +43,11 @@ export interface ScraperPipelineOptions {
   onProgress?: (message: string) => void
   /** When set (e.g. request.signal), the pipeline stops between products if the client cancels the scrape. */
   abortSignal?: AbortSignal
+  /**
+   * When true, fetch each product detail URL if note-source text lacks an explicit merchant list
+   * (Featured notes, Top:/Heart:, scent notes include, etc.). Default false so Vitest and fixtures stay offline.
+   */
+  fetchPdpNoteBootstrap?: boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -118,6 +123,212 @@ const resolveNotesSource = (item: ScrapedItem): string => {
     .filter(Boolean)
   if (parts.length === 0) return ""
   return [...new Set(parts)].join("\n\n")
+}
+
+/** True when the page text includes a merchant-style note list or pyramid — not metaphor-only prose. */
+const hasExplicitNoteListSignal = (text: string): boolean => {
+  const t = text
+  if (/\b(?:featured|key|main|primary|signature|dominant)\s+notes?\s*:/i.test(t)) return true
+  if (/\bscent\s+notes?\s+include\b/i.test(t)) return true
+  if (/\bfragrance\s+notes?\s+are\b/i.test(t)) return true
+  if (/\bnote\s+structure\b/i.test(t)) return true
+  if (/\b(?:top|heart|middle|mid|base|opening|dry[\s-]*down)\s*(?:notes?)?\s*:/i.test(t)) return true
+  if (/\bnotes?\s*:\s*[a-z0-9]/i.test(t)) return true
+  return false
+}
+
+/** Same four "ingredients" the noir generator hammers — if that's all we extracted, PDP bootstrap likely failed first pass. */
+const NOIR_NOTE_CLICHE = new Set(["plum", "rose", "brown sugar", "golden honey"])
+
+const isLikelyNoirClicheOnlyNotes = (notes: {
+  openNotes: string[]
+  heartNotes: string[]
+  baseNotes: string[]
+}): boolean => {
+  const union = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
+    .map(s => s.trim().toLowerCase())
+    .filter(Boolean)
+  if (union.length === 0 || union.length > 6) return false
+  return union.every(n => NOIR_NOTE_CLICHE.has(n))
+}
+
+/** One fetch per URL per process — scrapes hit the same PDPs many times in a single run. */
+const pdpNoteBootstrapCache = new Map<string, string | null>()
+
+const stripHtmlToPlainText = (html: string): string =>
+  html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/\s+/g, " ")
+    .trim()
+
+/** Shopify PDPs use "Concentration :" / "Volume :" (space before colon). Match those headers, not bare \bVolume\b (avoids false stops inside note lists). */
+const FEATURED_LIST_SECTION_STOP = String.raw`(?=\s+Concentration\s*:|\s+Volume\s*:|\s+Size\s*:|\s+Shipping\s*:|\s+Ingredients\s*:|\s+Add to cart\b|\s+Buy it now\b|\s+You may also\b|Related products\b|Customer reviews\b|\s+📷|Tag us on|$)`
+
+const unescapeHtmlAttr = (s: string): string =>
+  s
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/gi, "&")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/\u00a0/g, " ")
+
+/**
+ * Extract "Featured notes: …" / key notes from already-plain text (meta description, stripped body).
+ */
+const extractFeaturedBlockFromPlain = (t: string): string | null => {
+  const plain = (t ?? "").replace(/\s+/g, " ").trim()
+  if (plain.length < 30) return null
+
+  const featured = plain.match(
+    new RegExp(String.raw`\bfeatured\s+notes?\s*:\s*(.+?)${FEATURED_LIST_SECTION_STOP}`, "i"),
+  )
+  if (featured?.[1]) {
+    const body = featured[1].trim().replace(/[,;]\s*$/, "")
+    if (body.length >= 12 && /[a-z]{2,}/i.test(body)) {
+      return `featured notes: ${body}`.slice(0, 4000)
+    }
+  }
+
+  const keyNotes = plain.match(
+    new RegExp(
+      String.raw`\b(?:key|main|signature|primary|dominant)\s+notes?\s*:\s*(.+?)${FEATURED_LIST_SECTION_STOP}`,
+      "i",
+    ),
+  )
+  if (keyNotes?.[1]) {
+    const body = keyNotes[1].trim().replace(/[,;]\s*$/, "")
+    if (body.length >= 12 && /[a-z]{2,}/i.test(body)) {
+      return `key notes: ${body}`.slice(0, 4000)
+    }
+  }
+
+  const featuring = plain.match(/\bfeaturing\s+notes?\s+of\s+([^.]{12,2000})\./i)
+  if (featuring?.[1]) {
+    const body = featuring[1].trim()
+    return `fragrance notes: ${body}.`.slice(0, 4000)
+  }
+
+  const scentInc = plain.match(/\bscent\s+notes?\s+include\s+([^.]{12,2000})\./i)
+  if (scentInc?.[1]) {
+    const body = scentInc[1].trim()
+    return `scent notes include ${body}.`.slice(0, 4000)
+  }
+
+  const fragAre = plain.match(/\bfragrance\s+notes?\s+are\s+([^.]{12,2000})\./i)
+  if (fragAre?.[1]) {
+    const body = fragAre[1].trim()
+    return `fragrance notes are ${body}.`.slice(0, 4000)
+  }
+
+  return null
+}
+
+const extractFromMetaDescriptionTag = (html: string): string | null => {
+  const m = html.match(/<meta\s+name="description"\s+content="([^"]*)"/i)
+  if (!m?.[1]) return null
+  const plain = unescapeHtmlAttr(m[1]).replace(/\s+/g, " ").trim()
+  return extractFeaturedBlockFromPlain(plain)
+}
+
+/** Shopify product JSON / JSON-LD often embeds the full RTE string with "Featured Notes: …" before scripts are stripped. */
+const extractFeaturedFromRawHtmlQuotes = (html: string): string | null => {
+  const idx = html.search(/Featured Notes\s*:/i)
+  if (idx < 0) return null
+  const slice = html.slice(idx, idx + 4500)
+  const rough = slice
+    .replace(/\\u003c/gi, "<")
+    .replace(/\\u003e/gi, ">")
+    .replace(/\\n/g, " ")
+    .replace(/\\"/g, '"')
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+  return extractFeaturedBlockFromPlain(rough)
+}
+
+/**
+ * Pull a single merchant-authored note line from raw PDP HTML when Selenium/plain description missed it.
+ */
+const extractMerchantNoteBootstrapFromHtml = (html: string): string | null => {
+  if (!html?.trim()) return null
+
+  const fromMeta = extractFromMetaDescriptionTag(html)
+  if (fromMeta) return fromMeta
+
+  const fromRaw = extractFeaturedFromRawHtmlQuotes(html)
+  if (fromRaw) return fromRaw
+
+  const t = stripHtmlToPlainText(html)
+  return extractFeaturedBlockFromPlain(t)
+}
+
+const tryFetchPdpNoteBootstrap = async (
+  detailUrl: string,
+  sig: AbortSignal | undefined,
+): Promise<string | null> => {
+  const cached = pdpNoteBootstrapCache.get(detailUrl)
+  if (cached !== undefined) return cached
+  try {
+    const u = new URL(detailUrl)
+    if (u.protocol !== "http:" && u.protocol !== "https:") {
+      pdpNoteBootstrapCache.set(detailUrl, null)
+      return null
+    }
+    const res = await fetch(detailUrl, {
+      signal: sig,
+      redirect: "follow",
+      headers: {
+        "user-agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
+        "accept-language": "en-US,en;q=0.9",
+      },
+    })
+    if (!res.ok) {
+      pdpNoteBootstrapCache.set(detailUrl, null)
+      return null
+    }
+    const html = await res.text()
+    const chunk = extractMerchantNoteBootstrapFromHtml(html)
+    pdpNoteBootstrapCache.set(detailUrl, chunk)
+    return chunk
+  } catch {
+    pdpNoteBootstrapCache.set(detailUrl, null)
+    return null
+  }
+}
+
+/**
+ * Some PDPs bury "Featured notes:" / "Key notes:" after long prose. Pull those labeled spans up so
+ * flat-list regex reliably runs (and so runs beat noir-only tails in the same string).
+ */
+const augmentNotesSourceWithLabeledLists = (raw: string): string => {
+  const collapsed = (raw ?? "").replace(/\r/g, "\n").replace(/\s+/g, " ").trim()
+  if (!collapsed) return raw ?? ""
+
+  const segments: string[] = []
+  const re = new RegExp(
+    String.raw`\b((?:featured|key|main|primary|signature|dominant)\s+notes?)\s*:\s*(.+?)${FEATURED_LIST_SECTION_STOP}`,
+    "gi",
+  )
+  let m: RegExpExecArray | null
+  while ((m = re.exec(collapsed)) !== null) {
+    const label = (m[1] ?? "").trim().toLowerCase()
+    const list = (m[2] ?? "").trim()
+    if (list.length >= 8) segments.push(`${label}: ${list}`)
+  }
+  if (segments.length === 0) return raw
+
+  const boost = [...new Set(segments)].join("\n")
+  const head = boost.slice(0, Math.min(80, boost.length))
+  if (collapsed.toLowerCase().includes(head.toLowerCase())) return raw
+  return `${boost}\n\n${raw}`.trim()
 }
 
 // ---------------------------------------------------------------------------
@@ -750,13 +961,18 @@ Return ONLY a JSON object with exactly these keys (use these exact names):
 
 Authoritative lists (must follow first):
 - If the text contains a comma- or "and"-separated note list introduced by any of: "Scent notes include", "Fragrance notes are", "Fragrance notes:", "Notes:", "Note:", "Key notes:", "Featured notes", "Main notes:", "with notes of", or similar labeled lines, that list is the ONLY source of notes. Include every item verbatim (lowercase, English). Put them all in openNotes and set heartNotes and baseNotes to [] unless the same text explicitly defines Top/Heart/Base (or equivalent) grouping for those exact materials.
-- Do NOT add ingredients that appear only in marketing or storytelling sentences (e.g. sandalwood, musk, jasmine) if they are not in that labeled list.
+- If there is NO such labeled list but the copy clearly states materials in structured phrases like "opens with … Apricot, Black Tea, and … Neroli", "portrayed … by … Rose and Oakwood", or "greeted by warm notes of Maple, … Amber, and … Leather", extract those comma-/and-separated materials as the note set (open/heart/base by order or volatility).
 
 Layer detection (only when there is NO authoritative flat list as above):
 - If the text uses section headers (e.g. "Top:", "Heart:", "Base:" or "Opening:", "Mid:", "Body:", "Center:", "Bottom:", "Background:", "Dry down:" or "Head/Heart/Base", or French "Notes de tête / de cœur / de fond"), put each note in the matching layer.
 - If it says "top notes include X, Y" or "heart: X, Y" or "base notes: X", follow that structure.
 - If there is no layering, spread notes by typical volatility: citrus, herbs, light florals → openNotes; florals, spices, fruits → heartNotes; woods, musk, vanilla, amber, resins → baseNotes.
 - When in doubt, prefer putting a note in heartNotes rather than omitting it.
+
+Prose extraction (when there is no labeled list — narrative copy and storytelling can still name real materials):
+- Extract every named fragrance material that appears anywhere in the text, even when it is woven into metaphor or storytelling. Examples of materials to keep: rose, plum, honey, brown sugar, smoke, leather, amber, vanilla, sandalwood, oakwood, bergamot, jasmine, musk, oud, tobacco, incense, patchouli, cedar, vetiver, lavender, neroli, bourbon, whiskey, coffee, cocoa, hay, salt, sea, rain, ozone, peppercorn, cinnamon, clove, ginger.
+- Do NOT skip a material just because it appears inside a metaphor sentence ("she wore plum and rose like a secret" still means plum and rose are notes).
+- Ignore non-material storytelling words (e.g. "shadow", "midnight", "secret", "temptation", "velvet" as a texture, "moonlight", "whisper", "promise").
 
 Rules (when not using a single authoritative list):
 - Extract every fragrance note mentioned in the narrative — include every scent ingredient (e.g. vanilla, rose, black pepper, sandalwood, bergamot, jasmine, musk, amber, oud).
@@ -812,7 +1028,7 @@ How to find notes (use ALL of these):
 
 Rules:
 - Return ONLY a JSON object: {"openNotes": string[], "heartNotes": string[], "baseNotes": string[]}.
-- NEVER return all empty arrays. Always provide at least 2-3 notes total (prefer 4+ for well-known perfumes).
+- NEVER return all empty arrays. Always provide AT LEAST 3 notes total, distributed across at least two of the three layers. Prefer 4-6 notes total for evocative/abstract names. Cap the total at 6 notes — do not pad with generic filler.
 - For recognized fragrances (e.g. Lush Lord of Misrule, Karma, Rose Jam), use the fragrance's documented top/heart/base notes — do not return only a single generic note like "musk".
 - Use lowercase. No duplicates. No explanation, no markdown.
 - Assign by volatility: citrus, herbs, green, light florals → openNotes; florals, spices, fruits → heartNotes; woods, musk, vanilla, amber, oud, resins → baseNotes.`
@@ -1285,7 +1501,22 @@ const processSingleProductPhase1 = async (
   opts.onProgress?.(
     `Notes pipeline ${index + 1}/${totalItems}: ${(name || resolvedName || "product").slice(0, 72)}`,
   )
-  const notesSource = resolveNotesSource(item)
+  let mergedBase = resolveNotesSource(item)
+  if (
+    opts.fetchPdpNoteBootstrap === true &&
+    !hasExplicitNoteListSignal(mergedBase) &&
+    item.detailURL?.trim().startsWith("http")
+  ) {
+    throwIfAborted(sig)
+    const boot = await tryFetchPdpNoteBootstrap(item.detailURL.trim(), sig)
+    if (boot) {
+      mergedBase = `${boot}\n\n${mergedBase}`.trim()
+      opts.onProgress?.(
+        `Notes pipeline ${index + 1}/${totalItems}: injected note list from PDP HTML for ${(name || resolvedName || "product").slice(0, 48)}`,
+      )
+    }
+  }
+  const notesSource = augmentNotesSourceWithLabeledLists(mergedBase)
   try {
     const flatAuthEarly = extractFlatNotes(notesSource)
     let notes = extractNotesFromStructuredText(notesSource)
@@ -1321,8 +1552,14 @@ const processSingleProductPhase1 = async (
       notes = await mergeStructuredNotesWithLlm(llm, notes, notesSource, name || resolvedName)
     }
 
-    const totalAfterLlm = notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
-    if (totalAfterLlm === 0 && !notesSource?.trim()) {
+    /**
+     * Guaranteed name + theme inference when description-based extraction yields nothing.
+     * Runs whether the source text was empty or not — a prose-only description that the LLM
+     * couldn't pull materials from still gets name/house/theme-inferred notes here, so the
+     * scraper never imports a perfume with empty notes (and the noir step never overwrites the
+     * original merchant copy without something to anchor it).
+     */
+    if (noteLayerCount(notes) === 0) {
       const fallbackName = name || resolvedName
       if (fallbackName?.trim()) {
         throwIfAborted(sig)
@@ -1336,6 +1573,32 @@ const processSingleProductPhase1 = async (
     }
 
     notes = preferAuthoritativeFlatNoteList(notes, extractFlatNotes(notesSource))
+
+    if (
+      opts.fetchPdpNoteBootstrap === true &&
+      item.detailURL?.trim().startsWith("http") &&
+      isLikelyNoirClicheOnlyNotes(notes)
+    ) {
+      throwIfAborted(sig)
+      pdpNoteBootstrapCache.delete(item.detailURL.trim())
+      const boot = await tryFetchPdpNoteBootstrap(item.detailURL.trim(), sig)
+      if (boot) {
+        const rescueSource = augmentNotesSourceWithLabeledLists(`${boot}\n\n${mergedBase}`)
+        const rescuedFlat = extractFlatNotes(rescueSource)
+        let rescued = extractNotesFromStructuredText(rescueSource)
+        rescued = preferAuthoritativeFlatNoteList(rescued, rescuedFlat)
+        if (
+          rescuedFlat.length >= 6 ||
+          noteLayerCount(rescued) > noteLayerCount(notes) ||
+          !isLikelyNoirClicheOnlyNotes(rescued)
+        ) {
+          notes = rescued
+          opts.onProgress?.(
+            `Notes pipeline ${index + 1}/${totalItems}: replaced noir-cliché notes using PDP fetch for ${(name || resolvedName || "product").slice(0, 48)}`,
+          )
+        }
+      }
+    }
 
     const cleanNote = (n: string) => isScraperKeptNote(n)
     notes = {
@@ -1454,7 +1717,14 @@ function buildGraph(
         continue
       }
 
-      if (opts.generateNoirDescriptions && noirLlm) {
+      /**
+       * Skip noir when the extraction ladder couldn't produce at least 2 notes for this product.
+       * Noir generation overwrites the original merchant copy, so writing noir without notes leaves
+       * the row with no recoverable source text — a future refresh:house-notes run can't extract
+       * anything from a noir paragraph. Keeping the original description preserves that option.
+       */
+      const totalNotes = noteLayerCount(p.notes)
+      if (opts.generateNoirDescriptions && noirLlm && totalNotes >= 2) {
         throwIfAborted(sig)
         const noirDesc = await generateNoirDescription(
           noirLlm,
@@ -1469,6 +1739,11 @@ function buildGraph(
           description: noirDesc,
         })
       } else {
+        if (opts.generateNoirDescriptions && noirLlm && totalNotes < 2) {
+          opts.onProgress?.(
+            `Notes pipeline: skipped noir for "${p.name.slice(0, 60)}" — only ${totalNotes} note(s) extracted; keeping original description for re-extraction.`,
+          )
+        }
         results.push(p.record)
       }
     }

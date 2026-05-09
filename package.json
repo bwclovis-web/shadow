@@ -28,6 +28,7 @@
     "db:restore:pg:list": "node scripts/restore-database.js --list",
     "migrate:images": "npx tsx scripts/migrate-images-to-r2.ts",
     "refresh:house-notes": "npx tsx scripts/refresh-house-notes-from-description.ts",
+    "notes:fixture": "npx tsx scripts/run-note-pipeline-fixture.ts",
     "start": "next start",
     "lint": "eslint",
     "knip": "knip",

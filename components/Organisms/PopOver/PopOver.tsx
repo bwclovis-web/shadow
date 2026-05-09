@@ -5,6 +5,7 @@ import { usePopoverMenu } from '@/hooks/usePopoverMenu'
 import { styleMerge } from '@/utils/styleUtils'
 import { Button } from '@/components/Atoms/Button/Button'
 import { ButtonVariants } from '../../Atoms/Button/button-variants'
+import type { IconName } from '@/components/Atoms/Icons/Icons'
 import type { PopOverCloseButtonOptions } from '../../Molecules/PopOverFooter/popOverCloseButton'
 import { PopoverFooter } from '../../Molecules/PopOverFooter/PopoverFooter'
 import { PopOverHeader } from '../../Molecules/PopOverHeading/PopOverHeader'
@@ -37,6 +38,7 @@ interface PopOverProps {
     closePosition?: 'right' | 'left'
     closeButtonAriaLabel?: string
     headingIcon?: {
+      icon: IconName
       position: 'left' | 'right'
     }
   }
@@ -49,7 +51,7 @@ interface PopOverProps {
     triggerVariant?: ButtonVariants['variant']
     triggerSize?: ButtonVariants['size']
     triggerText?: string
-    triggerIcon?: string
+    triggerIcon?: IconName
     triggerAriaLabel?: string
   }
   imperativeRef?: PopOverImperativeRef
@@ -61,10 +63,10 @@ export const PopOver = ({
   panelAriaLabel,
   size = 'sm',
   trigger = {
-    triggerVariant: 'tertiary',
+    triggerVariant: 'secondary',
     triggerSize: 'md',
     triggerText: '',
-    triggerIcon: ''
+    triggerIcon: undefined
   },
   placement = 'above',
   header = {
@@ -157,6 +159,8 @@ export const PopOver = ({
             closePosition={header.closePosition}
             closeMenu={closeMenu}
             heading={header.heading}
+            headingIcon={header.headingIcon}
+            headingId={panelHeadingId}
             size={size}
           />
         </div>
