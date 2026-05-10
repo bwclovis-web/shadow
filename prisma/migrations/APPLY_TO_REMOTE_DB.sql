@@ -91,6 +91,14 @@ DO $$ BEGIN
     END IF;
 END $$;
 
+-- WishlistBottlePreference enum (wishlist sample / partial / full / any)
+DO $$ BEGIN
+    CREATE TYPE "WishlistBottlePreference" AS ENUM ('sample', 'partial', 'full', 'any');
+EXCEPTION
+    WHEN duplicate_object THEN
+        RAISE NOTICE 'WishlistBottlePreference enum already exists, skipping';
+END $$;
+
 -- ============================================================================
 -- 2. CREATE MISSING TABLES
 -- ============================================================================
@@ -309,6 +317,20 @@ DO $$ BEGIN
     ) THEN
         ALTER TABLE "UserPerfumeWishlist" ADD COLUMN "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
         RAISE NOTICE 'Added updatedAt column to UserPerfumeWishlist';
+    END IF;
+END $$;
+
+-- Add bottlePreference to UserPerfumeWishlist if missing (matches prisma/schema.prisma)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'UserPerfumeWishlist'
+          AND column_name = 'bottlePreference'
+    ) THEN
+        ALTER TABLE "UserPerfumeWishlist"
+        ADD COLUMN "bottlePreference" "WishlistBottlePreference" NOT NULL DEFAULT 'any';
+        RAISE NOTICE 'Added bottlePreference column to UserPerfumeWishlist';
     END IF;
 END $$;
 

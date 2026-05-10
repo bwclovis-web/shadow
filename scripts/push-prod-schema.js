@@ -114,7 +114,13 @@ async function verifySchema() {
           SELECT 1 FROM pg_enum e
           JOIN pg_type t ON e.enumtypid = t.oid
           WHERE t.typname = 'PerfumeType' AND e.enumlabel = 'hairGloss'
-        ) AS "hasPerfumeTypeHairGloss"
+        ) AS "hasPerfumeTypeHairGloss",
+        EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'UserPerfumeWishlist'
+            AND column_name = 'bottlePreference'
+        ) AS "hasUserPerfumeWishlistBottlePreference"
     `)
 
     const result = Array.isArray(checks) ? checks[0] : checks
