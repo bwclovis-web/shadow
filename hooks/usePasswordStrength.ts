@@ -224,5 +224,3 @@ export const usePasswordStrength = (
     calculateStrength,
   }
 }
-
-export default usePasswordStrength

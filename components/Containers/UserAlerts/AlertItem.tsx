@@ -298,5 +298,3 @@ export const AlertItem = ({
     </div>
   )
 }
-
-export default AlertItem

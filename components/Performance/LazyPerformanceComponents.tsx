@@ -26,7 +26,7 @@ const PerformanceLoading = () => (
 )
 
 // Lazy performance components wrapper
-export const LazyPerformanceComponents = () => (
+const LazyPerformanceComponents = () => (
   <Suspense fallback={<PerformanceLoading />}>
     <div className="space-y-6">
       <PerformanceDashboard />

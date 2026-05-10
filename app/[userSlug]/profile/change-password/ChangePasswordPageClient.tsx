@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl"
 
-import ChangePasswordForm from "@/components/Molecules/ChangePasswordForm/ChangePasswordForm"
+import { ChangePasswordForm } from "@/components/Molecules/ChangePasswordForm/ChangePasswordForm"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 
 type ChangePasswordPageClientProps = {

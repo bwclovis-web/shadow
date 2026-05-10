@@ -107,4 +107,3 @@ scrollToIndex, scrollToAlignment, itemHeight, containerHeight
 }
 
 export { VirtualScroll }
-export default VirtualScroll

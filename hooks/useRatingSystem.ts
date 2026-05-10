@@ -129,5 +129,3 @@ export const useRatingSystem = ({
     categories,
   }
 }
-
-export default useRatingSystem

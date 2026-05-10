@@ -132,5 +132,3 @@ export const handleDownloadCSV = async (handlers?: DownloadCsvHandlers) => {
     handlers?.onError?.(errorMessage)
   }
 }
-
-export default handleDownloadCSV

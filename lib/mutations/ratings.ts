@@ -141,8 +141,3 @@ export const useCreateOrUpdateRating = () => {
     },
   })
 }
-
-// Alias for convenience (matching the checklist naming)
-export const useCreateRating = useCreateOrUpdateRating
-export const useUpdateRating = useCreateOrUpdateRating
-

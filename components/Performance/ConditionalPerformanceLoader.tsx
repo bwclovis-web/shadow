@@ -51,5 +51,3 @@ export const ConditionalPerformanceLoader = ({
     </Suspense>
   )
 }
-
-export default ConditionalPerformanceLoader

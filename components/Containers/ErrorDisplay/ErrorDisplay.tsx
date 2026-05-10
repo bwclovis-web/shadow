@@ -57,7 +57,7 @@ const getResolvedContent = (error: unknown) => {
   return { message, type, title }
 }
 
-export const ErrorDisplay = ({
+const ErrorDisplay = ({
   error,
   title: titleProp,
   showDetails = false,

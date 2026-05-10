@@ -397,5 +397,3 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
     </div>
   )
 }
-
-export default SearchTypeahead

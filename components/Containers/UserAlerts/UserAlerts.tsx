@@ -20,7 +20,7 @@ interface UserAlertsProps {
   initialUnreadCount?: number
 }
 
-export const UserAlerts = ({
+const UserAlerts = ({
   userId,
   initialAlerts = [],
   initialPreferences,

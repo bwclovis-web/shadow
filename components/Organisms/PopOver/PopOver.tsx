@@ -178,5 +178,3 @@ export const PopOver = ({
     </>
   )
 }
-
-export default PopOver

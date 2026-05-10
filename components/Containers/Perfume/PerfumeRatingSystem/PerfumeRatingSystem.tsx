@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 
 import NoirRating from "@/components/Organisms/NoirRating"
-import { useRatingSystem } from "@/hooks"
+import { useRatingSystem } from "@/hooks/useRatingSystem"
 import type {
   PerfumeDetailAverageRatingsProp,
   PerfumeDetailUserRatingsProp,

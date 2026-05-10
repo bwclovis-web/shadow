@@ -1,6 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["prisma/seed.ts"],
+  "ignoreFiles": ["prisma/seed.ts"],
   "ignore": [
     "scripts/**",
     "public/sw.js",
@@ -8,6 +8,7 @@
     "prisma/schema.prod.temp.prisma"
   ],
   "ignoreBinaries": ["prisma-docs-generator"],
+  "ignoreDependencies": ["csv-parse"],
   "rules": {
     "duplicates": "warn",
     "enumMembers": "warn",

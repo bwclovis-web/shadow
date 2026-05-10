@@ -173,5 +173,3 @@ export const AlertBell = ({
     </div>
   )
 }
-
-export default AlertBell

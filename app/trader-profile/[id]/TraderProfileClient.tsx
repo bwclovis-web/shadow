@@ -14,7 +14,7 @@ import type { TraderFeedbackResponse } from "@/lib/queries/traderFeedback"
 import type { SafeUser, UserPerfumeI } from "@/types"
 import { getTraderDisplayName } from "@/utils/user"
 import { TraderProfileAside } from "./aside/aside"
-import useMediaQuery from "@/hooks/useMediaQuery"
+import { useMediaQuery } from "@/hooks/useMediaQuery"
 const DESKTOP_MEDIA = "(min-width: 1024px)"
 
 const BANNER_IMAGE = "/images/trade.webp"

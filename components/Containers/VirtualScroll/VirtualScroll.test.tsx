@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
-import VirtualScroll from "./VirtualScroll"
+import { VirtualScroll } from "./VirtualScroll"
 
 const mockItems = Array.from({ length: 100 }, (_, i) => ({
   id: i,

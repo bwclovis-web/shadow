@@ -26,5 +26,3 @@ export const FilterPanelSection: FC<FilterPanelSectionProps> = ({
     {children}
   </section>
 )
-
-export default FilterPanelSection

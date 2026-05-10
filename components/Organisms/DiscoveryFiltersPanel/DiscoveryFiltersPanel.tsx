@@ -206,5 +206,3 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
     </div>
   )
 }
-
-export default DiscoveryFiltersPanel

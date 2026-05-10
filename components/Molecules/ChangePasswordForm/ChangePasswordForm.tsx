@@ -292,5 +292,3 @@ export const ChangePasswordForm = ({
     </form>
   )
 }
-
-export default ChangePasswordForm

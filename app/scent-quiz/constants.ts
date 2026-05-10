@@ -3,7 +3,7 @@ export const SCENT_QUIZ_ROUTE = "/scent-quiz" as const
 export const MIN_NOTE_SELECTIONS = 3
 export const MAX_NOTE_SELECTIONS = 7
 
-export const STEPS = [
+const STEPS = [
   "welcome",
   "note-preferences",
   "avoid-notes",

@@ -177,5 +177,3 @@ export const useFormState = <T extends Record<string, any>>({
     validate: validateForm,
   }
 }
-
-export default useFormState

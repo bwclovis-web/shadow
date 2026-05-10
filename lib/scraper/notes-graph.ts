@@ -214,10 +214,20 @@ const extractFeaturedBlockFromPlain = (t: string): string | null => {
    * "sweet/spicy blend of Patchouli, Vanilla, …" — no "Featured notes:" header.
    * Run before the length gate so short meta descriptions still bootstrap.
    */
-  // Stop before `$12` / `Price` — a greedy `[^.!?]+` would swallow Wix price tails and merge the
-  // last note with `$16.00` (junk filter drops it — e.g. missing "clove" on Seventh Muse).
+  /**
+   * Stop boundaries for inline-prose blend phrases. Wix / Shopify / Etsy PDPs render UI labels
+   * (Quantity, Add to Cart, Buy It Now, Subscribe, Details) immediately after the description
+   * with no real punctuation in between, so the boundary needs to include them — otherwise the
+   * regex consumes past the last real note and "Persian Lime" becomes "Persian Lime Quantity".
+   */
+  const ECOMMERCE_STOP =
+    String.raw`(?=\s+\$\d|\s+Price\s|\s+Quantity\b|\s+Qty\b|\s+SKU\b|\s+Add\s+to\s+(?:Cart|Wishlist|Bag|Favorites)\b|\s+Buy\s+(?:Now|It\s+Now)\b|\s+Subscribe\b|\s+View\s+full\s+details\b|\s+Choose\s+a\s+selection\b|[.!?]|$)`
+
   const blendPhrase = plain.match(
-    /\b(?:[\w.]+\s+){0,6}(?:sweet\/spicy\s+)?blend\s+of\s+.+?(?=\s+\$\d|\s+Price\s|[.!?]|$)/i,
+    new RegExp(
+      String.raw`\b(?:[\w.]+\s+){0,6}(?:sweet\/spicy\s+)?blend\s+of\s+.+?${ECOMMERCE_STOP}`,
+      "i",
+    ),
   )
   if (blendPhrase?.[0]) {
     const raw = blendPhrase[0].trim()
@@ -229,7 +239,10 @@ const extractFeaturedBlockFromPlain = (t: string): string | null => {
   }
 
   const aromaBlend = plain.match(
-    /\b(?:scent|fragrance|aroma)\s+blend\s+of\s+.+?(?=\s+\$\d|\s+Price\s|[.!?]|$)/i,
+    new RegExp(
+      String.raw`\b(?:scent|fragrance|aroma)\s+blend\s+of\s+.+?${ECOMMERCE_STOP}`,
+      "i",
+    ),
   )
   if (aromaBlend?.[0]) {
     const raw = aromaBlend[0].trim()
@@ -244,7 +257,19 @@ const extractFeaturedBlockFromPlain = (t: string): string | null => {
     /\b([A-Z][^.!?\n*$]{2,85}?)\s*(?:\.{2,}|\u2026)\s*(?:just\b|here'?s|here\s+is|this\s+is|we\s+|you\s+'?ll|read\s+more|learn\s+more|click\s+)/i,
   )
   if (ellipsisHook?.[1]) {
-    const raw = ellipsisHook[1].trim()
+    /**
+     * Wix / boutique PDPs render the price label INLINE just before the description (e.g.
+     * "Spring Fairy Perfume Oil $21.00 Price Dew and Honeysuckle…just what we imagine…").
+     * The `[A-Z]` start-anchor latches on to "Price"/"Quantity"/etc., not the actual scent line —
+     * strip any leading e-commerce labels so "Dew and Honeysuckle" is what `splitNoteList` sees.
+     */
+    const raw = ellipsisHook[1]
+      .trim()
+      .replace(
+        /^(?:\$?\d+(?:[.,]\d+)?|price|quantity|qty|sku|item|product|in\s+stock|out\s+of\s+stock)\b[\s:,-]*/gi,
+        "",
+      )
+      .trim()
     const listLike = /\band\b/i.test(raw) || /,/.test(raw)
     if (listLike && raw.length >= 8 && raw.length <= 120) return raw.slice(0, 4000)
   }
@@ -648,11 +673,25 @@ function splitNoteList(text: string): string[] {
     .replace(/\s*&\s*/g, ", ")
     .replace(/\band\b/gi, ",")
 
+  /**
+   * Defense-in-depth: strip trailing e-commerce UI labels that occasionally cling to the last
+   * note when an upstream regex consumes past the actual list boundary (e.g. Wix renders
+   * "Persian Lime Quantity" inline because Quantity is the next button label).
+   */
+  const stripTrailingEcommerceLabels = (part: string): string =>
+    part
+      .replace(
+        /\s+(?:quantity|qty|sku|add\s+to\s+(?:cart|wishlist|bag|favorites)|buy\s+(?:now|it\s+now)|subscribe|view\s+full\s+details|choose\s+a\s+selection|details|share|copy\s+link)\s*$/i,
+        "",
+      )
+      .trim()
+
   return uniqueNotes(
     splitReady
       .split(/[\n,]+/)
       .map(part => unmaskParenGroups(part.trim(), groups))
       .map(part => part.replace(/^[&\-\u2022*:\s]+/, "").replace(/[.:\-\s*]+$/, ""))
+      .map(stripTrailingEcommerceLabels)
       .filter(part => !/^amp$/i.test(part))
       .filter(Boolean),
   )
@@ -713,7 +752,7 @@ const JUNK_NOTE_PATTERNS: RegExp[] = [
   /[.!?;:(){}\[\]"]/, // punctuation → sentence fragment or copy
   /\d{2,}/, // numbers like sizes, prices, percentages
   /\d+(?:rem|em|ch|vw|vh|px|pt)\b/i, // CSS / layout tokens (e.g. 1rem, 12px)
-  /\b(buy|shop|order|add to cart|checkout|shipping|delivery|free|sale|discount)\b/i,
+  /\b(buy|shop|order|add to cart|checkout|shipping|delivery|free|sale|discount|price|quantity|qty|sku)\b/i,
   /\b(livrare|cumpara|adauga|comanda|rapid|gratuit)\b/i, // Romanian commerce
   /\b(livraison|acheter|commande|gratuit)\b/i, // French commerce
   /\b(extrait|parfum|eau de|huile|spray|ml|oz)\b/i,
@@ -1672,10 +1711,20 @@ const processSingleProductPhase1 = async (
     throwIfAborted(sig)
     const boot = await tryFetchPdpNoteBootstrap(item.detailURL.trim(), sig, opts.onProgress)
     if (boot) {
-      mergedBase = `${boot}\n\n${mergedBase}`.trim()
-      opts.onProgress?.(
-        `Notes pipeline ${index + 1}/${totalItems}: injected note list from PDP HTML for ${(name || resolvedName || "product").slice(0, 48)}`,
-      )
+      /**
+       * Skip the merge if the bootstrap chunk is already substantially present in the description
+       * (e.g. Wix PDP description IS "Dew and Honeysuckle…", and the regex would otherwise capture
+       * the duplicated "Dew and Honeysuckle Dew and Honeysuckle" span and emit fake compound notes
+       * like "honeysuckle dew").
+       */
+      const haystack = mergedBase.toLowerCase().replace(/\s+/g, " ")
+      const needle = boot.toLowerCase().replace(/\s+/g, " ")
+      if (!haystack.includes(needle)) {
+        mergedBase = `${boot}\n\n${mergedBase}`.trim()
+        opts.onProgress?.(
+          `Notes pipeline ${index + 1}/${totalItems}: injected note list from PDP HTML for ${(name || resolvedName || "product").slice(0, 48)}`,
+        )
+      }
     }
   }
   const notesSource = augmentNotesSourceWithLabeledLists(mergedBase)

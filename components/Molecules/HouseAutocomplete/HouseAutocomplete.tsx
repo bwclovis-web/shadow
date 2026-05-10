@@ -84,5 +84,3 @@ export const HouseAutocomplete: FC<HouseAutocompleteProps> = ({
     </div>
   )
 }
-
-export default HouseAutocomplete

@@ -285,5 +285,3 @@ export const AlertPreferences = ({
     </VooDooDetails>
   )
 }
-
-export default AlertPreferences

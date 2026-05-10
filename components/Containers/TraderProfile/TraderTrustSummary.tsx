@@ -48,7 +48,7 @@ type TraderTrustSummaryProps = {
   reputation: TraderReputationV1
 }
 
-export const TraderTrustSummary = ({ reputation }: TraderTrustSummaryProps) => {
+const TraderTrustSummary = ({ reputation }: TraderTrustSummaryProps) => {
   const t = useTranslations("traderProfile.reputation")
 
   const hasAvg =

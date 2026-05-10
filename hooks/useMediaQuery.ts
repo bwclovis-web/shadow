@@ -60,5 +60,3 @@ export const useResponsivePageSize = (): number => {
 
   return pageSize
 }
-
-export default useMediaQuery

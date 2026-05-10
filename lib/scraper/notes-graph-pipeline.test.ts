@@ -1049,6 +1049,110 @@ Base: white musk`
     vi.unstubAllGlobals()
   })
 
+  it("Wix-style 'Dew and Honeysuckle…just what we imagine' prose: extracts clean ['dew', 'honeysuckle'] without 'Price' / duplicate-region leakage", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    /**
+     * Reproduces the Seventh Muse "Spring Fairy" failure mode: Wix renders the price label inline
+     * just before the description, the stripped plain text becomes "$21.00 Price Dew and
+     * Honeysuckle…just what we imagine…", the ellipsisHook regex starts matching at the [A-Z] in
+     * "Price", and the bootstrap-merge then duplicates the same prose region — producing notes
+     * like ["price dew", "honeysuckle dew", "honeysuckle"]. After the fix the e-commerce label
+     * prefix is stripped and the bootstrap is not double-merged when it's already in the source,
+     * so the only notes that survive are the two real materials.
+     */
+    const wixHtml = `<html><head>
+      <meta property="og:description" content="Dew and Honeysuckle...just what we imagine a fairy garden would smell like" />
+      </head><body>
+      <h1>Spring Fairy Perfume Oil</h1>
+      <span>$21.00</span><span>Price</span>
+      <p>Dew and Honeysuckle...just what we imagine a fairy garden would smell like</p>
+      <button>Quantity</button><button>Add to Cart</button>
+      </body></html>`
+    const fetchMock = vi.fn().mockImplementation(async () => ({
+      ok: true,
+      status: 200,
+      text: async () => wixHtml,
+    }))
+    vi.stubGlobal("fetch", fetchMock)
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Spring Fairy",
+        description: "Dew and Honeysuckle...just what we imagine a fairy garden would smell like",
+        image: "",
+        detailURL: "https://www.seventhmuse.net/product-page/spring-fairy-perfume-oil",
+        perfumeHouse: "Seventh Muse",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when 'Dew and Honeysuckle' parses cleanly from prose")
+    })
+
+    const records = await extractNotesForItems(items, "Seventh Muse", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: true,
+    })
+
+    expect(records).toHaveLength(1)
+    const all = [
+      ...JSON.parse(records[0].openNotes),
+      ...JSON.parse(records[0].heartNotes),
+      ...JSON.parse(records[0].baseNotes),
+    ] as string[]
+    expect(all).toEqual(expect.arrayContaining(["dew", "honeysuckle"]))
+    expect(all).not.toEqual(expect.arrayContaining(["price dew"]))
+    expect(all).not.toEqual(expect.arrayContaining(["honeysuckle dew"]))
+    expect(all).not.toEqual(expect.arrayContaining(["price"]))
+    expect(all.length).toBe(2)
+    vi.unstubAllGlobals()
+  })
+
+  it("Wix-style 'blend of …' prose followed by 'Quantity' button: keeps 'Persian Lime' clean (no 'persian lime quantity')", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    /**
+     * Reproduces the Seventh Muse "Summer Fairy" failure mode: the Wix layout puts the
+     * Quantity / Add to Cart buttons immediately after the description prose, so the
+     * stripped plain text becomes "...blend of Magnolia Flowers, Apple Blossom and Persian
+     * Lime Quantity * Add to Cart Details 1/2 ounce…". Before the fix the blendPhrase regex
+     * consumed past "Persian Lime" into "Quantity" and emitted a fake "persian lime quantity"
+     * note. After the fix the regex stops at the e-commerce label boundary AND `splitNoteList`
+     * strips any residual UI label tail.
+     */
+    const items: ScrapedItem[] = [
+      {
+        name: "Summer Fairy",
+        description:
+          "Soft, youthful, lovely blend of Magnolia Flowers, Apple Blossom and Persian Lime Quantity * Add to Cart Details 1/2 ounce oil",
+        image: "",
+        detailURL: "https://example.com/p/summer-fairy",
+        perfumeHouse: "Seventh Muse",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when blend phrase parses cleanly")
+    })
+
+    const records = await extractNotesForItems(items, "Seventh Muse", {
+      generateNoirDescriptions: false,
+    })
+
+    expect(records).toHaveLength(1)
+    const all = [
+      ...JSON.parse(records[0].openNotes),
+      ...JSON.parse(records[0].heartNotes),
+      ...JSON.parse(records[0].baseNotes),
+    ] as string[]
+    expect(all).toEqual(expect.arrayContaining(["magnolia flowers", "apple blossom", "persian lime"]))
+    expect(all).not.toEqual(expect.arrayContaining(["persian lime quantity"]))
+    expect(all).not.toEqual(expect.arrayContaining(["quantity"]))
+    expect(all).not.toEqual(expect.arrayContaining(["add to cart"]))
+    expect(all.length).toBe(3)
+  })
+
   it("Featured Notes ending with marketing copy: drops 'experiment for yourself' tail", async () => {
     vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
 

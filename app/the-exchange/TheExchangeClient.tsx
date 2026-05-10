@@ -15,7 +15,7 @@ import LinkCard from "@/components/Organisms/LinkCard"
 import Modal from "@/components/Organisms/Modal"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
-import useMediaQuery from "@/hooks/useMediaQuery"
+import { useMediaQuery } from "@/hooks/useMediaQuery"
 import { useSessionStore } from "@/hooks/sessionStore"
 import {
   discoveryFiltersActive,

@@ -1,14 +1,21 @@
 import { render, screen } from "@testing-library/react"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import PasswordStrengthIndicator from "./PasswordStrengthIndicator"
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) => {
+    if (key === "excellentPasswordStrength") return "Excellent password strength!"
+    if (key === "passwordMeetsAllRequirements") return "Password meets all requirements"
+    return key
+  },
+}))
 
-// Mock the usePasswordStrength hook
-vi.mock("~/hooks", () => ({
+vi.mock("@/hooks/usePasswordStrength", () => ({
   usePasswordStrength: vi.fn(),
 }))
 
-import { usePasswordStrength } from "~/hooks"
+import PasswordStrengthIndicator from "./PasswordStrengthIndicator"
+
+import { usePasswordStrength } from "@/hooks/usePasswordStrength"
 
 const mockUsePasswordStrength = usePasswordStrength as ReturnType<typeof vi.fn>
 

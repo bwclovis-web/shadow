@@ -1,10 +1,5 @@
-export {
-  SearchTypeahead,
-  type SearchTypeaheadProps,
-  type TypeaheadItem,
+export type {
+  SearchTypeaheadProps,
+  TypeaheadItem,
 } from "./SearchTypeahead"
 export { SearchTypeahead as default } from "./SearchTypeahead"
-export {
-  typeaheadItemRowClass,
-  typeaheadPanelClass,
-} from "./search-typeahead-surfaces"

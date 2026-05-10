@@ -80,5 +80,3 @@ export const createHandleUploadCSV =
 
     return { ok: true, successCount, errorCount, rowMessages }
   }
-
-export default createHandleUploadCSV

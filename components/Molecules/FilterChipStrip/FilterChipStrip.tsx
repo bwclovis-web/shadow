@@ -68,5 +68,3 @@ export const FilterChipStrip: FC<FilterChipStripProps> = ({
     </div>
   )
 }
-
-export default FilterChipStrip
