@@ -3,10 +3,21 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { queryKeys as perfumeQueryKeys } from "@/lib/queries/perfumes"
 import { queryKeys, type WishlistResponse as WishlistCache } from "@/lib/queries/user"
 
+export type WishlistBottlePreference = "sample" | "partial" | "full" | "any"
+
+/** Display / form order: Sample, Partial, Full, Any */
+export const WISHLIST_BOTTLE_PREFERENCE_OPTIONS: WishlistBottlePreference[] = [
+  "sample",
+  "partial",
+  "full",
+  "any",
+]
+
 export interface WishlistActionParams {
   perfumeId: string
-  action: "add" | "remove" | "updateVisibility"
+  action: "add" | "remove" | "updateVisibility" | "updateBottlePreference"
   isPublic?: boolean
+  bottlePreference?: WishlistBottlePreference
 }
 
 export interface WishlistResponse {
@@ -36,13 +47,16 @@ const getCsrfHeader = (): HeadersInit => {
 const wishlistAction = async (
   params: WishlistActionParams
 ): Promise<WishlistResponse> => {
-  const { perfumeId, action, isPublic } = params
+  const { perfumeId, action, isPublic, bottlePreference } = params
 
   const formData = new FormData()
   formData.append("perfumeId", perfumeId)
   formData.append("action", action)
   if (isPublic !== undefined) {
     formData.append("isPublic", String(isPublic))
+  }
+  if (bottlePreference !== undefined) {
+    formData.append("bottlePreference", bottlePreference)
   }
 
   const response = await fetch("/api/wishlist", {

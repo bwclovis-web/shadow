@@ -1,10 +1,13 @@
+import type { WishlistBottlePreference } from "@prisma/client"
+
 import { prisma } from "@/lib/db"
 import { updateScentProfileFromBehavior } from "@/models/scent-profile.server"
 
 export const addToWishlist = async (
   userId: string,
   perfumeId: string,
-  isPublic: boolean = false
+  isPublic: boolean = false,
+  bottlePreference: WishlistBottlePreference = "any"
 ) => {
   // Check if item already exists in wishlist
   const existing = await prisma.userPerfumeWishlist.findFirst({
@@ -23,6 +26,7 @@ export const addToWishlist = async (
       userId,
       perfumeId,
       isPublic,
+      bottlePreference,
     },
   })
 
@@ -70,6 +74,24 @@ export const updateWishlistVisibility = async (
   return { success: true, data: updated }
 }
 
+export const updateWishlistBottlePreference = async (
+  userId: string,
+  perfumeId: string,
+  bottlePreference: WishlistBottlePreference
+) => {
+  const updated = await prisma.userPerfumeWishlist.updateMany({
+    where: {
+      userId,
+      perfumeId,
+    },
+    data: {
+      bottlePreference,
+    },
+  })
+
+  return { success: true, data: updated }
+}
+
 export const isInWishlist = async (userId: string, perfumeId: string) => {
   const count = await prisma.userPerfumeWishlist.count({
     where: { userId, perfumeId },
@@ -87,6 +109,7 @@ export const getUserWishlist = async (userId: string) => {
       userId: true,
       perfumeId: true,
       isPublic: true,
+      bottlePreference: true,
       createdAt: true,
       perfume: {
         select: {

@@ -223,7 +223,8 @@
     "deleteConversationShort": "Delete",
     "deleteConversationFull": "Delete conversation",
     "deleteConversationAria": "Delete conversation with {name}",
-    "deleteConversationConfirm": "Delete this entire conversation with {name}? All messages will be removed for both of you. This cannot be undone.",
+    "deleteConversationConfirm": "Delete this conversation with {name}?",
+    "deleteConversationDescription": "All messages will be removed for both of you. This cannot be undone.",
     "deleteConversationFailed": "Could not delete the conversation.",
     "deleteConversationDeleting": "Deleting…"
   },
@@ -663,7 +664,7 @@
       "deleteComment": "Delete Comment",
       "makePublic": "Make public",
       "makePrivate": "Make private",
-      "noComments": "No comments yet. Be the first to share your thoughts!",
+      "noComments": "No comments yet. Be the first to share your thoughts! These comments are only visible to you and are for personal use only.",
       "error": "Error submitting comment. Please try again.",
       "failed": "Failed to add comment",
       "deleteError": "Error deleting comment",
@@ -1102,10 +1103,12 @@
     "aboutHeading": "About",
     "itemsAvailable": "Items To  Trade",
     "itemsAvailableSummary": "{traderName} has the following items to trade:",
+    "traderProfileAside": "Trader {traderName} profile",
     "itemsSearchingFor": "Is Seeking Out",
     "itemsSummary": "{traderName} is looking for the following perfumes:",
     "noItemsAvailable": "No items available for trading.",
     "noItemsSearchingFor": "No items searching for.",
+    "wishlistBottleSeeking": "Looking for: {preference}",
     "amount": "Amount Available",
     "price": "Price",
     "tradePrice": "Trade Price",
@@ -1212,6 +1215,14 @@
     "itemsInWishlist": "items in Wishlist",
     "addButton": "Add to Wishlist",
     "removeButton": "Remove from Wishlist",
+    "bottlePreference": {
+      "label": "Bottle preference",
+      "hint": "What size are you hoping to find?",
+      "sample": "Sample",
+      "partial": "Partial bottle",
+      "full": "Full bottle",
+      "any": "Any"
+    },
     "itemCard": {
       "visibility": "Visibility",
       "public": "Public",
@@ -1219,7 +1230,8 @@
       "available": "🎉 AVAILABLE IN TRADING POST! 🎉",
       "addedOn": "Added on",
       "availableMessage": "This item will appear on your trader profile",
-      "unavailableMessage": "This item is private and will not appear on your trader profile"
+      "unavailableMessage": "This item is private and will not appear on your trader profile",
+      "bottlePreference": "Bottle preference"
     }
   },
   "404": {
@@ -1239,6 +1251,7 @@
     "usernameMin": "Username must be at least 3 characters.",
     "usernameMax": "Username must be 30 characters or less.",
     "usernameFormat": "Use only letters, numbers, spaces and underscores.",
-    "profileAboutMax": "Trader about must be {max} characters or less."
+    "profileAboutMax": "Trader about must be {max} characters or less.",
+    "wishlistBottlePreferenceRequired": "Please select a bottle preference."
   }
 }

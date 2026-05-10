@@ -2,13 +2,18 @@
 
 import { useRouter } from "next/navigation"
 import { Link } from "next-view-transitions"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 
 import ContactTraderForm from "@/components/Containers/Forms/ContactTraderForm"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { useCSRF } from "@/hooks/useCSRF"
 import { getTraderDisplayName } from "@/utils/user"
+import { Button } from "@/components/Atoms/Button/Button"
+import { MdDeleteForever } from "react-icons/md"
+import DangerModal from "@/components/Organisms/DangerModal"
+import { useSessionStore } from "@/hooks/sessionStore"
+import Modal from "@/components/Organisms/Modal"
 
 const BANNER_IMAGE = "/images/messages.png"
 
@@ -37,6 +42,9 @@ export default function ThreadClient({
 }: ThreadClientProps) {
   const router = useRouter()
   const { addToHeaders } = useCSRF()
+  const { modalOpen, toggleModal, closeModal, modalId } = useSessionStore()
+  const DELETE_MODAL_ID = "delete-conversation"
+  const deleteButtonRef = useRef<HTMLButtonElement>(null)
   const tDm = useTranslations("directMessages")
   const [lastResult, setLastResult] = useState<{ success?: boolean; error?: string; message?: string } | null>(null)
   const [isDeletingThread, setIsDeletingThread] = useState(false)
@@ -62,19 +70,14 @@ export default function ThreadClient({
   }
 
   const handleDeleteConversation = async () => {
-    if (
-      !window.confirm(
-        tDm("deleteConversationConfirm", { name: otherUserName })
-      )
-    ) {
-      return
-    }
+    if (isDeletingThread) return
     setIsDeletingThread(true)
     try {
       const response = await fetch(
         `/api/messages?otherUserId=${encodeURIComponent(otherUser.id)}`,
         { method: "DELETE", headers: addToHeaders() }
       )
+      closeModal()
       if (response.ok) {
         router.push("/messages")
         router.refresh()
@@ -82,6 +85,7 @@ export default function ThreadClient({
         window.alert(tDm("deleteConversationFailed"))
       }
     } catch {
+      closeModal()
       window.alert(tDm("deleteConversationFailed"))
     } finally {
       setIsDeletingThread(false)
@@ -89,6 +93,16 @@ export default function ThreadClient({
   }
 
   return (
+    <>
+    {modalOpen && modalId === DELETE_MODAL_ID && (
+        <Modal innerType="dark" animateStart="top">
+          <DangerModal
+            heading={tDm("deleteConversationConfirm", { name: otherUserName })}
+            description={tDm("deleteConversationDescription", { name: otherUserName })}
+            action={handleDeleteConversation}
+          />
+        </Modal>
+      )}
     <section>
       <TitleBanner
         image={BANNER_IMAGE}
@@ -104,16 +118,20 @@ export default function ThreadClient({
           >
             <span aria-hidden>←</span> Back to messages
           </Link>
-          <button
+          <Button
             type="button"
+            variant="icon"
+            background="red"
+            ref={deleteButtonRef}
+            size="sm"
             disabled={isDeletingThread}
-            onClick={() => void handleDeleteConversation()}
-            className="text-sm text-noir-gold-100 hover:text-red-400 transition-colors disabled:opacity-50 ml-auto sm:ml-0"
+            leftIcon={<MdDeleteForever size={20} fill="white" />}
+            onClick={() => toggleModal(deleteButtonRef, DELETE_MODAL_ID)}
           >
             {isDeletingThread
               ? tDm("deleteConversationDeleting")
               : tDm("deleteConversationFull")}
-          </button>
+          </Button>
         </div>
 
         <div className="space-y-4 mb-8">
@@ -180,6 +198,7 @@ export default function ThreadClient({
         </div>
       </div>
     </section>
+    </>
   )
 }
 

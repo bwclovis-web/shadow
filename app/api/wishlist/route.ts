@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import {
   addToWishlist,
   removeFromWishlist,
+  updateWishlistBottlePreference,
   updateWishlistVisibility,
 } from "@/models/wishlist.server"
 import { processDecantInterestAlerts } from "@/utils/alert-processors"
@@ -20,7 +21,8 @@ export async function POST(request: NextRequest) {
     if (!validation.success) {
       return NextResponse.json({ success: false, error: "Validation failed", errors: validation.errors }, { status: 400 })
     }
-    const { perfumeId, action: actionType, isPublic } = validation.data!
+    const { perfumeId, action: actionType, isPublic, bottlePreference } =
+      validation.data!
     const authResult = await authenticateUser(request)
     if (!authResult.success) {
       return NextResponse.json({ success: false, error: authResult.error }, { status: authResult.status ?? 401 })
@@ -28,7 +30,12 @@ export async function POST(request: NextRequest) {
     const userId = authResult.user!.id
 
     if (actionType === "add") {
-      const result = await addToWishlist(userId, perfumeId, isPublic ?? false)
+      const result = await addToWishlist(
+        userId,
+        perfumeId,
+        isPublic ?? false,
+        bottlePreference ?? "any"
+      )
       if (isPublic) {
         try {
           await processDecantInterestAlerts(perfumeId, userId, true)
@@ -52,7 +59,18 @@ export async function POST(request: NextRequest) {
       }
       return NextResponse.json(result)
     }
-    throw validationError("Invalid action type", { actionType, validActions: ["add", "remove", "updateVisibility"] })
+    if (actionType === "updateBottlePreference") {
+      const result = await updateWishlistBottlePreference(
+        userId,
+        perfumeId,
+        bottlePreference!
+      )
+      return NextResponse.json(result)
+    }
+    throw validationError("Invalid action type", {
+      actionType,
+      validActions: ["add", "remove", "updateVisibility", "updateBottlePreference"],
+    })
   } catch (error) {
     if (error instanceof CSRFError) {
       return NextResponse.json({ success: false, error: error.message }, { status: 403 })

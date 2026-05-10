@@ -24,13 +24,9 @@ type GeneralDetailsProps = {
   userPerfume: UserPerfumeI
   deletePerfume?: (userPerfumeId: string) => void
   isRemoving?: boolean
-  /** Total amount (ml) across all entries for this perfume */
   totalAmount?: number
-  /** Amount (ml) remaining after destashes */
   remainingAmount?: number
-  /** Totals broken down by perfume type */
   byTypeTotals?: ByTypeTotal[]
-  /** Called after the bottle details are successfully updated */
   onBottleUpdated?: (userPerfumeId: string, fields: { amount: string; type?: string; price?: string | null; placeOfPurchase?: string | null }) => void
 }
 
@@ -111,21 +107,21 @@ const GeneralDetails = ({
     <div className="flex flex-col gap-4 mt-6 px-2">
       {/* Totals row */}
       <div className="flex flex-col md:flex-row gap-2 md:gap-10 justify-between md:items-start">
-        <div className="flex items-start justify-start gap-2 lg:gap-6 md:gap-4">
+        <div className="flex flex-col md:flex-row items-start justify-start gap-2 lg:gap-6 md:gap-4">
           {typeof totalAmount === "number" && (
-            <p className="flex flex-col items-start justify-start">
+            <p className="flex flex-col items-start justify-start min-w-max">
               <span className="text-lg font-medium text-noir-gold">{t("totalAmount")}</span>
-              <span className="text-2xl text-noir-gold-100">{totalAmount.toFixed(1)} ml</span>
+              <span className="text-xl text-noir-gold-100">{totalAmount.toFixed(1)} ml</span>
             </p>
           )}
           {typeof remainingAmount === "number" && (
-            <p className="flex flex-col items-start justify-start">
+            <p className="flex flex-col items-start justify-start min-w-max">
               <span className="text-lg font-medium text-noir-gold">{t("remainingAmount")}</span>
-              <span className="text-2xl text-noir-gold-100">{remainingAmount.toFixed(1)} ml</span>
+              <span className="text-xl text-noir-gold-100">{remainingAmount.toFixed(1)} ml</span>
             </p>
           )}
           {byTypeTotals && byTypeTotals.length > 1 && (
-            <div>
+            <div className="w-full border-t md:border-t-0 md:border-l md:pl-4 border-noir-gold/20 pt-2 md:pt-0">
               <p className="text-sm font-medium text-noir-gold mb-1">{t("byType")}</p>
               <ul className="flex flex-wrap gap-3">
                 {byTypeTotals.map((entry) => (
@@ -162,7 +158,7 @@ const GeneralDetails = ({
       {!isEditing ? (
         <div className="noir-border p-4 bg-noir-dark/10 flex flex-col gap-2">
           <div className="flex justify-between items-center">
-            <p className="text-sm font-semibold text-noir-gold">{t("thisBottle")}</p>
+            <h2>{t("thisBottle")}</h2>
             <Button
               onClick={() => setIsEditing(true)}
               variant="icon"
@@ -177,22 +173,22 @@ const GeneralDetails = ({
           <div className="flex flex-wrap gap-6 mt-1">
             <p className="flex flex-col items-start">
               <span className="text-xs text-noir-gold-500">{t("amountLabel")}</span>
-              <span className="text-xl text-noir-gold-100">{userPerfume.amount} ml</span>
+              <span className="text-base text-noir-gold-100">{userPerfume.amount} ml</span>
             </p>
             <p className="flex flex-col items-start">
               <span className="text-xs text-noir-gold-500">{t("type")}</span>
-              <span className="text-xl text-noir-gold-100">{typeLabel}</span>
+              <span className="text-base text-noir-gold-100">{typeLabel}</span>
             </p>
             {priceNum != null && !Number.isNaN(priceNum) && (
               <p className="flex flex-col items-start">
                 <span className="text-xs text-noir-gold-500">{t("price")}</span>
-                <span className="text-xl text-noir-gold-100">{formatPrice(priceNum)}</span>
+                <span className="text-base text-noir-gold-100">{formatPrice(priceNum)}</span>
               </p>
             )}
             {userPerfume.placeOfPurchase && (
               <p className="flex flex-col items-start">
                 <span className="text-xs text-noir-gold-500">{t("pointOfPurchase")}</span>
-                <span className="text-xl text-noir-gold-100 capitalize">{userPerfume.placeOfPurchase}</span>
+                <span className="text-base text-noir-gold-100 capitalize">{userPerfume.placeOfPurchase}</span>
               </p>
             )}
           </div>

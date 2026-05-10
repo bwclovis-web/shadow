@@ -7,6 +7,8 @@ import { VooDooLink } from "@/components/Atoms/Button"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import WishlistItemCard from "@/components/Organisms/WishlistItemCard/WishlistItemCard"
 
+import type { WishlistBottlePreference } from "@/lib/mutations/wishlist"
+
 import { revalidateWishlistPage } from "./actions"
 
 /** Shape of a single wishlist item as returned by getUserWishlist (serializable from server). */
@@ -15,6 +17,7 @@ export type WishlistItemForClient = {
   userId: string
   perfumeId: string
   isPublic: boolean
+  bottlePreference: WishlistBottlePreference
   createdAt: Date
   perfume: {
     id: string

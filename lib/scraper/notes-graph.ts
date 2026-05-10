@@ -152,6 +152,31 @@ const isLikelyNoirClicheOnlyNotes = (notes: {
   return union.every(n => NOIR_NOTE_CLICHE.has(n))
 }
 
+/**
+ * Heuristic: should the PDP rescue fetch fire even when notes aren't strictly all-cliché?
+ *
+ * Catches mid-confidence outputs like `[plum, rose, brown sugar, golden honey, vanilla]` (4/5 are
+ * cliché → likely noir prose contamination, but `every()` would fail) and short lists where the
+ * merchant almost certainly has more notes available on the PDP.
+ */
+const shouldAttemptPdpRescue = (notes: {
+  openNotes: string[]
+  heartNotes: string[]
+  baseNotes: string[]
+}): boolean => {
+  const union = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
+    .map(s => s.trim().toLowerCase())
+    .filter(Boolean)
+  if (union.length === 0) return true
+  if (isLikelyNoirClicheOnlyNotes(notes)) return true
+  if (union.length <= 6) {
+    const clicheHits = union.filter(n => NOIR_NOTE_CLICHE.has(n)).length
+    // 2+ of a small list match the noir cliche set → likely contaminated; verify against PDP.
+    if (clicheHits >= 2) return true
+  }
+  return false
+}
+
 /** One fetch per URL per process — scrapes hit the same PDPs many times in a single run. */
 const pdpNoteBootstrapCache = new Map<string, string | null>()
 
@@ -183,6 +208,47 @@ const unescapeHtmlAttr = (s: string): string =>
  */
 const extractFeaturedBlockFromPlain = (t: string): string | null => {
   const plain = (t ?? "").replace(/\s+/g, " ").trim()
+
+  /**
+   * Wix / boutique PDPs (e.g. Seventh Muse): product blurb is a prose line with
+   * "sweet/spicy blend of Patchouli, Vanilla, …" — no "Featured notes:" header.
+   * Run before the length gate so short meta descriptions still bootstrap.
+   */
+  // Stop before `$12` / `Price` — a greedy `[^.!?]+` would swallow Wix price tails and merge the
+  // last note with `$16.00` (junk filter drops it — e.g. missing "clove" on Seventh Muse).
+  const blendPhrase = plain.match(
+    /\b(?:[\w.]+\s+){0,6}(?:sweet\/spicy\s+)?blend\s+of\s+.+?(?=\s+\$\d|\s+Price\s|[.!?]|$)/i,
+  )
+  if (blendPhrase?.[0]) {
+    const raw = blendPhrase[0].trim()
+    const listLike =
+      /,/.test(raw) ||
+      /\band\s+a\s+hint\s+of\b/i.test(raw) ||
+      /\b(?:\w+,\s*){2,}\w+\b/i.test(raw)
+    if (raw.length >= 25 && listLike) return raw.slice(0, 4000)
+  }
+
+  const aromaBlend = plain.match(
+    /\b(?:scent|fragrance|aroma)\s+blend\s+of\s+.+?(?=\s+\$\d|\s+Price\s|[.!?]|$)/i,
+  )
+  if (aromaBlend?.[0]) {
+    const raw = aromaBlend[0].trim()
+    if (raw.length >= 22 && /,/.test(raw)) return raw.slice(0, 4000)
+  }
+
+  /**
+   * "Dew and Honeysuckle…just what we imagine" (Wix PDPs, e.g. seventhmuse.net spring-fairy-perfume-oil).
+   * List-like fragment before ellipsis + marketing; excludes `$` so price tails do not merge.
+   */
+  const ellipsisHook = plain.match(
+    /\b([A-Z][^.!?\n*$]{2,85}?)\s*(?:\.{2,}|\u2026)\s*(?:just\b|here'?s|here\s+is|this\s+is|we\s+|you\s+'?ll|read\s+more|learn\s+more|click\s+)/i,
+  )
+  if (ellipsisHook?.[1]) {
+    const raw = ellipsisHook[1].trim()
+    const listLike = /\band\b/i.test(raw) || /,/.test(raw)
+    if (listLike && raw.length >= 8 && raw.length <= 120) return raw.slice(0, 4000)
+  }
+
   if (plain.length < 30) return null
 
   const featured = plain.match(
@@ -268,40 +334,102 @@ const extractMerchantNoteBootstrapFromHtml = (html: string): string | null => {
   return extractFeaturedBlockFromPlain(t)
 }
 
+const PDP_FETCH_ATTEMPTS = 3
+const PDP_FETCH_BACKOFFS_MS = [400, 1200]
+
+const sleep = (ms: number, sig: AbortSignal | undefined): Promise<void> =>
+  new Promise((resolve, reject) => {
+    if (sig?.aborted) {
+      reject(sig.reason ?? new Error("aborted"))
+      return
+    }
+    const id = setTimeout(() => {
+      sig?.removeEventListener("abort", onAbort)
+      resolve()
+    }, ms)
+    const onAbort = () => {
+      clearTimeout(id)
+      reject(sig?.reason ?? new Error("aborted"))
+    }
+    sig?.addEventListener("abort", onAbort, { once: true })
+  })
+
+/**
+ * Resolve PDP HTML → "Featured Notes:" chunk with retry + on-progress logging.
+ *
+ * Resilience contract:
+ *  - Successful parses (note chunk OR confirmed null content) ARE cached so a single PDP only ever
+ *    parses once per process.
+ *  - Transient failures (network errors, 5xx, abort-free timeouts) are NOT cached — the next caller
+ *    (typically the noir-cliché rescue path) re-attempts from scratch.
+ *  - Up to {@link PDP_FETCH_ATTEMPTS} attempts per call, with exponential-ish backoff between them.
+ */
 const tryFetchPdpNoteBootstrap = async (
   detailUrl: string,
   sig: AbortSignal | undefined,
+  onProgress?: (msg: string) => void,
 ): Promise<string | null> => {
   const cached = pdpNoteBootstrapCache.get(detailUrl)
   if (cached !== undefined) return cached
+
+  let u: URL
   try {
-    const u = new URL(detailUrl)
-    if (u.protocol !== "http:" && u.protocol !== "https:") {
-      pdpNoteBootstrapCache.set(detailUrl, null)
-      return null
-    }
-    const res = await fetch(detailUrl, {
-      signal: sig,
-      redirect: "follow",
-      headers: {
-        "user-agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
-        "accept-language": "en-US,en;q=0.9",
-      },
-    })
-    if (!res.ok) {
-      pdpNoteBootstrapCache.set(detailUrl, null)
-      return null
-    }
-    const html = await res.text()
-    const chunk = extractMerchantNoteBootstrapFromHtml(html)
-    pdpNoteBootstrapCache.set(detailUrl, chunk)
-    return chunk
+    u = new URL(detailUrl)
   } catch {
     pdpNoteBootstrapCache.set(detailUrl, null)
     return null
   }
+  if (u.protocol !== "http:" && u.protocol !== "https:") {
+    pdpNoteBootstrapCache.set(detailUrl, null)
+    return null
+  }
+
+  let lastErrSummary: string | null = null
+  for (let attempt = 0; attempt < PDP_FETCH_ATTEMPTS; attempt++) {
+    if (attempt > 0) {
+      const backoff = PDP_FETCH_BACKOFFS_MS[attempt - 1] ?? 1500
+      try {
+        await sleep(backoff, sig)
+      } catch {
+        return null
+      }
+    }
+    try {
+      const res = await fetch(detailUrl, {
+        signal: sig,
+        redirect: "follow",
+        headers: {
+          "user-agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
+          "accept-language": "en-US,en;q=0.9",
+        },
+      })
+      if (res.ok) {
+        const html = await res.text()
+        const chunk = extractMerchantNoteBootstrapFromHtml(html)
+        pdpNoteBootstrapCache.set(detailUrl, chunk)
+        return chunk
+      }
+      // Don't cache 4xx that may be a one-shot WAF challenge / 5xx that may recover; retry.
+      lastErrSummary = `HTTP ${res.status}`
+      if (res.status >= 400 && res.status < 500 && res.status !== 429 && res.status !== 408) {
+        // Hard 4xx (404, 403 fixed) — won't recover; cache and bail.
+        pdpNoteBootstrapCache.set(detailUrl, null)
+        return null
+      }
+    } catch (err) {
+      if (sig?.aborted) return null
+      lastErrSummary =
+        err instanceof Error ? err.message.slice(0, 160) : String(err).slice(0, 160)
+    }
+  }
+
+  if (lastErrSummary) {
+    onProgress?.(`PDP fetch failed for ${detailUrl} after ${PDP_FETCH_ATTEMPTS} attempts (${lastErrSummary})`)
+  }
+  // Don't cache failures: noir-cliché rescue path may benefit from another fresh attempt.
+  return null
 }
 
 /**
@@ -524,7 +652,7 @@ function splitNoteList(text: string): string[] {
     splitReady
       .split(/[\n,]+/)
       .map(part => unmaskParenGroups(part.trim(), groups))
-      .map(part => part.replace(/^[&\-\u2022*:\s]+/, "").replace(/[.:\-\s]+$/, ""))
+      .map(part => part.replace(/^[&\-\u2022*:\s]+/, "").replace(/[.:\-\s*]+$/, ""))
       .filter(part => !/^amp$/i.test(part))
       .filter(Boolean),
   )
@@ -634,6 +762,13 @@ const JUNK_NOTE_PATTERNS: RegExp[] = [
   // Shopify / theme copy: cookie banners, vault promos, prose fragments mis-parsed as notes
   /\bmoments?\s+of\s+pause\b/i,
   /\bentering\s+the\s+vault\b/i,
+  // Marketing call-to-action sentences that occasionally land at the end of a "Featured Notes:"
+  // line (e.g. Gallagher's Tulip Silk: "…sandalwood, tobacco, experiment for yourself")
+  /\bexperiment\s+(?:for|with)\s+yourself\b/i,
+  /\bexperiment\s+with\b/i,
+  /\btry\s+(?:it|this)\s+(?:for|on)\s+yourself\b/i,
+  /\bsee\s+for\s+yourself\b/i,
+  /\bfor\s+yourself\b/i,
 ]
 
 /** Junk checks for typical short notes — excludes the punctuation rule so accord phrases with () survive. */
@@ -674,6 +809,7 @@ const stripNoteListProsePrefix = (p: string): string =>
   p
     .replace(/^\s*notes\s+of\s+/i, "")
     .replace(/^\s*note\s+of\s+/i, "")
+    .replace(/^\s*a\s+hint\s+of\s+/i, "")
     .replace(/^\s*hints?\s+of\s+/i, "")
     .replace(/^\s*enhanced\s+by\s+/i, "")
     .replace(/^\s*enriched\s+by\s+/i, "")
@@ -748,7 +884,13 @@ function extractInlineLayeredNotes(text: string): {
 const FLAT_NOTE_PROSE_BOUNDARY_RES: RegExp[] = [
   // Shopify PDP specs after "Featured notes: …" (same paragraph when whitespace-collapsed)
   /\s+(?:Concentration|Volume)\s*:/i,
-  /\s+(?:Sweet |Sipping |Read about|Beneath |Among |Caught |In the |A sudden |A whisper |A worn |A dusty |A low |A shimmering |A porcelain |A delicate |Fingers |Rain-soaked |Cloaked |Under the |Twist-top |Variation:|Join |Sign up|Select |Add to |Image \d+\s+of\s+\d+|Shop all|Skip to)\b/i,
+  // "Sweet " is gated below — it's also a real note prefix (Sweet Orange, Sweet Pea, Sweet Almond,
+  // Sweet Basil, Sweet Pepper, Sweet Marjoram, Sweet Tea, Sweet Onion, Sweet Lime, Sweet Mandarin,
+  // Sweet Cinnamon, Sweet Vanilla) and must not truncate mid-list.
+  /\s+(?:Sipping |Read about|Beneath |Among |Caught |In the |A sudden |A whisper |A worn |A dusty |A low |A shimmering |A porcelain |A delicate |Fingers |Rain-soaked |Cloaked |Under the |Twist-top |Variation:|Join |Sign up|Select |Add to |Image \d+\s+of\s+\d+|Shop all|Skip to)\b/i,
+  // "Sweet " only as a prose-tail (not "Sweet Orange" etc.). Negative lookahead lists common
+  // compound notes that begin with "Sweet"; anything else means we hit prose like "Sweet as a memory".
+  /\s+Sweet\s+(?!(?:Orange|Pea|Peas|Almond|Almonds|Basil|Pepper|Peppers|Marjoram|Tea|Onion|Lime|Mandarin|Sage|Corn|Potato|Cinnamon|Vanilla|Cherry|Plum|Rose|Apple|Caramel|Tobacco|Honey|Spice|Spices|Fennel|Clover|Grass|Wood|Woods|Cream|Milk|Butter|Bay|Pea|Pepper|Mint|Birch|Annie|William|Wattle|Acacia|Lemon|Magnolia|Osmanthus|Pea|Pepper))\b/i,
   /\s+(?:Available in |Originally (?:a |the )?|Our oil perfume|NOTE:|Packaging:|How to use|Shipping:|Return [Pp]olicy|Subscribe(?:\s+now|\s+today)?|You may also|Customers also|Related products|Complete the look|Pairs well|Also available|More from|Write a review|Questions\?|Leave a review)\b/i,
   /\s+#{1,6}\s*(?:Ingredients|How to use|Shipping|Returns?|FAQ|Details|Directions|Warnings?|Disclaimer|Specifications|Size [Gg]uide|Care [Ii]nstructions)\b/i,
   /\s+(?:Ingredients|Cruelty[- ]free|Vegan |Dermatologist|Clinically tested|Prop(?:osition|\.)?\s*65|FDA disclaimer)\b/i,
@@ -814,6 +956,11 @@ const FLAT_NOTE_LIST_PATTERNS: RegExp[] = [
   /(?:^|[\s.!?\n*])\bwith\s+notes?\s+of\s+([^.!?\n*]+)/gi,
   // "The fragrance composition includes …"
   /(?:^|[\s.!?\n*])(?:the\s+)?(?:fragrance|scent|perfume)\s+composition\s+(?:includes|features|contains)\s+([^.!?\n*]+)/gi,
+  // "… blend of …" — exclude `$` so `[^.!?]+` does not swallow `$16.00` and merge the last note with price.
+  /(?:^|[\s.!?\n*])\b(?:sweet\/spicy\s+)?blend\s+of\s+([^.!?\n*$]+)/gi,
+  /(?:^|[\s.!?\n*])\b(?:scent|fragrance|aroma)\s+blend\s+of\s+([^.!?\n*$]+)/gi,
+  // "Dew and Honeysuckle...just what we imagine" (ellipsis then marketing; Wix / Seventh Muse)
+  /\b([A-Z][^.!?\n*$]{2,85}?)\s*(?:\.{2,}|\u2026)\s*(?:just\b|here'?s|here\s+is|this\s+is|we\s+|you\s+'?ll|read\s+more)/gi,
 ]
 
 /**
@@ -1284,6 +1431,21 @@ async function extractNotesFallbackLookup(
 // Film noir description generation
 // ---------------------------------------------------------------------------
 
+/**
+ * Wix / theme scrapes sometimes capture cross-sell strips and inline editor CSS instead of PDP copy.
+ * Those rows must not be treated as "merchant description" (which would skip noir for thin note lists).
+ */
+const isJunkScrapedDescription = (text: string | null | undefined): boolean => {
+  const t = text?.trim() ?? ""
+  if (!t) return false
+  const lower = t.toLowerCase()
+  if (/click\s+pic\s+to\s+see\s+all/i.test(lower)) return true
+  if (/shea\s+butter\s*&\s*aloe\s+lotion/i.test(lower) && /\$\s*\d/.test(t)) return true
+  if (/spray\s+mists\s*\$/i.test(lower)) return true
+  if (/#comp-[a-z0-9]{4,}/i.test(t) && (/\{\s*fill\s*:/i.test(t) || /\[data-color\s*=/i.test(lower))) return true
+  return false
+}
+
 const NOIR_DESCRIPTION_SYSTEM = `You write short, evocative perfume descriptions for a film noir themed fragrance site. Style: sexy, mysterious, shadowy, seductive. Channel 1940s noir: smoke, rain-slick streets, trench coats, dim bars, dangerous allure.
 
 Rules:
@@ -1508,7 +1670,7 @@ const processSingleProductPhase1 = async (
     item.detailURL?.trim().startsWith("http")
   ) {
     throwIfAborted(sig)
-    const boot = await tryFetchPdpNoteBootstrap(item.detailURL.trim(), sig)
+    const boot = await tryFetchPdpNoteBootstrap(item.detailURL.trim(), sig, opts.onProgress)
     if (boot) {
       mergedBase = `${boot}\n\n${mergedBase}`.trim()
       opts.onProgress?.(
@@ -1552,21 +1714,6 @@ const processSingleProductPhase1 = async (
       notes = await mergeStructuredNotesWithLlm(llm, notes, notesSource, name || resolvedName)
     }
 
-    /**
-     * Guaranteed name + theme inference when description-based extraction yields nothing.
-     * Runs whether the source text was empty or not — a prose-only description that the LLM
-     * couldn't pull materials from still gets name/house/theme-inferred notes here, so the
-     * scraper never imports a perfume with empty notes (and the noir step never overwrites the
-     * original merchant copy without something to anchor it).
-     */
-    if (noteLayerCount(notes) === 0) {
-      const fallbackName = name || resolvedName
-      if (fallbackName?.trim()) {
-        throwIfAborted(sig)
-        notes = await extractNotesFallbackLookup(llm, fallbackName, item.perfumeHouse ?? houseName)
-      }
-    }
-
     if (!allNotesEnglish(notes)) {
       throwIfAborted(sig)
       notes = await translateNotesToEnglish(llm, notes)
@@ -1574,32 +1721,11 @@ const processSingleProductPhase1 = async (
 
     notes = preferAuthoritativeFlatNoteList(notes, extractFlatNotes(notesSource))
 
-    if (
-      opts.fetchPdpNoteBootstrap === true &&
-      item.detailURL?.trim().startsWith("http") &&
-      isLikelyNoirClicheOnlyNotes(notes)
-    ) {
-      throwIfAborted(sig)
-      pdpNoteBootstrapCache.delete(item.detailURL.trim())
-      const boot = await tryFetchPdpNoteBootstrap(item.detailURL.trim(), sig)
-      if (boot) {
-        const rescueSource = augmentNotesSourceWithLabeledLists(`${boot}\n\n${mergedBase}`)
-        const rescuedFlat = extractFlatNotes(rescueSource)
-        let rescued = extractNotesFromStructuredText(rescueSource)
-        rescued = preferAuthoritativeFlatNoteList(rescued, rescuedFlat)
-        if (
-          rescuedFlat.length >= 6 ||
-          noteLayerCount(rescued) > noteLayerCount(notes) ||
-          !isLikelyNoirClicheOnlyNotes(rescued)
-        ) {
-          notes = rescued
-          opts.onProgress?.(
-            `Notes pipeline ${index + 1}/${totalItems}: replaced noir-cliché notes using PDP fetch for ${(name || resolvedName || "product").slice(0, 48)}`,
-          )
-        }
-      }
-    }
-
+    /**
+     * Apply the junk filter BEFORE the rescue check so narrative noise (e.g. "the night",
+     * "shadows") that the LLM occasionally leaks doesn't push the cliché-detection union past
+     * its `<= 6` threshold and silently skip the rescue.
+     */
     const cleanNote = (n: string) => isScraperKeptNote(n)
     notes = {
       openNotes: notes.openNotes.filter(cleanNote),
@@ -1608,12 +1734,66 @@ const processSingleProductPhase1 = async (
     }
     notes = dedupeNotesAcrossLayers(notes)
 
+    if (
+      opts.fetchPdpNoteBootstrap === true &&
+      item.detailURL?.trim().startsWith("http") &&
+      shouldAttemptPdpRescue(notes)
+    ) {
+      throwIfAborted(sig)
+      pdpNoteBootstrapCache.delete(item.detailURL.trim())
+      const boot = await tryFetchPdpNoteBootstrap(item.detailURL.trim(), sig, opts.onProgress)
+      if (boot) {
+        const rescueSource = augmentNotesSourceWithLabeledLists(`${boot}\n\n${mergedBase}`)
+        const rescuedFlat = extractFlatNotes(rescueSource)
+        let rescued = extractNotesFromStructuredText(rescueSource)
+        rescued = preferAuthoritativeFlatNoteList(rescued, rescuedFlat)
+        rescued = {
+          openNotes: rescued.openNotes.filter(cleanNote),
+          heartNotes: rescued.heartNotes.filter(cleanNote),
+          baseNotes: rescued.baseNotes.filter(cleanNote),
+        }
+        rescued = dedupeNotesAcrossLayers(rescued)
+        if (
+          rescuedFlat.length >= 6 ||
+          noteLayerCount(rescued) > noteLayerCount(notes) ||
+          (!isLikelyNoirClicheOnlyNotes(rescued) && noteLayerCount(rescued) > 0)
+        ) {
+          notes = rescued
+          opts.onProgress?.(
+            `Notes pipeline ${index + 1}/${totalItems}: replaced thin/noir-cliché notes using PDP fetch for ${(name || resolvedName || "product").slice(0, 48)}`,
+          )
+        }
+      }
+    }
+
+    /**
+     * Guaranteed name + theme inference — runs AFTER the junk filter so a regex extraction whose
+     * candidates all fail isScraperKeptNote (e.g. layered list of single-letter placeholders, or
+     * noise that survived earlier stages) still ends up with real notes. Always-on so prose-only
+     * descriptions that yielded nothing get name/house/theme-inferred notes, and the scraper
+     * never imports a perfume with empty notes.
+     */
+    if (noteLayerCount(notes) === 0) {
+      const fallbackName = name || resolvedName
+      if (fallbackName?.trim()) {
+        throwIfAborted(sig)
+        const inferred = await extractNotesFallbackLookup(llm, fallbackName, item.perfumeHouse ?? houseName)
+        notes = {
+          openNotes: inferred.openNotes.filter(cleanNote),
+          heartNotes: inferred.heartNotes.filter(cleanNote),
+          baseNotes: inferred.baseNotes.filter(cleanNote),
+        }
+        notes = dedupeNotesAcrossLayers(notes)
+      }
+    }
+
     const allNoteStrs = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
     const stripRaw = stripNotesFromDescription(item.description, allNoteStrs)
 
     let descriptionForRecord: string
     if (stripRaw) descriptionForRecord = stripRaw.trim()
     else descriptionForRecord = item.description ?? ""
+    if (isJunkScrapedDescription(descriptionForRecord)) descriptionForRecord = ""
 
     const record: PerfumeCsvRecord = {
       name,
@@ -1718,19 +1898,24 @@ function buildGraph(
       }
 
       /**
-       * Skip noir when the extraction ladder couldn't produce at least 2 notes for this product.
-       * Noir generation overwrites the original merchant copy, so writing noir without notes leaves
-       * the row with no recoverable source text — a future refresh:house-notes run can't extract
-       * anything from a noir paragraph. Keeping the original description preserves that option.
+       * Prefer noir when we have 2+ notes (overwrites merchant copy). With only 1 note, still run noir
+       * when there is no usable merchant description (empty or Wix/CSS bleed) so CSV rows are not
+       * left with cross-sell junk. When 1 note and real prose exists, keep it for refresh:house-notes.
        */
       const totalNotes = noteLayerCount(p.notes)
-      if (opts.generateNoirDescriptions && noirLlm && totalNotes >= 2) {
+      const hasUsableMerchantDescription = (p.record.description || "").trim().length > 0
+      const shouldRunNoir =
+        opts.generateNoirDescriptions &&
+        noirLlm &&
+        (totalNotes >= 2 || (totalNotes >= 1 && !hasUsableMerchantDescription))
+
+      if (shouldRunNoir) {
         throwIfAborted(sig)
         const noirDesc = await generateNoirDescription(
           noirLlm,
           p.name,
           p.notes,
-          p.stripRaw || p.item.description,
+          (p.record.description || "").trim(),
           previousOpenings,
         )
         previousOpenings.push(openingFingerprint(noirDesc))
@@ -1739,10 +1924,16 @@ function buildGraph(
           description: noirDesc,
         })
       } else {
-        if (opts.generateNoirDescriptions && noirLlm && totalNotes < 2) {
-          opts.onProgress?.(
-            `Notes pipeline: skipped noir for "${p.name.slice(0, 60)}" — only ${totalNotes} note(s) extracted; keeping original description for re-extraction.`,
-          )
+        if (opts.generateNoirDescriptions && noirLlm) {
+          if (totalNotes === 0) {
+            opts.onProgress?.(
+              `Notes pipeline: skipped noir for "${p.name.slice(0, 60)}" — no notes extracted.`,
+            )
+          } else if (totalNotes < 2 && hasUsableMerchantDescription) {
+            opts.onProgress?.(
+              `Notes pipeline: skipped noir for "${p.name.slice(0, 60)}" — only ${totalNotes} note(s) extracted; keeping merchant description for re-extraction.`,
+            )
+          }
         }
         results.push(p.record)
       }

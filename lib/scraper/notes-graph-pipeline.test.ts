@@ -13,9 +13,9 @@ vi.mock("@langchain/openai", () => ({
 import { extractNotesForItems } from "./notes-graph"
 
 /** Structured notes with 3 layers and enough notes to skip merge LLM; keeps Phase 1 free of invoke(). */
-const NOTES_TEXT_NO_LLM = `Top: a, b
-Heart: c, d
-Base: e, f`
+const NOTES_TEXT_NO_LLM = `Top: bergamot, lemon
+Heart: rose, jasmine
+Base: vetiver, sandalwood`
 
 describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
   beforeEach(() => {
@@ -259,6 +259,230 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
     expect(records[0].heartNotes).toBe("[]")
     expect(records[0].baseNotes).toBe("[]")
     expect(records[0].description).toBe(originalDescription)
+  })
+
+  it("single note + Wix cross-sell/CSS bleed: junk description cleared and noir still runs", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const wixJunk =
+      'Shea Butter & Aloe Lotion $18.00 click pic to see all 40 scentsSpray Mists $14.00 Vintage Inspired Fragrance #comp-khkuc2ru svg [data-color="1"] {fill: #EEE6C6;}'
+
+    /** Pyramid lines after the Wix blob so inline extraction gets clean chunks; merchant-facing `description` still starts with junk (cleared before CSV). */
+    const items: ScrapedItem[] = [
+      {
+        name: "Amber",
+        description: `${wixJunk}\n\nTop: bergamot\nBase: amber`,
+        image: "",
+        detailURL: "https://www.seventhmuse.net/product-page/amber-roll-on",
+        perfumeHouse: "Seventh Muse",
+      },
+    ]
+
+    let noirCalls = 0
+    invokeMock.mockImplementation(async (messages: unknown) => {
+      const msgs = messages as { role: string; content: string }[]
+      const sys = msgs.find(m => m.role === "system")?.content ?? ""
+      if (sys.includes("film noir")) {
+        noirCalls++
+        return { content: "Neon rain on amber glass; the night remembers what morning forgets." }
+      }
+      if (sys.includes("rebalance a perfume note list")) {
+        return {
+          content: JSON.stringify({
+            openNotes: ["bergamot"],
+            heartNotes: [],
+            baseNotes: ["amber"],
+          }),
+        }
+      }
+      throw new Error(`Unexpected LLM prompt: ${sys.slice(0, 90)}`)
+    })
+
+    const records = await extractNotesForItems(items, "Seventh Muse", { generateNoirDescriptions: true })
+
+    expect(noirCalls).toBe(1)
+    expect(records[0].description).toContain("Neon rain")
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    expect(open).toContain("bergamot")
+    expect(base).toContain("amber")
+  })
+
+  it("single extracted note + Wix bleed: noir runs when merchant description is unusable", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const wixJunk =
+      'Shea Butter & Aloe Lotion $18.00 click pic to see all 40 scentsSpray Mists $14.00 #comp-abc123 svg [data-color="1"] {fill: #000;}'
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Musk",
+        description: `${wixJunk}\n\nBase: musk`,
+        image: "",
+        detailURL: "https://www.seventhmuse.net/product-page/musk-roll-on",
+        perfumeHouse: "Seventh Muse",
+      },
+    ]
+
+    let noirCalls = 0
+    invokeMock.mockImplementation(async (messages: unknown) => {
+      const msgs = messages as { role: string; content: string }[]
+      const sys = msgs.find(m => m.role === "system")?.content ?? ""
+      if (sys.includes("film noir")) {
+        noirCalls++
+        return { content: "Smoke and streetlight pool in the hollow of your collarbone." }
+      }
+      if (sys.includes("rebalance a perfume note list")) {
+        return { content: JSON.stringify({ openNotes: [], heartNotes: [], baseNotes: ["musk"] }) }
+      }
+      throw new Error(`Unexpected LLM prompt: ${sys.slice(0, 90)}`)
+    })
+
+    const records = await extractNotesForItems(items, "Seventh Muse", { generateNoirDescriptions: true })
+
+    expect(noirCalls).toBe(1)
+    expect(records[0].description).toContain("Smoke and streetlight")
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    expect(base).toContain("musk")
+  })
+
+  it("single note + usable merchant prose: noir skipped and description preserved", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    /** Avoid the literal note token in prose so stripNotesFromDescription does not erase it. */
+    const merchant =
+      "Velvet petals on wet pavement, dusk gathering over the river while the city holds its breath."
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Solo Rose",
+        description: `${merchant}\n\nHeart: rose`,
+        image: "",
+        detailURL: "https://example.com/p/solo-rose",
+        perfumeHouse: "Test House",
+      },
+    ]
+
+    let noirCalls = 0
+    invokeMock.mockImplementation(async (messages: unknown) => {
+      const msgs = messages as { role: string; content: string }[]
+      const sys = msgs.find(m => m.role === "system")?.content ?? ""
+      if (sys.includes("film noir")) {
+        noirCalls++
+        return { content: "should not appear" }
+      }
+      if (sys.includes("rebalance a perfume note list")) {
+        return { content: JSON.stringify({ openNotes: [], heartNotes: ["rose"], baseNotes: [] }) }
+      }
+      throw new Error(`Unexpected LLM prompt: ${sys.slice(0, 90)}`)
+    })
+
+    const records = await extractNotesForItems(items, "Test House", { generateNoirDescriptions: true })
+
+    expect(noirCalls).toBe(0)
+    expect(records[0].description).toContain("Velvet petals")
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    expect(heart).toContain("rose")
+  })
+
+  it("Seventh Muse / Wix style 'sweet/spicy blend of … and a hint of …' extracts merchant notes (no LLM)", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Autumn Fairy Roll-On",
+        description:
+          "Warm, exotic, sweet/spicy blend of Patchouli, Vanilla, Amber and a hint of Clove $16.00 Price",
+        image: "",
+        detailURL: "https://www.seventhmuse.net/product-page/new-scent-autumn-fairy",
+        perfumeHouse: "Seventh Muse",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM must not run when blend-of line yields a flat list")
+    })
+
+    const records = await extractNotesForItems(items, "Seventh Muse", {
+      generateNoirDescriptions: false,
+    })
+
+    expect(invokeMock).not.toHaveBeenCalled()
+    const open = JSON.parse(records[0].openNotes) as string[]
+    expect(open).toEqual(expect.arrayContaining(["patchouli", "vanilla", "amber", "clove"]))
+    expect(records[0].heartNotes).toBe("[]")
+    expect(records[0].baseNotes).toBe("[]")
+  })
+
+  it("Seventh Muse Spring Fairy ellipsis hook extracts Dew and Honeysuckle (no LLM)", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Spring Fairy Perfume Oil",
+        description:
+          "Dew and Honeysuckle...just what we imagine a fairy garden would smell like $21.00 Price",
+        image: "",
+        detailURL: "https://www.seventhmuse.net/product-page/spring-fairy-perfume-oil",
+        perfumeHouse: "Seventh Muse",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM must not run when ellipsis hook yields materials")
+    })
+
+    const records = await extractNotesForItems(items, "Seventh Muse", {
+      generateNoirDescriptions: false,
+    })
+
+    expect(invokeMock).not.toHaveBeenCalled()
+    const open = JSON.parse(records[0].openNotes) as string[]
+    expect(open).toEqual(expect.arrayContaining(["dew", "honeysuckle"]))
+    expect(records[0].heartNotes).toBe("[]")
+    expect(records[0].baseNotes).toBe("[]")
+  })
+
+  it("PDP bootstrap extracts Seventh Muse blend-of line when scraped description is empty", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const html = `<!DOCTYPE html><html><body>
+      <h1>Autumn Fairy Roll-On</h1>
+      <p>Warm, exotic, sweet/spicy blend of Patchouli, Vanilla, Amber and a hint of Clove</p>
+      <p>$16.00 Price</p>
+    </body></html>`
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => html,
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Autumn Fairy Roll-On",
+        description: "",
+        image: "",
+        detailURL: "https://www.seventhmuse.net/product-page/new-scent-autumn-fairy",
+        perfumeHouse: "Seventh Muse",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM must not run when PDP HTML contains blend-of materials")
+    })
+
+    const records = await extractNotesForItems(items, "Seventh Muse", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: true,
+    })
+
+    vi.unstubAllGlobals()
+    expect(fetchMock).toHaveBeenCalled()
+    const open = JSON.parse(records[0].openNotes) as string[]
+    expect(open).toEqual(expect.arrayContaining(["patchouli", "vanilla", "amber", "clove"]))
+    expect(records[0].heartNotes).toBe("[]")
+    expect(records[0].baseNotes).toBe("[]")
   })
 
   it("Gallagher-style Featured Notes: skips merge LLM and uses merchant flat list in openNotes only", async () => {
@@ -675,5 +899,184 @@ Base: white musk`
     expect(open).toContain("bergamot")
     expect(base).toContain("sandalwood")
     expect(base).not.toEqual(expect.arrayContaining(["enhanced by sandalwood", "creating a rich"]))
+  })
+
+  it("Featured Notes list with 'Sweet Orange' is preserved end-to-end (no mid-list truncation)", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const description =
+      "Featured Notes: Aldehydes, Bergamot, Egyptian Bitter Red Orange, Italian Blood Orange, Sweet Orange, Italian Clementine, Tunisian Neroli, Oman Frankincense, Powdered Chocolate, Labdanum Resin from Spain, Honeyed Amber, Brazilian Tonka Bean Absolute, Cream Soda, Benzoin, Australian Sandalwood, Tonkin Musk*, and 8-year Aged Indonesian Patchouli."
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Behold, Patchouli",
+        description,
+        image: "",
+        detailURL: "https://example.com/p/behold-patchouli",
+        perfumeHouse: "Gallagher Fragrances",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when Featured Notes list is authoritative")
+    })
+
+    const records = await extractNotesForItems(items, "Gallagher Fragrances", { generateNoirDescriptions: false })
+
+    expect(invokeMock).not.toHaveBeenCalled()
+    const open = JSON.parse(records[0].openNotes) as string[]
+    expect(open).toContain("aldehydes")
+    expect(open).toContain("bergamot")
+    expect(open).toContain("sweet orange")
+    expect(open).toContain("tunisian neroli")
+    expect(open).toContain("powdered chocolate")
+    expect(open).toContain("brazilian tonka bean absolute")
+    expect(open).toContain("australian sandalwood")
+    expect(open).toContain("tonkin musk")
+    expect(open).toContain("8-year aged indonesian patchouli")
+    expect(open.length).toBeGreaterThanOrEqual(15)
+    expect(open).not.toEqual(expect.arrayContaining(["tonkin musk*"]))
+  })
+
+  it("noir-prose-only description with mixed cliché extraction: PDP rescue replaces with full Featured Notes", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    /**
+     * Simulates the Baklava/Glowberry bug: the saved description is noir prose that mentions exactly
+     * the four-note "noir cliché" set, the merge LLM emits 4 cliché notes plus one extra real note,
+     * and the strict `every() ∈ cliché` rescue trigger would have skipped this. The broadened
+     * `shouldAttemptPdpRescue` heuristic must still fire because 4/5 are cliché in a list of ≤6.
+     */
+    const noirDescription =
+      "A lone figure leans against the warm brick of a hidden café, the sweet scent of brown sugar and golden honey wrapping around them like a lover's embrace. As the night deepens, the sultry notes of ripe plum and blooming rose weave a tale of temptation."
+
+    const fetchMock = vi.fn().mockImplementation(async () => ({
+      ok: true,
+      status: 200,
+      text: async () =>
+        `<html><body><p>Featured Notes: Sweet Orange, Bergamot, Cherry, Almond, Pistachio, Neroli, Baklava, Honey, Vanilla, Patchouli, and Musk.</p><p>Concentration: Extrait de Parfum</p></body></html>`,
+    }))
+    vi.stubGlobal("fetch", fetchMock)
+
+    invokeMock.mockImplementation(async (messages: unknown) => {
+      const msgs = messages as { role: string; content: string }[]
+      const sys = msgs.find(m => m.role === "system")?.content ?? ""
+      if (sys.includes("master perfumer")) {
+        return {
+          content: JSON.stringify({
+            openNotes: ["plum"],
+            heartNotes: ["rose", "brown sugar"],
+            baseNotes: ["golden honey", "vanilla"],
+          }),
+        }
+      }
+      throw new Error(`Unexpected LLM call: ${sys.slice(0, 80)}`)
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Baklava",
+        description: noirDescription,
+        image: "",
+        detailURL: "https://gallagherfragrances.com/products/baklava",
+        perfumeHouse: "Gallagher Fragrances",
+      },
+    ]
+
+    const records = await extractNotesForItems(items, "Gallagher Fragrances", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: true,
+    })
+
+    expect(records).toHaveLength(1)
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+    expect(all).toEqual(
+      expect.arrayContaining(["sweet orange", "bergamot", "cherry", "almond", "pistachio", "neroli"]),
+    )
+    expect(all.length).toBeGreaterThanOrEqual(10)
+    expect(fetchMock).toHaveBeenCalled()
+    vi.unstubAllGlobals()
+  })
+
+  it("PDP fetch with transient 500 then 200 still rescues the merchant note list", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    let pdpCallCount = 0
+    const fetchMock = vi.fn().mockImplementation(async () => {
+      pdpCallCount++
+      if (pdpCallCount === 1) {
+        return { ok: false, status: 500, text: async () => "" }
+      }
+      return {
+        ok: true,
+        status: 200,
+        text: async () =>
+          `<html><body><p>Featured Notes: Mandarin, Apricot, Raspberry, Strawberry Tart, Blackcurrant, Magnolia, Sandalwood, Vanilla, Patchouli, and Musk.</p></body></html>`,
+      }
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    /** No description so the only path to notes is the PDP fetch — exercises the retry path. */
+    const items: ScrapedItem[] = [
+      {
+        name: "Glowberry",
+        description: "",
+        image: "",
+        detailURL: "https://gallagherfragrances.com/products/glowberry",
+        perfumeHouse: "Gallagher Fragrances",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when PDP rescue retry succeeds")
+    })
+
+    const records = await extractNotesForItems(items, "Gallagher Fragrances", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: true,
+    })
+
+    expect(records).toHaveLength(1)
+    expect(pdpCallCount).toBeGreaterThanOrEqual(2)
+    const open = JSON.parse(records[0].openNotes) as string[]
+    expect(open).toEqual(
+      expect.arrayContaining(["mandarin", "apricot", "raspberry", "strawberry tart", "magnolia"]),
+    )
+    expect(open.length).toBeGreaterThanOrEqual(8)
+    vi.unstubAllGlobals()
+  })
+
+  it("Featured Notes ending with marketing copy: drops 'experiment for yourself' tail", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const description =
+      "Featured Notes: tulip, white amber musk, blackcurrant, jasmine, lavender, mandarin, orange blossom, sandalwood, tobacco, experiment for yourself"
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Tulip Silk",
+        description,
+        image: "",
+        detailURL: "https://example.com/p/tulip-silk",
+        perfumeHouse: "Gallagher Fragrances",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run for this flat-list test")
+    })
+
+    const records = await extractNotesForItems(items, "Gallagher Fragrances", { generateNoirDescriptions: false })
+
+    expect(invokeMock).not.toHaveBeenCalled()
+    const open = JSON.parse(records[0].openNotes) as string[]
+    expect(open).toContain("tulip")
+    expect(open).toContain("white amber musk")
+    expect(open).toContain("tobacco")
+    expect(open).not.toEqual(expect.arrayContaining(["experiment for yourself"]))
+    expect(open).not.toEqual(expect.arrayContaining(["for yourself"]))
   })
 })

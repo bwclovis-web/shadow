@@ -119,8 +119,8 @@ const PerfumeDetailClient = ({
         </p>
       </HeroHeader>
 
-      <div className="flex flex-col gap-20 mx-auto inner-container items-center">
-        <div className="w-full flex flex-col lg:flex-row gap-4 max-w-6xl">
+      <div className="flex flex-col gap-6 mx-auto inner-container items-center">
+        <div className="w-full flex flex-col lg:flex-row gap-4">
           {user && (
             <PerfumeIcons
               perfume={perfume}
@@ -130,14 +130,14 @@ const PerfumeDetailClient = ({
             />
           )}
           <div
-            className={`bg-white/5 ${user ? "lg:w-3/4" : "md:w-full"} border-4 noir-border relative shadow-lg text-noir-gold-500`}
+            className={`bg-white/5 ${user ? "lg:w-5/6" : "md:w-full"} border-4 noir-border relative shadow-lg text-noir-gold-500`}
           >
             <PerfumeNotes
               perfumeNotesOpen={perfume.perfumeNotesOpen}
               perfumeNotesHeart={perfume.perfumeNotesHeart}
               perfumeNotesClose={perfume.perfumeNotesClose}
             />
-            <p className="p-4 mb-14">{perfume.description}</p>
+            <p className="p-4 mb-14 font-light">{perfume.description}</p>
             <Button
               onClick={handleBack}
               variant="primary"

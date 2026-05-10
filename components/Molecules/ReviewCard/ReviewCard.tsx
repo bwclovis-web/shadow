@@ -1,4 +1,4 @@
-import { useRef } from "react"
+import { type RefObject, useRef } from "react"
 import { formatDistanceToNow } from "date-fns"
 import { GrEdit } from "react-icons/gr"
 import { MdDeleteForever } from "react-icons/md"
@@ -28,7 +28,10 @@ interface ReviewCardProps {
   }
   currentUserId?: string
   currentUserRole?: string
-  onEdit?: (reviewId: string) => void
+  onEdit?: (
+    reviewId: string,
+    triggerRef: RefObject<HTMLButtonElement | null>
+  ) => void
   onDelete?: (reviewId: string) => void
   onModerate?: (reviewId: string, isApproved: boolean) => void
   showModerationActions?: boolean
@@ -51,6 +54,7 @@ const ReviewCard = ({
   const canDelete = isOwner || canModerate
   const { modalOpen, modalId, toggleModal } = useSessionStore()
   const removeButtonRef = useRef<HTMLButtonElement>(null)
+  const editButtonRef = useRef<HTMLButtonElement>(null)
   const deleteModalId = `delete-review-item-${review.id}`
   const showDeleteModal =
     Boolean(modalOpen && modalId && onDelete) && modalId === deleteModalId
@@ -105,7 +109,8 @@ const ReviewCard = ({
           <div className="flex items-center space-x-2">
             {isOwner && onEdit && (
               <Button
-                onClick={() => onEdit(review.id)}
+                ref={editButtonRef}
+                onClick={() => onEdit(review.id, editButtonRef)}
                 variant="icon"
                 background="gold"
                 size="sm"

@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react"
+import { type RefObject, useEffect, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button"
 import RichTextEditor from "@/components/Atoms/RichTextEditor"
 import ReviewCard from "@/components/Molecules/ReviewCard"
+import Modal from "@/components/Organisms/Modal"
 import { useCSRF } from "@/hooks/useCSRF"
+import { useSessionStore } from "@/hooks/sessionStore"
 import { safeAsync } from "@/utils/errorHandling.patterns"
 import { containsDangerousReviewHtml, sanitizeReviewHtml } from "@/utils/sanitize"
 
@@ -56,7 +58,11 @@ const ReviewSection = ({
   pageSize,
 }: ReviewSectionProps) => {
   const t = useTranslations("singlePerfume.review")
-  const [showReviewForm, setShowReviewForm] = useState(false)
+  const reviewModalId = `perfume-review-form-${perfumeId}`
+  const writeReviewButtonRef = useRef<HTMLButtonElement>(null)
+  const wasReviewModalOpenRef = useRef(false)
+  const { modalOpen, modalId, toggleModal, closeModal } = useSessionStore()
+  const isReviewModalOpen = modalOpen && modalId === reviewModalId
   const [reviewContent, setReviewContent] = useState("")
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null)
   const [userReview, setUserReview] = useState(existingUserReview || null)
@@ -72,6 +78,15 @@ const ReviewSection = ({
   useEffect(() => {
     setUserReview(existingUserReview || null)
   }, [existingUserReview])
+
+  useEffect(() => {
+    const ours = modalOpen && modalId === reviewModalId
+    if (wasReviewModalOpenRef.current && !ours) {
+      setReviewContent("")
+      setEditingReviewId(null)
+    }
+    wasReviewModalOpenRef.current = ours
+  }, [modalOpen, modalId, reviewModalId])
 
   const reviews = reviewsState?.reviews ?? []
   const hasMore = reviewsState?.pagination?.hasNextPage ?? false
@@ -171,7 +186,7 @@ const ReviewSection = ({
 
       const result = await response.json()
       setReviewContent("")
-      setShowReviewForm(false)
+      closeModal()
       setUserReview(result?.data || null)
       await refreshReviews()
     } catch (error) {
@@ -184,21 +199,26 @@ const ReviewSection = ({
     }
   }
 
-  const handleEditReview = (reviewId: string) => {
-    // Find the review to edit
-    const reviewToEdit = userReview?.id === reviewId 
-      ? userReview 
-      : reviews.find(r => r.id === reviewId)
-    
+  const handleEditReview = (
+    reviewId: string,
+    triggerRef: RefObject<HTMLButtonElement | null>
+  ) => {
+    const reviewToEdit =
+      userReview?.id === reviewId ? userReview : reviews.find(r => r.id === reviewId)
+
     if (!reviewToEdit) {
       console.error("Review not found for editing")
       return
     }
 
-    // Set editing state
     setEditingReviewId(reviewId)
     setReviewContent(reviewToEdit.review)
-    setShowReviewForm(true)
+
+    const { modalOpen: storeOpen, modalId: storeModalId } = useSessionStore.getState()
+    if (storeOpen && storeModalId === reviewModalId) {
+      return
+    }
+    toggleModal(triggerRef, reviewModalId)
   }
 
   const handleUpdateReview = async () => {
@@ -257,9 +277,9 @@ const ReviewSection = ({
       updateReviewInState(editingReviewId, result?.data || optimisticReview)
       
       setReviewContent("")
-      setShowReviewForm(false)
+      closeModal()
       setEditingReviewId(null)
-      
+
       // Refresh to ensure consistency
       await refreshReviews()
     } catch (error) {
@@ -273,8 +293,8 @@ const ReviewSection = ({
   }
 
   const handleCancelEdit = () => {
+    closeModal()
     setReviewContent("")
-    setShowReviewForm(false)
     setEditingReviewId(null)
   }
 
@@ -339,53 +359,67 @@ const ReviewSection = ({
           {t("heading")} ({reviews.length})
         </h2>
         {canCreateReview && !userReview && (
-          <Button onClick={() => setShowReviewForm(true)}>
+          <Button
+            ref={writeReviewButtonRef}
+            onClick={() => {
+              setEditingReviewId(null)
+              setReviewContent("")
+              toggleModal(writeReviewButtonRef, reviewModalId)
+            }}
+          >
             {t("writeReview")}
           </Button>
         )}
       </div>
 
-      {/* Review Form */}
-      {showReviewForm && (
-        <div className="border border-noir-gold bg-noir-dark rounded-lg p-4 space-y-4">
-          <h3 className="text-lg font-medium text-gray-900">
-            {editingReviewId 
-              ? t("editYourReview")
-              : t("writeYourReview")}
-          </h3>
-          <RichTextEditor
-            value={reviewContent}
-            onChange={setReviewContent}
-            placeholder={t("addReviewPlaceholder")}
-            maxLength={2000}
-          />
-          <div className="flex justify-end space-x-2">
-            <Button
-              onClick={editingReviewId ? handleUpdateReview : handleCreateReview}
-              disabled={!reviewContent.trim() || isSubmittingReview}
-              className="px-4 py-2 bg-noir-gold text-noir-black rounded-md hover:bg-noir-gold/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      {isReviewModalOpen && (
+        <Modal
+          innerType="dark"
+          animateStart="top"
+          className="max-w-4xl"
+          dialogAriaLabelledBy="review-modal-form-title"
+        >
+          <div className="space-y-4">
+            <h3
+              id="review-modal-form-title"
+              className="text-lg font-medium text-noir-gold pr-10"
             >
-              {isSubmittingReview
-                ? t("submitting")
-                : editingReviewId
-                  ? t("updateReview")
-                  : t("submitReview")}
-            </Button>
-            <Button 
-              onClick={handleCancelEdit}
-              variant="secondary"
-              disabled={isSubmittingReview}
-            >
-              {t("cancel")}
-            </Button>
+              {editingReviewId ? t("editYourReview") : t("writeYourReview")}
+            </h3>
+            <RichTextEditor
+              value={reviewContent}
+              onChange={setReviewContent}
+              placeholder={t("addReviewPlaceholder")}
+              maxLength={2000}
+            />
+            <div className="flex justify-end space-x-2">
+              <Button
+                onClick={editingReviewId ? handleUpdateReview : handleCreateReview}
+                disabled={!reviewContent.trim() || isSubmittingReview}
+                className="px-4 py-2 bg-noir-gold text-noir-black rounded-md hover:bg-noir-gold/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isSubmittingReview
+                  ? t("submitting")
+                  : editingReviewId
+                    ? t("updateReview")
+                    : t("submitReview")}
+              </Button>
+              <Button
+                onClick={handleCancelEdit}
+                variant="secondary"
+                disabled={isSubmittingReview}
+              >
+                {t("cancel")}
+              </Button>
+            </div>
           </div>
-        </div>
+        </Modal>
       )}
 
       {/* Existing User Review */}
       {userReview && (
         <div className="space-y-2">
-          <h3 className="text-lg font-medium text-gray-900">
+          <h3 className="text-lg font-medium text-noir-gold">
             {t("yourReview")}
           </h3>
           <ReviewCard

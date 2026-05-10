@@ -27,21 +27,22 @@ vi.mock("date-fns", () => ({
   }),
 }))
 
-// Mock react-i18next
-vi.mock("react-i18next", () => ({
-  useTranslation: () => ({
-    t: (key: string) => {
-      const translations: Record<string, string> = {
-        "common.edit": "Edit",
-        "common.delete": "Delete",
-        "common.approve": "Approve",
-        "common.reject": "Reject",
-        "singlePerfume.review.dangerModal.heading": "Delete Review",
-        "singlePerfume.review.dangerModal.description": "Are you sure you want to delete this review?",
-      }
-      return translations[key] || key
-    },
-  }),
+vi.mock("next-intl", () => ({
+  useTranslations: (namespace: string) => (key: string) => {
+    const translations: Record<string, Record<string, string>> = {
+      common: {
+        edit: "Edit",
+        delete: "Delete",
+        approve: "Approve",
+        reject: "Reject",
+      },
+      "singlePerfume.review": {
+        "dangerModal.heading": "Delete Review",
+        "dangerModal.description": "Are you sure you want to delete this review?",
+      },
+    }
+    return translations[namespace]?.[key] || key
+  },
 }))
 
 describe("ReviewCard", () => {
@@ -232,7 +233,10 @@ describe("ReviewCard", () => {
       // Use fireEvent for immediate execution instead of userEvent
       editButton.click()
 
-      expect(onEdit).toHaveBeenCalledWith("review-1")
+      expect(onEdit).toHaveBeenCalledWith(
+        "review-1",
+        expect.objectContaining({ current: expect.anything() })
+      )
       expect(onEdit).toHaveBeenCalledTimes(1)
     })
 

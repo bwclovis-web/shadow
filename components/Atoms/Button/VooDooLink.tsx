@@ -13,15 +13,19 @@ import {
 import { styleMerge } from "@/utils/styleUtils"
 
 import { buttonVariants } from "./button-variants"
+import { Icon, IconName } from "../Icons/Icons"
 
 export interface VooDooLinkProps
   extends Omit<LinkHTMLAttributes<HTMLAnchorElement>, "style">,
-    VariantProps<typeof buttonVariants> {
+    Omit<VariantProps<typeof buttonVariants>, "leftIcon" | "rightIcon"> {
   variant?: "primary" | "secondary" | "danger" | "link" | "icon" | null
   url: string
   ref?: Ref<HTMLAnchorElement>
   background?: "red" | "gold" | null
   children?: ReactNode
+  leftIcon?: ReactNode
+  rightIcon?: ReactNode
+  icon?: IconName
 }
 
 export const VooDooLink = ({
@@ -31,6 +35,9 @@ export const VooDooLink = ({
   children,
   url,
   background,
+  leftIcon,
+  rightIcon,
+  icon,
   onClick,
   ...props
 }: VooDooLinkProps) => {
@@ -54,7 +61,10 @@ export const VooDooLink = ({
       onClick={handleClick}
       {...props}
     >
-      {children}
+    {leftIcon && <span>{leftIcon}</span>}
+    {icon ? <Icon name={icon} /> : null}
+    {children}
+    {rightIcon && <span>{rightIcon}</span>}
     </Link>
   )
 }

@@ -227,7 +227,8 @@
     "deleteConversationShort": "Elimina",
     "deleteConversationFull": "Elimina conversazione",
     "deleteConversationAria": "Elimina conversazione con {name}",
-    "deleteConversationConfirm": "Eliminare l’intera conversazione con {name}? Tutti i messaggi verranno rimossi per entrambi. Azione irreversibile.",
+    "deleteConversationConfirm": "Eliminare questa conversazione con {name}?",
+    "deleteConversationDescription": "Tutti i messaggi verranno rimossi per entrambi. Questa azione è irreversibile.",
     "deleteConversationFailed": "Impossibile eliminare la conversazione.",
     "deleteConversationDeleting": "Eliminazione…"
   },
@@ -666,7 +667,7 @@
       "deleteComment": "Elimina commento",
       "makePublic": "Rendi pubblico",
       "makePrivate": "Rendi privato",
-      "noComments": "Nessun commento. Sii il primo!"
+      "noComments": "Ancora nessun commento. Sii il primo a condividere i tuoi pensieri! Questi commenti sono visibili solo a te e sono solo per uso personale."
     },
     "search": {
       "placeholder": "Cerca i tuoi profumi...",
@@ -1096,6 +1097,7 @@
     "itemsSummary": "{traderName} cerca i seguenti profumi:",
     "noItemsAvailable": "Nessun articolo disponibile.",
     "noItemsSearchingFor": "Nessuna ricerca.",
+    "wishlistBottleSeeking": "Cerca: {preference}",
     "amount": "Quantità disponibile",
     "price": "Prezzo",
     "tradePrice": "Prezzo di scambio",
@@ -1202,6 +1204,14 @@
     "itemsInWishlist": "articoli nella wishlist",
     "addButton": "Aggiungi alla wishlist",
     "removeButton": "Rimuovi dalla wishlist",
+    "bottlePreference": {
+      "label": "Formato del flacone",
+      "hint": "Che dimensione speri di trovare?",
+      "sample": "Campione",
+      "partial": "Flacone parziale",
+      "full": "Flacone pieno",
+      "any": "Qualsiasi"
+    },
     "itemCard": {
       "visibility": "Visibilità",
       "public": "Pubblico",
@@ -1209,10 +1219,12 @@
       "available": "🎉 DISPONIBILE NEL MERCATO! 🎉",
       "addedOn": "Aggiunto il",
       "availableMessage": "Questo articolo apparirà sul tuo profilo",
-      "unavailableMessage": "Questo articolo è privato e non apparirà sul tuo profilo"
+      "unavailableMessage": "Questo articolo è privato e non apparirà sul tuo profilo",
+      "bottlePreference": "Formato del flacone"
     }
   },
   "validation": {
-    "profileAboutMax": "Informazioni sul venditore devono essere al massimo {max} caratteri."
+    "profileAboutMax": "Informazioni sul venditore devono essere al massimo {max} caratteri.",
+    "wishlistBottlePreferenceRequired": "Seleziona un formato di flacone."
   }
 }

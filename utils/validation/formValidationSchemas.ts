@@ -144,22 +144,49 @@ export const UpdateCommentSchema = z.object({
   isPublic: z.boolean().optional(),
 })
 
+const wishlistBottlePreferenceValues = ["sample", "partial", "full", "any"] as const
+
 // Wishlist
-export const WishlistActionSchema = z.object({
-  perfumeId: z
-    .string()
-    .trim()
-    .min(1, { message: V.perfumeIdRequired })
-    .refine(isValidPrismaRecordId, { message: "Invalid ID format" }),
-  action: z.enum(["add", "remove", "updateVisibility"], {
-    errorMap: () => ({ message: V.wishlistAction }),
-  }),
-  isPublic: z
-    .string()
-    .optional()
-    .default("false")
-    .transform(val => val === "true"),
-})
+export const WishlistActionSchema = z
+  .object({
+    perfumeId: z
+      .string()
+      .trim()
+      .min(1, { message: V.perfumeIdRequired })
+      .refine(isValidPrismaRecordId, { message: "Invalid ID format" }),
+    action: z.enum(
+      ["add", "remove", "updateVisibility", "updateBottlePreference"],
+      {
+        errorMap: () => ({ message: V.wishlistAction }),
+      }
+    ),
+    isPublic: z
+      .string()
+      .optional()
+      .default("false")
+      .transform(val => val === "true"),
+    bottlePreference: z
+      .string()
+      .optional()
+      .transform(val =>
+        val === undefined || val === "" ? undefined : val
+      )
+      .pipe(
+        z.enum(wishlistBottlePreferenceValues).optional()
+      ),
+  })
+  .superRefine((data, ctx) => {
+    if (
+      data.action === "updateBottlePreference" &&
+      data.bottlePreference === undefined
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: V.wishlistBottlePreferenceRequired,
+        path: ["bottlePreference"],
+      })
+    }
+  })
 
 // User / Auth
 export const UserFormSchema = z

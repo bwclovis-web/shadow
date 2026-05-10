@@ -43,6 +43,7 @@ export const validationKeys = {
   commentMax: "validation.commentMax",
   commentIdRequired: "validation.commentIdRequired",
   wishlistAction: "validation.wishlistAction",
+  wishlistBottlePreferenceRequired: "validation.wishlistBottlePreferenceRequired",
   confirmPasswordRequired: "validation.confirmPasswordRequired",
   firstNameRequired: "validation.firstNameRequired",
   firstNameMax: "validation.firstNameMax",

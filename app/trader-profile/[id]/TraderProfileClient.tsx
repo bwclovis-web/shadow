@@ -8,14 +8,14 @@ import {
   ItemsSearchingFor,
   ItemsToTrade,
 } from "@/components/Containers/TraderProfile"
-import ContactTraderButton from "@/components/Containers/TraderProfile/ContactTraderButton"
-import TraderFeedbackSection from "@/components/Containers/TraderProfile/TraderFeedbackSection"
-import TraderTrustSummary from "@/components/Containers/TraderProfile/TraderTrustSummary"
 import { useTrader } from "@/hooks/useTrader"
 import type { TraderResponse } from "@/lib/queries/user"
 import type { TraderFeedbackResponse } from "@/lib/queries/traderFeedback"
 import type { SafeUser, UserPerfumeI } from "@/types"
 import { getTraderDisplayName } from "@/utils/user"
+import { TraderProfileAside } from "./aside/aside"
+import useMediaQuery from "@/hooks/useMediaQuery"
+const DESKTOP_MEDIA = "(min-width: 1024px)"
 
 const BANNER_IMAGE = "/images/trade.webp"
 
@@ -32,7 +32,7 @@ export default function TraderProfileClient({
 }: TraderProfileClientProps) {
   const { data: trader } = useTrader(initialTrader.id, initialTrader)
   const t = useTranslations("traderProfile")
-
+  const isLgView = useMediaQuery(DESKTOP_MEDIA)
   if (!trader) {
     return (
       <div className="p-4">
@@ -52,31 +52,17 @@ export default function TraderProfileClient({
       />
 
       <div className="inner-container grid grid-cols-1 items-start gap-8 p-6 md:grid-cols-2 xl:grid-cols-3">
-        <div className="md:col-span-2 xl:col-span-1">
-          {trader.traderAbout?.trim() ? (
-            <div className="noir-border mb-4 p-4">
-              <h2 className="mb-2 text-noir-gold">{t("aboutHeading")}</h2>
-              <p className="whitespace-pre-wrap text-noir-gold-100">
-                {trader.traderAbout}
-              </p>
-            </div>
-          ) : null}
-          <TraderTrustSummary reputation={feedback.reputation} />
-          <TraderFeedbackSection
-            traderId={trader.id}
-            viewerId={viewer?.id}
-            initialData={feedback}
-          />
-          <div className="mt-4">
-            <ContactTraderButton
-              traderId={trader.id}
-              trader={trader}
-              viewerId={viewer?.id}
-            />
-          </div>
-        </div>
+        {isLgView ? (
+          <TraderProfileAside trader={trader} viewer={viewer} feedback={feedback} />
+        ) : (
+            <VooDooDetails type="primary" name="traderProfileAside" summary={t("traderProfileAside", { traderName })} background="dark" defaultOpen={false}>
+              <div className="py-4">
+                <TraderProfileAside trader={trader} viewer={viewer} feedback={feedback} />
+              </div>
+            </VooDooDetails>
+        )}
 
-        <div className="flex flex-col gap-8 md:col-span-2 xl:col-span-2">
+        <div className="flex flex-col gap-4 md:col-span-2 xl:col-span-2">
           <div className="noir-border relative p-4">
             <h2 className="mb-2 text-center">
               {t("itemsAvailable")}
@@ -121,6 +107,7 @@ export default function TraderProfileClient({
                   id: item.id,
                   perfumeId: item.perfumeId,
                   isPublic: item.isPublic,
+                  bottlePreference: item.bottlePreference,
                   createdAt: item.createdAt,
                   user: {
                     id: trader.id,

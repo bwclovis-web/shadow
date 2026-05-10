@@ -67,12 +67,12 @@ const PerfumeRatingSystem = ({
   })
 
   return (
-    <div className="bg-noir-dark/20 rounded-lg p-6">
-      <h2 className="text-xl font-bold text-noir-gold mb-1 text-center">
+    <div className="bg-noir-dark/20 p-4">
+      <h3 className="text-center min-w-min border-b border-noir-gold/20 pb-2 mb-4">
         {isInteractive
           ? t("RateThisPerfume")
           : t("CommunityRatings")}
-      </h2>
+      </h3>
 
       {!isLoggedIn && (
         <p className="text-sm text-noir-gold-500 mb-4 text-center">

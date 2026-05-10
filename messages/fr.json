@@ -227,7 +227,8 @@
     "deleteConversationShort": "Supprimer",
     "deleteConversationFull": "Supprimer la conversation",
     "deleteConversationAria": "Supprimer la conversation avec {name}",
-    "deleteConversationConfirm": "Supprimer toute la conversation avec {name} ? Tous les messages seront supprimés pour vous deux. Action irréversible.",
+    "deleteConversationConfirm": "Supprimer cette conversation avec {name} ?",
+    "deleteConversationDescription": "Tous les messages seront supprimés pour vous deux. Cette action est irréversible.",
     "deleteConversationFailed": "Impossible de supprimer la conversation.",
     "deleteConversationDeleting": "Suppression…"
   },
@@ -666,7 +667,7 @@
       "deleteComment": "Supprimer le commentaire",
       "makePublic": "Rendre public",
       "makePrivate": "Rendre privé",
-      "noComments": "Aucun commentaire. Soyez le premier !"
+      "noComments": "Aucun commentaire pour l'instant. Soyez le premier à partager vos idées ! Ces commentaires ne sont visibles que par vous et sont réservés à un usage personnel."
     },
     "search": {
       "placeholder": "Rechercher vos parfums...",
@@ -1096,6 +1097,7 @@
     "itemsSummary": "{traderName} recherche les parfums suivants :",
     "noItemsAvailable": "Aucun article disponible.",
     "noItemsSearchingFor": "Aucune recherche.",
+    "wishlistBottleSeeking": "Recherche : {preference}",
     "amount": "Quantité disponible",
     "price": "Prix",
     "tradePrice": "Prix d'échange",
@@ -1202,6 +1204,14 @@
     "itemsInWishlist": "articles dans la liste",
     "addButton": "Ajouter à la liste de souhaits",
     "removeButton": "Retirer de la liste",
+    "bottlePreference": {
+      "label": "Format du flacon",
+      "hint": "Quelle taille recherchez-vous ?",
+      "sample": "Échantillon",
+      "partial": "Flacon partiel",
+      "full": "Flacon plein",
+      "any": "Indifférent"
+    },
     "itemCard": {
       "visibility": "Visibilité",
       "public": "Public",
@@ -1209,10 +1219,12 @@
       "available": "🎉 DISPONIBLE SUR LA BOURSE ! 🎉",
       "addedOn": "Ajouté le",
       "availableMessage": "Cet article apparaîtra sur votre profil",
-      "unavailableMessage": "Cet article est privé et n'apparaîtra pas sur votre profil"
+      "unavailableMessage": "Cet article est privé et n'apparaîtra pas sur votre profil",
+      "bottlePreference": "Format du flacon"
     }
   },
   "validation": {
-    "profileAboutMax": "À propos du vendeur doit faire {max} caractères ou moins."
+    "profileAboutMax": "À propos du vendeur doit faire {max} caractères ou moins.",
+    "wishlistBottlePreferenceRequired": "Veuillez sélectionner un format de flacon."
   }
 }

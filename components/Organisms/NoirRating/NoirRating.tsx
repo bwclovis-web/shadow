@@ -17,7 +17,7 @@ const NoirRating = ({
   value,
   onChange,
   readonly = false,
-  size = "md",
+  size = "sm",
   showLabel = true,
 }: NoirRatingProps) => {
   const [hoverValue, setHoverValue] = useState<number | null>(null)

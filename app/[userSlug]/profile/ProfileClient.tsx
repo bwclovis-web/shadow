@@ -142,7 +142,7 @@ const ProfileForm = ({
         type="submit"
         variant="primary"
         background="gold"
-        size="xl"
+        size="lg"
         className="w-full"
       >
         {t("updateProfile")}

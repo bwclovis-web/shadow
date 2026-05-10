@@ -286,7 +286,7 @@ const MySingleScentClient = ({
         image={imageSrc}
         heading={perfume?.name ?? ""}
       />
-      <div className="inner-container">
+      <div className="inner-container py-6">
         <div className="flex justify-end mt-4 mb-2">
           <AddToCollectionModal
             type="icon"

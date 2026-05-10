@@ -2,7 +2,6 @@ import { useTranslations } from "next-intl"
 import { MdDeleteForever } from "react-icons/md"
 
 import { Button } from "@/components/Atoms/Button"
-import VooDooCheck from "@/components/Atoms/VooDooCheck/VooDooCheck"
 import { usePerfumeComments } from "@/hooks/usePerfumeComments"
 import { useSessionStore } from "@/hooks/sessionStore"
 import type { UserPerfumeI } from "@/types"
@@ -14,12 +13,8 @@ interface PerfumeCommentsProps {
 const PerfumeComments = ({ userPerfume, onCommentSuccess }: PerfumeCommentsProps) => {
   const t = useTranslations("myScents.comments")
   const { toggleModal } = useSessionStore()
-  const { comments, uniqueModalId, toggleCommentVisibility, deleteComment } =
+  const { comments, uniqueModalId, deleteComment } =
     usePerfumeComments({ userPerfume, onCommentSuccess })
-
-  const handleTogglePublic = async (commentId: string, currentIsPublic: boolean) => {
-    await toggleCommentVisibility(commentId, currentIsPublic)
-  }
 
   const handleDeleteComment = async (commentId: string) => {
     await deleteComment(commentId)
@@ -36,7 +31,7 @@ const PerfumeComments = ({ userPerfume, onCommentSuccess }: PerfumeCommentsProps
       {comments.length > 0 ? (
         <ul className="list-decimal">
           {comments.map(comment => (
-            <ol
+            <li
               key={comment.id}
               className="mb-1 border-b border-noir-gold/20 pb-2"
             >
@@ -46,12 +41,6 @@ const PerfumeComments = ({ userPerfume, onCommentSuccess }: PerfumeCommentsProps
                   Created on : {new Date(comment.createdAt).toLocaleDateString("en-US")}
                 </span>
                 <div className="flex items-center gap-2">
-                  <VooDooCheck
-                    checked={comment.isPublic}
-                    labelChecked={t("makePublic")}
-                    labelUnchecked={t("makePrivate")}
-                    onChange={() => handleTogglePublic(comment.id, comment.isPublic)}
-                  />
                   <Button
                     variant="icon"
                     onClick={() => handleDeleteComment(comment.id)}
@@ -63,7 +52,7 @@ const PerfumeComments = ({ userPerfume, onCommentSuccess }: PerfumeCommentsProps
                   </Button>
                 </div>
               </div>
-            </ol>
+            </li>
           ))}
         </ul>
       ) : (

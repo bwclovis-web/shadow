@@ -9,11 +9,16 @@ import AddToCollectionModal from "@/components/Organisms/AddToCollectionModal"
 import DangerModal from "@/components/Organisms/DangerModal"
 import Modal from "@/components/Organisms/Modal"
 import { useSessionStore } from "@/hooks/sessionStore"
-import { useToggleWishlist } from "@/lib/mutations/wishlist"
+import {
+  useToggleWishlist,
+  WISHLIST_BOTTLE_PREFERENCE_OPTIONS,
+  type WishlistBottlePreference,
+} from "@/lib/mutations/wishlist"
 import { useTranslations } from "next-intl"
 
 const DELETE_MODAL_ID = "delete-perfume-item"
-const ICON_BUTTON_CLASS = "flex items-center justify-between gap-2"
+
+const wishlistModalIdForPerfume = (perfumeId: string) => `wishlist-${perfumeId}`
 
 interface Perfume {
   id: string
@@ -28,20 +33,7 @@ interface PerfumeIconsProps {
   isInWishlist: boolean
 }
 
-const IconLabel = ({
-  label,
-  icon: Icon,
-  size = 20,
-}: {
-  label: string
-  icon: React.ComponentType<{ size?: number }>
-  size?: number
-}) => (
-  <div className={ICON_BUTTON_CLASS}>
-    <span>{label}</span>
-    <Icon size={size} />
-  </div>
-)
+import { IconLabel } from "@/components/Molecules/IconLabel/IconLabel"
 
 const PerfumeIcons = ({
   perfume,
@@ -50,13 +42,17 @@ const PerfumeIcons = ({
   isInWishlist,
 }: PerfumeIconsProps) => {
   const [inWishlist, setInWishlist] = useState(isInWishlist)
-  const { modalOpen, toggleModal, modalId } = useSessionStore()
+  const { modalOpen, toggleModal, modalId, closeModal } = useSessionStore()
   const [isPublic, setIsPublic] = useState(false)
-  const [showWishlistForm, setShowWishlistForm] = useState(false)
+  const [bottlePreference, setBottlePreference] =
+    useState<WishlistBottlePreference>("any")
   const deleteButtonRef = useRef<HTMLButtonElement>(null)
+  const wishlistButtonRef = useRef<HTMLButtonElement>(null)
+  const wishlistModalId = wishlistModalIdForPerfume(perfume.id)
   const tCommon = useTranslations("common")
   const tIcons = useTranslations("singlePerfume")
   const tWishlist = useTranslations("wishlist.itemCard")
+  const tBottle = useTranslations("wishlist.bottlePreference")
   const toggleWishlist = useToggleWishlist()
 
   useEffect(() => {
@@ -70,23 +66,30 @@ const PerfumeIcons = ({
         {
           onSuccess: () => {
             setInWishlist(false)
-            setShowWishlistForm(false)
+            closeModal()
           },
           onError: error => console.error("Failed to remove from wishlist:", error),
         }
       )
     } else {
-      setShowWishlistForm(true)
+      setIsPublic(false)
+      setBottlePreference("any")
+      toggleModal(wishlistButtonRef, wishlistModalId)
     }
   }
 
   const handleAddToWishlist = () => {
     toggleWishlist.mutate(
-      { perfumeId: perfume.id, action: "add", isPublic },
+      {
+        perfumeId: perfume.id,
+        action: "add",
+        isPublic,
+        bottlePreference,
+      },
       {
         onSuccess: () => {
           setInWishlist(true)
-          setShowWishlistForm(false)
+          closeModal()
         },
         onError: error => console.error("Failed to add to wishlist:", error),
       }
@@ -107,25 +110,41 @@ const PerfumeIcons = ({
           />
         </Modal>
       )}
-      <div className="grid grid-cols-1 gap-2 noir-border relative p-4">
-        {!showWishlistForm ? (
-          <Button
-            onClick={handleWishlistToggle}
-            variant="icon"
-            background="gold"
-            size="sm"
-            disabled={toggleWishlist.isPending}
-            aria-label={wishlistAriaLabel}
-          >
-            {inWishlist ? (
-              <IconLabel label={tIcons("icons.inWishlist")} icon={BsHeartFill} />
-            ) : (
-              <IconLabel label={tIcons("icons.addButton")} icon={BsHearts} />
-            )}
-          </Button>
-        ) : (
-          <div className="space-y-2 p-3 bg-noir-dark/10 rounded-lg border border-noir-gold">
-            <div className="flex items-center gap-2">
+      {modalOpen && modalId === wishlistModalId && (
+        <Modal innerType="dark" animateStart="top">
+          <div className="space-y-4 p-6 pt-12 max-w-md">
+            <h2 className="text-lg font-medium text-center text-noir-cream">
+              {tIcons("icons.addButton")}
+            </h2>
+            <p className="text-sm text-noir-cream/80 text-center">
+              {perfume.name}
+            </p>
+            <div className="space-y-2">
+              <label
+                htmlFor={`bottle-pref-${perfume.id}`}
+                className="block text-sm text-center text-noir-cream/90"
+              >
+                {tBottle("label")}
+              </label>
+              <select
+                id={`bottle-pref-${perfume.id}`}
+                value={bottlePreference}
+                onChange={e =>
+                  setBottlePreference(e.target.value as WishlistBottlePreference)
+                }
+                className="w-full rounded border border-noir-gold bg-noir-dark px-3 py-2 text-sm text-noir-cream"
+              >
+                {WISHLIST_BOTTLE_PREFERENCE_OPTIONS.map(v => (
+                  <option key={v} value={v}>
+                    {tBottle(v)}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-center text-noir-cream/70">
+                {tBottle("hint")}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 justify-center">
               <VooDooCheck
                 id={`public-${perfume.id}`}
                 checked={isPublic}
@@ -134,7 +153,7 @@ const PerfumeIcons = ({
                 labelUnchecked={tWishlist("private")}
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 justify-center">
               <Button
                 onClick={handleAddToWishlist}
                 variant="icon"
@@ -145,7 +164,7 @@ const PerfumeIcons = ({
                 {toggleWishlist.isPending ? tCommon("adding") : tIcons("icons.addButton")}
               </Button>
               <Button
-                onClick={() => setShowWishlistForm(false)}
+                onClick={closeModal}
                 variant="icon"
                 background="gold"
                 size="sm"
@@ -154,7 +173,24 @@ const PerfumeIcons = ({
               </Button>
             </div>
           </div>
-        )}
+        </Modal>
+      )}
+      <div className="grid grid-cols-1 gap-2 noir-border relative p-4">
+        <Button
+          ref={wishlistButtonRef}
+          onClick={handleWishlistToggle}
+          variant="icon"
+          background="gold"
+          size="sm"
+          disabled={toggleWishlist.isPending}
+          aria-label={wishlistAriaLabel}
+        >
+          {inWishlist ? (
+            <IconLabel label={tIcons("icons.inWishlist")} icon={BsHeartFill} size={22} />
+          ) : (
+            <IconLabel label={tIcons("icons.addButton")} icon={BsHearts} size={22} />
+          )}
+        </Button>
         <AddToCollectionModal type="icon" perfume={perfume} />
         {isAdmin && (
           <div>
@@ -167,21 +203,23 @@ const PerfumeIcons = ({
                 variant="icon"
                 background="gold"
                 size="sm"
-                className={ICON_BUTTON_CLASS}
+                className="flex items-center justify-between gap-2 min-w-full"
+                rightIcon={<GrEdit size={22} />}
                 url={`/admin/perfume/${perfume.slug}/edit`}
               >
-                <IconLabel label={tIcons("icons.editButton")} icon={GrEdit} size={22} />
+                {tIcons("icons.editButton")}
               </VooDooLink>
               <Button
                 ref={deleteButtonRef}
                 onClick={() => toggleModal(deleteButtonRef, DELETE_MODAL_ID)}
                 aria-label={`delete ${perfume.name}`}
                 variant="icon"
-                className={ICON_BUTTON_CLASS}
+                className="flex items-center justify-between gap-2 min-w-full"
+                rightIcon={<MdDeleteForever size={22} />}
                 background="gold"
                 size="sm"
               >
-                <IconLabel label={tIcons("icons.deleteButton")} icon={MdDeleteForever} size={22} />
+                {tIcons("icons.deleteButton")}
               </Button>
             </div>
           </div>

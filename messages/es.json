@@ -227,7 +227,8 @@
     "deleteConversationShort": "Eliminar",
     "deleteConversationFull": "Eliminar conversación",
     "deleteConversationAria": "Eliminar conversación con {name}",
-    "deleteConversationConfirm": "¿Eliminar toda la conversación con {name}? Se borrarán todos los mensajes para ambos. No se puede deshacer.",
+    "deleteConversationConfirm": "¿Eliminar esta conversación con {name}?",
+    "deleteConversationDescription": "Se borrarán todos los mensajes para ambos. Esta acción no se puede deshacer.",
     "deleteConversationFailed": "No se pudo eliminar la conversación.",
     "deleteConversationDeleting": "Eliminando…"
   },
@@ -666,7 +667,7 @@
       "deleteComment": "Eliminar comentario",
       "makePublic": "Hacer público",
       "makePrivate": "Hacer privado",
-      "noComments": "Aún no hay comentarios. ¡Sé el primero en compartir tus pensamientos!"
+      "noComments": "Aún no hay comentarios. ¡Sé el primero en compartir tus pensamientos! Estos comentarios solo son visibles para ti y son solo para uso personal."
     },
     "search": {
       "placeholder": "Busca tus perfumes...",
@@ -1097,6 +1098,7 @@
     "itemsSummary": "{traderName} está buscando los siguientes perfumes:",
     "noItemsAvailable": "No hay artículos disponibles para intercambio.",
     "noItemsSearchingFor": "No hay artículos que esté buscando.",
+    "wishlistBottleSeeking": "Busca: {preference}",
     "amount": "Cantidad Disponible",
     "price": "Precio",
     "tradePrice": "Precio de Intercambio",
@@ -1203,6 +1205,14 @@
     "itemsInWishlist": "artículos en la Lista de Deseos",
     "addButton": "Agregar a la Lista de Deseos",
     "removeButton": "Eliminar de la Lista de Deseos",
+    "bottlePreference": {
+      "label": "Formato del frasco",
+      "hint": "¿Qué tamaño esperas encontrar?",
+      "sample": "Muestra",
+      "partial": "Frasco parcial",
+      "full": "Frasco completo",
+      "any": "Cualquiera"
+    },
     "itemCard": {
       "visibility": "Visibilidad",
       "public": "Público",
@@ -1210,10 +1220,12 @@
       "available": "🎉 ¡DISPONIBLE EN EL INTERCAMBIO! 🎉",
       "addedOn": "Agregado el",
       "availableMessage": "Este artículo aparecerá en tu perfil de comerciante",
-      "unavailableMessage": "Este artículo es privado y no aparecerá en tu perfil de comerciante"
+      "unavailableMessage": "Este artículo es privado y no aparecerá en tu perfil de comerciante",
+      "bottlePreference": "Formato del frasco"
     }
   },
   "validation": {
-    "profileAboutMax": "Sobre el comerciante debe tener {max} caracteres o menos."
+    "profileAboutMax": "Sobre el comerciante debe tener {max} caracteres o menos.",
+    "wishlistBottlePreferenceRequired": "Selecciona un formato de frasco."
   }
 }

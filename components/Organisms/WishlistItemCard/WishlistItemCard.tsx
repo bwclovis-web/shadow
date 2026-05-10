@@ -1,11 +1,15 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 import Image from "next/image"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { IoMdCloseCircle } from "react-icons/io"
 
 import VooDooCheck from "@/components/Atoms/VooDooCheck/VooDooCheck"
-import { useToggleWishlist } from "@/lib/mutations/wishlist"
+import {
+  useToggleWishlist,
+  WISHLIST_BOTTLE_PREFERENCE_OPTIONS,
+  type WishlistBottlePreference,
+} from "@/lib/mutations/wishlist"
 import { normalizeRemoteImageSrc, styleMerge } from "@/utils/styleUtils"
 
 import {
@@ -30,13 +34,37 @@ const WishlistItemCard = ({
   onRemove,
 }: WishlistItemCardProps) => {
   const [isPublic, setIsPublic] = useState(item.isPublic)
+  const [bottlePreference, setBottlePreference] = useState<WishlistBottlePreference>(
+    item.bottlePreference ?? "any"
+  )
   const t = useTranslations("wishlist.itemCard")
+  const tBottle = useTranslations("wishlist.bottlePreference")
   const toggleWishlist = useToggleWishlist()
+
+  useEffect(() => {
+    setBottlePreference(item.bottlePreference ?? "any")
+  }, [item.bottlePreference])
 
   const handleRemove = () => {
     toggleWishlist.mutate(
       { perfumeId: item.perfume.id, action: "remove" },
       { onSuccess: () => onRemove?.() }
+    )
+  }
+
+  const handleBottlePreferenceChange = (next: WishlistBottlePreference) => {
+    if (next === bottlePreference) return
+    toggleWishlist.mutate(
+      {
+        perfumeId: item.perfume.id,
+        action: "updateBottlePreference",
+        bottlePreference: next,
+      },
+      {
+        onSuccess: () => setBottlePreference(next),
+        onError: error =>
+          console.error("Error updating wishlist bottle preference:", error),
+      }
     )
   }
 
@@ -122,6 +150,33 @@ const WishlistItemCard = ({
           </div>
 
           <div className="mt-3 pt-3 border-t border-noir-gold-200">
+            <div className="pb-4">
+              <label
+                htmlFor={`wishlist-bottle-${item.id}`}
+                className={styleMerge(
+                  wishlistVisibilityVariants({ isAvailable })
+                )}
+              >
+                {t("bottlePreference")}
+              </label>
+              <select
+                id={`wishlist-bottle-${item.id}`}
+                value={bottlePreference}
+                onChange={e =>
+                  handleBottlePreferenceChange(
+                    e.target.value as WishlistBottlePreference
+                  )
+                }
+                disabled={toggleWishlist.isPending}
+                className="mt-1 w-full rounded border border-noir-gold bg-noir-dark px-2 py-1.5 text-sm text-noir-cream disabled:opacity-50"
+              >
+                {WISHLIST_BOTTLE_PREFERENCE_OPTIONS.map(v => (
+                  <option key={v} value={v}>
+                    {tBottle(v)}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="flex items-center justify-between pb-4">
               <span
                 className={styleMerge(wishlistVisibilityVariants({ isAvailable }))}

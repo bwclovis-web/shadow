@@ -7,6 +7,7 @@ interface WishlistItem {
   id: string
   perfumeId: string
   isPublic: boolean
+  bottlePreference: "sample" | "partial" | "full" | "any"
   createdAt: string
   user: {
     id: string
@@ -32,6 +33,7 @@ interface ItemsSearchingForProps {
 
 const ItemsSearchingFor = ({ wishlistItems }: ItemsSearchingForProps) => {
   const t = useTranslations("traderProfile")
+  const tBottle = useTranslations("wishlist.bottlePreference")
 
   if (wishlistItems.length === 0) {
     return (
@@ -73,6 +75,11 @@ const ItemsSearchingFor = ({ wishlistItems }: ItemsSearchingForProps) => {
                     by {item.perfume.perfumeHouse.name}
                   </p>
                 )}
+                <p className="text-sm text-noir-gold-200 mt-1">
+                  {t("wishlistBottleSeeking", {
+                    preference: tBottle(item.bottlePreference),
+                  })}
+                </p>
               </div>
               <div className="flex-shrink-0 absolute right-1 bottom-0">
                 <p className="text-xs text-noir-gold-500">

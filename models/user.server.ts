@@ -188,6 +188,7 @@ export const getTraderById = cache(async (id: string) => {
           id: true,
           perfumeId: true,
           isPublic: true,
+          bottlePreference: true,
           createdAt: true,
           perfume: {
             select: {

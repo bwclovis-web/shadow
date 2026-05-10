@@ -176,14 +176,15 @@ model UserPerfumeReview {
 }
 
 model UserPerfumeWishlist {
-  id        String   @id @default(cuid())
-  userId    String
-  perfumeId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-  isPublic  Boolean  @default(false)
-  perfume   Perfume  @relation(fields: [perfumeId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  id               String                   @id @default(cuid())
+  userId           String
+  perfumeId        String
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @default(now()) @updatedAt
+  isPublic         Boolean                  @default(false)
+  bottlePreference WishlistBottlePreference @default(any)
+  perfume          Perfume                  @relation(fields: [perfumeId], references: [id])
+  user             User                     @relation(fields: [userId], references: [id])
 
   @@index([userId, createdAt], name: "idx_wishlist_user_created")
   @@index([perfumeId], name: "idx_wishlist_perfume")
@@ -450,6 +451,13 @@ enum SecurityAuditSeverity {
   warning
   error
   critical
+}
+
+enum WishlistBottlePreference {
+  sample
+  partial
+  full
+  any
 }
 
 enum AlertType {

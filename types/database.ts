@@ -145,11 +145,14 @@ export interface UserPerfumeReview {
   user: User
 }
 
+export type WishlistBottlePreference = "sample" | "partial" | "full" | "any"
+
 export interface UserPerfumeWishlist {
   id: string
   userId: string
   perfumeId: string
   createdAt: Date
+  bottlePreference: WishlistBottlePreference
   perfume: Perfume
   user: User
 }

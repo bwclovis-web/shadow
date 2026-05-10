@@ -10,9 +10,9 @@ export const voodoodetailsVariants = cva(
     variants: {
       type: {
         primary:
-          "bg-noir-black/70 text-noir-gold-100",
+          "bg-noir-black/70 text-noir-gold-500",
         secondary:
-          "bg-noir-dark/70 text-noir-gold-200",
+          "bg-noir-dark/70 text-noir-gold-500",
       },
     },
     defaultVariants: {
@@ -24,19 +24,19 @@ export const voodoodetailsVariants = cva(
 export const voodooDetailsSummaryVariants = cva(
   [
     "flex cursor-pointer items-center gap-3  py-3 uppercase tracking-widest transition-colors duration-200",
-    "text-sm font-semibold outline-none group-open:text-noir-gold-300 px-1",
+    "text-sm font-semibold outline-none group-open:text-noir-gold-100 px-1",
   ],
   {
     variants: {
       type: {
         primary:
-          "text-noir-gold-100",
+          "text-noir-gold-500",
         secondary:
-          "text-noir-gold-300/80",
+          "text-noir-gold-100/80",
       },
       background: {
         dark:
-          "bg-noir-gold border-noir-gold-500 border-2 group-open:border-none group-open:shadow-none shadow shadow-xl shadow-black hover:bg-noir-gold-100 text-noir-dark group-open:hover:text-noir-dark group-open:bg-noir-black/60 group-open:text-noir-gold-100",
+          "bg-noir-gold border-noir-gold-500 border-2 group-open:border-none group-open:shadow-none shadow shadow-xl shadow-black hover:bg-noir-gold-100 text-noir-dark group-open:hover:text-noir-dark group-open:bg-noir-black/60 group-open:text-noir-gold-500",
         light:
           "bg-noir-light/10 text-noir-dark border-b border-noir-gold/30 group-open:bg-noir-light/20",
       },

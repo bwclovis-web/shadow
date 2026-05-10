@@ -11,6 +11,7 @@ import { createPortal } from "react-dom"
 import { IoMdCloseCircle } from "react-icons/io"
 
 import { useSessionStore } from "@/hooks/sessionStore"
+import { useFocusTrap } from "@/hooks/useFocusTrap"
 import { styleMerge } from "@/utils/styleUtils"
 
 import { modalBackgroundVariant, modalContentVariant } from "./modal-variants"
@@ -23,6 +24,10 @@ interface ModalProps
     VariantProps<typeof modalBackgroundVariant>,
     VariantProps<typeof modalContentVariant> {
   children: ReactNode
+  /** Optional `id` of a visible heading inside the modal for `aria-labelledby`. */
+  dialogAriaLabelledBy?: string
+  /** Used when `dialogAriaLabelledBy` is not set. Defaults to `"Dialog"`. */
+  dialogAriaLabel?: string
 }
 
 const Modal = ({
@@ -31,6 +36,9 @@ const Modal = ({
   innerType,
   animateStart,
   ref,
+  dialogAriaLabelledBy,
+  dialogAriaLabel,
+  className,
 }: ModalProps) => {
   const [mounted, setMounted] = useState(false)
   const [animate, setAnimate] = useState(false)
@@ -43,6 +51,11 @@ const Modal = ({
     if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current)
     closeTimeoutRef.current = setTimeout(closeModal, CLOSE_DELAY_MS)
   }
+
+  useFocusTrap(modalRef, {
+    active: modalOpen,
+    onEscape: handleClose,
+  })
 
   useLayoutEffect(() => {
     setMounted(true)
@@ -90,11 +103,20 @@ const Modal = ({
       )}
       <div
         ref={modalRef}
-        className={styleMerge(modalContentVariant({
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={dialogAriaLabelledBy}
+        aria-label={
+          dialogAriaLabelledBy ? undefined : (dialogAriaLabel ?? "Dialog")
+        }
+        className={styleMerge(
+          modalContentVariant({
             animate,
             animateStart,
             innerType,
-          }))}
+          }),
+          className
+        )}
         style={{ willChange: "transform, opacity" }}
       >
         <button

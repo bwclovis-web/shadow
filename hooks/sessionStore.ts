@@ -61,6 +61,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   },
 
   closeModal: () => {
+    const { triggerId } = get()
+    triggerId?.current?.focus()
+
     set({
       modalOpen: false,
       modalId: null,
