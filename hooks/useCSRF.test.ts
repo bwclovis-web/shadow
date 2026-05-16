@@ -177,9 +177,8 @@ describe("useCSRF", () => {
 
       const headers = result.current.addToHeaders()
 
-      expect(headers).toEqual({
-        "x-csrf-token": "header-token",
-      })
+      expect(headers).toBeInstanceOf(Headers)
+      expect((headers as Headers).get("x-csrf-token")).toBe("header-token")
     })
 
     it("should merge with existing headers", async () => {
@@ -196,11 +195,10 @@ describe("useCSRF", () => {
         Authorization: "Bearer xyz",
       })
 
-      expect(headers).toEqual({
-        "Content-Type": "application/json",
-        Authorization: "Bearer xyz",
-        "x-csrf-token": "token123",
-      })
+      expect(headers).toBeInstanceOf(Headers)
+      expect((headers as Headers).get("Content-Type")).toBe("application/json")
+      expect((headers as Headers).get("Authorization")).toBe("Bearer xyz")
+      expect((headers as Headers).get("x-csrf-token")).toBe("token123")
     })
 
     it("should return original headers when no token", async () => {
@@ -218,7 +216,9 @@ describe("useCSRF", () => {
 
       const headers = result.current.addToHeaders(originalHeaders)
 
-      expect(headers).toEqual(originalHeaders)
+      expect(headers).toBeInstanceOf(Headers)
+      expect((headers as Headers).get("Content-Type")).toBe("application/json")
+      expect((headers as Headers).get("x-csrf-token")).toBeNull()
     })
 
     it("should handle empty headers object", async () => {
@@ -232,9 +232,8 @@ describe("useCSRF", () => {
 
       const headers = result.current.addToHeaders({})
 
-      expect(headers).toEqual({
-        "x-csrf-token": "token",
-      })
+      expect(headers).toBeInstanceOf(Headers)
+      expect((headers as Headers).get("x-csrf-token")).toBe("token")
     })
 
     it("should handle Headers instance", async () => {
@@ -251,8 +250,9 @@ describe("useCSRF", () => {
 
       const headers = result.current.addToHeaders(headersInstance)
 
-      // Should return a new headers object with merged values
-      expect(headers).toBeDefined()
+      expect(headers).toBeInstanceOf(Headers)
+      expect((headers as Headers).get("Content-Type")).toBe("application/json")
+      expect((headers as Headers).get("x-csrf-token")).toBe("token")
     })
   })
 
@@ -311,12 +311,15 @@ describe("useCSRF", () => {
       const formData = new FormData()
       await result.current.submitForm("/api/submit", formData)
 
+      const callArgs = mockFetch.mock.calls[0][1] as RequestInit
+      const headers = callArgs.headers as Headers
+      expect(headers.get("x-csrf-token")).toBe("header-token")
+
       expect(mockFetch).toHaveBeenCalledWith(
         "/api/submit",
         expect.objectContaining({
-          headers: expect.objectContaining({
-            "x-csrf-token": "header-token",
-          }),
+          method: "POST",
+          body: expect.any(FormData),
         })
       )
     })
@@ -338,15 +341,16 @@ describe("useCSRF", () => {
         mode: "cors",
       })
 
+      const callArgs = mockFetch.mock.calls[0][1] as RequestInit
+      const headers = callArgs.headers as Headers
+      expect(headers.get("Authorization")).toBe("Bearer xyz")
+      expect(headers.get("x-csrf-token")).toBe("token")
+
       expect(mockFetch).toHaveBeenCalledWith(
         "/api/submit",
         expect.objectContaining({
           method: "POST",
           mode: "cors",
-          headers: expect.objectContaining({
-            Authorization: "Bearer xyz",
-            "x-csrf-token": "token",
-          }),
         })
       )
     })

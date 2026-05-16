@@ -20,6 +20,8 @@ interface LinkCardProps {
   /** Overrides image `alt` (defaults to `data.name`). */
   imageAlt?: string
   imagePriority?: boolean
+  /** Badges or controls overlaid on the card image (e.g. listing condition). */
+  imageOverlay?: React.ReactNode
 }
 
 const LinkCard = ({
@@ -30,6 +32,7 @@ const LinkCard = ({
   sourcePage: _sourcePage,
   imageAlt,
   imagePriority = false,
+  imageOverlay,
 }: LinkCardProps) => {
   const alt = imageAlt ?? data.name
   const basePath = type === "house" ? HOUSE_DETAIL_PATH : PERFUME_PATH
@@ -39,7 +42,7 @@ const LinkCard = ({
     : `${basePath}/${data.slug}`
 
   return (
-    <div className="relative w-full h-full min-h-72 group noir-border overflow-hidden transition-all duration-300 ease-in-out bg-noir-dark/70 backdrop-blur-sm">
+    <div className="relative aspect-square w-full h-full min-h-72 group noir-border overflow-hidden transition-all duration-300 ease-in-out bg-noir-dark/70 backdrop-blur-sm">
       <PrefetchLink
         href={href}
         prefetch={false}
@@ -60,7 +63,7 @@ const LinkCard = ({
               src={cardImage}
               alt={alt}
               width={400}
-              height={400}
+              height={500}
               priority={imagePriority}
               quality={75}
               className="w-full mask-radial-at-center mask-radial-from-10% mask-radial-to-75%                                                        
@@ -88,6 +91,11 @@ const LinkCard = ({
             <p className="text-sm absolute bottom-6 right-2 bg-noir-gold dark:bg-noir-gold/80 border rounded-sm text-noir-black px-2 py-1 capitalize font-bold border-noir-dark">
               {data.type}
             </p>
+          )}
+          {imageOverlay && (
+            <div className="absolute top-14 left-2 z-20 pointer-events-none">
+              {imageOverlay}
+            </div>
           )}
         </div>
       </PrefetchLink>

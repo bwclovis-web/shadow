@@ -9,6 +9,8 @@ export interface UserWithCounts {
   lastName: string | null
   username: string | null
   role: UserRole
+  strikeCount: number
+  isBanned: boolean
   createdAt: Date
   _count: {
     UserPerfume: number
@@ -35,6 +37,8 @@ export async function getAllUsersWithCounts(): Promise<UserWithCounts[]> {
         lastName: true,
         username: true,
         role: true,
+        strikeCount: true,
+        isBanned: true,
         createdAt: true,
         _count: {
           select: {
@@ -73,6 +77,8 @@ export async function getUserWithCounts(userId: string): Promise<UserWithCounts 
         lastName: true,
         username: true,
         role: true,
+        strikeCount: true,
+        isBanned: true,
         createdAt: true,
         _count: {
           select: {
@@ -369,6 +375,109 @@ export async function updateUserRole(
     return {
       success: false,
       message: "Failed to update user role. Please try again.",
+    }
+  }
+}
+
+export type IssueStrikeResult = {
+  success: boolean
+  message: string
+  strikeCount?: number
+  isBanned?: boolean
+}
+
+/**
+ * Issue a strike against a user. Increments strikeCount atomically; bans at 3+ strikes.
+ */
+export const issueStrike = async (
+  userId: string,
+  reason: string,
+  adminId: string
+): Promise<IssueStrikeResult> => {
+  const trimmedReason = reason.trim()
+  if (!trimmedReason) {
+    return { success: false, message: "A reason is required" }
+  }
+
+  try {
+    const target = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, strikeCount: true, isBanned: true },
+    })
+
+    if (!target) {
+      return { success: false, message: "User not found" }
+    }
+
+    if (userId === adminId) {
+      return { success: false, message: "Cannot issue a strike against your own account" }
+    }
+
+    if (target.isBanned) {
+      return { success: false, message: "User is already banned" }
+    }
+
+    if (target.email.startsWith("deleted_")) {
+      return { success: false, message: "Cannot issue a strike against a deleted user" }
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      await tx.userStrike.create({
+        data: {
+          userId,
+          issuedBy: adminId,
+          reason: trimmedReason,
+        },
+      })
+
+      const newStrikeCount = target.strikeCount + 1
+      const shouldBan = newStrikeCount >= 3
+
+      const updated = await tx.user.update({
+        where: { id: userId },
+        data: {
+          strikeCount: newStrikeCount,
+          ...(shouldBan
+            ? { isBanned: true, tokenVersion: { increment: 1 } }
+            : {}),
+        },
+        select: { strikeCount: true, isBanned: true },
+      })
+
+      return updated
+    })
+
+    await prisma.securityAuditLog.create({
+      data: {
+        id: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        userId: adminId,
+        action: "DATA_MODIFICATION",
+        severity: result.isBanned ? "warning" : "info",
+        resource: "User",
+        resourceId: userId,
+        details: {
+          targetUserEmail: target.email,
+          strikeCount: result.strikeCount,
+          isBanned: result.isBanned,
+          reason: trimmedReason,
+          action: "Strike issued by admin",
+        },
+      },
+    })
+
+    const banNote = result.isBanned ? " User is now banned." : ""
+
+    return {
+      success: true,
+      message: `Strike issued (${result.strikeCount}/3).${banNote}`,
+      strikeCount: result.strikeCount,
+      isBanned: result.isBanned,
+    }
+  } catch (error) {
+    console.error("Error issuing strike:", error)
+    return {
+      success: false,
+      message: "Failed to issue strike. Please try again.",
     }
   }
 }

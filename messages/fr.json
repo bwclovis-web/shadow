@@ -74,6 +74,7 @@
       "performanceAdmin": "Admin performance",
       "errorAnalytics": "Analyse des erreurs",
       "pendingSubmissions": "Soumissions en attente",
+      "userReports": "Signalements",
       "houseScraper": "Scraper de maisons"
     },
     "perfumeHouse": {
@@ -209,7 +210,8 @@
     },
     "signIn": {
       "title": "Connexion - Shadow and Sillage",
-      "description": "Connectez-vous pour accéder à votre profil et gérer votre collection."
+      "description": "Connectez-vous pour accéder à votre profil et gérer votre collection.",
+      "suspended": "Votre compte a été suspendu. Contactez le support si vous pensez qu'il s'agit d'une erreur."
     },
     "signUp": {
       "title": "S'inscrire - Shadow and Sillage",
@@ -638,7 +640,8 @@
       "sourceBottleLabel": "Décanter depuis quelle bouteille ?",
       "sourceBottlePlaceholder": "Sélectionner une bouteille...",
       "sourceBottleRemaining": "{amount} ml restant",
-      "standaloneDecant": "Autonome (sans bouteille source)"
+      "standaloneDecant": "Autonome (sans bouteille source)",
+      "bottleDestashHint": "Destash depuis cette bouteille (jusqu'à {max} ml)"
     },
     "heading": "Mes parfums",
     "subheading": "Gérez votre collection de parfums.",
@@ -1171,18 +1174,47 @@
     "users": "Utilisateurs",
     "userCount": "Nous avons actuellement {count} utilisateurs",
     "manageUsers": "Gérer les utilisateurs",
+    "filters": {
+      "searchLabel": "Rechercher",
+      "searchPlaceholder": "Nom, e-mail ou identifiant…",
+      "roleLabel": "Rôle",
+      "roleAll": "Tous les rôles",
+      "roleUser": "Utilisateur",
+      "roleEditor": "Éditeur",
+      "roleAdmin": "Admin",
+      "strikeLabel": "Strikes",
+      "strikeAll": "Tous",
+      "strikeNone": "Aucun strike",
+      "strikeOne": "1 strike",
+      "strikeTwo": "2 strikes",
+      "strikeBanned": "Banni",
+      "showingCount": "Affichage de {shown} sur {total} utilisateurs"
+    },
+    "strikeModal": {
+      "title": "Émettre un strike",
+      "description": "Cela enregistre un strike contre l'utilisateur. Trois strikes entraînent un bannissement automatique.",
+      "reasonLabel": "Motif",
+      "reasonPlaceholder": "Décrivez pourquoi ce strike est émis…",
+      "cancel": "Annuler",
+      "confirm": "Émettre le strike",
+      "processing": "Traitement…"
+    },
     "table": {
       "user": "Utilisateur",
       "role": "Rôle",
+      "strikes": "Strikes",
       "dataRecords": "Enregistrements",
       "joined": "Inscrit le",
       "actions": "Actions",
       "softDelete": "Suppression douce",
       "delete": "Supprimer",
+      "issueStrike": "Émettre un strike",
       "currentUser": "Utilisateur actuel",
       "admin": "Admin",
       "deleted": "Supprimé",
       "changeRole": "Changer le rôle de l'utilisateur",
+      "strikesLabel": "{count, plural, =0 {Aucun strike} one {# strike} other {# strikes}}",
+      "bannedBadge": "BANNI",
       "roles": {
         "user": "Utilisateur",
         "editor": "Éditeur",
@@ -1226,5 +1258,40 @@
   "validation": {
     "profileAboutMax": "À propos du vendeur doit faire {max} caractères ou moins.",
     "wishlistBottlePreferenceRequired": "Veuillez sélectionner un format de flacon."
+  },
+  "listing": {
+    "photosLabel": "Photos de l'annonce",
+    "photosHint": "Ajoutez au moins une photo avant de publier sur l'échange.",
+    "dropzoneHint": "Glissez-déposez des images ici, ou choisissez des fichiers",
+    "chooseFiles": "Choisir des fichiers",
+    "useCamera": "Utiliser la caméra",
+    "uploading": "Téléversement…",
+    "uploadError": "Impossible de téléverser l'image. Réessayez.",
+    "cameraError": "Impossible d'accéder à la caméra.",
+    "cameraTitle": "Prendre une photo",
+    "capture": "Capturer",
+    "cancel": "Annuler",
+    "removePhoto": "Supprimer la photo",
+    "conditionLabel": "État",
+    "conditionPlaceholder": "Sélectionner l'état (facultatif)",
+    "condition": {
+      "sealed": "Scellé",
+      "mint": "Neuf",
+      "lightlyUsed": "Peu utilisé",
+      "heavilyUsed": "Très utilisé",
+      "damaged": "Endommagé"
+    },
+    "decantFormatLabel": "Format du décant",
+    "decantFormatPlaceholder": "Sélectionner le format (facultatif)",
+    "decantFormat": {
+      "atomizer": "Atomiseur",
+      "vial": "Fiole",
+      "original": "Flacon d'origine"
+    },
+    "openPhoto": "Ouvrir la photo {index}",
+    "lightboxTitle": "Photo de l'annonce",
+    "previousPhoto": "Photo précédente",
+    "nextPhoto": "Photo suivante",
+    "closeLightbox": "Fermer"
   }
 }

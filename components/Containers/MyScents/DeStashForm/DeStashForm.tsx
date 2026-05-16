@@ -1,3 +1,4 @@
+import type { DecantFormat, ListingCondition } from "@prisma/client"
 import { useTranslations } from "next-intl"
 import { useCallback, useMemo } from "react"
 
@@ -5,7 +6,9 @@ import { Button } from "@/components/Atoms/Button"
 import RadioSelect from "@/components/Atoms/RadioSelect"
 import RangeSlider from "@/components/Atoms/RangeSlider"
 import VooDooCheck from "@/components/Atoms/VooDooCheck/VooDooCheck"
+import ImageUploader from "@/components/Molecules/ImageUploader/ImageUploader"
 import { useFormState } from "@/hooks/useFormState"
+import { DECANT_FORMATS, LISTING_CONDITIONS } from "@/utils/listing-display"
 import type { UserPerfumeI } from "@/types"
 
 interface DeStashFormProps {
@@ -16,12 +19,15 @@ interface DeStashFormProps {
   maxAvailable?: number // Maximum amount that can be destashed (remaining from owned)
 }
 
-interface DeStashData {
+export interface DeStashData {
   amount: string
   price?: string
   tradePreference: "cash" | "trade" | "both"
   tradeOnly: boolean
   createNew?: boolean
+  images: string[]
+  condition: ListingCondition | null
+  decantFormat: DecantFormat | null
 }
 
 const TRADE_OPTIONS = [
@@ -38,6 +44,7 @@ const DeStashForm = ({
   maxAvailable,
 }: DeStashFormProps) => {
   const t = useTranslations("myScents.listItem")
+  const tListing = useTranslations("listing")
   const available = userPerfume?.available || "0"
   const tradePriceVal = userPerfume?.tradePrice || ""
   const tradePreferenceVal =
@@ -51,8 +58,20 @@ const DeStashForm = ({
       tradePreference: tradePreferenceVal,
       tradeOnly: tradeOnlyVal,
       createNew: isCreating,
+      images: userPerfume?.images ?? [],
+      condition: (userPerfume?.condition as ListingCondition | null) ?? null,
+      decantFormat: (userPerfume?.decantFormat as DecantFormat | null) ?? null,
     }),
-    [available, tradePriceVal, tradePreferenceVal, tradeOnlyVal, isCreating]
+    [
+      available,
+      tradePriceVal,
+      tradePreferenceVal,
+      tradeOnlyVal,
+      isCreating,
+      userPerfume?.images,
+      userPerfume?.condition,
+      userPerfume?.decantFormat,
+    ]
   )
 
   const validate = useCallback(
@@ -94,6 +113,9 @@ const DeStashForm = ({
         tradePreference: values.tradePreference,
         tradeOnly,
         createNew: values.createNew,
+        images: values.images,
+        condition: values.condition,
+        decantFormat: values.decantFormat,
       }
       handleDecantConfirm(deStashData)
     },
@@ -188,6 +210,70 @@ const DeStashForm = ({
 
         {showPriceAndTrade && (
           <>
+            <div>
+              <p className="block text-sm font-medium text-noir-dark mb-1">
+                {tListing("photosLabel")}
+              </p>
+              <p className="text-xs text-noir-gold-500 mb-2">{tListing("photosHint")}</p>
+              <ImageUploader
+                value={values.images}
+                onChange={(urls) => setValue("images", urls)}
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="condition"
+                className="block text-sm font-medium text-noir-dark mb-1"
+              >
+                {tListing("conditionLabel")}
+              </label>
+              <select
+                id="condition"
+                name="condition"
+                value={values.condition ?? ""}
+                onChange={(event) =>
+                  setValue(
+                    "condition",
+                    (event.target.value || null) as ListingCondition | null
+                  )
+                }
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              >
+                <option value="">{tListing("conditionPlaceholder")}</option>
+                {LISTING_CONDITIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {tListing(`condition.${option}`)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label
+                htmlFor="decantFormat"
+                className="block text-sm font-medium text-noir-dark mb-1"
+              >
+                {tListing("decantFormatLabel")}
+              </label>
+              <select
+                id="decantFormat"
+                name="decantFormat"
+                value={values.decantFormat ?? ""}
+                onChange={(event) =>
+                  setValue(
+                    "decantFormat",
+                    (event.target.value || null) as DecantFormat | null
+                  )
+                }
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+              >
+                <option value="">{tListing("decantFormatPlaceholder")}</option>
+                {DECANT_FORMATS.map((option) => (
+                  <option key={option} value={option}>
+                    {tListing(`decantFormat.${option}`)}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div>
               <label
                 htmlFor="price"

@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Suspense } from "react"
 import { getTranslations } from "next-intl/server"
 
 import SignInClient from "../SignInClient"
@@ -12,5 +13,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function SignInPage() {
-  return <SignInClient />
+  return (
+    <Suspense fallback={null}>
+      <SignInClient />
+    </Suspense>
+  )
 }

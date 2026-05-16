@@ -37,7 +37,8 @@
     "test:watch": "vitest",
     "validate": "npm run typecheck && npm run test && npm run knip",
     "pwa:icons": "node scripts/generate-pwa-icons.mjs",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.995.0",

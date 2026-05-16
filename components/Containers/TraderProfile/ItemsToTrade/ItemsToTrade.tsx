@@ -1,8 +1,10 @@
 import { useTranslations } from "next-intl"
 import { GiTrade } from "react-icons/gi"
 
+import ListingPhotos from "@/components/Molecules/ListingPhotos/ListingPhotos"
 import VooDooDetails from "~/components/Atoms/VooDooDetails"
 import { getPerfumeTypeLabel } from "~/data/SelectTypes"
+import { listingConditionI18nKey } from "@/utils/listing-display"
 import type { UserPerfumeI } from "~/types"
 import ContactItemButton from "~/components/Containers/TraderProfile/ContactItemButton"
 
@@ -37,6 +39,34 @@ const PerfumeHeader = ({ userPerfume }: { userPerfume: UserPerfumeI }) => (
     )}
   </div>
 )
+
+const ListingDetails = ({ userPerfume }: { userPerfume: UserPerfumeI }) => {
+  const tListing = useTranslations("listing")
+  const { condition, decantFormat } = userPerfume
+
+  if (!condition && !decantFormat) return null
+
+  return (
+    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+      {condition && (
+        <p className="text-noir-gold-100">
+          <span className="text-noir-gold-300">{tListing("conditionLabel")}: </span>
+          <span className="text-noir-gold-500">
+            {tListing(listingConditionI18nKey(condition))}
+          </span>
+        </p>
+      )}
+      {decantFormat && (
+        <p className="text-noir-gold-100">
+          <span className="text-noir-gold-300">{tListing("decantFormatLabel")}: </span>
+          <span className="text-noir-gold-500">
+            {tListing(`decantFormat.${decantFormat}`)}
+          </span>
+        </p>
+      )}
+    </div>
+  )
+}
 
 const PriceInfo = ({ userPerfume, t }: { userPerfume: UserPerfumeI; t: ReturnType<typeof useTranslations> }) => {
   return (
@@ -128,7 +158,19 @@ const ItemsToTrade = ({ userPerfume, trader, viewerId }: ItemsToTradeProps) => {
     className="mb-4 border bg-noir-gold/20 border-noir-gold rounded py-2 px-4"
   >
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+    <div>
     <PerfumeHeader userPerfume={userPerfume} />
+    <ListingPhotos
+      images={userPerfume.images}
+      perfumeImage={userPerfume.perfume?.image}
+      condition={userPerfume.condition}
+      tradePreference={userPerfume.tradePreference}
+      tradeOnly={userPerfume.tradeOnly}
+      className="mt-2"
+      lightboxSize="large"
+    />
+    <ListingDetails userPerfume={userPerfume} />
+    </div>
     <div>
       <PriceInfo userPerfume={userPerfume} t={t} />
       <TradeInfo userPerfume={userPerfume} t={t} />

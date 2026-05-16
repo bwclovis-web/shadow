@@ -1,9 +1,8 @@
 "use client"
 
-import { useActionState, useState, useCallback, useEffect } from "react"
+import { useActionState, useState, useCallback, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-
 import {
   CSRFToken,
   CSRFTokenProvider,
@@ -14,12 +13,20 @@ import type { UserWithCounts } from "@/models/admin.server"
 import {
   deleteUserAction,
   updateUserRoleAction,
+  issueStrikeAction,
   type DeleteUserActionState,
   type UpdateRoleActionState,
+  type IssueStrikeActionState,
 } from "./actions"
 import ConfirmDeleteModal from "./ConfirmDeleteModal"
+import ConfirmStrikeModal from "./ConfirmStrikeModal"
 import FormPendingSync from "./FormPendingSync"
 import UserRow from "./UserRow"
+import {
+  filterUsers,
+  type RoleFilter,
+  type StrikeFilter,
+} from "./userAdminFilters"
 
 const BANNER_IMAGE = "/images/userAdmin.webp"
 
@@ -38,12 +45,26 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
     updateUserRoleAction,
     null as UpdateRoleActionState
   )
+  const [strikeState, strikeFormAction] = useActionState(
+    issueStrikeAction,
+    null as IssueStrikeActionState
+  )
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [showStrikeModal, setShowStrikeModal] = useState(false)
   const [deleteType, setDeleteType] = useState<"delete" | "soft-delete">("delete")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isStrikeSubmitting, setIsStrikeSubmitting] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all")
+  const [strikeFilter, setStrikeFilter] = useState<StrikeFilter>("all")
 
   const t = useTranslations("userAdmin")
+
+  const filteredUsers = useMemo(
+    () => filterUsers(users, searchQuery, roleFilter, strikeFilter),
+    [users, searchQuery, roleFilter, strikeFilter]
+  )
 
   const handleDelete = useCallback((userId: string, type: "delete" | "soft-delete") => {
     setSelectedUserId(userId)
@@ -51,8 +72,18 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
     setShowConfirmModal(true)
   }, [])
 
+  const handleIssueStrike = useCallback((userId: string) => {
+    setSelectedUserId(userId)
+    setShowStrikeModal(true)
+  }, [])
+
   const cancelDelete = useCallback(() => {
     setShowConfirmModal(false)
+    setSelectedUserId(null)
+  }, [])
+
+  const cancelStrike = useCallback(() => {
+    setShowStrikeModal(false)
     setSelectedUserId(null)
   }, [])
 
@@ -69,8 +100,31 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
     }
   }, [roleState?.success, router])
 
+  useEffect(() => {
+    if (strikeState?.success) {
+      setShowStrikeModal(false)
+      setSelectedUserId(null)
+      router.refresh()
+    }
+  }, [strikeState?.success, router])
+
   const pendingAction = isSubmitting && selectedUserId ? deleteType : null
   const pendingUserId = isSubmitting ? selectedUserId : null
+
+  const roleOptions: { value: RoleFilter; labelKey: string }[] = [
+    { value: "all", labelKey: "filters.roleAll" },
+    { value: "user", labelKey: "filters.roleUser" },
+    { value: "editor", labelKey: "filters.roleEditor" },
+    { value: "admin", labelKey: "filters.roleAdmin" },
+  ]
+
+  const strikeOptions: { value: StrikeFilter; labelKey: string }[] = [
+    { value: "all", labelKey: "filters.strikeAll" },
+    { value: "none", labelKey: "filters.strikeNone" },
+    { value: "1", labelKey: "filters.strikeOne" },
+    { value: "2", labelKey: "filters.strikeTwo" },
+    { value: "banned", labelKey: "filters.strikeBanned" },
+  ]
 
   return (
     <CSRFTokenProvider>
@@ -88,6 +142,75 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
             </div>
           )}
 
+          {strikeState && !strikeState.success && (
+            <div className="mb-6 rounded-md border border-red-400 bg-red-100 p-4 text-red-700">
+              {strikeState.message}
+            </div>
+          )}
+
+          {strikeState?.success && (
+            <div className="mb-6 rounded-md border border-green-500/50 bg-green-900/20 p-4 text-green-300">
+              {strikeState.message}
+            </div>
+          )}
+
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+            <div className="min-w-[12rem] flex-1">
+              <label htmlFor="user-search" className="mb-1 block text-sm text-noir-gold-100">
+                {t("filters.searchLabel")}
+              </label>
+              <input
+                id="user-search"
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t("filters.searchPlaceholder")}
+                className="w-full rounded border border-noir-gold-500/50 bg-noir-black px-3 py-2 text-sm text-noir-gold-100 focus:border-noir-gold focus:outline-none focus:ring-1 focus:ring-noir-gold"
+              />
+            </div>
+            <div>
+              <label htmlFor="role-filter" className="mb-1 block text-sm text-noir-gold-100">
+                {t("filters.roleLabel")}
+              </label>
+              <select
+                id="role-filter"
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
+                className="min-w-[8rem] rounded border border-noir-gold-500/50 bg-noir-black px-3 py-2 text-sm text-noir-gold-100 focus:border-noir-gold focus:outline-none focus:ring-1 focus:ring-noir-gold"
+              >
+                {roleOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {t(opt.labelKey)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="strike-filter" className="mb-1 block text-sm text-noir-gold-100">
+                {t("filters.strikeLabel")}
+              </label>
+              <select
+                id="strike-filter"
+                value={strikeFilter}
+                onChange={(e) => setStrikeFilter(e.target.value as StrikeFilter)}
+                className="min-w-[8rem] rounded border border-noir-gold-500/50 bg-noir-black px-3 py-2 text-sm text-noir-gold-100 focus:border-noir-gold focus:outline-none focus:ring-1 focus:ring-noir-gold"
+              >
+                {strikeOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {t(opt.labelKey)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <p className="mb-4 text-sm text-noir-gold-100/80">
+            {t("filters.showingCount", {
+              shown: filteredUsers.length,
+              total: users.length,
+            })}
+          </p>
+
           <div className="overflow-hidden rounded-md border border-noir-gold bg-noir-dark shadow sm:rounded-md">
             <div className="px-4 py-5 sm:px-6">
               <h3 className="text-noir-gold-100">
@@ -104,19 +227,21 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
                   <tr className="text-left text-xs font-medium uppercase tracking-wider text-noir-gold-100">
                     <th className="px-6 py-3">{t("table.user")}</th>
                     <th className="px-6 py-3">{t("table.role")}</th>
+                    <th className="px-6 py-3">{t("table.strikes")}</th>
                     <th className="px-6 py-3">{t("table.dataRecords")}</th>
                     <th className="px-6 py-3">{t("table.joined")}</th>
                     <th className="px-6 py-3 text-right">{t("table.actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-noir-black">
-                  {users.map((user) => (
+                  {filteredUsers.map((user) => (
                     <UserRow
                       key={user.id}
                       user={user}
                       currentUserId={currentUserId}
                       onDelete={(id) => handleDelete(id, "delete")}
                       onSoftDelete={(id) => handleDelete(id, "soft-delete")}
+                      onIssueStrike={handleIssueStrike}
                       pendingAction={pendingAction}
                       pendingUserId={pendingUserId}
                       roleFormAction={roleFormAction}
@@ -134,6 +259,12 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
             onCancel={cancelDelete}
           />
 
+          <ConfirmStrikeModal
+            isOpen={showStrikeModal}
+            isSubmitting={isStrikeSubmitting}
+            onCancel={cancelStrike}
+          />
+
           <form
             id="delete-form"
             action={formAction}
@@ -143,6 +274,16 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
             <input type="hidden" name="action" value={deleteType} />
             <input type="hidden" name="userId" value={selectedUserId ?? ""} />
             <FormPendingSync onPendingChange={setIsSubmitting} />
+          </form>
+
+          <form
+            id="strike-form"
+            action={strikeFormAction}
+            className="hidden"
+          >
+            <CSRFToken />
+            <input type="hidden" name="userId" value={selectedUserId ?? ""} />
+            <FormPendingSync onPendingChange={setIsStrikeSubmitting} />
           </form>
         </div>
       </div>

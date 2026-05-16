@@ -89,3 +89,29 @@ If these keys are missing from the JSON, use sensible defaults (e.g. no delay, 1
 1. **Run in smaller batches** — Use fewer collection URLs per run (e.g. 2–4 pages), then run again for more pages.
 2. **Run locally** — Use `npm run dev` and trigger the scrape from localhost; the dev server may allow longer runs than a deployed environment.
 3. **Increase timeout** — The route uses `maxDuration` (seconds). On Vercel Pro you can raise it up to 800 in `app/api/admin/scraper/run/route.ts` if you need longer runs.
+
+---
+
+## Note extraction pipeline (Node / LangGraph)
+
+Admin scraper settings map to `lib/scraper/notes-graph.ts` after Python returns raw items.
+
+### Environment variables
+
+| Variable | Purpose |
+|----------|---------|
+| `OPENAI_NOTES_PIPELINE_MODEL` | Default OpenAI model for extraction, merge, and translate (e.g. `gpt-4o-mini`). |
+| `OPENAI_NOTES_PIPELINE_NOIR_MODEL` | Model for film-noir descriptions; defaults to the extraction model. |
+| `OPENAI_NOTES_PIPELINE_TIMEOUT_MS` | Per-request LLM timeout (ms). |
+| `NOTES_PIPELINE_CONCURRENCY` | Parallel Phase-1 workers (1–32). |
+
+### Inference mode
+
+- **Standard** — May infer notes from product name / encyclopedia fallback when the page has no merchant list.
+- **Strict** — Skips encyclopedia fallback; name-only extraction is literal-only. Some rows may have empty notes (`_noteSource: empty` in preview).
+
+### Preview: `_noteSource` and `batchWarnings`
+
+Records may include `_noteSource` (`labeled_list`, `pdp_bootstrap`, `llm_description`, `llm_name_literal`, `llm_name_inferred`, `empty`). **Admin preview only** — stripped before DB import.
+
+`batchWarnings` surfaces batch-level uniformity (e.g. many products sharing the same notes); check before importing.

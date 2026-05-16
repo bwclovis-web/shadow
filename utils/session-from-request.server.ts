@@ -145,6 +145,9 @@ export async function getSessionFromCookieHeader(
 
   if (includeUser) {
     const fullUser = await getUserById(userId)
+    if (fullUser?.isBanned) {
+      return null
+    }
     const user = createSafeUser(fullUser)
     if (user) {
       result.user = {

@@ -70,10 +70,97 @@
       "performanceAdmin": "Performance Admin",
       "errorAnalytics": "Error Analytics",
       "pendingSubmissions": "Pending Submissions",
+      "userReports": "User Reports",
       "houseScraper": "House Scraper"
     },
     "perfumeHouse": {
       "sectionHeading": "Admin"
+    }
+  },
+  "userReport": {
+    "button": "Report",
+    "heading": "Report trader",
+    "subheading": "Tell us what happened with {traderName}. Reports are reviewed by our team.",
+    "categoryLabel": "Category",
+    "categoryPlaceholder": "Select a category…",
+    "descriptionLabel": "Details (optional)",
+    "descriptionPlaceholder": "Describe what happened…",
+    "photosLabel": "Evidence photos (optional)",
+    "photosHint": "Up to 3 images to help our team review your report.",
+    "submit": "Submit report",
+    "submitting": "Submitting…",
+    "categories": {
+      "scam": "Scam or fraud",
+      "fakeItem": "Fake or misrepresented item",
+      "harassment": "Harassment",
+      "noShip": "Did not ship",
+      "other": "Other"
+    }
+  },
+  "adminReports": {
+    "meta": {
+      "title": "User Reports - Admin - Shadow and Sillage",
+      "description": "Review community reports against traders."
+    },
+    "heading": "User Reports",
+    "subheading": "Review reports filed by members",
+    "empty": "No reports in this queue",
+    "filters": {
+      "inProgress": "In progress",
+      "settled": "Settled",
+      "passed": "Passed",
+      "all": "All"
+    },
+    "status": {
+      "inProgress": "In progress",
+      "settled": "Settled",
+      "passed": "Passed"
+    },
+    "statusLabel": "Dispute status",
+    "updateStatus": "Update",
+    "reporter": "Reporter",
+    "reportedUser": "Reported",
+    "reporterEmail": "Reporter email",
+    "reportedEmail": "Reported user email",
+    "showDetails": "Show details",
+    "hideDetails": "Hide details",
+    "noDescription": "No additional details provided.",
+    "tradeLink": "Trade",
+    "issueStrike": "Issue Strike",
+    "deleteReport": "Delete report",
+    "deleteConfirmHeading": "Delete this report?",
+    "deleteConfirmDescription": "This permanently removes the report and its evidence photos. This cannot be undone.",
+    "categories": {
+      "scam": "Scam or fraud",
+      "fakeItem": "Fake or misrepresented item",
+      "harassment": "Harassment",
+      "noShip": "Did not ship",
+      "other": "Other"
+    }
+  },
+  "myReports": {
+    "meta": {
+      "title": "My Reports - Shadow and Sillage",
+      "description": "Reports you have filed against other traders."
+    },
+    "heading": "My Reports",
+    "subheading": "Track reports you have submitted",
+    "backToProfile": "Back to profile",
+    "empty": "You have not filed any reports.",
+    "reported": "Reported",
+    "withdraw": "Withdraw report",
+    "withdrawing": "Withdrawing…",
+    "status": {
+      "inProgress": "In progress",
+      "settled": "Settled",
+      "passed": "Passed"
+    },
+    "categories": {
+      "scam": "Scam or fraud",
+      "fakeItem": "Fake or misrepresented item",
+      "harassment": "Harassment",
+      "noShip": "Did not ship",
+      "other": "Other"
     }
   },
   "pendingSubmissions": {
@@ -205,7 +292,8 @@
     },
     "signIn": {
       "title": "Sign In - Shadow and Sillage",
-      "description": "Sign in to your account to access your profile and manage your collection."
+      "description": "Sign in to your account to access your profile and manage your collection.",
+      "suspended": "Your account has been suspended. Contact support if you believe this is an error."
     },
     "signUp": {
       "title": "Sign Up - Shadow and Sillage",
@@ -635,7 +723,8 @@
       "sourceBottleLabel": "Decant from which bottle?",
       "sourceBottlePlaceholder": "Select a bottle...",
       "sourceBottleRemaining": "{amount} ml remaining",
-      "standaloneDecant": "Standalone (no source bottle)"
+      "standaloneDecant": "Standalone (no source bottle)",
+      "bottleDestashHint": "Destashing from this bottle (up to {max} ml)"
     },
     "heading": "My Scents",
     "subheading": "Manage your personal collection of perfumes.",
@@ -761,6 +850,7 @@
     "navigation": {
       "profile": "Profile",
       "wishlist": "My Wishlist",
+      "myReports": "My Reports",
       "myScents": "My Scents",
       "changePassword": "Change Password"
     }
@@ -1182,18 +1272,47 @@
     "users": "Users",
     "userCount": "Currently we have {count} users",
     "manageUsers": "Manage Our Current Users",
+    "filters": {
+      "searchLabel": "Search",
+      "searchPlaceholder": "Name, email, or username…",
+      "roleLabel": "Role",
+      "roleAll": "All roles",
+      "roleUser": "User",
+      "roleEditor": "Editor",
+      "roleAdmin": "Admin",
+      "strikeLabel": "Strikes",
+      "strikeAll": "All",
+      "strikeNone": "No strikes",
+      "strikeOne": "1 strike",
+      "strikeTwo": "2 strikes",
+      "strikeBanned": "Banned",
+      "showingCount": "Showing {shown} of {total} users"
+    },
+    "strikeModal": {
+      "title": "Issue strike",
+      "description": "This records a strike against the user. Three strikes result in an automatic ban.",
+      "reasonLabel": "Reason",
+      "reasonPlaceholder": "Describe why this strike is being issued…",
+      "cancel": "Cancel",
+      "confirm": "Issue strike",
+      "processing": "Processing…"
+    },
     "table": {
       "user": "User",
       "role": "Role",
+      "strikes": "Strikes",
       "dataRecords": "Data Records",
       "joined": "Joined",
       "actions": "Actions",
       "softDelete": "Soft Delete",
       "delete": "Delete",
+      "issueStrike": "Issue Strike",
       "currentUser": "Current User",
       "admin": "Admin",
       "deleted": "Deleted",
       "changeRole": "Change user role",
+      "strikesLabel": "{count, plural, =0 {No strikes} one {# strike} other {# strikes}}",
+      "bannedBadge": "BANNED",
       "roles": {
         "user": "User",
         "editor": "Editor",
@@ -1253,5 +1372,40 @@
     "usernameFormat": "Use only letters, numbers, spaces and underscores.",
     "profileAboutMax": "Trader about must be {max} characters or less.",
     "wishlistBottlePreferenceRequired": "Please select a bottle preference."
+  },
+  "listing": {
+    "photosLabel": "Listing photos",
+    "photosHint": "Add at least one photo before publishing to the exchange.",
+    "dropzoneHint": "Drag and drop images here, or choose files",
+    "chooseFiles": "Choose files",
+    "useCamera": "Use camera",
+    "uploading": "Uploading…",
+    "uploadError": "Could not upload image. Try again.",
+    "cameraError": "Could not access camera.",
+    "cameraTitle": "Take a photo",
+    "capture": "Capture",
+    "cancel": "Cancel",
+    "removePhoto": "Remove photo",
+    "conditionLabel": "Condition",
+    "conditionPlaceholder": "Select condition (optional)",
+    "condition": {
+      "sealed": "Sealed",
+      "mint": "Mint",
+      "lightlyUsed": "Lightly used",
+      "heavilyUsed": "Heavily used",
+      "damaged": "Damaged"
+    },
+    "decantFormatLabel": "Decant format",
+    "decantFormatPlaceholder": "Select format (optional)",
+    "decantFormat": {
+      "atomizer": "Atomizer",
+      "vial": "Vial",
+      "original": "Original bottle"
+    },
+    "openPhoto": "Open photo {index}",
+    "lightboxTitle": "Listing photo",
+    "previousPhoto": "Previous photo",
+    "nextPhoto": "Next photo",
+    "closeLightbox": "Close"
   }
 }

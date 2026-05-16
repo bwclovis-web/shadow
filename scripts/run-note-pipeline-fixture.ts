@@ -67,12 +67,10 @@ const main = async () => {
   const fixture = loadFixture(fixturePath)
   const model = process.env.OPENAI_NOTES_MODEL ?? fixture.model ?? "gpt-4o-mini"
 
-  const records = await extractNotesForItems(
-    fixture.items,
-    fixture.houseName,
-    fixture.options ?? {},
-    model,
-  )
+  const { records } = await extractNotesForItems(fixture.items, fixture.houseName, {
+    ...(fixture.options ?? {}),
+    notesPipelineModel: model,
+  })
 
   console.log(JSON.stringify(summarize(records), null, 2))
 }

@@ -7,8 +7,40 @@ import { useCSRF } from "@/hooks/useCSRF"
 import { useSessionStore } from "@/hooks/sessionStore"
 import type { UserPerfumeI } from "@/types"
 
-import DestashForm from "../DeStashForm/DeStashForm"
+import DestashForm, { type DeStashData } from "../DeStashForm/DeStashForm"
 import DestashItem from "./DestashItem"
+
+const parseMl = (value?: string | null) => {
+  const n = parseFloat((value ?? "").replace(/[^0-9.]/g, "") || "0")
+  return Number.isFinite(n) ? n : 0
+}
+
+const totalDestashedForPerfume = (entriesForPerfume: UserPerfumeI[]) =>
+  entriesForPerfume.reduce((sum, e) => sum + parseMl(e.available), 0)
+
+const isCollectionBottle = (entry: UserPerfumeI) => parseMl(entry.amount) > 0
+
+const standaloneDestashMl = (entriesForPerfume: UserPerfumeI[]) =>
+  entriesForPerfume
+    .filter((e) => !isCollectionBottle(e) && parseMl(e.available) > 0)
+    .reduce((sum, e) => sum + parseMl(e.available), 0)
+
+/** How much has already been listed from this bottle (row + separate destash entries). */
+const getDestashedMlForBottle = (
+  sourceBottleId: string,
+  entriesForPerfume: UserPerfumeI[]
+) => {
+  const source = entriesForPerfume.find((e) => e.id === sourceBottleId)
+  if (!source || !isCollectionBottle(source)) return 0
+
+  const collectionBottles = entriesForPerfume.filter(isCollectionBottle)
+
+  if (collectionBottles.length <= 1) {
+    return totalDestashedForPerfume(entriesForPerfume)
+  }
+
+  return parseMl(source.available) + standaloneDestashMl(entriesForPerfume)
+}
 
 interface DestashManagerProps {
   perfumeId: string
@@ -31,7 +63,12 @@ const DestashManager = ({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [submitState, setSubmitState] = useState<"idle" | "submitting">("idle")
-  const [submitData, setSubmitData] = useState<{ success?: boolean; userPerfume?: UserPerfumeI } | null>(null)
+  const [submitData, setSubmitData] = useState<{
+    success?: boolean
+    userPerfume?: UserPerfumeI
+    error?: string
+  } | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const previousStateRef = useRef<"idle" | "submitting">("idle")
   const submittedRef = useRef(false)
   const { closeModal } = useSessionStore()
@@ -39,6 +76,7 @@ const DestashManager = ({
   const submitForm = useCallback(
     async (formData: FormData) => {
       setSubmitState("submitting")
+      setSubmitError(null)
       submittedRef.current = true
       addToFormData(formData)
       try {
@@ -69,7 +107,19 @@ const DestashManager = ({
     const transitionedToIdle =
       previousStateRef.current === "submitting" && submitState === "idle"
 
+    if (transitionedToIdle && submittedRef.current && !isSuccess) {
+      const err =
+        responseData &&
+        typeof responseData === "object" &&
+        "error" in responseData &&
+        typeof (responseData as { error?: string }).error === "string"
+          ? (responseData as { error: string }).error
+          : null
+      setSubmitError(err)
+    }
+
     if (transitionedToIdle && isSuccess && submittedRef.current) {
+      setSubmitError(null)
       if (
         responseData &&
         typeof responseData === "object" &&
@@ -106,10 +156,8 @@ const DestashManager = ({
     const amt = parseFloat(entry.amount?.replace(/[^0-9.]/g, "") || "0")
     return sum + (isNaN(amt) ? 0 : amt)
   }, 0)
-  const totalDestashed = entriesForPerfume.reduce((sum, entry) => {
-    const avail = parseFloat(entry.available?.replace(/[^0-9.]/g, "") || "0")
-    return sum + (isNaN(avail) ? 0 : avail)
-  }, 0)
+  const totalDestashed = totalDestashedForPerfume(entriesForPerfume)
+  const poolRemaining = Math.max(0, totalOwned - totalDestashed)
 
   const handleCreateNew = () => {
     setIsCreating(true)
@@ -144,13 +192,13 @@ const DestashManager = ({
     }
   }
 
-  const handleDecantConfirm = (data: {
-    amount: string
-    price?: string
-    tradePreference: "cash" | "trade" | "both"
-    tradeOnly: boolean
-    createNew?: boolean
-  }) => {
+  const appendListingFields = (formData: FormData, data: DeStashData) => {
+    formData.append("images", JSON.stringify(data.images))
+    if (data.condition) formData.append("condition", data.condition)
+    if (data.decantFormat) formData.append("decantFormat", data.decantFormat)
+  }
+
+  const handleDecantConfirm = (data: DeStashData) => {
     const formData = new FormData()
     formData.append("perfumeId", perfumeId)
     formData.append("tradePreference", data.tradePreference)
@@ -163,17 +211,28 @@ const DestashManager = ({
       formData.append("userPerfumeId", editingId)
       formData.append("amount", data.amount)
       if (data.price) formData.append("tradePrice", data.price)
+      appendListingFields(formData, data)
     } else if (isCreating && currentBottleId) {
-      // On single-bottle page: decant from this bottle
-      formData.append("action", "decant")
-      formData.append("userPerfumeId", currentBottleId)
+      const activeDestashes = userPerfumes.filter(
+        (up) => up.perfumeId === perfumeId && parseMl(up.available) > 0
+      )
+      const isFirstListingForPerfume = activeDestashes.length === 0
+
+      if (isFirstListingForPerfume) {
+        formData.append("action", "decant")
+        formData.append("userPerfumeId", currentBottleId)
+      } else {
+        formData.append("action", "create-decant")
+      }
       formData.append("amount", data.amount)
       if (data.price) formData.append("tradePrice", data.price)
+      appendListingFields(formData, data)
     } else {
       // No current bottle context: standalone destash entry
       formData.append("action", "create-decant")
       formData.append("amount", data.amount)
       if (data.price) formData.append("tradePrice", data.price)
+      appendListingFields(formData, data)
     }
 
     submitForm(formData)
@@ -226,6 +285,12 @@ const DestashManager = ({
       )}
 
       {/* Create/Edit Form */}
+      {submitError && (
+        <p className="text-sm text-red-400 bg-red-950/30 border border-red-500/40 rounded p-2">
+          {submitError}
+        </p>
+      )}
+
       {(isCreating || editingId) && (
         <div className="noir-border p-4 bg-noir-dark/30">
           <div className="flex justify-between items-center mb-4">
@@ -254,7 +319,9 @@ const DestashManager = ({
             // Use current bottle when on single-bottle page; otherwise first entry for this perfume or fallback
             const sourceBottle = currentBottleId
               ? userPerfumes.find(up => up.id === currentBottleId)
-              : userPerfumes.find(up => up.perfumeId === perfumeId)
+              : userPerfumes.find(
+                  up => up.perfumeId === perfumeId && isCollectionBottle(up)
+                )
             const fallbackFirst = userPerfumes?.[0]
             let finalUserPerfume = sourceBottle || fallbackFirst
 
@@ -276,23 +343,35 @@ const DestashManager = ({
             }
 
             let formMaxAvailable: number | undefined
-            if (sourceBottle) {
-              const rawAmt = (sourceBottle.amount ?? "").replace(/[^0-9.]/g, "")
-              const sAmt = rawAmt ? parseFloat(rawAmt) : NaN
-              const sAvail = parseFloat((sourceBottle.available ?? "").replace(/[^0-9.]/g, "") || "0")
-              formMaxAvailable = isNaN(sAmt) ? undefined : Math.max(0, sAmt - sAvail)
+            if (currentBottleId && sourceBottle) {
+              const destashedFromBottle = getDestashedMlForBottle(
+                sourceBottle.id,
+                entriesForPerfume
+              )
+              const bottleRemaining = Math.max(
+                0,
+                parseMl(sourceBottle.amount) - destashedFromBottle
+              )
+              formMaxAvailable = Math.min(bottleRemaining, poolRemaining)
             } else {
-              formMaxAvailable = totalOwned > 0 ? totalOwned - totalDestashed : undefined
+              formMaxAvailable = poolRemaining > 0 ? poolRemaining : undefined
             }
 
             return (
-              <DestashForm
-                key={`create-new-${currentBottleId ?? "standalone"}`}
-                userPerfume={finalUserPerfume}
-                handleDecantConfirm={handleDecantConfirm}
-                isCreating={true}
-                maxAvailable={formMaxAvailable}
-              />
+              <>
+                {currentBottleId && formMaxAvailable != null && (
+                  <p className="text-sm text-noir-dark mb-3">
+                    {t("bottleDestashHint", { max: formMaxAvailable })}
+                  </p>
+                )}
+                <DestashForm
+                  key={`create-new-${currentBottleId ?? "standalone"}`}
+                  userPerfume={finalUserPerfume}
+                  handleDecantConfirm={handleDecantConfirm}
+                  isCreating={true}
+                  maxAvailable={formMaxAvailable}
+                />
+              </>
             )
           })()}
         </div>

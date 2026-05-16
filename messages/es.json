@@ -74,6 +74,7 @@
       "performanceAdmin": "Administración de Rendimiento",
       "errorAnalytics": "Análisis de Errores",
       "pendingSubmissions": "Envíos Pendientes",
+      "userReports": "Reportes de Usuarios",
       "houseScraper": "Scraper de casas"
     },
     "perfumeHouse": {
@@ -209,7 +210,8 @@
     },
     "signIn": {
       "title": "Iniciar Sesión - Shadow and Sillage",
-      "description": "Inicia sesión en tu cuenta para acceder a tu perfil y administrar tu colección."
+      "description": "Inicia sesión en tu cuenta para acceder a tu perfil y administrar tu colección.",
+      "suspended": "Tu cuenta ha sido suspendida. Contacta con soporte si crees que es un error."
     },
     "signUp": {
       "title": "Registrarse - Shadow and Sillage",
@@ -638,7 +640,8 @@
       "sourceBottleLabel": "¿Desde qué botella decantás?",
       "sourceBottlePlaceholder": "Seleccionar una botella...",
       "sourceBottleRemaining": "{amount} ml restante",
-      "standaloneDecant": "Independiente (sin botella fuente)"
+      "standaloneDecant": "Independiente (sin botella fuente)",
+      "bottleDestashHint": "Destash desde esta botella (hasta {max} ml)"
     },
     "heading": "Mis Aromas",
     "subheading": "Administra tu colección personal de perfumes.",
@@ -1172,18 +1175,47 @@
     "users": "Usuarios",
     "userCount": "Actualmente tenemos {count} usuarios",
     "manageUsers": "Administrar Nuestros Usuarios Actuales",
+    "filters": {
+      "searchLabel": "Buscar",
+      "searchPlaceholder": "Nombre, correo o usuario…",
+      "roleLabel": "Rol",
+      "roleAll": "Todos los roles",
+      "roleUser": "Usuario",
+      "roleEditor": "Editor",
+      "roleAdmin": "Administrador",
+      "strikeLabel": "Strikes",
+      "strikeAll": "Todos",
+      "strikeNone": "Sin strikes",
+      "strikeOne": "1 strike",
+      "strikeTwo": "2 strikes",
+      "strikeBanned": "Baneado",
+      "showingCount": "Mostrando {shown} de {total} usuarios"
+    },
+    "strikeModal": {
+      "title": "Emitir strike",
+      "description": "Esto registra un strike contra el usuario. Tres strikes resultan en un baneo automático.",
+      "reasonLabel": "Motivo",
+      "reasonPlaceholder": "Describe por qué se emite este strike…",
+      "cancel": "Cancelar",
+      "confirm": "Emitir strike",
+      "processing": "Procesando…"
+    },
     "table": {
       "user": "Usuario",
       "role": "Rol",
+      "strikes": "Strikes",
       "dataRecords": "Registros de Datos",
       "joined": "Se Unió",
       "actions": "Acciones",
       "softDelete": "Eliminación Suave",
       "delete": "Eliminar",
+      "issueStrike": "Emitir Strike",
       "currentUser": "Usuario Actual",
       "admin": "Administrador",
       "deleted": "Eliminado",
       "changeRole": "Cambiar rol del usuario",
+      "strikesLabel": "{count, plural, =0 {Sin strikes} one {# strike} other {# strikes}}",
+      "bannedBadge": "BANEADO",
       "roles": {
         "user": "Usuario",
         "editor": "Editor",
@@ -1227,5 +1259,40 @@
   "validation": {
     "profileAboutMax": "Sobre el comerciante debe tener {max} caracteres o menos.",
     "wishlistBottlePreferenceRequired": "Selecciona un formato de frasco."
+  },
+  "listing": {
+    "photosLabel": "Fotos del anuncio",
+    "photosHint": "Añade al menos una foto antes de publicar en el intercambio.",
+    "dropzoneHint": "Arrastra y suelta imágenes aquí, o elige archivos",
+    "chooseFiles": "Elegir archivos",
+    "useCamera": "Usar cámara",
+    "uploading": "Subiendo…",
+    "uploadError": "No se pudo subir la imagen. Inténtalo de nuevo.",
+    "cameraError": "No se pudo acceder a la cámara.",
+    "cameraTitle": "Tomar una foto",
+    "capture": "Capturar",
+    "cancel": "Cancelar",
+    "removePhoto": "Eliminar foto",
+    "conditionLabel": "Condición",
+    "conditionPlaceholder": "Seleccionar condición (opcional)",
+    "condition": {
+      "sealed": "Sellado",
+      "mint": "Como nuevo",
+      "lightlyUsed": "Poco usado",
+      "heavilyUsed": "Muy usado",
+      "damaged": "Dañado"
+    },
+    "decantFormatLabel": "Formato del decant",
+    "decantFormatPlaceholder": "Seleccionar formato (opcional)",
+    "decantFormat": {
+      "atomizer": "Atomizador",
+      "vial": "Vial",
+      "original": "Frasco original"
+    },
+    "openPhoto": "Abrir foto {index}",
+    "lightboxTitle": "Foto del anuncio",
+    "previousPhoto": "Foto anterior",
+    "nextPhoto": "Foto siguiente",
+    "closeLightbox": "Cerrar"
   }
 }

@@ -334,7 +334,8 @@ export async function importPerfumeRecords(
 
   try {
     for (let i = 0; i < records.length; i++) {
-      const rec = records[i]
+      const { _noteSource: _stripNoteSource, ...rec } = records[i]
+      void _stripNoteSource
       try {
         const result = await importOneRecord(prisma, rec, {
           overwriteImageUrls: options?.overwriteImageUrls,

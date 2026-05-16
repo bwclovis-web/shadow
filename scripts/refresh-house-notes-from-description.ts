@@ -9,6 +9,10 @@
  *   npm run refresh:house-notes -- "Other House"
  *   npm run refresh:house-notes -- --dry-run
  *   npm run refresh:house-notes -- --no-noir
+ *   npm run refresh:house-notes -- --validate   (optional: bulk LLM note validation, same as admin scraper)
+ *
+ * By default, bulk LLM note validation is **off** for this script — it runs on the whole house at once
+ * and can drop legitimate materials from stored descriptions. Pass `--validate` to enable it.
  *
  * Requires OPENAI_API_KEY and DATABASE_URL.
  */
@@ -24,31 +28,49 @@ import type { ScrapedItem } from "@/types/scraper"
 
 const prisma = new PrismaClient()
 
+const parseNotesColumn = (json: string | undefined, recordName: string, column: string): string[] => {
+  const raw = json ?? "[]"
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) {
+      console.warn(`  [warn] ${recordName}: ${column} is not a JSON array, skipping. Raw: ${raw.slice(0, 80)}`)
+      return []
+    }
+    return parsed.map(String).map(s => s.trim()).filter(Boolean)
+  } catch {
+    console.warn(`  [warn] ${recordName}: invalid JSON in ${column}: ${raw.slice(0, 120)}…`)
+    return []
+  }
+}
+
 // ---------------------------------------------------------------------------
 // CLI parsing
 // ---------------------------------------------------------------------------
 
-function parseArgv(): {
+const parseArgv = (): {
   houseNameFromArg: string | null
   dryRun: boolean
   noNoir: boolean
-} {
+  validateNotes: boolean
+} => {
   const args = process.argv.slice(2)
   let houseNameFromArg: string | null = null
   let dryRun = false
   let noNoir = false
+  let validateNotes = false
 
   for (const arg of args) {
     if (arg === "--dry-run") dryRun = true
     else if (arg === "--no-noir") noNoir = true
+    else if (arg === "--validate") validateNotes = true
     else if (!arg.startsWith("--") && arg.trim() && houseNameFromArg === null) {
       houseNameFromArg = arg.trim()
     }
   }
-  return { houseNameFromArg, dryRun, noNoir }
+  return { houseNameFromArg, dryRun, noNoir, validateNotes }
 }
 
-function promptHouseName(defaultName: string): Promise<string> {
+const promptHouseName = (defaultName: string): Promise<string> => {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
   return new Promise(resolve => {
     rl.question(
@@ -66,8 +88,8 @@ function promptHouseName(defaultName: string): Promise<string> {
 // Main
 // ---------------------------------------------------------------------------
 
-async function main() {
-  const { houseNameFromArg, dryRun, noNoir } = parseArgv()
+const main = async () => {
+  const { houseNameFromArg, dryRun, noNoir, validateNotes } = parseArgv()
 
   const houseName = houseNameFromArg ?? (await promptHouseName(DEFAULT_HOUSE_NAME))
   if (!houseName) {
@@ -82,6 +104,10 @@ async function main() {
 
   if (dryRun) {
     console.log("DRY RUN – no changes will be made.\n")
+  }
+
+  if (!validateNotes) {
+    console.log("Note: bulk LLM validation is OFF (use --validate to enable).\n")
   }
 
   const house = await prisma.perfumeHouse.findFirst({
@@ -125,16 +151,26 @@ async function main() {
   }))
 
   console.log(`Extracting notes and generating descriptions for ${items.length} perfumes…`)
-  const records = await extractNotesForItems(items, house.name, {
+  const { records, batchWarnings } = await extractNotesForItems(items, house.name, {
     generateNoirDescriptions: !noNoir,
+    noteValidationMode: validateNotes ? "llm" : "off",
+    onProgress: (message: string) => {
+      console.log(`  ${message}`)
+    },
   })
+
+  if (batchWarnings.length > 0) {
+    console.log("\nBatch warnings:")
+    batchWarnings.forEach(w => console.log(`  ${w}`))
+    console.log("")
+  }
 
   if (dryRun) {
     console.log("\nWould update the following (description snippet + notes):\n")
     for (const r of records) {
-      const open = JSON.parse(r.openNotes || "[]") as string[]
-      const heart = JSON.parse(r.heartNotes || "[]") as string[]
-      const base = JSON.parse(r.baseNotes || "[]") as string[]
+      const open = parseNotesColumn(r.openNotes, r.name, "openNotes")
+      const heart = parseNotesColumn(r.heartNotes, r.name, "heartNotes")
+      const base = parseNotesColumn(r.baseNotes, r.name, "baseNotes")
       console.log(`  ${r.name}`)
       console.log(`    description: ${(r.description || "").slice(0, 120)}…`)
       console.log(`    open: ${open.join(", ") || "(none)"}`)

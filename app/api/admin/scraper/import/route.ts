@@ -22,7 +22,7 @@ import type {
   ScraperImportRequest,
   ScraperImportResponse,
 } from "@/types/scraper"
-import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
+import { CSRFError, requireCSRFForJsonBody } from "@/utils/server/csrf.server"
 import { requireAdminOrEditorApi } from "@/utils/server/requireAdminOrEditorApi.server"
 
 /** Allow long imports when R2 migration runs for many products (align with scraper run). */
@@ -54,8 +54,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const auth = await requireAdminOrEditorApi(request)
   if (!auth.allowed) return auth.response
 
+  let body: unknown
   try {
-    await requireCSRF(request)
+    body = JSON.parse(await request.text()) as unknown
+  } catch {
+    return NextResponse.json(
+      { ok: false, importedCount: 0, r2UploadCount: 0, errors: ["Invalid JSON body"] } satisfies ScraperImportResponse,
+      { status: 400 },
+    )
+  }
+
+  try {
+    await requireCSRFForJsonBody(request, body)
   } catch (error) {
     if (error instanceof CSRFError) {
       return NextResponse.json(
@@ -69,16 +79,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       )
     }
     throw error
-  }
-
-  let body: unknown
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json(
-      { ok: false, importedCount: 0, r2UploadCount: 0, errors: ["Invalid JSON body"] } satisfies ScraperImportResponse,
-      { status: 400 },
-    )
   }
 
   if (!validateBody(body)) {

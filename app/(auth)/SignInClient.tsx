@@ -3,6 +3,7 @@
 import { getFormProps, useForm } from "@conform-to/react"
 import { getZodConstraint, parseWithZod } from "@conform-to/zod"
 import { useActionState, useRef } from "react"
+import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
 import Input from "@/components/Atoms/Input/Input"
@@ -14,7 +15,10 @@ import { signInAction, type SignInActionState } from "@/app/(auth)/sign-in/actio
 
 const SignInClient = () => {
   const emailInputRef = useRef<HTMLInputElement | null>(null)
+  const searchParams = useSearchParams()
   const t = useTranslations("forms")
+  const tAuth = useTranslations("auth.signIn")
+  const isSuspended = searchParams.get("suspended") === "1"
 
   const [state, formAction] = useActionState(signInAction, null as SignInActionState)
 
@@ -47,6 +51,13 @@ const SignInClient = () => {
           inputType="password"
           action={password}
         />
+        {isSuspended && !state?.error && (
+          <ErrorDisplay
+            error={tAuth("suspended")}
+            variant="inline"
+            title="Sign-in Error"
+          />
+        )}
         {state?.error && (
           <ErrorDisplay
             error={state.error}

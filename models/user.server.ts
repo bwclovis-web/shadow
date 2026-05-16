@@ -17,6 +17,14 @@ import {
 import { allocateUniqueProfileSlug } from "@/utils/profile-slug.server"
 import { generateUniqueUsername } from "@/utils/username-generator.server"
 
+import {
+  type ListingMetadataInput,
+  deleteListingImagesFromR2,
+  emptyListingMetadata,
+  listingMetadataToPrismaData,
+  validateListingPublish,
+} from "./listing-metadata.server"
+import { userPerfumeListingSelect } from "./user-perfume-listing-fields"
 import { getUserByEmail } from "./user.query"
 
 /** Thrown when free signup limit is reached during atomic create (race condition). */
@@ -138,6 +146,7 @@ export const getTraderById = cache(async (id: string) => {
           tradePreference: true,
           tradeOnly: true,
           type: true,
+          ...userPerfumeListingSelect,
           perfume: {
             select: {
               id: true,
@@ -318,6 +327,7 @@ export const getUserPerfumes = async (userId: string) => {
       tradeOnly: true,
       type: true,
       createdAt: true,
+      ...userPerfumeListingSelect,
       perfume: {
         select: {
           id: true,
@@ -448,6 +458,7 @@ interface CreateDestashParams {
   tradePrice?: string
   tradePreference?: string
   tradeOnly?: boolean
+  listing?: ListingMetadataInput
 }
 
 export const createDestashEntry = async ({
@@ -457,8 +468,18 @@ export const createDestashEntry = async ({
   tradePrice,
   tradePreference,
   tradeOnly,
+  listing,
 }: CreateDestashParams) => {
   try {
+    const listingMeta = listing ?? {
+      images: [],
+      condition: null,
+      decantFormat: null,
+    }
+    const publishCheck = validateListingPublish(available, listingMeta)
+    if (!publishCheck.ok) {
+      return { success: false, error: publishCheck.error }
+    }
     // Get all user's entries for this perfume to calculate totals
     const existingEntries = await prisma.userPerfume.findMany({
       where: { userId, perfumeId },
@@ -498,6 +519,7 @@ export const createDestashEntry = async ({
         tradePrice: tradePrice || null,
         tradePreference: (tradePreference === "trade" || tradePreference === "both" ? tradePreference : "cash") as TradePreference,
         tradeOnly: tradeOnly || false,
+        ...listingMetadataToPrismaData(listingMeta),
       },
       select: {
         id: true,
@@ -512,6 +534,7 @@ export const createDestashEntry = async ({
         tradeOnly: true,
         type: true,
         createdAt: true,
+        ...userPerfumeListingSelect,
         perfume: {
           select: {
             id: true,
@@ -567,6 +590,10 @@ export const removeUserPerfume = async (userId: string, userPerfumeId: string) =
       return { success: false, error: "Perfume not found in your collection" }
     }
 
+    if (existingPerfume.images?.length) {
+      await deleteListingImagesFromR2(existingPerfume.images)
+    }
+
     // Delete only this specific bottle (and its comments)
     await prisma.$transaction(async (transaction) => {
       await transaction.userPerfumeComment.deleteMany({
@@ -592,20 +619,25 @@ const prepareUpdateData = (
   availableAmount: string,
   tradePrice?: string | null,
   tradePreference?: string | null,
-  tradeOnly?: boolean | null
+  tradeOnly?: boolean | null,
+  listing?: ListingMetadataInput
 ) => {
-  const updateData: any = { available: availableAmount }
+  const updateData: Record<string, unknown> = { available: availableAmount }
 
   if (tradePrice !== undefined && tradePrice !== null) {
     updateData.tradePrice = tradePrice
   }
 
-  if (tradePreference && typeof tradePreference === 'string' && tradePreference.trim()) {
+  if (tradePreference && typeof tradePreference === "string" && tradePreference.trim()) {
     updateData.tradePreference = tradePreference
   }
 
-  if (typeof tradeOnly === 'boolean') {
+  if (typeof tradeOnly === "boolean") {
     updateData.tradeOnly = tradeOnly
+  }
+
+  if (listing) {
+    Object.assign(updateData, listingMetadataToPrismaData(listing))
   }
 
   return updateData
@@ -629,6 +661,7 @@ const updatePerfumeInDatabase = async (perfumeId: string, updateData: any) => aw
       tradeOnly: true,
       type: true,
       createdAt: true,
+      ...userPerfumeListingSelect,
       perfume: {
         select: {
           id: true,
@@ -671,6 +704,7 @@ export const updateAvailableAmount = async (params: {
   tradePrice?: string
   tradePreference?: string
   tradeOnly?: boolean
+  listing?: ListingMetadataInput
 }) => {
   try {
     const {
@@ -680,6 +714,7 @@ export const updateAvailableAmount = async (params: {
       tradePrice,
       tradePreference,
       tradeOnly,
+      listing,
     } = params
 
     // Check if the user owns this user perfume entry
@@ -692,6 +727,17 @@ export const updateAvailableAmount = async (params: {
 
     if (!existingPerfume) {
       return { success: false, error: "Perfume not found in your collection" }
+    }
+
+    const listingMeta: ListingMetadataInput = listing ?? {
+      images: existingPerfume.images ?? [],
+      condition: existingPerfume.condition ?? null,
+      decantFormat: existingPerfume.decantFormat ?? null,
+    }
+
+    const publishCheck = validateListingPublish(availableAmount, listingMeta)
+    if (!publishCheck.ok) {
+      return { success: false, error: publishCheck.error }
     }
 
     // Get all user's entries for this perfume to calculate totals
@@ -726,12 +772,23 @@ export const updateAvailableAmount = async (params: {
       }
     }
 
+    const isUnpublishing = newDestashAmount <= 0
+
+    if (isUnpublishing && existingPerfume.images?.length) {
+      await deleteListingImagesFromR2(existingPerfume.images)
+    }
+
     // Prepare update data
     const updateData = prepareUpdateData(
       availableAmount,
       tradePrice,
       tradePreference,
-      tradeOnly
+      tradeOnly,
+      isUnpublishing
+        ? emptyListingMetadata()
+        : listing !== undefined
+          ? listingMeta
+          : undefined
     )
 
     // Update the perfume with new data
@@ -797,6 +854,7 @@ export const updateUserPerfumeAmount = async ({
         tradeOnly: true,
         type: true,
         createdAt: true,
+        ...userPerfumeListingSelect,
         perfume: {
           select: {
             id: true,

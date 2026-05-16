@@ -10,16 +10,41 @@ vi.mock("@langchain/openai", () => ({
   })),
 }))
 
-import { extractNotesForItems } from "./notes-graph"
+import { canonicalizeNote } from "./canonical-notes"
+import {
+  computeBatchNoteUniformityWarnings,
+  extractNotesForItems,
+  sanitizeCopyForNotePipeline,
+} from "./notes-graph"
 
 /** Structured notes with 3 layers and enough notes to skip merge LLM; keeps Phase 1 free of invoke(). */
 const NOTES_TEXT_NO_LLM = `Top: bergamot, lemon
 Heart: rose, jasmine
 Base: vetiver, sandalwood`
 
+describe("sanitizeCopyForNotePipeline", () => {
+  it("removes box-drawing and decorative lines but keeps labeled note lines", () => {
+    const input = "════\nTop notes: bergamot, rose\n───"
+    const out = sanitizeCopyForNotePipeline(input)
+    expect(out).toContain("Top notes:")
+    expect(out).toContain("bergamot")
+    expect(out).not.toMatch(/═/)
+  })
+
+  it("fixes common LLM typo I cone → I come", () => {
+    expect(sanitizeCopyForNotePipeline("I cone to this fragrance.")).toBe("I come to this fragrance.")
+  })
+})
+
 describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
   beforeEach(() => {
     vi.stubEnv("OPENAI_API_KEY", "test-key")
+    /**
+     * Tests assert exact LLM call counts (often "not called at all" for pure-regex paths). The bulk
+     * note validator adds one call per scrape run; opt out at the env level so existing assertions
+     * stay accurate. Tests that want to verify validator behavior can override the option per call.
+     */
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
     invokeMock.mockReset()
   })
 
@@ -50,7 +75,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       throw new Error("LLM must not run when Featured Notes line is present")
     })
 
-    const records = await extractNotesForItems(items, "Gallagher Fragrances", {
+    const { records } = await extractNotesForItems(items, "Gallagher Fragrances", {
       generateNoirDescriptions: false,
       titleDashSegment: "before",
     })
@@ -99,7 +124,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       }
     })
 
-    const records = await extractNotesForItems(items, "Gallagher Fragrances", {
+    const { records } = await extractNotesForItems(items, "Gallagher Fragrances", {
       generateNoirDescriptions: false,
       titleDashSegment: "before",
     })
@@ -157,7 +182,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       throw new Error(`Unexpected system prompt: ${sys.slice(0, 80)}`)
     })
 
-    const records = await extractNotesForItems(items, "Test House", { generateNoirDescriptions: true })
+    const { records } = await extractNotesForItems(items, "Test House", { generateNoirDescriptions: true })
 
     expect(noteCalls).toBe(1)
     expect(fallbackCalls).toBe(0)
@@ -211,7 +236,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       throw new Error(`Unexpected system prompt: ${sys.slice(0, 80)}`)
     })
 
-    const records = await extractNotesForItems(items, "Witch House", { generateNoirDescriptions: true })
+    const { records } = await extractNotesForItems(items, "Witch House", { generateNoirDescriptions: true })
 
     expect(noteCalls).toBeGreaterThanOrEqual(1)
     expect(fallbackCalls).toBe(1)
@@ -252,7 +277,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       return { content: JSON.stringify({ openNotes: [], heartNotes: [], baseNotes: [] }) }
     })
 
-    const records = await extractNotesForItems(items, "Mystery House", { generateNoirDescriptions: true })
+    const { records } = await extractNotesForItems(items, "Mystery House", { generateNoirDescriptions: true })
 
     expect(noirCalls).toBe(0)
     expect(records[0].openNotes).toBe("[]")
@@ -298,7 +323,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       throw new Error(`Unexpected LLM prompt: ${sys.slice(0, 90)}`)
     })
 
-    const records = await extractNotesForItems(items, "Seventh Muse", { generateNoirDescriptions: true })
+    const { records } = await extractNotesForItems(items, "Seventh Muse", { generateNoirDescriptions: true })
 
     expect(noirCalls).toBe(1)
     expect(records[0].description).toContain("Neon rain")
@@ -338,7 +363,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       throw new Error(`Unexpected LLM prompt: ${sys.slice(0, 90)}`)
     })
 
-    const records = await extractNotesForItems(items, "Seventh Muse", { generateNoirDescriptions: true })
+    const { records } = await extractNotesForItems(items, "Seventh Muse", { generateNoirDescriptions: true })
 
     expect(noirCalls).toBe(1)
     expect(records[0].description).toContain("Smoke and streetlight")
@@ -377,7 +402,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       throw new Error(`Unexpected LLM prompt: ${sys.slice(0, 90)}`)
     })
 
-    const records = await extractNotesForItems(items, "Test House", { generateNoirDescriptions: true })
+    const { records } = await extractNotesForItems(items, "Test House", { generateNoirDescriptions: true })
 
     expect(noirCalls).toBe(0)
     expect(records[0].description).toContain("Velvet petals")
@@ -403,7 +428,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       throw new Error("LLM must not run when blend-of line yields a flat list")
     })
 
-    const records = await extractNotesForItems(items, "Seventh Muse", {
+    const { records } = await extractNotesForItems(items, "Seventh Muse", {
       generateNoirDescriptions: false,
     })
 
@@ -432,7 +457,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       throw new Error("LLM must not run when ellipsis hook yields materials")
     })
 
-    const records = await extractNotesForItems(items, "Seventh Muse", {
+    const { records } = await extractNotesForItems(items, "Seventh Muse", {
       generateNoirDescriptions: false,
     })
 
@@ -472,7 +497,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       throw new Error("LLM must not run when PDP HTML contains blend-of materials")
     })
 
-    const records = await extractNotesForItems(items, "Seventh Muse", {
+    const { records } = await extractNotesForItems(items, "Seventh Muse", {
       generateNoirDescriptions: false,
       fetchPdpNoteBootstrap: true,
     })
@@ -508,7 +533,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       throw new Error("merge / extract LLM must not run when Featured Notes list is authoritative")
     })
 
-    const records = await extractNotesForItems(items, "Gallagher Fragrances", {
+    const { records } = await extractNotesForItems(items, "Gallagher Fragrances", {
       generateNoirDescriptions: false,
       titleDashSegment: "before",
     })
@@ -550,7 +575,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       throw new Error("LLM should not run")
     })
 
-    const records = await extractNotesForItems(items, "H", {
+    const { records } = await extractNotesForItems(items, "H", {
       generateNoirDescriptions: false,
       titleDashSegment: "before",
     })
@@ -605,7 +630,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       return { content: noteJson }
     })
 
-    const records = await extractNotesForItems(items, "House", { generateNoirDescriptions: true })
+    const { records } = await extractNotesForItems(items, "House", { generateNoirDescriptions: true })
 
     expect(records).toHaveLength(3)
     expect(records.map(r => r.name)).toEqual(["Alpha", "Beta", "Gamma"])
@@ -653,7 +678,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       return { content: noteJson }
     })
 
-    const records = await extractNotesForItems(items, "H", { generateNoirDescriptions: true })
+    const { records } = await extractNotesForItems(items, "H", { generateNoirDescriptions: true })
 
     expect(records.map(r => r.name)).toEqual(["One", "Two"])
     expect(noirCall).toBe(2)
@@ -683,7 +708,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       throw new Error("LLM should not run when notesText carries the authoritative list")
     })
 
-    const records = await extractNotesForItems(items, "Little And Grim", { generateNoirDescriptions: false })
+    const { records } = await extractNotesForItems(items, "Little And Grim", { generateNoirDescriptions: false })
 
     expect(invokeMock).not.toHaveBeenCalled()
     expect(records).toHaveLength(1)
@@ -729,7 +754,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       throw new Error("LLM should not run when flat listing is detected from structured text")
     })
 
-    const records = await extractNotesForItems(items, "Little And Grim", { generateNoirDescriptions: false })
+    const { records } = await extractNotesForItems(items, "Little And Grim", { generateNoirDescriptions: false })
 
     expect(invokeMock).not.toHaveBeenCalled()
     expect(records).toHaveLength(1)
@@ -764,7 +789,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       throw new Error("LLM should not run")
     })
 
-    const records = await extractNotesForItems(items, "House", { generateNoirDescriptions: false })
+    const { records } = await extractNotesForItems(items, "House", { generateNoirDescriptions: false })
 
     expect(invokeMock).not.toHaveBeenCalled()
     const open = [
@@ -803,7 +828,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
       throw new Error("LLM should not run")
     })
 
-    const records = await extractNotesForItems(items, "House", { generateNoirDescriptions: false })
+    const { records } = await extractNotesForItems(items, "House", { generateNoirDescriptions: false })
 
     expect(invokeMock).not.toHaveBeenCalled()
     const all = [
@@ -860,7 +885,7 @@ Base: white musk`
       throw new Error(`Unexpected LLM call: ${sys.slice(0, 80)}`)
     })
 
-    const records = await extractNotesForItems(items, "House", { generateNoirDescriptions: false })
+    const { records } = await extractNotesForItems(items, "House", { generateNoirDescriptions: false })
 
     expect(records).toHaveLength(1)
     const base = JSON.parse(records[0].baseNotes) as string[]
@@ -889,7 +914,7 @@ Base: white musk`
       throw new Error("LLM should not run for this structured parse test")
     })
 
-    const records = await extractNotesForItems(items, "House", { generateNoirDescriptions: false })
+    const { records } = await extractNotesForItems(items, "House", { generateNoirDescriptions: false })
     expect(invokeMock).not.toHaveBeenCalled()
     expect(records).toHaveLength(1)
 
@@ -921,7 +946,7 @@ Base: white musk`
       throw new Error("LLM should not run when Featured Notes list is authoritative")
     })
 
-    const records = await extractNotesForItems(items, "Gallagher Fragrances", { generateNoirDescriptions: false })
+    const { records } = await extractNotesForItems(items, "Gallagher Fragrances", { generateNoirDescriptions: false })
 
     expect(invokeMock).not.toHaveBeenCalled()
     const open = JSON.parse(records[0].openNotes) as string[]
@@ -983,7 +1008,7 @@ Base: white musk`
       },
     ]
 
-    const records = await extractNotesForItems(items, "Gallagher Fragrances", {
+    const { records } = await extractNotesForItems(items, "Gallagher Fragrances", {
       generateNoirDescriptions: false,
       fetchPdpNoteBootstrap: true,
     })
@@ -1034,7 +1059,7 @@ Base: white musk`
       throw new Error("LLM should not run when PDP rescue retry succeeds")
     })
 
-    const records = await extractNotesForItems(items, "Gallagher Fragrances", {
+    const { records } = await extractNotesForItems(items, "Gallagher Fragrances", {
       generateNoirDescriptions: false,
       fetchPdpNoteBootstrap: true,
     })
@@ -1090,7 +1115,7 @@ Base: white musk`
       throw new Error("LLM should not run when 'Dew and Honeysuckle' parses cleanly from prose")
     })
 
-    const records = await extractNotesForItems(items, "Seventh Muse", {
+    const { records } = await extractNotesForItems(items, "Seventh Muse", {
       generateNoirDescriptions: false,
       fetchPdpNoteBootstrap: true,
     })
@@ -1136,7 +1161,7 @@ Base: white musk`
       throw new Error("LLM should not run when blend phrase parses cleanly")
     })
 
-    const records = await extractNotesForItems(items, "Seventh Muse", {
+    const { records } = await extractNotesForItems(items, "Seventh Muse", {
       generateNoirDescriptions: false,
     })
 
@@ -1173,7 +1198,7 @@ Base: white musk`
       throw new Error("LLM should not run for this flat-list test")
     })
 
-    const records = await extractNotesForItems(items, "Gallagher Fragrances", { generateNoirDescriptions: false })
+    const { records } = await extractNotesForItems(items, "Gallagher Fragrances", { generateNoirDescriptions: false })
 
     expect(invokeMock).not.toHaveBeenCalled()
     const open = JSON.parse(records[0].openNotes) as string[]
@@ -1182,5 +1207,265 @@ Base: white musk`
     expect(open).toContain("tobacco")
     expect(open).not.toEqual(expect.arrayContaining(["experiment for yourself"]))
     expect(open).not.toEqual(expect.arrayContaining(["for yourself"]))
+  })
+
+  it("strict mode with blank PDP yields empty notes and empty _noteSource", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    invokeMock.mockImplementation(() => ({
+      content: '{"openNotes":[],"heartNotes":[],"baseNotes":[]}',
+    }))
+    const items: ScrapedItem[] = [
+      {
+        name: "Xyzzynoingredients987",
+        description: "",
+        image: "",
+        detailURL: "",
+        perfumeHouse: "House",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "House", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+      noteInferenceMode: "strict",
+    })
+    expect(records[0].openNotes).toBe("[]")
+    expect(records[0]._noteSource).toBe("empty")
+  })
+
+  it("canonicalizeNote maps vetivert and vanille", () => {
+    expect(canonicalizeNote("vetivert")).toBe("vetiver")
+    expect(canonicalizeNote("vanille")).toBe("vanilla")
+  })
+
+  it("computeBatchNoteUniformityWarnings flags when >=30% share same 3+ notes", () => {
+    const same = {
+      openNotes: ["plum", "rose", "honey"],
+      heartNotes: [] as string[],
+      baseNotes: [] as string[],
+    }
+    const layers = Array.from({ length: 10 }, () => ({ ...same }))
+    const w = computeBatchNoteUniformityWarnings(layers)
+    expect(w.length).toBe(1)
+    expect(w[0]).toMatch(/10\/10/)
+  })
+
+  it("bulk LLM validator drops non-material strings and rewrites prose-adjective phrases", async () => {
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "llm")
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    /**
+     * Three invocations expected (in order):
+     *   1. extractNotesFromDescription for the first product
+     *   2. extractNotesFromDescription for the second product (all junk)
+     *   3. validateNotesWithLlm (bulk) — returns substitution map:
+     *      - "bergamot" → "bergamot" (kept)
+     *      - "delicate apple blossom" → "apple blossom" (prose stripped)
+     *      - "creamy vanilla" → "creamy vanilla" (olfactory adjective kept)
+     *      - "sandalwood" → "sandalwood" (kept)
+     *      - "a sweet" → omitted (pure prose)
+     *      - "glowing amber warmth" → omitted (no material core)
+     */
+    const responses = [
+      '{"openNotes":["bergamot","a sweet","delicate apple blossom"],"heartNotes":["creamy vanilla"],"baseNotes":["sandalwood","glowing amber warmth"]}',
+      '{"openNotes":["a sweet"],"heartNotes":[],"baseNotes":["glowing amber warmth"]}',
+      '{"valid":[{"in":"bergamot","out":"bergamot"},{"in":"delicate apple blossom","out":"apple blossom"},{"in":"creamy vanilla","out":"creamy vanilla"},{"in":"sandalwood","out":"sandalwood"}]}',
+    ]
+    let i = 0
+    invokeMock.mockImplementation(() => ({ content: responses[i++] ?? '{"valid":[]}' }))
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Real Notes Product",
+        description: "Some product copy that lacks a labeled note list but mentions bergamot and rose.",
+        image: "",
+        detailURL: "",
+        perfumeHouse: "House",
+      },
+      {
+        name: "All Junk Product",
+        description: "Marketing prose without any actual scent materials worth keeping.",
+        image: "",
+        detailURL: "",
+        perfumeHouse: "House",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "House", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+      noteInferenceMode: "strict",
+    })
+
+    const r0Open = JSON.parse(records[0].openNotes) as string[]
+    const r0Heart = JSON.parse(records[0].heartNotes) as string[]
+    const r0Base = JSON.parse(records[0].baseNotes) as string[]
+    // Prose stripped from "delicate apple blossom" → "apple blossom"
+    expect(r0Open).toContain("bergamot")
+    expect(r0Open).toContain("apple blossom")
+    expect(r0Open).not.toContain("delicate apple blossom")
+    expect(r0Open).not.toContain("a sweet")
+    // Olfactory adjective ("creamy") preserved
+    expect(r0Heart).toContain("creamy vanilla")
+    expect(r0Base).toEqual(["sandalwood"])
+    expect(r0Base).not.toContain("glowing amber warmth")
+    expect(records[0]._noteSource).not.toBe("empty")
+
+    // Product with only prose-junk notes is fully emptied + _noteSource flipped
+    const r1All = [
+      ...(JSON.parse(records[1].openNotes) as string[]),
+      ...(JSON.parse(records[1].heartNotes) as string[]),
+      ...(JSON.parse(records[1].baseNotes) as string[]),
+    ]
+    expect(r1All).toEqual([])
+    expect(records[1]._noteSource).toBe("empty")
+  })
+
+  it("policy-only merchant description gets wiped so noir gen kicks in when notes exist", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    /**
+     * Mirrors the Andromedas Moon "Love Don't Be Shy" PDP — every sentence is operational /
+     * legal boilerplate (size options, processing time, trademarks, sugarcane alcohol ingredient
+     * disclosure). With notes empty, noir is skipped; with notes present, descriptionForRecord
+     * must be wiped so noir replaces it.
+     */
+    invokeMock.mockImplementation(() => ({
+      content: '{"openNotes":["vanilla","tonka bean"],"heartNotes":["jasmine"],"baseNotes":["musk"]}',
+    }))
+    const policyDesc = `Inspired by Love, Dont Be Shy EDP. ORIGINAL MANUFACTURERS PICTURES OF BOTTLE IS FOR REFERENCE ONLY- ALL PRODUCTS SENT WILL USE OUR COMPANIES BOTTLES AND FORMULA. Size options- 5ml glass spray bottle (EDP) Sample Size 15ml glass perfume bottle (EDP) Travel Size 30ml glass perfume bottle (EDP) 1 oz 60ml glass perfume bottle (EDP) 2 oz 100ml glass perfume bottle (EDP) 3.4 oz. As with any fragrance, as it matures you will get a stronger scent. Name trademarks and copyrights are properties of their respective manufacturers and/or designers. Andromedas Moon has no affiliation with the manufacturers / designers. Ingredients: Sugarcane Alcohol (Ethyl Alcohol) Carcinogen & Phthalate-Free Fragrance.`
+    const items: ScrapedItem[] = [
+      {
+        name: "Love Dont Be Shy",
+        description: policyDesc,
+        image: "",
+        detailURL: "",
+        perfumeHouse: "Andromedas Moon",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "Andromedas Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+      noteInferenceMode: "strict",
+    })
+    // Description must NOT contain any of the policy phrases.
+    const d = records[0].description
+    expect(d).not.toMatch(/ORIGINAL MANUFACTURERS/i)
+    expect(d).not.toMatch(/no\s+changes/i)
+    expect(d).not.toMatch(/sugarcane\s+alcohol/i)
+    expect(d).not.toMatch(/trademarks/i)
+    // With noir disabled and policy-only original, description is wiped to "".
+    expect(d).toBe("")
+  })
+
+  it("Andromedas Moon London Fog PDP: extracts layered notes and strips template copy from description", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    const londonFogDesc =
+      "Inspired by London Fog Eau De Parfum London Fog A cozy, moody gourmand that feels like sipping hot tea in a foggy London eveningsweet honey drizzles into a warm cup, with soft lavender floating through the steam. Scent Vibe Warm black tea golden honey airy lavender foggy, comforting ambiance Notes Top: Steaming Black Tea Heart: Lavender Mist Base: Honeyed Sweetness How it wears Opens with a realistic tea-steam warmth, quickly sweetened by honey, then settles into a smooth lavender haze that stays soft and cozy (never sharp). Sizes 5ml 15ml 30ml 60ml 100ml *Roller balls are never sold. Application Spray on pulse points. Processing & Shipping Processing: At least 7 business days and COULD TAKE LONGER. Important Shop Policy No changes, no cancellations, and no refunds."
+    const items: ScrapedItem[] = [
+      {
+        name: "London Fog Brandt",
+        description: londonFogDesc,
+        image: "",
+        detailURL: "",
+        perfumeHouse: "Andromedas Moon",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "Andromedas Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+      noteInferenceMode: "strict",
+    })
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    expect(
+      { open, heart, base, description: records[0].description, invokeCalls: invokeMock.mock.calls.length },
+      "London Fog extraction snapshot",
+    ).toMatchObject({
+      open: expect.arrayContaining([expect.stringMatching(/black tea|steaming/i)]),
+      heart: expect.arrayContaining([expect.stringMatching(/lavender/i)]),
+      base: expect.arrayContaining([expect.stringMatching(/honey/i)]),
+      invokeCalls: expect.any(Number),
+    })
+    expect(invokeMock.mock.calls.length).toBeLessThanOrEqual(1)
+    const d = records[0].description
+    expect(d).toMatch(/cozy|gourmand|lavender/i)
+    expect(d).not.toMatch(/scent\s+vibe/i)
+    expect(d).not.toMatch(/notes\s+top/i)
+    expect(d).not.toMatch(/how\s+it\s+wears/i)
+    expect(d).not.toMatch(/sizes\s+5\s*ml/i)
+    expect(d).not.toMatch(/processing/i)
+    expect(d).not.toMatch(/roller\s+balls/i)
+  })
+
+  it("stripPolicyBoilerplate truncates Processing/Packing/Shipping trail", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    /**
+     * Mirrors line 34 of the CSV — real scent narrative + structured notes + trailing
+     * "Processing: AT LEAST 7 business days... no changes, no cancellations..." boilerplate.
+     * After processing, the description retains the scent narrative but drops everything from
+     * "Processing:" onward.
+     */
+    const realDesc =
+      "A golden overdose of vanilla wrapped in amber warmth. Plush vanilla bean, softly powdered, and balsamic resins. A smooth musk veil lingers in the background."
+    const desc = `${realDesc} Processing: AT LEAST 7 business days and COULD TAKE LONGER. Packing: Hand-filled and inspected. Shipping & Insurance: USPS/UPS include up to $100 insurance automatically. Once an order is placed, there are no changes, no cancellations, and no refunds.`
+    invokeMock.mockImplementation(() => ({
+      content: '{"openNotes":["vanilla"],"heartNotes":["amber"],"baseNotes":["musk"]}',
+    }))
+    const items: ScrapedItem[] = [
+      {
+        name: "Vanille Planifolia",
+        description: desc,
+        image: "",
+        detailURL: "",
+        perfumeHouse: "Andromedas Moon",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "Andromedas Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+      noteInferenceMode: "strict",
+    })
+    const d = records[0].description
+    // Real narrative preserved
+    expect(d).toMatch(/golden overdose|plush vanilla bean|musk veil/i)
+    // Policy trail dropped
+    expect(d).not.toMatch(/processing\s*:/i)
+    expect(d).not.toMatch(/no\s+changes/i)
+    expect(d).not.toMatch(/usps?\s*\/?\s*ups/i)
+    expect(d).not.toMatch(/business days/i)
+  })
+
+  it("bulk LLM validator fails open when the call errors", async () => {
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "llm")
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    /**
+     * First call: extraction returns real notes. Second call (validator): throws. Pipeline must
+     * preserve the original notes — validator outages should never drop notes.
+     */
+    let call = 0
+    invokeMock.mockImplementation(() => {
+      call++
+      if (call === 1) return { content: '{"openNotes":["bergamot"],"heartNotes":["rose"],"baseNotes":["sandalwood"]}' }
+      throw new Error("Simulated validator outage")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Outage Product",
+        description: "Description hinting at bergamot, rose, and sandalwood.",
+        image: "",
+        detailURL: "",
+        perfumeHouse: "House",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "House", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+      noteInferenceMode: "strict",
+    })
+
+    expect(JSON.parse(records[0].openNotes)).toEqual(["bergamot"])
+    expect(JSON.parse(records[0].heartNotes)).toEqual(["rose"])
+    expect(JSON.parse(records[0].baseNotes)).toEqual(["sandalwood"])
   })
 })

@@ -112,17 +112,17 @@ const PerfumeIcons = ({
       )}
       {modalOpen && modalId === wishlistModalId && (
         <Modal innerType="dark" animateStart="top">
-          <div className="space-y-4 p-6 pt-12 max-w-md">
-            <h2 className="text-lg font-medium text-center text-noir-cream">
+          <div className="space-y-4 p-6 pt-12 max-w-md mx-auto">
+            <h2 className="text-lg font-medium text-center text-noir-gold">
               {tIcons("icons.addButton")}
             </h2>
-            <p className="text-sm text-noir-cream/80 text-center">
+            <p className="text-sm text-noir-gold-500 text-center">
               {perfume.name}
             </p>
             <div className="space-y-2">
               <label
                 htmlFor={`bottle-pref-${perfume.id}`}
-                className="block text-sm text-center text-noir-cream/90"
+                className="block text-sm text-center text-noir-gold-100"
               >
                 {tBottle("label")}
               </label>
@@ -132,15 +132,15 @@ const PerfumeIcons = ({
                 onChange={e =>
                   setBottlePreference(e.target.value as WishlistBottlePreference)
                 }
-                className="w-full rounded border border-noir-gold bg-noir-dark px-3 py-2 text-sm text-noir-cream"
+                className="w-full rounded border border-noir-gold bg-noir-dark px-3 py-2 text-sm text-noir-gold-500 cursor-pointer"
               >
                 {WISHLIST_BOTTLE_PREFERENCE_OPTIONS.map(v => (
-                  <option key={v} value={v}>
+                  <option key={v} value={v} className="cursor-pointer">
                     {tBottle(v)}
                   </option>
                 ))}
               </select>
-              <p className="text-xs text-center text-noir-cream/70">
+              <p className="text-xs text-center text-noir-gold-100">
                 {tBottle("hint")}
               </p>
             </div>

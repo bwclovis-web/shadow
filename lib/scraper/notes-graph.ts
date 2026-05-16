@@ -15,11 +15,45 @@
  * Requires OPENAI_API_KEY in environment.
  */
 
+import { BaseMessage } from "@langchain/core/messages"
 import { Annotation, StateGraph } from "@langchain/langgraph"
 import { ChatOpenAI } from "@langchain/openai"
 
-import type { PerfumeCsvRecord, ScrapedItem, TitleDashSegment } from "@/types/scraper"
+import type {
+  NoteInferenceMode,
+  NoteValidationMode,
+  PerfumeCsvRecord,
+  ScrapedItem,
+  ScraperNoteSource,
+  TitleDashSegment,
+} from "@/types/scraper"
+import {
+  assignVolatilityLayersFromFlatOpen,
+  canonicalizeNote,
+  canonicalizeNoteLayers,
+  HYPHEN_PROTECTED_NOTE_FRAGMENTS,
+} from "@/lib/scraper/canonical-notes"
 import { isDisplayableScentNote } from "@/utils/validation/note-validation.server"
+
+/** Flatten LangChain 1.x `AIMessage` output (`content` may be string or text blocks). */
+const getLlmInvocationText = (response: BaseMessage): string => {
+  const viaGetter = response.text
+  if (typeof viaGetter === "string" && viaGetter.length > 0) return viaGetter
+  const c = response.content
+  if (typeof c === "string") return c
+  if (Array.isArray(c)) {
+    return c
+      .map((block: unknown) => {
+        if (typeof block === "string") return block
+        if (block && typeof block === "object" && "text" in block) {
+          return String((block as { text: unknown }).text ?? "")
+        }
+        return ""
+      })
+      .join("")
+  }
+  return ""
+}
 
 /** Options for title cleaning and description generation. */
 export interface ScraperPipelineOptions {
@@ -48,6 +82,16 @@ export interface ScraperPipelineOptions {
    * (Featured notes, Top:/Heart:, scent notes include, etc.). Default false so Vitest and fixtures stay offline.
    */
   fetchPdpNoteBootstrap?: boolean
+  /** `standard` (default) may infer from name / encyclopedia fallback; `strict` keeps only merchant-stated notes. */
+  noteInferenceMode?: NoteInferenceMode
+  /** Minimum items in a flat merchant note list to treat as authoritative (default 2). */
+  minConfidentFlatNotes?: number
+  /** OpenAI model for extraction / merge / translate (optional; falls back to env or gpt-4o-mini). */
+  notesPipelineModel?: string
+  /** OpenAI model for noir descriptions (optional; falls back to env or extraction model). */
+  noirPipelineModel?: string
+  /** Post-extraction LLM validator over the union of unique notes. Default `"llm"`; `"off"` disables. */
+  noteValidationMode?: NoteValidationMode
 }
 
 // ---------------------------------------------------------------------------
@@ -64,6 +108,10 @@ const ScraperState = Annotation.Root({
     default: () => "",
   }),
   results: Annotation<PerfumeCsvRecord[]>({
+    reducer: (_, next) => next,
+    default: () => [],
+  }),
+  batchWarnings: Annotation<string[]>({
     reducer: (_, next) => next,
     default: () => [],
   }),
@@ -134,6 +182,10 @@ const hasExplicitNoteListSignal = (text: string): boolean => {
   if (/\bnote\s+structure\b/i.test(t)) return true
   if (/\b(?:top|heart|middle|mid|base|opening|dry[\s-]*down)\s*(?:notes?)?\s*:/i.test(t)) return true
   if (/\bnotes?\s*:\s*[a-z0-9]/i.test(t)) return true
+  if (/\b(?:kopfnoten?|herznoten?|basisnoten?|duftnoten)\s*:/i.test(t)) return true
+  if (/\bnote\s+di\s+(?:testa|cuore|fondo|olfattive)\s*:/i.test(t)) return true
+  if (/\b(?:topnoten?|hartnoten?|basisnoten?)\s*:/i.test(t)) return true
+  if (/\bnotas\s+de\s+(?:salida|coraz[oó]n|fondo)\s*:/i.test(t)) return true
   return false
 }
 
@@ -606,7 +658,7 @@ function stripNotesFromDescription(description: string, notes: string[]): string
 }
 
 function uniqueNotes(notes: string[]): string[] {
-  return [...new Set(notes.map(n => n.trim().toLowerCase()).filter(Boolean))]
+  return [...new Set(notes.map(n => canonicalizeNote(n)).filter(Boolean))]
 }
 
 function dedupeNotesAcrossLayers(notes: {
@@ -701,11 +753,134 @@ function splitNoteList(text: string): string[] {
 function stripTrailingNonNoteSections(text: string): string {
   return text
     .replace(
-      /\s+(?:additional information|ingredients|how to use|directions(?:\s+for\s+use)?|customer reviews?|reviews?|specifications|size [Gg]uide|care [Ii]nstructions|warnings?|disclaimer)\b[\s\S]*$/i,
+      /\s+(?:additional information|ingredients|how to use|directions(?:\s+for\s+use)?|customer reviews?|reviews?|specifications|size [Gg]uide|care [Ii]nstructions|warnings?|disclaimer|how it wears|how (?:it\s+)?smells|wear(?:ability|ing)\s+notes?|important information|important\s+(?:shop|order)\s+info|available\s+sizes?|size\s+options?|available\s+in|shipping|processing|packing|please\s+note|please\s+read|about\s+this\s+fragrance|about\s+(?:our|the)\s+brand|(?:scent\s+)?profile\s+(?:guide|overview)|pairing\s+suggestions?|frequently\s+asked)\b[\s\S]*$/i,
       "",
     )
     .replace(/\s+extra info\b[\s\S]*$/i, "")
+    .replace(/\s+---+\s*[\s\S]*$/i, "")
     .trim()
+}
+
+/**
+ * Merchant policy / shipping / brand-disclaimer boilerplate that frequently follows the real PDP
+ * copy on indie Shopify houses (e.g. Andromedas Moon). Truncate the description at the earliest
+ * match — every character after the marker is operational / legal text, not scent prose.
+ */
+/** Indie Shopify PDP template sections — strip from stored descriptions only (not pre-extraction). */
+const PDP_SECTION_BOILERPLATE_START_PATTERNS: RegExp[] = [
+  /\bscent\s+vibe\b/i,
+  /\bnotes\s+top\s*:/i,
+  /\bhow\s+it\s+wears\b/i,
+  /\bsizes\s+\d+\s*ml\b/i,
+  /\bapplication\s+spray\b/i,
+  /\*?\s*roller\s+balls?\s+are\s+never\s+sold/i,
+  /\bimportant\s+shop\s+policy\b/i,
+]
+
+const POLICY_BOILERPLATE_START_PATTERNS: RegExp[] = [
+  /\bprocessing\s*(?:&|and)\s*shipping\b/i,
+  /\bprocessing\s*:?\s*at\s+least\s+\d/i,
+  /\b(?:packing|packaging)\s*:\s*hand[-\s]?(?:filled|poured)/i,
+  /\bshipping\s*(?:&|and)?\s*insurance\s*:/i,
+  /\busps?\s*\/?\s*ups\b[^.]*\binsurance\b/i,
+  /\bavailable\s+sizes\b\s*[:.]?\s*\d/i,
+  /\bavailable\s+sizes\b\s*[\r\n]+\s*\d/i,
+  /\bno\s+changes\s*,\s+no\s+cancellations\s*,\s+(?:and\s+)?no\s+refunds\b/i,
+  /\ball\s+orders\s+are\s+final\s+once\s+placed\b/i,
+  /\bonce\s+an\s+order\s+is\s+placed[^.]*no\s+changes\b/i,
+  /\bcredit\s+card\s+processing\s+fees\s+are\s+non-refundable\b/i,
+  /\bmaterials\s+(?:are\s+)?allocated\s+(?:to\s+order|immediately)\b/i,
+  /\bandromedas?\s+moon\s+is\s+(?:an?\s+)?(?:independent|small)/i,
+  /\bnot\s+affiliated\s+with[^.]*(?:manufacturers?|designers?|brand)/i,
+  /\boriginal\s+manufacturers?\s+pictures?/i,
+  /\binfringe\s+on\s+the\s+manufacturers?\b/i,
+  /\ball\s+trademarks?\s+are\s+(?:property\s+of\s+)?their\s+respective\s+(?:owners|manufacturers)/i,
+  /\bname\s+trademarks?\s+and\s+copyrights?\s+are\s+propert(?:y|ies)\b/i,
+  /\bthis\s+fragrance\s+is\s+an\s+independent\s+interpretation\b/i,
+  /\bplease\s+read\s+our\s+policy\s+page\b/i,
+  /\binspired\s+by\s+is\s+used\s+only\s+to\s+describe\b/i,
+  /\bstore\s+polic(?:y|ies)\s*[:.]?/i,
+  /\bingredients?\s*:\s*(?:sugarcane|ethyl)\s+alcohol\b/i,
+  /\b(?:carcinogen|phthalate)[-\s]?free\s+fragrance\b/i,
+  /\bbi[-\s]?phase\s+fragrance\b/i,
+  /\bdoes\s+require\s+shaking\s+before\s+use\b/i,
+  /\bnot\s+responsible\s+for\s+(?:lost|stolen|customs)\b/i,
+  /\bsales?\s+are\s+final\b/i,
+  /\bsize\s+options?\s*-?\s*\d\s*ml\b/i,
+  // "5ml • 15ml • …" sizing bullet lines
+  /\b\d+\s*ml\s*[•·|\/,]\s*\d+\s*ml\b/i,
+  // "Final Sale:" policy marker
+  /\bfinal\s+sale\s*:/i,
+  // "Sampling Size Policy:" marker
+  /\bsampling\s+size\s+policy\s*:/i,
+  // Independent-interpretation disclaimers
+  /\bthis\s+(?:fragrance|scent|perfume)\s+is\s+an?\s+independent\b/i,
+  /\bindependent\s+interpretation\s+inspired\b/i,
+  /\ball\s+perfumes?\s+are\s+hand[-\s]?(?:filled|poured)\s+to\s+order\b/i,
+  /\bhttps?:\/\//i,
+]
+
+const stripAtEarliestPatterns = (text: string, patterns: RegExp[]): string => {
+  if (!text?.trim()) return ""
+  let cutoff = text.length
+  for (const re of patterns) {
+    const m = re.exec(text)
+    if (m && m.index < cutoff) cutoff = m.index
+  }
+  return text.slice(0, cutoff).replace(/\s+$/u, "").trim()
+}
+
+const stripPolicyBoilerplate = (text: string): string =>
+  stripAtEarliestPatterns(text, POLICY_BOILERPLATE_START_PATTERNS)
+
+/** Template blocks (Scent Vibe, Sizes, Application, …) — for final CSV descriptions, not note extraction. */
+const stripPdpSectionBoilerplate = (text: string): string =>
+  stripAtEarliestPatterns(text, PDP_SECTION_BOILERPLATE_START_PATTERNS)
+
+const stripMerchantDescriptionForStorage = (text: string): string =>
+  stripPdpSectionBoilerplate(stripPolicyBoilerplate(text))
+
+/**
+ * Strip decorative Unicode (box drawing, fill blocks), ASCII-art divider lines, and C0 control
+ * characters so labeled note lines and prose aren't hidden behind grid/marketing ornament.
+ * Also fixes occasional LLM typos ("I cone" → "I come") that slip into noir copy.
+ */
+export const sanitizeCopyForNotePipeline = (text: string): string => {
+  if (!text?.trim()) return ""
+  let s = text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+  s = s.replace(/[\u2500-\u257F\u2580-\u259F]/g, " ")
+  const lines = s.split(/\r?\n/)
+  const kept: string[] = []
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!trimmed) continue
+    if (/^[\s\-=*_|/\\·•]+$/u.test(trimmed) && trimmed.length >= 3) continue
+    const decoChars = (trimmed.match(/[|*\-=_/\\·•─═│┼├┤]/gu) ?? []).length
+    if (trimmed.length >= 8 && decoChars / trimmed.length > 0.55) continue
+    const normalized = line.replace(/[ \t]+/g, " ").trimEnd()
+    if (normalized) kept.push(normalized)
+  }
+  s = kept.join("\n")
+  s = s.replace(/[\-*_=#]{4,}/g, " ")
+  s = s.replace(/\n{3,}/g, "\n\n").trim()
+  s = s.replace(/\bI\s+cone\b/gi, "I come")
+  s = s.replace(/\bcone\s+to\b/gi, "come to")
+  return s.trim()
+}
+
+/**
+ * After stripping policy boilerplate, if the remaining narrative is too short to be useful, treat
+ * the merchant description as unusable so the noir generator runs (when notes are available)
+ * instead of preserving shipping/legal text.
+ *
+ * Returns `true` when the description should be wiped to "".
+ */
+const isPolicyOnlyMerchantDescription = (raw: string | null | undefined): boolean => {
+  const t = (raw ?? "").trim()
+  if (!t) return false
+  const stripped = stripPolicyBoilerplate(t)
+  // Less than 80 chars of real narrative after policy cutoff = treat as boilerplate-only.
+  return stripped.length < 80
 }
 
 /** Pattern-by-Etsy and minified HTML glue layer headers: "AccordMiddle Notes:" → "Accord Middle Notes:" */
@@ -729,11 +904,23 @@ const splitGluedLayerLabels = (text: string): string =>
  * next line. After `get_text` / whitespace collapse that becomes "Top notes Almond, Bergamot …"
  * without a colon, so layered parsers miss it — insert "Label: " before the list.
  */
-const normalizeImplicitLayerColons = (text: string): string =>
-  text.replace(
+const normalizeImplicitLayerColons = (text: string): string => {
+  let s = text
+  // "Top Notes Granny Smith" (label + "Notes" + list — no colon, whitespace-collapsed H3)
+  s = s.replace(
     /\b(top|open(?:ing)?|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry[\s-]*down|drydown|end)\s+notes?\s+(?!(?:of|and|with|from|to|in|the|a|an|is|are)\b)(?=[A-Za-z])/gi,
     "$1: ",
   )
+  // "Top: " already handled; also catch bare label standing alone before a capitalised list
+  // e.g. "Fragrance Notes Top Granny Smith Apple, Pear" (no "Notes" suffix either)
+  // Guard: only replace when immediately followed by a capital+lowercase material word,
+  // NOT when followed by another layer label (to avoid "Top Middle Base" collapse).
+  s = s.replace(
+    /\b(top|opening|head|heart|middle|core|base|bottom|foundation|drydown)\s+(?!(?:notes?|of|and|with|from|to|in|the|a|an|is|are|open|mid|center|centre|body|background|bottom|foundation|dry|end)\b)(?=[A-Z][a-z])/g,
+    "$1: ",
+  )
+  return s
+}
 
 /** Stop last layer chunk before Pattern/Etsy listing meta (avoids ':' in tokens → junk filter drops all base notes). */
 const truncateAtShopMetaLabels = (s: string): string => {
@@ -742,6 +929,70 @@ const truncateAtShopMetaLabels = (s: string): string => {
   )
   if (m?.index != null) return s.slice(0, m.index).trim()
   return s.trim()
+}
+
+/**
+ * When a note list chunk (e.g. a layer slice from `extractInlineLayeredNotes`) is followed
+ * immediately by marketing prose — e.g. "Musk Perfect for anyone who loves..." — the
+ * whitespace collapse in `extractNotesFromStructuredText` merges the note and prose into a
+ * single comma token that the junk filter then drops.
+ *
+ * This function truncates the chunk at the start of the first clearly-prose run so that only
+ * the material portion survives. We look for:
+ *   1. "Perfect for", "Best for", "Great for", "A great", "A perfect", "Great choice",
+ *      "A beautiful", "A wonderful", "Ideal for", "This fragrance", "This scent",
+ *      "The opening", "The drydown", "The dry down", "The base" + verb, "Inspired by"
+ *      — common Shopify PDP marketing paragraph starters
+ *   2. A period or exclamation followed by a space + capital letter — hard sentence boundary
+ *
+ * The function is conservative: it only truncates when the prose marker appears AFTER at
+ * least one comma-separated token (i.e., the chunk is not entirely prose).
+ */
+const truncateChunkAtProseStart = (chunk: string): string => {
+  // Marketing paragraph starters that signal the end of the note list and begin prose
+  const PROSE_STARTS =
+    /(?:\b(?:perfect|ideal|great|wonderful|excellent)\s+(?:for|choice|option)\b|\ba\s+(?:great|perfect|beautiful|wonderful|stunning|luxurious|gorgeous|rich|dark|warm|sensual|cozy)\s+choice\b|\b(?:this\s+(?:fragrance|scent|perfume|inspired|is)|the\s+(?:opening|drydown|dry\s+down|base\s+(?:lingers|settles|brings))|inspired\s+by|perfect\s+for\s+anyone|opens?\s+with\s+(?:a|the)|think\s+(?:crisp|fresh|warm|cool|dark|soft)|vibe\b|how\s+it\s+wears|available\s+sizes?|important\s+(?:information|shop|order)|all\s+perfumes?\s+are\s+hand|this\s+is\s+(?:a|an|the)\s+kind)\b)/i
+
+  const sentenceBoundary = /[.!]\s+[A-Z]/
+
+  // Only truncate if we have at least one real note already (comma in the string)
+  const hasComma = chunk.indexOf(",") !== -1
+
+  const proseMatch = PROSE_STARTS.exec(chunk)
+  if (proseMatch?.index != null) {
+    const cut = chunk.slice(0, proseMatch.index).trimEnd().replace(/,\s*$/, "").trimEnd()
+    if (cut.length > 0) return cut
+  }
+
+  if (hasComma) {
+    const sbMatch = sentenceBoundary.exec(chunk)
+    if (sbMatch?.index != null) {
+      const cut = chunk.slice(0, sbMatch.index + 1).trimEnd().replace(/,\s*$/, "").trimEnd()
+      if (cut.length > 0) return cut
+    }
+  }
+
+  return chunk
+}
+
+/**
+ * When a long note+prose merge token makes it through comma-splitting (e.g.
+ * "Musk Perfect for anyone who loves..." was last in the list with no comma),
+ * try to rescue the valid note prefix that appears before the prose begins.
+ * Returns the cleaned prefix if it looks like a valid 1–4 word note; otherwise null.
+ */
+const rescueNotePrefixFromProseToken = (token: string): string | null => {
+  const t = token.trim()
+  if (!t) return null
+  // Already valid — don't process
+  if (t.split(/\s+/).length <= 4) return null
+  // Walk possible 1-to-4 word prefixes from the start of the token
+  const words = t.split(/\s+/)
+  for (let len = 1; len <= Math.min(4, words.length - 1); len++) {
+    const candidate = words.slice(0, len).join(" ")
+    if (isScraperKeptNote(candidate)) return candidate
+  }
+  return null
 }
 
 // ---------------------------------------------------------------------------
@@ -808,6 +1059,94 @@ const JUNK_NOTE_PATTERNS: RegExp[] = [
   /\btry\s+(?:it|this)\s+(?:for|on)\s+yourself\b/i,
   /\bsee\s+for\s+yourself\b/i,
   /\bfor\s+yourself\b/i,
+  // E‑commerce policy / ops copy mistaken for notes (e.g. indie Shopify PDPs)
+  /\bcancellations?\b/i,
+  /\bno\s+cancellations?\b/i,
+  /\bno\s+changes?\b/i,
+  /\bmaterials?\b/i,
+  /\blabor\b/i,
+  /\bprocessing\b/i,
+  /\bexclude\s+weekends?\b/i,
+  /\ball\s+sales\s+are\s+final\b/i,
+  /\border\s+includes?\b/i,
+  /\brefunds?\b/i,
+  /\brefundable\b/i,
+  /\bpolicy\b/i,
+  /\ballocated\b/i,
+  // Article-prefixed prose fragments ("a sweet", "an opening", "the center turns resinous")
+  /^(?:a|an|the)\s+/i,
+  // Preposition-prefixed prose fragments ("with aromatic longoza", "with a hint of")
+  /^with\s+/i,
+  // Marketing prose fragments / experience copy (not ingredient names)
+  /\bthat\s+feels?\b/i,
+  /\bgiving\s+it\s+a\b/i,
+  /\ba\s+creamy\b/i,
+  /\bjuicy\s+opening\b/i,
+  /\bcreamy\s+heart\b/i,
+  /\bcandy[-\s]like\b/i,
+  /\bdessert[-\s]forward\b/i,
+  /\bsmooth\s+finish\b/i,
+  /\bgiving\s+it\b/i,
+  /\bavailable\s+sizes\b/i,
+  // Prose/experience words that are never standalone ingredients
+  /\bfeel\b/i,
+  /\bwarmth\b/i,
+  // Keep merchant phrases like "Honeyed Sweetness"; drop bare sensory descriptors only
+  /(?<!(?:honeyed|brown|burnt|golden|warm|sheer|powdered|caramelized)\s)\bsweetness\b/i,
+  /\btexture\b/i,
+  /\bcharacter/i,
+  /\bturns\b/i,
+  /\bscents?\b/i,
+  /\badding\b/i,
+  /\bsoftly\b/i,
+  /\bswirls?\s+of\b/i,
+  /\bmake\s+it\b/i,
+  /\bthrough\s+the\b/i,
+  // "notes" at end of a phrase signals a header/descriptor, not a material
+  /\bnotes?\s*$/i,
+  // Single-token profile descriptors (genre labels, not materials)
+  /^\bfeminine\b$/i,
+  /^\bmasculine\b$/i,
+  /^\bmusky\b$/i,
+  /^\bwoody\b$/i,
+  /^\bwood\b$/i,
+  /^\bwoods\b$/i,
+  /^\bfruity\b$/i,
+  /^\bpowdery\b$/i,
+  /^\bspicy\b$/i,
+  /^\baquatic\b$/i,
+  /^\baromatic\b$/i,
+  /^\boriental\b$/i,
+  /^\bgourmand\b$/i,
+  /^\bfloral\b$/i,
+  /^\bflorals\b$/i,
+  /^\bflowers\b$/i,
+  /^\bcitrus\b$/i,
+  /^\bfresh\b$/i,
+  /^\bfruit\b$/i,
+  /^\bfruits\b$/i,
+  /^\bspice\b$/i,
+  /^\bspices\b$/i,
+  /^\bresin\b$/i,
+  /^\bresins\b$/i,
+  /^\bsweet\b$/i,
+  /^\bcozy\b$/i,
+  /^\bjuicy\b$/i,
+  /^\bplush\b$/i,
+  /^\bsmoother\b$/i,
+  /^\bwarmer\b$/i,
+  /\bglowing\b/i,
+  /\bmodern\b/i,
+  /^\bplayful\b$/i,
+  /^\bupscale\b$/i,
+  /\beffortlessly\b/i,
+  /^\bdelicate\b$/i,
+  /\bairy\b/i,
+  /^\bsmooth\b$/i,
+  /^\bwarm\b$/i,
+  /^\bcool\b$/i,
+  /^\bluxe\b$/i,
+  /^\bchanges\b$/i,
 ]
 
 /** Junk checks for typical short notes — excludes the punctuation rule so accord phrases with () survive. */
@@ -817,6 +1156,14 @@ const looksLikeJunkNote = (note: string): boolean => {
   if (!note?.trim()) return true
   const n = note.trim().toLowerCase()
   if (n.split(/\s+/).length > 4) return true
+  const hasProtectedHyphen = HYPHEN_PROTECTED_NOTE_FRAGMENTS.some(p => n.includes(p))
+  if (
+    !hasProtectedHyphen &&
+    n.includes("-") &&
+    /(?:like|forward|milky|creamy|juicy|heart|opening|feel)/i.test(n)
+  ) {
+    return true
+  }
   return JUNK_NOTE_PATTERNS.some(p => p.test(n))
 }
 
@@ -856,8 +1203,21 @@ const stripNoteListProsePrefix = (p: string): string =>
     .trim()
 
 /** Candidates from labeled Top/Middle/Base list lines (parentheticals, long accords). */
-const filterStructuredNoteParts = (parts: string[]): string[] =>
-  parts.map(p => stripNoteListProsePrefix(p.trim())).filter(p => p && isScraperKeptNote(p))
+const filterStructuredNoteParts = (parts: string[]): string[] => {
+  const out: string[] = []
+  for (const raw of parts) {
+    const cleaned = stripNoteListProsePrefix(raw.trim())
+    if (!cleaned) continue
+    if (isScraperKeptNote(cleaned)) {
+      out.push(cleaned)
+    } else {
+      // Rescue a valid note prefix from an over-long token that was merged with prose
+      const rescued = rescueNotePrefixFromProseToken(cleaned)
+      if (rescued) out.push(rescued)
+    }
+  }
+  return out
+}
 
 function classifyNoteLayer(label: string): "open" | "heart" | "base" | null {
   const normalized = label.trim().toLowerCase().replace(/\s+/g, " ")
@@ -865,6 +1225,18 @@ function classifyNoteLayer(label: string): "open" | "heart" | "base" | null {
   if (/^notes?\s+de\s+(tête|tete)$/.test(normalized)) return "open"
   if (/^notes?\s+de\s+(cœur|coeur)$/.test(normalized)) return "heart"
   if (/^notes?\s+de\s+fond$/.test(normalized)) return "base"
+  if (/^note\s+di\s+(testa|olfattive)$/.test(normalized)) return "open"
+  if (/^note\s+di\s+cuore$/.test(normalized)) return "heart"
+  if (/^note\s+di\s+fondo$/.test(normalized)) return "base"
+  if (/^notas\s+de\s+salida$/.test(normalized)) return "open"
+  if (/^notas\s+de\s+(coraz[oó]n|corazon)$/.test(normalized)) return "heart"
+  if (/^notas\s+de\s+fondo$/.test(normalized)) return "base"
+  if (/^kopfnoten?$/.test(normalized)) return "open"
+  if (/^herznoten?$/.test(normalized)) return "heart"
+  if (/^basisnoten?$/.test(normalized)) return "base"
+  if (/^duftnoten?$/.test(normalized)) return "open"
+  if (/^topnoten?$/.test(normalized)) return "open"
+  if (/^hartnoten?$/.test(normalized)) return "heart"
   if (/^(top|open|opening|head)(?: notes?)?$/.test(normalized)) return "open"
   if (/^(heart|middle|mid|core|body|center|centre)(?: notes?)?$/.test(normalized)) return "heart"
   if (/^(base|bottom|background|foundation|dry down|drydown|end)(?: notes?)?$/.test(normalized)) return "base"
@@ -878,12 +1250,18 @@ function extractInlineLayeredNotes(text: string): {
 } {
   const empty = { openNotes: [] as string[], heartNotes: [] as string[], baseNotes: [] as string[] }
   const source = splitGluedLayerLabels(
-    stripTrailingNonNoteSections(text.replace(/\r/g, "\n").replace(/\s+/g, " ").trim()),
+    stripTrailingNonNoteSections(
+      text
+        .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, " ")
+        .replace(/\r/g, "\n")
+        .replace(/\s+/g, " ")
+        .trim(),
+    ),
   )
   if (!source) return empty
 
   const sectionRe =
-    /\b(top(?:\s+notes?)?|open(?:ing)?(?:\s+notes?)?|head(?:\s+notes?)?|heart(?:\s+notes?)?|middle(?:\s+notes?)?|mid(?:\s+notes?)?|core(?:\s+notes?)?|body(?:\s+notes?)?|cent(?:er|re)(?:\s+notes?)?|base(?:\s+notes?)?|bottom(?:\s+notes?)?|background(?:\s+notes?)?|foundation(?:\s+notes?)?|dry\s*down(?:\s+notes?)?|drydown(?:\s+notes?)?|end(?:\s+notes?)?|notes?\s+de\s+(?:tête|tete)|notes?\s+de\s+(?:cœur|coeur)|notes?\s+de\s+fond)\s*:/gi
+    /\b(top(?:\s+notes?)?|open(?:ing)?(?:\s+notes?)?|head(?:\s+notes?)?|heart(?:\s+notes?)?|middle(?:\s+notes?)?|mid(?:\s+notes?)?|core(?:\s+notes?)?|body(?:\s+notes?)?|cent(?:er|re)(?:\s+notes?)?|base(?:\s+notes?)?|bottom(?:\s+notes?)?|background(?:\s+notes?)?|foundation(?:\s+notes?)?|dry\s*down(?:\s+notes?)?|drydown(?:\s+notes?)?|end(?:\s+notes?)?|notes?\s+de\s+(?:tête|tete)|notes?\s+de\s+(?:cœur|coeur)|notes?\s+de\s+fond|note\s+di\s+(?:testa|cuore|fondo|olfattive)|notas\s+de\s+(?:salida|coraz[oó]n|corazon|fondo)|kopfnoten?|herznoten?|basisnoten?|duftnoten?|topnoten?|hartnoten?)\s*:/gi
   const matches = [...source.matchAll(sectionRe)]
   if (matches.length === 0) return empty
 
@@ -900,7 +1278,9 @@ function extractInlineLayeredNotes(text: string): {
     const end = i + 1 < matches.length && matches[i + 1].index != null
       ? matches[i + 1].index!
       : source.length
-    const chunk = truncateAtShopMetaLabels(stripTrailingNonNoteSections(source.slice(start, end)))
+    const chunk = truncateChunkAtProseStart(
+      truncateAtShopMetaLabels(stripTrailingNonNoteSections(source.slice(start, end))),
+    )
     const parsed = filterStructuredNoteParts(splitNoteList(chunk))
     if (layer === "open") openNotes.push(...parsed)
     if (layer === "heart") heartNotes.push(...parsed)
@@ -921,6 +1301,8 @@ function extractInlineLayeredNotes(text: string): {
  * still bleeds PDP tail into note lists (each is tested with `.match()` — no `/g` flag).
  */
 const FLAT_NOTE_PROSE_BOUNDARY_RES: RegExp[] = [
+  // Next layer label — flat extraction captured beyond a single section (collapsed pyramid)
+  /\s+(?:middle|mid|heart|center|centre|core|body|base|bottom|background|foundation|dry\s*down|drydown)(?:\s+notes?)?\s*:/i,
   // Shopify PDP specs after "Featured notes: …" (same paragraph when whitespace-collapsed)
   /\s+(?:Concentration|Volume)\s*:/i,
   // "Sweet " is gated below — it's also a real note prefix (Sweet Orange, Sweet Pea, Sweet Almond,
@@ -933,6 +1315,10 @@ const FLAT_NOTE_PROSE_BOUNDARY_RES: RegExp[] = [
   /\s+(?:Available in |Originally (?:a |the )?|Our oil perfume|NOTE:|Packaging:|How to use|Shipping:|Return [Pp]olicy|Subscribe(?:\s+now|\s+today)?|You may also|Customers also|Related products|Complete the look|Pairs well|Also available|More from|Write a review|Questions\?|Leave a review)\b/i,
   /\s+#{1,6}\s*(?:Ingredients|How to use|Shipping|Returns?|FAQ|Details|Directions|Warnings?|Disclaimer|Specifications|Size [Gg]uide|Care [Ii]nstructions)\b/i,
   /\s+(?:Ingredients|Cruelty[- ]free|Vegan |Dermatologist|Clinically tested|Prop(?:osition|\.)?\s*65|FDA disclaimer)\b/i,
+  // Common post-notes sections on indie Shopify PDP
+  /\s+(?:Vibe|How It Wears|How (?:It\s+)?Smells|Available Sizes?|Important Information|Important Shop Info|Final Sale|Sampling Size Policy|Fragrance Description(?!\s+:))\b/i,
+  // Note set followed immediately by marketing paragraph openers (whitespace-collapsed)
+  /\s+(?:Think\s+(?:crisp|fresh|warm|cool|dark|soft|juicy|lush)|Opens?\s+(?:with|on)|A\s+(?:crisp|juicy|dark|warm|rich|soft|bright|clean|bold|lush|fresh)\s+(?:and|,)|\bSparkling\b|\bThis\s+inspired\b)/i,
 ]
 
 const MIN_FLAT_CHUNK_BEFORE_TRUNCATE = 8
@@ -956,6 +1342,17 @@ const truncateFlatNotesChunk = (chunk: string): string => {
   }
   if (earliest < s.length) s = s.slice(0, earliest).trim()
   return s.replace(/,\s*$/, "").trim()
+}
+
+/**
+ * Count how many distinct layer labels (Top/Middle/Base and equivalents) are present in
+ * the collapsed source text. Used to detect whitespace-collapsed pyramids where the flat
+ * extractor would incorrectly short-circuit.
+ */
+const countInlineLayerLabels = (source: string): number => {
+  const re =
+    /\b(?:top(?:\s+notes?)?|open(?:ing)?(?:\s+notes?)?|head(?:\s+notes?)?|heart(?:\s+notes?)?|middle(?:\s+notes?)?|mid(?:\s+notes?)?|core(?:\s+notes?)?|body(?:\s+notes?)?|cent(?:er|re)(?:\s+notes?)?|base(?:\s+notes?)?|bottom(?:\s+notes?)?|background(?:\s+notes?)?|foundation(?:\s+notes?)?|dry\s*down(?:\s+notes?)?|drydown(?:\s+notes?)?|notes?\s+de\s+(?:tête|tete|cœur|coeur|fond)|note\s+di\s+(?:testa|cuore|fondo|olfattive)|notas\s+de\s+(?:salida|coraz[oó]n|corazon|fondo)|kopfnoten?|herznoten?|basisnoten?|topnoten?|hartnoten?)\s*:/gi
+  return [...source.matchAll(re)].length
 }
 
 /** True when the match is immediately preceded by a layered label (top/heart/base …). */
@@ -1000,6 +1397,11 @@ const FLAT_NOTE_LIST_PATTERNS: RegExp[] = [
   /(?:^|[\s.!?\n*])\b(?:scent|fragrance|aroma)\s+blend\s+of\s+([^.!?\n*$]+)/gi,
   // "Dew and Honeysuckle...just what we imagine" (ellipsis then marketing; Wix / Seventh Muse)
   /\b([A-Z][^.!?\n*$]{2,85}?)\s*(?:\.{2,}|\u2026)\s*(?:just\b|here'?s|here\s+is|this\s+is|we\s+|you\s+'?ll|read\s+more)/gi,
+  // German / Dutch / Italian / Spanish labeled single-line lists (collapsed PDPs)
+  /(?:^|[\s.!?\n*])\b(?:kopfnoten?|herznoten?|basisnoten?|duftnoten)\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi,
+  /(?:^|[\s.!?\n*])\b(?:topnoten?|hartnoten?|basisnoten?)\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi,
+  /(?:^|[\s.!?\n*])\bnote\s+di\s+(?:testa|cuore|fondo|olfattive)\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi,
+  /(?:^|[\s.!?\n*])\bnotas\s+de\s+(?:salida|coraz[oó]n|fondo)\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi,
 ]
 
 /**
@@ -1030,13 +1432,22 @@ function extractFlatNotes(text: string): string[] {
   return uniqueNotes(found)
 }
 
-function extractNotesFromStructuredText(text: string): {
+function extractNotesFromStructuredText(
+  text: string,
+  minConfidentFlatNotes = 2,
+): {
   openNotes: string[]
   heartNotes: string[]
   baseNotes: string[]
 } {
   const empty = { openNotes: [] as string[], heartNotes: [] as string[], baseNotes: [] as string[] }
-  const collapsed = (text ?? "").replace(/\r/g, "\n").replace(/\s+/g, " ").trim()
+  // Strip emoji/pictograph characters before collapsing (e.g. 🌙 used as layer decorators in
+  // stored descriptions like "🌙Top notes: … 🌙Middle notes: …"). When the multiline text is
+  // collapsed to a single line, each emoji sits between the last note of one layer and the label
+  // of the next, contaminating the note chunk boundary — "Magnolia Petals 🌙" becomes a token
+  // that the LLM validator cannot cleanly identify.
+  const stripped = (text ?? "").replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, " ")
+  const collapsed = stripped.replace(/\r/g, "\n").replace(/\s+/g, " ").trim()
   const source = splitGluedLayerLabels(normalizeImplicitLayerColons(collapsed))
   if (!source) return empty
 
@@ -1046,12 +1457,20 @@ function extractNotesFromStructuredText(text: string): {
    * extraction finds enough items (matches merge skip threshold).
    */
   const authoritativeFlat = extractFlatNotes(source)
-  if (authoritativeFlat.length >= 5) {
+  const inlineLayerCount = countInlineLayerLabels(source)
+  if (authoritativeFlat.length >= minConfidentFlatNotes && inlineLayerCount < 2) {
     return { openNotes: uniqueNotes(authoritativeFlat), heartNotes: [], baseNotes: [] }
   }
 
   const inlineNotes = extractInlineLayeredNotes(source)
-  if (inlineNotes.openNotes.length || inlineNotes.heartNotes.length || inlineNotes.baseNotes.length) {
+  const inlineSeemsIncomplete =
+    /(?:herznoten?|note\s+di\s+cuore|notes?\s+de\s+(?:cœur|coeur)|hartnoten?)\s*:/i.test(source) &&
+    inlineNotes.heartNotes.length === 0 &&
+    (inlineNotes.openNotes.length > 0 || inlineNotes.baseNotes.length > 0)
+  if (
+    !inlineSeemsIncomplete &&
+    (inlineNotes.openNotes.length || inlineNotes.heartNotes.length || inlineNotes.baseNotes.length)
+  ) {
     return inlineNotes
   }
 
@@ -1095,6 +1514,36 @@ function extractNotesFromStructuredText(text: string): {
     const baseFr = normalized.match(/^notes?\s+de\s+fond\s*[:\-]\s*(.+)$/iu)
     if (baseFr) {
       baseNotes.push(...filterStructuredNoteParts(splitNoteList(truncateAtShopMetaLabels(baseFr[1]))))
+      continue
+    }
+    const openDe = normalized.match(/^kopfnoten?\s*[:\-]\s*(.+)$/i)
+    if (openDe) {
+      openNotes.push(...filterStructuredNoteParts(splitNoteList(truncateAtShopMetaLabels(openDe[1]))))
+      continue
+    }
+    const heartDe = normalized.match(/^herznoten?\s*[:\-]\s*(.+)$/i)
+    if (heartDe) {
+      heartNotes.push(...filterStructuredNoteParts(splitNoteList(truncateAtShopMetaLabels(heartDe[1]))))
+      continue
+    }
+    const baseDe = normalized.match(/^basisnoten?\s*[:\-]\s*(.+)$/i)
+    if (baseDe) {
+      baseNotes.push(...filterStructuredNoteParts(splitNoteList(truncateAtShopMetaLabels(baseDe[1]))))
+      continue
+    }
+    const openIt = normalized.match(/^note\s+di\s+testa\s*[:\-]\s*(.+)$/iu)
+    if (openIt) {
+      openNotes.push(...filterStructuredNoteParts(splitNoteList(truncateAtShopMetaLabels(openIt[1]))))
+      continue
+    }
+    const heartIt = normalized.match(/^note\s+di\s+cuore\s*[:\-]\s*(.+)$/iu)
+    if (heartIt) {
+      heartNotes.push(...filterStructuredNoteParts(splitNoteList(truncateAtShopMetaLabels(heartIt[1]))))
+      continue
+    }
+    const baseIt = normalized.match(/^note\s+di\s+fondo\s*[:\-]\s*(.+)$/iu)
+    if (baseIt) {
+      baseNotes.push(...filterStructuredNoteParts(splitNoteList(truncateAtShopMetaLabels(baseIt[1]))))
       continue
     }
   }
@@ -1164,15 +1613,25 @@ Rules (when not using a single authoritative list):
 - Extract every fragrance note mentioned in the narrative — include every scent ingredient (e.g. vanilla, rose, black pepper, sandalwood, bergamot, jasmine, musk, amber, oud).
 - Notes must be lowercase and in ENGLISH. Translate any non-English note names: "santal" → "sandalwood", "musc" / "musc blanc" → "white musk", "vanille" → "vanilla", "ambre" → "amber", "bois" → "wood", "rose" → "rose", "fleur" → "flower", "tabac" → "tobacco", "encens" → "incense".
 - Remove duplicates within each array.
-- Adjectives that describe a note (e.g. "warm vanilla", "fresh bergamot") → keep the note as a phrase (warm vanilla, fresh bergamot).
+- Adjectives that describe a note → keep as phrase ONLY when the core ingredient is a real scent material. "warm vanilla" ✓  "warm sandalwood" ✓  "glowing amber warmth" ✗ (warmth is not a material).
 - Omit pure marketing fluff that is not a note (e.g. "luscious", "irresistible", "seductive", "sensual", "confidence", "courage", "healing", "balance", "vitality" as standalone words).
 - NEVER include crystals, gemstones, or minerals as notes (e.g. quartz, amethyst, herkimer diamond, topaz, tourmaline, moonstone, labradorite, gem magic, citrine, obsidian, selenite). These are not fragrance notes.
 - NEVER include carrier oils or base ingredients as notes (e.g. sunflower oil, jojoba oil, shea butter, coconut oil, sweet almond oil, argan oil). These are not fragrance notes.
 - NEVER treat storefront section headers or specs as notes (e.g. "Extra Info Below if You're Curious", "power source accord", battery/USB copy). These are not fragrance notes.
 - NEVER treat solvent/carrier marketing as notes (e.g. "vegan augeo", "made from renewable resources", "colourless", "odourless", "is vegan", "room sprays", "what does X smell like" SEO lines). These are not fragrance pyramid materials.
 - NEVER treat people, roles, or quote fluff as notes (e.g. founder, iconic, transmission, "continues the narrative", attributions like perfumer names).
+- NEVER output scent-profile genre tokens as standalone notes (e.g. musky, woody, fruity, powdery, feminine, citrus, floral, gourmand, aquatic as single-word entries — "fresh bergamot" as a phrase is fine). EXCEPTION: qualified multi-word forms that name a specific ingredient class ARE valid: "white flowers" ✓, "white florals" ✓, "white musk" ✓, "green tea" ✓, "black tea" ✓, "red fruits" ✓, "citrus fruits" ✓. Only bare unqualified single-word genre labels are banned.
+- NEVER output e-commerce or policy language as notes (e.g. cancellations, materials, labor, processing, changes, exclude weekends, all sales are final, order includes, refunds).
+- NEVER output experience-fragment or marketing sentence tails as notes (e.g. "juicy opening", "a creamy candy-like heart", "giving it a smooth", "ginger that feels vibrant", "that feels cozy").
+- NEVER start a note with an article: "a sweet" ✗  "an opening" ✗  "the base" ✗.
+- NEVER include sensory experience words that are not materials: warmth, sweetness, feel, texture, character, presence, opening, scent, airy, glowing, softly, effortlessly, modern, adding — these describe experiences, not ingredients.
 - If the product is clearly NOT a fragrance (e.g. jewelry, necklace, candle, body scrub, hair product, supplement), return all empty arrays: {"openNotes":[],"heartNotes":[],"baseNotes":[]}.
-- Return only the JSON object — no explanation, no markdown fences.`
+
+SELF-CHECK before returning: for each note in your arrays ask "Is this a named scent material — a botanical, natural extract, synthetic aroma molecule, or established accord name?" If no, remove it.
+  ✗ Remove: "a sweet", "glowing amber warmth", "effortlessly pretty", "romantic feel", "the center turns resinous", "airy aquatic notes", "modern opening", "warm sweetness", "skin scents", "adding softness", "woody through the heart", "soft swirls of vanilla", "moonlit character"
+  ✓ Keep: "vanilla", "warm sandalwood", "bergamot", "orris butter", "tonka bean", "smoked leather", "peru balsam", "tahitian vanilla", "black currant", "marshmallow fluff", "whipped cream", "orris butter", "praline", "granny smith apple", "pitahaya", "soft musk", "powdery woods", "vanilla cream"
+
+Return only the JSON object — no explanation, no markdown fences.`
 
 const NAME_ONLY_PROMPT = `You are a master perfumer extracting fragrance notes from a product name.
 
@@ -1198,6 +1657,16 @@ Return ONLY a JSON object: {"openNotes": string[], "heartNotes": string[], "base
 Use lowercase. No duplicates. No explanation, no markdown.
 Always provide at least 1-3 notes even when guessing.`
 
+const NAME_ONLY_PROMPT_STRICT = `You extract fragrance notes from a product name ONLY when the name contains literal scent materials or recognizable fragrance names.
+
+Return ONLY a JSON object: {"openNotes": string[], "heartNotes": string[], "baseNotes": string[]}.
+
+Rules:
+- Include only materials or fragrance names explicitly present in the product name (e.g. "Lavender & Vanilla" → lavender in openNotes, vanilla in baseNotes by volatility is optional — use one layer or split sensibly).
+- Do NOT invent thematic, mythological, mood-based, or "witchy/gourmand palette" notes from abstract titles.
+- If the name has no identifiable scent ingredients, return {"openNotes":[],"heartNotes":[],"baseNotes":[]}.
+- Lowercase only. No duplicates. No markdown or explanation.`
+
 /** Used when description + name fallback still yield no notes: infer from name and/or known perfume databases. */
 const FALLBACK_LOOKUP_SYSTEM_PROMPT = `You are a fragrance encyclopedia. This perfume returned NO notes from its listing. You MUST return notes — empty arrays are NOT acceptable.
 
@@ -1217,7 +1686,8 @@ Rules:
 - NEVER return all empty arrays. Always provide AT LEAST 3 notes total, distributed across at least two of the three layers. Prefer 4-6 notes total for evocative/abstract names. Cap the total at 6 notes — do not pad with generic filler.
 - For recognized fragrances (e.g. Lush Lord of Misrule, Karma, Rose Jam), use the fragrance's documented top/heart/base notes — do not return only a single generic note like "musk".
 - Use lowercase. No duplicates. No explanation, no markdown.
-- Assign by volatility: citrus, herbs, green, light florals → openNotes; florals, spices, fruits → heartNotes; woods, musk, vanilla, amber, oud, resins → baseNotes.`
+- Assign by volatility: citrus, herbs, green, light florals → openNotes; florals, spices, fruits → heartNotes; woods, musk, vanilla, amber, oud, resins → baseNotes.
+- NEVER output e-commerce or policy words, scent-profile single-word genre tokens, or experience fragments as notes (same exclusions as the main extractor: cancellations, materials, labor, musky/woody/feminine as standalone tokens, "juicy opening", etc.).`
 
 /** Keys the LLM might use for each layer; we normalize to openNotes, heartNotes, baseNotes. */
 const OPEN_KEYS = ["openNotes", "open", "opening", "openingNotes", "topNotes", "top", "headNotes", "head"]
@@ -1345,7 +1815,7 @@ const mergeStructuredNotesWithLlm = async (
   const universe = buildLowercaseNoteUniverse(structured, fullText)
   const user = `Product: "${productName.slice(0, 200)}"
 
-Structured notes already found (you must keep all of these; add more if the text mentions others):
+Structured notes already found (keep every one; re-layer across open/heart/base only — do NOT add new note names that are not already in the structured arrays or in an explicit labeled note line in the full text):
 openNotes: ${JSON.stringify(structured.openNotes)}
 heartNotes: ${JSON.stringify(structured.heartNotes)}
 baseNotes: ${JSON.stringify(structured.baseNotes)}
@@ -1357,7 +1827,7 @@ Full product text:
       { role: "system", content: MERGE_STRUCTURED_SUPPLEMENT_PROMPT },
       { role: "user", content: user },
     ])
-    const merged = parseNotesFromLlmResponse(response.content)
+    const merged = parseNotesFromLlmResponse(getLlmInvocationText(response))
     const mergedSanitized = filterLayersToUniverse(merged, universe)
     const before = noteLayerCount(structured)
     const after = noteLayerCount(mergedSanitized)
@@ -1376,34 +1846,37 @@ Full product text:
 async function extractNotesFromDescription(
   llm: ChatOpenAI,
   description: string,
-  productNameFallback?: string,
-): Promise<{ openNotes: string[]; heartNotes: string[]; baseNotes: string[] }> {
-  const empty = { openNotes: [], heartNotes: [], baseNotes: [] }
+  productNameFallback: string | undefined,
+  inferenceMode: NoteInferenceMode = "standard",
+): Promise<{
+  layers: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] }
+  extractionPath: "description" | "name_only" | "none"
+}> {
+  const empty = { openNotes: [] as string[], heartNotes: [] as string[], baseNotes: [] as string[] }
   const descTrimmed = description?.trim() ?? ""
   const nameTrimmed = productNameFallback?.trim() ?? ""
 
-  if (!descTrimmed && !nameTrimmed) return empty
+  if (!descTrimmed && !nameTrimmed) return { layers: empty, extractionPath: "none" }
 
   // ── Path A: We have a description ────────────────────────────────────────
   if (descTrimmed) {
-    // Always include product name as context alongside the description
     const userContent = nameTrimmed
       ? `Product name: "${nameTrimmed.slice(0, 200)}"\n\nProduct description:\n"${descTrimmed.slice(0, 3500)}"`
       : `Product description:\n"${descTrimmed.slice(0, 3500)}"`
 
-    // Attempt 1: standard extraction
     try {
       const response = await llm.invoke([
         { role: "system", content: NOTE_SYSTEM_PROMPT },
         { role: "user", content: userContent },
       ])
-      const notes = parseNotesFromLlmResponse(response.content)
-      if (notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length > 0) return notes
+      const notes = parseNotesFromLlmResponse(getLlmInvocationText(response))
+      if (notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length > 0) {
+        return { layers: notes, extractionPath: "description" }
+      }
     } catch {
       // fall through to retry
     }
 
-    // Attempt 2: aggressive retry — also instructs it to check the product name
     try {
       const retryResponse = await llm.invoke([
         {
@@ -1414,9 +1887,9 @@ async function extractNotesFromDescription(
         },
         { role: "user", content: userContent },
       ])
-      const retryNotes = parseNotesFromLlmResponse(retryResponse.content)
+      const retryNotes = parseNotesFromLlmResponse(getLlmInvocationText(retryResponse))
       if (retryNotes.openNotes.length + retryNotes.heartNotes.length + retryNotes.baseNotes.length > 0) {
-        return retryNotes
+        return { layers: retryNotes, extractionPath: "description" }
       }
     } catch {
       // fall through to name-only
@@ -1425,18 +1898,22 @@ async function extractNotesFromDescription(
 
   // ── Path B: No description (or description extraction failed) — extract from name ──
   if (nameTrimmed) {
+    const namePrompt = inferenceMode === "strict" ? NAME_ONLY_PROMPT_STRICT : NAME_ONLY_PROMPT
     try {
       const response = await llm.invoke([
-        { role: "system", content: NAME_ONLY_PROMPT },
+        { role: "system", content: namePrompt },
         { role: "user", content: `Product name: "${nameTrimmed.slice(0, 200)}"` },
       ])
-      return parseNotesFromLlmResponse(response.content)
+      return {
+        layers: parseNotesFromLlmResponse(getLlmInvocationText(response)),
+        extractionPath: "name_only",
+      }
     } catch {
-      return empty
+      return { layers: empty, extractionPath: "none" }
     }
   }
 
-  return empty
+  return { layers: empty, extractionPath: "none" }
 }
 
 /**
@@ -1460,7 +1937,7 @@ async function extractNotesFallbackLookup(
         content: `Perfume name: "${name}"${houseCtx}\n\nReturn a JSON object with openNotes, heartNotes, baseNotes. Use the name, the house, and your knowledge (Fragrantica, Basenotes, indie perfume communities) to list as many notes as possible. Do NOT return empty arrays.`,
       },
     ])
-    return parseNotesFromLlmResponse(response.content)
+    return parseNotesFromLlmResponse(getLlmInvocationText(response))
   } catch {
     return empty
   }
@@ -1482,16 +1959,30 @@ const isJunkScrapedDescription = (text: string | null | undefined): boolean => {
   if (/shea\s+butter\s*&\s*aloe\s+lotion/i.test(lower) && /\$\s*\d/.test(t)) return true
   if (/spray\s+mists\s*\$/i.test(lower)) return true
   if (/#comp-[a-z0-9]{4,}/i.test(t) && (/\{\s*fill\s*:/i.test(t) || /\[data-color\s*=/i.test(lower))) return true
+  if (/^\s*\/\*/.test(t) && /\b(max-width|margin\s*:\s*0\s+auto|\.am-wrapper|linear-gradient)\b/i.test(lower)) {
+    return true
+  }
   return false
 }
+
+const NOIR_OPENING_VARIATIONS = [
+  "Open with a specific place (curb at 2am, service entrance, last booth, fire stairs).",
+  "Open with an action or gesture (striking a match, checking a watch, snapping gloves shut, collar up).",
+  "Open with light or weather (neon bleed in rain, fog halogen, wet asphalt glare).",
+  "Open by treating one note from the list as a tangible object in the scene (not 'notes of …').",
+  "Open with time or stakes (closing time, wrong room, last train, someone following).",
+  "Open with contrast (polished vs tarnished, clean smoke vs dirty wool, heat vs cold metal).",
+] as const
 
 const NOIR_DESCRIPTION_SYSTEM = `You write short, evocative perfume descriptions for a film noir themed fragrance site. Style: sexy, mysterious, shadowy, seductive. Channel 1940s noir: smoke, rain-slick streets, trench coats, dim bars, dangerous allure.
 
 Rules:
 - Write 2–3 sentences only. No bullet lists.
 - Weave in the actual fragrance notes naturally; do not list them.
-- UNIQUE OPENING: Every description must start in a different way. Never use the same or similar opening phrase as another product (e.g. avoid repeating "A shadowy...", "This scent...", "An intoxicating...", "Smoky..."). Vary rhythm, first word, and angle (e.g. start with a place, a gesture, a moment, a contrast, or the notes in an unexpected way).
-- Each description must feel unique — avoid repeating the same phrases across products.
+- UNIQUE OPENING: Every description must start differently. NEVER begin with "A whisper of", "A cascade of", "A sun-drenched", "A warm", "A veil of", "A silken", "Somewhere", "Tonight", "In the heart", "Beneath the", or any opener starting with "A " plus an adjective. Prefer a strong noun, verb, place, or time clause as the first word.
+- NEVER repeat phrases across products in the same batch: "dances in the air", "mingles with", "lingers in the air", "envelops the senses", "weaves a", "unfurls like", "sun-kissed", "sun-drenched", "silken", "velvet", "tapestry", "cherished secret", "starlit sky".
+- Prefer concrete, odd noir specifics over stock luxury metaphor.
+- Grammar: every sentence must be complete — never leave empty subjects or objects (e.g. reject "scent of mingles", "as unfurls", "bouquet of unfurls"). If a note name is awkward in prose, rephrase the whole sentence.
 - Tone: alluring, enigmatic, slightly dangerous. No cute or cheerful language.
 - Return ONLY the description text — no labels, no "Description:", no quotes.`
 
@@ -1508,6 +1999,8 @@ async function generateNoirDescription(
   notes: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] },
   originalDescriptionSnippet: string,
   previousOpenings: string[] = [],
+  batchIndex = 0,
+  batchTotal = 0,
 ): Promise<string> {
   const allNotes = [
     ...notes.openNotes,
@@ -1515,13 +2008,19 @@ async function generateNoirDescription(
     ...notes.baseNotes,
   ].filter(Boolean)
   const notesText = allNotes.length ? allNotes.join(", ") : "unknown"
+  const recent = previousOpenings.slice(-18)
   const avoidBlock =
-    previousOpenings.length > 0
-      ? `\nCRITICAL — Do NOT start your description with a phrase similar to these (already used by other products in this batch):\n${previousOpenings.map(o => `- "${o}"`).join("\n")}\nStart with a completely different angle, image, or first word.`
+    recent.length > 0
+      ? `\nCRITICAL — Do NOT start your description with a phrase similar to these (already used by other products in this batch):\n${recent.map(o => `- "${o}"`).join("\n")}\nStart with a completely different angle, image, or first word.`
       : ""
+  const variation = NOIR_OPENING_VARIATIONS[batchIndex % NOIR_OPENING_VARIATIONS.length]
+  const pos = batchIndex + 1
+  const totalStr = batchTotal > 0 ? String(batchTotal) : "?"
   const userContent = `Product: "${productName}"
 Fragrance notes: ${notesText}
-Original description (use only for mood/context; do not copy): ${originalDescriptionSnippet.slice(0, 800)}${avoidBlock}
+Original description (use only for mood/context; do not copy): ${originalDescriptionSnippet.slice(0, 800)}
+Batch position: ${pos} of ${totalStr} — this row must feel distinct from every other.
+Composition hint for THIS product only (obey it; each row in the batch gets a different hint): ${variation}${avoidBlock}
 
 Write a unique, film noir styled description for this perfume (2–3 sentences).`
 
@@ -1530,8 +2029,8 @@ Write a unique, film noir styled description for this perfume (2–3 sentences).
       { role: "system", content: NOIR_DESCRIPTION_SYSTEM },
       { role: "user", content: userContent },
     ])
-    const text = typeof response.content === "string" ? response.content : ""
-    return text.trim().slice(0, 1200) || originalDescriptionSnippet.slice(0, 500)
+    const text = sanitizeCopyForNotePipeline(getLlmInvocationText(response).trim())
+    return text.slice(0, 1200) || originalDescriptionSnippet.slice(0, 500)
   } catch {
     return originalDescriptionSnippet.slice(0, 500)
   }
@@ -1544,10 +2043,47 @@ Write a unique, film noir styled description for this perfume (2–3 sentences).
 // ASCII-only check is insufficient for French (musc, santal, vanille are all ASCII).
 // We also flag known non-English perfumery words explicitly.
 const KNOWN_NON_ENGLISH_NOTE_WORDS = new Set([
-  "musc", "vanille", "ambre", "bois", "encens", "tabac", "cèdre", "cedre",
-  "santal", "feve", "fève", "oud", "fleur", "violette",
-  "trandafir", "mosc", "vanilie", "lemn", "iasomie", "ambra",
-  "rosa", "ámbar", "sándalo", "madera", "almizle",
+  "musc",
+  "vanille",
+  "ambre",
+  "bois",
+  "encens",
+  "tabac",
+  "cèdre",
+  "cedre",
+  "santal",
+  "feve",
+  "fève",
+  "oud",
+  "fleur",
+  "violette",
+  "trandafir",
+  "mosc",
+  "vanilie",
+  "iasomie",
+  "ambra",
+  "rosa",
+  "ámbar",
+  "sándalo",
+  "madera",
+  "almizle",
+  // Italian
+  "muschio",
+  "gelsomino",
+  "sandalo",
+  "legno",
+  "cedro",
+  // German (lowercase tokens)
+  "moschus",
+  "sandelholz",
+  // Dutch
+  "roos",
+  "muskus",
+  "sandelhout",
+  // Portuguese
+  "ambar",
+  "almiscar",
+  "almíscar",
 ])
 
 function allNotesEnglish(notes: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] }): boolean {
@@ -1566,8 +2102,8 @@ async function translateNotesToEnglish(
   llm: ChatOpenAI,
   notes: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] },
 ): Promise<{ openNotes: string[]; heartNotes: string[]; baseNotes: string[] }> {
-  const all = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
-  if (all.length === 0 || allNotesEnglish(notes)) return notes
+  const mapped = canonicalizeNoteLayers(notes)
+  if (allNotesEnglish(mapped)) return mapped
   try {
     const response = await llm.invoke([
       {
@@ -1576,15 +2112,128 @@ async function translateNotesToEnglish(
       },
       {
         role: "user",
-        content: JSON.stringify({ openNotes: notes.openNotes, heartNotes: notes.heartNotes, baseNotes: notes.baseNotes }),
+        content: JSON.stringify({
+          openNotes: mapped.openNotes,
+          heartNotes: mapped.heartNotes,
+          baseNotes: mapped.baseNotes,
+        }),
       },
     ])
-    const translated = parseNotesFromLlmResponse(response.content)
+    const translated = parseNotesFromLlmResponse(getLlmInvocationText(response))
     const total = translated.openNotes.length + translated.heartNotes.length + translated.baseNotes.length
-    return total > 0 ? translated : notes
+    return total > 0 ? translated : mapped
   } catch {
-    return notes
+    return mapped
   }
+}
+
+// ---------------------------------------------------------------------------
+// Bulk LLM note validator (runs once per scrape over the union of unique notes)
+// ---------------------------------------------------------------------------
+
+const NOTE_VALIDATOR_SYSTEM_PROMPT = `You are a perfumery expert. For each input string, decide whether it names a real fragrance material and, if needed, normalise it to just the material — stripping pure-prose adjectives that are NOT olfactory descriptors.
+
+OLFACTORY descriptors that MUST be kept with the material (they describe how it smells / its texture or origin):
+  creamy, milky, buttery, smoky, smoked, fresh, dry, warm, cool, sweet, dark, deep, bright, green, woody, resinous, powdery, ambered, salted, candied, toasted, roasted, burnt, raw, aged, vintage, wild, fermented, balsamic, golden (when origin/material like "golden amber"), tahitian, madagascar, bourbon, bulgarian, sicilian, indian, javanese, white, black, pink, red, blue, granny, soft (only with musk/leather/woods), whipped (only with cream/milk), powdery (only with woods/iris/musk).
+  Examples: "creamy vanilla" → "creamy vanilla" ✓, "warm sandalwood" → "warm sandalwood" ✓, "smoked vanilla" → "smoked vanilla" ✓, "tahitian vanilla" → "tahitian vanilla" ✓, "black currant" → "black currant" ✓, "granny smith apple" → "granny smith apple" ✓, "whipped cream" → "whipped cream" ✓, "soft musk" → "soft musk" ✓, "powdery woods" → "powdery woods" ✓, "vanilla cream" → "vanilla cream" ✓.
+
+VALID notes that are NOT single common materials — keep these exactly as-is (DO NOT drop them as "generic"):
+  marshmallow fluff, vanilla cream, orris butter, whipped cream, soft musk, powdery woods, granny smith apple, pitahaya, praline, orris root, iris butter, cashmere wood, cashmere woods, benzoin resinoid, ambrette seed, ambroxan, hedione, iso e super, javanol, clearwood, galaxolide, habanolide, musks (accord), cashmeran, solar musk, skin musk, solar wood, tonka absolute, skin accord.
+
+PROSE adjectives that MUST be stripped, leaving only the material:
+  delicate, sunlit, moonlit, glowing, romantic, dreamy, silken, velvety, intoxicating, mysterious, dangerous, alluring, seductive, sultry, airy, juicy, tropical (as adjective), modern, effortless, refined, ethereal, fluffy, sugary, cloudlike, glossy, lush, vibrant, opulent, decadent, sensuous, sensual, magnetic, luminous, gleaming, shimmering, whispered, hidden, secret, ripe, fluffy, plush, expensive, comforting, addictive, sparkling (as adjective), bright (only alone), crisp (only alone).
+  Examples: "delicate apple blossom" → "apple blossom"; "soft violet" → "violet"; "sugary marshmallow clouds" → "marshmallow"; "glossy strawberry glaze" → "strawberry"; "ripe blackcurrant" → "blackcurrant"; "lush jasmine" → "jasmine"; "fluffy marshmallow" → "marshmallow"; "crisp green apple" → "green apple"; "sparkling bergamot" → "bergamot".
+
+DROP (do not include in output at all) when the string has no material at its core:
+- Article-prefixed prose with no material: "a sweet", "the night", "the center turns resinous".
+- Sensory experience words alone: "warmth", "sweetness", "feel", "texture", "character", "scents", "presence", "opening", "finish".
+- Vague descriptors alone: "tropical", "fruity", "fresh", "modern", "airy", "glowing", "softly", "effortlessly", "delicate", "warmer", "smoother", "playful", "upscale".
+- Generic substrate-only words: "wood", "florals", "flowers", "fruit", "spice", "musks" (alone, with no qualifier). But "sandalwood" ✓, "cashmere wood" ✓, "white musk" ✓, "white flowers" ✓, "white flower" ✓, "white florals" ✓, "red fruits" ✓, "citrus fruits" ✓, "wild flowers" ✓, "spring flowers" ✓, "tropical flowers" ✓, "fresh flowers" ✓. Any adjective + substrate combination that names a recognised perfumery accord is VALID.
+- Multi-word prose with no nameable material: "sunlit burst of melon" → DROP (it has "melon" but the wrapper is prose; ✗ keep only if the core material is unambiguous AND extractable, e.g. "sunlit burst of melon" → "melon" is OK to extract; use judgment). When in doubt, extract just the material.
+- Concatenated/mangled text: "moonlit characterwarm", "crme brle custard" (the latter is mangled "crème brûlée custard" — accept if you can canonicalise to "crème brûlée").
+- Phrases describing how the scent acts: "musk make it smooth", "adding softness", "warmer finish with vanilla", "a heart of coffee" → DROP (or extract bare "vanilla"/"coffee" if it is the only material).
+- E-commerce / policy / non-material content.
+
+Return ONLY a JSON object in this exact shape (no markdown, no commentary):
+{
+  "valid": [
+    { "in": "<original input string, lowercase>", "out": "<cleaned material name, lowercase>" }
+  ]
+}
+
+Rules for the response:
+- Only include entries whose \`out\` is a real material (or material with kept olfactory descriptor).
+- \`in\` must EXACTLY match an input string (lowercased). Never invent inputs.
+- \`out\` is the cleaned material name. Often \`out === in\` (no change needed). When stripping prose adjectives, \`out\` is shorter.
+- Omit any input that has no extractable material at all.
+- Lowercase only. No duplicates by \`in\`.`
+
+/**
+ * Classify and clean every candidate note with one bulk LLM call. Returns a substitution Map
+ * from lowercased original note to lowercased cleaned material name. Notes not present in the
+ * map should be DROPPED.
+ *
+ * Fail-open: any error or unparseable response returns an identity map (every input → itself)
+ * so the scrape never loses notes due to a validator outage.
+ *
+ * Cost: a single chat-completion per scrape regardless of batch size.
+ */
+const validateNotesWithLlm = async (
+  llm: ChatOpenAI,
+  candidates: string[],
+): Promise<Map<string, string>> => {
+  const lowered = Array.from(
+    new Set(candidates.map(n => n.trim().toLowerCase()).filter(Boolean)),
+  )
+  const identityMap = (): Map<string, string> => new Map(lowered.map(n => [n, n]))
+  if (lowered.length === 0) return identityMap()
+
+  try {
+    const response = await llm.invoke([
+      { role: "system", content: NOTE_VALIDATOR_SYSTEM_PROMPT },
+      { role: "user", content: JSON.stringify({ candidates: lowered }) },
+    ])
+    const text = getLlmInvocationText(response)
+    const cleaned = text.replace(/^```[a-z]*\n?/i, "").replace(/```$/, "").trim()
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) return identityMap()
+
+    const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>
+    const rawValid = Array.isArray(parsed.valid) ? parsed.valid : []
+    const substitutions = new Map<string, string>()
+    const inputSet = new Set(lowered)
+    for (const entry of rawValid) {
+      if (!entry || typeof entry !== "object") continue
+      const e = entry as Record<string, unknown>
+      const inLc = typeof e.in === "string" ? e.in.trim().toLowerCase() : ""
+      const outLc = typeof e.out === "string" ? e.out.trim().toLowerCase() : ""
+      if (!inLc || !outLc) continue
+      if (!inputSet.has(inLc)) continue
+      substitutions.set(inLc, outLc)
+    }
+    /**
+     * Sanity floor: if the model returned a substitution map covering less than 10% of inputs,
+     * assume the call went off the rails (format slip, truncation) and fail open. Real fragrance
+     * batches reliably have most notes pass; <10% coverage is a smell, not a real rejection rate.
+     */
+    if (substitutions.size === 0 || substitutions.size < Math.floor(lowered.length * 0.1)) {
+      return identityMap()
+    }
+    return substitutions
+  } catch {
+    return identityMap()
+  }
+}
+
+const resolveNoteValidationMode = (
+  opts: ScraperPipelineOptions,
+): NoteValidationMode => {
+  if (opts.noteValidationMode === "off" || opts.noteValidationMode === "llm") {
+    return opts.noteValidationMode
+  }
+  const envMode = (process.env.NOTES_PIPELINE_VALIDATION ?? "").trim().toLowerCase()
+  if (envMode === "off") return "off"
+  return "llm"
 }
 
 // ---------------------------------------------------------------------------
@@ -1663,6 +2312,10 @@ const preferAuthoritativeFlatNoteList = (notes: NotesLayers, flatAuth: string[])
   const missingFromCurrent = flatLc.filter(f => !currentLc.has(f))
 
   if (missingFromCurrent.length <= 2 && overlap / flatAuth.length >= 0.85) {
+    // Don't downgrade a richer layered result to a smaller flat list — the flat extractor
+    // may only have captured a subset of a pyramid (e.g. the first layer before layer-label
+    // colons caused junk filtering). Only override when the flat list is at least as large.
+    if (flatAuth.length < current.length) return notes
     return {
       openNotes: uniqueNotes(flatAuth),
       heartNotes: [],
@@ -1671,6 +2324,34 @@ const preferAuthoritativeFlatNoteList = (notes: NotesLayers, flatAuth: string[])
   }
 
   return notes
+}
+
+/** Exported for tests — detects when many products share the same 3+ note set (possible LLM drift). */
+export const computeBatchNoteUniformityWarnings = (
+  layersList: Array<{ openNotes: string[]; heartNotes: string[]; baseNotes: string[] }>,
+): string[] => {
+  const n = layersList.length
+  if (n < 3) return []
+  const warnings: string[] = []
+  const counts = new Map<string, number>()
+  for (const notes of layersList) {
+    const all = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
+      .map(s => s.trim().toLowerCase())
+      .filter(Boolean)
+      .sort()
+    if (all.length < 3) continue
+    const key = all.join("|")
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+  for (const [key, cnt] of counts) {
+    if (cnt / n >= 0.3) {
+      const labels = key.split("|")
+      warnings.push(
+        `Warning: ${cnt}/${n} products share the same notes [${labels.join(", ")}] — possible LLM drift; consider strict mode or a stronger model.`,
+      )
+    }
+  }
+  return warnings
 }
 
 type Phase1Ok = {
@@ -1703,6 +2384,12 @@ const processSingleProductPhase1 = async (
     `Notes pipeline ${index + 1}/${totalItems}: ${(name || resolvedName || "product").slice(0, 72)}`,
   )
   let mergedBase = resolveNotesSource(item)
+  /**
+   * Strip merchant policy/shipping/disclaimer boilerplate from the notes source BEFORE extraction.
+   * Otherwise LLM extraction sees "Processing: AT LEAST 7 business days... no changes, no cancellations..."
+   * and either gets confused or extracts shipping fragments as notes.
+   */
+  mergedBase = sanitizeCopyForNotePipeline(stripPolicyBoilerplate(mergedBase))
   if (
     opts.fetchPdpNoteBootstrap === true &&
     !hasExplicitNoteListSignal(mergedBase) &&
@@ -1727,10 +2414,26 @@ const processSingleProductPhase1 = async (
       }
     }
   }
+  const inferenceMode: NoteInferenceMode = opts.noteInferenceMode === "strict" ? "strict" : "standard"
+  const minFlat =
+    typeof opts.minConfidentFlatNotes === "number" &&
+    Number.isFinite(opts.minConfidentFlatNotes) &&
+    opts.minConfidentFlatNotes >= 1 &&
+    opts.minConfidentFlatNotes <= 50
+      ? Math.floor(opts.minConfidentFlatNotes)
+      : 2
+
   const notesSource = augmentNotesSourceWithLabeledLists(mergedBase)
   try {
     const flatAuthEarly = extractFlatNotes(notesSource)
-    let notes = extractNotesFromStructuredText(notesSource)
+    let notes = extractNotesFromStructuredText(notesSource, minFlat)
+
+    const initialStructuredNoteCount = noteLayerCount(notes)
+    let usedDescPathLlm = false
+    let usedNameOnlyPath = false
+    let usedFallbackLookup = false
+    let pdpRescueApplied = false
+
     const totalParsedDirectly = notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
 
     const layersWithParsedNotes = [
@@ -1738,21 +2441,22 @@ const processSingleProductPhase1 = async (
       notes.heartNotes.length > 0,
       notes.baseNotes.length > 0,
     ].filter(Boolean).length
-    const parsedNoteCount = noteLayerCount(notes)
     const flatListingOnly =
-      notes.openNotes.length >= 2 &&
+      notes.openNotes.length >= Math.max(2, minFlat) &&
       notes.heartNotes.length === 0 &&
       notes.baseNotes.length === 0
-    /** Strong labeled list (Featured/Key notes, etc.) — skip LLM merge that reinvents pyramid from prose. */
-    const hasStrongFlatAuthoritativeList = flatAuthEarly.length >= 5
+    const hasStrongFlatAuthoritativeList = flatAuthEarly.length >= minFlat
     const skipStructuredLlmMerge =
-      (layersWithParsedNotes === 3 && parsedNoteCount >= 5) ||
+      (layersWithParsedNotes === 3 && totalParsedDirectly >= 5) ||
       flatListingOnly ||
       hasStrongFlatAuthoritativeList
 
     if (totalParsedDirectly === 0 && notesSource?.trim()) {
       throwIfAborted(sig)
-      notes = await extractNotesFromDescription(llm, notesSource, name || resolvedName)
+      const extracted = await extractNotesFromDescription(llm, notesSource, name || resolvedName, inferenceMode)
+      notes = extracted.layers
+      if (extracted.extractionPath === "description") usedDescPathLlm = true
+      if (extracted.extractionPath === "name_only") usedNameOnlyPath = true
     } else if (
       totalParsedDirectly > 0 &&
       (notesSource?.length ?? 0) > 100 &&
@@ -1760,6 +2464,14 @@ const processSingleProductPhase1 = async (
       !skipStructuredLlmMerge
     ) {
       throwIfAborted(sig)
+      if (
+        notes.openNotes.length >= 4 &&
+        notes.heartNotes.length === 0 &&
+        notes.baseNotes.length === 0 &&
+        flatAuthEarly.length >= notes.openNotes.length
+      ) {
+        notes = assignVolatilityLayersFromFlatOpen(notes.openNotes)
+      }
       notes = await mergeStructuredNotesWithLlm(llm, notes, notesSource, name || resolvedName)
     }
 
@@ -1775,11 +2487,10 @@ const processSingleProductPhase1 = async (
      * "shadows") that the LLM occasionally leaks doesn't push the cliché-detection union past
      * its `<= 6` threshold and silently skip the rescue.
      */
-    const cleanNote = (n: string) => isScraperKeptNote(n)
     notes = {
-      openNotes: notes.openNotes.filter(cleanNote),
-      heartNotes: notes.heartNotes.filter(cleanNote),
-      baseNotes: notes.baseNotes.filter(cleanNote),
+      openNotes: notes.openNotes.filter(isScraperKeptNote),
+      heartNotes: notes.heartNotes.filter(isScraperKeptNote),
+      baseNotes: notes.baseNotes.filter(isScraperKeptNote),
     }
     notes = dedupeNotesAcrossLayers(notes)
 
@@ -1794,20 +2505,21 @@ const processSingleProductPhase1 = async (
       if (boot) {
         const rescueSource = augmentNotesSourceWithLabeledLists(`${boot}\n\n${mergedBase}`)
         const rescuedFlat = extractFlatNotes(rescueSource)
-        let rescued = extractNotesFromStructuredText(rescueSource)
+        let rescued = extractNotesFromStructuredText(rescueSource, minFlat)
         rescued = preferAuthoritativeFlatNoteList(rescued, rescuedFlat)
         rescued = {
-          openNotes: rescued.openNotes.filter(cleanNote),
-          heartNotes: rescued.heartNotes.filter(cleanNote),
-          baseNotes: rescued.baseNotes.filter(cleanNote),
+          openNotes: rescued.openNotes.filter(isScraperKeptNote),
+          heartNotes: rescued.heartNotes.filter(isScraperKeptNote),
+          baseNotes: rescued.baseNotes.filter(isScraperKeptNote),
         }
         rescued = dedupeNotesAcrossLayers(rescued)
         if (
-          rescuedFlat.length >= 6 ||
+          rescuedFlat.length >= Math.max(minFlat, 3) ||
           noteLayerCount(rescued) > noteLayerCount(notes) ||
           (!isLikelyNoirClicheOnlyNotes(rescued) && noteLayerCount(rescued) > 0)
         ) {
           notes = rescued
+          pdpRescueApplied = true
           opts.onProgress?.(
             `Notes pipeline ${index + 1}/${totalItems}: replaced thin/noir-cliché notes using PDP fetch for ${(name || resolvedName || "product").slice(0, 48)}`,
           )
@@ -1818,31 +2530,62 @@ const processSingleProductPhase1 = async (
     /**
      * Guaranteed name + theme inference — runs AFTER the junk filter so a regex extraction whose
      * candidates all fail isScraperKeptNote (e.g. layered list of single-letter placeholders, or
-     * noise that survived earlier stages) still ends up with real notes. Always-on so prose-only
-     * descriptions that yielded nothing get name/house/theme-inferred notes, and the scraper
-     * never imports a perfume with empty notes.
+     * noise that survived earlier stages) still ends up with real notes. Skipped in strict mode.
      */
     if (noteLayerCount(notes) === 0) {
       const fallbackName = name || resolvedName
-      if (fallbackName?.trim()) {
+      if (fallbackName?.trim() && inferenceMode !== "strict") {
         throwIfAborted(sig)
+        usedFallbackLookup = true
         const inferred = await extractNotesFallbackLookup(llm, fallbackName, item.perfumeHouse ?? houseName)
         notes = {
-          openNotes: inferred.openNotes.filter(cleanNote),
-          heartNotes: inferred.heartNotes.filter(cleanNote),
-          baseNotes: inferred.baseNotes.filter(cleanNote),
+          openNotes: inferred.openNotes.filter(isScraperKeptNote),
+          heartNotes: inferred.heartNotes.filter(isScraperKeptNote),
+          baseNotes: inferred.baseNotes.filter(isScraperKeptNote),
         }
         notes = dedupeNotesAcrossLayers(notes)
       }
     }
 
+    const resolveNoteSource = (): ScraperNoteSource => {
+      if (noteLayerCount(notes) === 0) return "empty"
+      if (usedFallbackLookup) return "llm_name_inferred"
+      if (pdpRescueApplied) return "pdp_bootstrap"
+      if (usedDescPathLlm) return "llm_description"
+      if (usedNameOnlyPath) return inferenceMode === "strict" ? "llm_name_literal" : "llm_name_inferred"
+      if (initialStructuredNoteCount > 0) return "labeled_list"
+      return "llm_description"
+    }
+
+    if (inferenceMode === "strict" && noteLayerCount(notes) === 0) {
+      opts.onProgress?.(
+        `Notes pipeline ${index + 1}/${totalItems}: strict mode — no merchant notes extracted for "${(name || resolvedName || "product").slice(0, 72)}"`,
+      )
+    }
+
+    const noteSource = resolveNoteSource()
+
     const allNoteStrs = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
-    const stripRaw = stripNotesFromDescription(item.description, allNoteStrs)
+    const sanitizedDescription = sanitizeCopyForNotePipeline(item.description ?? "")
+    const stripRaw = stripNotesFromDescription(sanitizedDescription, allNoteStrs)
 
     let descriptionForRecord: string
     if (stripRaw) descriptionForRecord = stripRaw.trim()
-    else descriptionForRecord = item.description ?? ""
+    else descriptionForRecord = sanitizedDescription
     if (isJunkScrapedDescription(descriptionForRecord)) descriptionForRecord = ""
+    /**
+     * Drop merchant policy/shipping/disclaimer trail from the stored description, and wipe entirely
+     * when the remaining narrative is too short (boilerplate-only PDPs like Andromedas' "Love Don't
+     * Be Shy" where the merchant copy is all ORIGINAL MANUFACTURERS PICTURES / ingredients lists /
+     * no-changes-no-refunds). With notes present, noir generation later replaces the empty string.
+     */
+    if (descriptionForRecord) {
+      if (isPolicyOnlyMerchantDescription(descriptionForRecord)) {
+        descriptionForRecord = ""
+      } else {
+        descriptionForRecord = stripMerchantDescriptionForStorage(descriptionForRecord)
+      }
+    }
 
     const record: PerfumeCsvRecord = {
       name,
@@ -1853,6 +2596,7 @@ const processSingleProductPhase1 = async (
       heartNotes: JSON.stringify(notes.heartNotes),
       baseNotes: JSON.stringify(notes.baseNotes),
       detailURL: item.detailURL,
+      _noteSource: noteSource,
     }
 
     return {
@@ -1935,6 +2679,96 @@ function buildGraph(
       concurrency,
     )
 
+    /**
+     * Bulk LLM validation across the union of every product's notes. One cheap call drops prose /
+     * sensory fragments the regex filter misses (e.g. "a sweet", "glowing amber warmth", "sunlit
+     * burst of melon"). Filtering happens BEFORE noir generation so noir descriptions reflect the
+     * validated note set.
+     */
+    const validationMode = resolveNoteValidationMode(opts)
+    if (validationMode === "llm") {
+      const okPhase1 = phase1.filter((p): p is Phase1Ok => p.ok)
+      const candidateUnion = new Set<string>()
+      for (const p of okPhase1) {
+        for (const n of p.notes.openNotes) candidateUnion.add(n.trim().toLowerCase())
+        for (const n of p.notes.heartNotes) candidateUnion.add(n.trim().toLowerCase())
+        for (const n of p.notes.baseNotes) candidateUnion.add(n.trim().toLowerCase())
+      }
+      candidateUnion.delete("")
+
+      if (candidateUnion.size > 0) {
+        throwIfAborted(sig)
+        opts.onProgress?.(
+          `Notes pipeline: validating ${candidateUnion.size} unique notes across ${okPhase1.length} products…`,
+        )
+        const substitutions = await validateNotesWithLlm(llm, Array.from(candidateUnion))
+
+        /**
+         * Apply substitutions per-layer with dedup. A note is kept iff it has a mapping in the
+         * substitution map; the mapped value (cleaned material name) replaces it. Layers are then
+         * dedup'd across each other via dedupeNotesAcrossLayers so substitutions that converge
+         * two phrases to the same material (e.g. "delicate apple blossom" + "apple blossom") do
+         * not produce duplicates.
+         */
+        const cleanLayer = (arr: string[]): string[] => {
+          const out: string[] = []
+          const seen = new Set<string>()
+          for (const n of arr) {
+            const lc = n.trim().toLowerCase()
+            const mapped = substitutions.get(lc)
+            if (mapped == null) continue
+            const final = mapped.trim().toLowerCase()
+            if (!final || seen.has(final)) continue
+            seen.add(final)
+            out.push(final)
+          }
+          return out
+        }
+
+        let droppedCount = 0
+        let rewrittenCount = 0
+        for (const p of okPhase1) {
+          const beforeCount = noteLayerCount(p.notes)
+          const beforeUnionLc = new Set(
+            [...p.notes.openNotes, ...p.notes.heartNotes, ...p.notes.baseNotes].map(s =>
+              s.trim().toLowerCase(),
+            ),
+          )
+          const intermediate = {
+            openNotes: cleanLayer(p.notes.openNotes),
+            heartNotes: cleanLayer(p.notes.heartNotes),
+            baseNotes: cleanLayer(p.notes.baseNotes),
+          }
+          const filtered = dedupeNotesAcrossLayers(intermediate)
+          const afterCount = noteLayerCount(filtered)
+          const afterUnionLc = new Set(
+            [...filtered.openNotes, ...filtered.heartNotes, ...filtered.baseNotes].map(s =>
+              s.trim().toLowerCase(),
+            ),
+          )
+          const sameSet =
+            afterUnionLc.size === beforeUnionLc.size &&
+            Array.from(afterUnionLc).every(n => beforeUnionLc.has(n))
+          if (sameSet) continue
+          droppedCount += Math.max(0, beforeCount - afterCount)
+          rewrittenCount += Array.from(afterUnionLc).filter(n => !beforeUnionLc.has(n)).length
+          p.notes = filtered
+          p.record = {
+            ...p.record,
+            openNotes: JSON.stringify(filtered.openNotes),
+            heartNotes: JSON.stringify(filtered.heartNotes),
+            baseNotes: JSON.stringify(filtered.baseNotes),
+            _noteSource: afterCount === 0 ? "empty" : p.record._noteSource,
+          }
+        }
+        if (droppedCount > 0 || rewrittenCount > 0) {
+          opts.onProgress?.(
+            `Notes pipeline: validator dropped ${droppedCount} non-material note(s) and rewrote ${rewrittenCount} prose-adjective phrase(s) across the batch.`,
+          )
+        }
+      }
+    }
+
     const results: PerfumeCsvRecord[] = []
     const previousOpenings: string[] = []
 
@@ -1966,6 +2800,8 @@ function buildGraph(
           p.notes,
           (p.record.description || "").trim(),
           previousOpenings,
+          idx,
+          totalItems,
         )
         previousOpenings.push(openingFingerprint(noirDesc))
         results.push({
@@ -1988,7 +2824,13 @@ function buildGraph(
       }
     }
 
-    return { results }
+    const okLayers = phase1.filter((p): p is Phase1Ok => p.ok).map(p => p.notes)
+    const batchWarnings = computeBatchNoteUniformityWarnings(okLayers)
+    for (const w of batchWarnings) {
+      opts.onProgress?.(w)
+    }
+
+    return { results, batchWarnings }
   }
 
   const graph = new StateGraph(ScraperState)
@@ -2008,9 +2850,9 @@ function buildGraph(
  *
  * @param items - Raw scraped products from run_scraper.py
  * @param houseName - Perfume house name to attach when item.perfumeHouse is absent
- * @param options - Optional title cleaning and film noir description generation
- * @param model - OpenAI model to use (default: gpt-4o-mini)
- * @returns Array of PerfumeCsvRecord ready for CSV serialisation or direct DB import
+ * @param options - Optional title cleaning, film noir generation, inference mode, models (see types)
+ * @param legacyExtractionModel - Deprecated; use `options.notesPipelineModel` or env `OPENAI_NOTES_PIPELINE_MODEL`
+ * @returns Extracted CSV records plus optional batch-level warnings (e.g. uniform LLM drift)
  *
  * Phase 1 (extract/merge/translate) uses limited parallelism (NOTES_PIPELINE_CONCURRENCY, default 3).
  * Film noir (Phase 2) stays sequential so previousOpenings matches the original pipeline.
@@ -2019,25 +2861,36 @@ export async function extractNotesForItems(
   items: ScrapedItem[],
   houseName: string,
   options: ScraperPipelineOptions = {},
-  model = "gpt-4o-mini",
-): Promise<PerfumeCsvRecord[]> {
+  /** @deprecated Prefer `options.notesPipelineModel`. */
+  legacyExtractionModel?: string,
+): Promise<{ records: PerfumeCsvRecord[]; batchWarnings: string[] }> {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("OPENAI_API_KEY is not set. Note extraction requires an OpenAI key.")
   }
 
+  const extractionModel =
+    options.notesPipelineModel ??
+    legacyExtractionModel ??
+    process.env.OPENAI_NOTES_PIPELINE_MODEL ??
+    "gpt-4o-mini"
+  const noirModel =
+    options.noirPipelineModel ?? process.env.OPENAI_NOTES_PIPELINE_NOIR_MODEL ?? extractionModel
+
   const llmTimeout = resolveNotesPipelineLlmTimeoutMs()
+  const jsonModeKwargs = { response_format: { type: "json_object" as const } }
   const llm = new ChatOpenAI({
-    model,
+    model: extractionModel,
     temperature: 0.1,
     apiKey: process.env.OPENAI_API_KEY,
     timeout: llmTimeout,
     maxRetries: 0,
+    modelKwargs: jsonModeKwargs,
   })
 
   const noirLlm = options.generateNoirDescriptions
     ? new ChatOpenAI({
-        model,
-        temperature: 0.7,
+        model: noirModel,
+        temperature: 0.9,
         apiKey: process.env.OPENAI_API_KEY,
         timeout: llmTimeout,
         maxRetries: 0,
@@ -2045,6 +2898,9 @@ export async function extractNotesForItems(
     : undefined
 
   const graph = buildGraph(llm, options, noirLlm)
-  const finalState = await graph.invoke({ items, houseName, results: [] })
-  return finalState.results
+  const finalState = await graph.invoke({ items, houseName, results: [], batchWarnings: [] })
+  return {
+    records: finalState.results,
+    batchWarnings: finalState.batchWarnings ?? [],
+  }
 }

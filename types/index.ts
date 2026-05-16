@@ -133,6 +133,10 @@ export interface UserPerfumeI {
   tradePrice?: string
   tradePreference?: "cash" | "trade" | "both"
   tradeOnly?: boolean
+  images?: string[]
+  condition?: "sealed" | "mint" | "lightlyUsed" | "heavilyUsed" | "damaged" | null
+  decantFormat?: "atomizer" | "vial" | "original" | null
+  mlRemaining?: number | null
   createdAt?: Date | string
   comments?: {
     id: string

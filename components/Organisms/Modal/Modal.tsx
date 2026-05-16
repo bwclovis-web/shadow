@@ -28,6 +28,8 @@ interface ModalProps
   dialogAriaLabelledBy?: string
   /** Used when `dialogAriaLabelledBy` is not set. Defaults to `"Dialog"`. */
   dialogAriaLabel?: string
+  /** Called when the modal begins closing (X, backdrop, or Escape). */
+  onClose?: () => void
 }
 
 const Modal = ({
@@ -39,6 +41,7 @@ const Modal = ({
   dialogAriaLabelledBy,
   dialogAriaLabel,
   className,
+  onClose,
 }: ModalProps) => {
   const [mounted, setMounted] = useState(false)
   const [animate, setAnimate] = useState(false)
@@ -49,7 +52,10 @@ const Modal = ({
   const handleClose = () => {
     setAnimate(false)
     if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current)
-    closeTimeoutRef.current = setTimeout(closeModal, CLOSE_DELAY_MS)
+    closeTimeoutRef.current = setTimeout(() => {
+      onClose?.()
+      closeModal()
+    }, CLOSE_DELAY_MS)
   }
 
   useFocusTrap(modalRef, {

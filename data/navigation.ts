@@ -14,6 +14,7 @@ export const adminNavigation = [
   { id: "5", label: "security monitor", key: "securityMonitor", path: "/admin/security-monitor" },
   { id: "6", label: "performance admin", key: "performanceAdmin", path: "/admin/performance-admin" },
   { id: "7", label: "pending submissions", key: "pendingSubmissions", path: "/admin/pending-submission" },
+  { id: "9", label: "user reports", key: "userReports", path: "/admin/reports" },
   { id: "8", label: "house scraper", key: "houseScraper", path: "/admin/scraper" },
 ] as const
 
@@ -21,6 +22,7 @@ export const adminNavigation = [
 export const profileNavigation = [
   { id: "0", label: "Profile", key: "profile", path: "/profile" } as const,
   { id: "1", label: "My Wishlist", key: "wishlist", path: "/profile/wishlist" } as const,
+  { id: "4", label: "My Reports", key: "myReports", path: "/profile/reports" } as const,
   { id: "2", label: "My Scents", key: "myScents", path: "/profile/my-scents" } as const,
   { id: "3", label: "Change Password", key: "changePassword", path: "/profile/change-password" } as const,
 ] as const

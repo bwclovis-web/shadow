@@ -24,7 +24,8 @@ import path from "path"
 
 import { NextResponse, type NextRequest } from "next/server"
 
-import { extractNotesForItems } from "@/lib/scraper/notes-graph"
+import { extractNotesForItems, type ScraperPipelineOptions } from "@/lib/scraper/notes-graph"
+import { isAllowedNotesPipelineModel, NOTES_PIPELINE_MODEL_ALLOWLIST } from "@/lib/scraper/notes-pipeline-models"
 import type {
   PerfumeCsvRecord,
   ScrapedItem,
@@ -32,7 +33,7 @@ import type {
   ScraperRunResponse,
   TitleDashSegment,
 } from "@/types/scraper"
-import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
+import { CSRFError, requireCSRFForJsonBody } from "@/utils/server/csrf.server"
 import { requireAdminOrEditorApi } from "@/utils/server/requireAdminOrEditorApi.server"
 
 // ---------------------------------------------------------------------------
@@ -165,7 +166,38 @@ function validateBody(body: unknown): body is ScraperRunRequest {
   if (b.titleColonSegment !== undefined && typeof b.titleColonSegment !== "string") return false
   if (b.titleTakeAfterFirstComma !== undefined && typeof b.titleTakeAfterFirstComma !== "boolean") return false
   if (b.titleTakeBeforeFirstComma !== undefined && typeof b.titleTakeBeforeFirstComma !== "boolean") return false
+  if (
+    b.noteInferenceMode !== undefined &&
+    b.noteInferenceMode !== "standard" &&
+    b.noteInferenceMode !== "strict"
+  )
+    return false
+  if (
+    b.minConfidentFlatNotes !== undefined &&
+    (typeof b.minConfidentFlatNotes !== "number" || !Number.isFinite(b.minConfidentFlatNotes))
+  )
+    return false
+  if (b.notesPipelineModel !== undefined && typeof b.notesPipelineModel !== "string") return false
+  if (b.noirPipelineModel !== undefined && typeof b.noirPipelineModel !== "string") return false
+  if (
+    b.noteValidationMode !== undefined &&
+    b.noteValidationMode !== "llm" &&
+    b.noteValidationMode !== "off"
+  )
+    return false
   return true
+}
+
+const validatePipelineModels = (body: ScraperRunRequest): string | null => {
+  const extra = body.notesPipelineModel?.trim()
+  if (extra && !isAllowedNotesPipelineModel(extra)) {
+    return `Invalid notesPipelineModel "${extra}". Allowed: ${NOTES_PIPELINE_MODEL_ALLOWLIST.join(", ")}`
+  }
+  const noir = body.noirPipelineModel?.trim()
+  if (noir && !isAllowedNotesPipelineModel(noir)) {
+    return `Invalid noirPipelineModel "${noir}". Allowed: ${NOTES_PIPELINE_MODEL_ALLOWLIST.join(", ")}`
+  }
+  return null
 }
 
 // ---------------------------------------------------------------------------
@@ -176,8 +208,18 @@ export async function POST(request: NextRequest): Promise<Response> {
   const auth = await requireAdminOrEditorApi(request)
   if (!auth.allowed) return auth.response
 
+  let body: unknown
   try {
-    await requireCSRF(request)
+    body = JSON.parse(await request.text()) as unknown
+  } catch {
+    return NextResponse.json(
+      { ok: false, scrapedCount: 0, records: [], csvContent: "", errors: ["Invalid JSON body"] } satisfies ScraperRunResponse,
+      { status: 400 },
+    )
+  }
+
+  try {
+    await requireCSRFForJsonBody(request, body)
   } catch (error) {
     if (error instanceof CSRFError) {
       return NextResponse.json(
@@ -192,16 +234,6 @@ export async function POST(request: NextRequest): Promise<Response> {
       )
     }
     throw error
-  }
-
-  let body: unknown
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json(
-      { ok: false, scrapedCount: 0, records: [], csvContent: "", errors: ["Invalid JSON body"] } satisfies ScraperRunResponse,
-      { status: 400 },
-    )
   }
 
   if (!validateBody(body)) {
@@ -231,6 +263,20 @@ export async function POST(request: NextRequest): Promise<Response> {
           selectorError,
           "Use valid CSS selectors only. For links use e.g. a[href*='/products/'] or a[href*='/p/']. Inspect the collection page in DevTools to see the correct link structure.",
         ],
+      } satisfies ScraperRunResponse,
+      { status: 400 },
+    )
+  }
+
+  const modelError = validatePipelineModels(body)
+  if (modelError) {
+    return NextResponse.json(
+      {
+        ok: false,
+        scrapedCount: 0,
+        records: [],
+        csvContent: "",
+        errors: [modelError],
       } satisfies ScraperRunResponse,
       { status: 400 },
     )
@@ -383,6 +429,11 @@ export async function POST(request: NextRequest): Promise<Response> {
             typeof body.retryAttempts === "number" && body.retryAttempts >= 1
               ? body.retryAttempts
               : undefined,
+          // Notes pipeline options forwarded to the Python pipeline
+          generateNoirDescriptions: body.generateNoirDescriptions ?? true,
+          noteValidationMode: body.noteValidationMode === "off" ? "off" : "llm",
+          notesPipelineModel: body.notesPipelineModel?.trim() || undefined,
+          noirPipelineModel: body.noirPipelineModel?.trim() || undefined,
         }),
       )
       childStdin.end()
@@ -485,45 +536,95 @@ export async function POST(request: NextRequest): Promise<Response> {
             return
           }
 
-          try {
-            sendLine(controller, {
-              type: "log",
-              message: `Starting note extraction for ${scrapedItems.length} products (sequential LLM calls — progress lines "Notes pipeline i/n" follow).`,
-            })
-          } catch {
-            // ignore
-          }
+          // Check whether the Python pipeline already extracted notes.
+          // When openNotes is a string array on the first item, Python ran its
+          // HTML-aware pipeline and we can build PerfumeCsvRecord directly,
+          // bypassing the Node.js LangGraph pipeline entirely.
+          const hasPythonNotes =
+            scrapedItems.length > 0 && Array.isArray(scrapedItems[0].openNotes)
 
-          const pipelineOptions = {
-            titleDashSegment: resolveTitleDashSegment(body),
-            titleColonSegment:
-              body.titleColonSegment === "before" || body.titleColonSegment === "after" || body.titleColonSegment === "none"
-                ? body.titleColonSegment
-                : "none",
-            titleTakeAfterFirstComma: body.titleTakeAfterFirstComma === true,
-            titleTakeBeforeFirstComma: body.titleTakeBeforeFirstComma === true,
-            titleStripNumbers: body.titleStripNumbers ?? false,
-            titleOmitWords: Array.isArray(body.titleOmitWords) ? body.titleOmitWords : [],
-            generateNoirDescriptions: body.generateNoirDescriptions ?? true,
-            fetchPdpNoteBootstrap: body.fetchPdpNoteBootstrap !== false,
-            abortSignal: request.signal,
-            onProgress: (message: string) => {
-              try {
-                sendLine(controller, { type: "log", message })
-              } catch {
-                // stream closed
-              }
-            },
-          }
-          const records = await extractNotesForItems(scrapedItems, body.houseName, pipelineOptions)
+          if (hasPythonNotes) {
+            try {
+              sendLine(controller, {
+                type: "log",
+                message: `Python notes pipeline complete — building ${scrapedItems.length} records directly.`,
+              })
+            } catch {
+              // ignore
+            }
 
-          result = {
-            ok: true,
-            scrapedCount: scrapedItems.length,
-            records,
-            csvContent: toCsv(records),
-            errors: [],
-            scraperLog: scraperLog.trim() || undefined,
+            const records: PerfumeCsvRecord[] = scrapedItems.map(item => ({
+              name: item.name,
+              // Prefer Python-generated noir description when available
+              description: item.noirDescription || item.description,
+              image: item.image,
+              perfumeHouse: item.perfumeHouse ?? body.houseName,
+              openNotes: JSON.stringify(item.openNotes ?? []),
+              heartNotes: JSON.stringify(item.heartNotes ?? []),
+              baseNotes: JSON.stringify(item.baseNotes ?? []),
+              detailURL: item.detailURL,
+            }))
+
+            result = {
+              ok: true,
+              scrapedCount: scrapedItems.length,
+              records,
+              csvContent: toCsv(records),
+              errors: [],
+              scraperLog: scraperLog.trim() || undefined,
+            }
+          } else {
+            try {
+              sendLine(controller, {
+                type: "log",
+                message: `Starting note extraction for ${scrapedItems.length} products (Node.js pipeline — progress lines follow).`,
+              })
+            } catch {
+              // ignore
+            }
+
+            const pipelineOptions: ScraperPipelineOptions = {
+              titleDashSegment: resolveTitleDashSegment(body),
+              titleColonSegment:
+                body.titleColonSegment === "before" || body.titleColonSegment === "after" || body.titleColonSegment === "none"
+                  ? body.titleColonSegment
+                  : "none",
+              titleTakeAfterFirstComma: body.titleTakeAfterFirstComma === true,
+              titleTakeBeforeFirstComma: body.titleTakeBeforeFirstComma === true,
+              titleStripNumbers: body.titleStripNumbers ?? false,
+              titleOmitWords: Array.isArray(body.titleOmitWords) ? body.titleOmitWords : [],
+              generateNoirDescriptions: body.generateNoirDescriptions ?? true,
+              fetchPdpNoteBootstrap: body.fetchPdpNoteBootstrap !== false,
+              noteInferenceMode: body.noteInferenceMode === "strict" ? "strict" : "standard",
+              minConfidentFlatNotes:
+                typeof body.minConfidentFlatNotes === "number" &&
+                body.minConfidentFlatNotes >= 1 &&
+                body.minConfidentFlatNotes <= 50
+                  ? body.minConfidentFlatNotes
+                  : undefined,
+              notesPipelineModel: body.notesPipelineModel?.trim() || undefined,
+              noirPipelineModel: body.noirPipelineModel?.trim() || undefined,
+              noteValidationMode: body.noteValidationMode === "off" ? "off" : "llm",
+              abortSignal: request.signal,
+              onProgress: (message: string) => {
+                try {
+                  sendLine(controller, { type: "log", message })
+                } catch {
+                  // stream closed
+                }
+              },
+            }
+            const { records, batchWarnings } = await extractNotesForItems(scrapedItems, body.houseName, pipelineOptions)
+
+            result = {
+              ok: true,
+              scrapedCount: scrapedItems.length,
+              records,
+              csvContent: toCsv(records),
+              errors: [],
+              scraperLog: scraperLog.trim() || undefined,
+              batchWarnings: batchWarnings.length > 0 ? batchWarnings : undefined,
+            }
           }
           detachAbortListener()
           invokeClientAbort = null

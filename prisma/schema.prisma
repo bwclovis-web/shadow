@@ -17,6 +17,14 @@ model User {
   /// URL path segment for /{profileSlug}/profile; unique; may differ from slug(username) when disambiguating collisions.
   profileSlug           String?                @unique
   traderAbout            String?
+  avatarImage           String?
+  region                String?
+  instagramHandle       String?
+  fragranticaUrl        String?
+  redditUsername        String?
+  strikeCount           Int                    @default(0)
+  isBanned              Boolean                @default(false)
+  onboardingCompletedAt DateTime?
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
   role                  UserRole               @default(user)
@@ -41,6 +49,13 @@ model User {
   reviewedSubmissions   PendingSubmission[] @relation("ReviewedSubmissions")
   traderContactMessagesSent TraderContactMessage[] @relation("ContactMessagesSent")
   traderContactMessagesReceived TraderContactMessage[] @relation("ContactMessagesReceived")
+  tradesInitiated       Trade[]                @relation("TradesInitiated")
+  tradesAsCounterparty  Trade[]                @relation("TradesAsCounterparty")
+  tradeEvents           TradeEvent[]           @relation("TradeEventActor")
+  strikesReceived       UserStrike[]           @relation("StrikesReceived")
+  strikesIssued         UserStrike[]           @relation("StrikesIssued")
+  reportsFiled          UserReport[]           @relation("ReportsFiled")
+  reportsReceived       UserReport[]           @relation("ReportsReceived")
   ScentProfile              ScentProfile?
 }
 
@@ -104,25 +119,33 @@ model Perfume {
 }
 
 model UserPerfume {
-  id              String               @id @default(cuid())
-  userId          String
-  perfumeId       String
-  amount          String               @default("0")
-  available       String               @default("0")
-  price           String?
-  placeOfPurchase String?
-  tradePrice      String?
-  tradePreference TradePreference      @default(cash)
-  tradeOnly       Boolean              @default(false)
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @default(now()) @updatedAt
-  type            PerfumeType          @default(eauDeParfum)
-  perfume         Perfume              @relation(fields: [perfumeId], references: [id])
-  user            User                 @relation(fields: [userId], references: [id])
-  comments        UserPerfumeComment[]
+  id                  String               @id @default(cuid())
+  userId              String
+  perfumeId           String
+  amount              String               @default("0")
+  available           String               @default("0")
+  price               String?
+  placeOfPurchase     String?
+  tradePrice          String?
+  tradePreference     TradePreference      @default(cash)
+  tradeOnly           Boolean              @default(false)
+  images              String[]             @default([])
+  condition           ListingCondition?
+  decantFormat        DecantFormat?
+  mlRemaining         Float?
+  pendingSubmissionId String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @default(now()) @updatedAt
+  type                PerfumeType          @default(eauDeParfum)
+  perfume             Perfume              @relation(fields: [perfumeId], references: [id])
+  user                User                 @relation(fields: [userId], references: [id])
+  pendingSubmission   PendingSubmission?   @relation(fields: [pendingSubmissionId], references: [id])
+  comments            UserPerfumeComment[]
+  tradeLineItems      TradeLineItem[]
 
   @@index([userId, available], name: "idx_user_perfume_user_available")
   @@index([perfumeId, available], name: "idx_user_perfume_perfume_available")
+  @@index([pendingSubmissionId])
 }
 
 model UserPerfumeRating {
@@ -254,16 +277,19 @@ model TraderFeedback {
   id          String   @id @default(cuid())
   traderId    String
   reviewerId  String
+  tradeId     String?
   rating      Int      /// Expected 1-5 scale; enforce in application logic.
   comment     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   trader      User     @relation("FeedbackForTrader", fields: [traderId], references: [id])
   reviewer    User     @relation("FeedbackFromReviewer", fields: [reviewerId], references: [id])
+  trade       Trade?   @relation(fields: [tradeId], references: [id])
 
   @@unique([traderId, reviewerId])
   @@index([traderId])
   @@index([reviewerId])
+  @@index([tradeId])
 }
 
 model SecurityAuditLog {
@@ -325,6 +351,7 @@ model PendingSubmission {
   updatedAt      DateTime              @updatedAt
   submittedByUser User?               @relation("SubmittedSubmissions", fields: [submittedBy], references: [id])
   reviewedByUser User?                @relation("ReviewedSubmissions", fields: [reviewedBy], references: [id])
+  userPerfumes   UserPerfume[]
 
   @@index([status, createdAt])
   @@index([submissionType, status])
@@ -334,16 +361,102 @@ model TraderContactMessage {
   id          String   @id @default(cuid())
   senderId    String
   recipientId String
+  tradeId     String?
   subject     String?
   message     String
   read        Boolean  @default(false)
   createdAt   DateTime @default(now())
   sender      User     @relation("ContactMessagesSent", fields: [senderId], references: [id])
   recipient   User     @relation("ContactMessagesReceived", fields: [recipientId], references: [id])
+  trade       Trade?   @relation(fields: [tradeId], references: [id])
 
   @@index([senderId, createdAt])
   @@index([recipientId, createdAt])
   @@index([senderId, recipientId, createdAt])
+  @@index([tradeId])
+}
+
+model Trade {
+  id             String       @id @default(cuid())
+  initiatorId    String
+  counterpartyId String
+  status         TradeStatus  @default(draft)
+  notes          String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  initiator      User         @relation("TradesInitiated", fields: [initiatorId], references: [id])
+  counterparty   User         @relation("TradesAsCounterparty", fields: [counterpartyId], references: [id])
+  lineItems      TradeLineItem[]
+  events         TradeEvent[]
+  contactMessages TraderContactMessage[]
+  feedback       TraderFeedback[]
+  reports        UserReport[]
+
+  @@index([initiatorId, status])
+  @@index([counterpartyId, status])
+  @@index([status, updatedAt])
+}
+
+model TradeLineItem {
+  id                String            @id @default(cuid())
+  tradeId           String
+  userPerfumeId     String
+  role              TradeLineItemRole
+  perfumeName       String
+  mlSnapshot        Float?
+  conditionSnapshot ListingCondition?
+  trade             Trade             @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  userPerfume       UserPerfume       @relation(fields: [userPerfumeId], references: [id])
+
+  @@index([tradeId])
+  @@index([userPerfumeId])
+}
+
+model TradeEvent {
+  id          String   @id @default(cuid())
+  tradeId     String
+  type        String
+  actorUserId String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  trade       Trade    @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  actor       User     @relation("TradeEventActor", fields: [actorUserId], references: [id])
+
+  @@index([tradeId, createdAt])
+  @@index([actorUserId])
+}
+
+model UserStrike {
+  id        String   @id @default(cuid())
+  userId    String
+  issuedBy  String
+  reason    String
+  createdAt DateTime @default(now())
+  user      User     @relation("StrikesReceived", fields: [userId], references: [id])
+  issuer    User     @relation("StrikesIssued", fields: [issuedBy], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([issuedBy])
+}
+
+model UserReport {
+  id             String             @id @default(cuid())
+  reporterId     String
+  reportedUserId String
+  tradeId        String?
+  category       UserReportCategory
+  description    String?
+  images         String[]           @default([])
+  status         UserReportStatus   @default(inProgress)
+  createdAt      DateTime           @default(now())
+  reporter       User               @relation("ReportsFiled", fields: [reporterId], references: [id])
+  reportedUser   User               @relation("ReportsReceived", fields: [reportedUserId], references: [id])
+  trade          Trade?             @relation(fields: [tradeId], references: [id])
+
+  @@index([status, createdAt])
+  @@index([reportedUserId])
+  @@index([reporterId])
+  @@index([tradeId])
 }
 
 model ScentProfile {
@@ -465,6 +578,55 @@ enum AlertType {
   decant_interest
   pending_submission_approval
   new_trader_message
+  trade_received
+  trade_accepted
+  trade_shipped
+  trade_completed
+  trade_cancelled
+}
+
+enum TradeStatus {
+  draft
+  pending
+  accepted
+  shipped
+  received
+  completed
+  declined
+  cancelled
+}
+
+enum TradeLineItemRole {
+  offered
+  requested
+}
+
+enum ListingCondition {
+  sealed
+  mint
+  lightlyUsed
+  heavilyUsed
+  damaged
+}
+
+enum DecantFormat {
+  atomizer
+  vial
+  original
+}
+
+enum UserReportCategory {
+  scam
+  fakeItem
+  harassment
+  noShip
+  other
+}
+
+enum UserReportStatus {
+  inProgress
+  settled
+  passed
 }
 
 enum PerfumeNoteType {

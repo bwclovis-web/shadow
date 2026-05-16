@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 
 import {
   deleteUserSafely,
+  issueStrike,
   softDeleteUser,
   updateUserRole,
 } from "@/models/admin.server"
@@ -24,6 +25,14 @@ export type UpdateRoleActionState = {
   message: string
   userId?: string
   role?: UserRole
+} | null
+
+export type IssueStrikeActionState = {
+  success: boolean
+  message: string
+  userId?: string
+  strikeCount?: number
+  isBanned?: boolean
 } | null
 
 export const deleteUserAction = async (
@@ -101,4 +110,47 @@ export const updateUserRoleAction = async (
   }
 
   return updateUserRole(userId, newRole as UserRole, session.user.id)
+}
+
+export const issueStrikeAction = async (
+  _prevState: IssueStrikeActionState,
+  formData: FormData
+): Promise<IssueStrikeActionState> => {
+  const cookieHeader = await getCookieHeader()
+  const session = await getSessionFromCookieHeader(cookieHeader, {
+    includeUser: true,
+  })
+
+  if (!session?.user) {
+    redirect("/sign-in?redirect=/admin/users")
+  }
+
+  if (session.user.role !== "admin") {
+    return { success: false, message: "Unauthorized" }
+  }
+
+  const request = new Request("http://localhost", { method: "POST" })
+  await requireCSRF(request, formData)
+
+  const userId = formData.get("userId")
+  const reason = formData.get("reason")
+
+  if (typeof userId !== "string") {
+    return { success: false, message: "Invalid request" }
+  }
+
+  if (typeof reason !== "string") {
+    return { success: false, message: "Invalid request" }
+  }
+
+  const result = await issueStrike(userId, reason, session.user.id)
+
+  if (result.success) {
+    return {
+      ...result,
+      userId,
+    }
+  }
+
+  return result
 }

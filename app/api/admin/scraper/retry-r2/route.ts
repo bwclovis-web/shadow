@@ -8,6 +8,7 @@ import type {
   ScraperRetryR2Request,
   ScraperRetryR2Response,
 } from "@/types/scraper"
+import { CSRFError, requireCSRFForJsonBody } from "@/utils/server/csrf.server"
 import { requireAdminOrEditorApi } from "@/utils/server/requireAdminOrEditorApi.server"
 
 export const maxDuration = 300
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   let body: unknown
   try {
-    body = await request.json()
+    body = JSON.parse(await request.text()) as unknown
   } catch {
     return NextResponse.json(
       {
@@ -46,6 +47,24 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       } satisfies ScraperRetryR2Response,
       { status: 400 },
     )
+  }
+
+  try {
+    await requireCSRFForJsonBody(request, body)
+  } catch (error) {
+    if (error instanceof CSRFError) {
+      return NextResponse.json(
+        {
+          ok: false,
+          attemptedCount: 0,
+          uploadedCount: 0,
+          skippedCount: 0,
+          errors: [error.message],
+        } satisfies ScraperRetryR2Response,
+        { status: 403 },
+      )
+    }
+    throw error
   }
 
   if (!validateBody(body)) {

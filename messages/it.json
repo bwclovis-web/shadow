@@ -74,6 +74,7 @@
       "performanceAdmin": "Admin prestazioni",
       "errorAnalytics": "Analisi errori",
       "pendingSubmissions": "Invii in sospeso",
+      "userReports": "Segnalazioni",
       "houseScraper": "Scraper case"
     },
     "perfumeHouse": {
@@ -209,7 +210,8 @@
     },
     "signIn": {
       "title": "Accedi - Shadow and Sillage",
-      "description": "Accedi per gestire il profilo e la collezione."
+      "description": "Accedi per gestire il profilo e la collezione.",
+      "suspended": "Il tuo account è stato sospeso. Contatta il supporto se ritieni che si tratti di un errore."
     },
     "signUp": {
       "title": "Registrati - Shadow and Sillage",
@@ -638,7 +640,8 @@
       "sourceBottleLabel": "Decantare da quale bottiglia?",
       "sourceBottlePlaceholder": "Seleziona una bottiglia...",
       "sourceBottleRemaining": "{amount} ml rimanente",
-      "standaloneDecant": "Autonomo (nessuna bottiglia sorgente)"
+      "standaloneDecant": "Autonomo (nessuna bottiglia sorgente)",
+      "bottleDestashHint": "Destash da questa bottiglia (fino a {max} ml)"
     },
     "heading": "I miei profumi",
     "subheading": "Gestisci la tua collezione di profumi.",
@@ -1171,18 +1174,47 @@
     "users": "Utenti",
     "userCount": "Attualmente abbiamo {count} utenti",
     "manageUsers": "Gestisci gli utenti",
+    "filters": {
+      "searchLabel": "Cerca",
+      "searchPlaceholder": "Nome, email o username…",
+      "roleLabel": "Ruolo",
+      "roleAll": "Tutti i ruoli",
+      "roleUser": "Utente",
+      "roleEditor": "Editore",
+      "roleAdmin": "Admin",
+      "strikeLabel": "Strikes",
+      "strikeAll": "Tutti",
+      "strikeNone": "Nessuno strike",
+      "strikeOne": "1 strike",
+      "strikeTwo": "2 strikes",
+      "strikeBanned": "Bannato",
+      "showingCount": "Visualizzazione di {shown} su {total} utenti"
+    },
+    "strikeModal": {
+      "title": "Emetti strike",
+      "description": "Registra uno strike contro l'utente. Tre strike comportano un ban automatico.",
+      "reasonLabel": "Motivo",
+      "reasonPlaceholder": "Descrivi perché viene emesso questo strike…",
+      "cancel": "Annulla",
+      "confirm": "Emetti strike",
+      "processing": "Elaborazione…"
+    },
     "table": {
       "user": "Utente",
       "role": "Ruolo",
+      "strikes": "Strikes",
       "dataRecords": "Record dati",
       "joined": "Iscritto il",
       "actions": "Azioni",
       "softDelete": "Eliminazione soft",
       "delete": "Elimina",
+      "issueStrike": "Emetti Strike",
       "currentUser": "Utente corrente",
       "admin": "Admin",
       "deleted": "Eliminato",
       "changeRole": "Cambia ruolo utente",
+      "strikesLabel": "{count, plural, =0 {Nessuno strike} one {# strike} other {# strikes}}",
+      "bannedBadge": "BANNATO",
       "roles": {
         "user": "Utente",
         "editor": "Editore",
@@ -1226,5 +1258,40 @@
   "validation": {
     "profileAboutMax": "Informazioni sul venditore devono essere al massimo {max} caratteri.",
     "wishlistBottlePreferenceRequired": "Seleziona un formato di flacone."
+  },
+  "listing": {
+    "photosLabel": "Foto dell'annuncio",
+    "photosHint": "Aggiungi almeno una foto prima di pubblicare nello scambio.",
+    "dropzoneHint": "Trascina le immagini qui, o scegli i file",
+    "chooseFiles": "Scegli file",
+    "useCamera": "Usa fotocamera",
+    "uploading": "Caricamento…",
+    "uploadError": "Impossibile caricare l'immagine. Riprova.",
+    "cameraError": "Impossibile accedere alla fotocamera.",
+    "cameraTitle": "Scatta una foto",
+    "capture": "Scatta",
+    "cancel": "Annulla",
+    "removePhoto": "Rimuovi foto",
+    "conditionLabel": "Condizione",
+    "conditionPlaceholder": "Seleziona condizione (facoltativo)",
+    "condition": {
+      "sealed": "Sigillato",
+      "mint": "Come nuovo",
+      "lightlyUsed": "Poco usato",
+      "heavilyUsed": "Molto usato",
+      "damaged": "Danneggiato"
+    },
+    "decantFormatLabel": "Formato decant",
+    "decantFormatPlaceholder": "Seleziona formato (facoltativo)",
+    "decantFormat": {
+      "atomizer": "Atomizzatore",
+      "vial": "Fiala",
+      "original": "Flacone originale"
+    },
+    "openPhoto": "Apri foto {index}",
+    "lightboxTitle": "Foto dell'annuncio",
+    "previousPhoto": "Foto precedente",
+    "nextPhoto": "Foto successiva",
+    "closeLightbox": "Chiudi"
   }
 }

@@ -45,6 +45,29 @@ const getCsrfCookieFromRequest = async (request: Request): Promise<string | null
 /** FormData or a parsed wrapper that exposes get(key) for CSRF token lookup */
 type CSRFFormDataLike = FormData | { get(key: string): string | File | null }
 
+/**
+ * When the client POSTs JSON, some proxies strip custom headers; the double-submit token can be
+ * duplicated in the body as `_csrf` (same value as the cookie). Prefer the header when present.
+ */
+export const csrfFormAdapterFromJsonBody = (parsedJson: unknown): CSRFFormDataLike | undefined => {
+  if (!parsedJson || typeof parsedJson !== "object") return undefined
+  const t = (parsedJson as Record<string, unknown>)[CSRF_COOKIE_NAME]
+  if (typeof t !== "string") return undefined
+  const trimmed = t.trim()
+  if (!trimmed) return undefined
+  return {
+    get: (key: string) => (key === CSRF_COOKIE_NAME ? trimmed : null),
+  }
+}
+
+/** Validate CSRF after `JSON.parse` of the request body (header + cookie still apply). */
+export const requireCSRFForJsonBody = async (
+  request: Request,
+  parsedJson: unknown,
+): Promise<void> => {
+  await requireCSRF(request, csrfFormAdapterFromJsonBody(parsedJson))
+}
+
 const getCsrfTokenFromRequest = (request: Request, formData?: CSRFFormDataLike): string | null => {
   const header = request.headers.get(CSRF_HEADER_NAME)?.trim()
   if (header) return header

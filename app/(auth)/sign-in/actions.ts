@@ -69,6 +69,10 @@ export const signInAction = async (
       return { error: "Invalid email or password" }
     }
 
+    if (existingUser.isBanned) {
+      return { error: "Your account has been suspended" }
+    }
+
     let user = existingUser
     if (!existingUser.username?.trim()) {
       const username = await generateUniqueUsername()

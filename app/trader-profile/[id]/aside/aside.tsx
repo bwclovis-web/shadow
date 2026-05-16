@@ -1,4 +1,5 @@
-import ContactTraderButton from "@/components/Containers/TraderProfile/ContactTraderButton";
+import ContactTraderButton from "@/components/Containers/TraderProfile/ContactTraderButton"
+import ReportTraderButton from "@/components/Containers/TraderProfile/ReportTraderButton"
 import TraderFeedbackSection from "@/components/Containers/TraderProfile/TraderFeedbackSection";
 import TraderTrustSummary from "@/components/Containers/TraderProfile/TraderTrustSummary";
 import { TraderFeedbackResponse } from "@/lib/queries/traderFeedback";
@@ -30,8 +31,13 @@ export const TraderProfileAside = ({ trader, viewer, feedback }: TraderProfileAs
             viewerId={viewer?.id}
             initialData={feedback}
           />
-          <div className="mt-4">
+          <div className="mt-4 flex flex-col lg:flex-row gap-4">
             <ContactTraderButton
+              traderId={trader.id}
+              trader={trader}
+              viewerId={viewer?.id}
+            />
+            <ReportTraderButton
               traderId={trader.id}
               trader={trader}
               viewerId={viewer?.id}

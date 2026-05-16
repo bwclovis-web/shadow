@@ -13,13 +13,17 @@ import { Button } from "@/components/Atoms/Button/Button"
 import HouseTypeahead from "@/components/Molecules/HouseTypeahead/HouseTypeahead"
 import { useCSRF } from "@/hooks/useCSRF"
 import type {
+  NoteInferenceMode,
+  NoteValidationMode,
   PerfumeCsvRecord,
   ScraperImportResponse,
+  ScraperNoteSource,
   ScraperRetryR2Response,
   ScraperRunRequest,
   ScraperRunResponse,
   TitleDashSegment,
 } from "@/types/scraper"
+import { NOTES_PIPELINE_MODEL_ALLOWLIST } from "@/lib/scraper/notes-pipeline-models"
 import {
   chunkPerfumeCsvRecordsForImport,
   chunkPerfumeCsvRecordsForRetryR2,
@@ -117,7 +121,26 @@ function countRecordsWithExtractedNotes(records: PerfumeCsvRecord[]): number {
   }).length
 }
 
-type PreviewRow = { name: string; notesPreview: string[] }
+type PreviewRow = { name: string; notesPreview: string[]; noteSource?: ScraperNoteSource }
+
+function noteSourceBadgeClass(source?: ScraperNoteSource): string {
+  switch (source) {
+    case "labeled_list":
+      return "bg-emerald-900/50 text-emerald-100"
+    case "pdp_bootstrap":
+      return "bg-cyan-900/50 text-cyan-100"
+    case "llm_description":
+      return "bg-blue-900/50 text-blue-100"
+    case "llm_name_literal":
+      return "bg-violet-900/50 text-violet-100"
+    case "llm_name_inferred":
+      return "bg-amber-900/50 text-amber-100"
+    case "empty":
+      return "bg-neutral-800 text-neutral-400"
+    default:
+      return "bg-neutral-800 text-neutral-400"
+  }
+}
 
 function buildPreviewRows(records: PerfumeCsvRecord[]): PreviewRow[] {
   return records.map((r) => {
@@ -127,7 +150,7 @@ function buildPreviewRows(records: PerfumeCsvRecord[]): PreviewRow[] {
     } catch {
       notesPreview = []
     }
-    return { name: r.name, notesPreview }
+    return { name: r.name, notesPreview, noteSource: r._noteSource }
   })
 }
 
@@ -135,7 +158,7 @@ function buildPreviewRows(records: PerfumeCsvRecord[]): PreviewRow[] {
 // Component
 // ---------------------------------------------------------------------------
 export function ScraperPageClient() {
-  const { addToHeaders } = useCSRF()
+  const { addToHeaders, getTokenWithFallback } = useCSRF()
 
   // -- scraper config state --
   const [houseName, setHouseName] = useState("")
@@ -171,6 +194,11 @@ export function ScraperPageClient() {
   const [delayBetweenUrlsMs, setDelayBetweenUrlsMs] = useState<string>("")
   /** Optional retries per page load when connection is reset. */
   const [retryAttempts, setRetryAttempts] = useState<string>("")
+  const [noteInferenceMode, setNoteInferenceMode] = useState<NoteInferenceMode>("standard")
+  const [minConfidentFlatNotes, setMinConfidentFlatNotes] = useState("")
+  const [notesPipelineModel, setNotesPipelineModel] = useState("")
+  const [noirPipelineModel, setNoirPipelineModel] = useState("")
+  const [noteValidationMode, setNoteValidationMode] = useState<NoteValidationMode>("llm")
 
   // -- step 1 state (scrape + note extraction) --
   const [scraping, setScraping] = useState(false)
@@ -340,6 +368,14 @@ export function ScraperPageClient() {
         const n = parseInt(retryAttempts, 10)
         return Number.isFinite(n) && n >= 1 ? n : undefined
       })(),
+      noteInferenceMode,
+      minConfidentFlatNotes: (() => {
+        const n = parseInt(minConfidentFlatNotes, 10)
+        return Number.isFinite(n) && n >= 1 && n <= 50 ? n : undefined
+      })(),
+      notesPipelineModel: notesPipelineModel.trim() || undefined,
+      noirPipelineModel: noirPipelineModel.trim() || undefined,
+      noteValidationMode,
     }
 
     const SCRAPER_REQUEST_TIMEOUT_MS = 90 * 60 * 1000 // 90 min — match server; avoid client aborting early
@@ -349,10 +385,14 @@ export function ScraperPageClient() {
     scrapeTimeoutRef.current = setTimeout(() => ac.abort(), SCRAPER_REQUEST_TIMEOUT_MS)
 
     try {
+      const csrf = getTokenWithFallback()
       const res = await fetch("/api/admin/scraper/run", {
         method: "POST",
         headers: addToHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          ...body,
+          ...(csrf ? { _csrf: csrf } : {}),
+        }),
         credentials: "include",
         signal: ac.signal,
       })
@@ -484,6 +524,7 @@ export function ScraperPageClient() {
       const failedR2Names: string[] = []
 
       for (let i = 0; i < batches.length; i++) {
+        const csrf = getTokenWithFallback()
         const res = await fetch("/api/admin/scraper/import", {
           method: "POST",
           headers: addToHeaders({ "Content-Type": "application/json" }),
@@ -491,6 +532,7 @@ export function ScraperPageClient() {
             records: batches[i],
             uploadImagesToR2,
             overwriteImageUrls,
+            ...(csrf ? { _csrf: csrf } : {}),
           }),
           credentials: "include",
         })
@@ -564,10 +606,14 @@ export function ScraperPageClient() {
       const failedR2Names: string[] = []
 
       for (let i = 0; i < batches.length; i++) {
+        const csrf = getTokenWithFallback()
         const res = await fetch("/api/admin/scraper/retry-r2", {
           method: "POST",
           headers: addToHeaders({ "Content-Type": "application/json" }),
-          body: JSON.stringify({ records: batches[i] }),
+          body: JSON.stringify({
+            records: batches[i],
+            ...(csrf ? { _csrf: csrf } : {}),
+          }),
           credentials: "include",
         })
         let data: ScraperRetryR2Response
@@ -1058,6 +1104,104 @@ export function ScraperPageClient() {
               onChange={(e: ChangeEvent<HTMLInputElement>) => setTitleOmitWordsRaw(e.target.value)}
             />
           </Field>
+          <Field
+            label="Note inference mode"
+            hint="Standard may infer notes from name/theme when the page has no list. Strict keeps only merchant-listed notes (regex + optional PDP fetch); some rows may have empty notes."
+          >
+            <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="noteInferenceMode"
+                  checked={noteInferenceMode === "standard"}
+                  onChange={() => setNoteInferenceMode("standard")}
+                />
+                <span className="text-sm">Standard</span>
+              </label>
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="noteInferenceMode"
+                  checked={noteInferenceMode === "strict"}
+                  onChange={() => setNoteInferenceMode("strict")}
+                />
+                <span className="text-sm">Strict</span>
+              </label>
+            </div>
+          </Field>
+          <Field
+            label="Min flat note list size (optional)"
+            hint="1–50. Merchant flat lists with at least this many items skip merge LLM. Leave blank for default (2)."
+          >
+            <input
+              className={inputClass()}
+              inputMode="numeric"
+              value={minConfidentFlatNotes}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setMinConfidentFlatNotes(e.target.value.replace(/\D/g, ""))
+              }
+              placeholder="2"
+            />
+          </Field>
+          <Field
+            label="Extraction / merge / translate model"
+            hint="Blank uses OPENAI_NOTES_PIPELINE_MODEL from env, then gpt-4o-mini."
+          >
+            <select
+              className={inputClass()}
+              value={notesPipelineModel}
+              onChange={(e: ChangeEvent<HTMLSelectElement>) => setNotesPipelineModel(e.target.value)}
+            >
+              <option value="">Env default</option>
+              {NOTES_PIPELINE_MODEL_ALLOWLIST.map(m => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field
+            label="Noir description model"
+            hint="Blank uses OPENAI_NOTES_PIPELINE_NOIR_MODEL or the extraction model."
+          >
+            <select
+              className={inputClass()}
+              value={noirPipelineModel}
+              onChange={(e: ChangeEvent<HTMLSelectElement>) => setNoirPipelineModel(e.target.value)}
+            >
+              <option value="">Env / extraction default</option>
+              {NOTES_PIPELINE_MODEL_ALLOWLIST.map(m => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field
+            label="Bulk LLM note validator"
+            hint="On (default) runs a single classification call over the union of extracted notes and drops prose / sensory fragments (e.g. 'a sweet', 'glowing amber warmth', 'sunlit burst of melon'). Off disables it."
+          >
+            <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="noteValidationMode"
+                  checked={noteValidationMode === "llm"}
+                  onChange={() => setNoteValidationMode("llm")}
+                />
+                <span className="text-sm">On (LLM validator)</span>
+              </label>
+              <label className="flex cursor-pointer items-center gap-2">
+                <input
+                  type="radio"
+                  name="noteValidationMode"
+                  checked={noteValidationMode === "off"}
+                  onChange={() => setNoteValidationMode("off")}
+                />
+                <span className="text-sm">Off</span>
+              </label>
+            </div>
+          </Field>
           <label className="flex cursor-pointer items-start gap-3">
             <input
               type="checkbox"
@@ -1237,6 +1381,17 @@ export function ScraperPageClient() {
               </div>
             )}
 
+            {scrapeResult.batchWarnings && scrapeResult.batchWarnings.length > 0 && (
+              <div className="mt-3 rounded border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
+                <p className="font-medium">Batch warnings</p>
+                <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs">
+                  {scrapeResult.batchWarnings.map((w, i) => (
+                    <li key={i}>{w}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {scrapeResult.scraperLog && (
               <details className="mt-3" open={scrapeResult.scrapedCount === 0}>
                 <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
@@ -1274,6 +1429,7 @@ export function ScraperPageClient() {
                   <thead className="sticky top-0 bg-background">
                     <tr className="border-b border-border text-left text-muted-foreground">
                       <th className="px-4 py-2 font-medium">Name</th>
+                      <th className="px-4 py-2 font-medium">Source</th>
                       <th className="px-4 py-2 font-medium">Open notes</th>
                     </tr>
                   </thead>
@@ -1281,6 +1437,13 @@ export function ScraperPageClient() {
                     {previewRows.map((row, i) => (
                       <tr key={i} className="border-b border-border last:border-0">
                         <td className="max-w-[200px] truncate px-4 py-2 font-medium">{row.name}</td>
+                        <td className="whitespace-nowrap px-4 py-2">
+                          <span
+                            className={`inline-block rounded px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${noteSourceBadgeClass(row.noteSource)}`}
+                          >
+                            {row.noteSource ?? "—"}
+                          </span>
+                        </td>
                         <td className="px-4 py-2 text-muted-foreground">
                           {row.notesPreview.length > 0 ? row.notesPreview.join(", ") : (
                             <span className="italic opacity-50">none extracted</span>

@@ -7,6 +7,8 @@
 import { redirect } from "next/navigation"
 
 import { SIGN_IN } from "@/constants/routes"
+
+const SUSPENDED_SIGN_IN = `${SIGN_IN}?suspended=1`
 import {
   createSession,
   invalidateAllUserSessions,
@@ -68,6 +70,9 @@ export const requireUser = async (
   if (!user) {
     redirect(SIGN_IN)
   }
+  if (user.isBanned) {
+    redirect(SUSPENDED_SIGN_IN)
+  }
   return user
 }
 
@@ -110,7 +115,13 @@ export const requireRoles = async (
   roles: string[]
 ): Promise<NonNullable<Awaited<ReturnType<typeof getUser>>>> => {
   const user = await getUser(context)
-  if (!user || !roles.includes(user.role)) {
+  if (!user) {
+    redirect(SIGN_IN)
+  }
+  if (user.isBanned) {
+    redirect(SUSPENDED_SIGN_IN)
+  }
+  if (!roles.includes(user.role)) {
     redirect(SIGN_IN)
   }
   return user

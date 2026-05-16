@@ -12,6 +12,7 @@ import {
   updatePerfumeComment,
   updateUserPerfumeAmount,
 } from "@/models/user.server"
+import { parseListingMetadataFromFormData } from "@/models/listing-metadata.server"
 import { processWishlistAvailabilityAlerts } from "@/utils/alert-processors"
 import { authenticateUser } from "@/utils/server/auth.server"
 import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
@@ -65,6 +66,10 @@ export async function POST(request: NextRequest) {
     const tradePrice = formData.get("tradePrice") as string | undefined
     const tradePreference = formData.get("tradePreference") as string | undefined
     const tradeOnly = formData.get("tradeOnly") === "true"
+    const listing =
+      actionType === "decant" || actionType === "create-decant"
+        ? parseListingMetadataFromFormData(formData)
+        : undefined
 
     if (perfumeId && !isValidPrismaRecordId(perfumeId)) {
       return NextResponse.json({ success: false, error: "Invalid ID format" }, { status: 400 })
@@ -108,6 +113,7 @@ export async function POST(request: NextRequest) {
           tradePrice,
           tradePreference,
           tradeOnly,
+          listing,
         })
         if (amount && parseFloat(amount) > 0 && perfumeId) {
           try {
@@ -128,6 +134,7 @@ export async function POST(request: NextRequest) {
           tradePrice,
           tradePreference: tradePreference || "cash",
           tradeOnly,
+          listing,
         })
         if (availableAmount && parseFloat(availableAmount) > 0) {
           try {

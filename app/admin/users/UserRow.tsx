@@ -6,6 +6,9 @@ import type { UserRole } from "@prisma/client"
 import type { UserWithCounts } from "@/models/admin.server"
 import { CSRFToken } from "@/components/Molecules/CSRFToken"
 
+import StrikeIndicators from "./StrikeIndicators"
+import { getUserDisplayName } from "./userAdminFilters"
+
 const ROLES: UserRole[] = ["user", "editor", "admin"]
 
 const formatDate = (date: Date | string) =>
@@ -52,6 +55,7 @@ const UserRow = ({
   currentUserId,
   onDelete,
   onSoftDelete,
+  onIssueStrike,
   pendingAction,
   pendingUserId,
   roleFormAction,
@@ -60,6 +64,7 @@ const UserRow = ({
   currentUserId: string
   onDelete: (userId: string) => void
   onSoftDelete: (userId: string) => void
+  onIssueStrike: (userId: string) => void
   pendingAction: string | null
   pendingUserId: string | null
   roleFormAction?: (formData: FormData) => void
@@ -73,7 +78,8 @@ const UserRow = ({
   const canChangeRole =
     roleFormAction && !isCurrentUser && !isDeleted
 
-  const displayName = [user.firstName, user.lastName].filter(Boolean).join(" ") || user.username || user.email
+  const displayName = getUserDisplayName(user)
+  const canIssueStrike = !isCurrentUser && !isDeleted && !user.isBanned
 
   return (
     <tr
@@ -104,6 +110,9 @@ const UserRow = ({
         )}
       </td>
       <td className="whitespace-nowrap px-6 py-4 text-sm text-noir-gold-100">
+        <StrikeIndicators strikeCount={user.strikeCount} isBanned={user.isBanned} />
+      </td>
+      <td className="whitespace-nowrap px-6 py-4 text-sm text-noir-gold-100">
         {totalDataRecords(user)}
       </td>
       <td className="whitespace-nowrap px-6 py-4 text-sm text-noir-gold-100">
@@ -113,7 +122,15 @@ const UserRow = ({
         {isCurrentUser ? (
           <span className="text-noir-gold-100/60">—</span>
         ) : (
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => onIssueStrike(user.id)}
+              disabled={!canIssueStrike || isPending}
+              className="rounded border border-orange-600/70 px-2 py-1 text-orange-400 hover:bg-orange-600/20 disabled:opacity-50"
+            >
+              {t("issueStrike")}
+            </button>
             <button
               type="button"
               onClick={() => onSoftDelete(user.id)}

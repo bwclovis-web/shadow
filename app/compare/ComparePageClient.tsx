@@ -30,7 +30,7 @@ import type { ComparePerfumeDto } from "@/models/compare.server"
 import { compareIdsExceedMax, normalizeCompareIds } from "@/utils/compare-ids"
 import { normalizeRemoteImageSrc, styleMerge, validImageRegex } from "@/utils/styleUtils"
 
-const BANNER_IMAGE = "/images/vault.webp"
+const BANNER_IMAGE = "/images/compare.png"
 const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
 const VAULT_PATH = "/the-vault"
 const EXCHANGE_PATH = "/the-exchange"

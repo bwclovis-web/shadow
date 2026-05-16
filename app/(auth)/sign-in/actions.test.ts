@@ -69,6 +69,20 @@ describe("signInAction", () => {
     expect(mockRedirect).not.toHaveBeenCalled()
   })
 
+  it("returns suspended error when user is banned", async () => {
+    mockSignInCustomer.mockResolvedValue({
+      id: "banned-user",
+      username: "BannedUser",
+      tokenVersion: 0,
+      isBanned: true,
+    } as Awaited<ReturnType<typeof signInCustomer>>)
+
+    const result = await signInAction(null, formData())
+    expect(result).toEqual({ error: "Your account has been suspended" })
+    expect(mockCreateSession).not.toHaveBeenCalled()
+    expect(mockRedirect).not.toHaveBeenCalled()
+  })
+
   it("when user has username, does not call generateUniqueUsername or updateUser and redirects to profile", async () => {
     mockSignInCustomer.mockResolvedValue({
       id: "user-1",

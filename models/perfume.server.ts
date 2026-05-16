@@ -593,6 +593,10 @@ const availableForDecantingSelect = {
       tradeOnly: true,
       type: true,
       userId: true,
+      images: true,
+      condition: true,
+      decantFormat: true,
+      mlRemaining: true,
       user: {
         select: {
           id: true,

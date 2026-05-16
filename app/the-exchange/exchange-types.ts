@@ -20,6 +20,10 @@ export type ExchangeUserPerfumeRow = {
   tradeOnly: boolean
   price: string | null
   tradePrice: string | null
+  images: string[]
+  condition: "sealed" | "mint" | "lightlyUsed" | "heavilyUsed" | "damaged" | null
+  decantFormat: "atomizer" | "vial" | "original" | null
+  mlRemaining: number | null
   user: {
     id: string
     firstName: string | null

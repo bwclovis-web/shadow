@@ -38,8 +38,9 @@ export const useCSRF = () => {
 
   const addToHeaders = (headers: HeadersInit = {}): HeadersInit => {
     const token = getTokenWithFallback()
-    if (!token) return headers
-    return { ...headers, "x-csrf-token": token }
+    const merged = new Headers(headers)
+    if (token) merged.set("x-csrf-token", token)
+    return merged
   }
 
   const submitForm = async (
