@@ -794,6 +794,564 @@ DO $$ BEGIN
 END $$;
 
 -- ============================================================================
+-- 6. WAVE 1 — TRUST FOUNDATION (trades, strikes, reports, listings, profile)
+-- ============================================================================
+
+-- TradeStatus enum
+DO $$ BEGIN
+    CREATE TYPE "TradeStatus" AS ENUM (
+        'draft', 'pending', 'accepted', 'shipped', 'received', 'completed', 'declined', 'cancelled'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN
+        RAISE NOTICE 'TradeStatus enum already exists, skipping';
+END $$;
+
+-- TradeLineItemRole enum
+DO $$ BEGIN
+    CREATE TYPE "TradeLineItemRole" AS ENUM ('offered', 'requested');
+EXCEPTION
+    WHEN duplicate_object THEN
+        RAISE NOTICE 'TradeLineItemRole enum already exists, skipping';
+END $$;
+
+-- ListingCondition enum
+DO $$ BEGIN
+    CREATE TYPE "ListingCondition" AS ENUM (
+        'sealed', 'mint', 'lightlyUsed', 'heavilyUsed', 'damaged'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN
+        RAISE NOTICE 'ListingCondition enum already exists, skipping';
+END $$;
+
+-- DecantFormat enum
+DO $$ BEGIN
+    CREATE TYPE "DecantFormat" AS ENUM ('atomizer', 'vial', 'original');
+EXCEPTION
+    WHEN duplicate_object THEN
+        RAISE NOTICE 'DecantFormat enum already exists, skipping';
+END $$;
+
+-- UserReportCategory enum
+DO $$ BEGIN
+    CREATE TYPE "UserReportCategory" AS ENUM (
+        'scam', 'fakeItem', 'harassment', 'noShip', 'other'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN
+        RAISE NOTICE 'UserReportCategory enum already exists, skipping';
+END $$;
+
+-- UserReportStatus enum (Wave 1C: inProgress / settled / passed)
+DO $$ BEGIN
+    CREATE TYPE "UserReportStatus" AS ENUM ('inProgress', 'settled', 'passed');
+EXCEPTION
+    WHEN duplicate_object THEN
+        RAISE NOTICE 'UserReportStatus enum already exists, skipping';
+END $$;
+
+-- AlertType: trade lifecycle + trader message (matches prisma/schema.prisma)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_enum e
+        JOIN pg_type t ON e.enumtypid = t.oid
+        WHERE t.typname = 'AlertType' AND e.enumlabel = 'new_trader_message'
+    ) THEN
+        ALTER TYPE "AlertType" ADD VALUE 'new_trader_message';
+        RAISE NOTICE 'Added new_trader_message to AlertType enum';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_enum e
+        JOIN pg_type t ON e.enumtypid = t.oid
+        WHERE t.typname = 'AlertType' AND e.enumlabel = 'trade_received'
+    ) THEN
+        ALTER TYPE "AlertType" ADD VALUE 'trade_received';
+        RAISE NOTICE 'Added trade_received to AlertType enum';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_enum e
+        JOIN pg_type t ON e.enumtypid = t.oid
+        WHERE t.typname = 'AlertType' AND e.enumlabel = 'trade_accepted'
+    ) THEN
+        ALTER TYPE "AlertType" ADD VALUE 'trade_accepted';
+        RAISE NOTICE 'Added trade_accepted to AlertType enum';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_enum e
+        JOIN pg_type t ON e.enumtypid = t.oid
+        WHERE t.typname = 'AlertType' AND e.enumlabel = 'trade_shipped'
+    ) THEN
+        ALTER TYPE "AlertType" ADD VALUE 'trade_shipped';
+        RAISE NOTICE 'Added trade_shipped to AlertType enum';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_enum e
+        JOIN pg_type t ON e.enumtypid = t.oid
+        WHERE t.typname = 'AlertType' AND e.enumlabel = 'trade_completed'
+    ) THEN
+        ALTER TYPE "AlertType" ADD VALUE 'trade_completed';
+        RAISE NOTICE 'Added trade_completed to AlertType enum';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_enum e
+        JOIN pg_type t ON e.enumtypid = t.oid
+        WHERE t.typname = 'AlertType' AND e.enumlabel = 'trade_cancelled'
+    ) THEN
+        ALTER TYPE "AlertType" ADD VALUE 'trade_cancelled';
+        RAISE NOTICE 'Added trade_cancelled to AlertType enum';
+    END IF;
+END $$;
+
+-- Trade tables
+CREATE TABLE IF NOT EXISTS "Trade" (
+    "id" TEXT NOT NULL,
+    "initiatorId" TEXT NOT NULL,
+    "counterpartyId" TEXT NOT NULL,
+    "status" "TradeStatus" NOT NULL DEFAULT 'draft',
+    "notes" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Trade_pkey" PRIMARY KEY ("id")
+);
+
+CREATE TABLE IF NOT EXISTS "TradeLineItem" (
+    "id" TEXT NOT NULL,
+    "tradeId" TEXT NOT NULL,
+    "userPerfumeId" TEXT NOT NULL,
+    "role" "TradeLineItemRole" NOT NULL,
+    "perfumeName" TEXT NOT NULL,
+    "mlSnapshot" DOUBLE PRECISION,
+    "conditionSnapshot" "ListingCondition",
+    CONSTRAINT "TradeLineItem_pkey" PRIMARY KEY ("id")
+);
+
+CREATE TABLE IF NOT EXISTS "TradeEvent" (
+    "id" TEXT NOT NULL,
+    "tradeId" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "actorUserId" TEXT NOT NULL,
+    "metadata" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "TradeEvent_pkey" PRIMARY KEY ("id")
+);
+
+CREATE TABLE IF NOT EXISTS "UserStrike" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "issuedBy" TEXT NOT NULL,
+    "reason" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UserStrike_pkey" PRIMARY KEY ("id")
+);
+
+CREATE TABLE IF NOT EXISTS "UserReport" (
+    "id" TEXT NOT NULL,
+    "reporterId" TEXT NOT NULL,
+    "reportedUserId" TEXT NOT NULL,
+    "tradeId" TEXT,
+    "category" "UserReportCategory" NOT NULL,
+    "description" TEXT,
+    "images" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
+    "status" "UserReportStatus" NOT NULL DEFAULT 'inProgress',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UserReport_pkey" PRIMARY KEY ("id")
+);
+
+-- UserReport: migrate legacy status enum values if present (pending/reviewed/actioned → inProgress/settled/passed)
+DO $$ BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_enum e
+        JOIN pg_type t ON e.enumtypid = t.oid
+        WHERE t.typname = 'UserReportStatus' AND e.enumlabel = 'pending'
+    ) THEN
+        ALTER TABLE "UserReport" ALTER COLUMN "status" DROP DEFAULT;
+        ALTER TABLE "UserReport" ALTER COLUMN "status" TYPE TEXT USING "status"::TEXT;
+        UPDATE "UserReport" SET "status" = 'inProgress' WHERE "status" IN ('pending', 'reviewed');
+        UPDATE "UserReport" SET "status" = 'settled' WHERE "status" = 'actioned';
+        DROP TYPE "UserReportStatus";
+        CREATE TYPE "UserReportStatus" AS ENUM ('inProgress', 'settled', 'passed');
+        ALTER TABLE "UserReport" ALTER COLUMN "status" TYPE "UserReportStatus" USING "status"::"UserReportStatus";
+        ALTER TABLE "UserReport" ALTER COLUMN "status" SET DEFAULT 'inProgress';
+        RAISE NOTICE 'Migrated UserReport.status to inProgress/settled/passed';
+    END IF;
+EXCEPTION
+    WHEN undefined_table THEN
+        RAISE NOTICE 'UserReport table missing during status migration, skipping';
+    WHEN others THEN
+        RAISE NOTICE 'UserReport status migration skipped: %', SQLERRM;
+END $$;
+
+-- UserReport.images (if table predates photo attachments)
+DO $$ BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = 'UserReport'
+    ) AND NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'UserReport' AND column_name = 'images'
+    ) THEN
+        ALTER TABLE "UserReport" ADD COLUMN "images" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
+        RAISE NOTICE 'Added images column to UserReport';
+    END IF;
+END $$;
+
+-- User profile / moderation fields (Wave 1A / 1E)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'avatarImage'
+    ) THEN
+        ALTER TABLE "User" ADD COLUMN "avatarImage" TEXT;
+        RAISE NOTICE 'Added avatarImage column to User';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'region'
+    ) THEN
+        ALTER TABLE "User" ADD COLUMN "region" TEXT;
+        RAISE NOTICE 'Added region column to User';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'instagramHandle'
+    ) THEN
+        ALTER TABLE "User" ADD COLUMN "instagramHandle" TEXT;
+        RAISE NOTICE 'Added instagramHandle column to User';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'fragranticaUrl'
+    ) THEN
+        ALTER TABLE "User" ADD COLUMN "fragranticaUrl" TEXT;
+        RAISE NOTICE 'Added fragranticaUrl column to User';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'redditUsername'
+    ) THEN
+        ALTER TABLE "User" ADD COLUMN "redditUsername" TEXT;
+        RAISE NOTICE 'Added redditUsername column to User';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'strikeCount'
+    ) THEN
+        ALTER TABLE "User" ADD COLUMN "strikeCount" INTEGER NOT NULL DEFAULT 0;
+        RAISE NOTICE 'Added strikeCount column to User';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'isBanned'
+    ) THEN
+        ALTER TABLE "User" ADD COLUMN "isBanned" BOOLEAN NOT NULL DEFAULT false;
+        RAISE NOTICE 'Added isBanned column to User';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'User' AND column_name = 'onboardingCompletedAt'
+    ) THEN
+        ALTER TABLE "User" ADD COLUMN "onboardingCompletedAt" TIMESTAMP(3);
+        RAISE NOTICE 'Added onboardingCompletedAt column to User';
+    END IF;
+END $$;
+
+-- UserPerfume listing-quality fields (Wave 1D)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'UserPerfume' AND column_name = 'images'
+    ) THEN
+        ALTER TABLE "UserPerfume" ADD COLUMN "images" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
+        RAISE NOTICE 'Added images column to UserPerfume';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'UserPerfume' AND column_name = 'condition'
+    ) THEN
+        ALTER TABLE "UserPerfume" ADD COLUMN "condition" "ListingCondition";
+        RAISE NOTICE 'Added condition column to UserPerfume';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'UserPerfume' AND column_name = 'decantFormat'
+    ) THEN
+        ALTER TABLE "UserPerfume" ADD COLUMN "decantFormat" "DecantFormat";
+        RAISE NOTICE 'Added decantFormat column to UserPerfume';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'UserPerfume' AND column_name = 'mlRemaining'
+    ) THEN
+        ALTER TABLE "UserPerfume" ADD COLUMN "mlRemaining" DOUBLE PRECISION;
+        RAISE NOTICE 'Added mlRemaining column to UserPerfume';
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'UserPerfume' AND column_name = 'pendingSubmissionId'
+    ) THEN
+        ALTER TABLE "UserPerfume" ADD COLUMN "pendingSubmissionId" TEXT;
+        RAISE NOTICE 'Added pendingSubmissionId column to UserPerfume';
+    END IF;
+END $$;
+
+-- TraderContactMessage.tradeId
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'TraderContactMessage' AND column_name = 'tradeId'
+    ) THEN
+        ALTER TABLE "TraderContactMessage" ADD COLUMN "tradeId" TEXT;
+        RAISE NOTICE 'Added tradeId column to TraderContactMessage';
+    END IF;
+END $$;
+
+-- TraderFeedback.tradeId
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'TraderFeedback' AND column_name = 'tradeId'
+    ) THEN
+        ALTER TABLE "TraderFeedback" ADD COLUMN "tradeId" TEXT;
+        RAISE NOTICE 'Added tradeId column to TraderFeedback';
+    END IF;
+END $$;
+
+-- Trade indexes
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'Trade_initiatorId_status_idx') THEN
+        CREATE INDEX "Trade_initiatorId_status_idx" ON "Trade"("initiatorId", "status");
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'Trade_counterpartyId_status_idx') THEN
+        CREATE INDEX "Trade_counterpartyId_status_idx" ON "Trade"("counterpartyId", "status");
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'Trade_status_updatedAt_idx') THEN
+        CREATE INDEX "Trade_status_updatedAt_idx" ON "Trade"("status", "updatedAt");
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'TradeLineItem_tradeId_idx') THEN
+        CREATE INDEX "TradeLineItem_tradeId_idx" ON "TradeLineItem"("tradeId");
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'TradeLineItem_userPerfumeId_idx') THEN
+        CREATE INDEX "TradeLineItem_userPerfumeId_idx" ON "TradeLineItem"("userPerfumeId");
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'TradeEvent_tradeId_createdAt_idx') THEN
+        CREATE INDEX "TradeEvent_tradeId_createdAt_idx" ON "TradeEvent"("tradeId", "createdAt");
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'TradeEvent_actorUserId_idx') THEN
+        CREATE INDEX "TradeEvent_actorUserId_idx" ON "TradeEvent"("actorUserId");
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'UserStrike_userId_createdAt_idx') THEN
+        CREATE INDEX "UserStrike_userId_createdAt_idx" ON "UserStrike"("userId", "createdAt");
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'UserStrike_issuedBy_idx') THEN
+        CREATE INDEX "UserStrike_issuedBy_idx" ON "UserStrike"("issuedBy");
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'UserReport_status_createdAt_idx') THEN
+        CREATE INDEX "UserReport_status_createdAt_idx" ON "UserReport"("status", "createdAt");
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'UserReport_reportedUserId_idx') THEN
+        CREATE INDEX "UserReport_reportedUserId_idx" ON "UserReport"("reportedUserId");
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'UserReport_reporterId_idx') THEN
+        CREATE INDEX "UserReport_reporterId_idx" ON "UserReport"("reporterId");
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'UserReport_tradeId_idx') THEN
+        CREATE INDEX "UserReport_tradeId_idx" ON "UserReport"("tradeId");
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'UserPerfume_pendingSubmissionId_idx') THEN
+        CREATE INDEX "UserPerfume_pendingSubmissionId_idx" ON "UserPerfume"("pendingSubmissionId");
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'TraderContactMessage_tradeId_idx') THEN
+        CREATE INDEX "TraderContactMessage_tradeId_idx" ON "TraderContactMessage"("tradeId");
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'TraderFeedback_tradeId_idx') THEN
+        CREATE INDEX "TraderFeedback_tradeId_idx" ON "TraderFeedback"("tradeId");
+    END IF;
+END $$;
+
+-- Trade foreign keys
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Trade_initiatorId_fkey') THEN
+        ALTER TABLE "Trade"
+        ADD CONSTRAINT "Trade_initiatorId_fkey"
+        FOREIGN KEY ("initiatorId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Trade_counterpartyId_fkey') THEN
+        ALTER TABLE "Trade"
+        ADD CONSTRAINT "Trade_counterpartyId_fkey"
+        FOREIGN KEY ("counterpartyId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'TradeLineItem_tradeId_fkey') THEN
+        ALTER TABLE "TradeLineItem"
+        ADD CONSTRAINT "TradeLineItem_tradeId_fkey"
+        FOREIGN KEY ("tradeId") REFERENCES "Trade"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'TradeLineItem_userPerfumeId_fkey') THEN
+        ALTER TABLE "TradeLineItem"
+        ADD CONSTRAINT "TradeLineItem_userPerfumeId_fkey"
+        FOREIGN KEY ("userPerfumeId") REFERENCES "UserPerfume"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'TradeEvent_tradeId_fkey') THEN
+        ALTER TABLE "TradeEvent"
+        ADD CONSTRAINT "TradeEvent_tradeId_fkey"
+        FOREIGN KEY ("tradeId") REFERENCES "Trade"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'TradeEvent_actorUserId_fkey') THEN
+        ALTER TABLE "TradeEvent"
+        ADD CONSTRAINT "TradeEvent_actorUserId_fkey"
+        FOREIGN KEY ("actorUserId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'UserStrike_userId_fkey') THEN
+        ALTER TABLE "UserStrike"
+        ADD CONSTRAINT "UserStrike_userId_fkey"
+        FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'UserStrike_issuedBy_fkey') THEN
+        ALTER TABLE "UserStrike"
+        ADD CONSTRAINT "UserStrike_issuedBy_fkey"
+        FOREIGN KEY ("issuedBy") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'UserReport_reporterId_fkey') THEN
+        ALTER TABLE "UserReport"
+        ADD CONSTRAINT "UserReport_reporterId_fkey"
+        FOREIGN KEY ("reporterId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'UserReport_reportedUserId_fkey') THEN
+        ALTER TABLE "UserReport"
+        ADD CONSTRAINT "UserReport_reportedUserId_fkey"
+        FOREIGN KEY ("reportedUserId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'UserReport_tradeId_fkey') THEN
+        ALTER TABLE "UserReport"
+        ADD CONSTRAINT "UserReport_tradeId_fkey"
+        FOREIGN KEY ("tradeId") REFERENCES "Trade"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'UserPerfume_pendingSubmissionId_fkey') THEN
+        ALTER TABLE "UserPerfume"
+        ADD CONSTRAINT "UserPerfume_pendingSubmissionId_fkey"
+        FOREIGN KEY ("pendingSubmissionId") REFERENCES "PendingSubmission"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'TraderContactMessage_tradeId_fkey') THEN
+        ALTER TABLE "TraderContactMessage"
+        ADD CONSTRAINT "TraderContactMessage_tradeId_fkey"
+        FOREIGN KEY ("tradeId") REFERENCES "Trade"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+    END IF;
+END $$;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'TraderFeedback_tradeId_fkey') THEN
+        ALTER TABLE "TraderFeedback"
+        ADD CONSTRAINT "TraderFeedback_tradeId_fkey"
+        FOREIGN KEY ("tradeId") REFERENCES "Trade"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+    END IF;
+END $$;
+
+-- ============================================================================
 -- 7. COMMIT TRANSACTION
 -- ============================================================================
 

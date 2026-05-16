@@ -120,13 +120,71 @@ async function verifySchema() {
           WHERE table_schema = 'public'
             AND table_name = 'UserPerfumeWishlist'
             AND column_name = 'bottlePreference'
-        ) AS "hasUserPerfumeWishlistBottlePreference"
+        ) AS "hasUserPerfumeWishlistBottlePreference",
+        EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'User'
+            AND column_name = 'avatarImage'
+        ) AS "hasUserAvatarImage",
+        EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'User'
+            AND column_name = 'strikeCount'
+        ) AS "hasUserStrikeCount",
+        EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'UserPerfume'
+            AND column_name = 'images'
+        ) AS "hasUserPerfumeListingImages",
+        EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'UserPerfume'
+            AND column_name = 'condition'
+        ) AS "hasUserPerfumeListingCondition",
+        EXISTS (
+          SELECT 1 FROM information_schema.tables
+          WHERE table_schema = 'public' AND table_name = 'Trade'
+        ) AS "hasTrade",
+        EXISTS (
+          SELECT 1 FROM information_schema.tables
+          WHERE table_schema = 'public' AND table_name = 'UserStrike'
+        ) AS "hasUserStrike",
+        EXISTS (
+          SELECT 1 FROM information_schema.tables
+          WHERE table_schema = 'public' AND table_name = 'UserReport'
+        ) AS "hasUserReport"
     `)
 
     const result = Array.isArray(checks) ? checks[0] : checks
+    const required = [
+      "hasUserAvatarImage",
+      "hasUserPerfumeListingImages",
+      "hasUserPerfumeListingCondition",
+      "hasTrade",
+      "hasUserStrike",
+      "hasUserReport",
+    ]
+    const missing = required.filter(key => !result[key])
+
     console.log("Verification result:")
     console.log(JSON.stringify(result, null, 2))
     console.log("")
+
+    if (missing.length > 0) {
+      console.error(
+        "ERROR: Production is still missing Wave 1 schema after sync:",
+        missing.join(", ")
+      )
+      console.error(
+        "Review prisma/migrations/APPLY_TO_REMOTE_DB.sql and re-run npm run db:push:prod"
+      )
+      process.exit(1)
+    }
+
     console.log("Production schema sync completed.")
   } finally {
     await prisma.$disconnect()
