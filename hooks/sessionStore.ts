@@ -17,6 +17,7 @@ interface SessionState {
     modalId: string,
     data?: ModalData
   ) => void
+  openModal: (modalId: string, data?: ModalData) => void
   closeModal: () => void
   setModalData: (data: ModalData | null) => void
   setModalId: (id: string | null) => void
@@ -57,6 +58,16 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     })
 
     // Handle body overflow
+    document.documentElement.style.overflow = "hidden"
+  },
+
+  openModal: (modalId: string, data?: ModalData) => {
+    set({
+      modalOpen: true,
+      modalId,
+      modalData: data ?? null,
+      triggerId: null,
+    })
     document.documentElement.style.overflow = "hidden"
   },
 
