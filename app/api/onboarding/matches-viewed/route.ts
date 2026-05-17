@@ -17,7 +17,7 @@ export const POST = async (request: NextRequest) => {
     const body = await request.json().catch(() => ({}))
     await requireCSRFForJsonBody(request, body)
 
-    await markOnboardingMatchesViewed(authResult.userId)
+    await markOnboardingMatchesViewed(authResult.user!.id)
 
     return NextResponse.json({ success: true })
   } catch (error) {

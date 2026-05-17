@@ -70,17 +70,14 @@ export const submitScentQuizAction = async (
       ? browsingRaw
       : null
 
-  const budgetTier = parseQuizBudgetTier(
-    typeof formData.get("budget") === "string" ? formData.get("budget") : null
-  )
-  const concentrationPref = parseQuizConcentrationPreference(
-    typeof formData.get("concentration") === "string"
-      ? formData.get("concentration")
-      : null
-  )
-  const houseTierPref = parseQuizHouseTierPreference(
-    typeof formData.get("houseTier") === "string" ? formData.get("houseTier") : null
-  )
+  const formString = (key: string): string | null => {
+    const value = formData.get(key)
+    return typeof value === "string" ? value : null
+  }
+
+  const budgetTier = parseQuizBudgetTier(formString("budget"))
+  const concentrationPref = parseQuizConcentrationPreference(formString("concentration"))
+  const houseTierPref = parseQuizHouseTierPreference(formString("houseTier"))
 
   const tErr = await getTranslations("quiz.errors")
 
@@ -101,13 +98,20 @@ export const submitScentQuizAction = async (
   }
 
   const priceRangeFromBudget = budgetTier ? budgetTierToPriceRange(budgetTier) : null
+  const preferredPriceRange =
+    priceRangeFromBudget == null
+      ? null
+      : {
+          ...(priceRangeFromBudget.min != null ? { min: priceRangeFromBudget.min } : {}),
+          ...(priceRangeFromBudget.max != null ? { max: priceRangeFromBudget.max } : {}),
+        }
 
   const quizData: ScentQuizData = {
     noteWeights,
     avoidNoteIds,
     seasonHints,
     browsingStyle,
-    preferredPriceRange: budgetTier != null ? priceRangeFromBudget : null,
+    preferredPriceRange: budgetTier != null ? preferredPriceRange : null,
     preferredConcentration: concentrationPref ?? null,
     preferredHouseTier: houseTierPref ?? null,
   }

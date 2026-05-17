@@ -25,8 +25,6 @@ export type ScentDnaSnapshot = {
   hasHouseData: boolean
 }
 
-const HOUSE_BREAKDOWN_TYPES: HouseType[] = ["indie", "niche", "designer"]
-
 export const computeTopNoteFamilies = (
   noteWeights: Record<string, number>,
   noteNameById: ReadonlyMap<string, string>,
@@ -97,9 +95,10 @@ export const computeHouseTypeBreakdown = (
   let total = 0
 
   for (const type of houseTypes) {
-    if (!type || !HOUSE_BREAKDOWN_TYPES.includes(type)) continue
-    counts[type] += 1
-    total += 1
+    if (type === "indie" || type === "niche" || type === "designer") {
+      counts[type] += 1
+      total += 1
+    }
   }
 
   if (total === 0) return null

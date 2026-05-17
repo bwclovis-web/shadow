@@ -71,6 +71,13 @@ const OnboardingMatchesList = ({
               condition: match.condition,
               decantFormat: match.decantFormat,
               mlRemaining: match.mlRemaining,
+              user: {
+                id: match.counterpartyId,
+                firstName: null,
+                lastName: null,
+                username: null,
+                email: null,
+              },
             },
             {
               perfumeId: match.perfumeId,

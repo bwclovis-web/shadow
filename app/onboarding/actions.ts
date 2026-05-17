@@ -36,7 +36,7 @@ export const dismissOnboardingAction = async (
   await requireCSRF(request, formData)
 
   const auth = await requireOnboardingUser()
-  if ("error" in auth) return { error: auth.error }
+  if ("error" in auth) return { error: auth.error ?? "Unauthorized" }
 
   await dismissOnboarding(auth.userId)
   revalidatePath("/", "layout")
@@ -51,7 +51,7 @@ export const completeOnboardingAction = async (
   await requireCSRF(request, formData)
 
   const auth = await requireOnboardingUser()
-  if ("error" in auth) return { error: auth.error }
+  if ("error" in auth) return { error: auth.error ?? "Unauthorized" }
 
   await completeOnboarding(auth.userId)
   revalidatePath("/", "layout")
