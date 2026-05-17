@@ -10,6 +10,11 @@ const copy = {
   priceChipMin: (min: number) => `Min ${min}`,
   priceChipMax: (max: number) => `Max ${max}`,
   priceChipRange: (min: number, max: number) => `${min}-${max}`,
+  tradePrefLabel: () => "Cash",
+  bottleLabel: () => "Full",
+  conditionLabel: () => "Mint",
+  regionLabel: () => "US",
+  hasPhotosLabel: "Has photos",
 }
 
 describe("buildExchangeDiscoveryChipItems", () => {

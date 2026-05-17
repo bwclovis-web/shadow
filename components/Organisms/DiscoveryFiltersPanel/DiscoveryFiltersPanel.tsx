@@ -1,24 +1,80 @@
 "use client"
 
-import { useEffect, useState, type FC } from "react"
+import { useEffect, useId, useState, type FC } from "react"
 
 import { Button } from "@/components/Atoms/Button/Button"
+import CheckBox from "@/components/Atoms/CheckBox/CheckBox"
 import Input from "@/components/Atoms/Input/Input"
 import { SeasonSelectionToggleRow } from "@/components/Containers/Perfume/PerfumeSeasonVote/SeasonSelectionToggleRow"
 import { FilterPanelSection } from "@/components/Molecules/FilterPanelSection"
+import { FilterToggleGroup } from "@/components/Molecules/FilterToggleGroup"
 import {
   HouseAutocomplete,
   type HouseAutocompleteOption,
 } from "@/components/Molecules/HouseAutocomplete"
+import { selectVariants, selectWrapperVariants } from "@/components/Atoms/Select/select-variants"
 import TagSearch from "@/components/Organisms/TagSearch/TagSearch"
 import type { Tag } from "@/lib/queries/tags"
 import {
+  DISCOVERY_LISTING_CONDITIONS,
+  DISCOVERY_TRADE_PREFERENCES,
+  EXCHANGE_BOTTLE_TYPES,
+  EXCHANGE_REGION_BUCKETS,
   emptyDiscoveryFilters,
+  type DiscoveryListingCondition,
+  type DiscoveryTradePreference,
+  type ExchangeBottleType,
+  type ExchangeRegionBucket,
   type PerfumeDiscoveryFilters,
   seasonsArrayToSelection,
   selectionToSeasonsArray,
 } from "@/utils/discovery-filters"
 import { styleMerge } from "@/utils/styleUtils"
+
+export type DiscoveryFiltersPanelLabels = {
+  notesTitle: string
+  notesDescription: string
+  notesSearchLabel: string
+  seasonTitle: string
+  seasonDescription: string
+  houseTitle: string
+  houseSearchLabel: string
+  houseClear: string
+  priceTitle: string
+  priceDescription: string
+  minLabel: string
+  maxLabel: string
+  tradePrefTitle: string
+  tradePrefDescription: string
+  tradePrefAria: string
+  tradePrefCash: string
+  tradePrefTrade: string
+  tradePrefBoth: string
+  bottleTitle: string
+  bottleDescription: string
+  bottleAria: string
+  bottleFull: string
+  bottlePartial: string
+  bottleSample: string
+  bottleDecant: string
+  conditionTitle: string
+  conditionDescription: string
+  conditionAria: string
+  conditionLabels: Record<DiscoveryListingCondition, string>
+  regionTitle: string
+  regionDescription: string
+  regionLabel: string
+  regionAll: string
+  regionUS: string
+  regionUK: string
+  regionAU: string
+  regionEU: string
+  regionOther: string
+  hasPhotosLabel: string
+  hasPhotosDescription: string
+  hasPhotosToggle: string
+  clearAll: string
+}
 
 export type DiscoveryFiltersPanelProps = {
   value: PerfumeDiscoveryFilters
@@ -27,23 +83,13 @@ export type DiscoveryFiltersPanelProps = {
   initialNoteTags: Tag[]
   /** Hydrated house when URL has `house`. */
   initialHouse: HouseAutocompleteOption | null
-  labels: {
-    notesTitle: string
-    notesDescription: string
-    notesSearchLabel: string
-    seasonTitle: string
-    seasonDescription: string
-    houseTitle: string
-    houseSearchLabel: string
-    houseClear: string
-    priceTitle: string
-    priceDescription: string
-    minLabel: string
-    maxLabel: string
-    clearAll: string
-  }
+  labels: DiscoveryFiltersPanelLabels
   className?: string
 }
+
+const TRADE_PREF_OPTIONS: DiscoveryTradePreference[] = [...DISCOVERY_TRADE_PREFERENCES]
+const BOTTLE_OPTIONS: ExchangeBottleType[] = [...EXCHANGE_BOTTLE_TYPES]
+const CONDITION_OPTIONS: DiscoveryListingCondition[] = [...DISCOVERY_LISTING_CONDITIONS]
 
 export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
   value,
@@ -53,6 +99,7 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
   labels,
   className,
 }) => {
+  const regionSelectId = useId()
   const [minStr, setMinStr] = useState(
     () => (value.minPrice != null ? String(value.minPrice) : "")
   )
@@ -115,6 +162,59 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
     })
   }
 
+  const regionLabelFor = (bucket: ExchangeRegionBucket): string => {
+    switch (bucket) {
+      case "US":
+        return labels.regionUS
+      case "UK":
+        return labels.regionUK
+      case "AU":
+        return labels.regionAU
+      case "EU":
+        return labels.regionEU
+      case "other":
+        return labels.regionOther
+      default:
+        return bucket
+    }
+  }
+
+  const tradePrefOptions = TRADE_PREF_OPTIONS.map(pref => ({
+    value: pref,
+    label:
+      pref === "cash"
+        ? labels.tradePrefCash
+        : pref === "trade"
+          ? labels.tradePrefTrade
+          : labels.tradePrefBoth,
+  }))
+
+  const bottleOptions = BOTTLE_OPTIONS.map(bottle => ({
+    value: bottle,
+    label:
+      bottle === "full"
+        ? labels.bottleFull
+        : bottle === "partial"
+          ? labels.bottlePartial
+          : bottle === "sample"
+            ? labels.bottleSample
+            : labels.bottleDecant,
+  }))
+
+  const conditionOptions = CONDITION_OPTIONS.map(condition => ({
+    value: condition,
+    label: labels.conditionLabels[condition],
+  }))
+
+  const selectShell = styleMerge(
+    selectWrapperVariants({ size: "compact" }),
+    "w-full min-w-0 max-w-none bg-transparent pr-0"
+  )
+  const selectClass = styleMerge(
+    selectVariants({ size: "compact" }),
+    "w-full min-w-0 bg-noir-dark/60 text-sm text-noir-gold-100"
+  )
+
   return (
     <div
       className={styleMerge(
@@ -161,6 +261,71 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
         />
       </FilterPanelSection>
 
+      <FilterPanelSection
+        title={labels.tradePrefTitle}
+        description={labels.tradePrefDescription}
+      >
+        <FilterToggleGroup
+          options={tradePrefOptions}
+          selected={value.tradePreferences}
+          onChange={tradePreferences => onChange({ ...value, tradePreferences })}
+          ariaLabel={labels.tradePrefAria}
+        />
+      </FilterPanelSection>
+
+      <FilterPanelSection title={labels.bottleTitle} description={labels.bottleDescription}>
+        <FilterToggleGroup
+          options={bottleOptions}
+          selected={value.bottleTypes}
+          onChange={bottleTypes => onChange({ ...value, bottleTypes })}
+          ariaLabel={labels.bottleAria}
+        />
+      </FilterPanelSection>
+
+      <FilterPanelSection
+        title={labels.conditionTitle}
+        description={labels.conditionDescription}
+      >
+        <FilterToggleGroup
+          options={conditionOptions}
+          selected={value.conditions}
+          onChange={conditions => onChange({ ...value, conditions })}
+          ariaLabel={labels.conditionAria}
+        />
+      </FilterPanelSection>
+
+      <FilterPanelSection title={labels.regionTitle} description={labels.regionDescription}>
+        <div className={selectShell}>
+          <label
+            className="mb-1 block text-sm text-noir-gold-500"
+            htmlFor={regionSelectId}
+          >
+            {labels.regionLabel}
+          </label>
+          <select
+            id={regionSelectId}
+            value={value.region ?? ""}
+            onChange={e => {
+              const raw = e.target.value
+              onChange({
+                ...value,
+                region: raw ? (raw as ExchangeRegionBucket) : null,
+              })
+            }}
+            className={selectClass}
+          >
+            <option value="" className="bg-noir-dark">
+              {labels.regionAll}
+            </option>
+            {EXCHANGE_REGION_BUCKETS.map(bucket => (
+              <option key={bucket} value={bucket} className="bg-noir-dark">
+                {regionLabelFor(bucket)}
+              </option>
+            ))}
+          </select>
+        </div>
+      </FilterPanelSection>
+
       <FilterPanelSection title={labels.priceTitle} description={labels.priceDescription}>
         <div className="grid grid-cols-2 gap-3">
           <Input
@@ -188,6 +353,18 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
         </div>
       </FilterPanelSection>
 
+      <FilterPanelSection
+        title={labels.hasPhotosLabel}
+        description={labels.hasPhotosDescription}
+      >
+        <CheckBox
+          id="exchange-discovery-has-photos"
+          label={labels.hasPhotosToggle}
+          checked={value.hasPhotos}
+          onChange={() => onChange({ ...value, hasPhotos: !value.hasPhotos })}
+        />
+      </FilterPanelSection>
+
       <Button
         type="button"
         variant="secondary"
@@ -206,3 +383,4 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
     </div>
   )
 }
+

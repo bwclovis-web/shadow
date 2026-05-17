@@ -89,12 +89,52 @@ describe("discoveryFiltersActive", () => {
       discoveryFiltersActive({
         ...emptyDiscoveryFilters(),
         noteIds: ["clxxxxxxxxxxxxxxxxxxxxxx01"],
-        seasons: [],
-        houseId: null,
-        minPrice: null,
-        maxPrice: null,
       })
     ).toBe(true)
+    expect(
+      discoveryFiltersActive({
+        ...emptyDiscoveryFilters(),
+        tradePreferences: ["cash"],
+      })
+    ).toBe(true)
+    expect(
+      discoveryFiltersActive({
+        ...emptyDiscoveryFilters(),
+        hasPhotos: true,
+      })
+    ).toBe(true)
+  })
+})
+
+describe("listing extension filters parse", () => {
+  it("parses trade, bottle, condition, region, and hasPhotos", () => {
+    const sp = new URLSearchParams()
+    sp.set("tradePref", "cash,trade")
+    sp.set("bottle", "full,decant")
+    sp.set("condition", "mint,sealed")
+    sp.set("region", "US")
+    sp.set("hasPhotos", "1")
+    const parsed = parseDiscoveryFiltersFromSearchParams(sp)
+    expect(parsed.tradePreferences).toEqual(["cash", "trade"])
+    expect(parsed.bottleTypes).toEqual(["full", "decant"])
+    expect(parsed.conditions).toEqual(["mint", "sealed"])
+    expect(parsed.region).toBe("US")
+    expect(parsed.hasPhotos).toBe(true)
+  })
+
+  it("round-trips listing extension filters", () => {
+    const initial = {
+      ...emptyDiscoveryFilters(),
+      tradePreferences: ["both"] as const,
+      bottleTypes: ["sample"] as const,
+      conditions: ["damaged"] as const,
+      region: "EU" as const,
+      hasPhotos: true,
+    }
+    const parsed = parseDiscoveryFiltersFromSearchParams(
+      discoveryFiltersToSearchParams(initial)
+    )
+    expect(parsed).toMatchObject(initial)
   })
 })
 

@@ -7,7 +7,30 @@ export const DISCOVERY_QUERY = {
   house: "house",
   minPrice: "minPrice",
   maxPrice: "maxPrice",
+  tradePref: "tradePref",
+  bottle: "bottle",
+  condition: "condition",
+  region: "region",
+  hasPhotos: "hasPhotos",
 } as const
+
+export const DISCOVERY_TRADE_PREFERENCES = ["cash", "trade", "both"] as const
+export type DiscoveryTradePreference = (typeof DISCOVERY_TRADE_PREFERENCES)[number]
+
+export const EXCHANGE_BOTTLE_TYPES = ["full", "partial", "sample", "decant"] as const
+export type ExchangeBottleType = (typeof EXCHANGE_BOTTLE_TYPES)[number]
+
+export const DISCOVERY_LISTING_CONDITIONS = [
+  "sealed",
+  "mint",
+  "lightlyUsed",
+  "heavilyUsed",
+  "damaged",
+] as const
+export type DiscoveryListingCondition = (typeof DISCOVERY_LISTING_CONDITIONS)[number]
+
+export const EXCHANGE_REGION_BUCKETS = ["US", "UK", "AU", "EU", "other"] as const
+export type ExchangeRegionBucket = (typeof EXCHANGE_REGION_BUCKETS)[number]
 
 export type PerfumeDiscoveryFilters = {
   noteIds: string[]
@@ -15,28 +38,90 @@ export type PerfumeDiscoveryFilters = {
   houseId: string | null
   minPrice: number | null
   maxPrice: number | null
+  tradePreferences: DiscoveryTradePreference[]
+  bottleTypes: ExchangeBottleType[]
+  conditions: DiscoveryListingCondition[]
+  region: ExchangeRegionBucket | null
+  hasPhotos: boolean
 }
 
-export function emptyDiscoveryFilters(): PerfumeDiscoveryFilters {
-  return {
-    noteIds: [],
-    seasons: [],
-    houseId: null,
-    minPrice: null,
-    maxPrice: null,
-  }
-}
+export const emptyDiscoveryFilters = (): PerfumeDiscoveryFilters => ({
+  noteIds: [],
+  seasons: [],
+  houseId: null,
+  minPrice: null,
+  maxPrice: null,
+  tradePreferences: [],
+  bottleTypes: [],
+  conditions: [],
+  region: null,
+  hasPhotos: false,
+})
 
 /** CUID / Prisma id: alphanumeric, typical length 20–32. */
-export function isValidDiscoveryId(raw: string): boolean {
+export const isValidDiscoveryId = (raw: string): boolean => {
   const s = raw.trim()
   return /^[a-z0-9]{20,32}$/i.test(s)
+}
+
+const parseCommaTokens = (raw: string): string[] =>
+  raw
+    .split(",")
+    .map(s => s.trim())
+    .filter(Boolean)
+
+const parseTradePreferenceToken = (t: string): DiscoveryTradePreference | null => {
+  const k = t.trim().toLowerCase()
+  return (DISCOVERY_TRADE_PREFERENCES as readonly string[]).includes(k)
+    ? (k as DiscoveryTradePreference)
+    : null
+}
+
+const parseBottleTypeToken = (t: string): ExchangeBottleType | null => {
+  const k = t.trim().toLowerCase()
+  return (EXCHANGE_BOTTLE_TYPES as readonly string[]).includes(k)
+    ? (k as ExchangeBottleType)
+    : null
+}
+
+const parseConditionToken = (t: string): DiscoveryListingCondition | null => {
+  const k = t.trim()
+  return (DISCOVERY_LISTING_CONDITIONS as readonly string[]).includes(k)
+    ? (k as DiscoveryListingCondition)
+    : null
+}
+
+export const isExchangeRegionBucket = (raw: string): raw is ExchangeRegionBucket => {
+  const upper = raw.trim().toUpperCase()
+  if (upper === "OTHER") return true
+  return (EXCHANGE_REGION_BUCKETS as readonly string[]).includes(
+    upper as ExchangeRegionBucket
+  )
+}
+
+const parseRegionToken = (raw: string): ExchangeRegionBucket | null => {
+  const trimmed = raw.trim()
+  if (!trimmed) return null
+  if (trimmed.toLowerCase() === "other") return "other"
+  const upper = trimmed.toUpperCase()
+  return (EXCHANGE_REGION_BUCKETS as readonly string[]).includes(
+    upper as ExchangeRegionBucket
+  )
+    ? (upper as ExchangeRegionBucket)
+    : null
+}
+
+const parseHasPhotosFlag = (raw: string): boolean => {
+  const v = raw.trim().toLowerCase()
+  return v === "1" || v === "true" || v === "yes"
 }
 
 /**
  * Parse a listing price string (e.g. "$49.99", "50") to a number, or null if unusable.
  */
-export function parseListingPriceToNumber(raw: string | null | undefined): number | null {
+export const parseListingPriceToNumber = (
+  raw: string | null | undefined
+): number | null => {
   if (raw == null) return null
   const cleaned = raw.replace(/[^0-9.]/g, "").trim()
   if (!cleaned) return null
@@ -58,9 +143,9 @@ function parseOptionalNonNegativeNumber(raw: string): number | null {
 /**
  * Read discovery filters from URL search params (client `URLSearchParams` or App Router `searchParams`).
  */
-export function parseDiscoveryFiltersFromSearchParams(
+export const parseDiscoveryFiltersFromSearchParams = (
   params: URLSearchParams | Record<string, string | string[] | undefined>
-): PerfumeDiscoveryFilters {
+): PerfumeDiscoveryFilters => {
   const get = (key: string): string => {
     if (params instanceof URLSearchParams) {
       return params.get(key) ?? ""
@@ -91,12 +176,44 @@ export function parseDiscoveryFiltersFromSearchParams(
     ;[minPrice, maxPrice] = [maxPrice, minPrice]
   }
 
+  const tradePreferences = [
+    ...new Set(
+      parseCommaTokens(get(DISCOVERY_QUERY.tradePref))
+        .map(parseTradePreferenceToken)
+        .filter((x): x is DiscoveryTradePreference => x != null)
+    ),
+  ]
+
+  const bottleTypes = [
+    ...new Set(
+      parseCommaTokens(get(DISCOVERY_QUERY.bottle))
+        .map(parseBottleTypeToken)
+        .filter((x): x is ExchangeBottleType => x != null)
+    ),
+  ]
+
+  const conditions = [
+    ...new Set(
+      parseCommaTokens(get(DISCOVERY_QUERY.condition))
+        .map(parseConditionToken)
+        .filter((x): x is DiscoveryListingCondition => x != null)
+    ),
+  ]
+
+  const region = parseRegionToken(get(DISCOVERY_QUERY.region))
+  const hasPhotos = parseHasPhotosFlag(get(DISCOVERY_QUERY.hasPhotos))
+
   return {
     noteIds,
     seasons,
     houseId,
     minPrice,
     maxPrice,
+    tradePreferences,
+    bottleTypes,
+    conditions,
+    region,
+    hasPhotos,
   }
 }
 
@@ -104,17 +221,16 @@ export function parseDiscoveryFiltersFromSearchParams(
  * Merge discovery params into URLSearchParams. Preserves unrelated keys (e.g. `q`, `pg`).
  * Caller should delete `pg` when filter semantics require resetting the page.
  */
-export function discoveryFiltersToSearchParams(
+export const discoveryFiltersToSearchParams = (
   filters: PerfumeDiscoveryFilters,
   base?: URLSearchParams
-): URLSearchParams {
+): URLSearchParams => {
   const out = base ? new URLSearchParams(base.toString()) : new URLSearchParams()
 
-  out.delete(DISCOVERY_QUERY.notes)
-  out.delete(DISCOVERY_QUERY.season)
-  out.delete(DISCOVERY_QUERY.house)
-  out.delete(DISCOVERY_QUERY.minPrice)
-  out.delete(DISCOVERY_QUERY.maxPrice)
+  const keysToClear = Object.values(DISCOVERY_QUERY)
+  for (const key of keysToClear) {
+    out.delete(key)
+  }
 
   if (filters.noteIds.length > 0) {
     out.set(DISCOVERY_QUERY.notes, filters.noteIds.join(","))
@@ -131,54 +247,95 @@ export function discoveryFiltersToSearchParams(
   if (filters.maxPrice != null) {
     out.set(DISCOVERY_QUERY.maxPrice, String(filters.maxPrice))
   }
+  if (filters.tradePreferences.length > 0) {
+    out.set(DISCOVERY_QUERY.tradePref, filters.tradePreferences.join(","))
+  }
+  if (filters.bottleTypes.length > 0) {
+    out.set(DISCOVERY_QUERY.bottle, filters.bottleTypes.join(","))
+  }
+  if (filters.conditions.length > 0) {
+    out.set(DISCOVERY_QUERY.condition, filters.conditions.join(","))
+  }
+  if (filters.region) {
+    out.set(DISCOVERY_QUERY.region, filters.region)
+  }
+  if (filters.hasPhotos) {
+    out.set(DISCOVERY_QUERY.hasPhotos, "1")
+  }
 
   return out
 }
 
-export function discoveryFiltersActive(filters: PerfumeDiscoveryFilters): boolean {
-  return (
-    filters.noteIds.length > 0 ||
-    filters.seasons.length > 0 ||
-    filters.houseId != null ||
-    filters.minPrice != null ||
-    filters.maxPrice != null
-  )
-}
+export const discoveryFiltersActive = (filters: PerfumeDiscoveryFilters): boolean =>
+  filters.noteIds.length > 0 ||
+  filters.seasons.length > 0 ||
+  filters.houseId != null ||
+  filters.minPrice != null ||
+  filters.maxPrice != null ||
+  filters.tradePreferences.length > 0 ||
+  filters.bottleTypes.length > 0 ||
+  filters.conditions.length > 0 ||
+  filters.region != null ||
+  filters.hasPhotos
 
-export function removeDiscoveryNoteId(
+export const removeDiscoveryNoteId = (
   filters: PerfumeDiscoveryFilters,
   noteId: string
-): PerfumeDiscoveryFilters {
-  return {
-    ...filters,
-    noteIds: filters.noteIds.filter(id => id !== noteId),
-  }
-}
+): PerfumeDiscoveryFilters => ({
+  ...filters,
+  noteIds: filters.noteIds.filter(id => id !== noteId),
+})
 
-export function removeDiscoverySeason(
+export const removeDiscoverySeason = (
   filters: PerfumeDiscoveryFilters,
   season: SeasonKey
-): PerfumeDiscoveryFilters {
-  return {
-    ...filters,
-    seasons: filters.seasons.filter(s => s !== season),
-  }
-}
+): PerfumeDiscoveryFilters => ({
+  ...filters,
+  seasons: filters.seasons.filter(s => s !== season),
+})
 
-export function clearDiscoveryHouse(
+export const clearDiscoveryHouse = (
   filters: PerfumeDiscoveryFilters
-): PerfumeDiscoveryFilters {
-  return { ...filters, houseId: null }
-}
+): PerfumeDiscoveryFilters => ({ ...filters, houseId: null })
 
-export function clearDiscoveryPrice(
+export const clearDiscoveryPrice = (
   filters: PerfumeDiscoveryFilters
-): PerfumeDiscoveryFilters {
-  return { ...filters, minPrice: null, maxPrice: null }
-}
+): PerfumeDiscoveryFilters => ({ ...filters, minPrice: null, maxPrice: null })
+
+export const removeDiscoveryTradePreference = (
+  filters: PerfumeDiscoveryFilters,
+  pref: DiscoveryTradePreference
+): PerfumeDiscoveryFilters => ({
+  ...filters,
+  tradePreferences: filters.tradePreferences.filter(p => p !== pref),
+})
+
+export const removeDiscoveryBottleType = (
+  filters: PerfumeDiscoveryFilters,
+  bottle: ExchangeBottleType
+): PerfumeDiscoveryFilters => ({
+  ...filters,
+  bottleTypes: filters.bottleTypes.filter(b => b !== bottle),
+})
+
+export const removeDiscoveryCondition = (
+  filters: PerfumeDiscoveryFilters,
+  condition: DiscoveryListingCondition
+): PerfumeDiscoveryFilters => ({
+  ...filters,
+  conditions: filters.conditions.filter(c => c !== condition),
+})
+
+export const clearDiscoveryRegion = (
+  filters: PerfumeDiscoveryFilters
+): PerfumeDiscoveryFilters => ({ ...filters, region: null })
+
+export const clearDiscoveryHasPhotos = (
+  filters: PerfumeDiscoveryFilters
+): PerfumeDiscoveryFilters => ({ ...filters, hasPhotos: false })
 
 /** Map URL season multi-select to `SeasonSelection` for `SeasonSelectionToggleRow`. */
-export function seasonsArrayToSelection(seasons: SeasonKey[]) {
+export const seasonsArrayToSelection = (seasons: SeasonKey[]) => {
   const s: Record<SeasonKey, boolean> = {
     winter: false,
     spring: false,
@@ -191,6 +348,5 @@ export function seasonsArrayToSelection(seasons: SeasonKey[]) {
   return s
 }
 
-export function selectionToSeasonsArray(sel: Record<SeasonKey, boolean>): SeasonKey[] {
-  return SEASON_KEYS.filter(k => sel[k])
-}
+export const selectionToSeasonsArray = (sel: Record<SeasonKey, boolean>): SeasonKey[] =>
+  SEASON_KEYS.filter(k => sel[k])

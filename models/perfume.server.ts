@@ -16,6 +16,13 @@ import {
   type PerfumeListSortBy,
 } from "@/utils/server/perfume-cursor-order.server"
 import type { PerfumeDiscoveryFilters } from "@/utils/discovery-filters"
+import {
+  buildExchangeListingUserPerfumeWhere,
+  fetchPerfumeIdsWithMatchingListings,
+  fetchUserPerfumeIdsMatchingBottleTypes,
+  hasExchangeListingFilters,
+  mergeUserPerfumeListingWhere,
+} from "@/utils/exchange-listing-filter.server"
 import { sanitizeText } from "@/utils/server/sanitize.server"
 import { createUrlSlug } from "@/utils/slug"
 
@@ -559,7 +566,51 @@ const availableForDecantingWhere = {
   },
 } as const
 
-const availableForDecantingSelect = {
+const availableForDecantingUserPerfumeSelect = {
+  id: true,
+  perfumeId: true,
+  available: true,
+  amount: true,
+  price: true,
+  tradePrice: true,
+  tradePreference: true,
+  tradeOnly: true,
+  type: true,
+  userId: true,
+  images: true,
+  condition: true,
+  decantFormat: true,
+  mlRemaining: true,
+  user: {
+    select: {
+      id: true,
+      firstName: true,
+      lastName: true,
+      username: true,
+      email: true,
+    },
+  },
+  comments: {
+    where: {
+      isPublic: true,
+    },
+    select: {
+      id: true,
+      userId: true,
+      perfumeId: true,
+      userPerfumeId: true,
+      comment: true,
+      isPublic: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  },
+} as const
+
+const availableForDecantingSelectBase = {
   id: true,
   name: true,
   description: true,
@@ -577,61 +628,28 @@ const availableForDecantingSelect = {
     },
   },
   userPerfume: {
-    where: {
+    select: availableForDecantingUserPerfumeSelect,
+  },
+} as const
+
+const buildAvailableForDecantingSelect = (
+  listingWhere?: Prisma.UserPerfumeWhereInput
+) => ({
+  ...availableForDecantingSelectBase,
+  userPerfume: {
+    where: listingWhere ?? {
       available: {
         not: "0",
       },
     },
-    select: {
-      id: true,
-      perfumeId: true,
-      available: true,
-      amount: true,
-      price: true,
-      tradePrice: true,
-      tradePreference: true,
-      tradeOnly: true,
-      type: true,
-      userId: true,
-      images: true,
-      condition: true,
-      decantFormat: true,
-      mlRemaining: true,
-      user: {
-        select: {
-          id: true,
-          firstName: true,
-          lastName: true,
-          username: true,
-          email: true,
-        },
-      },
-      comments: {
-        where: {
-          isPublic: true,
-        },
-        select: {
-          id: true,
-          userId: true,
-          perfumeId: true,
-          userPerfumeId: true,
-          comment: true,
-          isPublic: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      },
-    },
+    select: availableForDecantingUserPerfumeSelect,
   },
-} as const
+})
 
 export const getAvailablePerfumesForDecanting = async () => {
   const availablePerfumes = await prisma.perfume.findMany({
     where: availableForDecantingWhere,
-    select: availableForDecantingSelect,
+    select: buildAvailableForDecantingSelect(),
     orderBy: {
       name: "asc",
     },
@@ -743,13 +761,37 @@ export const getAvailablePerfumesForDecantingPaginated = async ({
     andParts.push({ id: { in: priceIds } })
   }
 
+  let nestedListingWhere: Prisma.UserPerfumeWhereInput = {
+    available: { not: "0" },
+  }
+
+  if (discovery && hasExchangeListingFilters(discovery)) {
+    const listingPerfumeIds = await fetchPerfumeIdsWithMatchingListings(discovery)
+    andParts.push({ id: { in: listingPerfumeIds ?? [] } })
+
+    const listingFilterWhere = buildExchangeListingUserPerfumeWhere(discovery)
+    let bottleTypeIds: string[] | undefined
+    if (discovery.bottleTypes.length > 0) {
+      bottleTypeIds = await fetchUserPerfumeIdsMatchingBottleTypes(
+        discovery.bottleTypes
+      )
+    }
+    nestedListingWhere = mergeUserPerfumeListingWhere(
+      { available: { not: "0" } },
+      listingFilterWhere,
+      bottleTypeIds
+    )
+  }
+
   const whereClause: Prisma.PerfumeWhereInput =
     andParts.length === 1 ? andParts[0]! : { AND: andParts }
+
+  const select = buildAvailableForDecantingSelect(nestedListingWhere)
 
   const [perfumes, totalCount] = await Promise.all([
     prisma.perfume.findMany({
       where: whereClause,
-      select: availableForDecantingSelect,
+      select,
       orderBy: {
         name: "asc",
       },

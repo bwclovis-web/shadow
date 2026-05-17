@@ -53,6 +53,9 @@ const TheExchangeClient = ({
   const tTradeComposer = useTranslations("tradeComposer")
   const tf = useTranslations("tradingPost.filters")
   const tSeason = useTranslations("singlePerfume.seasonVote.season")
+  const tTraderPrefs = useTranslations("traderProfile.preferences")
+  const tListingCondition = useTranslations("listing.condition")
+  const tWishlistBottle = useTranslations("wishlist.bottlePreference")
   const router = useTransitionRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -229,6 +232,41 @@ const TheExchangeClient = ({
     priceDescription: tf("priceDescription"),
     minLabel: tf("minLabel"),
     maxLabel: tf("maxLabel"),
+    tradePrefTitle: tf("tradePrefTitle"),
+    tradePrefDescription: tf("tradePrefDescription"),
+    tradePrefAria: tf("tradePrefAria"),
+    tradePrefCash: tTraderPrefs("cash"),
+    tradePrefTrade: tTraderPrefs("trade"),
+    tradePrefBoth: tTraderPrefs("both"),
+    bottleTitle: tf("bottleTitle"),
+    bottleDescription: tf("bottleDescription"),
+    bottleAria: tf("bottleAria"),
+    bottleFull: tWishlistBottle("full"),
+    bottlePartial: tWishlistBottle("partial"),
+    bottleSample: tWishlistBottle("sample"),
+    bottleDecant: tf("bottleDecant"),
+    conditionTitle: tf("conditionTitle"),
+    conditionDescription: tf("conditionDescription"),
+    conditionAria: tf("conditionAria"),
+    conditionLabels: {
+      sealed: tListingCondition("sealed"),
+      mint: tListingCondition("mint"),
+      lightlyUsed: tListingCondition("lightlyUsed"),
+      heavilyUsed: tListingCondition("heavilyUsed"),
+      damaged: tListingCondition("damaged"),
+    },
+    regionTitle: tf("regionTitle"),
+    regionDescription: tf("regionDescription"),
+    regionLabel: tf("regionLabel"),
+    regionAll: tf("regionAll"),
+    regionUS: tf("regionUS"),
+    regionUK: tf("regionUK"),
+    regionAU: tf("regionAU"),
+    regionEU: tf("regionEU"),
+    regionOther: tf("regionOther"),
+    hasPhotosLabel: tf("hasPhotosLabel"),
+    hasPhotosDescription: tf("hasPhotosDescription"),
+    hasPhotosToggle: tf("hasPhotosToggle"),
     clearAll: tf("clearAll"),
   }
 
@@ -265,6 +303,24 @@ const TheExchangeClient = ({
         priceChipMax: max => tf("priceChipMax", { max }),
         priceChipRange: (min, max) =>
           tf("priceChipRange", { min, max }),
+        tradePrefLabel: pref => tTraderPrefs(pref),
+        bottleLabel: bottle =>
+          bottle === "decant" ? tf("bottleDecant") : tWishlistBottle(bottle),
+        conditionLabel: condition => tListingCondition(condition),
+        regionLabel: region => {
+          const key =
+            region === "US"
+              ? "regionUS"
+              : region === "UK"
+                ? "regionUK"
+                : region === "AU"
+                  ? "regionAU"
+                  : region === "EU"
+                    ? "regionEU"
+                    : "regionOther"
+          return tf(key)
+        },
+        hasPhotosLabel: tf("hasPhotosChip"),
       },
     })
   }, [
@@ -272,7 +328,10 @@ const TheExchangeClient = ({
     handleDiscoveryChange,
     initialHouse,
     initialNoteTags,
+    tListingCondition,
     tSeason,
+    tTraderPrefs,
+    tWishlistBottle,
     tf,
   ])
 

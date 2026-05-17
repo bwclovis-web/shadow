@@ -133,15 +133,17 @@ _These features make the platform sticky. Users return because they have active 
 
 **Shipped in:** `services/reputation/tradeStats.server.ts`, updated `loadReputationInputs.server.ts` / `computeReputation.ts` / `v1-constants.ts`; `TraderProfileHeaderStats`, `TraderTrustSummary` trade reliability; feedback gating in `models/traderFeedback.server.ts` (`TRADER_FEEDBACK_REQUIRES_COMPLETED_TRADE=false` to allow open v1); `app/community-policy/page.tsx`, `SiteFooter`, `TradeStatusCard` policy link; i18n `traderProfile.headerStats`, `communityPolicy`, `siteFooter`.
 
-### 2C — Exchange Filter Extensions
+### 2C — Exchange Filter Extensions ✅
 
 _All enums already exist — this is UI only, no schema change._
 
-- [ ] **IMP-130** Add Trade Preference filter to [`DiscoveryFiltersPanel`](../components/Organisms/DiscoveryFiltersPanel/DiscoveryFiltersPanel.tsx): cash / trade / both (existing `TradePreference` enum)
-- [ ] **IMP-131** Add Bottle Type filter: full bottle / partial / sample / decant (existing `WishlistBottlePreference` enum)
-- [ ] **IMP-132** Add Condition filter: sealed / mint / lightly used / heavily used / damaged
-- [ ] **IMP-133** Add Region filter: free-text or predefined list (US / EU / UK / AU / other)
-- [ ] **IMP-134** Add "Has photos" toggle filter (only show listings with at least one image)
+- [x] **IMP-130** Add Trade Preference filter to [`DiscoveryFiltersPanel`](../components/Organisms/DiscoveryFiltersPanel/DiscoveryFiltersPanel.tsx): cash / trade / both (existing `TradePreference` enum)
+- [x] **IMP-131** Add Bottle Type filter: full bottle / partial / sample / decant (existing `WishlistBottlePreference` enum)
+- [x] **IMP-132** Add Condition filter: sealed / mint / lightly used / heavily used / damaged
+- [x] **IMP-133** Add Region filter: free-text or predefined list (US / EU / UK / AU / other)
+- [x] **IMP-134** Add "Has photos" toggle filter (only show listings with at least one image)
+
+**Shipped in:** `utils/discovery-filters.ts` (URL keys `tradePref`, `bottle`, `condition`, `region`, `hasPhotos`), `utils/exchange-listing-filter.server.ts` (Prisma + SQL bottle-type classification), `models/perfume.server.ts` (perfume + nested `userPerfume` where), `DiscoveryFiltersPanel`, `FilterToggleGroup`, `buildExchangeDiscoveryChipItems.ts`, `TheExchangeClient.tsx`, i18n `tradingPost.filters`.
 
 ### 2D — Wishlist Matching
 
