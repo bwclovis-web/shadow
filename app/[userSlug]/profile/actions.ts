@@ -49,13 +49,28 @@ export const updateProfileAction = async (
     return { errors: { username: ["Username is already taken"] } }
   }
 
-  const { firstName, lastName, email, traderAbout } = submission.value
+  const {
+    firstName,
+    lastName,
+    email,
+    traderAbout,
+    avatarImage,
+    region,
+    instagramHandle,
+    fragranticaUrl,
+    redditUsername,
+  } = submission.value
   const updated = await updateUser(userId, {
     firstName,
     lastName,
     username,
     email,
     traderAbout,
+    avatarImage,
+    region,
+    instagramHandle,
+    fragranticaUrl,
+    redditUsername,
   })
   const { password, ...safeUser } = updated
   void password

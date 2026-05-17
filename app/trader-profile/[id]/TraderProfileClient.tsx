@@ -8,6 +8,7 @@ import {
   ItemsSearchingFor,
   ItemsToTrade,
 } from "@/components/Containers/TraderProfile"
+import { TraderAvatar } from "@/components/Molecules/TraderAvatar"
 import { useTrader } from "@/hooks/useTrader"
 import type { TraderResponse } from "@/lib/queries/user"
 import type { TraderFeedbackResponse } from "@/lib/queries/traderFeedback"
@@ -15,8 +16,8 @@ import type { SafeUser, UserPerfumeI } from "@/types"
 import { getTraderDisplayName } from "@/utils/user"
 import { TraderProfileAside } from "./aside/aside"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
-const DESKTOP_MEDIA = "(min-width: 1024px)"
 
+const DESKTOP_MEDIA = "(min-width: 1024px)"
 const BANNER_IMAGE = "/images/trade.webp"
 
 type TraderProfileClientProps = {
@@ -33,6 +34,7 @@ export default function TraderProfileClient({
   const { data: trader } = useTrader(initialTrader.id, initialTrader)
   const t = useTranslations("traderProfile")
   const isLgView = useMediaQuery(DESKTOP_MEDIA)
+
   if (!trader) {
     return (
       <div className="p-4">
@@ -49,17 +51,29 @@ export default function TraderProfileClient({
         image={BANNER_IMAGE}
         heading={t("heading", { traderName })}
         subheading={t("subheading", { traderName })}
-      />
+      >
+        <TraderAvatar
+          displayName={traderName}
+          avatarImage={trader.avatarImage}
+          size="lg"
+        />
+      </TitleBanner>
 
       <div className="inner-container grid grid-cols-1 items-start gap-8 p-6 md:grid-cols-2 xl:grid-cols-3">
         {isLgView ? (
           <TraderProfileAside trader={trader} viewer={viewer} feedback={feedback} />
         ) : (
-            <VooDooDetails type="primary" name="traderProfileAside" summary={t("traderProfileAside", { traderName })} background="dark" defaultOpen={false}>
-              <div className="py-4">
-                <TraderProfileAside trader={trader} viewer={viewer} feedback={feedback} />
-              </div>
-            </VooDooDetails>
+          <VooDooDetails
+            type="primary"
+            name="traderProfileAside"
+            summary={t("traderProfileAside", { traderName })}
+            background="dark"
+            defaultOpen={false}
+          >
+            <div className="py-4">
+              <TraderProfileAside trader={trader} viewer={viewer} feedback={feedback} />
+            </div>
+          </VooDooDetails>
         )}
 
         <div className="flex flex-col gap-4 md:col-span-2 xl:col-span-2">

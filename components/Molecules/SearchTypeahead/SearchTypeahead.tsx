@@ -47,6 +47,10 @@ export type SearchTypeaheadProps<T extends TypeaheadItem = TypeaheadItem> = {
   footerSlot?: ReactNode | ((ctx: { clearList: () => void }) => ReactNode)
   /** Whether selecting an option also clears the input text. */
   clearInputOnSelect?: boolean
+  /** Custom row content; defaults to highlighted name. */
+  renderOption?: (item: T, ctx: { highlighted: ReactNode }) => ReactNode
+  /** When true, the list stays closed until the user types (avoids open-on-mount). */
+  initialDismissed?: boolean
   disabled?: boolean
   name?: string
   autoComplete?: string
@@ -110,6 +114,8 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
   messages,
   footerSlot,
   clearInputOnSelect = false,
+  renderOption,
+  initialDismissed = false,
   disabled = false,
   name,
   autoComplete = "off",
@@ -144,7 +150,7 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
   } = useDebouncedSearch<T>(searchFn, debounceOpts)
 
   const trimmed = searchValue.trim()
-  const [dismissed, setDismissed] = useState(false)
+  const [dismissed, setDismissed] = useState(initialDismissed)
   const listOpen = trimmed.length >= minLength && !dismissed
 
   const [activeIndex, setActiveIndex] = useState(-1)
@@ -315,7 +321,7 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
                   onClick={() => clearQuery()}
                   onMouseDown={e => e.preventDefault()}
                 >
-                  {highlighted}
+                  {renderOption ? renderOption(item, { highlighted }) : highlighted}
                 </PrefetchLink>
               </li>
             )
@@ -335,7 +341,7 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
                 onMouseDown={e => e.preventDefault()}
                 onClick={() => handleSelect(item)}
               >
-                {highlighted}
+                {renderOption ? renderOption(item, { highlighted }) : highlighted}
               </button>
             </li>
           )

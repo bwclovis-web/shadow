@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import { PROFILE_LENGTH } from "@/utils/constants"
+import { isAllowedCountryId } from "@/utils/country-list"
 import { validationKeys as V } from "./validationKeys"
 
 /** Sanitize form input to prevent XSS and code injection. */
@@ -115,4 +116,54 @@ export const traderAboutSchema = z
     const raw = (s ?? "").trim()
     if (raw === "") return null
     return sanitizeInput(raw)
+  })
+
+export const avatarImageSchema = z
+  .string()
+  .optional()
+  .transform((s) => {
+    const raw = (s ?? "").trim()
+    return raw === "" ? null : raw
+  })
+  .refine((v) => v === null || z.string().url().safeParse(v).success, {
+    message: V.urlInvalid,
+  })
+
+export const traderRegionSchema = z
+  .string()
+  .optional()
+  .transform((s) => {
+    const raw = (s ?? "").trim()
+    if (raw === "") return null
+    return raw
+  })
+  .refine((v) => isAllowedCountryId(v), { message: V.countryMax })
+
+export const instagramHandleSchema = z
+  .string()
+  .max(30, { message: V.usernameMax })
+  .optional()
+  .transform((s) => {
+    const raw = sanitizeInput((s ?? "").trim().replace(/^@+/, ""))
+    return raw === "" ? null : raw
+  })
+
+export const redditUsernameSchema = z
+  .string()
+  .max(30, { message: V.usernameMax })
+  .optional()
+  .transform((s) => {
+    const raw = sanitizeInput((s ?? "").trim().replace(/^\/?u\//i, "").replace(/^@+/, ""))
+    return raw === "" ? null : raw
+  })
+
+export const fragranticaUrlSchema = z
+  .string()
+  .optional()
+  .transform((s) => {
+    const raw = (s ?? "").trim()
+    return raw === "" ? null : raw
+  })
+  .refine((v) => v === null || z.string().url().safeParse(v).success, {
+    message: V.urlInvalid,
   })

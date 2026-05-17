@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 
+import { TraderAvatar } from "@/components/Molecules/TraderAvatar"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import DangerModal from "@/components/Organisms/DangerModal"
 import Modal from "@/components/Organisms/Modal"
@@ -22,6 +23,7 @@ export interface ConversationSummary {
   otherUserUsername: string | null
   otherUserFirstName: string | null
   otherUserLastName: string | null
+  otherUserAvatarImage: string | null
   lastMessageAt: Date | string
   lastMessagePreview: string | null
   unreadCount: number
@@ -123,6 +125,12 @@ export default function MessagesClient({
                       href={`/messages/${conv.otherUserId}`}
                       className="flex flex-1 min-w-0 items-center justify-between gap-4 p-2 lg:p-4 text-inherit no-underline"
                     >
+                      <TraderAvatar
+                        displayName={displayName}
+                        avatarImage={conv.otherUserAvatarImage}
+                        size="md"
+                        className="shrink-0"
+                      />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span className="font-medium truncate text-noir-gold group-hover:text-noir-black transition-colors">

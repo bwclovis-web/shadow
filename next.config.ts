@@ -37,6 +37,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'flagcdn.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'pub-cebc143562244d6fbf277d0ab2b1d01e.r2.dev',
         pathname: '/**',
       },

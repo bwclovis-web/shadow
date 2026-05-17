@@ -107,7 +107,7 @@ const ListingPhotos = ({
             <li key={`${url}-${index}`}>
               <button
                 type="button"
-                className="relative block overflow-hidden rounded border border-noir-gold/40 focus:outline-none focus:ring-2 focus:ring-noir-gold"
+                className="relative block aspect-square cursor-pointer overflow-hidden rounded border border-noir-gold focus:outline-none focus:ring-2 focus:ring-noir-gold"
                 style={{ width: THUMB_SIZE, height: THUMB_SIZE }}
                 onClick={() => openLightbox(index)}
                 aria-label={t("openPhoto", { index: index + 1 })}
@@ -119,15 +119,6 @@ const ListingPhotos = ({
                   className="object-cover"
                   sizes={`${THUMB_SIZE}px`}
                 />
-                {index === 0 && (condition || tradePreference || tradeOnly) && (
-                  <span className="absolute bottom-0 left-0 right-0 p-0.5 bg-gradient-to-t from-noir-dark/90 to-transparent">
-                    <ListingImageBadges
-                      condition={condition}
-                      tradePreference={tradePreference}
-                      tradeOnly={tradeOnly}
-                    />
-                  </span>
-                )}
               </button>
             </li>
           )

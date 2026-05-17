@@ -41,6 +41,11 @@ export const createSafeUser = (user: User | null): SafeUser | null => {
     ...("profileSlug" in user &&
       user.profileSlug != null && { profileSlug: user.profileSlug }),
     ...("traderAbout" in user && { traderAbout: user.traderAbout }),
+    ...("avatarImage" in user && { avatarImage: user.avatarImage }),
+    ...("region" in user && { region: user.region }),
+    ...("instagramHandle" in user && { instagramHandle: user.instagramHandle }),
+    ...("fragranticaUrl" in user && { fragranticaUrl: user.fragranticaUrl }),
+    ...("redditUsername" in user && { redditUsername: user.redditUsername }),
   }
 }
 

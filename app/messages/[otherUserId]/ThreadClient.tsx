@@ -6,6 +6,7 @@ import { useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 
 import ContactTraderForm from "@/components/Containers/Forms/ContactTraderForm"
+import { TraderAvatar } from "@/components/Molecules/TraderAvatar"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { useCSRF } from "@/hooks/useCSRF"
 import { getTraderDisplayName } from "@/utils/user"
@@ -25,13 +26,31 @@ type ThreadMessage = {
   message: string
   read: boolean
   createdAt: Date | string
-  sender: { id: string; username: string | null; firstName: string | null; lastName: string | null }
-  recipient: { id: string; username: string | null; firstName: string | null; lastName: string | null }
+  sender: {
+    id: string
+    username: string | null
+    firstName: string | null
+    lastName: string | null
+    avatarImage?: string | null
+  }
+  recipient: {
+    id: string
+    username: string | null
+    firstName: string | null
+    lastName: string | null
+    avatarImage?: string | null
+  }
 }
 
 interface ThreadClientProps {
   currentUserId: string
-  otherUser: { id: string; username: string | null; firstName: string | null; lastName: string | null }
+  otherUser: {
+    id: string
+    username: string | null
+    firstName: string | null
+    lastName: string | null
+    avatarImage?: string | null
+  }
   initialThread: ThreadMessage[]
 }
 
@@ -145,15 +164,25 @@ export default function ThreadClient({
                 lastName: msg.sender.lastName,
                 username: msg.sender.username,
               }) || "Unknown"
+              const senderAvatar = msg.sender.avatarImage ?? null
               return (
                 <div
                   key={msg.id}
-                  className={`rounded-lg p-4 max-w-[85%] ${
-                    isFromMe
-                      ? "ml-auto bg-noir-gold/50 border border-noir-gold-500"
-                      : "mr-auto bg-noir-dark border border-noir-gold-100"
-                  }`}
+                  className={`flex gap-2 max-w-[85%] ${isFromMe ? "ml-auto flex-row-reverse" : "mr-auto"}`}
                 >
+                  <TraderAvatar
+                    displayName={senderName}
+                    avatarImage={senderAvatar}
+                    size="sm"
+                    className="mt-1 shrink-0"
+                  />
+                  <div
+                    className={`rounded-lg p-4 min-w-0 flex-1 ${
+                      isFromMe
+                        ? "bg-noir-gold/50 border border-noir-gold-500"
+                        : "bg-noir-dark border border-noir-gold-100"
+                    }`}
+                  >
                   <div className="flex items-center justify-between gap-2 mb-1">
                     <span className="font-medium text-sm">
                       {senderName}{" "}
@@ -180,6 +209,7 @@ export default function ThreadClient({
                     </p>
                   )}
                   <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                  </div>
                 </div>
               )
             })

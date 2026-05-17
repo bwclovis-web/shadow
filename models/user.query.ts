@@ -96,6 +96,11 @@ export type UpdateUserProfilePayload = {
   username?: string | null
   email?: string
   traderAbout?: string | null
+  avatarImage?: string | null
+  region?: string | null
+  instagramHandle?: string | null
+  fragranticaUrl?: string | null
+  redditUsername?: string | null
 }
 
 export const updateUser = async (
@@ -125,6 +130,14 @@ export const updateUser = async (
       username: payload.username ?? undefined,
       email: payload.email,
       traderAbout: payload.traderAbout === undefined ? undefined : payload.traderAbout,
+      avatarImage: payload.avatarImage === undefined ? undefined : payload.avatarImage,
+      region: payload.region === undefined ? undefined : payload.region,
+      instagramHandle:
+        payload.instagramHandle === undefined ? undefined : payload.instagramHandle,
+      fragranticaUrl:
+        payload.fragranticaUrl === undefined ? undefined : payload.fragranticaUrl,
+      redditUsername:
+        payload.redditUsername === undefined ? undefined : payload.redditUsername,
       ...(profileSlug !== undefined ? { profileSlug } : {}),
     },
   })

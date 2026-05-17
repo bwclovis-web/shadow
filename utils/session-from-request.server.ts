@@ -28,6 +28,11 @@ export type SessionUser = {
   profileSlug?: string | null
   role: UserRole
   traderAbout?: string | null
+  avatarImage?: string | null
+  region?: string | null
+  instagramHandle?: string | null
+  fragranticaUrl?: string | null
+  redditUsername?: string | null
   updatedAt?: Date
 }
 
@@ -149,7 +154,7 @@ export async function getSessionFromCookieHeader(
       return null
     }
     const user = createSafeUser(fullUser)
-    if (user) {
+    if (user && fullUser) {
       result.user = {
         id: user.id,
         email: user.email,
@@ -159,6 +164,12 @@ export async function getSessionFromCookieHeader(
         profileSlug: user.profileSlug ?? null,
         role: user.role,
         traderAbout: user.traderAbout ?? null,
+        avatarImage: fullUser.avatarImage ?? null,
+        region: fullUser.region ?? null,
+        instagramHandle: fullUser.instagramHandle ?? null,
+        fragranticaUrl: fullUser.fragranticaUrl ?? null,
+        redditUsername: fullUser.redditUsername ?? null,
+        updatedAt: fullUser.updatedAt,
       }
     }
   }

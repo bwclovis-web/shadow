@@ -14,7 +14,7 @@ import {
   DEFAULT_RECOMMENDATIONS_LIMIT,
 } from "@/services/recommendations"
 import type { UserAlert } from "@/types/database"
-import type { SafeUser } from "@/types"
+import type { SessionUser } from "@/utils/session-from-request.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { getProfileSlug } from "@/utils/user"
 
@@ -76,7 +76,7 @@ export default async function ProfilePage({ params }: Props): Promise<React.Reac
 
   return (
     <ProfileClient
-      user={user as SafeUser}
+      user={user as SessionUser}
       alerts={alerts as UserAlert[]}
       preferences={preferences}
       unreadCount={unreadCount}

@@ -181,6 +181,11 @@ export interface TraderResponse {
   username?: string | null
   email: string
   traderAbout?: string | null
+  avatarImage?: string | null
+  region?: string | null
+  instagramHandle?: string | null
+  fragranticaUrl?: string | null
+  redditUsername?: string | null
   UserPerfume?: any[]
   UserPerfumeWishlist?: any[]
   [key: string]: any // Allow for additional trader properties

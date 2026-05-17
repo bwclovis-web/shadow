@@ -56,7 +56,13 @@ export default async function ThreadPage({
 
   const otherUser = await prisma.user.findUnique({
     where: { id: otherUserId },
-    select: { id: true, username: true, firstName: true, lastName: true },
+    select: {
+      id: true,
+      username: true,
+      firstName: true,
+      lastName: true,
+      avatarImage: true,
+    },
   })
   if (!otherUser) notFound()
 

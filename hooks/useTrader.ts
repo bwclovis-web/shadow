@@ -21,7 +21,8 @@ export const useTrader = (traderId: string, initialData?: TraderResponse) =>
     queryFn: () => getTraderById(traderId),
     initialData,
     initialDataUpdatedAt: initialData ? Date.now() : undefined,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 60 * 1000, // 1 minute — profile edits should show soon on trader page
     enabled: !!traderId,
+    refetchOnMount: true,
   })
 

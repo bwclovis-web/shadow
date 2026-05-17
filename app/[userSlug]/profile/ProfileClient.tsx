@@ -3,7 +3,8 @@
 import { getFormProps, getTextareaProps, useForm } from "@conform-to/react"
 import { getZodConstraint, parseWithZod } from "@conform-to/zod"
 import { Link } from "next-view-transitions"
-import { useRef, useActionState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
+import { useEffect, useRef, useActionState, useState } from "react"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button/Button"
@@ -11,13 +12,17 @@ import Input from "@/components/Atoms/Input/Input"
 import RecommendedForYou from "@/components/Containers/Recommendations/RecommendedForYou"
 import UserAlerts from "@/components/Containers/UserAlerts/UserAlerts"
 import { CSRFToken } from "@/components/Molecules/CSRFToken"
+import ImageUploader from "@/components/Molecules/ImageUploader/ImageUploader"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
+import CountryTypeahead from "@/components/Molecules/CountryTypeahead/CountryTypeahead"
+import { uploadAvatarImage } from "@/utils/avatar-images-client"
 import type { RecommendationPerfume } from "@/services/recommendations"
-import type { SafeUser } from "@/types"
+import type { SessionUser } from "@/utils/session-from-request.server"
 import type { UserAlert, UserAlertPreferences } from "@/types/database"
 import { PROFILE_LENGTH } from "@/utils/constants"
 import { UpdateProfileSchema } from "@/utils/validation/formValidationSchemas"
 import { getTranslatedError } from "@/utils/validation/formValidationSchemas"
+import { queryKeys } from "@/lib/queries/user"
 import { getUserDisplayName } from "@/utils/user"
 import {
   updateProfileAction,
@@ -27,7 +32,7 @@ import {
 const BANNER_IMAGE = "/images/myprofile.webp"
 
 type ProfileClientProps = {
-  user: SafeUser
+  user: SessionUser
   alerts: UserAlert[]
   preferences: UserAlertPreferences | null
   unreadCount: number
@@ -39,14 +44,22 @@ const ProfileForm = ({
   formAction,
   lastResult,
 }: {
-  user: SafeUser
+  user: SessionUser
   formAction: (formData: FormData) => void
   lastResult?: unknown
 }) => {
   const t = useTranslations("profile")
   const inputRef = useRef<HTMLInputElement | null>(null)
 
-  const [profileForm, { firstName, lastName, username, email, traderAbout }] =
+  const [avatarUrls, setAvatarUrls] = useState<string[]>(
+    user.avatarImage ? [user.avatarImage] : []
+  )
+
+  useEffect(() => {
+    setAvatarUrls(user.avatarImage ? [user.avatarImage] : [])
+  }, [user.avatarImage])
+
+  const [profileForm, { firstName, lastName, username, email, traderAbout, region, instagramHandle, fragranticaUrl, redditUsername }] =
     useForm({
       id: "profile-form",
       lastResult: lastResult ?? undefined,
@@ -61,6 +74,11 @@ const ProfileForm = ({
         username: user.username ?? "",
         email: user.email ?? "",
         traderAbout: user.traderAbout ?? "",
+        avatarImage: user.avatarImage ?? "",
+        region: user.region ?? "",
+        instagramHandle: user.instagramHandle ?? "",
+        fragranticaUrl: user.fragranticaUrl ?? "",
+        redditUsername: user.redditUsername ?? "",
       },
     })
 
@@ -72,6 +90,24 @@ const ProfileForm = ({
     >
       <CSRFToken />
       <input type="hidden" name="userId" value={user.id} />
+      <input type="hidden" name="avatarImage" value={avatarUrls[0] ?? ""} />
+
+      <div className="flex flex-col gap-1">
+        <span className="block text-sm font-medium text-noir-gold-100">
+          {t("avatarLabel")}
+        </span>
+        <p className="text-stone-400 text-sm" role="note">
+          {t("avatarHint")}
+        </p>
+        <ImageUploader
+          value={avatarUrls}
+          onChange={setAvatarUrls}
+          maxImages={1}
+          uploadFn={uploadAvatarImage}
+          translationNamespace="profile.avatar"
+          cameraModalId="profile-avatar-camera"
+        />
+      </div>
 
       <Input
         shading={true}
@@ -111,6 +147,50 @@ const ProfileForm = ({
         action={email}
         inputRef={inputRef}
       />
+
+      <CountryTypeahead
+        name={region.name}
+        defaultValue={(region.initialValue as string) || null}
+      />
+      {region.errors?.[0] ? (
+        <p className="text-sm text-red-500">{getTranslatedError(region.errors, t)}</p>
+      ) : null}
+
+      <Input
+        shading={true}
+        inputId="instagramHandle"
+        inputType="text"
+        label={t("instagramHandle")}
+        action={instagramHandle}
+        inputRef={inputRef}
+      />
+      <p className="text-stone-400 text-sm -mt-2 mb-2" role="note">
+        {t("instagramHint")}
+      </p>
+
+      <Input
+        shading={true}
+        inputId="redditUsername"
+        inputType="text"
+        label={t("redditUsername")}
+        action={redditUsername}
+        inputRef={inputRef}
+      />
+      <p className="text-stone-400 text-sm -mt-2 mb-2" role="note">
+        {t("redditHint")}
+      </p>
+
+      <Input
+        shading={true}
+        inputId="fragranticaUrl"
+        inputType="url"
+        label={t("fragranticaUrl")}
+        action={fragranticaUrl}
+        inputRef={inputRef}
+      />
+      <p className="text-stone-400 text-sm -mt-2 mb-2" role="note">
+        {t("fragranticaHint")}
+      </p>
 
       <div className="flex flex-col gap-1">
         <label
@@ -168,13 +248,22 @@ const ProfileClient = ({
   recommendedPerfumes,
 }: ProfileClientProps) => {
   const t = useTranslations("profile")
+  const queryClient = useQueryClient()
   const [state, formAction] = useActionState(
     updateProfileAction,
     null as UpdateProfileActionState
   )
 
+  useEffect(() => {
+    if (state?.success && state.user?.id) {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.user.trader(state.user.id),
+      })
+    }
+  }, [state?.success, state?.user?.id, queryClient])
+
   // Use the returned user after a successful save so the form shows saved data without a full refresh
-  const displayUser = (state?.user ?? user) as SafeUser
+  const displayUser = state?.user ?? user
 
   const hasSuccess = state?.success === true
   const hasErrors = state?.errors && Object.keys(state.errors).length > 0

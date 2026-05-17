@@ -12,6 +12,7 @@ export interface ConversationSummary {
   otherUserUsername: string | null
   otherUserFirstName: string | null
   otherUserLastName: string | null
+  otherUserAvatarImage: string | null
   lastMessageAt: Date
   lastMessagePreview: string | null
   unreadCount: number
@@ -77,6 +78,7 @@ export async function getConversations(userId: string): Promise<ConversationSumm
           username: true,
           firstName: true,
           lastName: true,
+          avatarImage: true,
         },
       },
     },
@@ -96,6 +98,7 @@ export async function getConversations(userId: string): Promise<ConversationSumm
           username: true,
           firstName: true,
           lastName: true,
+          avatarImage: true,
         },
       },
     },
@@ -109,6 +112,7 @@ export async function getConversations(userId: string): Promise<ConversationSumm
       username: string | null
       firstName: string | null
       lastName: string | null
+      avatarImage: string | null
       lastMessageAt: Date
       lastMessagePreview: string | null
       unreadCount: number
@@ -123,6 +127,7 @@ export async function getConversations(userId: string): Promise<ConversationSumm
         username: row.recipient.username,
         firstName: row.recipient.firstName,
         lastName: row.recipient.lastName,
+        avatarImage: row.recipient.avatarImage,
         lastMessageAt: row.createdAt,
         lastMessagePreview: row.message.slice(0, 80),
         unreadCount: 0,
@@ -139,6 +144,7 @@ export async function getConversations(userId: string): Promise<ConversationSumm
         username: row.sender.username,
         firstName: row.sender.firstName,
         lastName: row.sender.lastName,
+        avatarImage: row.sender.avatarImage,
         lastMessageAt: row.createdAt,
         lastMessagePreview: row.message.slice(0, 80),
         unreadCount: byOther[id]?.unreadCount ?? unread,
@@ -166,6 +172,7 @@ export async function getConversations(userId: string): Promise<ConversationSumm
       otherUserUsername: x.username,
       otherUserFirstName: x.firstName,
       otherUserLastName: x.lastName,
+      otherUserAvatarImage: x.avatarImage,
       lastMessageAt: x.lastMessageAt,
       lastMessagePreview: x.lastMessagePreview,
       unreadCount: x.unreadCount,
@@ -179,6 +186,7 @@ const threadInclude = {
       username: true,
       firstName: true,
       lastName: true,
+      avatarImage: true,
     },
   },
   recipient: {
@@ -187,6 +195,7 @@ const threadInclude = {
       username: true,
       firstName: true,
       lastName: true,
+      avatarImage: true,
     },
   },
 } as const
