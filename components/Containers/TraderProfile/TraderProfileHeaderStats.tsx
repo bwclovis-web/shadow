@@ -2,14 +2,18 @@
 
 import { useTranslations } from "next-intl"
 
+import { RecentlyActiveBadge } from "@/components/Atoms/RecentlyActiveBadge"
+
 type TraderProfileHeaderStatsProps = {
   memberSince: string
   completedTradeCount: number
+  lastActiveAt?: Date | string | null
 }
 
 const TraderProfileHeaderStats = ({
   memberSince,
   completedTradeCount,
+  lastActiveAt = null,
 }: TraderProfileHeaderStatsProps) => {
   const t = useTranslations("traderProfile.headerStats")
   const memberDate = new Date(memberSince)
@@ -36,6 +40,9 @@ const TraderProfileHeaderStats = ({
         <span className="font-medium text-noir-gold tabular-nums">
           {completedTradeCount}
         </span>
+      </li>
+      <li className="w-full flex justify-center sm:w-auto">
+        <RecentlyActiveBadge lastActiveAt={lastActiveAt} />
       </li>
     </ul>
   )

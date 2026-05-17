@@ -4,6 +4,7 @@ import {
   computeHouseTypeBreakdown,
   computeSeasonAffinity,
   computeTopNoteFamilies,
+  computeTopNotes,
 } from "./compute-scent-dna"
 import { classifyNoteNameToFamily } from "./note-families"
 
@@ -37,6 +38,27 @@ describe("computeTopNoteFamilies", () => {
     expect(top[0]?.family).toBe("florals")
     expect(top[1]?.family).toBe("woods")
     expect(top[0]?.percent).toBeGreaterThan(top[1]?.percent ?? 0)
+  })
+})
+
+describe("computeTopNotes", () => {
+  it("returns top notes by weight with resolved names", () => {
+    const noteNameById = new Map([
+      ["n1", "Rose"],
+      ["n2", "Bergamot"],
+      ["n3", "Unknown"],
+    ])
+
+    const top = computeTopNotes(
+      { n1: 5, n2: 2, n3: 10, missing: 99 },
+      noteNameById,
+      2
+    )
+
+    expect(top).toEqual([
+      { noteId: "n3", name: "Unknown", weight: 10 },
+      { noteId: "n1", name: "Rose", weight: 5 },
+    ])
   })
 })
 

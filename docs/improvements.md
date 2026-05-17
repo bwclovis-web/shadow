@@ -214,7 +214,7 @@ _These are the features no mobile-only competitor can easily replicate. They com
 | **3E** SEO pass | ✅ Done | IMP-240–246 (IMP-245 GSC submit is manual ops) |
 | **3F** Bulk inventory | ⏳ Not started | IMP-250–256 |
 | **3G** Shareable links | ⏳ Not started | IMP-260–263 |
-| **3H** Experience polish | ⏳ Not started | IMP-270–275 |
+| **3H** Experience polish | ✅ Done | IMP-270–275 |
 
 **Next up:** 3F — Bulk inventory editor
 
@@ -290,14 +290,16 @@ _No new schema — all computed from existing data._
 - [ ] **IMP-262** Add "Copy link" button to trader profile and wishlist pages for sharing on Reddit and Discord
 - [ ] **IMP-263** Add community stats strip to the home page: "X bottles listed · X trades completed this month · X members" — aggregate DB counts, cached and updated every hour
 
-### 3H — Experience Polish
+### 3H — Experience Polish ✅
 
-- [ ] **IMP-270** Extend View Transitions from [`LinkCard`](../components/Organisms/LinkCard/LinkCard.tsx) to the trade timeline and compare page navigation
-- [ ] **IMP-271** Add GSAP stagger animation to exchange grid load and the "Just listed" activity feed
-- [ ] **IMP-272** Add mobile bottom navigation bar optimised for thumb reach (exchange, messages, profile, alerts)
-- [ ] **IMP-273** Add i18n strings for all new trade states, condition labels, and alert types via `next-intl`
-- [ ] **IMP-274** Add "Recently active" indicator (last seen within 7 days) on trader profiles and inbox rows so traders know they'll get a response
-- [ ] **IMP-275** Add keyboard shortcut `/` to focus exchange search; `Esc` to clear filters
+- [x] **IMP-270** Extend View Transitions from [`LinkCard`](../components/Organisms/LinkCard/LinkCard.tsx) to the trade timeline and compare page navigation
+- [x] **IMP-271** Add GSAP stagger animation to exchange grid load and the "Just listed" activity feed
+- [x] **IMP-272** Add mobile bottom navigation bar optimised for thumb reach (exchange, messages, profile, alerts)
+- [x] **IMP-273** Add i18n strings for all new trade states, condition labels, and alert types via `next-intl`
+- [x] **IMP-274** Add "Recently active" indicator (last seen within 7 days) on trader profiles and inbox rows so traders know they'll get a response
+- [x] **IMP-275** Add keyboard shortcut `/` to focus exchange search; `Esc` to clear filters
+
+**Shipped in:** `utils/view-transition-names.ts`, `components/Molecules/TradeStatusTimeline/`, compare + activity feed `viewTransitionName` on bottle images; `hooks/useGsapStagger.ts` on exchange grid + `ActivityFeedSection`; `components/Molecules/MobileBottomNavigation/` wired in `app/layout.tsx` with `--mobile-bottom-nav-pad`; `AlertItem` i18n via `alerts.types` / `alerts.actions` / `alerts.timeAgo` (en, fr, es, it); `User.lastActiveAt`, migration `20260517140000_add_user_last_active_at`, `models/user-activity.server.ts`, `POST /api/activity/ping`, `components/Atoms/RecentlyActiveBadge/`, profile header + inbox rows; exchange `/` + `Esc` shortcuts + `tradingPost.search.keyboardHint`; i18n `navigation.mobileBottom`, `traderActivity`, `tradeStatus.timelineAria`.
 
 ---
 
@@ -316,8 +318,8 @@ _No new schema — all computed from existing data._
 
 - **Completed (Wave 1):** 1A schema, 1B admin strikes + ban enforcement, 1C user reports + admin reports queue, 1D listing photos, 1E trader avatar + profile fields (region, social links), 1F transactional email (wishlist + decant alerts).
 - **Completed (Wave 2):** Full trade lifecycle (API, composer, thread card, profile tabs), reputation + community policy, exchange discovery filters, wishlist matching, activity feed, seasonal trending, Web Push (trade + message alerts, nav badge). See section tables above for IMP IDs.
-- **Completed (Wave 3, partial):** Onboarding, Scent DNA, quiz depth, Sanity blog, SEO pass (JSON-LD, OG, canonicals, dynamic perfume OG images, sitemap/robots).
-- **Still open:** IMP-031 (report from trade UI), IMP-046 (photos on exchange cards), IMP-063 (`sendTradeEventEmail` — TODO in `trade.server.ts`). Wave 3F–3H unchanged. IMP-245 GSC verification is a manual deploy-time step.
+- **Completed (Wave 3, partial):** Onboarding, Scent DNA, quiz depth, Sanity blog, SEO pass (JSON-LD, OG, canonicals, dynamic perfume OG images, sitemap/robots), experience polish (view transitions, GSAP stagger, mobile bottom nav, alert i18n, recently active, exchange keyboard shortcuts).
+- **Still open:** IMP-031 (report from trade UI), IMP-046 (photos on exchange cards), IMP-063 (`sendTradeEventEmail` — TODO in `trade.server.ts`). Wave 3F–3G unchanged. IMP-245 GSC verification is a manual deploy-time step.
 - **Local schema:** Use **Prisma Migrate** (`npx prisma migrate dev` / `migrate deploy`) — see `docs/database-migrations.md` and `.cursor/rules/prisma-migrations-only.mdc`. Do **not** use `prisma db push` for routine work.
 - **Production schema (legacy):** Remote DB was synced May 2026 via `npm run db:push:prod` (`scripts/push-prod-schema.js` — `APPLY_TO_REMOTE_DB.sql` + `supplementalMigrations` for onboarding, quiz depth, and Web Push tables/columns). Verification passed for `Trade`, strikes, reports, listing fields, push prefs, `UserPushSubscription`, `UserConversationPresence`, etc. Prefer `npx prisma migrate deploy` against `REMOTE_DATABASE_URL` when migration history catches up; extend `supplementalMigrations` only when prod still lags checked-in migrations.
 - After schema changes: `npm run db:generate` and restart `npm run dev` (or delete `.next` + `node_modules/.prisma/client` if the client is stale on Windows).

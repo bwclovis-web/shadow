@@ -1,3 +1,6 @@
+"use client"
+
+import { useTranslations } from "next-intl"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import {
   BsBell,
@@ -39,45 +42,6 @@ const getAlertIconClassName = (alertType: UserAlert["alertType"]) => {
   }
 }
 
-const getAlertTypeLabel = (alertType: UserAlert["alertType"]) => {
-  switch (alertType as string) {
-    case "wishlist_available":
-      return "Wishlist Alert"
-    case "decant_interest":
-      return "Interest Alert"
-    case "pending_submission_approval":
-      return "Pending Submission"
-    case "new_trader_message":
-      return "Message"
-    case "trade_received":
-      return "Trade offer"
-    case "trade_accepted":
-      return "Trade accepted"
-    case "trade_shipped":
-      return "Trade shipped"
-    case "trade_completed":
-      return "Trade completed"
-    case "trade_cancelled":
-      return "Trade update"
-    default:
-      return "Alert"
-  }
-}
-
-const formatTimeAgo = (date: Date | string) => {
-  const now = new Date()
-  const dateObj = typeof date === "string" ? new Date(date) : date
-  const diffInMinutes = Math.floor((now.getTime() - dateObj.getTime()) / (1000 * 60))
-
-  if (diffInMinutes < 1) return "Just now"
-  if (diffInMinutes < 60) return `${diffInMinutes}m ago`
-  const diffInHours = Math.floor(diffInMinutes / 60)
-  if (diffInHours < 24) return `${diffInHours}h ago`
-  const diffInDays = Math.floor(diffInHours / 24)
-  if (diffInDays < 7) return `${diffInDays}d ago`
-  return dateObj.toLocaleDateString("en-US")
-}
-
 const perfumeLink = (slug: string) => `/perfume/${slug}`
 const messagesLink = (otherUserId: string) => `/messages/${otherUserId}`
 const isTradeAlert = (alertType: string) => alertType.startsWith("trade_")
@@ -94,12 +58,6 @@ const alertLink = (alert: UserAlert) => {
   if (alert.Perfume) return perfumeLink(alert.Perfume.slug)
   return "/messages"
 }
-const linkText = (alertType: UserAlert["alertType"]) => {
-  if ((alertType as string) === "pending_submission_approval") return "Review submission"
-  if ((alertType as string) === "new_trader_message") return "View message"
-  if (isTradeAlert(alertType as string)) return "View trade"
-  return "View perfume"
-}
 
 const AlertIcon = ({ alertType }: { alertType: UserAlert["alertType"] }) => {
   const cn = `h-4 w-4 ${getAlertIconClassName(alertType)}`
@@ -108,16 +66,61 @@ const AlertIcon = ({ alertType }: { alertType: UserAlert["alertType"] }) => {
   return <BsBell className={cn} />
 }
 
+const alertTypeKey = (alertType: UserAlert["alertType"]) => {
+  const key = alertType as string
+  const known = [
+    "wishlist_available",
+    "decant_interest",
+    "pending_submission_approval",
+    "new_trader_message",
+    "trade_received",
+    "trade_accepted",
+    "trade_shipped",
+    "trade_completed",
+    "trade_cancelled",
+  ] as const
+  return known.includes(key as (typeof known)[number]) ? key : "default"
+}
+
 export const AlertItem = ({
   alert,
   onMarkAsRead,
   onDismiss,
   compact = false,
 }: AlertItemProps) => {
+  const t = useTranslations("alerts")
+  const typeKey = alertTypeKey(alert.alertType)
+
+  const formatTimeAgo = (date: Date | string) => {
+    const now = new Date()
+    const dateObj = typeof date === "string" ? new Date(date) : date
+    const diffInMinutes = Math.floor(
+      (now.getTime() - dateObj.getTime()) / (1000 * 60)
+    )
+    if (diffInMinutes < 1) return t("timeAgo.justNow")
+    if (diffInMinutes < 60) return t("timeAgo.minutes", { count: diffInMinutes })
+    const diffInHours = Math.floor(diffInMinutes / 60)
+    if (diffInHours < 24) return t("timeAgo.hours", { count: diffInHours })
+    const diffInDays = Math.floor(diffInHours / 24)
+    if (diffInDays < 7) return t("timeAgo.days", { count: diffInDays })
+    return dateObj.toLocaleDateString()
+  }
+
+  const typeLabel = t(`types.${typeKey}` as "types.wishlist_available")
+
+  const actionLabel = (() => {
+    if (alert.alertType === "pending_submission_approval") {
+      return t("actions.reviewSubmission")
+    }
+    if (alert.alertType === "new_trader_message") return t("actions.viewMessage")
+    if (isTradeAlert(alert.alertType as string)) return t("actions.viewTrade")
+    return t("actions.viewPerfume")
+  })()
+
   if (compact) {
     return (
       <div
-        className={`flex items-start gap-3 ${!alert.isRead ? "bg-blue-50" : ""}`}
+        className={`flex items-start gap-3 ${!alert.isRead ? "bg-noir-gold-500" : ""}`}
       >
         <div className="shrink-0 mt-0.5">
           <AlertIcon alertType={alert.alertType} />
@@ -128,16 +131,16 @@ export const AlertItem = ({
             <div className="flex-1 min-w-0">
               <p
                 className={`text-sm font-medium ${
-                  !alert.isRead ? "text-gray-900" : "text-gray-700"
+                  !alert.isRead ? "text-gray-900" : "text-noir-gold-100"
                 }`}
               >
                 {alert.title}
               </p>
-              <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+              <p className="text-xs isRead ? text-noir-gold : text-gray-600 mt-1 line-clamp-2">
                 {alert.message}
               </p>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs text-gray-500" suppressHydrationWarning>
+                <span className="text-xs isRead ? text-noir-gold-500 : text-gray-500" suppressHydrationWarning>
                   {formatTimeAgo(alert.createdAt)}
                 </span>
                 <PrefetchLink
@@ -145,7 +148,7 @@ export const AlertItem = ({
                   prefetch={false}
                   className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
                 >
-                  {linkText(alert.alertType)}{" "}
+                  {actionLabel}{" "}
                   <BsBoxArrowUpRight className="h-3 w-3" />
                 </PrefetchLink>
               </div>
@@ -158,7 +161,7 @@ export const AlertItem = ({
                   size="sm"
                   onClick={onMarkAsRead}
                   className="p-1 h-6 w-6"
-                  title="Mark as read"
+                  title={t("actions.markRead")}
                 >
                   <BsCheck className="h-3 w-3" />
                 </Button>
@@ -168,7 +171,7 @@ export const AlertItem = ({
                 size="sm"
                 onClick={onDismiss}
                 className="p-1 h-6 w-6 text-gray-400 hover:text-red-600"
-                title="Dismiss"
+                title={t("actions.dismiss")}
               >
                 <BsX className="h-3 w-3" />
               </Button>
@@ -183,8 +186,8 @@ export const AlertItem = ({
     <div
       className={`group p-4 rounded-lg border transition-all duration-200 ${
         !alert.isRead
-          ? "border-blue-200 bg-blue-50 shadow-sm"
-          : "border-gray-200 bg-white"
+          ? "border-blue-200 bg-noir-gold-500 shadow-sm"
+          : "border-gray-200 bg-noir-dark"
       } hover:shadow-md`}
     >
       <div className="flex items-start gap-3">
@@ -197,7 +200,7 @@ export const AlertItem = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  {getAlertTypeLabel(alert.alertType)}
+                  {typeLabel}
                 </span>
                 <span
                   className="text-xs text-gray-400 flex items-center gap-1"
@@ -210,7 +213,7 @@ export const AlertItem = ({
 
               <h4
                 className={`font-semibold ${
-                  !alert.isRead ? "text-gray-900" : "text-gray-700"
+                  !alert.isRead ? "text-gray-900" : "text-noir-gold-100"
                 }`}
               >
                 {alert.title}
@@ -220,7 +223,7 @@ export const AlertItem = ({
 
               {alert.alertType !== "pending_submission_approval" && alert.Perfume && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <span>Perfume:</span>
+                  <span>{t("actions.perfumeLabel")}</span>
                   <PrefetchLink
                     href={perfumeLink(alert.Perfume.slug)}
                     prefetch={false}
@@ -246,7 +249,7 @@ export const AlertItem = ({
                     return (
                       <div>
                         <span className="font-medium text-gray-700">
-                          Available from:
+                          {t("actions.availableFrom")}
                         </span>
                         <div className="mt-1 space-y-1">
                           {traders.map(
@@ -266,7 +269,7 @@ export const AlertItem = ({
                               >
                                 {trader.displayName ??
                                   trader.email ??
-                                  "Unknown Trader"}
+                                  t("actions.unknownTrader")}
                               </PrefetchLink>
                             )
                           )}
@@ -278,14 +281,14 @@ export const AlertItem = ({
                   {alert.alertType === "decant_interest" && (
                     <div>
                       <span className="font-medium text-gray-700">
-                        Interested user:
+                        {t("actions.interestedUser")}
                       </span>
                       <span className="ml-2 text-blue-600">
                         {(alert.metadata as { interestedUserName?: string; interestedUserEmail?: string })
                           ?.interestedUserName ??
                           (alert.metadata as { interestedUserEmail?: string })
                             ?.interestedUserEmail ??
-                          "Unknown User"}
+                          t("actions.unknownUser")}
                       </span>
                     </div>
                   )}
@@ -302,7 +305,7 @@ export const AlertItem = ({
                   className="flex items-center gap-2"
                 >
                   <BsCheck className="h-4 w-4" />
-                  Mark Read
+                  {t("actions.markRead")}
                 </Button>
               )}
 
@@ -311,9 +314,10 @@ export const AlertItem = ({
                 size="sm"
                 onClick={onDismiss}
                 className="flex items-center gap-2 text-gray-400 hover:text-red-600"
+                title={t("actions.dismiss")}
               >
                 <BsX className="h-4 w-4" />
-                Dismiss
+                {t("actions.dismiss")}
               </Button>
             </div>
           </div>

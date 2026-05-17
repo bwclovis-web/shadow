@@ -26,7 +26,6 @@ interface GlobalNavigationProps
     username?: string | null
     role?: string
   } | null
-  exchangeNewThisWeekCount?: number
 }
 
 const navLinkBase =
@@ -34,10 +33,7 @@ const navLinkBase =
 const navLinkActive =
   "text-noir-light bg-noir-black/30 rounded-full border-noir-light/90"
 
-function GlobalNavigationContent({
-  user,
-  exchangeNewThisWeekCount = 0,
-}: GlobalNavigationProps) {
+function GlobalNavigationContent({ user }: GlobalNavigationProps) {
   const t = useTranslations("navigation")
   const pathname = usePathname()
 
@@ -91,11 +87,7 @@ function GlobalNavigationContent({
           />
         </PrefetchLink>
         <ul className="flex gap-4 items-center tracking-wide max-w-max">
-          <MainNavigationLinks
-            variant="desktop"
-            user={user}
-            exchangeNewThisWeekCount={exchangeNewThisWeekCount}
-          />
+          <MainNavigationLinks variant="desktop" user={user} />
         </ul>
       </nav>
     </header>

@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import { Link } from "next-view-transitions"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { useTranslations } from "next-intl"
@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl"
 import { Button } from "@/components/Atoms/Button/Button"
 import FormField from "@/components/Atoms/FormField/FormField"
 import TradeListingPreview from "@/components/Molecules/TradeListingPreview/TradeListingPreview"
+import { TradeStatusTimeline } from "@/components/Molecules/TradeStatusTimeline"
 import { TraderAvatar } from "@/components/Molecules/TraderAvatar"
 import { useCSRF } from "@/hooks/useCSRF"
 import type { TradeForClient, TradeListingSeed } from "@/types/trade"
@@ -28,6 +29,9 @@ const lineItemToSeed = (
   userPerfumeId: lineItem.userPerfumeId,
   counterpartyId: ownerId,
   perfumeName: lineItem.perfumeName,
+  perfumeId: lineItem.perfumeId ?? undefined,
+  perfumeSlug: lineItem.perfumeSlug ?? undefined,
+  perfumeImage: lineItem.perfumeImage ?? undefined,
   available: lineItem.mlSnapshot != null ? String(lineItem.mlSnapshot) : "0",
   mlRemaining: lineItem.mlSnapshot,
   condition: lineItem.conditionSnapshot,
@@ -83,8 +87,6 @@ const TradeStatusCard = ({
     }
   }
 
-  const statusLabel = t(`status.${trade.status}` as "status.pending")
-
   return (
     <div className="noir-border mb-4 bg-noir-gold/10 p-4">
       <div className="mb-3 flex items-center gap-3">
@@ -93,9 +95,9 @@ const TradeStatusCard = ({
           avatarImage={otherUser.avatarImage}
           size="sm"
         />
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-noir-gold">{t("tradeWith", { name: otherName })}</p>
-          <p className="text-xs uppercase tracking-wide text-noir-gold-500">{statusLabel}</p>
+          <TradeStatusTimeline tradeId={trade.id} status={trade.status} className="mt-2" />
         </div>
       </div>
 

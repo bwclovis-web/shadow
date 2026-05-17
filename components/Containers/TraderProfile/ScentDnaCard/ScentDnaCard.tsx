@@ -23,6 +23,9 @@ const FAMILY_CHIP_CLASS =
 const HOUSE_PILL_CLASS =
   "rounded-md border border-white/15 bg-white/5 px-2 py-1 text-xs text-noir-gold-100"
 
+const FAVORITE_NOTE_PILL_CLASS =
+  "shrink-0 rounded-full border border-noir-gold/30 bg-noir-black/40 px-2 py-0.5 text-xs text-noir-gold-100"
+
 const ScentDnaCard = ({
   scentDna,
   traderName,
@@ -117,6 +120,24 @@ const ScentDnaCard = ({
                     {entry.percent}%
                   </span>
                 </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {scentDna.hasFavoriteNotes ? (
+        <div className="mt-4">
+          <h3 className="text-xs font-medium uppercase tracking-wide text-noir-gold-500">
+            {t("favoriteNotesHeading")}
+          </h3>
+          <ul
+            className="mt-2 flex gap-2 overflow-x-auto pb-1 style-scroll-noir-cold"
+            aria-label={t("favoriteNotesHeading")}
+          >
+            {scentDna.topNotes.map((note) => (
+              <li key={note.noteId}>
+                <span className={FAVORITE_NOTE_PILL_CLASS}>{note.name}</span>
               </li>
             ))}
           </ul>

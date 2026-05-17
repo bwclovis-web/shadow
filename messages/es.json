@@ -170,7 +170,38 @@
       "50": "50 alertas"
     },
     "savePreferences": "Guardar Preferencias",
-    "savingPreferences": "Guardando..."
+    "savingPreferences": "Guardando...",
+    "types": {
+      "wishlist_available": "Lista de deseos",
+      "decant_interest": "Interés",
+      "pending_submission_approval": "Envío",
+      "new_trader_message": "Mensaje",
+      "trade_received": "Oferta de intercambio",
+      "trade_accepted": "Intercambio aceptado",
+      "trade_shipped": "Intercambio enviado",
+      "trade_completed": "Intercambio completado",
+      "trade_cancelled": "Actualización de intercambio",
+      "default": "Alerta"
+    },
+    "actions": {
+      "reviewSubmission": "Revisar envío",
+      "viewMessage": "Ver mensaje",
+      "viewTrade": "Ver intercambio",
+      "viewPerfume": "Ver perfume",
+      "markRead": "Marcar leído",
+      "dismiss": "Descartar",
+      "availableFrom": "Disponible de:",
+      "interestedUser": "Usuario interesado:",
+      "perfumeLabel": "Perfume:",
+      "unknownTrader": "Vendedor desconocido",
+      "unknownUser": "Usuario desconocido"
+    },
+    "timeAgo": {
+      "justNow": "Ahora mismo",
+      "minutes": "hace {count} min",
+      "hours": "hace {count} h",
+      "days": "hace {count} d"
+    }
   },
   "behindTheBottle": {
     "meta": {
@@ -751,7 +782,17 @@
     "howWeWork": "Cómo Funcionamos",
     "contactUs": "Contáctanos",
     "home": "Inicio",
-    "search": "Buscar"
+    "search": "Buscar",
+    "mobileBottom": {
+      "exchange": "Intercambio",
+      "messages": "Mensajes",
+      "profile": "Perfil",
+      "alerts": "Alertas",
+      "signIn": "Iniciar sesión"
+    }
+  },
+  "traderActivity": {
+    "recentlyActive": "Activo recientemente"
   },
   "password": {
     "excellentPasswordStrength": "Excelente fortaleza de contraseña!",
@@ -1154,7 +1195,8 @@
     "search": {
       "placeholder": "Busca perfumes disponibles...",
       "noResults": "No se encontraron perfumes",
-      "tryDifferent": "Prueba con un término de búsqueda diferente"
+      "tryDifferent": "Prueba con un término de búsqueda diferente",
+      "keyboardHint": "Pulsa / para buscar · Esc para borrar filtros"
     },
     "filters": {
       "toggle": "Filtros",
@@ -1273,6 +1315,7 @@
     "cancel": "Cancelar",
     "trackingOptional": "Seguimiento (opcional)",
     "error": "Algo salió mal.",
+    "timelineAria": "Progreso del intercambio",
     "status": {
       "draft": "Borrador",
       "pending": "Oferta pendiente",
@@ -1307,6 +1350,7 @@
       "empty": "Aún no hay datos suficientes: haz el cuestionario, vota estaciones o añade botellas a tu colección.",
       "takeQuiz": "Hacer el cuestionario olfativo",
       "noteFamiliesHeading": "Familias de notas principales",
+      "favoriteNotesHeading": "Notas favoritas",
       "seasonHeading": "Afinidad estacional",
       "houseHeading": "Preferencia de casas",
       "families": {

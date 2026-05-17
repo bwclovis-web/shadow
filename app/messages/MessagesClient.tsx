@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 
+import { RecentlyActiveBadge } from "@/components/Atoms/RecentlyActiveBadge"
 import { TraderAvatar } from "@/components/Molecules/TraderAvatar"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import DangerModal from "@/components/Organisms/DangerModal"
@@ -24,6 +25,7 @@ export interface ConversationSummary {
   otherUserFirstName: string | null
   otherUserLastName: string | null
   otherUserAvatarImage: string | null
+  otherUserLastActiveAt?: Date | string | null
   lastMessageAt: Date | string
   lastMessagePreview: string | null
   unreadCount: number
@@ -137,6 +139,10 @@ export default function MessagesClient({
                           <span className="font-medium truncate text-noir-gold group-hover:text-noir-black transition-colors">
                             {displayName}
                           </span>
+                          <RecentlyActiveBadge
+                            lastActiveAt={conv.otherUserLastActiveAt}
+                            variant="dot"
+                          />
                           {conv.hasActiveTrade ? (
                             <span className="shrink-0 rounded-full border border-noir-gold/50 bg-noir-gold/20 px-2 py-0.5 text-xs font-medium text-noir-gold">
                               {t("activeTradeBadge")}

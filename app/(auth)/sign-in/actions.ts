@@ -4,6 +4,7 @@ import { cookies, headers } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { updateUser } from "@/models/user.query"
+import { touchUserLastActive } from "@/models/user-activity.server"
 import { signInCustomer } from "@/models/user.server"
 import { validateRateLimit } from "@/utils/api-validation.server"
 import { getAuthRateLimits } from "@/utils/rate-limit-config.server"
@@ -85,6 +86,7 @@ export const signInAction = async (
       tokenVersion: user.tokenVersion ?? 0,
     })
     await setSessionCookies(accessToken, refreshToken)
+    await touchUserLastActive(user.id)
     redirect(getProfilePathForUser(user))
   } catch (error) {
     if (isRedirectError(error)) {

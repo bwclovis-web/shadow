@@ -1,15 +1,20 @@
 "use client"
 
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
+import { useDirectMessageUnreadCount } from "@/components/Molecules/DirectMessageUnread/DirectMessageUnreadProvider"
+import { useUserAlertsContext } from "@/components/Molecules/UserAlertsProvider/UserAlertsProvider"
 import { SIGN_IN } from "@/constants/routes"
-import { mainNavigation } from "@/data/navigation"
 import { getProfilePathForUser } from "@/utils/user"
 import { styleMerge } from "@/utils/styleUtils"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { type FC, type HTMLProps } from "react"
-import { AiFillHome } from "react-icons/ai"
-import { FaBars, FaHeart, FaUser } from "react-icons/fa"
-import { LuSearch } from "react-icons/lu"
+import { BsBell } from "react-icons/bs"
+import { FaExchangeAlt, FaUser } from "react-icons/fa"
+import { MdMail } from "react-icons/md"
+
+const EXCHANGE_PATH = "/the-exchange"
+const MESSAGES_PATH = "/messages"
 
 interface MobileBottomNavigationProps extends HTMLProps<HTMLDivElement> {
   user?: {
@@ -17,34 +22,38 @@ interface MobileBottomNavigationProps extends HTMLProps<HTMLDivElement> {
     username?: string | null
     role?: string
   } | null
-  onMenuOpen?: () => void
 }
 
 const navItemClass = (active: boolean) =>
   styleMerge(
-    "flex flex-col items-center gap-1 p-2 mobile-touch-target transition-colors duration-200",
+    "relative flex flex-1 flex-col items-center justify-center gap-1 py-2 mobile-touch-target transition-colors duration-200 min-h-[52px]",
     active ? "text-noir-light" : "text-noir-gold hover:text-noir-light"
   )
 
-function useIsActive() {
+const Badge = ({ count }: { count: number }) => {
+  if (count <= 0) return null
+  return (
+    <span className="absolute right-[calc(50%-22px)] top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white">
+      {count > 99 ? "99+" : count}
+    </span>
+  )
+}
+
+const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
+  className,
+  user,
+}) => {
+  const t = useTranslations("navigation.mobileBottom")
   const pathname = usePathname()
+  const messageUnread = useDirectMessageUnreadCount()
+  const alertsCtx = useUserAlertsContext()
+  const alertUnread = alertsCtx?.unreadCount ?? 0
 
   const isActive = (href: string, exact?: boolean) => {
     if (exact) return pathname === href
     return pathname === href || pathname.startsWith(`${href}/`)
   }
 
-  return { isActive }
-}
-
-const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
-  className,
-  user,
-  onMenuOpen,
-}) => {
-  const { isActive } = useIsActive()
-  const perfumesPath =
-    mainNavigation.find(nav => nav.key === "perfumes")?.path || "/the-vault"
   const profileHref = user?.id
     ? getProfilePathForUser({
         id: user.id,
@@ -52,39 +61,34 @@ const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
       })
     : SIGN_IN
 
+  const alertsHref = user?.id ? `${profileHref}#user-alerts` : SIGN_IN
+
   return (
     <div
       className={styleMerge(
         "md:hidden fixed bottom-0 left-0 right-0 z-40 bg-noir-dark/95 backdrop-blur-md border-t border-noir-light/20 mobile-safe-bottom",
         className
       )}
+      data-testid="mobile-bottom-navigation"
     >
-      <nav className="flex justify-around items-center py-2">
-        <PrefetchLink href="/" className={navItemClass(isActive("/", true))}>
-          <AiFillHome size={20} />
-          <span className="text-xs font-medium">Home</span>
+      <nav className="flex items-stretch justify-around max-w-lg mx-auto">
+        <PrefetchLink
+          href={EXCHANGE_PATH}
+          className={navItemClass(isActive(EXCHANGE_PATH))}
+          aria-current={isActive(EXCHANGE_PATH) ? "page" : undefined}
+        >
+          <FaExchangeAlt size={22} aria-hidden />
+          <span className="text-[11px] font-medium leading-tight">{t("exchange")}</span>
         </PrefetchLink>
 
-        <button
-          type="button"
-          onClick={() => {
-            const searchInput = document.querySelector(
-              'input[type="search"], input[placeholder*="search"], input[placeholder*="Search"]'
-            ) as HTMLInputElement | null
-            searchInput?.focus()
-          }}
-          className="flex flex-col items-center gap-1 p-2 mobile-touch-target transition-colors duration-200 text-noir-gold hover:text-noir-light"
-        >
-          <LuSearch size={20} />
-          <span className="text-xs font-medium">Search</span>
-        </button>
-
         <PrefetchLink
-          href={perfumesPath}
-          className={navItemClass(isActive(perfumesPath))}
+          href={user?.id ? MESSAGES_PATH : SIGN_IN}
+          className={navItemClass(user?.id ? isActive(MESSAGES_PATH) : isActive(SIGN_IN, true))}
+          aria-current={user?.id && isActive(MESSAGES_PATH) ? "page" : undefined}
         >
-          <FaHeart size={20} />
-          <span className="text-xs font-medium">Perfumes</span>
+          <MdMail size={24} aria-hidden />
+          <Badge count={messageUnread} />
+          <span className="text-[11px] font-medium leading-tight">{t("messages")}</span>
         </PrefetchLink>
 
         <PrefetchLink
@@ -92,20 +96,26 @@ const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
           className={navItemClass(
             user?.id ? isActive(profileHref) : isActive(SIGN_IN, true)
           )}
+          aria-current={
+            user?.id && isActive(profileHref) && !pathname.includes("#")
+              ? "page"
+              : undefined
+          }
         >
-          <FaUser size={20} />
-          <span className="text-xs font-medium">{user ? "Profile" : "Sign In"}</span>
+          <FaUser size={20} aria-hidden />
+          <span className="text-[11px] font-medium leading-tight">
+            {user?.id ? t("profile") : t("signIn")}
+          </span>
         </PrefetchLink>
 
-        <button
-          type="button"
-          onClick={onMenuOpen}
-          className="flex flex-col items-center gap-1 p-2 mobile-touch-target transition-colors duration-200 text-noir-gold hover:text-noir-light"
-          aria-label="Open menu"
+        <PrefetchLink
+          href={alertsHref}
+          className={navItemClass(false)}
         >
-          <FaBars size={20} />
-          <span className="text-xs font-medium">Menu</span>
-        </button>
+          <BsBell size={20} aria-hidden />
+          <Badge count={alertUnread} />
+          <span className="text-[11px] font-medium leading-tight">{t("alerts")}</span>
+        </PrefetchLink>
       </nav>
     </div>
   )

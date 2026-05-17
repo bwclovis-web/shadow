@@ -69,7 +69,7 @@ const TradeComposer = ({
   )
   const [activeInit, setActiveInit] = useState(init)
   const [offerable, setOfferable] = useState<OfferableListing[]>([])
-  const [selectedOfferId, setSelectedOfferId] = useState<string | null>(null)
+  const [selectedOfferIds, setSelectedOfferIds] = useState<string[]>([])
   const [notes, setNotes] = useState("")
   const [loading, setLoading] = useState(false)
   const [loadingListings, setLoadingListings] = useState(false)
@@ -80,6 +80,18 @@ const TradeComposer = ({
     activeInit.seed.tradePreference,
     activeInit.seed.tradeOnly
   )
+
+  useEffect(() => {
+    setSelectedOfferIds([])
+  }, [activeInit.seed.userPerfumeId])
+
+  const toggleOfferSelection = (listingId: string) => {
+    setSelectedOfferIds(prev =>
+      prev.includes(listingId)
+        ? prev.filter(id => id !== listingId)
+        : [...prev, listingId]
+    )
+  }
 
   useEffect(() => {
     if (step !== "compose" || cashOnly) return
@@ -115,8 +127,8 @@ const TradeComposer = ({
     const lineItems: { userPerfumeId: string; role: "offered" | "requested" }[] = [
       { userPerfumeId: activeInit.seed.userPerfumeId, role: "requested" },
     ]
-    if (selectedOfferId) {
-      lineItems.push({ userPerfumeId: selectedOfferId, role: "offered" })
+    for (const userPerfumeId of selectedOfferIds) {
+      lineItems.push({ userPerfumeId, role: "offered" })
     }
 
     const formData = new FormData()
@@ -194,10 +206,9 @@ const TradeComposer = ({
               <li key={listing.id}>
                 <label className="flex cursor-pointer items-start gap-2 noir-border bg-noir-dark/40 p-2">
                   <input
-                    type="radio"
-                    name="offeredListing"
-                    checked={selectedOfferId === listing.id}
-                    onChange={() => setSelectedOfferId(listing.id)}
+                    type="checkbox"
+                    checked={selectedOfferIds.includes(listing.id)}
+                    onChange={() => toggleOfferSelection(listing.id)}
                     className="mt-1"
                   />
                   <span className="text-sm text-noir-gold-100">

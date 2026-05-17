@@ -8,6 +8,7 @@ import AboutDropdown from "@/components/Molecules/AboutDropdown/AboutDropdown"
 import AdminDropdown from "@/components/Molecules/AdminDropdown/AdminDropdown"
 import ProfileDropdown from "@/components/Molecules/ProfileDropdown/ProfileDropdown"
 import { useDirectMessageUnreadCount } from "@/components/Molecules/DirectMessageUnread/DirectMessageUnreadProvider"
+import { useExchangeNewListingsBadgeCount } from "@/components/Molecules/ExchangeNewListingsBadge/ExchangeNewListingsBadgeProvider"
 import { useTradeAlertUnreadCount } from "@/components/Molecules/TradeAlertUnread/TradeAlertUnreadProvider"
 import { mainNavigation } from "@/data/navigation"
 import { styleMerge } from "@/utils/styleUtils"
@@ -21,7 +22,6 @@ export interface MainNavigationLinksProps {
     username?: string | null
     role?: string
   } | null
-  exchangeNewThisWeekCount?: number
   onNavClick?: () => void
 }
 
@@ -49,13 +49,13 @@ const getMainNavItemClassName = (
 export const MainNavigationLinks = ({
   variant,
   user,
-  exchangeNewThisWeekCount = 0,
   onNavClick,
 }: MainNavigationLinksProps) => {
   const t = useTranslations("navigation")
   const pathname = usePathname()
   const directMessageUnread = useDirectMessageUnreadCount()
   const tradeAlertUnread = useTradeAlertUnreadCount()
+  const exchangeNewListingsCount = useExchangeNewListingsBadgeCount()
 
   const isActive = (path: string) =>
     pathname === path || pathname.startsWith(path + "/")
@@ -69,7 +69,7 @@ export const MainNavigationLinks = ({
       </li>
       {mainNavigation.map((item) => {
         const showNewBadge =
-          item.key === "theExchange" && exchangeNewThisWeekCount > 0
+          item.key === "theExchange" && exchangeNewListingsCount > 0
         return (
           <li key={item.id}>
             <PrefetchLink
@@ -83,12 +83,12 @@ export const MainNavigationLinks = ({
                   <span
                     className="shrink-0 rounded-full bg-noir-gold text-noir-black text-xs font-semibold px-2 py-0.5 min-w-[1.25rem] text-center tabular-nums"
                     title={t("exchangeNewThisWeek", {
-                      count: exchangeNewThisWeekCount,
+                      count: exchangeNewListingsCount,
                     })}
                   >
-                    {exchangeNewThisWeekCount > 99
+                    {exchangeNewListingsCount > 99
                       ? "99+"
-                      : exchangeNewThisWeekCount}
+                      : exchangeNewListingsCount}
                   </span>
                 ) : null}
               </span>

@@ -80,7 +80,7 @@ export const AlertBell = ({
           aria-label="Close notifications"
         />
         <div
-          className="fixed w-80 bg-noir-light rounded-lg shadow-lg border border-noir-gold z-50 max-h-96 overflow-y-auto"
+          className="fixed w-80 bg-noir-dark shadow-2xl shadow-noir-black rounded-lg border border-noir-gold z-50 max-h-96 overflow-y-auto"
           style={{
             top: dropdownPosition.top,
             left: dropdownPosition.left,
@@ -88,7 +88,7 @@ export const AlertBell = ({
           role="dialog"
           aria-label="Notifications"
         >
-          <div className="flex items-center justify-between p-3 border-b border-noir-gray">
+          <div className="flex items-center justify-between p-3 border-b border-noir-gold-500/40">
             <h3 className="font-semibold text-noir-gold">
               Notifications
               {unreadCount > 0 && (
@@ -104,7 +104,7 @@ export const AlertBell = ({
               className="p-1"
               aria-label="Close"
             >
-              <BsX className="h-4 w-4 text-noir-dark" />
+              <BsX className="h-4 w-4 text-noir-dark bg-noir-gold-500" />
             </Button>
           </div>
 
@@ -115,9 +115,9 @@ export const AlertBell = ({
                 <p className="text-sm">No notifications</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-noir-gold-500">
                 {recentAlerts.map(alert => (
-                  <div key={alert.id} className="p-3 hover:bg-gray-50">
+                  <div key={alert.id} className="p-3">
                     <AlertItem
                       alert={alert}
                       onMarkAsRead={() => {
@@ -139,8 +139,8 @@ export const AlertBell = ({
           </div>
 
           {recentAlerts.length > 0 && (
-            <div className="p-3 border-t border-gray-200 bg-gray-50">
-              <p className="text-xs text-gray-600 text-center">
+            <div className="p-3 border-t border-noir-gold bg-noir-gold-100">
+              <p className="text-xs text-noir-dark text-center">
                 Showing {recentAlerts.length} of {alerts.length} alerts
               </p>
             </div>

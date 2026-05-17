@@ -15,6 +15,7 @@ vi.mock("@/lib/db", () => ({
 }))
 
 import {
+  getNewListingsSinceCount,
   getNewListingsThisWeekCount,
   getRecentlyListedActivity,
 } from "./activity-feed.server"
@@ -39,6 +40,22 @@ describe("activity-feed.server", () => {
         },
         orderBy: { createdAt: "desc" },
         take: 8,
+      })
+    )
+  })
+
+  it("counts listings created since a given date", async () => {
+    countMock.mockResolvedValue(3)
+    const since = new Date("2025-01-01T00:00:00.000Z")
+
+    const result = await getNewListingsSinceCount(since)
+
+    expect(result).toBe(3)
+    expect(countMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          createdAt: { gte: since },
+        }),
       })
     )
   })

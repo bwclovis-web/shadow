@@ -170,7 +170,38 @@
       "50": "50 notifiche"
     },
     "savePreferences": "Salva preferenze",
-    "savingPreferences": "Salvataggio..."
+    "savingPreferences": "Salvataggio...",
+    "types": {
+      "wishlist_available": "Lista dei desideri",
+      "decant_interest": "Interesse",
+      "pending_submission_approval": "Invio",
+      "new_trader_message": "Messaggio",
+      "trade_received": "Offerta di scambio",
+      "trade_accepted": "Scambio accettato",
+      "trade_shipped": "Scambio spedito",
+      "trade_completed": "Scambio completato",
+      "trade_cancelled": "Aggiornamento scambio",
+      "default": "Avviso"
+    },
+    "actions": {
+      "reviewSubmission": "Revisiona invio",
+      "viewMessage": "Vedi messaggio",
+      "viewTrade": "Vedi scambio",
+      "viewPerfume": "Vedi profumo",
+      "markRead": "Segna letto",
+      "dismiss": "Ignora",
+      "availableFrom": "Disponibile da:",
+      "interestedUser": "Utente interessato:",
+      "perfumeLabel": "Profumo:",
+      "unknownTrader": "Trader sconosciuto",
+      "unknownUser": "Utente sconosciuto"
+    },
+    "timeAgo": {
+      "justNow": "Proprio ora",
+      "minutes": "{count} min fa",
+      "hours": "{count} h fa",
+      "days": "{count} g fa"
+    }
   },
   "behindTheBottle": {
     "meta": {
@@ -751,7 +782,17 @@
     "howWeWork": "Come funziona",
     "contactUs": "Contatti",
     "home": "Home",
-    "search": "Cerca"
+    "search": "Cerca",
+    "mobileBottom": {
+      "exchange": "Mercato",
+      "messages": "Messaggi",
+      "profile": "Profilo",
+      "alerts": "Avvisi",
+      "signIn": "Accedi"
+    }
+  },
+  "traderActivity": {
+    "recentlyActive": "Attivo di recente"
   },
   "password": {
     "excellentPasswordStrength": "Ottima solidità della password!",
@@ -1153,7 +1194,8 @@
     "search": {
       "placeholder": "Cerca profumi disponibili...",
       "noResults": "Nessun profumo trovato",
-      "tryDifferent": "Prova un altro termine"
+      "tryDifferent": "Prova un altro termine",
+      "keyboardHint": "Premi / per cercare · Esc per cancellare i filtri"
     },
     "filters": {
       "toggle": "Filtri",
@@ -1273,6 +1315,7 @@
     "cancel": "Annulla",
     "trackingOptional": "Tracking (opzionale)",
     "error": "Qualcosa è andato storto.",
+    "timelineAria": "Avanzamento dello scambio",
     "status": {
       "draft": "Bozza",
       "pending": "Offerta in attesa",
@@ -1291,6 +1334,45 @@
     },
     "heading": "Venditore {traderName}",
     "subheading": "Profilo di {traderName}",
+    "scentDna": {
+      "meta": {
+        "title": "DNA olfattivo di {traderName}",
+        "description": "Famiglie di note, affinità stagionale e gusti di case per {traderName} su Shadow and Sillage."
+      },
+      "ariaLabel": "DNA olfattivo di {traderName}",
+      "title": "DNA olfattivo",
+      "subtitle": "Profilo gustativo calcolato per {traderName}",
+      "sharePageHeading": "DNA olfattivo di {traderName}",
+      "sharePageSubheading": "Un'istantanea condivisibile di famiglie di note, stagioni e case.",
+      "shareCta": "Condividi il mio DNA olfattivo",
+      "shareCopied": "Link copiato",
+      "shareError": "Impossibile copiare il link",
+      "empty": "Dati insufficienti — fai il quiz, vota le stagioni o aggiungi flaconi alla collezione.",
+      "takeQuiz": "Fai il quiz olfattivo",
+      "noteFamiliesHeading": "Famiglie di note principali",
+      "favoriteNotesHeading": "Note preferite",
+      "seasonHeading": "Affinità stagionale",
+      "houseHeading": "Gusto delle case",
+      "families": {
+        "florals": "Floreali",
+        "woods": "Legnosi",
+        "orientals": "Orientali",
+        "citrus": "Agrumi",
+        "aquatics": "Acquatici",
+        "gourmands": "Gourmand"
+      },
+      "season": {
+        "winter": "Inverno",
+        "spring": "Primavera",
+        "summer": "Estate",
+        "fall": "Autunno"
+      },
+      "house": {
+        "indie": "Indie",
+        "niche": "Niche",
+        "designer": "Designer"
+      }
+    },
     "aboutHeading": "Informazioni",
     "regionChip": "{region}",
     "social": {

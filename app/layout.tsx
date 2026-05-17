@@ -10,10 +10,13 @@ import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import GlobalNavigation from '@/components/Molecules/GlobalNavigation/GlobalNavigation'
 import { DirectMessageUnreadProvider } from '@/components/Molecules/DirectMessageUnread/DirectMessageUnreadProvider'
 import MobileNavigation from '@/components/Molecules/MobileNavigation'
+import MobileBottomNavigation from '@/components/Molecules/MobileBottomNavigation/MobileBottomNavigation'
+import { ActivityPing } from '@/components/Molecules/ActivityPing'
 import ServiceWorkerRegistration from '@/components/Containers/ServiceWorkerRegistration'
 import { getNewListingsThisWeekCount } from '@/models/activity-feed.server'
 import { getUnreadDirectMessageCount } from '@/models/contactMessage.server'
 import { getUnreadAlertCount, getUnreadTradeAlertCount, getUserAlerts } from '@/models/user-alerts.server'
+import { ExchangeNewListingsBadgeProvider } from '@/components/Molecules/ExchangeNewListingsBadge/ExchangeNewListingsBadgeProvider'
 import { TradeAlertUnreadProvider } from '@/components/Molecules/TradeAlertUnread/TradeAlertUnreadProvider'
 import { UserAlertsProvider } from '@/components/Molecules/UserAlertsProvider/UserAlertsProvider'
 import SiteFooter from '@/components/Organisms/SiteFooter/SiteFooter'
@@ -106,19 +109,19 @@ export default async function RootLayout({
                 initialAlerts={initialAlerts}
                 initialUnreadCount={initialAlertUnreadCount}
               >
-                <GlobalNavigation
-                  user={user}
-                  exchangeNewThisWeekCount={exchangeNewThisWeekCount}
-                />
-                <MobileNavigation
-                  user={user}
-                  exchangeNewThisWeekCount={exchangeNewThisWeekCount}
-                />
+                <ExchangeNewListingsBadgeProvider
+                  initialCount={exchangeNewThisWeekCount}
+                >
+                <GlobalNavigation user={user} />
+                <MobileNavigation user={user} />
+                <MobileBottomNavigation user={user} />
+                <ActivityPing userId={user?.id} />
                 <Providers>
                   {user?.id ? <OnboardingBannerSlot userId={user.id} /> : null}
                   {children}
                   <SiteFooter />
                 </Providers>
+                </ExchangeNewListingsBadgeProvider>
               </UserAlertsProvider>
               </TradeAlertUnreadProvider>
             </DirectMessageUnreadProvider>

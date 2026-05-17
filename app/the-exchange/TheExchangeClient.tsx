@@ -15,6 +15,7 @@ import LinkCard from "@/components/Organisms/LinkCard"
 import Modal from "@/components/Organisms/Modal"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
+import { useGsapStagger } from "@/hooks/useGsapStagger"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
 import { TradeComposerModal } from "@/components/Containers/Trade/TradeComposerModal"
 import { useTradeComposerModal } from "@/hooks/useTradeComposerModal"
@@ -68,6 +69,8 @@ const TheExchangeClient = ({
   const searchParams = useSearchParams()
   const isLg = useMediaQuery(DESKTOP_MEDIA)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const exchangeGridRef = useRef<HTMLUListElement>(null)
   const {
     composerData,
     modalOpen: composerModalOpen,
@@ -130,6 +133,12 @@ const TheExchangeClient = ({
     localSearchRef.current = localSearchValue
   }, [localSearchValue])
 
+  useGsapStagger(exchangeGridRef, {
+    selector: "[data-exchange-card]",
+    deps: [availablePerfumes.map(p => p.id).join(",")],
+    enabled: availablePerfumes.length > 0,
+  })
+
   const handleDiscoveryChange = useCallback(
     (next: PerfumeDiscoveryFilters) => {
       const nextSearch = discoveryFiltersToSearchParams(
@@ -144,6 +153,54 @@ const TheExchangeClient = ({
     },
     [searchParams, pushUrlFromSearchParams]
   )
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (pathname !== ROUTE_PATH) return
+      const target = e.target as HTMLElement
+      const inField =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+
+      if (e.key === "/" && !inField && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+        return
+      }
+
+      if (e.key !== "Escape") return
+
+      const hasFilters =
+        discoveryFiltersActive(discoveryFromUrl) ||
+        localSearchRef.current.trim().length > 0
+
+      if (inField && document.activeElement === searchInputRef.current) {
+        e.preventDefault()
+        setLocalSearchValue("")
+        cancelPending()
+        if (hasFilters) handleDiscoveryChange(emptyDiscoveryFilters())
+        searchInputRef.current?.blur()
+        return
+      }
+
+      if (!inField && hasFilters) {
+        e.preventDefault()
+        setLocalSearchValue("")
+        cancelPending()
+        handleDiscoveryChange(emptyDiscoveryFilters())
+      }
+    }
+
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [
+    pathname,
+    discoveryFromUrl,
+    cancelPending,
+    handleDiscoveryChange,
+    setLocalSearchValue,
+  ])
 
   const handleProposeSwapFromCard = useCallback(
     (
@@ -415,10 +472,15 @@ const TheExchangeClient = ({
                 ) : null}
                 <div className="max-w-md mx-auto lg:mx-0 lg:max-w-none">
                   <SearchInput
+                    id="exchange-search"
+                    inputRef={searchInputRef}
                     value={localSearchValue}
                     onChange={setLocalSearchValue}
                     placeholder={t("search.placeholder")}
                   />
+                  <p className="mt-1 text-center text-xs text-noir-gold-500 lg:text-left">
+                    {t("search.keyboardHint")}
+                  </p>
                 </div>
                 {recentListings.length > 0 ? (
                   <ActivityFeedSection listings={recentListings} />
@@ -440,12 +502,15 @@ const TheExchangeClient = ({
                     </p>
                   </div>
                 ) : (
-                  <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 auto-rows-fr animate-fade-in">
-                    {availablePerfumes.map((perfume, index) => (
+                  <ul
+                    ref={exchangeGridRef}
+                    className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 auto-rows-fr"
+                  >
+                    {availablePerfumes.map(perfume => (
                       <li
                         key={perfume.id}
-                        className="relative animate-fade-in-item"
-                        style={{ animationDelay: `${index * 0.05}s` }}
+                        data-exchange-card
+                        className="relative opacity-0"
                       >
                         <LinkCard
                           data={{

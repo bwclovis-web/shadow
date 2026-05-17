@@ -39,6 +39,10 @@ const supplementalMigrations = [
     sql: `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "onboardingMatchesViewedAt" TIMESTAMP(3);`,
   },
   {
+    label: "User.lastActiveAt",
+    sql: `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "lastActiveAt" TIMESTAMP(3);`,
+  },
+  {
     label: "ScentProfile.preferredConcentration, ScentProfile.preferredHouseTier",
     sql: `ALTER TABLE "ScentProfile" ADD COLUMN IF NOT EXISTS "preferredConcentration" TEXT, ADD COLUMN IF NOT EXISTS "preferredHouseTier" TEXT;`,
   },

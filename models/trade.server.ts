@@ -7,6 +7,7 @@ import {
 
 import { prisma } from "@/lib/db"
 import { createContactMessage } from "@/models/contactMessage.server"
+import { touchUserLastActive } from "@/models/user-activity.server"
 import { createUserAlert, dispatchPushForUserAlert } from "@/models/user-alerts.server"
 import type { TradeForClient, TradeLineItemInput } from "@/types/trade"
 import type { AlertType } from "@/types/database"
@@ -27,7 +28,17 @@ const TERMINAL_TRADE_STATUSES: TradeStatus[] = [
 ]
 
 const tradeInclude = {
-  lineItems: true,
+  lineItems: {
+    include: {
+      userPerfume: {
+        select: {
+          perfume: {
+            select: { id: true, slug: true, image: true },
+          },
+        },
+      },
+    },
+  },
   initiator: {
     select: {
       id: true,
@@ -72,6 +83,9 @@ const serializeTrade = (trade: TradeWithRelations): TradeForClient => ({
     userPerfumeId: li.userPerfumeId,
     role: li.role,
     perfumeName: li.perfumeName,
+    perfumeId: li.userPerfume?.perfume?.id ?? null,
+    perfumeSlug: li.userPerfume?.perfume?.slug ?? null,
+    perfumeImage: li.userPerfume?.perfume?.image ?? null,
     mlSnapshot: li.mlSnapshot,
     conditionSnapshot: li.conditionSnapshot,
   })),
@@ -383,6 +397,8 @@ export const createTrade = async (input: CreateTradeInput): Promise<TradeForClie
     await notifyTradeSubmittedInThread(trade, initiatorId, notes)
   }
 
+  void touchUserLastActive(initiatorId)
+
   return serializeTrade(trade)
 }
 
@@ -439,6 +455,8 @@ export const transitionTrade = async (
 
   await sendTradeAlertWithFallback(updated, action, actorUserId)
 
+  void touchUserLastActive(actorUserId)
+
   return serializeTrade(updated)
 }
 
@@ -486,20 +504,31 @@ export const getTradesForUserProfile = async (
   const statuses =
     mode === "active" ? ACTIVE_TRADE_STATUSES : TERMINAL_TRADE_STATUSES
 
-  const participantFilter =
-    viewerId && viewerId !== profileUserId
+  const participantWhere: Prisma.TradeWhereInput =
+    viewerId === profileUserId
       ? {
-          OR: [{ initiatorId: viewerId }, { counterpartyId: viewerId }],
+          OR: [
+            { initiatorId: profileUserId },
+            { counterpartyId: profileUserId },
+          ],
         }
-      : viewerId === profileUserId
-        ? {}
-        : {}
+      : {
+          OR: [
+            {
+              initiatorId: profileUserId,
+              counterpartyId: viewerId,
+            },
+            {
+              initiatorId: viewerId,
+              counterpartyId: profileUserId,
+            },
+          ],
+        }
 
   const trades = await prisma.trade.findMany({
     where: {
       status: { in: statuses },
-      OR: [{ initiatorId: profileUserId }, { counterpartyId: profileUserId }],
-      ...participantFilter,
+      ...participantWhere,
     },
     include: tradeInclude,
     orderBy: { updatedAt: "desc" },

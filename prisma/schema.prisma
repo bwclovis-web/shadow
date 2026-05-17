@@ -26,6 +26,7 @@ model User {
   isBanned              Boolean                @default(false)
   onboardingCompletedAt       DateTime?
   onboardingMatchesViewedAt   DateTime?
+  lastActiveAt                DateTime?
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
   role                  UserRole               @default(user)

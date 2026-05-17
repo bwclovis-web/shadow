@@ -11,7 +11,6 @@ import { useUserAlertsContext } from "@/components/Molecules/UserAlertsProvider/
 import { useUserAlerts } from "@/hooks/useUserAlerts"
 import type { UserAlert, UserAlertPreferences } from "@/types/database"
 
-import { AlertBell } from "./AlertBell"
 import { AlertItem } from "./AlertItem"
 import { AlertPreferences } from "./AlertPreferences"
 
@@ -114,16 +113,7 @@ const UserAlerts = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold mb-2  text-noir-gold">{t("heading")}</h2>
-        <AlertBell
-          unreadCount={unreadCount}
-          userId={userId}
-          alerts={alerts}
-          onMarkAsRead={handleMarkAsRead}
-          onDismissAlert={handleDismissAlert}
-        />
-      </div>
+      <h2 className="text-2xl font-bold mb-4 text-noir-gold">{t("heading")}</h2>
 
       <div className="noir-border p-4 relative">
         <VooDooDetails

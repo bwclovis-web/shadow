@@ -264,7 +264,38 @@
     "pushDenied": "Notification permission was denied. Enable it in your browser settings to use push.",
     "pushUnsupported": "Push notifications are not supported in this browser.",
     "pushNotConfigured": "Push is not configured on this server yet.",
-    "pushSubscribeFailed": "Could not enable push notifications. Try again later."
+    "pushSubscribeFailed": "Could not enable push notifications. Try again later.",
+    "types": {
+      "wishlist_available": "Wishlist",
+      "decant_interest": "Interest",
+      "pending_submission_approval": "Submission",
+      "new_trader_message": "Message",
+      "trade_received": "Trade offer",
+      "trade_accepted": "Trade accepted",
+      "trade_shipped": "Trade shipped",
+      "trade_completed": "Trade completed",
+      "trade_cancelled": "Trade update",
+      "default": "Alert"
+    },
+    "actions": {
+      "reviewSubmission": "Review submission",
+      "viewMessage": "View message",
+      "viewTrade": "View trade",
+      "viewPerfume": "View perfume",
+      "markRead": "Mark read",
+      "dismiss": "Dismiss",
+      "availableFrom": "Available from:",
+      "interestedUser": "Interested user:",
+      "perfumeLabel": "Perfume:",
+      "unknownTrader": "Unknown trader",
+      "unknownUser": "Unknown user"
+    },
+    "timeAgo": {
+      "justNow": "Just now",
+      "minutes": "{count}m ago",
+      "hours": "{count}h ago",
+      "days": "{count}d ago"
+    }
   },
   "behindTheBottle": {
     "meta": {
@@ -856,7 +887,17 @@
     "howWeWork": "How We Work",
     "contactUs": "Contact Us",
     "home": "Home",
-    "search": "Search"
+    "search": "Search",
+    "mobileBottom": {
+      "exchange": "Exchange",
+      "messages": "Messages",
+      "profile": "Profile",
+      "alerts": "Alerts",
+      "signIn": "Sign in"
+    }
+  },
+  "traderActivity": {
+    "recentlyActive": "Active recently"
   },
   "password": {
     "excellentPasswordStrength": "Excellent password strength!",
@@ -1300,7 +1341,8 @@
     "search": {
       "placeholder": "Search available perfumes...",
       "noResults": "No perfumes found",
-      "tryDifferent": "Try a different search term"
+      "tryDifferent": "Try a different search term",
+      "keyboardHint": "Press / to focus search · Esc to clear filters"
     },
     "filters": {
       "toggle": "Filters",
@@ -1421,6 +1463,7 @@
     "trackingOptional": "Tracking (optional)",
     "error": "Something went wrong.",
     "communityPolicyLink": "Shipping, disputes & community rules",
+    "timelineAria": "Trade progress",
     "status": {
       "draft": "Draft",
       "pending": "Offer pending",
@@ -1460,6 +1503,7 @@
       "empty": "Not enough data yet — take the scent quiz, vote on seasons, or add bottles to your collection.",
       "takeQuiz": "Take the scent quiz",
       "noteFamiliesHeading": "Top note families",
+      "favoriteNotesHeading": "Favorite notes",
       "seasonHeading": "Season affinity",
       "houseHeading": "House taste",
       "families": {

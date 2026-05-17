@@ -1,6 +1,7 @@
 import { type TradeStatus } from "@prisma/client"
 
 import { prisma } from "@/lib/db"
+import { touchUserLastActive } from "@/models/user-activity.server"
 
 const ACTIVE_TRADE_STATUSES: TradeStatus[] = [
   "draft",
@@ -43,6 +44,7 @@ export interface ConversationSummary {
   otherUserFirstName: string | null
   otherUserLastName: string | null
   otherUserAvatarImage: string | null
+  otherUserLastActiveAt: Date | null
   lastMessageAt: Date
   lastMessagePreview: string | null
   unreadCount: number
@@ -76,8 +78,7 @@ export async function createContactMessage(input: CreateContactMessageInput) {
     throw new Error("Recipient trader not found")
   }
 
-  // Create the contact message
-  return await prisma.traderContactMessage.create({
+  const created = await prisma.traderContactMessage.create({
     data: {
       senderId,
       recipientId,
@@ -86,6 +87,10 @@ export async function createContactMessage(input: CreateContactMessageInput) {
       tradeId: tradeId ?? null,
     },
   })
+
+  void touchUserLastActive(senderId)
+
+  return created
 }
 
 /** Total unread DMs received by the user (matches per-thread unread in getConversations). */
@@ -111,6 +116,7 @@ export async function getConversations(userId: string): Promise<ConversationSumm
           firstName: true,
           lastName: true,
           avatarImage: true,
+          lastActiveAt: true,
         },
       },
     },
@@ -131,6 +137,7 @@ export async function getConversations(userId: string): Promise<ConversationSumm
           firstName: true,
           lastName: true,
           avatarImage: true,
+          lastActiveAt: true,
         },
       },
     },
@@ -145,6 +152,7 @@ export async function getConversations(userId: string): Promise<ConversationSumm
       firstName: string | null
       lastName: string | null
       avatarImage: string | null
+      lastActiveAt: Date | null
       lastMessageAt: Date
       lastMessagePreview: string | null
       unreadCount: number
@@ -160,6 +168,7 @@ export async function getConversations(userId: string): Promise<ConversationSumm
         firstName: row.recipient.firstName,
         lastName: row.recipient.lastName,
         avatarImage: row.recipient.avatarImage,
+        lastActiveAt: row.recipient.lastActiveAt,
         lastMessageAt: row.createdAt,
         lastMessagePreview: row.message.slice(0, 80),
         unreadCount: 0,
@@ -177,6 +186,7 @@ export async function getConversations(userId: string): Promise<ConversationSumm
         firstName: row.sender.firstName,
         lastName: row.sender.lastName,
         avatarImage: row.sender.avatarImage,
+        lastActiveAt: row.sender.lastActiveAt,
         lastMessageAt: row.createdAt,
         lastMessagePreview: row.message.slice(0, 80),
         unreadCount: byOther[id]?.unreadCount ?? unread,
@@ -207,6 +217,7 @@ export async function getConversations(userId: string): Promise<ConversationSumm
       otherUserFirstName: x.firstName,
       otherUserLastName: x.lastName,
       otherUserAvatarImage: x.avatarImage,
+      otherUserLastActiveAt: x.lastActiveAt,
       lastMessageAt: x.lastMessageAt,
       lastMessagePreview: x.lastMessagePreview,
       unreadCount: x.unreadCount,

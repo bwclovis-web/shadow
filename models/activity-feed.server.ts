@@ -64,12 +64,15 @@ export const getRecentlyListedActivity = async (
     select: activityFeedListingSelect,
   })
 
-export const getNewListingsThisWeekCount = async (): Promise<number> => {
-  const weekAgo = new Date(Date.now() - DAYS_IN_WEEK * MS_PER_DAY)
-  return prisma.userPerfume.count({
+export const getNewListingsSinceCount = async (since: Date): Promise<number> =>
+  prisma.userPerfume.count({
     where: {
       ...availableListingWhere,
-      createdAt: { gte: weekAgo },
+      createdAt: { gte: since },
     },
   })
+
+export const getNewListingsThisWeekCount = async (): Promise<number> => {
+  const weekAgo = new Date(Date.now() - DAYS_IN_WEEK * MS_PER_DAY)
+  return getNewListingsSinceCount(weekAgo)
 }

@@ -10,6 +10,12 @@ export type TopNoteFamily = {
   percent: number
 }
 
+export type TopNote = {
+  noteId: string
+  name: string
+  weight: number
+}
+
 export type HouseTypeBreakdown = {
   indie: number
   niche: number
@@ -18,9 +24,11 @@ export type HouseTypeBreakdown = {
 
 export type ScentDnaSnapshot = {
   topFamilies: TopNoteFamily[]
+  topNotes: TopNote[]
   seasonAffinity: Record<SeasonKey, number>
   houseBreakdown: HouseTypeBreakdown | null
   hasNoteProfile: boolean
+  hasFavoriteNotes: boolean
   hasSeasonVotes: boolean
   hasHouseData: boolean
 }
@@ -54,6 +62,23 @@ export const computeTopNoteFamilies = (
     .sort((a, b) => b.weight - a.weight)
     .slice(0, limit)
 }
+
+export const computeTopNotes = (
+  noteWeights: Record<string, number>,
+  noteNameById: ReadonlyMap<string, string>,
+  limit = 8
+): TopNote[] =>
+  Object.entries(noteWeights)
+    .map(([noteId, rawWeight]) => {
+      const weight = Number(rawWeight)
+      if (!Number.isFinite(weight) || weight <= 0) return null
+      const name = noteNameById.get(noteId)
+      if (!name) return null
+      return { noteId, name, weight }
+    })
+    .filter((entry): entry is TopNote => entry !== null)
+    .sort((a, b) => b.weight - a.weight)
+    .slice(0, limit)
 
 export const computeSeasonAffinity = (
   votes: ReadonlyArray<{
@@ -125,6 +150,7 @@ export const buildScentDnaSnapshot = (input: {
     input.noteWeights,
     input.noteNameById
   )
+  const topNotes = computeTopNotes(input.noteWeights, input.noteNameById)
   const seasonAffinity = computeSeasonAffinity(input.seasonVotes)
   const houseBreakdown = computeHouseTypeBreakdown(input.houseTypes)
 
@@ -134,13 +160,18 @@ export const buildScentDnaSnapshot = (input: {
 
   return {
     topFamilies,
+    topNotes,
     seasonAffinity,
     houseBreakdown,
     hasNoteProfile: topFamilies.length > 0,
+    hasFavoriteNotes: topNotes.length > 0,
     hasSeasonVotes,
     hasHouseData: houseBreakdown !== null,
   }
 }
 
 export const isScentDnaEmpty = (snapshot: ScentDnaSnapshot): boolean =>
-  !snapshot.hasNoteProfile && !snapshot.hasSeasonVotes && !snapshot.hasHouseData
+  !snapshot.hasNoteProfile &&
+  !snapshot.hasFavoriteNotes &&
+  !snapshot.hasSeasonVotes &&
+  !snapshot.hasHouseData

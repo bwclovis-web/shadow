@@ -31,6 +31,7 @@ import type { ComparePerfumeDto } from "@/models/compare.server"
 import { compareIdsExceedMax, normalizeCompareIds } from "@/utils/compare-ids"
 import { DISCOVERY_QUERY } from "@/utils/discovery-filters"
 import { normalizeRemoteImageSrc, styleMerge, validImageRegex } from "@/utils/styleUtils"
+import { perfumeImageTransitionName } from "@/utils/view-transition-names"
 
 const BANNER_IMAGE = "/images/compare.png"
 const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
@@ -108,6 +109,9 @@ function CompareColumn({
           height={160}
           className="w-28 h-28 sm:w-32 sm:h-32 object-cover rounded-lg mx-auto mb-2"
           sizes="(max-width: 1024px) 40vw, 160px"
+          style={
+            { viewTransitionName: perfumeImageTransitionName(dto.id) } as React.CSSProperties
+          }
         />
         <h2 className="text-lg font-semibold text-noir-gold capitalize leading-tight">
           {dto.name}

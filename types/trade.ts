@@ -8,6 +8,7 @@ export type TradeListingSeed = {
   userPerfumeId: string
   counterpartyId: string
   perfumeId?: string
+  perfumeSlug?: string
   perfumeName: string
   perfumeHouse?: string
   perfumeImage?: string | null
@@ -111,6 +112,9 @@ export type TradeForClient = {
     userPerfumeId: string
     role: string
     perfumeName: string
+    perfumeId: string | null
+    perfumeSlug: string | null
+    perfumeImage: string | null
     mlSnapshot: number | null
     conditionSnapshot: ListingCondition | null
   }[]

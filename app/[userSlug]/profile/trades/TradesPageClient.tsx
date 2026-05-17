@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import { Link } from "next-view-transitions"
 import { useTranslations } from "next-intl"
 
 import VooDooDetails from "@/components/Atoms/VooDooDetails"

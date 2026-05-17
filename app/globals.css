@@ -48,7 +48,15 @@ body {
 
 /* Space for fixed compare tray (`CompareTray` sets `--compare-tray-pad` from store + tray height). */
 body {
-  padding-bottom: var(--compare-tray-pad, 0px);
+  padding-bottom: calc(
+    var(--compare-tray-pad, 0px) + var(--mobile-bottom-nav-pad, 0px)
+  );
+}
+
+@media (max-width: 1023px) {
+  :root {
+    --mobile-bottom-nav-pad: 4.25rem;
+  }
 }
 
 /* Optimize font rendering with better performance */

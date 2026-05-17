@@ -170,7 +170,38 @@
       "50": "50 alertes"
     },
     "savePreferences": "Enregistrer les préférences",
-    "savingPreferences": "Enregistrement..."
+    "savingPreferences": "Enregistrement...",
+    "types": {
+      "wishlist_available": "Liste de souhaits",
+      "decant_interest": "Intérêt",
+      "pending_submission_approval": "Soumission",
+      "new_trader_message": "Message",
+      "trade_received": "Offre d'échange",
+      "trade_accepted": "Échange accepté",
+      "trade_shipped": "Échange expédié",
+      "trade_completed": "Échange terminé",
+      "trade_cancelled": "Mise à jour d'échange",
+      "default": "Alerte"
+    },
+    "actions": {
+      "reviewSubmission": "Examiner la soumission",
+      "viewMessage": "Voir le message",
+      "viewTrade": "Voir l'échange",
+      "viewPerfume": "Voir le parfum",
+      "markRead": "Marquer lu",
+      "dismiss": "Ignorer",
+      "availableFrom": "Disponible chez :",
+      "interestedUser": "Utilisateur intéressé :",
+      "perfumeLabel": "Parfum :",
+      "unknownTrader": "Vendeur inconnu",
+      "unknownUser": "Utilisateur inconnu"
+    },
+    "timeAgo": {
+      "justNow": "À l'instant",
+      "minutes": "il y a {count} min",
+      "hours": "il y a {count} h",
+      "days": "il y a {count} j"
+    }
   },
   "behindTheBottle": {
     "meta": {
@@ -751,7 +782,17 @@
     "howWeWork": "Comment ça marche",
     "contactUs": "Contact",
     "home": "Accueil",
-    "search": "Rechercher"
+    "search": "Rechercher",
+    "mobileBottom": {
+      "exchange": "Bourse",
+      "messages": "Messages",
+      "profile": "Profil",
+      "alerts": "Alertes",
+      "signIn": "Connexion"
+    }
+  },
+  "traderActivity": {
+    "recentlyActive": "Actif récemment"
   },
   "password": {
     "excellentPasswordStrength": "Excellente solidité du mot de passe !",
@@ -1153,7 +1194,8 @@
     "search": {
       "placeholder": "Rechercher des parfums...",
       "noResults": "Aucun parfum trouvé",
-      "tryDifferent": "Essayez un autre terme"
+      "tryDifferent": "Essayez un autre terme",
+      "keyboardHint": "Appuyez sur / pour la recherche · Échap pour effacer les filtres"
     },
     "filters": {
       "toggle": "Filtres",
@@ -1273,6 +1315,7 @@
     "cancel": "Annuler",
     "trackingOptional": "Suivi (facultatif)",
     "error": "Une erreur s'est produite.",
+    "timelineAria": "Progression de l'échange",
     "status": {
       "draft": "Brouillon",
       "pending": "Offre en attente",
@@ -1307,6 +1350,7 @@
       "empty": "Pas encore assez de données — faites le quiz, votez les saisons ou ajoutez des flacons à votre collection.",
       "takeQuiz": "Faire le quiz olfactif",
       "noteFamiliesHeading": "Familles de notes principales",
+      "favoriteNotesHeading": "Notes favorites",
       "seasonHeading": "Affinité saisonnière",
       "houseHeading": "Goût de maisons",
       "families": {

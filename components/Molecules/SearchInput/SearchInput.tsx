@@ -1,4 +1,4 @@
-import { type ChangeEvent } from "react"
+import { type ChangeEvent, type Ref } from "react"
 import { useTranslations } from "next-intl"
 import { LuSearch, LuX } from "react-icons/lu"
 
@@ -10,6 +10,8 @@ interface SearchInputProps {
   onChange: (value: string) => void
   placeholder?: string
   className?: string
+  id?: string
+  inputRef?: Ref<HTMLInputElement>
 }
 
 const SearchInput = ({
@@ -17,6 +19,8 @@ const SearchInput = ({
   onChange,
   placeholder,
   className,
+  id,
+  inputRef,
 }: SearchInputProps) => {
   const t = useTranslations("common")
 
@@ -35,6 +39,8 @@ const SearchInput = ({
         aria-hidden
       />
       <input
+        ref={inputRef}
+        id={id}
         type="search"
         value={value}
         onChange={handleChange}

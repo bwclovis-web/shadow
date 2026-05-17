@@ -279,9 +279,9 @@ const ProfileClient = ({
           {getUserDisplayName(displayUser)}
         </span>
       </TitleBanner>
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 inner-container">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 inner-container mt-12">
         <div className="lg:col-span-1">
-          <h2 className="text-2xl font-bold mb-6 text-noir-gold">
+          <h2 className="text-2xl font-bold mb-4 text-noir-gold">
             {t("updateProfile")}
           </h2>
           {hasSuccess && (
@@ -302,7 +302,7 @@ const ProfileClient = ({
           />
         </div>
 
-        <div className="lg:col-span-1">
+        <div id="user-alerts" className="lg:col-span-1 scroll-mt-24">
           <UserAlerts
             userId={user.id}
             initialAlerts={alerts}

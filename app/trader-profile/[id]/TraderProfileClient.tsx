@@ -84,6 +84,9 @@ export default function TraderProfileClient({
         <TraderProfileHeaderStats
           memberSince={memberSince}
           completedTradeCount={feedback.reputation.completedTradeCount}
+          lastActiveAt={
+            (trader as { lastActiveAt?: Date | string | null }).lastActiveAt ?? null
+          }
         />
       </TitleBanner>
 

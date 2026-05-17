@@ -135,6 +135,7 @@ export const getTraderById = cache(async (id: string) => {
       instagramHandle: true,
       fragranticaUrl: true,
       redditUsername: true,
+      lastActiveAt: true,
       UserPerfume: {
         where: {
           available: {

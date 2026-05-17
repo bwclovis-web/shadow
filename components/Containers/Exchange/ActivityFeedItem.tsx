@@ -9,6 +9,7 @@ import TraderAvatar from "@/components/Molecules/TraderAvatar/TraderAvatar"
 import { getPrimaryListingImage } from "@/utils/listing-display"
 import { formatTimeAgo } from "@/utils/time-ago"
 import { normalizeRemoteImageSrc } from "@/utils/styleUtils"
+import { perfumeImageTransitionName } from "@/utils/view-transition-names"
 import { getTraderDisplayName } from "@/utils/user"
 
 type ActivityFeedItemProps = {
@@ -47,6 +48,11 @@ const ActivityFeedItem = ({ listing, compact = false }: ActivityFeedItemProps) =
             fill
             className="object-cover"
             sizes={`${thumbSize}px`}
+            style={
+              {
+                viewTransitionName: perfumeImageTransitionName(listing.perfume.id),
+              } as React.CSSProperties
+            }
           />
         ) : (
           <span
