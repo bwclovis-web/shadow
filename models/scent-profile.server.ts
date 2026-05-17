@@ -9,6 +9,8 @@ const createEmptyProfileData = () => ({
   noteWeights: EMPTY_NOTE_WEIGHTS as object,
   avoidNoteIds: EMPTY_AVOID_IDS as string[],
   preferredPriceRange: Prisma.JsonNull,
+  preferredConcentration: null,
+  preferredHouseTier: null,
   seasonHint: null,
   browsingStyle: null,
   lastQuizAt: null,
@@ -44,6 +46,8 @@ export type ScentQuizData = {
   noteWeights?: Record<string, number>
   avoidNoteIds?: string[]
   preferredPriceRange?: { min?: number; max?: number } | null
+  preferredConcentration?: "edt" | "edp" | "parfum" | "noPreference" | null
+  preferredHouseTier?: "designer" | "niche" | "indie" | "all" | null
   /** Preferred seasons (multi-select). Stored in DB as comma-separated in seasonHint. */
   seasonHints?: ("spring" | "summer" | "fall" | "winter")[] | null
   browsingStyle?: "explorer" | "focused" | "trader" | null
@@ -97,28 +101,57 @@ export const getOrCreateScentProfile = async (userId: string) => {
 }
 
 /**
- * Persists onboarding quiz answers into the user's ScentProfile.
- * Merges with existing profile (behavior data is preserved): quiz note weights
- * are added to existing weights, and quiz avoid IDs are unioned with existing.
- * Sets lastQuizAt to now.
+ * Persists scent quiz answers into the user's ScentProfile.
+ *
+ * First completion: merges quiz note weights with any existing behavior weights
+ * and unions avoid-note IDs so ratings/wishlist signals are preserved.
+ *
+ * Retake (lastQuizAt already set): replaces prior quiz answers — note weights,
+ * avoids, seasons, browsing style, and preference fields are overwritten.
+ * Behavior-driven updates after the retake continue to evolve the profile.
  */
 export const updateScentProfileFromQuiz = async (
   userId: string,
   quizData: ScentQuizData
 ) => {
   const profile = await getOrCreateScentProfile(userId)
+  const isRetake = profile.lastQuizAt != null
   const existingWeights = (profile.noteWeights as Record<string, number>) ?? {}
   const existingAvoidIds = (profile.avoidNoteIds as string[]) ?? []
 
   const noteWeights =
     quizData.noteWeights !== undefined
-      ? mergeNoteWeights(existingWeights, quizData.noteWeights as Record<string, number>)
+      ? isRetake
+        ? { ...quizData.noteWeights }
+        : mergeNoteWeights(
+            existingWeights,
+            quizData.noteWeights as Record<string, number>
+          )
       : existingWeights
 
   const avoidNoteIds =
-    quizData.avoidNoteIds !== undefined && quizData.avoidNoteIds.length > 0
-      ? [...new Set([...existingAvoidIds, ...quizData.avoidNoteIds])]
+    quizData.avoidNoteIds !== undefined
+      ? isRetake
+        ? [...quizData.avoidNoteIds]
+        : quizData.avoidNoteIds.length > 0
+          ? [...new Set([...existingAvoidIds, ...quizData.avoidNoteIds])]
+          : existingAvoidIds
       : existingAvoidIds
+
+  const seasonHint = Array.isArray(quizData.seasonHints)
+    ? quizData.seasonHints.length > 0
+      ? quizData.seasonHints.join(",")
+      : null
+    : isRetake
+      ? null
+      : profile.seasonHint
+
+  const browsingStyle =
+    quizData.browsingStyle !== undefined
+      ? quizData.browsingStyle
+      : isRetake
+        ? null
+        : profile.browsingStyle
 
   return prisma.scentProfile.update({
     where: { id: profile.id },
@@ -127,15 +160,30 @@ export const updateScentProfileFromQuiz = async (
       avoidNoteIds: avoidNoteIds as string[],
       preferredPriceRange:
         quizData.preferredPriceRange !== undefined
-          ? (quizData.preferredPriceRange as object)
-          : (profile.preferredPriceRange as object),
-      seasonHint:
-        Array.isArray(quizData.seasonHints)
-          ? quizData.seasonHints.length > 0
-            ? quizData.seasonHints.join(",")
-            : null
-          : profile.seasonHint,
-      browsingStyle: quizData.browsingStyle ?? profile.browsingStyle,
+          ? quizData.preferredPriceRange === null
+            ? Prisma.JsonNull
+            : (quizData.preferredPriceRange as object)
+          : isRetake
+            ? Prisma.JsonNull
+            : (profile.preferredPriceRange as object),
+      preferredConcentration:
+        quizData.preferredConcentration !== undefined
+          ? quizData.preferredConcentration === "noPreference"
+            ? null
+            : quizData.preferredConcentration
+          : isRetake
+            ? null
+            : profile.preferredConcentration,
+      preferredHouseTier:
+        quizData.preferredHouseTier !== undefined
+          ? quizData.preferredHouseTier === "all"
+            ? null
+            : quizData.preferredHouseTier
+          : isRetake
+            ? null
+            : profile.preferredHouseTier,
+      seasonHint,
+      browsingStyle,
       lastQuizAt: new Date(),
     },
   })

@@ -17,7 +17,19 @@ vi.mock("@/lib/db", () => ({
     perfume: {
       findMany: vi.fn(),
     },
+    scentProfile: {
+      findUnique: vi.fn(),
+      create: vi.fn(),
+    },
   },
+}))
+
+vi.mock("@/models/scent-profile.server", () => ({
+  getOrCreateScentProfile: vi.fn().mockResolvedValue({
+    preferredPriceRange: null,
+    preferredConcentration: null,
+    preferredHouseTier: null,
+  }),
 }))
 
 import { prisma } from "@/lib/db"
@@ -60,7 +72,7 @@ describe("getWishlistExchangeMatches", () => {
         where: expect.objectContaining({
           id: { in: ["perfume-a", "perfume-b"] },
         }),
-        take: 12,
+        take: 36,
       })
     )
   })

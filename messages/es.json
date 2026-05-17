@@ -847,6 +847,28 @@
       "prompt": "¿Cuándo sueles usar fragancia? (opcional, puedes elegir varias)",
       "toggleHint": "Toca una estación para incluirla. «Todas las estaciones» marca las cuatro, igual que en las fichas de perfume."
     },
+    "budget": {
+      "prompt": "¿Cuál es tu presupuesto habitual para un frasco nuevo? (opcional)",
+      "under50": "Menos de 50 $",
+      "50to100": "50 – 100 $",
+      "100to200": "100 – 200 $",
+      "200plus": "Más de 200 $",
+      "noPreference": "Sin preferencia"
+    },
+    "concentration": {
+      "prompt": "¿Qué concentración prefieres? (opcional)",
+      "edt": "Eau de Toilette (EDT)",
+      "edp": "Eau de Parfum (EDP)",
+      "parfum": "Parfum / Extrait",
+      "noPreference": "Sin preferencia"
+    },
+    "houseTier": {
+      "prompt": "¿Qué tipo de casa te atrae más? (opcional)",
+      "designer": "Diseñador",
+      "niche": "Nicho",
+      "indie": "Indie",
+      "all": "Todas"
+    },
     "browse": {
       "prompt": "¿Cómo te gusta explorar? (opcional)",
       "explorer": "Explorador – Me gusta descubrir nuevos aromas",
@@ -1239,6 +1261,44 @@
     },
     "heading": "Comerciante {traderName}",
     "subheading": "Perfil del Comerciante de {traderName}",
+    "scentDna": {
+      "meta": {
+        "title": "ADN olfativo de {traderName}",
+        "description": "Familias de notas, afinidad estacional y preferencia de casas para {traderName} en Shadow and Sillage."
+      },
+      "ariaLabel": "ADN olfativo de {traderName}",
+      "title": "ADN olfativo",
+      "subtitle": "Perfil de gusto calculado para {traderName}",
+      "sharePageHeading": "ADN olfativo de {traderName}",
+      "sharePageSubheading": "Una instantánea compartible de familias, estaciones y casas.",
+      "shareCta": "Compartir mi ADN olfativo",
+      "shareCopied": "Enlace copiado",
+      "shareError": "No se pudo copiar el enlace",
+      "empty": "Aún no hay datos suficientes: haz el cuestionario, vota estaciones o añade botellas a tu colección.",
+      "takeQuiz": "Hacer el cuestionario olfativo",
+      "noteFamiliesHeading": "Familias de notas principales",
+      "seasonHeading": "Afinidad estacional",
+      "houseHeading": "Preferencia de casas",
+      "families": {
+        "florals": "Florales",
+        "woods": "Amaderados",
+        "orientals": "Orientales",
+        "citrus": "Cítricos",
+        "aquatics": "Acuáticos",
+        "gourmands": "Gourmand"
+      },
+      "season": {
+        "winter": "Invierno",
+        "spring": "Primavera",
+        "summer": "Verano",
+        "fall": "Otoño"
+      },
+      "house": {
+        "indie": "Indie",
+        "niche": "Nicho",
+        "designer": "Diseñador"
+      }
+    },
     "aboutHeading": "Sobre",
     "regionChip": "{region}",
     "social": {

@@ -11,6 +11,7 @@ import { useMounted } from "@/hooks/useMounted"
 import type { ActivityFeedListingRow } from "@/models/activity-feed.server"
 import type { SeasonalTrendingResult } from "@/models/seasonal-trending.server"
 import SeasonalTrendingSection from "@/components/Containers/Exchange/SeasonalTrendingSection"
+import landingHero from "@/public/images/landing-new.png"
 
 type Feature = Awaited<ReturnType<typeof import("@/models/feature.server").getAllFeatures>>[number]
 
@@ -42,7 +43,7 @@ export default function HomeClient({
 
       gsap.from(".hero-title", {
         opacity: 0,
-        y: 30,
+        y: 50,
         duration: 1.2,
         ease: "power2.out",
       })
@@ -92,16 +93,14 @@ export default function HomeClient({
       ref={container}
     >
       <Image
-        src="/images/landing-new.png"
+        src={landingHero}
         alt=""
-        width={1200}
-        height={800}
         priority
         sizes="100vw"
         className="absolute object-cover w-full h-full filter grayscale-100% sepia-[0.5] mix-blend-multiply hero-image"
       />
       <div className="absolute inset-0 bg-noir-black/85 mask-radial-from-10% mask-radial-to-74% md:mask-radial-from-25% md:mask-radial-to-44%" />
-      <section className="text-noir-gold relative z-10 flex flex-col items-center gap-4 pt-50 md:pt-0">
+      <section className="text-noir-gold relative z-10 flex flex-col items-center gap-4 pt-50 md:pt-40">
         <div className="text-shadow-lg/90 text-shadow-noir-black text-center">
           <h1 className="hero-title">
             {mounted ? tHome("heading") : "home.heading"}

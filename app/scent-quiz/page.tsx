@@ -63,13 +63,12 @@ export default async function ScentQuizPage({
   const initialSeasonIds = seasonRaw.filter((s) =>
     VALID_SEASONS.includes(s as SeasonId)
   )
-  const browsingParam = sp[Q.browsingStyle]
-  const initialBrowsingStyle =
-    typeof browsingParam === "string"
-      ? browsingParam
-      : Array.isArray(browsingParam)
-        ? (browsingParam[0] ?? "")
-        : ""
+  const readParam = (key: string): string => {
+    const raw = sp[key]
+    if (typeof raw === "string") return raw
+    if (Array.isArray(raw)) return raw[0] ?? ""
+    return ""
+  }
 
   const notes = await getCachedDisplayableNotesForQuiz()
 
@@ -80,7 +79,10 @@ export default async function ScentQuizPage({
       initialNoteIds={initialNoteIds}
       initialAvoidNoteIds={initialAvoidNoteIds}
       initialSeasonIds={initialSeasonIds}
-      initialBrowsingStyle={initialBrowsingStyle}
+      initialBudget={readParam(Q.budget)}
+      initialConcentration={readParam(Q.concentration)}
+      initialHouseTier={readParam(Q.houseTier)}
+      initialBrowsingStyle={readParam(Q.browsingStyle)}
     />
   )
 }

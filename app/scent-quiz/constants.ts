@@ -8,6 +8,9 @@ const STEPS = [
   "note-preferences",
   "avoid-notes",
   "season",
+  "budget",
+  "concentration",
+  "house-tier",
   "browsing-style",
 ] as const
 
@@ -18,6 +21,9 @@ export const Q = {
   noteIds: "noteIds",
   avoidNoteIds: "avoidNoteIds",
   season: "season",
+  budget: "budget",
+  concentration: "concentration",
+  houseTier: "houseTier",
   browsingStyle: "browsingStyle",
 } as const
 

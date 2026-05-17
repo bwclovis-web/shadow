@@ -1,4 +1,9 @@
 import { prisma } from "@/lib/db"
+import { getOrCreateScentProfile } from "@/models/scent-profile.server"
+import {
+  scoreListingPreferenceAlignment,
+  signalsFromScentProfileFields,
+} from "@/utils/scent-profile-preferences"
 
 const traderUserSelect = {
   id: true,
@@ -109,6 +114,48 @@ export type TraderWishlistOverlap = {
 const WISHLIST_EXCHANGE_MATCH_LIMIT = 12
 const TRADERS_WANTING_LISTINGS_LIMIT = 24
 
+type RankableListing = {
+  type: string | null
+  price: string | null
+}
+
+const sortListingsByScentProfile = <T extends RankableListing>(
+  listings: T[],
+  perfumeHouseType: string | null | undefined,
+  signals: ReturnType<typeof signalsFromScentProfileFields>
+): T[] =>
+  [...listings].sort(
+    (a, b) =>
+      scoreListingPreferenceAlignment(
+        { price: b.price, type: b.type, perfumeHouseType },
+        signals
+      ) -
+      scoreListingPreferenceAlignment(
+        { price: a.price, type: a.type, perfumeHouseType },
+        signals
+      )
+  )
+
+const bestListingAlignmentScore = (
+  listings: RankableListing[],
+  perfumeHouseType: string | null | undefined,
+  signals: ReturnType<typeof signalsFromScentProfileFields>
+): number => {
+  if (listings.length === 0) return 0
+  return Math.max(
+    ...listings.map(l =>
+      scoreListingPreferenceAlignment(
+        {
+          price: l.price,
+          type: l.type,
+          perfumeHouseType,
+        },
+        signals
+      )
+    )
+  )
+}
+
 /**
  * Listings on the exchange for perfumes on the viewer's wishlist (IMP-140).
  */
@@ -116,6 +163,9 @@ export const getWishlistExchangeMatches = async (
   viewerId: string,
   limit = WISHLIST_EXCHANGE_MATCH_LIMIT
 ): Promise<WishlistExchangeMatchRow[]> => {
+  const profile = await getOrCreateScentProfile(viewerId)
+  const preferenceSignals = signalsFromScentProfileFields(profile)
+
   const wishlistRows = await prisma.userPerfumeWishlist.findMany({
     where: { userId: viewerId },
     select: { perfumeId: true },
@@ -144,11 +194,26 @@ export const getWishlistExchangeMatches = async (
         select: exchangeMatchListingSelect,
       },
     },
-    orderBy: { name: "asc" },
-    take: limit,
+    take: limit * 3,
   })
 
-  return perfumes.filter(p => p.userPerfume.length > 0)
+  return perfumes
+    .filter(p => p.userPerfume.length > 0)
+    .map(p => ({
+      ...p,
+      userPerfume: sortListingsByScentProfile(
+        p.userPerfume,
+        p.perfumeHouse?.type,
+        preferenceSignals
+      ),
+    }))
+    .sort(
+      (a, b) =>
+        bestListingAlignmentScore(b.userPerfume, b.perfumeHouse?.type, preferenceSignals) -
+        bestListingAlignmentScore(a.userPerfume, a.perfumeHouse?.type, preferenceSignals) ||
+        a.name.localeCompare(b.name)
+    )
+    .slice(0, limit)
 }
 
 /**
@@ -158,6 +223,9 @@ export const getTradersWantingUserListings = async (
   userId: string,
   limit = TRADERS_WANTING_LISTINGS_LIMIT
 ): Promise<TraderWantingUserListingRow[]> => {
+  const profile = await getOrCreateScentProfile(userId)
+  const preferenceSignals = signalsFromScentProfileFields(profile)
+
   const listed = await prisma.userPerfume.findMany({
     where: {
       userId,
@@ -165,12 +233,15 @@ export const getTradersWantingUserListings = async (
     },
     select: {
       perfumeId: true,
+      price: true,
+      type: true,
       perfume: {
         select: {
           id: true,
           name: true,
           slug: true,
           image: true,
+          perfumeHouse: { select: { type: true } },
         },
       },
     },
@@ -200,24 +271,52 @@ export const getTradersWantingUserListings = async (
     orderBy: { createdAt: "desc" },
   })
 
-  const byTrader = new Map<string, TraderWantingUserListingRow>()
+  const listingByPerfumeId = new Map(
+    listed.map(row => [
+      row.perfumeId,
+      {
+        price: row.price,
+        type: row.type,
+        houseType: row.perfume.perfumeHouse?.type,
+      },
+    ])
+  )
+
+  const byTrader = new Map<string, TraderWantingUserListingRow & { _score: number }>()
 
   for (const hit of wishlistHits) {
+    const listing = listingByPerfumeId.get(hit.perfume.id)
+    const hitScore = listing
+      ? scoreListingPreferenceAlignment(
+          {
+            price: listing.price,
+            type: listing.type,
+            perfumeHouseType: listing.houseType,
+          },
+          preferenceSignals
+        )
+      : 0
+
     const existing = byTrader.get(hit.userId)
     if (existing) {
       if (!existing.perfumes.some(p => p.id === hit.perfume.id)) {
         existing.perfumes.push(hit.perfume)
       }
+      existing._score = Math.max(existing._score, hitScore)
       continue
     }
-    if (byTrader.size >= limit) break
+    if (byTrader.size >= limit * 2) continue
     byTrader.set(hit.userId, {
       trader: hit.user,
       perfumes: [hit.perfume],
+      _score: hitScore,
     })
   }
 
   return [...byTrader.values()]
+    .sort((a, b) => b._score - a._score || a.trader.id.localeCompare(b.trader.id))
+    .slice(0, limit)
+    .map(({ trader, perfumes }) => ({ trader, perfumes }))
 }
 
 /**

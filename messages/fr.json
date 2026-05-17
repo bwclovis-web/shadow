@@ -847,6 +847,28 @@
       "prompt": "Quand portez-vous surtout du parfum ? (facultatif, plusieurs choix possibles)",
       "toggleHint": "Appuyez sur une saison pour l’ajouter. « Toutes les saisons » sélectionne les quatre, comme sur les pages parfum."
     },
+    "budget": {
+      "prompt": "Quel est votre budget habituel pour un nouveau flacon ? (facultatif)",
+      "under50": "Moins de 50 $",
+      "50to100": "50 – 100 $",
+      "100to200": "100 – 200 $",
+      "200plus": "Plus de 200 $",
+      "noPreference": "Sans préférence"
+    },
+    "concentration": {
+      "prompt": "Quelle concentration préférez-vous ? (facultatif)",
+      "edt": "Eau de Toilette (EDT)",
+      "edp": "Eau de Parfum (EDP)",
+      "parfum": "Parfum / Extrait",
+      "noPreference": "Sans préférence"
+    },
+    "houseTier": {
+      "prompt": "Quel type de maison vous attire le plus ? (facultatif)",
+      "designer": "Designer",
+      "niche": "Niche",
+      "indie": "Indie",
+      "all": "Toutes"
+    },
     "browse": {
       "prompt": "Comment aimez-vous parcourir le site ? (facultatif)",
       "explorer": "Explorateur – J'aime découvrir de nouveaux parfums",
@@ -1239,6 +1261,44 @@
     },
     "heading": "Vendeur {traderName}",
     "subheading": "Profil de {traderName}",
+    "scentDna": {
+      "meta": {
+        "title": "ADN parfumé de {traderName}",
+        "description": "Familles de notes, affinité saisonnière et goût de maisons pour {traderName} sur Shadow and Sillage."
+      },
+      "ariaLabel": "ADN parfumé de {traderName}",
+      "title": "ADN parfumé",
+      "subtitle": "Profil de goût calculé pour {traderName}",
+      "sharePageHeading": "ADN parfumé de {traderName}",
+      "sharePageSubheading": "Un aperçu partageable des familles, saisons et maisons.",
+      "shareCta": "Partager mon ADN parfumé",
+      "shareCopied": "Lien copié",
+      "shareError": "Impossible de copier le lien",
+      "empty": "Pas encore assez de données — faites le quiz, votez les saisons ou ajoutez des flacons à votre collection.",
+      "takeQuiz": "Faire le quiz olfactif",
+      "noteFamiliesHeading": "Familles de notes principales",
+      "seasonHeading": "Affinité saisonnière",
+      "houseHeading": "Goût de maisons",
+      "families": {
+        "florals": "Floraux",
+        "woods": "Boisés",
+        "orientals": "Orientaux",
+        "citrus": "Agrumes",
+        "aquatics": "Aquatiques",
+        "gourmands": "Gourmands"
+      },
+      "season": {
+        "winter": "Hiver",
+        "spring": "Printemps",
+        "summer": "Été",
+        "fall": "Automne"
+      },
+      "house": {
+        "indie": "Indie",
+        "niche": "Niche",
+        "designer": "Designer"
+      }
+    },
     "aboutHeading": "À propos",
     "regionChip": "{region}",
     "social": {

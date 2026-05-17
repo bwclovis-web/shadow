@@ -847,6 +847,28 @@
       "prompt": "Quando usi soprattutto il profumo? (facoltativo, scelta multipla)",
       "toggleHint": "Tocca una stagione per includerla. «Tutte le stagioni» seleziona tutte e quattro, come sulle pagine profumo."
     },
+    "budget": {
+      "prompt": "Qual è il tuo budget tipico per un nuovo flacone? (facoltativo)",
+      "under50": "Meno di 50 $",
+      "50to100": "50 – 100 $",
+      "100to200": "100 – 200 $",
+      "200plus": "Oltre 200 $",
+      "noPreference": "Nessuna preferenza"
+    },
+    "concentration": {
+      "prompt": "Quale concentrazione preferisci? (facoltativo)",
+      "edt": "Eau de Toilette (EDT)",
+      "edp": "Eau de Parfum (EDP)",
+      "parfum": "Parfum / Extrait",
+      "noPreference": "Nessuna preferenza"
+    },
+    "houseTier": {
+      "prompt": "Quale tipo di casa ti attira di più? (facoltativo)",
+      "designer": "Designer",
+      "niche": "Niche",
+      "indie": "Indie",
+      "all": "Tutte"
+    },
     "browse": {
       "prompt": "Come ti piace esplorare? (facoltativo)",
       "explorer": "Esploratore – Mi piace scoprire nuove fragranze",

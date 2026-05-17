@@ -2,6 +2,7 @@
 
 import { getTranslations } from "next-intl/server"
 
+import { syncOnboardingCompletion } from "@/models/onboarding.server"
 import {
   updateScentProfileFromQuiz,
   type ScentQuizData,
@@ -9,6 +10,12 @@ import {
 import {
   getCachedDisplayableNotesForQuiz,
 } from "@/models/tags.server"
+import {
+  budgetTierToPriceRange,
+  parseQuizBudgetTier,
+  parseQuizConcentrationPreference,
+  parseQuizHouseTierPreference,
+} from "@/utils/scent-profile-preferences"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
@@ -63,6 +70,18 @@ export const submitScentQuizAction = async (
       ? browsingRaw
       : null
 
+  const budgetTier = parseQuizBudgetTier(
+    typeof formData.get("budget") === "string" ? formData.get("budget") : null
+  )
+  const concentrationPref = parseQuizConcentrationPreference(
+    typeof formData.get("concentration") === "string"
+      ? formData.get("concentration")
+      : null
+  )
+  const houseTierPref = parseQuizHouseTierPreference(
+    typeof formData.get("houseTier") === "string" ? formData.get("houseTier") : null
+  )
+
   const tErr = await getTranslations("quiz.errors")
 
   if (noteIds.length < MIN_NOTE_SELECTIONS) {
@@ -81,14 +100,20 @@ export const submitScentQuizAction = async (
     noteWeights[id] = 1
   }
 
+  const priceRangeFromBudget = budgetTier ? budgetTierToPriceRange(budgetTier) : null
+
   const quizData: ScentQuizData = {
     noteWeights,
-    avoidNoteIds: avoidNoteIds.length > 0 ? avoidNoteIds : undefined,
-    seasonHints: seasonHints.length > 0 ? seasonHints : undefined,
+    avoidNoteIds,
+    seasonHints,
     browsingStyle,
+    preferredPriceRange: budgetTier != null ? priceRangeFromBudget : null,
+    preferredConcentration: concentrationPref ?? null,
+    preferredHouseTier: houseTierPref ?? null,
   }
 
   await updateScentProfileFromQuiz(session.user.id, quizData)
+  await syncOnboardingCompletion(session.user.id)
 
   return { success: true }
 }

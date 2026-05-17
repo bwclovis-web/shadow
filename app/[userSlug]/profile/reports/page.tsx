@@ -10,7 +10,7 @@ import { getProfileSlug } from "@/utils/user"
 
 import MyReportsPageClient from "./MyReportsPageClient"
 
-const BANNER_IMAGE = "/images/userAdmin.webp"
+const BANNER_IMAGE = "/images/reports.png"
 
 type Props = {
   params: Promise<{ userSlug: string }>

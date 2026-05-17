@@ -24,6 +24,15 @@ import {
   type ScentQuizActionState,
 } from "./actions"
 import {
+  QUIZ_BUDGET_TIERS,
+  QUIZ_CONCENTRATION_PREFERENCES,
+  QUIZ_HOUSE_TIER_PREFERENCES,
+  type QuizBudgetTierId,
+  type QuizConcentrationPreferenceId,
+  type QuizHouseTierPreferenceId,
+} from "@/utils/scent-profile-preferences"
+
+import {
   MAX_NOTE_SELECTIONS,
   MIN_NOTE_SELECTIONS,
   Q,
@@ -47,6 +56,9 @@ export type ScentQuizClientProps = {
   initialNoteIds: string[]
   initialAvoidNoteIds: string[]
   initialSeasonIds: string[]
+  initialBudget: string
+  initialConcentration: string
+  initialHouseTier: string
   initialBrowsingStyle: string
 }
 
@@ -56,6 +68,9 @@ export default function ScentQuizClient({
   initialNoteIds,
   initialAvoidNoteIds,
   initialSeasonIds,
+  initialBudget,
+  initialConcentration,
+  initialHouseTier,
   initialBrowsingStyle,
 }: ScentQuizClientProps) {
   const t = useTranslations("quiz")
@@ -73,6 +88,15 @@ export default function ScentQuizClient({
   const [browsingStyle, setBrowsingStyle] = useState<BrowsingId | "">(
     () => (initialBrowsingStyle as BrowsingId | "") || ""
   )
+  const [budget, setBudget] = useState<QuizBudgetTierId | "">(
+    () => (initialBudget as QuizBudgetTierId | "") || ""
+  )
+  const [concentration, setConcentration] = useState<
+    QuizConcentrationPreferenceId | ""
+  >(() => (initialConcentration as QuizConcentrationPreferenceId | "") || "")
+  const [houseTier, setHouseTier] = useState<QuizHouseTierPreferenceId | "">(
+    () => (initialHouseTier as QuizHouseTierPreferenceId | "") || ""
+  )
 
   const urlQuizStateKey = useMemo(
     () =>
@@ -80,9 +104,20 @@ export default function ScentQuizClient({
         initialNoteIds.join(","),
         initialAvoidNoteIds.join(","),
         initialSeasonIds.join(","),
+        initialBudget,
+        initialConcentration,
+        initialHouseTier,
         initialBrowsingStyle,
       ].join("|"),
-    [initialNoteIds, initialAvoidNoteIds, initialSeasonIds, initialBrowsingStyle]
+    [
+      initialNoteIds,
+      initialAvoidNoteIds,
+      initialSeasonIds,
+      initialBudget,
+      initialConcentration,
+      initialHouseTier,
+      initialBrowsingStyle,
+    ]
   )
 
   /* Sync when URL-derived snapshot changes; urlQuizStateKey avoids redundant runs on RSC array identity */
@@ -91,6 +126,9 @@ export default function ScentQuizClient({
     setAvoidNoteIds(new Set(initialAvoidNoteIds))
     setSelectedSeasonIds(new Set(initialSeasonIds))
     setBrowsingStyle((initialBrowsingStyle as BrowsingId | "") || "")
+    setBudget((initialBudget as QuizBudgetTierId | "") || "")
+    setConcentration((initialConcentration as QuizConcentrationPreferenceId | "") || "")
+    setHouseTier((initialHouseTier as QuizHouseTierPreferenceId | "") || "")
   }, [urlQuizStateKey]) // eslint-disable-line react-hooks/exhaustive-deps -- initial* align with urlQuizStateKey
 
   const stepParams = useMemo(
@@ -98,9 +136,12 @@ export default function ScentQuizClient({
       noteIds: [...selectedNoteIds],
       avoidIds: [...avoidNoteIds],
       seasonIds: [...selectedSeasonIds],
+      budget,
+      concentration,
+      houseTier,
       browsingStyle,
     }),
-    [selectedNoteIds, avoidNoteIds, selectedSeasonIds, browsingStyle]
+    [selectedNoteIds, avoidNoteIds, selectedSeasonIds, budget, concentration, houseTier, browsingStyle]
   )
 
   const buildStepUrl = useCallback(
@@ -110,10 +151,32 @@ export default function ScentQuizClient({
       if (stepParams.noteIds.length) sp.set(Q.noteIds, stepParams.noteIds.join(","))
       if (stepParams.avoidIds.length) sp.set(Q.avoidNoteIds, stepParams.avoidIds.join(","))
       if (stepParams.seasonIds.length) sp.set(Q.season, stepParams.seasonIds.join(","))
+      if (stepParams.budget) sp.set(Q.budget, stepParams.budget)
+      if (stepParams.concentration) sp.set(Q.concentration, stepParams.concentration)
+      if (stepParams.houseTier) sp.set(Q.houseTier, stepParams.houseTier)
       if (stepParams.browsingStyle) sp.set(Q.browsingStyle, stepParams.browsingStyle)
       return `${SCENT_QUIZ_ROUTE}?${sp.toString()}`
     },
     [stepParams]
+  )
+
+  const quizHiddenFields = (
+    <>
+      {[...selectedNoteIds].map((id) => (
+        <input key={id} type="hidden" name="noteIds" value={id} />
+      ))}
+      {[...avoidNoteIds].map((id) => (
+        <input key={`avoid-${id}`} type="hidden" name="avoidNoteIds" value={id} />
+      ))}
+      {[...selectedSeasonIds].map((id) => (
+        <input key={`season-${id}`} type="hidden" name="season" value={id} />
+      ))}
+      {budget ? <input type="hidden" name="budget" value={budget} /> : null}
+      {concentration ? (
+        <input type="hidden" name="concentration" value={concentration} />
+      ) : null}
+      {houseTier ? <input type="hidden" name="houseTier" value={houseTier} /> : null}
+    </>
   )
 
   const noteNameById = useMemo(
@@ -284,6 +347,102 @@ export default function ScentQuizClient({
               <VooDooLink url={buildStepUrl("avoid-notes")} variant="secondary">
                 {t("nav.back")}
               </VooDooLink>
+              <VooDooLink url={buildStepUrl("budget")} variant="primary">
+                {t("nav.next")}
+              </VooDooLink>
+            </div>
+          </div>
+        )}
+
+        {step === "budget" && (
+          <div className="mt-8">
+            <p className="mb-4 text-stone-300">{t("budget.prompt")}</p>
+            <div className="space-y-2">
+              {QUIZ_BUDGET_TIERS.map((tier) => (
+                <label
+                  key={tier}
+                  className="flex cursor-pointer items-center gap-3 rounded border border-stone-600 bg-stone-800/50 px-4 py-2 hover:bg-stone-700/50"
+                >
+                  <input
+                    type="radio"
+                    name="budget"
+                    value={tier}
+                    checked={budget === tier}
+                    onChange={() => setBudget(tier)}
+                    className="h-4 w-4"
+                  />
+                  <span>{t(`budget.${tier}`)}</span>
+                </label>
+              ))}
+            </div>
+            <div className="mt-6 flex gap-4">
+              <VooDooLink url={buildStepUrl("season")} variant="secondary">
+                {t("nav.back")}
+              </VooDooLink>
+              <VooDooLink url={buildStepUrl("concentration")} variant="primary">
+                {t("nav.next")}
+              </VooDooLink>
+            </div>
+          </div>
+        )}
+
+        {step === "concentration" && (
+          <div className="mt-8">
+            <p className="mb-4 text-stone-300">{t("concentration.prompt")}</p>
+            <div className="space-y-2">
+              {QUIZ_CONCENTRATION_PREFERENCES.map((pref) => (
+                <label
+                  key={pref}
+                  className="flex cursor-pointer items-center gap-3 rounded border border-stone-600 bg-stone-800/50 px-4 py-2 hover:bg-stone-700/50"
+                >
+                  <input
+                    type="radio"
+                    name="concentration"
+                    value={pref}
+                    checked={concentration === pref}
+                    onChange={() => setConcentration(pref)}
+                    className="h-4 w-4"
+                  />
+                  <span>{t(`concentration.${pref}`)}</span>
+                </label>
+              ))}
+            </div>
+            <div className="mt-6 flex gap-4">
+              <VooDooLink url={buildStepUrl("budget")} variant="secondary">
+                {t("nav.back")}
+              </VooDooLink>
+              <VooDooLink url={buildStepUrl("house-tier")} variant="primary">
+                {t("nav.next")}
+              </VooDooLink>
+            </div>
+          </div>
+        )}
+
+        {step === "house-tier" && (
+          <div className="mt-8">
+            <p className="mb-4 text-stone-300">{t("houseTier.prompt")}</p>
+            <div className="space-y-2">
+              {QUIZ_HOUSE_TIER_PREFERENCES.map((tier) => (
+                <label
+                  key={tier}
+                  className="flex cursor-pointer items-center gap-3 rounded border border-stone-600 bg-stone-800/50 px-4 py-2 hover:bg-stone-700/50"
+                >
+                  <input
+                    type="radio"
+                    name="houseTier"
+                    value={tier}
+                    checked={houseTier === tier}
+                    onChange={() => setHouseTier(tier)}
+                    className="h-4 w-4"
+                  />
+                  <span>{t(`houseTier.${tier}`)}</span>
+                </label>
+              ))}
+            </div>
+            <div className="mt-6 flex gap-4">
+              <VooDooLink url={buildStepUrl("concentration")} variant="secondary">
+                {t("nav.back")}
+              </VooDooLink>
               <VooDooLink url={buildStepUrl("browsing-style")} variant="primary">
                 {t("nav.next")}
               </VooDooLink>
@@ -294,15 +453,7 @@ export default function ScentQuizClient({
         {step === "browsing-style" && (
           <form action={formAction} className="mt-8">
             <CSRFToken />
-            {[...selectedNoteIds].map((id) => (
-              <input key={id} type="hidden" name="noteIds" value={id} />
-            ))}
-            {[...avoidNoteIds].map((id) => (
-              <input key={id} type="hidden" name="avoidNoteIds" value={id} />
-            ))}
-            {[...selectedSeasonIds].map((id) => (
-              <input key={id} type="hidden" name="season" value={id} />
-            ))}
+            {quizHiddenFields}
 
             <p className="mb-4 text-stone-300">{t("browse.prompt")}</p>
             <div className="space-y-2">
@@ -331,7 +482,7 @@ export default function ScentQuizClient({
             )}
 
             <div className="mt-6 flex gap-4">
-              <VooDooLink url={buildStepUrl("season")} variant="secondary">
+              <VooDooLink url={buildStepUrl("house-tier")} variant="secondary">
                 {t("nav.back")}
               </VooDooLink>
               <Button

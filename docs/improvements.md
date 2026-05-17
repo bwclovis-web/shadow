@@ -197,22 +197,26 @@ _These are the features no mobile-only competitor can easily replicate. They com
 
 **Shipped in:** `models/onboarding.server.ts`, `app/onboarding/actions.ts`, `components/Onboarding/OnboardingBanner.tsx`, `OnboardingBannerSlot.tsx` (root layout); step 1 via `ScentProfile.lastQuizAt` + `/scent-quiz?from=onboarding`; step 2 via `/{slug}/profile/my-scents?onboarding=add-bottle` + `SearchBar`/`SearchTypeahead` `autoFocus`; step 3 via `onboardingMatchesViewedAt` + expandable matches with `TradeComposerModal`; `syncOnboardingCompletion` on quiz submit and `addUserPerfume`; migration `20260517120000_add_onboarding_matches_viewed_at`; i18n `onboarding.*`.
 
-### 3B — Scent DNA Card
+### 3B — Scent DNA Card ✅
 
 _No new schema — all computed from existing data._
 
-- [ ] **IMP-210** Group `ScentProfile.noteWeights` into 6 families (florals, woods, orientals, citrus, aquatics, gourmands); compute top 3 by weight
-- [ ] **IMP-211** Aggregate `UserPerfumeSeasonVote` for the user into a season affinity score (0–100 per season)
-- [ ] **IMP-212** Compute house type breakdown from user's `UserPerfume` collection (% indie / niche / designer)
-- [ ] **IMP-213** Build `<ScentDnaCard>` component: small visual card with note family chips, season bar, and house type pills; render on public trader profile below avatar
-- [ ] **IMP-214** Add a "Share my Scent DNA" button that generates a shareable OG image (or a static `/profile/[id]/scent-dna` page with good meta tags)
+- [x] **IMP-210** Group `ScentProfile.noteWeights` into 6 families (florals, woods, orientals, citrus, aquatics, gourmands); compute top 3 by weight
+- [x] **IMP-211** Aggregate `UserPerfumeSeasonVote` for the user into a season affinity score (0–100 per season)
+- [x] **IMP-212** Compute house type breakdown from user's `UserPerfume` collection (% indie / niche / designer)
+- [x] **IMP-213** Build `<ScentDnaCard>` component: small visual card with note family chips, season bar, and house type pills; render on public trader profile below avatar
+- [x] **IMP-214** Add a "Share my Scent DNA" button that generates a shareable OG image (or a static `/profile/[id]/scent-dna` page with good meta tags)
 
-### 3C — Quiz Depth
+**Shipped in:** `utils/scent-dna/` (`note-families.ts`, `compute-scent-dna.ts`), `models/scent-dna.server.ts`, `components/Containers/TraderProfile/ScentDnaCard/`; trader profile `TitleBanner` + `app/trader-profile/[id]/scent-dna/page.tsx` (OG/Twitter meta, clipboard share); i18n `traderProfile.scentDna`.
 
-- [ ] **IMP-220** Add question to scent quiz: "What's your typical budget for a new bottle?" — maps to existing `ScentProfile.preferredPriceRange` field (currently never written)
-- [ ] **IMP-221** Add question: "Which concentration do you prefer?" (EDT / EDP / Parfum / no preference)
-- [ ] **IMP-222** Add question: "Which house tier excites you most?" (designer / niche / indie / all)
-- [ ] **IMP-223** Use `preferredPriceRange`, concentration, and house tier as additional ranking signals in the wishlist-overlap and recommended-trader queries
+### 3C — Quiz Depth ✅
+
+- [x] **IMP-220** Add question to scent quiz: "What's your typical budget for a new bottle?" — maps to existing `ScentProfile.preferredPriceRange` field (currently never written)
+- [x] **IMP-221** Add question: "Which concentration do you prefer?" (EDT / EDP / Parfum / no preference)
+- [x] **IMP-222** Add question: "Which house tier excites you most?" (designer / niche / indie / all)
+- [x] **IMP-223** Use `preferredPriceRange`, concentration, and house tier as additional ranking signals in the wishlist-overlap and recommended-trader queries
+
+**Shipped in:** migration `20260517130000_add_scent_profile_quiz_depth_fields`; `utils/scent-profile-preferences.ts`; quiz steps in `app/scent-quiz/` (`budget`, `concentration`, `house-tier`); `models/scent-profile.server.ts`; ranking in `services/recommendations/rules.service.ts` and `models/wishlist-matching.server.ts`; i18n `quiz.budget`, `quiz.concentration`, `quiz.houseTier`.
 
 ### 3D — Sanity Blog (Behind the Bottle)
 

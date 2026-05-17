@@ -7,6 +7,12 @@ import {
   getOrCreateScentProfile,
 } from "@/models/scent-profile.server"
 import {
+  houseTypesForTierPreference,
+  perfumeTypesForConcentrationPreference,
+  signalsFromScentProfileFields,
+} from "@/utils/scent-profile-preferences"
+
+import {
   buildIdfMap,
   cosineSimilarityFromIdf,
   COSINE_TIE_EPSILON,
@@ -26,6 +32,10 @@ import type {
 const W_SEASON = 3
 /** Weight for listing-in-price-range signal (personalized). */
 const W_PRICE = 2
+/** Weight when a perfume's house tier matches quiz preference. */
+const W_HOUSE_TIER = 1.5
+/** Weight when a perfume has a listing in the preferred concentration. */
+const W_CONCENTRATION = 1.5
 const WIDENED_POOL_FACTOR = 4
 const WIDENED_POOL_MIN = 48
 /** Max perfumes from the same house in profile recommendations. */
@@ -399,7 +409,12 @@ async function getPersonalizedForUser(
     .slice(0, widenTake)
 
   const seasonPrefs = parseSeasonHint(profile.seasonHint)
-  const priceRange = parsePreferredPriceRange(profile.preferredPriceRange)
+  const preferenceSignals = signalsFromScentProfileFields(profile)
+  const priceRange = preferenceSignals.priceRange
+  const concentrationTypes = perfumeTypesForConcentrationPreference(
+    preferenceSignals.concentration
+  )
+  const houseTypes = houseTypesForTierPreference(preferenceSignals.houseTier)
 
   const votesPromise: Promise<SeasonVotePick[]> =
     seasonPrefs.size > 0
@@ -422,8 +437,26 @@ async function getPersonalizedForUser(
 
   const metaPromise = prisma.perfume.findMany({
     where: { id: { in: widenedIds } },
-    select: { id: true, name: true, perfumeHouseId: true },
+    select: {
+      id: true,
+      name: true,
+      perfumeHouseId: true,
+      perfumeHouse: { select: { type: true } },
+    },
   })
+
+  const concentrationListingPromise =
+    concentrationTypes && concentrationTypes.length > 0
+      ? prisma.userPerfume.findMany({
+          where: {
+            perfumeId: { in: widenedIds },
+            available: { not: "0" },
+            type: { in: concentrationTypes },
+          },
+          select: { perfumeId: true },
+          distinct: ["perfumeId"],
+        })
+      : Promise.resolve([] as { perfumeId: string }[])
 
   const ratingPromise = prisma.userPerfumeRating.groupBy({
     by: ["perfumeId"],
@@ -431,14 +464,17 @@ async function getPersonalizedForUser(
     _avg: { overall: true },
   })
 
-  const [votes, priceIdList, metaRows, ratingGroups] = await Promise.all([
-    votesPromise,
-    priceIdsPromise,
-    metaPromise,
-    ratingPromise,
-  ])
+  const [votes, priceIdList, metaRows, ratingGroups, concentrationRows] =
+    await Promise.all([
+      votesPromise,
+      priceIdsPromise,
+      metaPromise,
+      ratingPromise,
+      concentrationListingPromise,
+    ])
 
   const priceInRange = new Set(priceIdList)
+  const concentrationMatch = new Set(concentrationRows.map(r => r.perfumeId))
 
   const votesByPerfume = new Map<string, SeasonVotePick[]>()
   for (const v of votes) {
@@ -473,6 +509,17 @@ async function getPersonalizedForUser(
     return priceInRange.has(perfumeId) ? 1 : 0
   }
 
+  const houseTierBoostFor = (houseType: string | null | undefined): number => {
+    if (!houseTypes || houseTypes.length === 0 || !houseType) return 0
+    return houseTypes.includes(houseType as (typeof houseTypes)[number]) ? 1 : 0
+  }
+
+  const concentrationBoostFor = (perfumeId: string): number => {
+    if (!concentrationTypes || concentrationTypes.length === 0) return 0
+    if (concentrationMatch.size === 0) return 0
+    return concentrationMatch.has(perfumeId) ? 1 : 0
+  }
+
   const ranked: ProfileRankRow[] = []
   for (const id of widenedIds) {
     const meta = metaById.get(id)
@@ -480,7 +527,14 @@ async function getPersonalizedForUser(
     const noteScore = scoreByPerfume[id] ?? 0
     const sBoost = seasonBoostFor(id)
     const pBoost = priceBoostFor(id)
-    const finalScore = noteScore + W_SEASON * sBoost + W_PRICE * pBoost
+    const hBoost = houseTierBoostFor(meta.perfumeHouse?.type)
+    const cBoost = concentrationBoostFor(id)
+    const finalScore =
+      noteScore +
+      W_SEASON * sBoost +
+      W_PRICE * pBoost +
+      W_HOUSE_TIER * hBoost +
+      W_CONCENTRATION * cBoost
     ranked.push({
       id,
       name: meta.name,

@@ -18,6 +18,8 @@ import type { TradeForClient } from "@/types/trade"
 import { getTraderDisplayName } from "@/utils/user"
 import TraderProfileHeaderStats from "@/components/Containers/TraderProfile/TraderProfileHeaderStats"
 import TraderWishlistOverlapBanner from "@/components/Containers/TraderProfile/TraderWishlistOverlapBanner"
+import ScentDnaCard from "@/components/Containers/TraderProfile/ScentDnaCard/ScentDnaCard"
+import type { ScentDnaSnapshot } from "@/models/scent-dna.server"
 import type { TraderWishlistOverlap } from "@/models/wishlist-matching.server"
 import { TraderProfileAside } from "./aside/aside"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
@@ -31,6 +33,7 @@ type TraderProfileClientProps = {
   feedback: TraderFeedbackResponse
   activeTrades?: TradeForClient[]
   wishlistOverlap?: TraderWishlistOverlap | null
+  scentDna: ScentDnaSnapshot
 }
 
 export default function TraderProfileClient({
@@ -39,6 +42,7 @@ export default function TraderProfileClient({
   feedback,
   activeTrades = [],
   wishlistOverlap = null,
+  scentDna,
 }: TraderProfileClientProps) {
   const { data: trader } = useTrader(initialTrader.id, initialTrader)
   const t = useTranslations("traderProfile")
@@ -71,6 +75,11 @@ export default function TraderProfileClient({
           displayName={traderName}
           avatarImage={trader.avatarImage}
           size="lg"
+        />
+        <ScentDnaCard
+          scentDna={scentDna}
+          traderName={traderName}
+          shareUrl={`/trader-profile/${trader.id}/scent-dna`}
         />
         <TraderProfileHeaderStats
           memberSince={memberSince}

@@ -953,6 +953,28 @@
       "prompt": "When do you wear fragrance most? (optional, select all that apply)",
       "toggleHint": "Tap a season to include it. “All seasons” selects all four — same as on perfume pages."
     },
+    "budget": {
+      "prompt": "What's your typical budget for a new bottle? (optional)",
+      "under50": "Under $50",
+      "50to100": "$50 – $100",
+      "100to200": "$100 – $200",
+      "200plus": "$200+",
+      "noPreference": "No preference"
+    },
+    "concentration": {
+      "prompt": "Which concentration do you prefer? (optional)",
+      "edt": "Eau de Toilette (EDT)",
+      "edp": "Eau de Parfum (EDP)",
+      "parfum": "Parfum / Extrait",
+      "noPreference": "No preference"
+    },
+    "houseTier": {
+      "prompt": "Which house tier excites you most? (optional)",
+      "designer": "Designer",
+      "niche": "Niche",
+      "indie": "Indie",
+      "all": "All of them"
+    },
     "browse": {
       "prompt": "How do you like to browse? (optional)",
       "explorer": "Explorer – I like to discover new scents",
@@ -1391,6 +1413,44 @@
       "ariaLabel": "Trader membership and trade history",
       "memberSince": "Member since",
       "completedTrades": "Completed trades"
+    },
+    "scentDna": {
+      "meta": {
+        "title": "{traderName}'s Scent DNA",
+        "description": "Note families, season affinity, and house taste for {traderName} on Shadow and Sillage."
+      },
+      "ariaLabel": "Scent DNA for {traderName}",
+      "title": "Scent DNA",
+      "subtitle": "Computed taste profile for {traderName}",
+      "sharePageHeading": "{traderName}'s Scent DNA",
+      "sharePageSubheading": "A shareable snapshot of note families, seasons, and house taste.",
+      "shareCta": "Share my Scent DNA",
+      "shareCopied": "Link copied",
+      "shareError": "Could not copy link",
+      "empty": "Not enough data yet — take the scent quiz, vote on seasons, or add bottles to your collection.",
+      "takeQuiz": "Take the scent quiz",
+      "noteFamiliesHeading": "Top note families",
+      "seasonHeading": "Season affinity",
+      "houseHeading": "House taste",
+      "families": {
+        "florals": "Florals",
+        "woods": "Woods",
+        "orientals": "Orientals",
+        "citrus": "Citrus",
+        "aquatics": "Aquatics",
+        "gourmands": "Gourmands"
+      },
+      "season": {
+        "winter": "Winter",
+        "spring": "Spring",
+        "summer": "Summer",
+        "fall": "Fall"
+      },
+      "house": {
+        "indie": "Indie",
+        "niche": "Niche",
+        "designer": "Designer"
+      }
     },
     "aboutHeading": "About",
     "regionChip": "{region}",

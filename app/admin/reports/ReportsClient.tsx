@@ -26,7 +26,7 @@ import {
   type ReportAdminActionState,
 } from "./actions"
 
-const BANNER_IMAGE = "/images/userAdmin.webp"
+const BANNER_IMAGE = "/images/complaints.png"
 const DELETE_MODAL_ID = "delete-user-report"
 
 type ReportsClientProps = {

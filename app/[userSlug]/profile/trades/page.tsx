@@ -10,7 +10,7 @@ import { getProfileSlug } from "@/utils/user"
 
 import TradesPageClient from "./TradesPageClient"
 
-const BANNER_IMAGE = "/images/trade.webp"
+const BANNER_IMAGE = "/images/mytrades.png"
 
 type Props = {
   params: Promise<{ userSlug: string }>
