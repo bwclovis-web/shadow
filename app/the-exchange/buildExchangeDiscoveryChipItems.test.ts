@@ -32,6 +32,7 @@ describe("buildExchangeDiscoveryChipItems", () => {
     const chips = buildExchangeDiscoveryChipItems(filters, {
       noteTags: [{ id: "note1", name: "Rose" }],
       houseLabel: "Test House",
+      perfumeLabel: null,
       apply,
       seasonLabel: () => "Spring",
       copy,

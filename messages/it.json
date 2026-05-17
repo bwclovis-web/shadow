@@ -53,6 +53,7 @@
     "availability": "Sull’exchange",
     "listingCount": "{count, plural, =0 {Nessun annuncio attivo} one {# annuncio} other {# annunci}}",
     "viewOnExchange": "Cerca su The Exchange",
+    "findTradersOnExchange": "Trova trader che ce l'hanno",
     "copyShareLink": "Copia link confronto",
     "linkCopied": "Link copiato",
     "copyLinkError": "Impossibile copiare — copia l’URL dalla barra degli indirizzi.",
@@ -579,6 +580,10 @@
         "heading": "La tua collezione è vuota.",
         "subheading": "Inizia ad aggiungere profumi!"
       }
+    },
+    "wishlistDemand": {
+      "title": "Qualcuno vuole quello che hai",
+      "description": "Questi trader hanno nella wishlist pubblica i profumi che tu proponi."
     },
     "listItem": {
       "destashed": "Destockato",
@@ -1109,6 +1114,8 @@
       "removeFilterAria": "Rimuovi filtro: {label}",
       "unknownNote": "Nota",
       "unknownHouse": "Casa",
+      "unknownPerfume": "Profumo",
+      "unknownPerfume": "Profumo",
       "priceChipMin": "Min {min}",
       "priceChipMax": "Max {max}",
       "priceChipRange": "{min}–{max}",
@@ -1135,6 +1142,10 @@
       "hasPhotosDescription": "Only show listings that include at least one photo.",
       "hasPhotosChip": "Has photos",
       "hasPhotosToggle": "Only listings with photos"
+    },
+    "wishlistMatches": {
+      "title": "Corrispondenze per te",
+      "description": "Profumi della tua wishlist attualmente in vendita sulla piattaforma."
     },
     "listings": {
       "openButton": "Vedi venditori e annunci",
@@ -1222,6 +1233,10 @@
     "noItemsAvailable": "Nessun articolo disponibile.",
     "noItemsSearchingFor": "Nessuna ricerca.",
     "wishlistBottleSeeking": "Cerca: {preference}",
+    "wishlistOverlap": {
+      "title": "Hai qualcosa che cercano",
+      "body": "{traderName} cerca {perfumes} — e tu lo hai in annuncio."
+    },
     "amount": "Quantità disponibile",
     "price": "Prezzo",
     "tradePrice": "Prezzo di scambio",

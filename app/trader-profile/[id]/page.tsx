@@ -9,6 +9,7 @@ import type { TraderFeedbackResponse } from "@/lib/queries/traderFeedback"
 import type { SafeUser } from "@/types"
 import { getTraderFeedbackForProfile } from "@/models/traderFeedback.server"
 import { getTradesForUserProfile } from "@/models/trade.server"
+import { getViewerOverlapWithTraderWishlist } from "@/models/wishlist-matching.server"
 import { getTraderById } from "@/models/user.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
@@ -49,9 +50,10 @@ export default async function TraderProfilePage({
   const viewer = session?.user ?? null
   const viewerId = viewer?.id ?? null
 
-  const [feedback, activeTrades] = await Promise.all([
+  const [feedback, activeTrades, wishlistOverlap] = await Promise.all([
     getTraderFeedbackForProfile(trader.id, viewerId),
     getTradesForUserProfile(trader.id, viewerId, "active"),
+    getViewerOverlapWithTraderWishlist(viewerId, trader.id),
   ])
 
   return (
@@ -60,6 +62,7 @@ export default async function TraderProfilePage({
       viewer={viewer as SafeUser | null}
       feedback={feedback}
       activeTrades={activeTrades}
+      wishlistOverlap={wishlistOverlap}
     />
   )
 }

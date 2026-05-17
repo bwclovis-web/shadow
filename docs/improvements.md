@@ -145,13 +145,15 @@ _All enums already exist — this is UI only, no schema change._
 
 **Shipped in:** `utils/discovery-filters.ts` (URL keys `tradePref`, `bottle`, `condition`, `region`, `hasPhotos`), `utils/exchange-listing-filter.server.ts` (Prisma + SQL bottle-type classification), `models/perfume.server.ts` (perfume + nested `userPerfume` where), `DiscoveryFiltersPanel`, `FilterToggleGroup`, `buildExchangeDiscoveryChipItems.ts`, `TheExchangeClient.tsx`, i18n `tradingPost.filters`.
 
-### 2D — Wishlist Matching
+### 2D — Wishlist Matching ✅
 
-- [ ] **IMP-140** Query: for the logged-in user, find `UserPerfume` rows (available, not own) whose `perfumeId` matches any row in the user's `UserPerfumeWishlist`; surface as "Matches for you" section on the exchange
-- [ ] **IMP-141** Query: for the logged-in user, find traders whose `UserPerfumeWishlist` contains perfumes the user has available; surface as "Someone wants what you have" on the user's listings page
-- [ ] **IMP-142** Show "You have something they want" banner at the top of a trader's profile when the visitor's collection overlaps with that trader's wishlist
-- [ ] **IMP-143** Make the public wishlist (`ItemsSearchingFor`) open by default on trader profiles (currently collapsed)
-- [ ] **IMP-144** Add "Find traders who have this" CTA on the compare page for each perfume in the comparison; links to exchange filtered by that perfume
+- [x] **IMP-140** Query: for the logged-in user, find `UserPerfume` rows (available, not own) whose `perfumeId` matches any row in the user's `UserPerfumeWishlist`; surface as "Matches for you" section on the exchange
+- [x] **IMP-141** Query: for the logged-in user, find traders whose `UserPerfumeWishlist` contains perfumes the user has available; surface as "Someone wants what you have" on the user's listings page
+- [x] **IMP-142** Show "You have something they want" banner at the top of a trader's profile when the visitor's collection overlaps with that trader's wishlist
+- [x] **IMP-143** Make the public wishlist (`ItemsSearchingFor`) open by default on trader profiles (currently collapsed)
+- [x] **IMP-144** Add "Find traders who have this" CTA on the compare page for each perfume in the comparison; links to exchange filtered by that perfume
+
+**Shipped in:** `models/wishlist-matching.server.ts`, `WishlistMatchesSection`, `WishlistDemandSection`, `TraderWishlistOverlapBanner`; exchange `?perfume=` discovery filter; `TheExchangeClient`, `MyScentsPageClient`, `TraderProfileClient`, `ComparePageClient`; i18n `tradingPost.wishlistMatches`, `myScents.wishlistDemand`, `traderProfile.wishlistOverlap`, `compare.findTradersOnExchange`.
 
 ### 2E — Activity Feed
 

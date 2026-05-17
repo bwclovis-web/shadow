@@ -17,6 +17,8 @@ import type { SafeUser, UserPerfumeI } from "@/types"
 import type { TradeForClient } from "@/types/trade"
 import { getTraderDisplayName } from "@/utils/user"
 import TraderProfileHeaderStats from "@/components/Containers/TraderProfile/TraderProfileHeaderStats"
+import TraderWishlistOverlapBanner from "@/components/Containers/TraderProfile/TraderWishlistOverlapBanner"
+import type { TraderWishlistOverlap } from "@/models/wishlist-matching.server"
 import { TraderProfileAside } from "./aside/aside"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
 
@@ -28,6 +30,7 @@ type TraderProfileClientProps = {
   viewer: SafeUser | null
   feedback: TraderFeedbackResponse
   activeTrades?: TradeForClient[]
+  wishlistOverlap?: TraderWishlistOverlap | null
 }
 
 export default function TraderProfileClient({
@@ -35,6 +38,7 @@ export default function TraderProfileClient({
   viewer,
   feedback,
   activeTrades = [],
+  wishlistOverlap = null,
 }: TraderProfileClientProps) {
   const { data: trader } = useTrader(initialTrader.id, initialTrader)
   const t = useTranslations("traderProfile")
@@ -92,6 +96,12 @@ export default function TraderProfileClient({
         )}
 
         <div className="flex flex-col gap-4 md:col-span-2 xl:col-span-2">
+          {wishlistOverlap && viewer?.id ? (
+            <TraderWishlistOverlapBanner
+              overlap={wishlistOverlap}
+              traderName={traderName}
+            />
+          ) : null}
           {activeTrades.length > 0 && viewer?.id ? (
             <TraderProfileTrades
               activeTrades={activeTrades}
@@ -136,7 +146,7 @@ export default function TraderProfileClient({
               name="itemsSearchingFor"
               summary={t("itemsSummary", { traderName })}
               background="dark"
-              defaultOpen={false}
+              defaultOpen={true}
             >
               <ItemsSearchingFor
                 wishlistItems={(trader.UserPerfumeWishlist ?? []).map((item) => ({

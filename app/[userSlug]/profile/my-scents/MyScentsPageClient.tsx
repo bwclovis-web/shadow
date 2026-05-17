@@ -17,6 +17,8 @@ import { getPerfumeTypeLabel } from "@/data/SelectTypes"
 import { useResponsivePageSize } from "@/hooks/useMediaQuery"
 import { useDataWithFilters } from "@/hooks/useDataWithFilters"
 import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
+import WishlistDemandSection from "@/components/Containers/MyScents/WishlistDemandSection"
+import type { TraderWantingUserListingRow } from "@/models/wishlist-matching.server"
 import type { SortOption } from "@/utils/sortUtils"
 
 const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
@@ -77,6 +79,7 @@ export type UserPerfumeForClient = {
 
 type MyScentsPageClientProps = {
   userPerfumes: UserPerfumeForClient[]
+  wishlistDemand?: TraderWantingUserListingRow[]
   bannerImage: string
 }
 
@@ -150,6 +153,7 @@ const SORT_OPTIONS: SortOption[] = ["name-asc", "name-desc", "created-desc", "cr
 
 const MyScentsPageClient = ({
   userPerfumes: initialUserPerfumes,
+  wishlistDemand = [],
   bannerImage,
 }: MyScentsPageClientProps) => {
   const params = useParams()
@@ -312,6 +316,7 @@ const MyScentsPageClient = ({
           onOptimisticAddRollback={handleOptimisticRollback}
         />
       </TitleBanner>
+      <WishlistDemandSection demand={wishlistDemand} />
       <div className="noir-border relative inner-container mx-auto text-center flex flex-col items-center justify-center gap-4 p-4 my-6">
         <h2 className="mb-2">{t("collection.heading")}</h2>
         {bottleEntries.length > 0 && (

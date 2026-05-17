@@ -31,6 +31,7 @@ import {
   parseDiscoveryFiltersFromSearchParams,
   type PerfumeDiscoveryFilters,
 } from "@/utils/discovery-filters"
+import WishlistMatchesSection from "@/components/Containers/Exchange/WishlistMatchesSection"
 import { buildExchangeDiscoveryChipItems } from "./buildExchangeDiscoveryChipItems"
 import type { ExchangePageData } from "./exchange-types"
 
@@ -45,6 +46,8 @@ const TheExchangeClient = ({
   searchQuery,
   initialNoteTags,
   initialHouse,
+  initialPerfume = null,
+  wishlistMatches = [],
   traderReputationByUserId = {},
   viewerId = null,
 }: ExchangePageData) => {
@@ -291,9 +294,17 @@ const TheExchangeClient = ({
           ? initialHouse.name
           : tf("unknownHouse")
 
+    const perfumeLabel =
+      discoveryFromUrl.perfumeId == null
+        ? null
+        : initialPerfume?.id === discoveryFromUrl.perfumeId
+          ? initialPerfume.name
+          : tf("unknownPerfume")
+
     return buildExchangeDiscoveryChipItems(discoveryFromUrl, {
       noteTags: initialNoteTags,
       houseLabel,
+      perfumeLabel,
       apply: handleDiscoveryChange,
       seasonLabel: key => tSeason(key),
       copy: {
@@ -327,6 +338,7 @@ const TheExchangeClient = ({
     discoveryFromUrl,
     handleDiscoveryChange,
     initialHouse,
+    initialPerfume,
     initialNoteTags,
     tListingCondition,
     tSeason,
@@ -399,6 +411,13 @@ const TheExchangeClient = ({
                     placeholder={t("search.placeholder")}
                   />
                 </div>
+                {viewerId && wishlistMatches.length > 0 ? (
+                  <WishlistMatchesSection
+                    matches={wishlistMatches}
+                    viewerId={viewerId}
+                    traderReputationByUserId={traderReputationByUserId}
+                  />
+                ) : null}
                 {availablePerfumes.length === 0 ? (
                   <div className="text-center py-8 bg-noir-dark/80 rounded-md border-2 border-noir-gold animate-fade-in">
                     <h2>

@@ -1,4 +1,5 @@
 import type { Tag } from "@/lib/queries/tags"
+import type { WishlistExchangeMatchRow } from "@/models/wishlist-matching.server"
 import type { TraderReputationV1 } from "@/services/reputation/types"
 
 export type ExchangePaginationMeta = {
@@ -48,6 +49,8 @@ export type ExchangePageData = {
   searchQuery: string
   initialNoteTags: Tag[]
   initialHouse: { id: string; name: string } | null
+  initialPerfume: { id: string; name: string } | null
+  wishlistMatches?: WishlistExchangeMatchRow[]
   traderReputationByUserId?: Record<string, TraderReputationV1>
   viewerId?: string | null
 }

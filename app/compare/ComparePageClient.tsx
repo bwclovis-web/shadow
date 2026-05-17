@@ -12,6 +12,7 @@ import {
 } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
+import { LuStore } from "react-icons/lu"
 
 import { Button } from "@/components/Atoms/Button/Button"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
@@ -28,6 +29,7 @@ import {
 } from "@/lib/queries/compare"
 import type { ComparePerfumeDto } from "@/models/compare.server"
 import { compareIdsExceedMax, normalizeCompareIds } from "@/utils/compare-ids"
+import { DISCOVERY_QUERY } from "@/utils/discovery-filters"
 import { normalizeRemoteImageSrc, styleMerge, validImageRegex } from "@/utils/styleUtils"
 
 const BANNER_IMAGE = "/images/compare.png"
@@ -76,7 +78,7 @@ function CompareColumn({
     )
   }
 
-  const exchangeHref = `${EXCHANGE_PATH}?q=${encodeURIComponent(dto.name)}`
+  const exchangeHref = `${EXCHANGE_PATH}?${DISCOVERY_QUERY.perfume}=${encodeURIComponent(dto.id)}`
 
   return (
     <article className="noir-border bg-white/5 flex flex-col gap-3 overflow-hidden">
@@ -151,7 +153,14 @@ function CompareColumn({
         </p>
         <PrefetchLink
           href={exchangeHref}
-          className="inline-block mt-2 text-blue-200 hover:underline font-semibold text-sm"
+          className="inline-flex items-center gap-1.5 mt-2 text-blue-200 hover:underline font-semibold text-sm"
+        >
+          <LuStore className="h-4 w-4 shrink-0" aria-hidden />
+          {t("findTradersOnExchange")}
+        </PrefetchLink>
+        <PrefetchLink
+          href={`${EXCHANGE_PATH}?q=${encodeURIComponent(dto.name)}`}
+          className="inline-block mt-1 text-noir-gold-500 hover:underline text-xs"
         >
           {t("viewOnExchange")}
         </PrefetchLink>

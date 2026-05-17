@@ -49,6 +49,7 @@
     "availability": "On the exchange",
     "listingCount": "{count, plural, =0 {No active listings} one {# listing} other {# listings}}",
     "viewOnExchange": "Search on The Exchange",
+    "findTradersOnExchange": "Find traders who have this",
     "copyShareLink": "Copy compare link",
     "linkCopied": "Link copied",
     "copyLinkError": "Could not copy — try copying the address bar.",
@@ -663,6 +664,10 @@
         "subheading": "Start adding perfumes to your collection!"
       }
     },
+    "wishlistDemand": {
+      "title": "Someone wants what you have",
+      "description": "These traders have your listed perfumes on their public wishlist."
+    },
     "listItem": {
       "destashed": "DeStashed",
       "name": "Name",
@@ -1243,6 +1248,7 @@
       "removeFilterAria": "Remove filter: {label}",
       "unknownNote": "Note",
       "unknownHouse": "House",
+      "unknownPerfume": "Perfume",
       "priceChipMin": "Min {min}",
       "priceChipMax": "Max {max}",
       "priceChipRange": "{min}–{max}",
@@ -1269,6 +1275,10 @@
       "hasPhotosDescription": "Only show listings that include at least one photo.",
       "hasPhotosChip": "Has photos",
       "hasPhotosToggle": "Only listings with photos"
+    },
+    "wishlistMatches": {
+      "title": "Matches for you",
+      "description": "Wishlist perfumes that traders are listing right now."
     },
     "listings": {
       "openButton": "View traders & listings",
@@ -1364,6 +1374,10 @@
     "noItemsAvailable": "No items available for trading.",
     "noItemsSearchingFor": "No items searching for.",
     "wishlistBottleSeeking": "Looking for: {preference}",
+    "wishlistOverlap": {
+      "title": "You have something they want",
+      "body": "{traderName} is looking for {perfumes} — and you have it listed."
+    },
     "amount": "Amount Available",
     "price": "Price",
     "tradePrice": "Trade Price",

@@ -2,7 +2,11 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
 import { getPerfumeHouseSummaryById } from "@/models/house.server"
-import { getAvailablePerfumesForDecantingPaginated } from "@/models/perfume.server"
+import {
+  getAvailablePerfumesForDecantingPaginated,
+  getPerfumeById,
+} from "@/models/perfume.server"
+import { getWishlistExchangeMatches } from "@/models/wishlist-matching.server"
 import { getPerfumeNotesByIds } from "@/models/tags.server"
 import { loadTraderReputationsForUserIds } from "@/services/reputation/loadReputationInputs.server"
 import { parseDiscoveryFiltersFromSearchParams } from "@/utils/discovery-filters"
@@ -44,20 +48,29 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
   const session = await getSessionFromCookieHeader(cookieHeader, { includeUser: true })
   const viewerId = session?.user?.id ?? null
 
-  const [perfumePage, initialNoteTags, initialHouse] = await Promise.all([
-    getAvailablePerfumesForDecantingPaginated({
-      skip: initialSkip,
-      take: PAGE_SIZE,
-      search: searchQuery || undefined,
-      discovery,
-    }),
-    discovery.noteIds.length > 0
-      ? getPerfumeNotesByIds(discovery.noteIds)
-      : Promise.resolve([]),
-    discovery.houseId
-      ? getPerfumeHouseSummaryById(discovery.houseId)
-      : Promise.resolve(null),
-  ])
+  const [perfumePage, initialNoteTags, initialHouse, initialPerfume, wishlistMatches] =
+    await Promise.all([
+      getAvailablePerfumesForDecantingPaginated({
+        skip: initialSkip,
+        take: PAGE_SIZE,
+        search: searchQuery || undefined,
+        discovery,
+      }),
+      discovery.noteIds.length > 0
+        ? getPerfumeNotesByIds(discovery.noteIds)
+        : Promise.resolve([]),
+      discovery.houseId
+        ? getPerfumeHouseSummaryById(discovery.houseId)
+        : Promise.resolve(null),
+      discovery.perfumeId
+        ? getPerfumeById(discovery.perfumeId).then(p =>
+            p ? { id: p.id, name: p.name } : null
+          )
+        : Promise.resolve(null),
+      viewerId
+        ? getWishlistExchangeMatches(viewerId)
+        : Promise.resolve([]),
+    ])
 
   let { perfumes: availablePerfumes, meta: pagination } = perfumePage
 
@@ -92,7 +105,11 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
   }
 
   const traderIds = [
-    ...new Set(availablePerfumes.flatMap((p) => p.userPerfume.map((up) => up.userId))),
+    ...new Set(
+      [...availablePerfumes, ...wishlistMatches].flatMap(p =>
+        p.userPerfume.map(up => up.userId)
+      )
+    ),
   ]
   const reputationMap =
     traderIds.length > 0 ? await loadTraderReputationsForUserIds(traderIds) : new Map()
@@ -105,6 +122,8 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
       searchQuery={searchQuery}
       initialNoteTags={initialNoteTags}
       initialHouse={initialHouse}
+      initialPerfume={initialPerfume}
+      wishlistMatches={wishlistMatches}
       traderReputationByUserId={traderReputationByUserId}
       viewerId={viewerId}
     />

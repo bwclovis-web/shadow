@@ -49,4 +49,13 @@ describe("buildExchangeDiscoveryWhereFragments", () => {
     )
     expect(parts).toHaveLength(3)
   })
+
+  it("adds perfume id fragment when set", () => {
+    const perfumeId = "clxxxxxxxxxxxxxxxxxxxxxx99"
+    const parts = buildExchangeDiscoveryWhereFragments(
+      { ...emptyDiscoveryFilters(), perfumeId },
+      undefined
+    )
+    expect(parts).toContainEqual({ id: perfumeId })
+  })
 })

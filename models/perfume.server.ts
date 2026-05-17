@@ -699,6 +699,9 @@ export function buildExchangeDiscoveryWhereFragments(
   if (discovery.houseId) {
     parts.push({ perfumeHouseId: discovery.houseId })
   }
+  if (discovery.perfumeId) {
+    parts.push({ id: discovery.perfumeId })
+  }
   return parts
 }
 

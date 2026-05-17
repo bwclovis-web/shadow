@@ -4,6 +4,7 @@ import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getTranslations } from "next-intl/server"
 import { redirect } from "next/navigation"
 
+import { getTradersWantingUserListings } from "@/models/wishlist-matching.server"
 import { getUserPerfumes } from "@/models/user.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { getProfileSlug } from "@/utils/user"
@@ -45,7 +46,10 @@ export default async function MyScentsPage({
     redirect(`/${slug}/profile/my-scents`)
   }
 
-  const userPerfumes = await getUserPerfumes(session.user.id)
+  const [userPerfumes, wishlistDemand] = await Promise.all([
+    getUserPerfumes(session.user.id),
+    getTradersWantingUserListings(session.user.id),
+  ])
 
   const serialized = userPerfumes.map((up) => ({
     ...up,
@@ -62,6 +66,7 @@ export default async function MyScentsPage({
   return (
     <MyScentsPageClient
       userPerfumes={serialized}
+      wishlistDemand={wishlistDemand}
       bannerImage={BANNER_IMAGE}
     />
   )

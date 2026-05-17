@@ -5,6 +5,7 @@ export const DISCOVERY_QUERY = {
   notes: "notes",
   season: "season",
   house: "house",
+  perfume: "perfume",
   minPrice: "minPrice",
   maxPrice: "maxPrice",
   tradePref: "tradePref",
@@ -36,6 +37,7 @@ export type PerfumeDiscoveryFilters = {
   noteIds: string[]
   seasons: SeasonKey[]
   houseId: string | null
+  perfumeId: string | null
   minPrice: number | null
   maxPrice: number | null
   tradePreferences: DiscoveryTradePreference[]
@@ -49,6 +51,7 @@ export const emptyDiscoveryFilters = (): PerfumeDiscoveryFilters => ({
   noteIds: [],
   seasons: [],
   houseId: null,
+  perfumeId: null,
   minPrice: null,
   maxPrice: null,
   tradePreferences: [],
@@ -169,6 +172,9 @@ export const parseDiscoveryFiltersFromSearchParams = (
   const houseRaw = get(DISCOVERY_QUERY.house).trim()
   const houseId = isValidDiscoveryId(houseRaw) ? houseRaw : null
 
+  const perfumeRaw = get(DISCOVERY_QUERY.perfume).trim()
+  const perfumeId = isValidDiscoveryId(perfumeRaw) ? perfumeRaw : null
+
   let minPrice = parseOptionalNonNegativeNumber(get(DISCOVERY_QUERY.minPrice))
   let maxPrice = parseOptionalNonNegativeNumber(get(DISCOVERY_QUERY.maxPrice))
 
@@ -207,6 +213,7 @@ export const parseDiscoveryFiltersFromSearchParams = (
     noteIds,
     seasons,
     houseId,
+    perfumeId,
     minPrice,
     maxPrice,
     tradePreferences,
@@ -241,6 +248,9 @@ export const discoveryFiltersToSearchParams = (
   if (filters.houseId) {
     out.set(DISCOVERY_QUERY.house, filters.houseId)
   }
+  if (filters.perfumeId) {
+    out.set(DISCOVERY_QUERY.perfume, filters.perfumeId)
+  }
   if (filters.minPrice != null) {
     out.set(DISCOVERY_QUERY.minPrice, String(filters.minPrice))
   }
@@ -270,6 +280,7 @@ export const discoveryFiltersActive = (filters: PerfumeDiscoveryFilters): boolea
   filters.noteIds.length > 0 ||
   filters.seasons.length > 0 ||
   filters.houseId != null ||
+  filters.perfumeId != null ||
   filters.minPrice != null ||
   filters.maxPrice != null ||
   filters.tradePreferences.length > 0 ||
@@ -297,6 +308,10 @@ export const removeDiscoverySeason = (
 export const clearDiscoveryHouse = (
   filters: PerfumeDiscoveryFilters
 ): PerfumeDiscoveryFilters => ({ ...filters, houseId: null })
+
+export const clearDiscoveryPerfume = (
+  filters: PerfumeDiscoveryFilters
+): PerfumeDiscoveryFilters => ({ ...filters, perfumeId: null })
 
 export const clearDiscoveryPrice = (
   filters: PerfumeDiscoveryFilters

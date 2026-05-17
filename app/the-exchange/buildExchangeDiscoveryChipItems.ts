@@ -4,6 +4,7 @@ import type { SeasonKey } from "@/types/perfume-season-vote"
 import {
   clearDiscoveryHasPhotos,
   clearDiscoveryHouse,
+  clearDiscoveryPerfume,
   clearDiscoveryPrice,
   clearDiscoveryRegion,
   removeDiscoveryBottleType,
@@ -40,12 +41,14 @@ export const buildExchangeDiscoveryChipItems = (
     noteTags: Tag[]
     /** Resolved label for the selected house, or null to omit the house chip. */
     houseLabel: string | null
+    /** Resolved label for a single perfume filter, or null to omit the chip. */
+    perfumeLabel: string | null
     apply: (next: PerfumeDiscoveryFilters) => void
     seasonLabel: (key: SeasonKey) => string
     copy: ExchangeDiscoveryChipCopy
   }
 ): FilterChipStripItem[] => {
-  const { noteTags, houseLabel, apply, seasonLabel, copy } = options
+  const { noteTags, houseLabel, perfumeLabel, apply, seasonLabel, copy } = options
   const tagById = new Map(noteTags.map(t => [t.id, t.name]))
   const chips: FilterChipStripItem[] = []
 
@@ -75,6 +78,15 @@ export const buildExchangeDiscoveryChipItems = (
       label: houseLabel,
       removeAriaLabel: copy.removeFilterAria(houseLabel),
       onRemove: () => apply(clearDiscoveryHouse(filters)),
+    })
+  }
+
+  if (filters.perfumeId && perfumeLabel) {
+    chips.push({
+      id: `perfume-${filters.perfumeId}`,
+      label: perfumeLabel,
+      removeAriaLabel: copy.removeFilterAria(perfumeLabel),
+      onRemove: () => apply(clearDiscoveryPerfume(filters)),
     })
   }
 

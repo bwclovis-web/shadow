@@ -53,6 +53,7 @@
     "availability": "Sur l’échange",
     "listingCount": "{count, plural, =0 {Aucune annonce active} one {# annonce} other {# annonces}}",
     "viewOnExchange": "Rechercher sur The Exchange",
+    "findTradersOnExchange": "Trouver des traders qui l'ont",
     "copyShareLink": "Copier le lien de comparaison",
     "linkCopied": "Lien copié",
     "copyLinkError": "Impossible de copier — copiez l’URL dans la barre d’adresse.",
@@ -579,6 +580,10 @@
         "heading": "Votre collection est vide.",
         "subheading": "Ajoutez des parfums à votre collection !"
       }
+    },
+    "wishlistDemand": {
+      "title": "Quelqu'un veut ce que vous avez",
+      "description": "Ces traders ont sur leur wishlist publique les parfums que vous proposez."
     },
     "listItem": {
       "destashed": "Déstocké",
@@ -1109,6 +1114,8 @@
       "removeFilterAria": "Retirer le filtre : {label}",
       "unknownNote": "Note",
       "unknownHouse": "Maison",
+      "unknownPerfume": "Parfum",
+      "unknownPerfume": "Parfum",
       "priceChipMin": "Min {min}",
       "priceChipMax": "Max {max}",
       "priceChipRange": "{min}–{max}",
@@ -1135,6 +1142,10 @@
       "hasPhotosDescription": "Only show listings that include at least one photo.",
       "hasPhotosChip": "Has photos",
       "hasPhotosToggle": "Only listings with photos"
+    },
+    "wishlistMatches": {
+      "title": "Correspondances pour vous",
+      "description": "Parfums de votre wishlist actuellement proposés par la communauté."
     },
     "listings": {
       "openButton": "Voir les vendeurs et annonces",
@@ -1222,6 +1233,10 @@
     "noItemsAvailable": "Aucun article disponible.",
     "noItemsSearchingFor": "Aucune recherche.",
     "wishlistBottleSeeking": "Recherche : {preference}",
+    "wishlistOverlap": {
+      "title": "Vous avez ce qu'ils cherchent",
+      "body": "{traderName} recherche {perfumes} — et vous l'avez en annonce."
+    },
     "amount": "Quantité disponible",
     "price": "Prix",
     "tradePrice": "Prix d'échange",
