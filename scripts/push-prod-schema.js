@@ -9,9 +9,9 @@
  * Run `prisma generate` separately when you need an updated @prisma/client after schema changes
  * (avoid running it while `next dev` / Studio hold the query engine on Windows — EPERM on rename).
  *
- * When you add a new Prisma model locally, you must append the matching DDL
- * (table, indexes, uniques, FKs) to APPLY_TO_REMOTE_DB.sql or production will
- * stay out of sync and Prisma Studio / the app will error on missing tables.
+ * When you add a new Prisma model locally, append matching DDL to
+ * APPLY_TO_REMOTE_DB.sql and/or `supplementalMigrations` below, or production
+ * will stay out of sync and Prisma Studio / the app will error on missing columns.
  *
  * The SQL file is additive-only and designed to avoid data loss.
  *
@@ -31,6 +31,81 @@ config({ path: resolve(process.cwd(), ".env") })
 const { REMOTE_DATABASE_URL } = process.env
 const migrationFile = "prisma/migrations/APPLY_TO_REMOTE_DB.sql"
 const dryRun = process.argv.includes("--dry-run")
+
+/** Idempotent DDL applied after APPLY_TO_REMOTE_DB.sql — add entries when schema.prisma changes. */
+const supplementalMigrations = [
+  {
+    label: "User.onboardingMatchesViewedAt",
+    sql: `ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "onboardingMatchesViewedAt" TIMESTAMP(3);`,
+  },
+  {
+    label: "ScentProfile.preferredConcentration, ScentProfile.preferredHouseTier",
+    sql: `ALTER TABLE "ScentProfile" ADD COLUMN IF NOT EXISTS "preferredConcentration" TEXT, ADD COLUMN IF NOT EXISTS "preferredHouseTier" TEXT;`,
+  },
+  {
+    label: "UserAlertPreferences push columns",
+    sql: `ALTER TABLE "UserAlertPreferences" ADD COLUMN IF NOT EXISTS "pushEnabled" BOOLEAN NOT NULL DEFAULT false, ADD COLUMN IF NOT EXISTS "pushTradeAlerts" BOOLEAN NOT NULL DEFAULT true, ADD COLUMN IF NOT EXISTS "pushMessageAlerts" BOOLEAN NOT NULL DEFAULT true;`,
+  },
+  {
+    label: "UserPushSubscription table",
+    sql: `
+CREATE TABLE IF NOT EXISTS "UserPushSubscription" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "endpoint" TEXT NOT NULL,
+    "p256dh" TEXT NOT NULL,
+    "auth" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "UserPushSubscription_pkey" PRIMARY KEY ("id")
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "UserPushSubscription_endpoint_key" ON "UserPushSubscription"("endpoint");
+CREATE INDEX IF NOT EXISTS "UserPushSubscription_userId_idx" ON "UserPushSubscription"("userId");
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'UserPushSubscription_userId_fkey'
+    ) THEN
+        ALTER TABLE "UserPushSubscription"
+        ADD CONSTRAINT "UserPushSubscription_userId_fkey"
+        FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
+`.trim(),
+  },
+  {
+    label: "UserConversationPresence table",
+    sql: `
+CREATE TABLE IF NOT EXISTS "UserConversationPresence" (
+    "userId" TEXT NOT NULL,
+    "counterpartUserId" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    CONSTRAINT "UserConversationPresence_pkey" PRIMARY KEY ("userId")
+);
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'UserConversationPresence_userId_fkey'
+    ) THEN
+        ALTER TABLE "UserConversationPresence"
+        ADD CONSTRAINT "UserConversationPresence_userId_fkey"
+        FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
+`.trim(),
+  },
+]
+
+const executeSql = (sql, label) => {
+  if (dryRun) {
+    console.log(`-- ${label}`)
+    console.log(sql)
+    console.log("")
+    return
+  }
+  console.log(`Applying: ${label}`)
+  execSync(`npx prisma db execute --stdin --url "${REMOTE_DATABASE_URL}"`, {
+    stdio: ["pipe", "inherit", "inherit"],
+    input: sql,
+  })
+}
 
 if (!REMOTE_DATABASE_URL) {
   console.error("ERROR: REMOTE_DATABASE_URL is not set in .env")
@@ -52,8 +127,12 @@ if (dryRun) {
   console.log("DRY RUN: No changes will be applied.")
   console.log("The following SQL would be executed:")
   console.log("")
+  console.log(`-- ${migrationFile}`)
   console.log(sql)
   console.log("")
+  for (const { label, sql: supplementalSql } of supplementalMigrations) {
+    executeSql(supplementalSql, label)
+  }
   console.log("Dry run completed.")
   process.exit(0)
 }
@@ -62,6 +141,11 @@ execSync(
   `npx prisma db execute --file "${migrationFile}" --url "${REMOTE_DATABASE_URL}"`,
   { stdio: "inherit" }
 )
+
+console.log("")
+for (const { label, sql } of supplementalMigrations) {
+  executeSql(sql, label)
+}
 
 console.log("")
 console.log("Running post-sync verification against production...")
@@ -131,6 +215,42 @@ async function verifySchema() {
           SELECT 1 FROM information_schema.columns
           WHERE table_schema = 'public'
             AND table_name = 'User'
+            AND column_name = 'onboardingMatchesViewedAt'
+        ) AS "hasUserOnboardingMatchesViewedAt",
+        EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'ScentProfile'
+            AND column_name = 'preferredConcentration'
+        ) AS "hasScentProfilePreferredConcentration",
+        EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'ScentProfile'
+            AND column_name = 'preferredHouseTier'
+        ) AS "hasScentProfilePreferredHouseTier",
+        EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'UserAlertPreferences'
+            AND column_name = 'pushEnabled'
+        ) AS "hasUserAlertPreferencesPushEnabled",
+        EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'UserAlertPreferences'
+            AND column_name = 'pushTradeAlerts'
+        ) AS "hasUserAlertPreferencesPushTradeAlerts",
+        EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'UserAlertPreferences'
+            AND column_name = 'pushMessageAlerts'
+        ) AS "hasUserAlertPreferencesPushMessageAlerts",
+        EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'User'
             AND column_name = 'strikeCount'
         ) AS "hasUserStrikeCount",
         EXISTS (
@@ -156,12 +276,28 @@ async function verifySchema() {
         EXISTS (
           SELECT 1 FROM information_schema.tables
           WHERE table_schema = 'public' AND table_name = 'UserReport'
-        ) AS "hasUserReport"
+        ) AS "hasUserReport",
+        EXISTS (
+          SELECT 1 FROM information_schema.tables
+          WHERE table_schema = 'public' AND table_name = 'UserPushSubscription'
+        ) AS "hasUserPushSubscription",
+        EXISTS (
+          SELECT 1 FROM information_schema.tables
+          WHERE table_schema = 'public' AND table_name = 'UserConversationPresence'
+        ) AS "hasUserConversationPresence"
     `)
 
     const result = Array.isArray(checks) ? checks[0] : checks
     const required = [
       "hasUserAvatarImage",
+      "hasUserOnboardingMatchesViewedAt",
+      "hasScentProfilePreferredConcentration",
+      "hasScentProfilePreferredHouseTier",
+      "hasUserAlertPreferencesPushEnabled",
+      "hasUserAlertPreferencesPushTradeAlerts",
+      "hasUserAlertPreferencesPushMessageAlerts",
+      "hasUserPushSubscription",
+      "hasUserConversationPresence",
       "hasUserPerfumeListingImages",
       "hasUserPerfumeListingCondition",
       "hasTrade",
@@ -180,7 +316,7 @@ async function verifySchema() {
         missing.join(", ")
       )
       console.error(
-        "Review prisma/migrations/APPLY_TO_REMOTE_DB.sql and re-run npm run db:push:prod"
+        "Review APPLY_TO_REMOTE_DB.sql / supplementalMigrations in push-prod-schema.js and re-run npm run db:push:prod"
       )
       process.exit(1)
     }
