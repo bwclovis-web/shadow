@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { useState } from 'react'
 
 import { CompareTray } from '@/components/Molecules/CompareTray/CompareTray'
+import ModalRouteCleanup from '@/components/Molecules/ModalRouteCleanup/ModalRouteCleanup'
 import { TokenRefresh } from '@/components/TokenRefresh'
 
 const ReactQueryDevtools = dynamic(
@@ -19,6 +20,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <TokenRefresh />
+      <ModalRouteCleanup />
       {children}
       <CompareTray />
       {process.env.NODE_ENV === 'development' && (

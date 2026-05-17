@@ -102,6 +102,21 @@ const TraderTrustSummary = ({ reputation }: TraderTrustSummaryProps) => {
           ) : reputation.totalReviews === 0 ? (
             <span className="text-sm text-noir-gold-500">{t("noReviewsDetail")}</span>
           ) : null}
+
+          {reputation.tradeReliabilityPercent !== null ? (
+            <p className="mt-2 text-sm text-noir-gold-100">
+              <span className="text-noir-gold-500">{t("tradeReliabilityLabel")}: </span>
+              <span className="font-semibold text-noir-gold tabular-nums">
+                {t("tradeReliabilityValue", {
+                  percent: reputation.tradeReliabilityPercent,
+                })}
+              </span>
+            </p>
+          ) : reputation.completedTradeCount > 0 ? (
+            <p className="mt-2 text-sm text-noir-gold-500">
+              {t("tradeReliabilityInsufficient")}
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -125,6 +140,7 @@ const TraderTrustSummary = ({ reputation }: TraderTrustSummaryProps) => {
           <li>{t("explainIntro")}</li>
           <li>{t("explainScore", { minReviews: MIN_REVIEWS_FOR_SCORE })}</li>
           <li>{t("explainBadges")}</li>
+          <li>{t("explainTradeReliability")}</li>
           <li>{t("explainMessaging")}</li>
         </ul>
       </details>

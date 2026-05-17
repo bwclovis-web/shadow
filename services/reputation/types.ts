@@ -16,4 +16,8 @@ export interface TraderReputationV1 {
   medianFirstReplyHours: number | null
   replySampleCount: number
   badges: ReputationBadgeId[]
+  /** Completed trades involving this trader */
+  completedTradeCount: number
+  /** completed / (completed + cancelled-by-trader); null when no qualifying trades */
+  tradeReliabilityPercent: number | null
 }

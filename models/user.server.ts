@@ -125,6 +125,7 @@ export const getTraderById = cache(async (id: string) => {
     select: {
       id: true,
       email: true,
+      createdAt: true,
       firstName: true,
       lastName: true,
       username: true,

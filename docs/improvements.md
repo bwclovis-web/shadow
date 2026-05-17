@@ -123,13 +123,15 @@ _These features make the platform sticky. Users return because they have active 
 - [x] **IMP-110** Add 15-second interval polling (or `router.refresh()` on window focus) to `ThreadClient` so received messages feel live
 - [x] **IMP-111** Add "Active trades" and "Trade history" tabs to trader profile; show completed count and success rate
 
-### 2B — Reputation
+### 2B — Reputation ✅
 
-- [ ] **IMP-120** Surface completed trade count and member-since date on trader profile header
-- [ ] **IMP-121** Add "fast responder" badge: median first-reply < 24 h across last 10 threads
-- [ ] **IMP-122** Gate `TraderFeedback` submission on a linked `tradeId` (post-v1; v1 can remain open)
-- [ ] **IMP-123** Add trader reliability score: completed / (completed + cancelled-by-them) ratio; show as percentage on profile
-- [ ] **IMP-124** Create policy page (shipping expectations, dispute process, community rules); link from trade timeline and footer
+- [x] **IMP-120** Surface completed trade count and member-since date on trader profile header
+- [x] **IMP-121** Add "fast responder" badge: median first-reply < 24 h across last 10 threads
+- [x] **IMP-122** Gate `TraderFeedback` submission on a linked `tradeId` (post-v1; v1 can remain open)
+- [x] **IMP-123** Add trader reliability score: completed / (completed + cancelled-by-them) ratio; show as percentage on profile
+- [x] **IMP-124** Create policy page (shipping expectations, dispute process, community rules); link from trade timeline and footer
+
+**Shipped in:** `services/reputation/tradeStats.server.ts`, updated `loadReputationInputs.server.ts` / `computeReputation.ts` / `v1-constants.ts`; `TraderProfileHeaderStats`, `TraderTrustSummary` trade reliability; feedback gating in `models/traderFeedback.server.ts` (`TRADER_FEEDBACK_REQUIRES_COMPLETED_TRADE=false` to allow open v1); `app/community-policy/page.tsx`, `SiteFooter`, `TradeStatusCard` policy link; i18n `traderProfile.headerStats`, `communityPolicy`, `siteFooter`.
 
 ### 2C — Exchange Filter Extensions
 

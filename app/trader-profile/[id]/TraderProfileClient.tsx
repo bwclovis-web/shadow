@@ -16,6 +16,7 @@ import TraderProfileTrades from "@/components/Containers/TraderProfile/TraderPro
 import type { SafeUser, UserPerfumeI } from "@/types"
 import type { TradeForClient } from "@/types/trade"
 import { getTraderDisplayName } from "@/utils/user"
+import TraderProfileHeaderStats from "@/components/Containers/TraderProfile/TraderProfileHeaderStats"
 import { TraderProfileAside } from "./aside/aside"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
 
@@ -48,6 +49,12 @@ export default function TraderProfileClient({
   }
 
   const traderName = getTraderDisplayName(trader)
+  const memberSince =
+    typeof trader.createdAt === "string"
+      ? trader.createdAt
+      : trader.createdAt instanceof Date
+        ? trader.createdAt.toISOString()
+        : new Date().toISOString()
 
   return (
     <section>
@@ -60,6 +67,10 @@ export default function TraderProfileClient({
           displayName={traderName}
           avatarImage={trader.avatarImage}
           size="lg"
+        />
+        <TraderProfileHeaderStats
+          memberSince={memberSince}
+          completedTradeCount={feedback.reputation.completedTradeCount}
         />
       </TitleBanner>
 

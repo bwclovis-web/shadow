@@ -8,7 +8,12 @@ function rep(
   messageStats: {
     medianFirstReplyHours: number | null
     replySampleCount: number
-  } = { medianFirstReplyHours: null, replySampleCount: 0 }
+  } = { medianFirstReplyHours: null, replySampleCount: 0 },
+  tradeStats = {
+    completedCount: 0,
+    cancelledByTraderCount: 0,
+    tradeReliabilityPercent: null as number | null,
+  }
 ) {
   return computeTraderReputationV1({
     feedback: {
@@ -17,6 +22,7 @@ function rep(
       totalReviews: feedback.totalReviews,
     },
     messageStats,
+    tradeStats,
   })
 }
 
@@ -63,12 +69,34 @@ describe("computeTraderReputationV1", () => {
     expect(both.badges).toContain("reliableTrader")
   })
 
-  it("awards fastResponder when median reply is within threshold", () => {
+  it("awards fastResponder when median reply is within 24h threshold", () => {
     const r = rep(
       { averageRating: null, totalReviews: 0 },
-      { medianFirstReplyHours: 24, replySampleCount: 5 }
+      { medianFirstReplyHours: 20, replySampleCount: 3 }
     )
     expect(r.badges).toContain("fastResponder")
+  })
+
+  it("does not award fastResponder when median exceeds 24h", () => {
+    const r = rep(
+      { averageRating: null, totalReviews: 0 },
+      { medianFirstReplyHours: 30, replySampleCount: 3 }
+    )
+    expect(r.badges).not.toContain("fastResponder")
+  })
+
+  it("exposes trade reliability percent from trade stats", () => {
+    const r = rep(
+      { averageRating: 5, totalReviews: 5 },
+      { medianFirstReplyHours: null, replySampleCount: 0 },
+      {
+        completedCount: 8,
+        cancelledByTraderCount: 2,
+        tradeReliabilityPercent: 80,
+      }
+    )
+    expect(r.completedTradeCount).toBe(8)
+    expect(r.tradeReliabilityPercent).toBe(80)
   })
 })
 
@@ -90,5 +118,25 @@ describe("computeReplyStatsFromMessages", () => {
     ])
     expect(stats.replySampleCount).toBe(0)
     expect(stats.medianFirstReplyHours).toBeNull()
+  })
+
+  it("uses only the last 10 conversation partners by recent inbound", () => {
+    const base = new Date("2025-06-01T12:00:00Z").getTime()
+    const hour = 60 * 60 * 1000
+    const messages: Parameters<typeof computeReplyStatsFromMessages>[1] = []
+
+    for (let i = 0; i < 12; i++) {
+      const partner = `u${i}`
+      const inboundAt = new Date(base + i * hour)
+      const replyAt = new Date(inboundAt.getTime() + (i < 2 ? 48 * hour : 2 * hour))
+      messages.push(
+        { senderId: partner, recipientId: "trader", createdAt: inboundAt },
+        { senderId: "trader", recipientId: partner, createdAt: replyAt }
+      )
+    }
+
+    const stats = computeReplyStatsFromMessages("trader", messages)
+    expect(stats.replySampleCount).toBe(10)
+    expect(stats.medianFirstReplyHours).toBe(2)
   })
 })

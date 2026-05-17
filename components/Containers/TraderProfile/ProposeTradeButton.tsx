@@ -70,6 +70,7 @@ const ProposeTradeButton = ({
           <TradeComposerModal
             data={modalData as { mode: "compose"; init: { seed: typeof seed; counterpartyDisplayName: string } }}
             onClose={closeModal}
+            onViewProfileClick={closeModal}
           />
         </Modal>
       ) : null}

@@ -125,6 +125,7 @@ const TraderFeedbackSection = memo(function TraderFeedbackSection({
 
   const isViewerTrader = Boolean(viewerId && viewerId === traderId)
   const hasViewerFeedback = Boolean(data?.viewerFeedback)
+  const canLeaveFeedback = data?.canLeaveFeedback ?? true
 
   const ratingSelectOptions = useMemo(
     () => [
@@ -153,10 +154,11 @@ const TraderFeedbackSection = memo(function TraderFeedbackSection({
         traderId,
         rating,
         comment: comment.trim(),
+        tradeId: data?.eligibleTradeId ?? undefined,
         viewerId,
       })
     },
-    [rating, comment, traderId, viewerId, submitFeedback, t]
+    [rating, comment, traderId, viewerId, data?.eligibleTradeId, submitFeedback, t]
   )
 
   const handleDelete = useCallback(() => {
@@ -205,6 +207,10 @@ const TraderFeedbackSection = memo(function TraderFeedbackSection({
               isViewerTrader ? (
                 <p className="text-noir-gold-500 text-sm">
                   {t("selfReviewNotice")}
+                </p>
+              ) : !canLeaveFeedback ? (
+                <p className="text-noir-gold-500 text-sm">
+                  {t("requiresCompletedTrade")}
                 </p>
               ) : (
                 <form className="space-y-4" onSubmit={handleSubmit}>

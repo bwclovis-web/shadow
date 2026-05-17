@@ -14,6 +14,7 @@ import ServiceWorkerRegistration from '@/components/Containers/ServiceWorkerRegi
 import { getUnreadDirectMessageCount } from '@/models/contactMessage.server'
 import { getUnreadAlertCount, getUserAlerts } from '@/models/user-alerts.server'
 import { UserAlertsProvider } from '@/components/Molecules/UserAlertsProvider/UserAlertsProvider'
+import SiteFooter from '@/components/Organisms/SiteFooter/SiteFooter'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -89,7 +90,10 @@ export default async function RootLayout({
               >
                 <GlobalNavigation user={user} />
                 <MobileNavigation user={user} />
-                <Providers>{children}</Providers>
+                <Providers>
+                  {children}
+                  <SiteFooter />
+                </Providers>
               </UserAlertsProvider>
             </DirectMessageUnreadProvider>
           </NextIntlClientProvider>

@@ -30,6 +30,8 @@ export type ExchangeListingPickerProps = {
   traderReputationByUserId?: Record<string, TraderReputationV1>
   listResetKey?: string
   onSelectListing: (row: ExchangeUserPerfumeRow) => void
+  /** Called before navigating to a trader profile (closes parent modal). */
+  onViewProfileClick?: () => void
   showMakeOffer?: boolean
   listClassName?: string
 }
@@ -39,6 +41,7 @@ export const ExchangeListingPicker = ({
   traderReputationByUserId = {},
   listResetKey,
   onSelectListing,
+  onViewProfileClick,
   showMakeOffer = true,
   listClassName = "flex max-h-[50vh] flex-col gap-3 overflow-y-auto",
 }: ExchangeListingPickerProps) => {
@@ -174,6 +177,7 @@ export const ExchangeListingPicker = ({
               reputation={traderReputationByUserId[up.userId]}
               showProfileLink
               showMakeOffer={showMakeOffer}
+              onViewProfileClick={onViewProfileClick}
               onMakeOffer={() => onSelectListing(up)}
             />
           ))}

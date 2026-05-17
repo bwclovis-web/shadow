@@ -7,6 +7,7 @@ export interface SubmitTraderFeedbackParams {
   traderId: string
   rating: number
   comment?: string
+  tradeId?: string | null
   viewerId?: string | null
 }
 
@@ -27,6 +28,9 @@ export function useSubmitTraderFeedback() {
       formData.append("rating", String(params.rating))
       if (typeof params.comment === "string") {
         formData.append("comment", params.comment)
+      }
+      if (params.tradeId?.trim()) {
+        formData.append("tradeId", params.tradeId.trim())
       }
 
       const response = await fetch("/api/trader-feedback", {

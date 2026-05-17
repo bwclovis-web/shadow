@@ -3,7 +3,9 @@ import { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/db"
 import { computeTraderReputationV1 } from "@/services/reputation/computeReputation"
 import { loadTraderMessageReplyStats } from "@/services/reputation/loadReputationInputs.server"
+import { getTraderTradeStats } from "@/services/reputation/tradeStats.server"
 import type { TraderReputationV1 } from "@/services/reputation/types"
+import { traderFeedbackRequiresCompletedTrade } from "@/utils/trader-feedback-config.server"
 import { validateRating } from "@/utils/server/api-route-helpers.server"
 
 /** Default number of feedback items returned in list endpoints */
@@ -14,6 +16,7 @@ export interface TraderFeedbackSubmissionInput {
   reviewerId: string
   rating: number
   comment?: string | null
+  tradeId?: string | null
 }
 
 export interface TraderFeedbackSummary {
@@ -54,6 +57,9 @@ export interface TraderFeedbackProfileData {
   comments: TraderFeedbackListItem[]
   viewerFeedback: TraderFeedbackViewerEntry | null
   reputation: TraderReputationV1
+  /** Viewer may submit new feedback (completed trade when gating is enabled) */
+  canLeaveFeedback: boolean
+  eligibleTradeId: string | null
 }
 
 const isMissingFeedbackTableError = (error: unknown): boolean =>
@@ -79,17 +85,103 @@ function serializeFeedbackEntry(entry: FeedbackWithReviewer): TraderFeedbackList
 }
 
 /**
+ * Most recent completed trade between two users (for feedback linkage).
+ */
+export const findCompletedTradeBetweenUsers = async (
+  traderId: string,
+  reviewerId: string
+): Promise<string | null> => {
+  try {
+    const trade = await prisma.trade.findFirst({
+      where: {
+        status: "completed",
+        OR: [
+          { initiatorId: traderId, counterpartyId: reviewerId },
+          { initiatorId: reviewerId, counterpartyId: traderId },
+        ],
+      },
+      orderBy: { updatedAt: "desc" },
+      select: { id: true },
+    })
+    return trade?.id ?? null
+  } catch (error) {
+    if (isMissingFeedbackTableError(error)) {
+      return null
+    }
+    throw error
+  }
+}
+
+const resolveFeedbackTradeId = async (
+  traderId: string,
+  reviewerId: string,
+  tradeId?: string | null
+): Promise<string | null> => {
+  if (!traderFeedbackRequiresCompletedTrade()) {
+    if (tradeId?.trim()) {
+      const trade = await prisma.trade.findFirst({
+        where: {
+          id: tradeId.trim(),
+          status: "completed",
+          OR: [
+            { initiatorId: traderId, counterpartyId: reviewerId },
+            { initiatorId: reviewerId, counterpartyId: traderId },
+          ],
+        },
+        select: { id: true },
+      })
+      return trade?.id ?? null
+    }
+    return findCompletedTradeBetweenUsers(traderId, reviewerId)
+  }
+
+  const resolved =
+    tradeId?.trim() ??
+    (await findCompletedTradeBetweenUsers(traderId, reviewerId))
+
+  if (!resolved) {
+    throw new Error(
+      "You can leave feedback after completing a trade with this member."
+    )
+  }
+
+  const trade = await prisma.trade.findFirst({
+    where: {
+      id: resolved,
+      status: "completed",
+      OR: [
+        { initiatorId: traderId, counterpartyId: reviewerId },
+        { initiatorId: reviewerId, counterpartyId: traderId },
+      ],
+    },
+    select: { id: true },
+  })
+
+  if (!trade) {
+    throw new Error("Invalid or ineligible trade for this feedback.")
+  }
+
+  return trade.id
+}
+
+/**
  * Submit or update feedback for a trader. One review per (trader, reviewer).
  * Use from API route with auth; validates rating and prevents self-review.
  */
 export async function submitTraderFeedback(input: TraderFeedbackSubmissionInput) {
-  const { traderId, reviewerId, rating, comment } = input
+  const { traderId, reviewerId, rating, comment, tradeId } = input
 
   if (traderId === reviewerId) {
     throw new Error("You cannot leave feedback for yourself.")
   }
 
   validateRating(rating)
+
+  const linkedTradeId = await resolveFeedbackTradeId(
+    traderId,
+    reviewerId,
+    tradeId
+  )
 
   try {
     return await prisma.traderFeedback.upsert({
@@ -101,10 +193,12 @@ export async function submitTraderFeedback(input: TraderFeedbackSubmissionInput)
         reviewerId,
         rating,
         comment: comment?.trim() || null,
+        tradeId: linkedTradeId,
       },
       update: {
         rating,
         comment: comment?.trim() || null,
+        ...(linkedTradeId ? { tradeId: linkedTradeId } : {}),
       },
     })
   } catch (error) {
@@ -238,16 +332,21 @@ export async function getTraderFeedbackForProfile(
     includeList = true,
   } = options
 
-  const [summary, comments, viewerRecord, messageStats] = await Promise.all([
-    getTraderFeedbackSummary(traderId),
-    includeList
-      ? getTraderFeedbackList(traderId, { limit: listLimit, offset: listOffset })
-      : Promise.resolve([]),
-    viewerId && viewerId !== traderId
-      ? getTraderFeedbackByReviewer(traderId, viewerId)
-      : Promise.resolve(null),
-    loadTraderMessageReplyStats(traderId),
-  ])
+  const [summary, comments, viewerRecord, messageStats, tradeStats, eligibleTradeId] =
+    await Promise.all([
+      getTraderFeedbackSummary(traderId),
+      includeList
+        ? getTraderFeedbackList(traderId, { limit: listLimit, offset: listOffset })
+        : Promise.resolve([]),
+      viewerId && viewerId !== traderId
+        ? getTraderFeedbackByReviewer(traderId, viewerId)
+        : Promise.resolve(null),
+      loadTraderMessageReplyStats(traderId),
+      getTraderTradeStats(traderId),
+      viewerId && viewerId !== traderId
+        ? findCompletedTradeBetweenUsers(traderId, viewerId)
+        : Promise.resolve(null),
+    ])
 
   const viewerFeedback: TraderFeedbackViewerEntry | null = viewerRecord
     ? {
@@ -267,7 +366,23 @@ export async function getTraderFeedbackForProfile(
       totalReviews: summary.totalReviews,
     },
     messageStats,
+    tradeStats,
   })
 
-  return { summary, comments, viewerFeedback, reputation }
+  const requiresTrade = traderFeedbackRequiresCompletedTrade()
+  const canLeaveFeedback =
+    !viewerId ||
+    viewerId === traderId ||
+    Boolean(viewerFeedback) ||
+    !requiresTrade ||
+    Boolean(eligibleTradeId)
+
+  return {
+    summary,
+    comments,
+    viewerFeedback,
+    reputation,
+    canLeaveFeedback,
+    eligibleTradeId,
+  }
 }

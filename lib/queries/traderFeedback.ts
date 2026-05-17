@@ -19,6 +19,8 @@ function fallbackReputation(traderId: string): TraderReputationV1 {
     medianFirstReplyHours: null,
     replySampleCount: 0,
     badges: [],
+    completedTradeCount: 0,
+    tradeReliabilityPercent: null,
   }
 }
 
@@ -52,6 +54,8 @@ export interface TraderFeedbackResponse {
   comments: TraderFeedbackComment[]
   viewerFeedback: TraderFeedbackViewerEntry | null
   reputation: TraderReputationV1
+  canLeaveFeedback: boolean
+  eligibleTradeId: string | null
 }
 
 export interface TraderFeedbackQueryParams {
@@ -107,6 +111,8 @@ export async function getTraderFeedback(params: TraderFeedbackQueryParams): Prom
     comments: data.comments ?? [],
     viewerFeedback: data.viewerFeedback ?? null,
     reputation: data.reputation ?? fallbackReputation(traderId),
+    canLeaveFeedback: data.canLeaveFeedback ?? true,
+    eligibleTradeId: data.eligibleTradeId ?? null,
   }
 }
 

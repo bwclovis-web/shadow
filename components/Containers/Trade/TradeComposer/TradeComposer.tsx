@@ -48,6 +48,7 @@ type TradeComposerProps = {
   }
   traderReputationByUserId?: Record<string, TraderReputationV1>
   onPickListing?: (seed: TradeListingSeed, init: TradeComposerInit) => void
+  onViewProfileClick?: () => void
 }
 
 const TradeComposer = ({
@@ -58,6 +59,7 @@ const TradeComposer = ({
   pickPerfumeMeta,
   traderReputationByUserId,
   onPickListing,
+  onViewProfileClick,
 }: TradeComposerProps) => {
   const t = useTranslations("tradeComposer")
   const router = useRouter()
@@ -158,6 +160,7 @@ const TradeComposer = ({
           traderReputationByUserId={traderReputationByUserId}
           listResetKey={pickPerfumeMeta.perfumeId}
           onSelectListing={handlePick}
+          onViewProfileClick={onViewProfileClick}
         />
       </div>
     )
@@ -170,6 +173,11 @@ const TradeComposer = ({
         <TradeListingPreview
           seed={activeInit.seed}
           traderName={activeInit.counterpartyDisplayName}
+          reputationScore={
+            traderReputationByUserId?.[activeInit.seed.counterpartyId]?.score ??
+            null
+          }
+          onViewProfileClick={onViewProfileClick}
         />
       </div>
 

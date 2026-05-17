@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl"
 
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import ListingPhotos from "@/components/Molecules/ListingPhotos/ListingPhotos"
 import { getPerfumeTypeLabel } from "@/data/SelectTypes"
 import type { TradeListingSeed } from "@/types/trade"
@@ -12,6 +13,8 @@ type TradeListingPreviewProps = {
   seed: TradeListingSeed
   traderName?: string
   reputationScore?: number | null
+  /** Closes parent modal before navigating to the trader profile. */
+  onViewProfileClick?: () => void
   compact?: boolean
   className?: string
 }
@@ -20,12 +23,14 @@ const TradeListingPreview = ({
   seed,
   traderName,
   reputationScore,
+  onViewProfileClick,
   compact = false,
   className,
 }: TradeListingPreviewProps) => {
   const t = useTranslations("traderProfile")
   const tRep = useTranslations("traderProfile.reputation")
   const tListings = useTranslations("tradingPost.listings")
+  const tComposer = useTranslations("tradeComposer")
 
   const { preference, showPrice, showTradePrice } = getExchangeListingTradeDisplay({
     tradePreference: seed.tradePreference ?? null,
@@ -66,6 +71,18 @@ const TradeListingPreview = ({
               ({tRep("exchangeTrust", { score: reputationScore })})
             </span>
           ) : null}
+        </p>
+      ) : null}
+      {seed.counterpartyId && traderName && !compact ? (
+        <p className="mt-1">
+          <PrefetchLink
+            href={`/trader-profile/${seed.counterpartyId}`}
+            prefetch={false}
+            className="text-xs text-noir-blue underline decoration-noir-gold/40 hover:text-noir-gold-100"
+            onClick={() => onViewProfileClick?.()}
+          >
+            {tComposer("viewTraderProfile")}
+          </PrefetchLink>
         </p>
       ) : null}
       <p className={styleMerge("font-semibold text-noir-gold", compact ? "text-sm mt-1" : "text-lg mt-2")}>

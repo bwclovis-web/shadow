@@ -18,5 +18,12 @@ export const BADGE_TOP_REVIEWED_MIN_AVG = 4.5
 export const BADGE_RELIABLE_MIN_REVIEWS = 10
 export const BADGE_RELIABLE_MIN_AVG = 4.6
 
-export const FAST_RESPONDER_MIN_SAMPLES = 5
-export const FAST_RESPONDER_MAX_MEDIAN_HOURS = 48
+/** Minimum measured reply intervals (from last N conversation partners) */
+export const FAST_RESPONDER_MIN_SAMPLES = 3
+/** Median first-reply must be under this many hours (IMP-121) */
+export const FAST_RESPONDER_MAX_MEDIAN_HOURS = 24
+/** Only the most recent conversation partners are considered (IMP-121) */
+export const FAST_RESPONDER_MAX_THREADS = 10
+
+/** Minimum completed + self-cancelled trades before showing reliability % */
+export const MIN_TRADES_FOR_RELIABILITY_PERCENT = 1

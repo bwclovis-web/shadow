@@ -21,6 +21,8 @@ function mockReputation(
     medianFirstReplyHours: null,
     replySampleCount: 0,
     badges: [],
+    completedTradeCount: 0,
+    tradeReliabilityPercent: null,
     ...overrides,
   }
 }
@@ -139,6 +141,8 @@ describe("TraderFeedbackSection", () => {
         },
       ],
       viewerFeedback: null,
+      canLeaveFeedback: true,
+      eligibleTradeId: null,
     }
 
     mockUseTraderFeedback.mockReturnValue({
@@ -153,7 +157,7 @@ describe("TraderFeedbackSection", () => {
     expect(screen.getByText("Trader Feedback")).toBeInTheDocument()
     expect(screen.getByText("5/5")).toBeInTheDocument()
     expect(screen.getByText("Great trade experience!")).toBeInTheDocument()
-    expect(screen.getByText("alex-smith")).toBeInTheDocument()
+    expect(screen.getByText("Alex Smith")).toBeInTheDocument()
   })
 
   it("prompts user to sign in when viewer is missing", () => {
@@ -167,6 +171,8 @@ describe("TraderFeedbackSection", () => {
       reputation: mockReputation("trader-2"),
       comments: [],
       viewerFeedback: null,
+      canLeaveFeedback: true,
+      eligibleTradeId: null,
     }
 
     mockUseTraderFeedback.mockReturnValue({
@@ -200,6 +206,8 @@ describe("TraderFeedbackSection", () => {
         createdAt: new Date("2024-02-01").toISOString(),
         updatedAt: new Date("2024-02-01").toISOString(),
       },
+      canLeaveFeedback: true,
+      eligibleTradeId: "trade-1",
     }
 
     mockUseTraderFeedback.mockReturnValue({

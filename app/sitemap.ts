@@ -18,6 +18,7 @@ const STATIC_PATHS = [
   "/contact-us",
   "/how-we-work",
   "/terms-and-conditions",
+  "/community-policy",
   "/the-exchange",
   "/the-vault",
   "/houses",

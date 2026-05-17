@@ -5,6 +5,8 @@ import { prisma } from "@/lib/db"
 import type { ReputationMessageStatsInput } from "./computeReputation"
 import { computeTraderReputationV1 } from "./computeReputation"
 import type { TraderReputationV1 } from "./types"
+import { FAST_RESPONDER_MAX_THREADS } from "./v1-constants"
+import { getTraderTradeStats } from "./tradeStats.server"
 import { getTraderFeedbackSummary } from "@/models/traderFeedback.server"
 
 type MessageRow = {
@@ -25,9 +27,16 @@ function median(sorted: number[]): number | null {
   return sorted[mid]!
 }
 
+type ThreadReplySample = {
+  partnerId: string
+  hours: number
+  lastInboundAt: Date
+}
+
 /**
- * Median hours from first inbound contact to trader's first reply per counterparty.
- * See docs/reputation-v1-spec.md.
+ * Median hours from first inbound contact to trader's first reply per counterparty,
+ * limited to the last {@link FAST_RESPONDER_MAX_THREADS} conversation partners by
+ * most recent inbound message. See docs/reputation-v1-spec.md.
  */
 export function computeReplyStatsFromMessages(
   traderId: string,
@@ -45,9 +54,9 @@ export function computeReplyStatsFromMessages(
     else byPartner.set(partner, [m])
   }
 
-  const deltasHours: number[] = []
+  const threadSamples: ThreadReplySample[] = []
 
-  for (const [, rows] of byPartner) {
+  for (const [partnerId, rows] of byPartner) {
     const chronological = [...rows].sort(
       (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
     )
@@ -56,17 +65,26 @@ export function computeReplyStatsFromMessages(
     const inbound = chronological[firstInboundIdx]!
     const afterInbound = chronological.slice(firstInboundIdx + 1)
     const reply = afterInbound.find(
-      (m) => m.senderId === traderId && m.recipientId !== traderId
+      (m) => m.senderId === traderId && m.recipientId === partnerId
     )
     if (!reply) continue
     const hours =
       (reply.createdAt.getTime() - inbound.createdAt.getTime()) / (1000 * 60 * 60)
     if (hours >= 0 && Number.isFinite(hours)) {
-      deltasHours.push(hours)
+      threadSamples.push({
+        partnerId,
+        hours,
+        lastInboundAt: inbound.createdAt,
+      })
     }
   }
 
-  deltasHours.sort((a, b) => a - b)
+  const recentThreads = [...threadSamples]
+    .sort((a, b) => b.lastInboundAt.getTime() - a.lastInboundAt.getTime())
+    .slice(0, FAST_RESPONDER_MAX_THREADS)
+
+  const deltasHours = recentThreads.map((t) => t.hours).sort((a, b) => a - b)
+
   return {
     medianFirstReplyHours: median(deltasHours),
     replySampleCount: deltasHours.length,
@@ -108,9 +126,10 @@ export async function loadTraderReputationsForUserIds(
 
   if (unique.length === 0) return result
 
-  const summaries = await Promise.all(
-    unique.map((id) => getTraderFeedbackSummary(id))
-  )
+  const [summaries, tradeStatsList] = await Promise.all([
+    Promise.all(unique.map((id) => getTraderFeedbackSummary(id))),
+    Promise.all(unique.map((id) => getTraderTradeStats(id))),
+  ])
 
   let messages: MessageRow[] = []
   try {
@@ -149,6 +168,7 @@ export async function loadTraderReputationsForUserIds(
   for (let i = 0; i < unique.length; i++) {
     const id = unique[i]!
     const summary = summaries[i]!
+    const tradeStats = tradeStatsList[i]!
     const combinedMessages = messagesByTrader.get(id) ?? []
     const messageStats = computeReplyStatsFromMessages(id, combinedMessages)
     result.set(
@@ -160,6 +180,7 @@ export async function loadTraderReputationsForUserIds(
           totalReviews: summary.totalReviews,
         },
         messageStats,
+        tradeStats,
       })
     )
   }

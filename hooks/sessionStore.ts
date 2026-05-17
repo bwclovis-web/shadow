@@ -44,7 +44,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         modalData: null,
         triggerId: null,
       })
-      document.documentElement.style.overflow = "auto"
+      document.documentElement.style.removeProperty("overflow")
       id.current?.focus()
       return
     }
@@ -82,9 +82,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       triggerId: null,
     })
 
-    // Restore body overflow
-    const root = document.documentElement
-    root.style.overflow = "auto"
+    document.documentElement.style.removeProperty("overflow")
   },
 
   setModalData: (data: ModalData | null) => {

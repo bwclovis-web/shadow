@@ -4,11 +4,14 @@ import { useTranslations } from "next-intl"
 
 import TradeComposer from "@/components/Containers/Trade/TradeComposer/TradeComposer"
 import type { TradeComposerModalData } from "@/hooks/useTradeComposerModal"
+import type { TraderReputationV1 } from "@/services/reputation/types"
 import { getTradeCtaLabelKey } from "@/types/trade"
 
 type TradeComposerModalProps = {
   data: TradeComposerModalData
   onClose?: () => void
+  onViewProfileClick?: () => void
+  traderReputationByUserId?: Record<string, TraderReputationV1>
   stayOnPage?: boolean
   onListingPicked?: (init: import("@/types/trade").TradeComposerInit) => void
 }
@@ -16,6 +19,8 @@ type TradeComposerModalProps = {
 const TradeComposerModal = ({
   data,
   onClose,
+  onViewProfileClick,
+  traderReputationByUserId,
   stayOnPage = false,
   onListingPicked,
 }: TradeComposerModalProps) => {
@@ -40,6 +45,7 @@ const TradeComposerModal = ({
           pickListings={data.listingsToPick}
           pickPerfumeMeta={data.perfumeMeta}
           traderReputationByUserId={data.traderReputationByUserId}
+          onViewProfileClick={onViewProfileClick}
           onPickListing={(_seed, init) => {
             onListingPicked?.(init)
           }}
@@ -62,6 +68,8 @@ const TradeComposerModal = ({
       <TradeComposer
         init={data.init}
         onSuccess={onClose}
+        onViewProfileClick={onViewProfileClick}
+        traderReputationByUserId={traderReputationByUserId}
         stayOnPage={stayOnPage}
       />
     </div>

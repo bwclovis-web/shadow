@@ -417,6 +417,8 @@ const TheExchangeClient = ({
               <TradeComposerModal
                 data={composerData}
                 onClose={closeComposer}
+                onViewProfileClick={closeComposer}
+                traderReputationByUserId={traderReputationByUserId}
                 onListingPicked={init => {
                   closeComposer()
                   setTimeout(() => openComposer(init), 0)

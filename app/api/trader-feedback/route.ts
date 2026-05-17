@@ -37,16 +37,34 @@ export async function GET(request: NextRequest) {
       viewerId = v
     }
 
-    const { summary, comments, viewerFeedback, reputation } =
-      await getTraderFeedbackForProfile(traderId, viewerId && viewerId !== traderId ? viewerId : null, {
+    const {
+      summary,
+      comments,
+      viewerFeedback,
+      reputation,
+      canLeaveFeedback,
+      eligibleTradeId,
+    } = await getTraderFeedbackForProfile(
+      traderId,
+      viewerId && viewerId !== traderId ? viewerId : null,
+      {
         includeList: includeComments,
         ...(includeComments && {
           listLimit: pagination.limit,
           listOffset: pagination.skip,
         }),
-      })
+      }
+    )
 
-    return NextResponse.json({ success: true, summary, comments, viewerFeedback, reputation })
+    return NextResponse.json({
+      success: true,
+      summary,
+      comments,
+      viewerFeedback,
+      reputation,
+      canLeaveFeedback,
+      eligibleTradeId,
+    })
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Failed to fetch feedback"
     return NextResponse.json({ error: msg }, { status: 400 })
@@ -67,6 +85,7 @@ export async function POST(request: NextRequest) {
       const traderId = formData.required("traderId")
       const rating = formData.getInt("rating")
       const comment = formData.get("comment")
+      const tradeId = formData.get("tradeId")?.trim() || null
       if (!rating) {
         return NextResponse.json({ error: "Rating is required" }, { status: 400 })
       }
@@ -75,6 +94,7 @@ export async function POST(request: NextRequest) {
         reviewerId: authResult.user!.id,
         rating,
         comment,
+        tradeId,
       })
       const summary = await getTraderFeedbackSummary(traderId)
       return NextResponse.json({ success: true, message: "Feedback submitted", data: { feedback, summary } })

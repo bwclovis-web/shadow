@@ -66,7 +66,7 @@ const ExchangeListingRow = ({
           href={`/trader-profile/${listing.userId}`}
           prefetch={false}
           className="text-base font-semibold text-noir-blue underline decoration-noir-gold/40 hover:text-noir-gold-100"
-          onClick={onViewProfileClick}
+          onClick={() => onViewProfileClick?.()}
         >
           {traderName}
         </PrefetchLink>

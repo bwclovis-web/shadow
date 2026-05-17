@@ -1111,6 +1111,43 @@
     }
     
   },
+  "siteFooter": {
+    "copyright": "© {year} Shadow and Sillage",
+    "navAria": "Site links",
+    "communityPolicy": "Community policy",
+    "terms": "Terms and conditions"
+  },
+  "communityPolicy": {
+    "meta": {
+      "title": "Community Policy - Shadow and Sillage",
+      "description": "Shipping expectations, dispute process, and community rules for traders."
+    },
+    "heading": "Community policy",
+    "subheading": "Trading expectations on Shadow and Sillage",
+    "shipping": {
+      "heading": "Shipping expectations",
+      "contentOne": "All payment and shipping are arranged off-platform between traders. Agree on carriers, packaging, and timelines in your messages before anyone ships.",
+      "contentTwo": "Ship within a reasonable window after both sides confirm the trade (typically within one week unless you agree otherwise). Share tracking when available.",
+      "contentThree": "Package bottles securely: use padding, seal decants, and disclose any known flaws before shipping."
+    },
+    "disputes": {
+      "heading": "Dispute process",
+      "contentOne": "If something goes wrong, message the other trader first and try to resolve it directly.",
+      "contentTwo": "If you cannot resolve the issue, use Report on their trader profile or, during an active trade, from the trade card. Include photos and a clear description.",
+      "contentThree": "Our team reviews reports and may issue strikes or account actions. We do not hold funds or guarantee refunds — we help document disputes and enforce community rules."
+    },
+    "community": {
+      "heading": "Community rules",
+      "contentOne": "Be honest about bottle condition, volume remaining, and authenticity. Listings should include accurate photos.",
+      "contentTwo": "Harassment, scams, and no-ship behavior are not tolerated. Repeated issues affect reputation and may lead to suspension.",
+      "contentThree": "Leave feedback only after a completed trade so reviews reflect real exchanges."
+    },
+    "offPlatform": {
+      "heading": "Off-platform payments",
+      "contentOne": "Shadow and Sillage connects traders; we never process payments or shipping labels.",
+      "contentTwo": "Use payment methods you trust, keep message records on-platform when possible, and never share passwords or unrelated financial details."
+    }
+  },
   "termsAndConditions": {
     "meta": {
       "title": "Terms and Conditions - Shadow and Sillage",
@@ -1230,6 +1267,7 @@
     "proposeSwap": "Propose swap",
     "connectAboutBottle": "Connect about this bottle",
     "subheading": "With {traderName}",
+    "viewTraderProfile": "View trader profile",
     "pickTitle": "Choose a listing — {name}",
     "pickSubheading": "Select which bottle you want to make an offer on.",
     "pickListing": "Each trader may list different amounts and prices.",
@@ -1264,6 +1302,7 @@
     "cancel": "Cancel trade",
     "trackingOptional": "Tracking (optional)",
     "error": "Something went wrong.",
+    "communityPolicyLink": "Shipping, disputes & community rules",
     "status": {
       "draft": "Draft",
       "pending": "Offer pending",
@@ -1282,6 +1321,11 @@
     },
     "heading": "Trader {traderName}",
     "subheading": "Trader Profile of {traderName}",
+    "headerStats": {
+      "ariaLabel": "Trader membership and trade history",
+      "memberSince": "Member since",
+      "completedTrades": "Completed trades"
+    },
     "aboutHeading": "About",
     "regionChip": "{region}",
     "social": {
@@ -1332,8 +1376,12 @@
       "explainTitle": "What this means",
       "explainIntro": "This score is rule-based and visible to everyone. It summarizes how other members rate this trader and how quickly they usually answer contact messages.",
       "explainScore": "We show a number only after at least {minReviews} peer reviews. When enough reply-timing data exists, peer ratings count for 75% of the score and typical first-reply speed for 25%; otherwise the score reflects ratings only.",
-      "explainBadges": "Badges are independent: Top reviewed means at least 5 reviews with a 4.5+ average. Reliable trader means at least 10 reviews with a 4.6+ average. Fast responder means at least 5 measured reply intervals with a median under 48 hours.",
-      "explainMessaging": "Reply times are inferred from contact messages; there is no formal thread id, so timing is an approximate signal.",
+      "explainBadges": "Badges are independent: Top reviewed means at least 5 reviews with a 4.5+ average. Reliable trader means at least 10 reviews with a 4.6+ average. Fast responder means a median first-reply under 24 hours across your last 10 conversation partners (minimum 3 measured replies).",
+      "explainTradeReliability": "Trade reliability is completed trades divided by completed plus trades this member cancelled. Declined offers are not counted.",
+      "explainMessaging": "Reply times use contact messages grouped by conversation partner (no formal thread id), considering only the 10 most recent partners.",
+      "tradeReliabilityLabel": "Trade reliability",
+      "tradeReliabilityValue": "{percent}%",
+      "tradeReliabilityInsufficient": "Not enough trade history for a reliability score yet.",
       "exchangeTrust": "{score}/100"
     },
     "feedback": {
@@ -1357,6 +1405,7 @@
       "updateButton": "Update feedback",
       "deleteButton": "Remove feedback",
       "loginPrompt": "Sign in to leave feedback and help build community trust.",
+      "requiresCompletedTrade": "Complete a trade with this member before leaving feedback.",
       "validation": {
         "ratingRequired": "Rating is required before submitting."
       }

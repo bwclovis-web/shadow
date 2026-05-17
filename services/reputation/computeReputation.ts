@@ -1,4 +1,5 @@
 import type { ReputationBadgeId, TraderReputationV1 } from "./types"
+import type { TraderTradeStats } from "./tradeStats.server"
 import {
   BADGE_RELIABLE_MIN_AVG,
   BADGE_RELIABLE_MIN_REVIEWS,
@@ -8,6 +9,7 @@ import {
   FAST_RESPONDER_MIN_SAMPLES,
   MIN_REVIEWS_FOR_SCORE,
   MIN_REVIEWS_FULL_CONFIDENCE,
+  MIN_TRADES_FOR_RELIABILITY_PERCENT,
   REPUTATION_V1_VERSION,
   SCORE_FEEDBACK_WEIGHT,
   SCORE_RESPONSE_WEIGHT,
@@ -74,12 +76,20 @@ function collectBadges(
 /**
  * Pure v1 reputation from feedback summary + pre-computed message reply stats.
  */
+const defaultTradeStats = (): TraderTradeStats => ({
+  completedCount: 0,
+  cancelledByTraderCount: 0,
+  tradeReliabilityPercent: null,
+})
+
 export function computeTraderReputationV1(input: {
   feedback: ReputationFeedbackInput
   messageStats: ReputationMessageStatsInput
+  tradeStats?: TraderTradeStats
 }): TraderReputationV1 {
   const { traderId, averageRating, totalReviews } = input.feedback
   const { medianFirstReplyHours, replySampleCount } = input.messageStats
+  const tradeStats = input.tradeStats ?? defaultTradeStats()
 
   let score: number | null = null
   let insufficientDataReason: TraderReputationV1["insufficientDataReason"] = "none"
@@ -111,6 +121,10 @@ export function computeTraderReputationV1(input: {
     replySampleCount
   )
 
+  const showReliability =
+    tradeStats.completedCount + tradeStats.cancelledByTraderCount >=
+    MIN_TRADES_FOR_RELIABILITY_PERCENT
+
   return {
     version: REPUTATION_V1_VERSION,
     traderId,
@@ -121,5 +135,9 @@ export function computeTraderReputationV1(input: {
     medianFirstReplyHours,
     replySampleCount,
     badges,
+    completedTradeCount: tradeStats.completedCount,
+    tradeReliabilityPercent: showReliability
+      ? tradeStats.tradeReliabilityPercent
+      : null,
   }
 }

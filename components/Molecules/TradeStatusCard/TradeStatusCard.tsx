@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { useTranslations } from "next-intl"
@@ -121,6 +122,15 @@ const TradeStatusCard = ({
           {trade.notes}
         </p>
       ) : null}
+
+      <p className="mt-2 text-xs text-noir-gold-500">
+        <Link
+          href="/community-policy"
+          className="text-noir-gold underline-offset-2 hover:text-noir-light hover:underline"
+        >
+          {t("communityPolicyLink")}
+        </Link>
+      </p>
 
       {error ? (
         <p className="mt-2 text-sm text-red-400">{error}</p>
