@@ -54,6 +54,7 @@ export type SearchTypeaheadProps<T extends TypeaheadItem = TypeaheadItem> = {
   disabled?: boolean
   name?: string
   autoComplete?: string
+  autoFocus?: boolean
   "data-testid"?: string
 }
 
@@ -119,6 +120,7 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
   disabled = false,
   name,
   autoComplete = "off",
+  autoFocus = false,
   "data-testid": dataTestId,
 }: SearchTypeaheadProps<T>) {
   const listboxId = listboxIdProp ?? `${inputId}-listbox`
@@ -158,6 +160,11 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
   useEffect(() => {
     setActiveIndex(-1)
   }, [results, isLoading, error])
+
+  useEffect(() => {
+    if (!autoFocus) return
+    inputRef.current?.focus()
+  }, [autoFocus])
 
   const selectableCount = results.length
   const coords = useTypeaheadPosition(listOpen, inputRef)

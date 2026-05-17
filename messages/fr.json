@@ -722,7 +722,8 @@
     "exchangeNewThisWeek": "{count, plural, one {# nouvelle annonce cette semaine} other {# nouvelles annonces cette semaine}}",
     "available": "La bourse d'échange",
     "messages": "Messages",
-    "admin": "Le profil",
+    "profile": "Profil",
+    "admin": "Admin",
     "logout": "Déconnexion",
     "signIn": "Connexion",
     "about": "À propos",
@@ -1452,5 +1453,23 @@
     "previousPhoto": "Photo précédente",
     "nextPhoto": "Photo suivante",
     "closeLightbox": "Fermer"
+  },
+  "onboarding": {
+    "bannerLabel": "Premiers pas",
+    "title": "Bienvenue — terminez la configuration de votre profil",
+    "subtitle": "Trois étapes rapides pour profiter au maximum de l'échange.",
+    "skip": "Passer pour l'instant",
+    "done": "Terminé",
+    "steps": {
+      "quiz": "Faire le questionnaire parfum",
+      "bottle": "Ajouter votre premier flacon",
+      "matches": "Trouver votre première correspondance"
+    },
+    "matches": {
+      "empty": "Aucune annonce sur l'échange ne correspond encore à votre profil. Revenez plus tard ou parcourez l'échange."
+    },
+    "errors": {
+      "mustSignIn": "Vous devez être connecté."
+    }
   }
 }

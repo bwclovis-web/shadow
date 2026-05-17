@@ -42,7 +42,7 @@ export default function HomeClient({
 
       gsap.from(".hero-title", {
         opacity: 0,
-        y: 20,
+        y: 30,
         duration: 1.2,
         ease: "power2.out",
       })

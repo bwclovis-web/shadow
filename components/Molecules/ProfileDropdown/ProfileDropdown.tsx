@@ -6,14 +6,14 @@ import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { FaChevronDown } from "react-icons/fa"
 
-import { adminNavigation } from "@/data/navigation"
+import { getProfileNavigation } from "@/data/navigation"
 import {
   getNavigationDropdownStyles,
   type NavigationDropdownVariant,
 } from "@/components/Molecules/NavigationDropdown/navigation-dropdown-styles"
 import { styleMerge } from "@/utils/styleUtils"
 
-interface AdminDropdownProps {
+interface ProfileDropdownProps {
   className?: string
   variant?: NavigationDropdownVariant
   user?: {
@@ -24,19 +24,17 @@ interface AdminDropdownProps {
   onNavClick?: () => void
 }
 
-const AdminDropdown = ({
+const ProfileDropdown = ({
   className,
   variant = "desktop",
   user,
   onNavClick,
-}: AdminDropdownProps) => {
+}: ProfileDropdownProps) => {
   const pathname = usePathname()
   const tNav = useTranslations("navigation")
-  const tAdmin = useTranslations("admin")
+  const tProfile = useTranslations("profile")
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-
-  const isAdmin = user?.role === "admin" || user?.role === "editor"
 
   const { baseClasses, dropdownClasses, linkClasses, activeLinkClasses } =
     getNavigationDropdownStyles(variant)
@@ -62,21 +60,25 @@ const AdminDropdown = ({
     onNavClick?.()
   }
 
-  if (!isAdmin) {
+  if (!user?.id) {
     return null
   }
+
+  const profileItems = getProfileNavigation({
+    id: user.id,
+    username: user.username ?? null,
+  })
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/")
 
-  const menuPaths = adminNavigation.map((item) => item.path)
-  const isMenuActive = menuPaths.some((path) => isActive(path))
+  const isMenuActive = profileItems.some((item) => isActive(item.path))
 
   return (
     <div
       ref={dropdownRef}
       className={styleMerge("relative", className)}
-      data-cy="AdminDropdown"
+      data-cy="ProfileDropdown"
     >
       <button
         type="button"
@@ -91,7 +93,7 @@ const AdminDropdown = ({
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
-        {tNav("admin")}
+        {tNav("profile")}
         <FaChevronDown
           className={styleMerge(
             "transition-transform duration-200",
@@ -104,7 +106,7 @@ const AdminDropdown = ({
       {isOpen && (
         <div className={dropdownClasses}>
           <ul className="py-2">
-            {adminNavigation.map((item) => (
+            {profileItems.map((item) => (
               <li key={item.id}>
                 <Link
                   href={item.path}
@@ -114,7 +116,7 @@ const AdminDropdown = ({
                     isActive(item.path) && activeLinkClasses
                   )}
                 >
-                  {tAdmin("navigation." + item.key)}
+                  {tProfile("navigation." + item.key)}
                 </Link>
               </li>
             ))}
@@ -125,4 +127,4 @@ const AdminDropdown = ({
   )
 }
 
-export default AdminDropdown
+export default ProfileDropdown

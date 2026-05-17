@@ -187,13 +187,15 @@ _All enums already exist — this is UI only, no schema change._
 
 _These are the features no mobile-only competitor can easily replicate. They compound over time._
 
-### 3A — Onboarding Flow
+### 3A — Onboarding Flow ✅
 
-- [ ] **IMP-200** Add onboarding banner component: shown on first login (when `onboardingCompletedAt` is null); dismissible with "Skip" at any step
-- [ ] **IMP-201** Step 1 — Take the quiz: surface the existing scent quiz as step 1 of onboarding; mark step complete on quiz submission
-- [ ] **IMP-202** Step 2 — Add your first bottle: open listing editor pre-focused on the perfume search field; mark step complete when first `UserPerfume` is created
-- [ ] **IMP-203** Step 3 — Find your first match: run wishlist + scent profile overlap query; show top 3 results with "Connect" CTAs; mark step complete on view
-- [ ] **IMP-204** Set `User.onboardingCompletedAt` when all 3 steps are done (or user explicitly dismisses); remove banner permanently
+- [x] **IMP-200** Add onboarding banner component: shown on first login (when `onboardingCompletedAt` is null); dismissible with "Skip" at any step
+- [x] **IMP-201** Step 1 — Take the quiz: surface the existing scent quiz as step 1 of onboarding; mark step complete on quiz submission
+- [x] **IMP-202** Step 2 — Add your first bottle: open listing editor pre-focused on the perfume search field; mark step complete when first `UserPerfume` is created
+- [x] **IMP-203** Step 3 — Find your first match: run wishlist + scent profile overlap query; show top 3 results with "Connect" CTAs; mark step complete on view
+- [x] **IMP-204** Set `User.onboardingCompletedAt` when all 3 steps are done (or user explicitly dismisses); remove banner permanently
+
+**Shipped in:** `models/onboarding.server.ts`, `app/onboarding/actions.ts`, `components/Onboarding/OnboardingBanner.tsx`, `OnboardingBannerSlot.tsx` (root layout); step 1 via `ScentProfile.lastQuizAt` + `/scent-quiz?from=onboarding`; step 2 via `/{slug}/profile/my-scents?onboarding=add-bottle` + `SearchBar`/`SearchTypeahead` `autoFocus`; step 3 via `onboardingMatchesViewedAt` + expandable matches with `TradeComposerModal`; `syncOnboardingCompletion` on quiz submit and `addUserPerfume`; migration `20260517120000_add_onboarding_matches_viewed_at`; i18n `onboarding.*`.
 
 ### 3B — Scent DNA Card
 

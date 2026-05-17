@@ -722,7 +722,8 @@
     "exchangeNewThisWeek": "{count, plural, one {# anuncio nuevo esta semana} other {# anuncios nuevos esta semana}}",
     "available": "El Intercambio",
     "messages": "Mensajes",
-    "admin": "El Perfil",
+    "profile": "Perfil",
+    "admin": "Admin",
     "logout": "Cerrar Sesión",
     "signIn": "Iniciar Sesión",
     "about": "Acerca de",
@@ -1452,5 +1453,23 @@
     "previousPhoto": "Foto anterior",
     "nextPhoto": "Foto siguiente",
     "closeLightbox": "Cerrar"
+  },
+  "onboarding": {
+    "bannerLabel": "Primeros pasos",
+    "title": "Bienvenido — termina de configurar tu perfil",
+    "subtitle": "Tres pasos rápidos para sacar el máximo partido al intercambio.",
+    "skip": "Omitir por ahora",
+    "done": "Listo",
+    "steps": {
+      "quiz": "Haz el cuestionario de aromas",
+      "bottle": "Añade tu primer frasco",
+      "matches": "Encuentra tu primera coincidencia"
+    },
+    "matches": {
+      "empty": "Aún no hay listados en el intercambio que coincidan con tu perfil. Vuelve más tarde o explora el intercambio."
+    },
+    "errors": {
+      "mustSignIn": "Debes iniciar sesión."
+    }
   }
 }

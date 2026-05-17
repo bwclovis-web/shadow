@@ -21,6 +21,7 @@ interface AddToCollectionModalProps {
   onOptimisticAddToCollection?: (item: OptimisticCollectionItem) => void
   /** Called when optimistic add should be rolled back. */
   onOptimisticAddRollback?: (tempId: string) => void
+  autoFocusSearch?: boolean
 }
 
 const AddToCollectionModal = ({
@@ -30,6 +31,7 @@ const AddToCollectionModal = ({
   onAddedToCollection,
   onOptimisticAddToCollection,
   onOptimisticAddRollback,
+  autoFocusSearch = false,
 }: AddToCollectionModalProps) => {
   const { modalOpen, toggleModal, modalId } = useSessionStore()
   const modalTrigger = useRef<HTMLButtonElement>(null)
@@ -62,6 +64,7 @@ const AddToCollectionModal = ({
             onAddedToCollection={onAddedToCollection}
             onOptimisticAddToCollection={onOptimisticAddToCollection}
             onOptimisticAddRollback={onOptimisticAddRollback}
+            autoFocusSearch={autoFocusSearch}
           />
         </Modal>
       )}

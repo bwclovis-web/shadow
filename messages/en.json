@@ -827,7 +827,8 @@
     "available": "The Exchange",
     "messages": "Messages",
     "tradeAlertsUnread": "{count, plural, one {# unread trade update} other {# unread trade updates}}",
-    "admin": "The Profile",
+    "profile": "Profile",
+    "admin": "Admin",
     "logout": "Log Out",
     "signIn": "Sign In",
     "about": "About",
@@ -1627,5 +1628,23 @@
     "previousPhoto": "Previous photo",
     "nextPhoto": "Next photo",
     "closeLightbox": "Close"
+  },
+  "onboarding": {
+    "bannerLabel": "Getting started",
+    "title": "Welcome — finish setting up your profile",
+    "subtitle": "Three quick steps to get the most from the exchange.",
+    "skip": "Skip for now",
+    "done": "Done",
+    "steps": {
+      "quiz": "Take the scent quiz",
+      "bottle": "Add your first bottle",
+      "matches": "Find your first match"
+    },
+    "matches": {
+      "empty": "No exchange listings match your profile yet. Check back after more traders list bottles, or browse the exchange."
+    },
+    "errors": {
+      "mustSignIn": "You must be signed in."
+    }
   }
 }

@@ -25,6 +25,7 @@ interface MyScentsModalProps {
   onOptimisticAddToCollection?: (item: OptimisticCollectionItem) => void
   /** Called when optimistic add should be rolled back. */
   onOptimisticAddRollback?: (tempId: string) => void
+  autoFocusSearch?: boolean
 }
 
 const MyScentsModal = ({
@@ -32,6 +33,7 @@ const MyScentsModal = ({
   onAddedToCollection,
   onOptimisticAddToCollection,
   onOptimisticAddRollback,
+  autoFocusSearch = false,
 }: MyScentsModalProps) => {
   const { modalData } = useSessionStore()
   const t = useTranslations("myScents.modal")
@@ -66,6 +68,7 @@ const MyScentsModal = ({
             variant="animated"
             searchType="perfume"
             className="mt-4"
+            autoFocus={autoFocusSearch}
             action={item => handleClick(item as unknown as UserPerfumeI)}
           />
         )}

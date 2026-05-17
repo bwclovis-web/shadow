@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl"
 
 import AboutDropdown from "@/components/Molecules/AboutDropdown/AboutDropdown"
 import AdminDropdown from "@/components/Molecules/AdminDropdown/AdminDropdown"
+import ProfileDropdown from "@/components/Molecules/ProfileDropdown/ProfileDropdown"
 import { useDirectMessageUnreadCount } from "@/components/Molecules/DirectMessageUnread/DirectMessageUnreadProvider"
 import { useTradeAlertUnreadCount } from "@/components/Molecules/TradeAlertUnread/TradeAlertUnreadProvider"
 import { mainNavigation } from "@/data/navigation"
@@ -121,10 +122,23 @@ export const MainNavigationLinks = ({
           </PrefetchLink>
         </li>
       )}
-      {variant === "mobile" && user && (
-        <li>
-          <AdminDropdown user={user} onNavClick={onNavClick} />
-        </li>
+      {user && (
+        <>
+          <li>
+            <ProfileDropdown
+              user={user}
+              variant={aboutVariant}
+              onNavClick={onNavClick}
+            />
+          </li>
+          <li>
+            <AdminDropdown
+              user={user}
+              variant={aboutVariant}
+              onNavClick={onNavClick}
+            />
+          </li>
+        </>
       )}
     </>
   )

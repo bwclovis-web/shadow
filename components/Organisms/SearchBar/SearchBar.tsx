@@ -23,6 +23,7 @@ interface SearchBarProps
   searchType: "perfume-house" | "perfume"
   placeholder?: string
   action?: (item: SearchBarItem) => void
+  autoFocus?: boolean
 }
 
 export default function SearchBar({
@@ -31,6 +32,7 @@ export default function SearchBar({
   action,
   placeholder,
   variant,
+  autoFocus,
 }: SearchBarProps) {
   const tCommon = useTranslations("common")
   const tHome = useTranslations("home")
@@ -83,6 +85,7 @@ export default function SearchBar({
             formatError: (err: string) =>
               mounted ? tCommon("searchError", { error: err }) : `Error: ${err}`,
           }}
+          autoFocus={autoFocus}
         />
       </form>
     </div>

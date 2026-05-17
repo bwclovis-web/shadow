@@ -16,6 +16,9 @@
   --color-noir-blue: oklch(0.6647 0.1795 256.24);
   /* Cool neutral for scrollbars / subtle cold accents */
   --color-noir-cold: oklch(0.52 0.06 250);
+  /* Fixed header clearance (mobile bar / desktop two-row nav; no admin sub-bar) */
+  --spacing-site-header-mobile: 5.5rem;
+  --spacing-site-header-desktop: 6.5rem;
 }
 
 /* Performance optimizations - optimized selectors and properties */

@@ -722,7 +722,8 @@
     "exchangeNewThisWeek": "{count, plural, one {# nuovo annuncio questa settimana} other {# nuovi annunci questa settimana}}",
     "available": "Il mercato",
     "messages": "Messaggi",
-    "admin": "Il profilo",
+    "profile": "Profilo",
+    "admin": "Admin",
     "logout": "Esci",
     "signIn": "Accedi",
     "about": "Informazioni",
@@ -1452,5 +1453,23 @@
     "previousPhoto": "Foto precedente",
     "nextPhoto": "Foto successiva",
     "closeLightbox": "Chiudi"
+  },
+  "onboarding": {
+    "bannerLabel": "Per iniziare",
+    "title": "Benvenuto — completa il profilo",
+    "subtitle": "Tre passaggi rapidi per sfruttare al meglio lo scambio.",
+    "skip": "Salta per ora",
+    "done": "Fatto",
+    "steps": {
+      "quiz": "Fai il quiz dei profumi",
+      "bottle": "Aggiungi la tua prima bottiglia",
+      "matches": "Trova la tua prima corrispondenza"
+    },
+    "matches": {
+      "empty": "Nessun annuncio in borsa corrisponde ancora al tuo profilo. Torna più tardi o esplora la borsa."
+    },
+    "errors": {
+      "mustSignIn": "Devi accedere."
+    }
   }
 }

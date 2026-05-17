@@ -9,6 +9,7 @@ import {
   useMemo,
   useState,
 } from "react"
+import { useRouter } from "next/navigation"
 
 import { Button, VooDooLink } from "@/components/Atoms/Button"
 import { SeasonSelectionToggleRow } from "@/components/Containers/Perfume/PerfumeSeasonVote"
@@ -58,6 +59,7 @@ export default function ScentQuizClient({
   initialBrowsingStyle,
 }: ScentQuizClientProps) {
   const t = useTranslations("quiz")
+  const router = useRouter()
   const [state, formAction, isPending] = useActionState<
     ScentQuizActionState,
     FormData
@@ -154,6 +156,12 @@ export default function ScentQuizClient({
   const setSeasonSelection = useCallback((next: SeasonSelection) => {
     setSelectedSeasonIds(new Set(SEASON_KEYS.filter((k) => next[k])))
   }, [])
+
+  useEffect(() => {
+    if (state?.success) {
+      router.refresh()
+    }
+  }, [state?.success, router])
 
   if (state?.success) {
     return (

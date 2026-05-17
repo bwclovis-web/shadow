@@ -17,6 +17,7 @@ import { getUnreadAlertCount, getUnreadTradeAlertCount, getUserAlerts } from '@/
 import { TradeAlertUnreadProvider } from '@/components/Molecules/TradeAlertUnread/TradeAlertUnreadProvider'
 import { UserAlertsProvider } from '@/components/Molecules/UserAlertsProvider/UserAlertsProvider'
 import SiteFooter from '@/components/Organisms/SiteFooter/SiteFooter'
+import OnboardingBannerSlot from '@/components/Onboarding/OnboardingBannerSlot'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -112,6 +113,7 @@ export default async function RootLayout({
                   exchangeNewThisWeekCount={exchangeNewThisWeekCount}
                 />
                 <Providers>
+                  {user?.id ? <OnboardingBannerSlot userId={user.id} /> : null}
                   {children}
                   <SiteFooter />
                 </Providers>

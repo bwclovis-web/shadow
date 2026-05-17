@@ -24,7 +24,8 @@ model User {
   redditUsername        String?
   strikeCount           Int                    @default(0)
   isBanned              Boolean                @default(false)
-  onboardingCompletedAt DateTime?
+  onboardingCompletedAt       DateTime?
+  onboardingMatchesViewedAt   DateTime?
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
   role                  UserRole               @default(user)

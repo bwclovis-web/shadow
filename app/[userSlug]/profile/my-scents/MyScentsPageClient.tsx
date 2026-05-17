@@ -6,6 +6,8 @@ import Image from "next/image"
 import { Link } from "next-view-transitions"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 
+import { useSessionStore } from "@/hooks/sessionStore"
+
 import { Button } from "@/components/Atoms/Button"
 import Select from "@/components/Atoms/Select/Select"
 import { PaginationBar } from "@/components/Molecules/PaginationBar"
@@ -271,7 +273,19 @@ const MyScentsPageClient = ({
   const pageSize = useResponsivePageSize()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const openModal = useSessionStore(s => s.openModal)
   const basePath = userSlug ? `/${userSlug}/profile/my-scents` : "/profile/my-scents"
+  const [autoFocusAddSearch, setAutoFocusAddSearch] = useState(false)
+
+  useEffect(() => {
+    if (searchParams.get("onboarding") !== "add-bottle") return
+    setAutoFocusAddSearch(true)
+    openModal("add-scent", { action: "create" })
+    const next = new URLSearchParams(searchParams.toString())
+    next.delete("onboarding")
+    const qs = next.toString()
+    router.replace(`${basePath}${qs ? `?${qs}` : ""}`, { scroll: false })
+  }, [openModal, router, searchParams, basePath])
 
   const totalCount = filteredData.length
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
@@ -314,6 +328,7 @@ const MyScentsPageClient = ({
           onAddedToCollection={refreshCollection}
           onOptimisticAddToCollection={handleOptimisticAdd}
           onOptimisticAddRollback={handleOptimisticRollback}
+          autoFocusSearch={autoFocusAddSearch}
         />
       </TitleBanner>
       <WishlistDemandSection demand={wishlistDemand} />

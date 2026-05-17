@@ -11,13 +11,11 @@ import { FaUser } from "react-icons/fa6"
 import LanguageSwitcher from "@/components/Organisms/LanguageSwitcher/LanguageSwitcher"
 import { MainNavigationLinks } from "@/components/Molecules/MainNavigationLinks/MainNavigationLinks"
 import { SIGN_IN } from "@/constants/routes"
-import { getProfilePathForUser } from "@/utils/user"
 import { styleMerge } from "@/utils/styleUtils"
 
 import { GlobalAlertBell } from "@/components/Containers/UserAlerts/GlobalAlertBell"
 import LogoutButton from "../LogoutButton/LogoutButton"
 import { globalNavigationVariants } from "./globalNavigation-variants"
-import AdminNavigation from "../AdminNavigation/AdminNavigation"
 import Image from "next/image"
 
 interface GlobalNavigationProps
@@ -71,29 +69,7 @@ function GlobalNavigationContent({
             </PrefetchLink>
           ) : (
             <>
-              {user.id && (
-                <GlobalAlertBell userId={user.id} />
-              )}
-              {user.id && (
-                <PrefetchLink
-                  href={getProfilePathForUser({
-                    id: user.id,
-                    username: user.username ?? null,
-                  })}
-                  className={styleMerge(
-                    navLinkBase,
-                    "flex",
-                    isActive(
-                      getProfilePathForUser({
-                        id: user.id,
-                        username: user.username ?? null,
-                      })
-                    ) && navLinkActive
-                  )}
-                >
-                  <FaUser size={20} title="Profile" />
-                </PrefetchLink>
-              )}
+              {user.id && <GlobalAlertBell userId={user.id} />}
               <LogoutButton />
             </>
           )}
@@ -122,11 +98,6 @@ function GlobalNavigationContent({
           />
         </ul>
       </nav>
-      {user && (
-        <div className="hidden lg:block">
-          <AdminNavigation user={user} />
-        </div>
-      )}
     </header>
   )
 }
