@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db"
+import { getRecentlyListedActivity } from "@/models/activity-feed.server"
 import { getAllFeatures } from '@/models/feature.server'
 import HomeClient from "./home-client"
 import type { Metadata } from "next"
@@ -13,12 +14,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const HomePage = async () => {
-  const features = await getAllFeatures()
-  const [userCount, houseCount, perfumeCount] = await Promise.all([
-    prisma.user.count(),
-    prisma.perfumeHouse.count(),
-    prisma.perfume.count(),
-  ])
+  const [features, userCount, houseCount, perfumeCount, recentListings] =
+    await Promise.all([
+      getAllFeatures(),
+      prisma.user.count(),
+      prisma.perfumeHouse.count(),
+      prisma.perfume.count(),
+      getRecentlyListedActivity(6),
+    ])
 
   const counts = {
     users: userCount,
@@ -30,6 +33,7 @@ const HomePage = async () => {
     <HomeClient
       features={features}
       counts={counts}
+      recentListings={recentListings}
     />
   )
 }

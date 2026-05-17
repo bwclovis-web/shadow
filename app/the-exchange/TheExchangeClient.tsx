@@ -31,6 +31,8 @@ import {
   parseDiscoveryFiltersFromSearchParams,
   type PerfumeDiscoveryFilters,
 } from "@/utils/discovery-filters"
+import ActivityFeedSection from "@/components/Containers/Exchange/ActivityFeedSection"
+import SeasonalTrendingSection from "@/components/Containers/Exchange/SeasonalTrendingSection"
 import WishlistMatchesSection from "@/components/Containers/Exchange/WishlistMatchesSection"
 import { buildExchangeDiscoveryChipItems } from "./buildExchangeDiscoveryChipItems"
 import type { ExchangePageData } from "./exchange-types"
@@ -48,6 +50,8 @@ const TheExchangeClient = ({
   initialHouse,
   initialPerfume = null,
   wishlistMatches = [],
+  recentListings = [],
+  seasonalTrending = { season: "spring", perfumes: [] },
   traderReputationByUserId = {},
   viewerId = null,
 }: ExchangePageData) => {
@@ -411,6 +415,9 @@ const TheExchangeClient = ({
                     placeholder={t("search.placeholder")}
                   />
                 </div>
+                {recentListings.length > 0 ? (
+                  <ActivityFeedSection listings={recentListings} />
+                ) : null}
                 {viewerId && wishlistMatches.length > 0 ? (
                   <WishlistMatchesSection
                     matches={wishlistMatches}

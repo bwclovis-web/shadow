@@ -466,6 +466,9 @@
       "users": "Utilisateurs",
       "houses": "Maisons",
       "perfumes": "Parfums"
+    },
+    "activityFeed": {
+      "title": "Dernières annonces sur l'échange"
     }
   },
   "howItWorks": {
@@ -713,6 +716,7 @@
     "houses": "Derrière le flacon",
     "perfumes": "La cave",
     "theExchange": "La bourse d'échange",
+    "exchangeNewThisWeek": "{count, plural, one {# nouvelle annonce cette semaine} other {# nouvelles annonces cette semaine}}",
     "available": "La bourse d'échange",
     "messages": "Messages",
     "admin": "Le profil",
@@ -1146,6 +1150,12 @@
     "wishlistMatches": {
       "title": "Correspondances pour vous",
       "description": "Parfums de votre wishlist actuellement proposés par la communauté."
+    },
+    "activityFeed": {
+      "title": "Tout juste listés",
+      "description": "Flacons récemment ajoutés à l'échange.",
+      "viewPerfume": "Voir {name}",
+      "viewTrader": "Voir le profil de {name}"
     },
     "listings": {
       "openButton": "Voir les vendeurs et annonces",

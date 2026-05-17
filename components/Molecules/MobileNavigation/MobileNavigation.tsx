@@ -18,6 +18,7 @@ interface MobileNavigationProps extends HTMLProps<HTMLDivElement> {
     username?: string | null
     role?: string
   } | null
+  exchangeNewThisWeekCount?: number
   onMenuClose?: () => void
 }
 
@@ -26,6 +27,7 @@ const MOBILE_MENU_ID = "mobile-navigation-menu"
 const MobileNavigation = ({
   className,
   user,
+  exchangeNewThisWeekCount = 0,
   onMenuClose,
 }: MobileNavigationProps) => {
   const t = useTranslations("navigation")
@@ -65,6 +67,7 @@ const MobileNavigation = ({
             {/* Navigation Links */}
             <NavigationLinks
               user={user}
+              exchangeNewThisWeekCount={exchangeNewThisWeekCount}
               onNavClick={handleNavClick}
             />
 

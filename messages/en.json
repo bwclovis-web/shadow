@@ -548,6 +548,9 @@
       "users": "Users",
       "houses": "Houses",
       "perfumes": "Perfumes"
+    },
+    "activityFeed": {
+      "title": "Latest on the exchange"
     }
   },
   "howItWorks":{
@@ -805,6 +808,7 @@
     "houses": "Behind the Bottle",
     "perfumes": "The Vault",
     "theExchange": "The Exchange",
+    "exchangeNewThisWeek": "{count, plural, one {# new listing this week} other {# new listings this week}}",
     "available": "The Exchange",
     "messages": "Messages",
     "admin": "The Profile",
@@ -1279,6 +1283,12 @@
     "wishlistMatches": {
       "title": "Matches for you",
       "description": "Wishlist perfumes that traders are listing right now."
+    },
+    "activityFeed": {
+      "title": "Just listed",
+      "description": "Fresh bottles recently added to the exchange.",
+      "viewPerfume": "View {name}",
+      "viewTrader": "View {name}'s profile"
     },
     "listings": {
       "openButton": "View traders & listings",

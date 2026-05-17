@@ -11,6 +11,7 @@ import GlobalNavigation from '@/components/Molecules/GlobalNavigation/GlobalNavi
 import { DirectMessageUnreadProvider } from '@/components/Molecules/DirectMessageUnread/DirectMessageUnreadProvider'
 import MobileNavigation from '@/components/Molecules/MobileNavigation'
 import ServiceWorkerRegistration from '@/components/Containers/ServiceWorkerRegistration'
+import { getNewListingsThisWeekCount } from '@/models/activity-feed.server'
 import { getUnreadDirectMessageCount } from '@/models/contactMessage.server'
 import { getUnreadAlertCount, getUserAlerts } from '@/models/user-alerts.server'
 import { UserAlertsProvider } from '@/components/Molecules/UserAlertsProvider/UserAlertsProvider'
@@ -56,6 +57,12 @@ export default async function RootLayout({
   let directMessageUnreadInitial = 0
   let initialAlerts: Awaited<ReturnType<typeof getUserAlerts>> = []
   let initialAlertUnreadCount = 0
+  let exchangeNewThisWeekCount = 0
+  try {
+    exchangeNewThisWeekCount = await getNewListingsThisWeekCount()
+  } catch (error) {
+    console.error("Failed to load exchange new listings count:", error)
+  }
   if (user?.id) {
     try {
       directMessageUnreadInitial = await getUnreadDirectMessageCount(user.id)
@@ -88,8 +95,14 @@ export default async function RootLayout({
                 initialAlerts={initialAlerts}
                 initialUnreadCount={initialAlertUnreadCount}
               >
-                <GlobalNavigation user={user} />
-                <MobileNavigation user={user} />
+                <GlobalNavigation
+                  user={user}
+                  exchangeNewThisWeekCount={exchangeNewThisWeekCount}
+                />
+                <MobileNavigation
+                  user={user}
+                  exchangeNewThisWeekCount={exchangeNewThisWeekCount}
+                />
                 <Providers>
                   {children}
                   <SiteFooter />

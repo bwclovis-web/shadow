@@ -466,6 +466,9 @@
       "users": "Utenti",
       "houses": "Case",
       "perfumes": "Profumi"
+    },
+    "activityFeed": {
+      "title": "Ultime novità sullo scambio"
     }
   },
   "howItWorks": {
@@ -713,6 +716,7 @@
     "houses": "Dietro il flacone",
     "perfumes": "La volta",
     "theExchange": "Il mercato",
+    "exchangeNewThisWeek": "{count, plural, one {# nuovo annuncio questa settimana} other {# nuovi annunci questa settimana}}",
     "available": "Il mercato",
     "messages": "Messaggi",
     "admin": "Il profilo",
@@ -1146,6 +1150,12 @@
     "wishlistMatches": {
       "title": "Corrispondenze per te",
       "description": "Profumi della tua wishlist attualmente in vendita sulla piattaforma."
+    },
+    "activityFeed": {
+      "title": "Appena inseriti",
+      "description": "Bottiglie aggiunte di recente allo scambio.",
+      "viewPerfume": "Vedi {name}",
+      "viewTrader": "Vedi il profilo di {name}"
     },
     "listings": {
       "openButton": "Vedi venditori e annunci",

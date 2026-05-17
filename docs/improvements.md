@@ -155,11 +155,13 @@ _All enums already exist — this is UI only, no schema change._
 
 **Shipped in:** `models/wishlist-matching.server.ts`, `WishlistMatchesSection`, `WishlistDemandSection`, `TraderWishlistOverlapBanner`; exchange `?perfume=` discovery filter; `TheExchangeClient`, `MyScentsPageClient`, `TraderProfileClient`, `ComparePageClient`; i18n `tradingPost.wishlistMatches`, `myScents.wishlistDemand`, `traderProfile.wishlistOverlap`, `compare.findTradersOnExchange`.
 
-### 2E — Activity Feed
+### 2E — Activity Feed ✅
 
-- [ ] **IMP-150** Add "Just listed" feed to exchange page: reverse-chronological list of recent `UserPerfume` rows with `available > 0`, showing photo thumbnail, perfume name, trader avatar, time ago
-- [ ] **IMP-151** Add condensed version of the same feed to the home page as a "Latest on the exchange" section
-- [ ] **IMP-152** Add "New this week" count badge to the exchange nav link
+- [x] **IMP-150** Add "Just listed" feed to exchange page: reverse-chronological list of recent `UserPerfume` rows with `available > 0`, showing photo thumbnail, perfume name, trader avatar, time ago
+- [x] **IMP-151** Add condensed version of the same feed to the home page as a "Latest on the exchange" section
+- [x] **IMP-152** Add "New this week" count badge to the exchange nav link
+
+**Shipped in:** `models/activity-feed.server.ts`, `utils/time-ago.ts`, `components/Containers/Exchange/ActivityFeedSection.tsx`, `ActivityFeedItem.tsx`; exchange `page.tsx` / `TheExchangeClient.tsx`; home `page.tsx` / `home-client.tsx`; nav badge via `app/layout.tsx` → `MainNavigationLinks`; i18n `tradingPost.activityFeed`, `home.activityFeed`, `navigation.exchangeNewThisWeek`.
 
 ### 2F — Seasonal Trending
 

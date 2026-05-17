@@ -19,6 +19,7 @@ export interface MainNavigationLinksProps {
     username?: string | null
     role?: string
   } | null
+  exchangeNewThisWeekCount?: number
   onNavClick?: () => void
 }
 
@@ -46,6 +47,7 @@ const getMainNavItemClassName = (
 export const MainNavigationLinks = ({
   variant,
   user,
+  exchangeNewThisWeekCount = 0,
   onNavClick,
 }: MainNavigationLinksProps) => {
   const t = useTranslations("navigation")
@@ -62,17 +64,35 @@ export const MainNavigationLinks = ({
       <li>
         <AboutDropdown variant={aboutVariant} onNavClick={onNavClick} />
       </li>
-      {mainNavigation.map((item) => (
-        <li key={item.id}>
-          <PrefetchLink
-            href={item.path}
-            onClick={onNavClick}
-            className={getMainNavItemClassName(variant, isActive(item.path))}
-          >
-            {t(item.key)}
-          </PrefetchLink>
-        </li>
-      ))}
+      {mainNavigation.map((item) => {
+        const showNewBadge =
+          item.key === "theExchange" && exchangeNewThisWeekCount > 0
+        return (
+          <li key={item.id}>
+            <PrefetchLink
+              href={item.path}
+              onClick={onNavClick}
+              className={getMainNavItemClassName(variant, isActive(item.path))}
+            >
+              <span className="inline-flex items-center justify-center gap-2">
+                {t(item.key)}
+                {showNewBadge ? (
+                  <span
+                    className="shrink-0 rounded-full bg-noir-gold text-noir-black text-xs font-semibold px-2 py-0.5 min-w-[1.25rem] text-center tabular-nums"
+                    title={t("exchangeNewThisWeek", {
+                      count: exchangeNewThisWeekCount,
+                    })}
+                  >
+                    {exchangeNewThisWeekCount > 99
+                      ? "99+"
+                      : exchangeNewThisWeekCount}
+                  </span>
+                ) : null}
+              </span>
+            </PrefetchLink>
+          </li>
+        )
+      })}
       {user && (
         <li>
           <PrefetchLink

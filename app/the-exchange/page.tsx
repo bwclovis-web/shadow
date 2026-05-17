@@ -6,6 +6,8 @@ import {
   getAvailablePerfumesForDecantingPaginated,
   getPerfumeById,
 } from "@/models/perfume.server"
+import { getRecentlyListedActivity } from "@/models/activity-feed.server"
+import { getSeasonalTrendingPerfumes } from "@/models/seasonal-trending.server"
 import { getWishlistExchangeMatches } from "@/models/wishlist-matching.server"
 import { getPerfumeNotesByIds } from "@/models/tags.server"
 import { loadTraderReputationsForUserIds } from "@/services/reputation/loadReputationInputs.server"
@@ -48,8 +50,15 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
   const session = await getSessionFromCookieHeader(cookieHeader, { includeUser: true })
   const viewerId = session?.user?.id ?? null
 
-  const [perfumePage, initialNoteTags, initialHouse, initialPerfume, wishlistMatches] =
-    await Promise.all([
+  const [
+    perfumePage,
+    initialNoteTags,
+    initialHouse,
+    initialPerfume,
+    wishlistMatches,
+    recentListings,
+    seasonalTrending,
+  ] = await Promise.all([
       getAvailablePerfumesForDecantingPaginated({
         skip: initialSkip,
         take: PAGE_SIZE,
@@ -70,6 +79,8 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
       viewerId
         ? getWishlistExchangeMatches(viewerId)
         : Promise.resolve([]),
+      getRecentlyListedActivity(12),
+      getSeasonalTrendingPerfumes(10),
     ])
 
   let { perfumes: availablePerfumes, meta: pagination } = perfumePage
@@ -124,6 +135,8 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
       initialHouse={initialHouse}
       initialPerfume={initialPerfume}
       wishlistMatches={wishlistMatches}
+      recentListings={recentListings}
+      seasonalTrending={seasonalTrending}
       traderReputationByUserId={traderReputationByUserId}
       viewerId={viewerId}
     />

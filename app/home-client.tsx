@@ -5,17 +5,24 @@ import Image from "next/image"
 import { useTranslations } from "next-intl"
 
 import Select from "@/components/Atoms/Select"
+import ActivityFeedSection from "@/components/Containers/Exchange/ActivityFeedSection"
 import SearchBar from "@/components/Organisms/SearchBar"
 import { useMounted } from "@/hooks/useMounted"
+import type { ActivityFeedListingRow } from "@/models/activity-feed.server"
 
 type Feature = Awaited<ReturnType<typeof import("@/models/feature.server").getAllFeatures>>[number]
 
 interface HomeClientProps {
   features: Feature[]
   counts: { users: number; houses: number; perfumes: number }
+  recentListings?: ActivityFeedListingRow[]
 }
 
-export default function HomeClient({ features: _features, counts }: HomeClientProps) {
+export default function HomeClient({
+  features: _features,
+  counts,
+  recentListings = [],
+}: HomeClientProps) {
   const [searchType, setSearchType] = useState<"perfume-house" | "perfume">("perfume")
   const container = useRef<HTMLDivElement>(null)
   const tHome = useTranslations("home")
@@ -150,6 +157,16 @@ export default function HomeClient({ features: _features, counts }: HomeClientPr
           />
         </div>
       </section>
+
+      {recentListings.length > 0 ? (
+        <section className="relative z-10 w-full max-w-4xl px-4 pb-8">
+          <ActivityFeedSection
+            listings={recentListings}
+            variant="compact"
+            className="rounded-md border border-noir-gold/40 bg-noir-black/70 p-4 backdrop-blur-sm"
+          />
+        </section>
+      ) : null}
     </div>
   )
 }

@@ -466,6 +466,9 @@
       "users": "Usuarios",
       "houses": "Casas",
       "perfumes": "Perfumes"
+    },
+    "activityFeed": {
+      "title": "Lo último en el intercambio"
     }
   },
   "howItWorks": {
@@ -713,6 +716,7 @@
     "houses": "Detrás de la Botella",
     "perfumes": "La Bóveda",
     "theExchange": "El Intercambio",
+    "exchangeNewThisWeek": "{count, plural, one {# anuncio nuevo esta semana} other {# anuncios nuevos esta semana}}",
     "available": "El Intercambio",
     "messages": "Mensajes",
     "admin": "El Perfil",
@@ -1146,6 +1150,12 @@
     "wishlistMatches": {
       "title": "Coincidencias para ti",
       "description": "Perfumes de tu wishlist que otros traders están listando ahora."
+    },
+    "activityFeed": {
+      "title": "Recién listados",
+      "description": "Botellas recién añadidas al intercambio.",
+      "viewPerfume": "Ver {name}",
+      "viewTrader": "Ver el perfil de {name}"
     },
     "listings": {
       "openButton": "Ver comerciantes y anuncios",
