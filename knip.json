@@ -1,6 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "ignoreFiles": ["prisma/seed.ts"],
+  "ignoreExportsUsedInFile": true,
+  "ignoreFiles": ["prisma/seed.ts", ".sanity/**"],
   "ignore": [
     "scripts/**",
     "public/sw.js",

@@ -29,27 +29,6 @@ export type TradeComposerInit = {
   counterpartyDisplayName: string
 }
 
-/** Shared with contact-trader item context (backward compatible). */
-export type TradeItemInfo = {
-  userPerfumeId: string
-  perfumeName: string
-  perfumeHouse?: string
-  amount?: string
-  price?: string
-  tradePrice?: string
-  tradePreference?: string
-}
-
-export const tradeItemInfoFromSeed = (seed: TradeListingSeed): TradeItemInfo => ({
-  userPerfumeId: seed.userPerfumeId,
-  perfumeName: seed.perfumeName,
-  perfumeHouse: seed.perfumeHouse,
-  amount: seed.available,
-  price: seed.price ?? undefined,
-  tradePrice: seed.tradePrice ?? undefined,
-  tradePreference: seed.tradePreference ?? undefined,
-})
-
 export const tradeListingSeedFromUserPerfumeI = (
   userPerfume: UserPerfumeI,
   counterpartyId: string
