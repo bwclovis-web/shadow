@@ -18,10 +18,10 @@ _Nothing in Wave 2 is meaningful without listing photos, a trade record, and a s
 | **1B** Trader strikes (admin) | ✅ Done | IMP-020–027 |
 | **1C** User reports | ✅ Done | IMP-030, 032–033 (IMP-031 deferred to 2A) |
 | **1D** Listing photos | ✅ Done | IMP-040–047 |
-| **1E** Trader avatar / profile | ⬜ Not started | IMP-050–053 |
-| **1F** Email delivery | ⬜ Not started | IMP-060–064 |
+| **1E** Trader avatar / profile | ✅ Done | IMP-050–053 (IMP-051 trade timeline deferred to 2A) |
+| **1F** Email delivery | ✅ Done | IMP-060–062, 064 (IMP-063 deferred to 2A) |
 
-**Next up:** 1E — Trader Avatar and Profile Fields
+**Next up:** Wave 2A — Trade Lifecycle
 
 ### 1A — Schema (single `prisma db push`) ✅
 
@@ -79,20 +79,28 @@ _Nothing in Wave 2 is meaningful without listing photos, a trade record, and a s
 
 **Shipped in:** `components/Molecules/ImageUploader/`, `components/Molecules/ListingPhotos/`, `app/api/listing-images/route.ts`, `models/listing-metadata.server.ts`, `utils/listing-images-client.ts`, `utils/listing-config.server.ts`, `utils/listing-display.ts`; wired in `DeStashForm`, `DestashManager`, `user.server.ts`, `user-perfumes` API, `ItemsToTrade` (large lightbox). Exchange browse (`TheExchangeClient`) shows catalog image only; listing photos remain on trader profile.
 
-### 1E — Trader Avatar and Profile Fields
+### 1E — Trader Avatar and Profile Fields ✅
 
-- [ ] **IMP-050** Add avatar image upload to user profile settings page (R2 pipeline, same component as IMP-040)
-- [ ] **IMP-051** Surface avatar on trader profile header, message inbox rows, and trade timeline events
-- [ ] **IMP-052** Add region field to profile settings; surface as a chip on trader profile
-- [ ] **IMP-053** Add optional social links (Fragrantica URL, Reddit username, Instagram handle) to profile settings; render as small icon links on trader profile
+- [x] **IMP-050** Add avatar image upload to user profile settings page (R2 pipeline, same component as IMP-040)
+- [x] **IMP-051** Surface avatar on trader profile header, message inbox rows, and trade timeline events — **trade timeline deferred** until Wave 2A trade UI exists
+- [x] **IMP-052** Add region field to profile settings; surface as a chip on trader profile
+- [x] **IMP-053** Add optional social links (Fragrantica URL, Reddit username, Instagram handle) to profile settings; render as small icon links on trader profile
 
-### 1F — Email Delivery
+**Shipped in:** `app/api/avatar-images/route.ts`, `utils/avatar-images-client.ts`, `utils/validation/fieldSchemas.ts` (`avatarImageSchema`); profile form in `app/[userSlug]/profile/ProfileClient.tsx` + `actions.ts` (`UpdateProfileSchema`); `components/Molecules/TraderAvatar/`, `components/Molecules/CountryTypeahead/`, `components/Atoms/CountryFlagBadge/`, `utils/country-list.ts` (shared with `data/countryList.json`); trader display in `app/trader-profile/[id]/TraderProfileClient.tsx` (avatar in `TitleBanner`), `app/trader-profile/[id]/aside/aside.tsx` + `components/Containers/TraderProfile/TraderProfileAboutExtras.tsx` + `TraderSocialLinks.tsx`; messages in `app/messages/MessagesClient.tsx`, `app/messages/[otherUserId]/ThreadClient.tsx`; `models/user.server.ts` / `models/user.query.ts` / `models/contactMessage.server.ts`; `hooks/useTrader.ts` (refetch on mount after profile edits); `flagcdn.com` in `next.config.ts` `remotePatterns`.
 
-- [ ] **IMP-060** Install and configure Resend (or AWS SES); store API key in env
-- [ ] **IMP-061** Wire `sendWishlistAlertEmail` stub in [`utils/alert-processors.ts`](../utils/alert-processors.ts) to send a real email when a wishlisted item is listed
-- [ ] **IMP-062** Wire `sendDecantInterestAlertEmail` stub
-- [ ] **IMP-063** Add `sendTradeEventEmail` for `tradeAccepted`, `tradeShipped`, `tradeCompleted` milestones
-- [ ] **IMP-064** Build a minimal transactional email template (plain text is fine for v1; matches the noir brand palette for v2)
+**IMP-052 details:** Region uses the same country list as perfume houses (`CountryTypeahead` + hidden field stores country `id`). Trader profile About section shows country name with a PNG flag (`CountryFlagBadge` via flagcdn; ISO code fallback if the image fails). Legacy region values (`US`, `UK`, `AU`, `EU`, `other`) still resolve for display.
+
+**IMP-051 partial:** Avatars on trader profile banner and message inbox/thread rows are live; trade timeline avatars wait on IMP-107+ (2A).
+
+### 1F — Email Delivery ✅
+
+- [x] **IMP-060** Install and configure Resend; store `RESEND_API_KEY` and `EMAIL_FROM` in env
+- [x] **IMP-061** Wire `sendWishlistAlertEmail` when a wishlisted item is listed (gated by `wishlistAlertsEnabled` + `emailWishlistAlerts`)
+- [x] **IMP-062** Wire `sendDecantInterestAlertEmail` (gated by `decantAlertsEnabled` + `emailDecantAlerts`)
+- [ ] **IMP-063** Add `sendTradeEventEmail` for trade milestones — **deferred to Wave 2A** when trade transition API exists
+- [x] **IMP-064** Plain-text transactional templates (perfume link + profile preferences link); HTML/noir branding deferred to v2
+
+**Shipped in:** `resend` package; `utils/email.server.ts`, `utils/alert-email.server.ts`; dispatch from `models/user-alerts.server.ts` after `createUserAlert`; re-exports in `utils/alert-processors.ts`; dependent email toggles in `AlertPreferences.tsx`; env documented in `docs/new computer set up.md`.
 
 ---
 
@@ -253,7 +261,7 @@ _No new schema — all computed from existing data._
 
 ## Notes
 
-- **Completed (Wave 1):** 1A schema, 1B admin strikes + ban enforcement, 1C user reports + admin reports queue. IMP-031 (report from trade timeline) waits on 2A trade UI.
+- **Completed (Wave 1):** 1A schema, 1B admin strikes + ban enforcement, 1C user reports + admin reports queue, 1D listing photos, 1E trader avatar + profile fields (region, social links). IMP-031 (report from trade timeline) and IMP-051 trade-timeline avatars wait on 2A trade UI.
 - All schema changes use `prisma db push` — no migration files.
 - After schema changes: `npm run db:generate` and restart `npm run dev` (or delete `.next` + `node_modules/.prisma/client` if the client is stale on Windows).
 - All new authenticated API routes mirror the auth, CSRF, and rate-limit patterns in [`app/api/contact-trader/route.ts`](../app/api/contact-trader/route.ts).

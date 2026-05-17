@@ -146,6 +146,7 @@
     "emailNotifications": "Notifications par e-mail",
     "emailWishlistAlerts": "Alertes liste de souhaits par e-mail",
     "emailDecantAlerts": "Alertes décanter par e-mail",
+    "emailRequiresInApp": "Les alertes par e-mail nécessitent que l'alerte correspondante dans l'application soit activée.",
     "alertLimits": "Limites d'alertes",
     "maxAlerts": "Nombre max d'alertes à conserver",
     "maxAlertsDescription": "Les alertes plus anciennes seront supprimées automatiquement lorsque cette limite est atteinte",

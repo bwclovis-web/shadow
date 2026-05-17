@@ -116,22 +116,7 @@ export const processBulkAlerts = async (
   }
 }
 
-/**
- * Email notification placeholders for when email service integration is added.
- * Suggested: SendGrid, Mailgun, AWS SES, or Postmark.
- */
-export const sendWishlistAlertEmail = async (
-  _userEmail: string,
-  _perfumeName: string,
-  _availableTraders: Array<{ userId: string; displayName: string }>
-): Promise<void> => {
-  // Not implemented
-}
-
-export const sendDecantInterestAlertEmail = async (
-  _userEmail: string,
-  _perfumeName: string,
-  _interestedUserName: string
-): Promise<void> => {
-  // Not implemented
-}
+export {
+  sendDecantInterestAlertEmail,
+  sendWishlistAlertEmail,
+} from "@/utils/alert-email.server"

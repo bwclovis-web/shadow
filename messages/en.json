@@ -228,6 +228,7 @@
     "emailNotifications": "Email Notifications",
     "emailWishlistAlerts": "Email Wishlist Alerts",
     "emailDecantAlerts": "Email Decant Alerts",
+    "emailRequiresInApp": "Email alerts require the matching in-app alert to be enabled.",
     "alertLimits": "Alert Limits",
     "maxAlerts": "Maximum Alerts to Keep",
     "maxAlertsDescription": "Older alerts will be automatically dismissed when this limit is reached",

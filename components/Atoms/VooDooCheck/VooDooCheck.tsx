@@ -4,6 +4,7 @@ interface VooDooCheckProps {
   labelChecked: string
   labelUnchecked: string
   id?: string
+  disabled?: boolean
 }
 
 const VooDooCheck = ({
@@ -12,14 +13,18 @@ const VooDooCheck = ({
   labelChecked,
   labelUnchecked,
   id,
+  disabled = false,
 }: VooDooCheckProps) => (
-  <label className="flex cursor-pointer select-none items-center">
+  <label
+    className={`flex select-none items-center ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+  >
     <div className="relative rounded-full border-noir-gold-100 border-2">
       <input
         id={id}
         type="checkbox"
         checked={checked}
-        onChange={onChange}
+        disabled={disabled}
+        onChange={disabled ? undefined : onChange}
         className="sr-only"
       />
       <div

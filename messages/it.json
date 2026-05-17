@@ -146,6 +146,7 @@
     "emailNotifications": "Notifiche email",
     "emailWishlistAlerts": "Notifiche wishlist per email",
     "emailDecantAlerts": "Notifiche decant per email",
+    "emailRequiresInApp": "Le notifiche email richiedono che l'alerta corrispondente nell'app sia attiva.",
     "alertLimits": "Limiti notifiche",
     "maxAlerts": "Numero massimo di notifiche da tenere",
     "maxAlertsDescription": "Le notifiche più vecchie saranno rimosse automaticamente al raggiungimento del limite",

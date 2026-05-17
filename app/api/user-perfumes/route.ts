@@ -98,7 +98,9 @@ export async function POST(request: NextRequest) {
         if (amount && parseFloat(amount) > 0) {
           try {
             await processWishlistAvailabilityAlerts(perfumeId, user.id)
-          } catch {}
+          } catch (alertError) {
+            console.error("[user-perfumes] Wishlist availability alerts failed:", alertError)
+          }
         }
         break
       }
@@ -118,7 +120,9 @@ export async function POST(request: NextRequest) {
         if (amount && parseFloat(amount) > 0 && perfumeId) {
           try {
             await processWishlistAvailabilityAlerts(perfumeId, user.id)
-          } catch {}
+          } catch (alertError) {
+            console.error("[user-perfumes] Wishlist availability alerts failed:", alertError)
+          }
         }
         break
       }
@@ -139,7 +143,9 @@ export async function POST(request: NextRequest) {
         if (availableAmount && parseFloat(availableAmount) > 0) {
           try {
             await processWishlistAvailabilityAlerts(perfumeId, user.id)
-          } catch {}
+          } catch (alertError) {
+            console.error("[user-perfumes] Wishlist availability alerts failed:", alertError)
+          }
         }
         break
       }

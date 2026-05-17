@@ -70,10 +70,16 @@ export const AlertPreferences = ({
     setIsEditing(false)
   }
 
+  const normalizeEditState = (state: typeof editState) => ({
+    ...state,
+    emailWishlistAlerts: state.wishlistAlertsEnabled ? state.emailWishlistAlerts : false,
+    emailDecantAlerts: state.decantAlertsEnabled ? state.emailDecantAlerts : false,
+  })
+
   const handleSave = async () => {
     setIsSaving(true)
     try {
-      const success = await onPreferencesChange(editState)
+      const success = await onPreferencesChange(normalizeEditState(editState))
       if (success) {
         setIsEditing(false)
       }
@@ -85,10 +91,28 @@ export const AlertPreferences = ({
   }
 
   const togglePreference = (key: keyof typeof editState) => {
-    setEditState(prev => ({
-      ...prev,
-      [key]: !prev[key],
-    }))
+    setEditState(prev => {
+      if (key === "wishlistAlertsEnabled") {
+        const wishlistAlertsEnabled = !prev.wishlistAlertsEnabled
+        return {
+          ...prev,
+          wishlistAlertsEnabled,
+          emailWishlistAlerts: wishlistAlertsEnabled ? prev.emailWishlistAlerts : false,
+        }
+      }
+      if (key === "decantAlertsEnabled") {
+        const decantAlertsEnabled = !prev.decantAlertsEnabled
+        return {
+          ...prev,
+          decantAlertsEnabled,
+          emailDecantAlerts: decantAlertsEnabled ? prev.emailDecantAlerts : false,
+        }
+      }
+      return {
+        ...prev,
+        [key]: !prev[key],
+      }
+    })
   }
 
   const updateMaxAlerts = (value: number) => {
@@ -141,10 +165,13 @@ export const AlertPreferences = ({
                 {t("emailNotifications")}
               </h4>
 
+              <p className="text-xs text-noir-gold-100/80 ml-6">{t("emailRequiresInApp")}</p>
+
               <div className="space-y-2 ml-6">
                 <VooDooCheck
                   id="email-wishlist-alerts"
                   checked={editState.emailWishlistAlerts}
+                  disabled={!editState.wishlistAlertsEnabled}
                   onChange={() => togglePreference("emailWishlistAlerts")}
                   labelChecked={t("emailWishlistAlerts")}
                   labelUnchecked={t("emailWishlistAlerts")}
@@ -153,6 +180,7 @@ export const AlertPreferences = ({
                 <VooDooCheck
                   id="email-decant-alerts"
                   checked={editState.emailDecantAlerts}
+                  disabled={!editState.decantAlertsEnabled}
                   onChange={() => togglePreference("emailDecantAlerts")}
                   labelChecked={t("emailDecantAlerts")}
                   labelUnchecked={t("emailDecantAlerts")}

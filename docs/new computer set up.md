@@ -69,7 +69,7 @@ Optional service variables (only if you use those features):
 
 - `OPENAI_API_KEY` (AI note refresh scripts)
 - Stripe variables (`STRIPE_*`) for payments
-- Email provider variables (for email flows)
+- Email (Resend): `RESEND_API_KEY`, `EMAIL_FROM` — must include a verified address, e.g. `Shadow and Sillage <alerts@shadowandsillage.com>` (not display name alone); verify sending domain in Resend dashboard
 - R2/Cloudflare storage variables (for image/storage scripts)
 
 ## 5) Generate Prisma client + apply schema

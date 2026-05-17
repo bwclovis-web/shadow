@@ -1,6 +1,10 @@
 import { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/db"
 import type { AlertType, UserAlertPreferences } from "@/types/database"
+import {
+  sendDecantInterestAlertEmail,
+  sendWishlistAlertEmail,
+} from "@/utils/alert-email.server"
 
 const ALERT_DEDUPE_WINDOW_MS = 24 * 60 * 60 * 1000
 
@@ -219,12 +223,20 @@ export const checkWishlistAvailabilityAlerts = async (
     },
     include: {
       user: {
-        include: {
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          username: true,
+          profileSlug: true,
           alertPreferences: true,
         },
       },
       perfume: {
-        include: {
+        select: {
+          name: true,
+          slug: true,
           perfumeHouse: {
             select: {
               name: true,
@@ -269,7 +281,7 @@ export const checkWishlistAvailabilityAlerts = async (
     ).map((a: { userId: string }) => a.userId)
   )
 
-  const alertsToCreate: Array<{
+  type WishlistAlertPayload = {
     userId: string
     perfumeId: string
     alertType: AlertType
@@ -277,7 +289,12 @@ export const checkWishlistAvailabilityAlerts = async (
     message: string
     metadata: Record<string, unknown>
     preferences?: Omit<UserAlertPreferences, "user"> | null
-  }> = []
+    recipient: (typeof wishlistUsers)[number]["user"]
+    perfumeName: string
+    perfumeSlug: string
+  }
+
+  const alertsToCreate: WishlistAlertPayload[] = []
 
   for (const wishlistItem of wishlistUsers) {
     const preferences = wishlistItem.user.alertPreferences
@@ -294,6 +311,9 @@ export const checkWishlistAvailabilityAlerts = async (
       title,
       message,
       preferences,
+      recipient: wishlistItem.user,
+      perfumeName: wishlistItem.perfume.name,
+      perfumeSlug: wishlistItem.perfume.slug,
       metadata: {
         availableTraders: availableTraders.map((trader: { user: { id: string; firstName: string | null; lastName: string | null; username: string | null; email: string } }) => ({
           userId: trader.user.id,
@@ -323,6 +343,17 @@ export const checkWishlistAvailabilityAlerts = async (
     )
     if (alert) {
       createdAlerts.push(alert)
+      const emailPreferences =
+        alertData.preferences ?? (await getUserAlertPreferences(alertData.userId))
+      void sendWishlistAlertEmail({
+        user: alertData.recipient,
+        preferences: emailPreferences,
+        perfumeName: alertData.perfumeName,
+        perfumeSlug: alertData.perfumeSlug,
+        message: alertData.message,
+      }).catch(err => {
+        console.error("[email] Failed to send wishlist alert email:", err)
+      })
     }
   }
 
@@ -352,12 +383,20 @@ export const checkDecantInterestAlerts = async (
     },
     include: {
       user: {
-        include: {
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          username: true,
+          profileSlug: true,
           alertPreferences: true,
         },
       },
       perfume: {
-        include: {
+        select: {
+          name: true,
+          slug: true,
           perfumeHouse: {
             select: {
               name: true,
@@ -399,7 +438,7 @@ export const checkDecantInterestAlerts = async (
     ).map((a: { userId: string }) => a.userId)
   )
 
-  const alertsToCreate: Array<{
+  type DecantAlertPayload = {
     userId: string
     perfumeId: string
     alertType: AlertType
@@ -407,7 +446,12 @@ export const checkDecantInterestAlerts = async (
     message: string
     metadata: Record<string, unknown>
     preferences?: Omit<UserAlertPreferences, "user"> | null
-  }> = []
+    recipient: (typeof decanters)[number]["user"]
+    perfumeName: string
+    perfumeSlug: string
+  }
+
+  const alertsToCreate: DecantAlertPayload[] = []
 
   for (const decanter of decanters) {
     const preferences = decanter.user.alertPreferences
@@ -432,6 +476,9 @@ export const checkDecantInterestAlerts = async (
       title,
       message,
       preferences,
+      recipient: decanter.user,
+      perfumeName: decanter.perfume.name,
+      perfumeSlug: decanter.perfume.slug,
       metadata: {
         interestedUserId,
         interestedUserName,
@@ -453,6 +500,17 @@ export const checkDecantInterestAlerts = async (
     )
     if (alert) {
       createdAlerts.push(alert)
+      const emailPreferences =
+        alertData.preferences ?? (await getUserAlertPreferences(alertData.userId))
+      void sendDecantInterestAlertEmail({
+        user: alertData.recipient,
+        preferences: emailPreferences,
+        perfumeName: alertData.perfumeName,
+        perfumeSlug: alertData.perfumeSlug,
+        message: alertData.message,
+      }).catch(err => {
+        console.error("[email] Failed to send decant interest alert email:", err)
+      })
     }
   }
 

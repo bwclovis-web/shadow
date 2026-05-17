@@ -39,7 +39,9 @@ export async function POST(request: NextRequest) {
       if (isPublic) {
         try {
           await processDecantInterestAlerts(perfumeId, userId, true)
-        } catch {}
+        } catch (alertError) {
+          console.error("[wishlist] Decant interest alerts failed:", alertError)
+        }
       }
       return NextResponse.json(result)
     }
@@ -55,7 +57,9 @@ export async function POST(request: NextRequest) {
       if (isPublic) {
         try {
           await processDecantInterestAlerts(perfumeId, userId, true)
-        } catch {}
+        } catch (alertError) {
+          console.error("[wishlist] Decant interest alerts failed:", alertError)
+        }
       }
       return NextResponse.json(result)
     }
