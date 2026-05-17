@@ -12,7 +12,9 @@ import { TraderAvatar } from "@/components/Molecules/TraderAvatar"
 import { useTrader } from "@/hooks/useTrader"
 import type { TraderResponse } from "@/lib/queries/user"
 import type { TraderFeedbackResponse } from "@/lib/queries/traderFeedback"
+import TraderProfileTrades from "@/components/Containers/TraderProfile/TraderProfileTrades/TraderProfileTrades"
 import type { SafeUser, UserPerfumeI } from "@/types"
+import type { TradeForClient } from "@/types/trade"
 import { getTraderDisplayName } from "@/utils/user"
 import { TraderProfileAside } from "./aside/aside"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
@@ -24,12 +26,14 @@ type TraderProfileClientProps = {
   initialTrader: TraderResponse
   viewer: SafeUser | null
   feedback: TraderFeedbackResponse
+  activeTrades?: TradeForClient[]
 }
 
 export default function TraderProfileClient({
   initialTrader,
   viewer,
   feedback,
+  activeTrades = [],
 }: TraderProfileClientProps) {
   const { data: trader } = useTrader(initialTrader.id, initialTrader)
   const t = useTranslations("traderProfile")
@@ -77,6 +81,13 @@ export default function TraderProfileClient({
         )}
 
         <div className="flex flex-col gap-4 md:col-span-2 xl:col-span-2">
+          {activeTrades.length > 0 && viewer?.id ? (
+            <TraderProfileTrades
+              activeTrades={activeTrades}
+              viewerId={viewer.id}
+            />
+          ) : null}
+
           <div className="noir-border relative p-4">
             <h2 className="mb-2 text-center">
               {t("itemsAvailable")}

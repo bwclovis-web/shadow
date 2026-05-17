@@ -27,6 +27,7 @@ export interface ConversationSummary {
   lastMessageAt: Date | string
   lastMessagePreview: string | null
   unreadCount: number
+  hasActiveTrade?: boolean
 }
 
 interface MessagesClientProps {
@@ -136,6 +137,11 @@ export default function MessagesClient({
                           <span className="font-medium truncate text-noir-gold group-hover:text-noir-black transition-colors">
                             {displayName}
                           </span>
+                          {conv.hasActiveTrade ? (
+                            <span className="shrink-0 rounded-full border border-noir-gold/50 bg-noir-gold/20 px-2 py-0.5 text-xs font-medium text-noir-gold">
+                              {t("activeTradeBadge")}
+                            </span>
+                          ) : null}
                           {conv.unreadCount > 0 && (
                             <span className="shrink-0 rounded-full bg-blue-600 text-white text-xs font-medium px-2 py-0.5">
                               {conv.unreadCount}

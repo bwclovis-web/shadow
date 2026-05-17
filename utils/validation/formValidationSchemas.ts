@@ -306,6 +306,42 @@ export const DataQualityReportSchema = z.object({
   }),
 })
 
+// Trades
+const tradeLineItemRoleSchema = z.enum(["offered", "requested"])
+
+export const TradeLineItemInputSchema = z.object({
+  userPerfumeId: z
+    .string()
+    .min(1)
+    .refine(isValidPrismaRecordId, { message: V.userPerfumeIdRequired }),
+  role: tradeLineItemRoleSchema,
+})
+
+export const CreateTradeSchema = z.object({
+  counterpartyId: z
+    .string()
+    .min(1, { message: V.recipientIdRequired })
+    .refine(isValidPrismaRecordId, { message: V.recipientIdRequired }),
+  notes: z
+    .string()
+    .max(2000, { message: V.messageMax })
+    .optional()
+    .transform(val => val?.trim() || undefined),
+  lineItems: z.array(TradeLineItemInputSchema).min(1),
+  submit: z
+    .union([z.boolean(), z.literal("true"), z.literal("false")])
+    .optional()
+    .transform(val => val === true || val === "true"),
+})
+
+export const TradeShipTransitionSchema = z.object({
+  trackingNumber: z
+    .string()
+    .max(200)
+    .optional()
+    .transform(val => val?.trim() || undefined),
+})
+
 // Contact Trader
 export const ContactTraderSchema = z.object({
   recipientId: z.string().min(1, { message: V.recipientIdRequired }),
@@ -342,4 +378,6 @@ export const validationSchemas = {
   adminUserForm: AdminUserFormSchema,
   dataQualityReport: DataQualityReportSchema,
   contactTrader: ContactTraderSchema,
+  createTrade: CreateTradeSchema,
+  tradeShipTransition: TradeShipTransitionSchema,
 } as const

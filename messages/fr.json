@@ -81,6 +81,18 @@
       "sectionHeading": "Administration"
     }
   },
+  "myTrades": {
+    "meta": {
+      "title": "Mes échanges - Shadow and Sillage",
+      "description": "Vos échanges actifs et votre historique."
+    },
+    "heading": "Mes échanges",
+    "subheading": "Offres actives et historique des échanges",
+    "backToProfile": "Retour au profil",
+    "empty": "Vous n'avez pas encore d'échanges.",
+    "activeSummary": "Échanges actifs ({count})",
+    "historySummary": "Historique des échanges ({count})"
+  },
   "pendingSubmissions": {
     "meta": {
       "title": "Soumissions en attente - Admin - Shadow and Sillage",
@@ -548,7 +560,8 @@
   },
   "messagesPage": {
     "heading": "Messages",
-    "subheading": "Vos conversations avec d'autres vendeurs."
+    "subheading": "Vos conversations avec d'autres vendeurs.",
+    "activeTradeBadge": "Échange actif"
   },
   "securityMonitor": {
     "heading": "Moniteur de sécurité",
@@ -786,6 +799,7 @@
     "navigation": {
       "profile": "Profil",
       "wishlist": "Ma liste de souhaits",
+      "myTrades": "Mes échanges",
       "myScents": "Mes parfums",
       "changePassword": "Changer le mot de passe"
     }
@@ -1111,7 +1125,57 @@
       "sortDefault": "Ordre par défaut",
       "sortPriceHighLow": "Prix (du plus élevé au plus bas)",
       "sortScoreHighLow": "Score vendeur (du plus élevé au plus bas)",
-      "noTradersMatchFilter": "Aucune annonce ne correspond à cette préférence. Essayez « Toutes »."
+      "noTradersMatchFilter": "Aucune annonce ne correspond à cette préférence. Essayez « Toutes ».",
+      "makeOffer": "Proposer un échange"
+    }
+  },
+  "tradeComposer": {
+    "proposeSwap": "Proposer un échange",
+    "connectAboutBottle": "Contacter à propos de ce flacon",
+    "subheading": "Avec {traderName}",
+    "pickTitle": "Choisir une annonce — {name}",
+    "pickSubheading": "Sélectionnez le flacon qui vous intéresse.",
+    "pickListing": "Chaque vendeur peut proposer des quantités et prix différents.",
+    "targetListing": "Leur annonce",
+    "yourOffer": "Votre offre (facultatif)",
+    "loadingListings": "Chargement de vos annonces…",
+    "noOfferableListings": "Vous n'avez aucun flacon listé pour l'échange.",
+    "offerOptional": "Vous pouvez envoyer une offre sans lister le vôtre.",
+    "notesLabel": "Notes",
+    "notesHelp": "Message facultatif sur le paiement, l'envoi ou l'échange.",
+    "notesHelpCash": "Message facultatif sur le paiement ou l'envoi.",
+    "notesPlaceholderCash": "ex. Je peux payer le prix demandé ou préfère un envoi standard…",
+    "submitConnect": "Envoyer le message",
+    "chooseListing": "Choisir une annonce",
+    "notesPlaceholder": "ex. Je peux ajouter des espèces ou préfère un envoi standard…",
+    "submitOffer": "Envoyer l'offre",
+    "submitting": "Envoi…",
+    "success": "Votre offre a été envoyée.",
+    "error": "Impossible d'envoyer l'offre.",
+    "openMessages": "Ouvrir la conversation"
+  },
+  "tradeStatus": {
+    "tradeWith": "Échange avec {name}",
+    "theyOffer": "Leur annonce",
+    "youOffer": "Votre côté",
+    "notes": "Notes",
+    "accept": "Accepter",
+    "decline": "Refuser",
+    "markShipped": "Marquer expédié",
+    "confirmReceived": "Confirmer réception",
+    "complete": "Terminer",
+    "cancel": "Annuler",
+    "trackingOptional": "Suivi (facultatif)",
+    "error": "Une erreur s'est produite.",
+    "status": {
+      "draft": "Brouillon",
+      "pending": "Offre en attente",
+      "accepted": "Accepté",
+      "shipped": "Expédié",
+      "received": "Reçu",
+      "completed": "Terminé",
+      "declined": "Refusé",
+      "cancelled": "Annulé"
     }
   },
   "traderProfile": {
@@ -1146,6 +1210,10 @@
       "cash": "Espèces uniquement",
       "trade": "Échange uniquement",
       "both": "Espèces ou échange"
+    },
+    "trades": {
+      "activeSummary": "Échanges actifs ({count})",
+      "historySummary": "Historique ({count})"
     },
     "reputation": {
       "ariaLabel": "Confiance et réputation du vendeur",

@@ -110,18 +110,18 @@ _These features make the platform sticky. Users return because they have active 
 
 ### 2A — Trade Lifecycle API and UI
 
-- [ ] **IMP-100** Create `app/api/trades/` route group; mirror auth, CSRF, and rate limits from [`app/api/contact-trader/route.ts`](../app/api/contact-trader/route.ts)
-- [ ] **IMP-101** Implement `POST /api/trades` (create draft): validates `initiatorId`, `counterpartyId`, `lineItems`; creates `Trade` + `TradeLineItem` rows; fires `TradeEvent`
-- [ ] **IMP-102** Implement status transition endpoints: accept, decline, ship (with optional tracking number), receive, complete, cancel
-- [ ] **IMP-103** Each transition appends a `TradeEvent` and fires the corresponding `AlertType`
-- [ ] **IMP-104** Add "Propose swap" / "Connect about this bottle" CTA to trader profile listing cards; pre-fills the trade composer modal with the `UserPerfume` context
-- [ ] **IMP-105** Add "Make offer" button directly on exchange listing cards; opens trade composer modal inline without navigating away
-- [ ] **IMP-106** Build `<TradeComposer>` modal: shows the target listing, lets the initiator select which of their own listings to offer (or propose cash/trade per `TradePreference`), adds optional notes, submits to `POST /api/trades`
-- [ ] **IMP-107** Build `<TradeStatusCard>` component: shows linked perfume(s), current state, and action buttons ("Mark as Shipped", "Confirm Received", "Cancel"); renders pinned above message bubbles in [`ThreadClient`](../app/messages/[otherUserId]/ThreadClient.tsx) when a `tradeId` is associated
-- [ ] **IMP-108** Update thread server page to load both messages and associated trade in one query
-- [ ] **IMP-109** Add `hasActiveTrade` boolean to `ConversationSummary`; show "Active trade" badge on inbox rows in [`MessagesClient`](../app/messages/MessagesClient.tsx)
-- [ ] **IMP-110** Add 15-second interval polling (or `router.refresh()` on window focus) to `ThreadClient` so received messages feel live
-- [ ] **IMP-111** Add "Active trades" and "Trade history" tabs to trader profile; show completed count and success rate
+- [x] **IMP-100** Create `app/api/trades/` route group; mirror auth, CSRF, and rate limits from [`app/api/contact-trader/route.ts`](../app/api/contact-trader/route.ts)
+- [x] **IMP-101** Implement `POST /api/trades` (create draft): validates `initiatorId`, `counterpartyId`, `lineItems`; creates `Trade` + `TradeLineItem` rows; fires `TradeEvent`
+- [x] **IMP-102** Implement status transition endpoints: accept, decline, ship (with optional tracking number), receive, complete, cancel
+- [x] **IMP-103** Each transition appends a `TradeEvent` and fires the corresponding `AlertType`
+- [x] **IMP-104** Add "Propose swap" / "Connect about this bottle" CTA to trader profile listing cards; pre-fills the trade composer modal with the `UserPerfume` context
+- [x] **IMP-105** Add "Make offer" button directly on exchange listing cards; opens trade composer modal inline without navigating away
+- [x] **IMP-106** Build `<TradeComposer>` modal: shows the target listing, lets the initiator select which of their own listings to offer (or propose cash/trade per `TradePreference`), adds optional notes, submits to `POST /api/trades`
+- [x] **IMP-107** Build `<TradeStatusCard>` component: shows linked perfume(s), current state, and action buttons ("Mark as Shipped", "Confirm Received", "Cancel"); renders pinned above message bubbles in [`ThreadClient`](../app/messages/[otherUserId]/ThreadClient.tsx) when a `tradeId` is associated
+- [x] **IMP-108** Update thread server page to load both messages and associated trade in one query
+- [x] **IMP-109** Add `hasActiveTrade` boolean to `ConversationSummary`; show "Active trade" badge on inbox rows in [`MessagesClient`](../app/messages/MessagesClient.tsx)
+- [x] **IMP-110** Add 15-second interval polling (or `router.refresh()` on window focus) to `ThreadClient` so received messages feel live
+- [x] **IMP-111** Add "Active trades" and "Trade history" tabs to trader profile; show completed count and success rate
 
 ### 2B — Reputation
 

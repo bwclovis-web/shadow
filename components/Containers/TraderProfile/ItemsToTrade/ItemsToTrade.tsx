@@ -6,7 +6,7 @@ import VooDooDetails from "~/components/Atoms/VooDooDetails"
 import { getPerfumeTypeLabel } from "~/data/SelectTypes"
 import { listingConditionI18nKey } from "@/utils/listing-display"
 import type { UserPerfumeI } from "~/types"
-import ContactItemButton from "~/components/Containers/TraderProfile/ContactItemButton"
+import ProposeTradeButton from "~/components/Containers/TraderProfile/ProposeTradeButton"
 
 import TradersComments from "./TradersComments"
 
@@ -178,12 +178,14 @@ const ItemsToTrade = ({ userPerfume, trader, viewerId }: ItemsToTradeProps) => {
     </div>
     <CommentsSection userPerfume={userPerfume} t={t} />
     {trader && (
-      <ContactItemButton
-        traderId={trader.id}
-        trader={trader}
-        userPerfume={userPerfume}
-        viewerId={viewerId}
-      />
+      <div className="mt-2">
+        <ProposeTradeButton
+          traderId={trader.id}
+          trader={trader}
+          userPerfume={userPerfume}
+          viewerId={viewerId}
+        />
+      </div>
     )}
   </li>
   )

@@ -49,4 +49,5 @@ export type ExchangePageData = {
   initialNoteTags: Tag[]
   initialHouse: { id: string; name: string } | null
   traderReputationByUserId?: Record<string, TraderReputationV1>
+  viewerId?: string | null
 }

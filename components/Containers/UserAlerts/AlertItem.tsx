@@ -28,6 +28,12 @@ const getAlertIconClassName = (alertType: UserAlert["alertType"]) => {
       return "text-yellow-600"
     case "new_trader_message":
       return "text-indigo-600"
+    case "trade_received":
+    case "trade_accepted":
+    case "trade_shipped":
+    case "trade_completed":
+    case "trade_cancelled":
+      return "text-noir-gold"
     default:
       return "text-gray-600"
   }
@@ -43,6 +49,16 @@ const getAlertTypeLabel = (alertType: UserAlert["alertType"]) => {
       return "Pending Submission"
     case "new_trader_message":
       return "Message"
+    case "trade_received":
+      return "Trade offer"
+    case "trade_accepted":
+      return "Trade accepted"
+    case "trade_shipped":
+      return "Trade shipped"
+    case "trade_completed":
+      return "Trade completed"
+    case "trade_cancelled":
+      return "Trade update"
     default:
       return "Alert"
   }
@@ -64,16 +80,24 @@ const formatTimeAgo = (date: Date | string) => {
 
 const perfumeLink = (slug: string) => `/perfume/${slug}`
 const messagesLink = (otherUserId: string) => `/messages/${otherUserId}`
+const isTradeAlert = (alertType: string) => alertType.startsWith("trade_")
+
 const alertLink = (alert: UserAlert) => {
   if ((alert.alertType as string) === "pending_submission_approval") return "/admin/pending-submission"
-  if ((alert.alertType as string) === "new_trader_message" && alert.metadata?.senderId)
-    return messagesLink(alert.metadata.senderId as string)
+  const senderId = alert.metadata?.senderId as string | undefined
+  if ((alert.alertType as string) === "new_trader_message" && senderId) {
+    return messagesLink(senderId)
+  }
+  if (isTradeAlert(alert.alertType as string) && senderId) {
+    return messagesLink(senderId)
+  }
   if (alert.Perfume) return perfumeLink(alert.Perfume.slug)
   return "/messages"
 }
 const linkText = (alertType: UserAlert["alertType"]) => {
   if ((alertType as string) === "pending_submission_approval") return "Review submission"
   if ((alertType as string) === "new_trader_message") return "View message"
+  if (isTradeAlert(alertType as string)) return "View trade"
   return "View perfume"
 }
 

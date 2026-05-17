@@ -1,10 +1,40 @@
+import { type TradeStatus } from "@prisma/client"
+
 import { prisma } from "@/lib/db"
+
+const ACTIVE_TRADE_STATUSES: TradeStatus[] = [
+  "draft",
+  "pending",
+  "accepted",
+  "shipped",
+  "received",
+]
+
+const getActiveTradeFlagsByOtherUserId = async (
+  userId: string
+): Promise<Record<string, boolean>> => {
+  const trades = await prisma.trade.findMany({
+    where: {
+      status: { in: ACTIVE_TRADE_STATUSES },
+      OR: [{ initiatorId: userId }, { counterpartyId: userId }],
+    },
+    select: { initiatorId: true, counterpartyId: true },
+  })
+
+  const flags: Record<string, boolean> = {}
+  for (const t of trades) {
+    const other = t.initiatorId === userId ? t.counterpartyId : t.initiatorId
+    flags[other] = true
+  }
+  return flags
+}
 
 export interface CreateContactMessageInput {
   senderId: string
   recipientId: string
   subject: string | null
   message: string
+  tradeId?: string | null
 }
 
 export interface ConversationSummary {
@@ -16,10 +46,11 @@ export interface ConversationSummary {
   lastMessageAt: Date
   lastMessagePreview: string | null
   unreadCount: number
+  hasActiveTrade: boolean
 }
 
 export async function createContactMessage(input: CreateContactMessageInput) {
-  const { senderId, recipientId, subject, message } = input
+  const { senderId, recipientId, subject, message, tradeId } = input
 
   if (senderId === recipientId) {
     throw new Error("Cannot send message to yourself")
@@ -52,6 +83,7 @@ export async function createContactMessage(input: CreateContactMessageInput) {
       recipientId,
       subject,
       message,
+      tradeId: tradeId ?? null,
     },
   })
 }
@@ -165,6 +197,8 @@ export async function getConversations(userId: string): Promise<ConversationSumm
     byOther[id].unreadCount = unreadByOther[id] ?? 0
   }
 
+  const activeTradeFlags = await getActiveTradeFlagsByOtherUserId(userId)
+
   return Object.values(byOther)
     .sort((a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime())
     .map((x) => ({
@@ -176,6 +210,7 @@ export async function getConversations(userId: string): Promise<ConversationSumm
       lastMessageAt: x.lastMessageAt,
       lastMessagePreview: x.lastMessagePreview,
       unreadCount: x.unreadCount,
+      hasActiveTrade: activeTradeFlags[x.otherUserId] ?? false,
     }))
 }
 

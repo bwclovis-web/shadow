@@ -12,6 +12,8 @@ import { DirectMessageUnreadProvider } from '@/components/Molecules/DirectMessag
 import MobileNavigation from '@/components/Molecules/MobileNavigation'
 import ServiceWorkerRegistration from '@/components/Containers/ServiceWorkerRegistration'
 import { getUnreadDirectMessageCount } from '@/models/contactMessage.server'
+import { getUnreadAlertCount, getUserAlerts } from '@/models/user-alerts.server'
+import { UserAlertsProvider } from '@/components/Molecules/UserAlertsProvider/UserAlertsProvider'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -51,11 +53,23 @@ export default async function RootLayout({
   const messages = await getMessages()
 
   let directMessageUnreadInitial = 0
+  let initialAlerts: Awaited<ReturnType<typeof getUserAlerts>> = []
+  let initialAlertUnreadCount = 0
   if (user?.id) {
     try {
       directMessageUnreadInitial = await getUnreadDirectMessageCount(user.id)
     } catch (error) {
       console.error("Failed to load unread message count:", error)
+    }
+    try {
+      const [alerts, unreadCount] = await Promise.all([
+        getUserAlerts(user.id, 10),
+        getUnreadAlertCount(user.id),
+      ])
+      initialAlerts = alerts ?? []
+      initialAlertUnreadCount = unreadCount ?? 0
+    } catch (error) {
+      console.error("Failed to load user alerts:", error)
     }
   }
 
@@ -68,9 +82,15 @@ export default async function RootLayout({
               userId={user?.id}
               initialCount={directMessageUnreadInitial}
             >
-              <GlobalNavigation user={user} />
-              <MobileNavigation user={user} />
-              <Providers>{children}</Providers>
+              <UserAlertsProvider
+                userId={user?.id}
+                initialAlerts={initialAlerts}
+                initialUnreadCount={initialAlertUnreadCount}
+              >
+                <GlobalNavigation user={user} />
+                <MobileNavigation user={user} />
+                <Providers>{children}</Providers>
+              </UserAlertsProvider>
             </DirectMessageUnreadProvider>
           </NextIntlClientProvider>
           <div id="modal-portal" />

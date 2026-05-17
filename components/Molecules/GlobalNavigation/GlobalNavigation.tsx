@@ -14,6 +14,7 @@ import { SIGN_IN } from "@/constants/routes"
 import { getProfilePathForUser } from "@/utils/user"
 import { styleMerge } from "@/utils/styleUtils"
 
+import { GlobalAlertBell } from "@/components/Containers/UserAlerts/GlobalAlertBell"
 import LogoutButton from "../LogoutButton/LogoutButton"
 import { globalNavigationVariants } from "./globalNavigation-variants"
 import AdminNavigation from "../AdminNavigation/AdminNavigation"
@@ -66,6 +67,9 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
             </PrefetchLink>
           ) : (
             <>
+              {user.id && (
+                <GlobalAlertBell userId={user.id} />
+              )}
               {user.id && (
                 <PrefetchLink
                   href={getProfilePathForUser({

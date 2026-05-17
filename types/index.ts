@@ -6,6 +6,7 @@
 // Re-export all types from specialized modules
 export * from "./comments"
 export * from "./database"
+export * from "./trade"
 
 // Legacy types for backward compatibility
 import type { UserRole } from "@prisma/client"

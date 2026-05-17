@@ -163,6 +163,18 @@
       "other": "Other"
     }
   },
+  "myTrades": {
+    "meta": {
+      "title": "My Trades - Shadow and Sillage",
+      "description": "Your active trades and trade history."
+    },
+    "heading": "My Trades",
+    "subheading": "Active offers and completed trade history",
+    "backToProfile": "Back to profile",
+    "empty": "You have no trades yet.",
+    "activeSummary": "Active trades ({count})",
+    "historySummary": "Trade history ({count})"
+  },
   "pendingSubmissions": {
     "meta": {
       "title": "Pending Submissions - Admin - Shadow and Sillage",
@@ -631,7 +643,8 @@
   },
   "messagesPage": {
     "heading": "Messages",
-    "subheading": "Your conversations with other traders."
+    "subheading": "Your conversations with other traders.",
+    "activeTradeBadge": "Active trade"
   },
   "securityMonitor": {
     "heading": "Security Monitor",
@@ -879,6 +892,7 @@
       "profile": "Profile",
       "wishlist": "My Wishlist",
       "myReports": "My Reports",
+      "myTrades": "My Trades",
       "myScents": "My Scents",
       "changePassword": "Change Password"
     }
@@ -1208,7 +1222,57 @@
       "sortDefault": "Default order",
       "sortPriceHighLow": "Price (high to low)",
       "sortScoreHighLow": "Trader score (high to low)",
-      "noTradersMatchFilter": "No listings match this preference. Try the All option above."
+      "noTradersMatchFilter": "No listings match this preference. Try the All option above.",
+      "makeOffer": "Propose swap"
+    }
+  },
+  "tradeComposer": {
+    "proposeSwap": "Propose swap",
+    "connectAboutBottle": "Connect about this bottle",
+    "subheading": "With {traderName}",
+    "pickTitle": "Choose a listing — {name}",
+    "pickSubheading": "Select which bottle you want to make an offer on.",
+    "pickListing": "Each trader may list different amounts and prices.",
+    "targetListing": "Their listing",
+    "yourOffer": "Your offer (optional)",
+    "loadingListings": "Loading your listings…",
+    "noOfferableListings": "You have no bottles listed for trade. Add a listing from My Scents first.",
+    "offerOptional": "You can send an offer without listing something of your own.",
+    "notesLabel": "Notes",
+    "notesHelp": "Optional message about cash, shipping preferences, or swap ideas.",
+    "notesHelpCash": "Optional message about cash or shipping preferences.",
+    "notesPlaceholder": "e.g. Happy to add cash on my side, or prefer USPS Ground Advantage…",
+    "notesPlaceholderCash": "e.g. Happy to pay asking price, or prefer USPS Ground Advantage…",
+    "submitOffer": "Send offer",
+    "submitConnect": "Send message",
+    "chooseListing": "Choose a listing",
+    "submitting": "Sending…",
+    "success": "Your offer was sent.",
+    "error": "Could not send offer. Please try again.",
+    "openMessages": "Open conversation"
+  },
+  "tradeStatus": {
+    "tradeWith": "Trade with {name}",
+    "theyOffer": "Their listing",
+    "youOffer": "Your side",
+    "notes": "Notes",
+    "accept": "Accept",
+    "decline": "Decline",
+    "markShipped": "Mark shipped",
+    "confirmReceived": "Confirm received",
+    "complete": "Complete trade",
+    "cancel": "Cancel trade",
+    "trackingOptional": "Tracking (optional)",
+    "error": "Something went wrong.",
+    "status": {
+      "draft": "Draft",
+      "pending": "Offer pending",
+      "accepted": "Accepted",
+      "shipped": "Shipped",
+      "received": "Received",
+      "completed": "Completed",
+      "declined": "Declined",
+      "cancelled": "Cancelled"
     }
   },
   "traderProfile": {
@@ -1244,6 +1308,10 @@
       "cash": "Cash Only",
       "trade": "Trade Only",
       "both": "Cash or Trade"
+    },
+    "trades": {
+      "activeSummary": "Active trades ({count})",
+      "historySummary": "Trade history ({count})"
     },
     "reputation": {
       "ariaLabel": "Trader trust and reputation",

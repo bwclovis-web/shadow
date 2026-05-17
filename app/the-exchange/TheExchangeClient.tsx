@@ -16,7 +16,14 @@ import Modal from "@/components/Organisms/Modal"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
-import { useSessionStore } from "@/hooks/sessionStore"
+import { TradeComposerModal } from "@/components/Containers/Trade/TradeComposerModal"
+import { useTradeComposerModal } from "@/hooks/useTradeComposerModal"
+import {
+  getTradeCtaLabelKey,
+  isCashOnlyListing,
+  tradeListingSeedFromExchangeRow,
+} from "@/types/trade"
+import { getTraderDisplayName } from "@/utils/user"
 import {
   discoveryFiltersActive,
   discoveryFiltersToSearchParams,
@@ -25,7 +32,6 @@ import {
   type PerfumeDiscoveryFilters,
 } from "@/utils/discovery-filters"
 import { buildExchangeDiscoveryChipItems } from "./buildExchangeDiscoveryChipItems"
-import ExchangeTradersModalContent from "./ExchangeTradersModalContent"
 import type { ExchangePageData } from "./exchange-types"
 
 export type { ExchangePageData } from "./exchange-types"
@@ -33,8 +39,6 @@ export type { ExchangePageData } from "./exchange-types"
 const ROUTE_PATH = "/the-exchange"
 const BANNER_IMAGE = "/images/exchange.webp"
 const DESKTOP_MEDIA = "(min-width: 1024px)"
-const EXCHANGE_TRADERS_MODAL_ID = "exchange-traders"
-
 const TheExchangeClient = ({
   availablePerfumes,
   pagination,
@@ -42,9 +46,11 @@ const TheExchangeClient = ({
   initialNoteTags,
   initialHouse,
   traderReputationByUserId = {},
+  viewerId = null,
 }: ExchangePageData) => {
   const t = useTranslations("tradingPost")
   const tListings = useTranslations("tradingPost.listings")
+  const tTradeComposer = useTranslations("tradeComposer")
   const tf = useTranslations("tradingPost.filters")
   const tSeason = useTranslations("singlePerfume.seasonVote.season")
   const router = useTransitionRouter()
@@ -52,17 +58,13 @@ const TheExchangeClient = ({
   const searchParams = useSearchParams()
   const isLg = useMediaQuery(DESKTOP_MEDIA)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
-  const exchangeTradersTriggerRef = useRef<HTMLButtonElement | null>(null)
-  const { modalOpen, modalId, modalData, toggleModal, closeModal } =
-    useSessionStore()
-
-  useEffect(() => {
-    return () => {
-      if (useSessionStore.getState().modalId === EXCHANGE_TRADERS_MODAL_ID) {
-        closeModal()
-      }
-    }
-  }, [closeModal])
+  const {
+    composerData,
+    modalOpen: composerModalOpen,
+    openComposer,
+    openListingPicker,
+    closeComposer,
+  } = useTradeComposerModal()
 
   const searchParamsKey = searchParams.toString()
   const discoveryFromUrl = useMemo(
@@ -133,23 +135,64 @@ const TheExchangeClient = ({
     [searchParams, pushUrlFromSearchParams]
   )
 
-  const exchangeModalPerfume = useMemo(() => {
-    if (!modalOpen || modalId !== EXCHANGE_TRADERS_MODAL_ID) return null
-    const rawId = modalData?.perfumeId
-    const perfumeId = typeof rawId === "string" ? rawId : null
-    if (!perfumeId) return null
-    return availablePerfumes.find(p => p.id === perfumeId) ?? null
-  }, [modalOpen, modalId, modalData, availablePerfumes])
+  const handleProposeSwapFromCard = useCallback(
+    (
+      perfume: (typeof availablePerfumes)[number],
+      trigger: HTMLButtonElement | null
+    ) => {
+      if (!viewerId) return
+      const listings = perfume.userPerfume.filter(up => up.userId !== viewerId)
+      if (listings.length === 0) return
 
-  const openExchangeTradersModal = useCallback(
-    (perfumeId: string, trigger: HTMLButtonElement | null) => {
-      exchangeTradersTriggerRef.current = trigger
-      toggleModal(exchangeTradersTriggerRef, EXCHANGE_TRADERS_MODAL_ID, {
-        perfumeId,
+      const perfumeMeta = {
+        perfumeId: perfume.id,
+        perfumeName: perfume.name,
+        perfumeHouse: perfume.perfumeHouse?.name,
+        perfumeImage: perfume.image ?? null,
+      }
+
+      if (listings.length === 1) {
+        const up = listings[0]!
+        openComposer(
+          {
+            seed: tradeListingSeedFromExchangeRow(up, perfumeMeta),
+            counterpartyDisplayName: getTraderDisplayName(up.user),
+          },
+          trigger
+        )
+        return
+      }
+
+      openListingPicker(listings, perfumeMeta, {
+        trigger,
+        traderReputationByUserId,
       })
     },
-    [toggleModal]
+    [viewerId, openComposer, openListingPicker, traderReputationByUserId]
   )
+
+  const getCardOfferCtaKey = (
+    perfume: (typeof availablePerfumes)[number]
+  ): "proposeSwap" | "connectAboutBottle" | "chooseListing" => {
+    const listings = perfume.userPerfume.filter(
+      up => viewerId && up.userId !== viewerId
+    )
+    if (listings.length === 1) {
+      const up = listings[0]!
+      return getTradeCtaLabelKey(up.tradePreference, up.tradeOnly)
+    }
+    if (listings.every(up => isCashOnlyListing(up.tradePreference, up.tradeOnly))) {
+      return "connectAboutBottle"
+    }
+    if (
+      listings.every(
+        up => !isCashOnlyListing(up.tradePreference, up.tradeOnly)
+      )
+    ) {
+      return "proposeSwap"
+    }
+    return "chooseListing"
+  }
 
   const handlePageChange = (page: number) => {
     cancelPending()
@@ -330,21 +373,26 @@ const TheExchangeClient = ({
                                 count: perfume.userPerfume.length,
                               })}
                             </p>
-                            <Button
-                              type="button"
-                              variant="secondary"
-                              size="sm"
-                              background="gold"
-                              className="w-full max-w-full"
-                              onClick={e =>
-                                openExchangeTradersModal(
-                                  perfume.id,
-                                  e.currentTarget
-                                )
-                              }
-                            >
-                              {tListings("openButton")}
-                            </Button>
+                            {viewerId &&
+                            perfume.userPerfume.some(
+                              up => up.userId !== viewerId
+                            ) ? (
+                              <Button
+                                type="button"
+                                variant="primary"
+                                size="sm"
+                                background="gold"
+                                className="w-full max-w-full"
+                                onClick={e =>
+                                  handleProposeSwapFromCard(
+                                    perfume,
+                                    e.currentTarget
+                                  )
+                                }
+                              >
+                                {tTradeComposer(getCardOfferCtaKey(perfume))}
+                              </Button>
+                            ) : null}
                           </div>
                         </LinkCard>
                       </li>
@@ -364,23 +412,18 @@ const TheExchangeClient = ({
             />
           )}
 
-          {modalOpen &&
-            modalId === EXCHANGE_TRADERS_MODAL_ID &&
-            exchangeModalPerfume && (
-              <Modal innerType="dark" animateStart="panelLeft">
-                <div
-                  role="dialog"
-                  aria-modal
-                  aria-labelledby="exchange-traders-modal-title"
-                  className="min-h-0 flex-1"
-                >
-                  <ExchangeTradersModalContent
-                    perfume={exchangeModalPerfume}
-                    traderReputationByUserId={traderReputationByUserId}
-                  />
-                </div>
-              </Modal>
-            )}
+          {composerData && composerModalOpen ? (
+            <Modal innerType="dark" animateStart="top">
+              <TradeComposerModal
+                data={composerData}
+                onClose={closeComposer}
+                onListingPicked={init => {
+                  closeComposer()
+                  setTimeout(() => openComposer(init), 0)
+                }}
+              />
+            </Modal>
+          ) : null}
         </>
       )}
     </section>

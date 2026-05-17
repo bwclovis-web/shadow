@@ -50,6 +50,7 @@ const MobileNavigation = ({
         modalId={MOBILE_MENU_ID}
         onMenuToggle={handleMenuToggle}
         onNavClick={handleNavClick}
+        userId={user?.id}
       />
 
       {/* Mobile Menu Modal */}

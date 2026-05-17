@@ -6,6 +6,8 @@ import { getAvailablePerfumesForDecantingPaginated } from "@/models/perfume.serv
 import { getPerfumeNotesByIds } from "@/models/tags.server"
 import { loadTraderReputationsForUserIds } from "@/services/reputation/loadReputationInputs.server"
 import { parseDiscoveryFiltersFromSearchParams } from "@/utils/discovery-filters"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
+import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
 import TheExchangeClient from "./TheExchangeClient"
 
@@ -37,6 +39,10 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
   const discovery = parseDiscoveryFiltersFromSearchParams(params)
   const initialPage = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
   const initialSkip = (initialPage - 1) * PAGE_SIZE
+
+  const cookieHeader = await getCookieHeader()
+  const session = await getSessionFromCookieHeader(cookieHeader, { includeUser: true })
+  const viewerId = session?.user?.id ?? null
 
   const [perfumePage, initialNoteTags, initialHouse] = await Promise.all([
     getAvailablePerfumesForDecantingPaginated({
@@ -100,6 +106,7 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
       initialNoteTags={initialNoteTags}
       initialHouse={initialHouse}
       traderReputationByUserId={traderReputationByUserId}
+      viewerId={viewerId}
     />
   )
 }

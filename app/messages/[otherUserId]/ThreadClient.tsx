@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { Link } from "next-view-transitions"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 
 import ContactTraderForm from "@/components/Containers/Forms/ContactTraderForm"
@@ -13,8 +13,10 @@ import { getTraderDisplayName } from "@/utils/user"
 import { Button } from "@/components/Atoms/Button/Button"
 import { MdDeleteForever } from "react-icons/md"
 import DangerModal from "@/components/Organisms/DangerModal"
+import { TradeStatusCard } from "@/components/Molecules/TradeStatusCard"
 import { useSessionStore } from "@/hooks/sessionStore"
 import Modal from "@/components/Organisms/Modal"
+import type { TradeForClient } from "@/types/trade"
 
 const BANNER_IMAGE = "/images/messages.png"
 
@@ -52,12 +54,14 @@ interface ThreadClientProps {
     avatarImage?: string | null
   }
   initialThread: ThreadMessage[]
+  initialTrades?: TradeForClient[]
 }
 
 export default function ThreadClient({
   currentUserId,
   otherUser,
   initialThread: thread,
+  initialTrades = [],
 }: ThreadClientProps) {
   const router = useRouter()
   const { addToHeaders } = useCSRF()
@@ -87,6 +91,18 @@ export default function ThreadClient({
     }
     return data
   }
+
+  useEffect(() => {
+    const interval = setInterval(() => router.refresh(), 15_000)
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") router.refresh()
+    }
+    document.addEventListener("visibilitychange", onVisibility)
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener("visibilitychange", onVisibility)
+    }
+  }, [router])
 
   const handleDeleteConversation = async () => {
     if (isDeletingThread) return
@@ -152,6 +168,19 @@ export default function ThreadClient({
               : tDm("deleteConversationFull")}
           </Button>
         </div>
+
+        {initialTrades.length > 0 ? (
+          <div className="mb-6 space-y-3">
+            {initialTrades.map(trade => (
+              <TradeStatusCard
+                key={trade.id}
+                trade={trade}
+                currentUserId={currentUserId}
+                onUpdated={() => router.refresh()}
+              />
+            ))}
+          </div>
+        ) : null}
 
         <div className="space-y-4 mb-8">
           {thread.length === 0 ? (

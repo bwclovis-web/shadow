@@ -81,6 +81,18 @@
       "sectionHeading": "Administración"
     }
   },
+  "myTrades": {
+    "meta": {
+      "title": "Mis intercambios - Shadow and Sillage",
+      "description": "Tus intercambios activos e historial."
+    },
+    "heading": "Mis intercambios",
+    "subheading": "Ofertas activas e historial de intercambios",
+    "backToProfile": "Volver al perfil",
+    "empty": "Aún no tienes intercambios.",
+    "activeSummary": "Intercambios activos ({count})",
+    "historySummary": "Historial de intercambios ({count})"
+  },
   "pendingSubmissions": {
     "meta": {
       "title": "Envíos Pendientes - Admin - Shadow and Sillage",
@@ -548,7 +560,8 @@
   },
   "messagesPage": {
     "heading": "Mensajes",
-    "subheading": "Tus conversaciones con otros comerciantes."
+    "subheading": "Tus conversaciones con otros comerciantes.",
+    "activeTradeBadge": "Intercambio activo"
   },
   "securityMonitor": {
     "heading": "Monitor de Seguridad",
@@ -786,6 +799,7 @@
     "navigation": {
       "profile": "Perfil",
       "wishlist": "Mi Lista de Deseos",
+      "myTrades": "Mis intercambios",
       "myScents": "Mis Aromas",
       "changePassword": "Cambiar Contraseña"
     }
@@ -1112,7 +1126,57 @@
       "sortDefault": "Orden predeterminado",
       "sortPriceHighLow": "Precio (mayor a menor)",
       "sortScoreHighLow": "Puntuación (mayor a menor)",
-      "noTradersMatchFilter": "Ningún anuncio coincide con esta preferencia. Prueba con «Todas»."
+      "noTradersMatchFilter": "Ningún anuncio coincide con esta preferencia. Prueba con «Todas».",
+      "makeOffer": "Proponer intercambio"
+    }
+  },
+  "tradeComposer": {
+    "proposeSwap": "Proponer intercambio",
+    "connectAboutBottle": "Contactar sobre este frasco",
+    "subheading": "Con {traderName}",
+    "pickTitle": "Elige un anuncio — {name}",
+    "pickSubheading": "Selecciona sobre qué frasco quieres ofertar.",
+    "pickListing": "Cada comerciante puede listar cantidades y precios distintos.",
+    "targetListing": "Su anuncio",
+    "yourOffer": "Tu oferta (opcional)",
+    "loadingListings": "Cargando tus anuncios…",
+    "noOfferableListings": "No tienes frascos listados para intercambio.",
+    "offerOptional": "Puedes enviar una oferta sin listar algo tuyo.",
+    "notesLabel": "Notas",
+    "notesHelp": "Mensaje opcional sobre efectivo, envío o intercambio.",
+    "notesHelpCash": "Mensaje opcional sobre efectivo o envío.",
+    "notesPlaceholderCash": "ej. Puedo pagar el precio indicado o prefiero envío estándar…",
+    "submitConnect": "Enviar mensaje",
+    "chooseListing": "Elegir un anuncio",
+    "notesPlaceholder": "ej. Puedo añadir efectivo, o prefiero envío estándar…",
+    "submitOffer": "Enviar oferta",
+    "submitting": "Enviando…",
+    "success": "Tu oferta fue enviada.",
+    "error": "No se pudo enviar la oferta.",
+    "openMessages": "Abrir conversación"
+  },
+  "tradeStatus": {
+    "tradeWith": "Intercambio con {name}",
+    "theyOffer": "Su anuncio",
+    "youOffer": "Tu lado",
+    "notes": "Notas",
+    "accept": "Aceptar",
+    "decline": "Rechazar",
+    "markShipped": "Marcar enviado",
+    "confirmReceived": "Confirmar recibido",
+    "complete": "Completar",
+    "cancel": "Cancelar",
+    "trackingOptional": "Seguimiento (opcional)",
+    "error": "Algo salió mal.",
+    "status": {
+      "draft": "Borrador",
+      "pending": "Oferta pendiente",
+      "accepted": "Aceptado",
+      "shipped": "Enviado",
+      "received": "Recibido",
+      "completed": "Completado",
+      "declined": "Rechazado",
+      "cancelled": "Cancelado"
     }
   },
   "traderProfile": {
@@ -1147,6 +1211,10 @@
       "cash": "Solo Efectivo",
       "trade": "Solo Intercambio",
       "both": "Efectivo o Intercambio"
+    },
+    "trades": {
+      "activeSummary": "Intercambios activos ({count})",
+      "historySummary": "Historial ({count})"
     },
     "reputation": {
       "ariaLabel": "Confianza y reputación del comerciante",

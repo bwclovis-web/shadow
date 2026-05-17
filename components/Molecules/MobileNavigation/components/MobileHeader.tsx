@@ -5,6 +5,7 @@ import { Link } from "next-view-transitions"
 import { AiFillHome } from "react-icons/ai"
 import { FaBars } from "react-icons/fa6"
 
+import { GlobalAlertBell } from "@/components/Containers/UserAlerts/GlobalAlertBell"
 import { useDirectMessageUnreadCount } from "@/components/Molecules/DirectMessageUnread/DirectMessageUnreadProvider"
 
 interface MobileHeaderProps {
@@ -14,6 +15,7 @@ interface MobileHeaderProps {
   modalId: string
   onMenuToggle: () => void
   onNavClick: () => void
+  userId?: string
 }
 
 const MobileHeader = ({
@@ -23,6 +25,7 @@ const MobileHeader = ({
   modalId,
   onMenuToggle,
   onNavClick,
+  userId,
 }: MobileHeaderProps) => {
   const directMessageUnread = useDirectMessageUnreadCount()
 
@@ -38,27 +41,30 @@ const MobileHeader = ({
         <span className="sm:hidden">S&S</span>
       </Link>
 
-      <div className="relative shrink-0">
-        <button
-          ref={menuButtonRef}
-          type="button"
-          onClick={onMenuToggle}
-          className="text-noir-gold hover:text-noir-gold-100 cursor-pointer p-3 transition-colors duration-200  mobile-touch-target rounded-lg hover:bg-noir-black/30"
-          aria-label={
-            directMessageUnread > 0
-              ? "Open menu, unread messages"
-              : "Open menu"
-          }
-          aria-expanded={modalOpen && modalId === "mobile-navigation-menu"}
-        >
-          <FaBars size={34} />
-        </button>
-        {directMessageUnread > 0 && (
-          <span
-            className="pointer-events-none absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-blue-600 ring-2 ring-noir-dark/60"
-            aria-hidden
-          />
-        )}
+      <div className="flex items-center gap-1 shrink-0">
+        {userId && <GlobalAlertBell userId={userId} />}
+        <div className="relative">
+          <button
+            ref={menuButtonRef}
+            type="button"
+            onClick={onMenuToggle}
+            className="text-noir-gold hover:text-noir-gold-100 cursor-pointer p-3 transition-colors duration-200  mobile-touch-target rounded-lg hover:bg-noir-black/30"
+            aria-label={
+              directMessageUnread > 0
+                ? "Open menu, unread messages"
+                : "Open menu"
+            }
+            aria-expanded={modalOpen && modalId === "mobile-navigation-menu"}
+          >
+            <FaBars size={34} />
+          </button>
+          {directMessageUnread > 0 && (
+            <span
+              className="pointer-events-none absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-blue-600 ring-2 ring-noir-dark/60"
+              aria-hidden
+            />
+          )}
+        </div>
       </div>
     </div>
   )

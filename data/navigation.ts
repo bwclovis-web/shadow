@@ -23,6 +23,7 @@ export const profileNavigation = [
   { id: "0", label: "Profile", key: "profile", path: "/profile" } as const,
   { id: "1", label: "My Wishlist", key: "wishlist", path: "/profile/wishlist" } as const,
   { id: "4", label: "My Reports", key: "myReports", path: "/profile/reports" } as const,
+  { id: "5", label: "My Trades", key: "myTrades", path: "/profile/trades" } as const,
   { id: "2", label: "My Scents", key: "myScents", path: "/profile/my-scents" } as const,
   { id: "3", label: "Change Password", key: "changePassword", path: "/profile/change-password" } as const,
 ] as const

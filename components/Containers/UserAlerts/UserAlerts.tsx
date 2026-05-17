@@ -7,6 +7,8 @@ import { useTranslations } from "next-intl"
 import { Button } from "@/components/Atoms/Button/Button"
 import VooDooDetails from "@/components/Atoms/VooDooDetails/VooDooDetails"
 import { useCSRF } from "@/hooks/useCSRF"
+import { useUserAlertsContext } from "@/components/Molecules/UserAlertsProvider/UserAlertsProvider"
+import { useUserAlerts } from "@/hooks/useUserAlerts"
 import type { UserAlert, UserAlertPreferences } from "@/types/database"
 
 import { AlertBell } from "./AlertBell"
@@ -27,9 +29,21 @@ const UserAlerts = ({
   initialUnreadCount = 0,
 }: UserAlertsProps) => {
   const t = useTranslations("alerts")
-  const [alerts, setAlerts] = useState<UserAlert[]>(initialAlerts)
+  const alertsContext = useUserAlertsContext()
+  const localAlerts = useUserAlerts({
+    userId,
+    initialAlerts,
+    initialUnreadCount,
+    disabled: alertsContext != null,
+  })
+  const {
+    alerts,
+    unreadCount,
+    handleMarkAsRead,
+    handleDismissAlert,
+    handleDismissAll: dismissAllAlerts,
+  } = alertsContext ?? localAlerts
   const [preferences, setPreferences] = useState<UserAlertPreferences | null>(initialPreferences || null)
-  const [unreadCount, setUnreadCount] = useState(initialUnreadCount)
   const [isLoading, setIsLoading] = useState(false)
   const { addToHeaders } = useCSRF()
   const addToHeadersRef = useRef(addToHeaders)
@@ -54,77 +68,10 @@ const UserAlerts = ({
     loadPreferences()
   }, [userId, preferences])
 
-  // Poll for new alerts every 30 seconds (ref avoids effect re-running when addToHeaders identity changes)
-  useEffect(() => {
-    const poll = async () => {
-      try {
-        const response = await fetch(`/api/user-alerts/${userId}`, {
-          headers: addToHeadersRef.current(),
-        })
-        if (response.ok) {
-          const data = await response.json()
-          setAlerts(data.alerts ?? [])
-          setUnreadCount(data.unreadCount ?? 0)
-        }
-      } catch (error) {
-        console.error("Failed to fetch alerts:", error)
-      }
-    }
-    const interval = setInterval(poll, 30000)
-    return () => clearInterval(interval)
-  }, [userId])
-
-  const handleMarkAsRead = async (alertId: string) => {
-    try {
-      const response = await fetch(`/api/user-alerts/${userId}/alert/${alertId}/read`, {
-        method: "POST",
-        headers: addToHeadersRef.current(),
-      })
-
-      if (response.ok) {
-        setAlerts(prev => prev.map(alert => alert.id === alertId
-              ? { ...alert, isRead: true, readAt: new Date() }
-              : alert))
-        setUnreadCount(prev => Math.max(0, prev - 1))
-      }
-    } catch (error) {
-      console.error("Failed to mark alert as read:", error)
-    }
-  }
-
-  const handleDismissAlert = async (alertId: string) => {
-    const wasUnread = alerts.find(a => a.id === alertId)?.isRead === false
-    try {
-      const response = await fetch(`/api/user-alerts/${userId}/alert/${alertId}/dismiss`, {
-        method: "POST",
-        headers: addToHeadersRef.current(),
-      })
-
-      if (response.ok) {
-        setAlerts(prev => prev.filter(alert => alert.id !== alertId))
-        if (wasUnread) {
-          setUnreadCount(prev => Math.max(0, prev - 1))
-        }
-      }
-    } catch (error) {
-      console.error("Failed to dismiss alert:", error)
-    }
-  }
-
   const handleDismissAll = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`/api/user-alerts/${userId}/dismiss-all`, {
-        method: "POST",
-        headers: addToHeaders(),
-      })
-
-      if (response.ok) {
-        setAlerts([])
-        setUnreadCount(0)
-      }
-    } catch (error) {
-      console.error("Failed to dismiss all alerts:", error)
+      await dismissAllAlerts()
     } finally {
       setIsLoading(false)
     }
