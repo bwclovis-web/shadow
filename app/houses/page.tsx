@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
 import { getHousesByLetterPaginated } from "@/models/house.server"
+import { isSanityConfigured } from "@/sanity/env"
 
 import AllHousesClient from "./AllHousesClient"
 
@@ -46,6 +47,7 @@ const HousesPage = async ({ searchParams }: Props) => {
     <AllHousesClient
       heading={t("heading")}
       subheading={t("subheading")}
+      showBlogLink={isSanityConfigured}
       initialLetter={normalizedLetter}
       initialHouses={initialHouses}
       initialHousesTotal={initialTotal}

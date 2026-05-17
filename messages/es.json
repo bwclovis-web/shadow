@@ -172,6 +172,24 @@
     "savePreferences": "Guardar Preferencias",
     "savingPreferences": "Guardando..."
   },
+  "behindTheBottle": {
+    "meta": {
+      "title": "Detrás de la Botella - Shadow and Sillage",
+      "description": "Historias del mundo del perfume: casas, frascos y cultura olfativa."
+    },
+    "eyebrow": "Editorial",
+    "heading": "Detrás de la Botella",
+    "subheading": "Artículos sobre casas de perfumes, frascos icónicos y la cultura del aroma.",
+    "browseHouses": "Ver todas las casas de perfumes →",
+    "empty": "Aún no hay artículos publicados. Vuelve pronto.",
+    "notConfigured": "El blog editorial aún no está conectado. Añade las variables de Sanity para habilitar artículos.",
+    "article": {
+      "backToIndex": "← Todos los artículos"
+    },
+    "related": {
+      "heading": "Del blog"
+    }
+  },
   "allHouses": {
     "meta": {
       "title": "Detrás de la Botella - Shadow and Sillage",
@@ -179,6 +197,7 @@
     },
     "heading": "Detrás de la Botella",
     "subheading": "No solo hacen perfumes, dejan una huella.",
+    "readStories": "Leer artículos editoriales →",
     "filters": {
       "houseType": "Filtrar por Tipo:",
       "sortBy": "Ordenar por:"
@@ -728,6 +747,7 @@
     "signIn": "Iniciar Sesión",
     "about": "Acerca de",
     "aboutUs": "Sobre Nosotros",
+    "editorial": "Editorial",
     "howWeWork": "Cómo Funcionamos",
     "contactUs": "Contáctanos",
     "home": "Inicio",

@@ -6,11 +6,12 @@ import { redirect } from "next/navigation"
 import { getUserReportsByReporter } from "@/models/user-report.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+import { publicAssetUrl } from "@/utils/public-asset-url.server"
 import { getProfileSlug } from "@/utils/user"
 
 import MyReportsPageClient from "./MyReportsPageClient"
 
-const BANNER_IMAGE = "/images/reports.png"
+const BANNER_IMAGE = publicAssetUrl("/images/reports.png")
 
 type Props = {
   params: Promise<{ userSlug: string }>

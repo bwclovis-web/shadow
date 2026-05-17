@@ -6,11 +6,12 @@ import { redirect } from "next/navigation"
 import { getUserWishlist } from "@/models/wishlist.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
+import { publicAssetUrl } from "@/utils/public-asset-url.server"
 import { getProfileSlug } from "@/utils/user"
 
 import WishlistPageClient from "./WishlistPageClient"
 
-const BANNER_IMAGE = "/images/wishlist.png"
+const BANNER_IMAGE = publicAssetUrl("/images/wishlist.png")
 
 type Props = {
   params: Promise<{ userSlug: string }>

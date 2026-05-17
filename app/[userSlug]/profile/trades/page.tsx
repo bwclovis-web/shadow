@@ -6,11 +6,12 @@ import { redirect } from "next/navigation"
 import { getTradesForUserProfile } from "@/models/trade.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+import { publicAssetUrl } from "@/utils/public-asset-url.server"
 import { getProfileSlug } from "@/utils/user"
 
 import TradesPageClient from "./TradesPageClient"
 
-const BANNER_IMAGE = "/images/mytrades.png"
+const BANNER_IMAGE = publicAssetUrl("/images/mytrades.png")
 
 type Props = {
   params: Promise<{ userSlug: string }>

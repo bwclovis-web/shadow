@@ -19,6 +19,7 @@ const PerfumeHouseAdminActions = dynamic(
     })),
   { ssr: false }
 )
+import { RelatedArticlesSection } from "@/components/Containers/Blog/RelatedArticlesSection"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import DangerModal from "@/components/Organisms/DangerModal"
 import Modal from "@/components/Organisms/Modal"
@@ -38,6 +39,7 @@ import {
   normalizeHousePerfumeNameSearch,
   parseHouseDetailSortOption,
 } from "@/utils/house-perfumes-url-params"
+import type { ArticleListItem } from "@/lib/sanity/types"
 import { getDefaultSortOptions, type SortOption } from "@/utils/sortUtils"
 
 const HOUSES_BASE_PATH = "/houses"
@@ -79,12 +81,14 @@ interface HouseDetailClientProps {
   initialPerfumeHouse: Awaited<
     ReturnType<typeof import("@/models/house.server").getPerfumeHouseBySlug>
   >
+  relatedArticles: ArticleListItem[]
   user?: { id?: string; role?: string } | null
   initialSearchParams: { pg: string; letter?: string; q?: string; sort?: string }
 }
 
 const HouseDetailClient = ({
   initialPerfumeHouse,
+  relatedArticles,
   user,
   initialSearchParams,
 }: HouseDetailClientProps) => {
@@ -422,6 +426,8 @@ const HouseDetailClient = ({
             onPrefetchNext={onPrefetchNext}
             onPrefetchPage={onPrefetchPage}
           />
+
+          <RelatedArticlesSection articles={relatedArticles} />
         </div>
       </section>
     </>

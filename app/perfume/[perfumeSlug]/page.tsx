@@ -3,6 +3,7 @@ import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 
+import { getArticlesForPerfumeSlug } from "@/lib/sanity/articles.server"
 import { getPerfumeDetailPayload } from "@/models/perfumeDetail.server"
 import { selectionFromVoteRow } from "@/models/perfumeSeasonVote.server"
 import { getPerfumeBySlug } from "@/models/perfume.server"
@@ -50,7 +51,7 @@ export default async function PerfumeDetailPage({
     notFound()
   }
 
-  const [payload, similarPerfumes] = await Promise.all([
+  const [payload, similarPerfumes, relatedArticles] = await Promise.all([
     getPerfumeDetailPayload(
       perfume.id,
       session?.userId ?? null,
@@ -67,6 +68,7 @@ export default async function PerfumeDetailPage({
         )
         return []
       }),
+    getArticlesForPerfumeSlug(perfumeSlug),
   ])
 
   return (
@@ -86,6 +88,7 @@ export default async function PerfumeDetailPage({
       reviewsData={payload.reviewsData}
       reviewsPageSize={REVIEWS_PAGE_SIZE}
       similarPerfumes={similarPerfumes}
+      relatedArticles={relatedArticles}
       selectedLetter={resolvedSearchParams.letter ?? null}
     />
   )

@@ -29,14 +29,13 @@ import {
   type UpdateProfileActionState,
 } from "./actions"
 
-const BANNER_IMAGE = "/images/myprofile.webp"
-
 type ProfileClientProps = {
   user: SessionUser
   alerts: UserAlert[]
   preferences: UserAlertPreferences | null
   unreadCount: number
   recommendedPerfumes: RecommendationPerfume[]
+  bannerImage: string
 }
 
 const ProfileForm = ({
@@ -246,6 +245,7 @@ const ProfileClient = ({
   preferences,
   unreadCount,
   recommendedPerfumes,
+  bannerImage,
 }: ProfileClientProps) => {
   const t = useTranslations("profile")
   const queryClient = useQueryClient()
@@ -271,7 +271,7 @@ const ProfileClient = ({
   return (
     <>
       <TitleBanner
-        image={BANNER_IMAGE}
+        image={bannerImage}
         heading={t("heading")}
         subheading={t("subheading")}
       >

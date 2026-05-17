@@ -5,3 +5,5 @@ export const PROFILE_PATH_PATTERN = "/[userSlug]/profile"
 /** House detail page - use with /houses/[slug] */
 export const HOUSE_DETAIL_PATH = "/houses"
 export const PERFUME_PATH = "/perfume"
+/** Editorial blog (Sanity CMS) */
+export const BEHIND_THE_BOTTLE_PATH = "/behind-the-bottle"

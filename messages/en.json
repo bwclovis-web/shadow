@@ -266,6 +266,24 @@
     "pushNotConfigured": "Push is not configured on this server yet.",
     "pushSubscribeFailed": "Could not enable push notifications. Try again later."
   },
+  "behindTheBottle": {
+    "meta": {
+      "title": "Behind the Bottle - Shadow and Sillage",
+      "description": "Stories from the world of perfume — houses, bottles, and the people who make them."
+    },
+    "eyebrow": "Editorial",
+    "heading": "Behind the Bottle",
+    "subheading": "Long-form stories on perfume houses, iconic bottles, and the culture around scent.",
+    "browseHouses": "Browse all perfume houses →",
+    "empty": "No articles published yet. Check back soon.",
+    "notConfigured": "The editorial blog is not connected yet. Add Sanity environment variables to enable articles.",
+    "article": {
+      "backToIndex": "← All articles"
+    },
+    "related": {
+      "heading": "From the blog"
+    }
+  },
   "allHouses": {
     "meta": {
       "title": "Behind the Bottle - Shadow and Sillage",
@@ -273,6 +291,7 @@
     },
     "heading": "Behind the Bottle",
     "subheading": "They don't just make perfume, they leave a mark.",
+    "readStories": "Read editorial stories →",
     "filters": {
       "houseType": "Filter by Type:",
       "sortBy": "Sort by:"
@@ -833,6 +852,7 @@
     "signIn": "Sign In",
     "about": "About",
     "aboutUs": "About Us",
+    "editorial": "Editorial",
     "howWeWork": "How We Work",
     "contactUs": "Contact Us",
     "home": "Home",

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 
+import { getArticlesForHouseSlug } from "@/lib/sanity/articles.server"
 import { getPerfumeHouseBySlug } from "@/models/house.server"
 import { houseDetailSortForApi } from "@/utils/house-perfumes-url-params"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
@@ -36,7 +37,7 @@ export default async function HouseDetailPage({ params, searchParams }: Props) {
   const { houseSlug } = await params
   const resolvedSearchParams = await searchParams
 
-  const [perfumeHouse, cookieHeader] = await Promise.all([
+  const [perfumeHouse, cookieHeader, relatedArticles] = await Promise.all([
     getPerfumeHouseBySlug(houseSlug, {
       skip: 0,
       take: DEFAULT_PAGE_SIZE,
@@ -44,6 +45,7 @@ export default async function HouseDetailPage({ params, searchParams }: Props) {
       nameSearch: resolvedSearchParams.q ?? null,
     }),
     getCookieHeader(),
+    getArticlesForHouseSlug(houseSlug),
   ])
   const session = await getSessionFromCookieHeader(cookieHeader, {
     includeUser: true,
@@ -58,6 +60,7 @@ export default async function HouseDetailPage({ params, searchParams }: Props) {
   return (
     <HouseDetailClient
       initialPerfumeHouse={perfumeHouse}
+      relatedArticles={relatedArticles}
       user={user}
       initialSearchParams={{
         pg: resolvedSearchParams.pg ?? "1",

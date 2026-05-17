@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next"
 
 import { prisma } from "@/lib/db"
+import { getPublishedArticles } from "@/lib/sanity/articles.server"
 
 export const revalidate = 86400
 
@@ -40,11 +41,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let perfumeEntries: MetadataRoute.Sitemap = []
   let houseEntries: MetadataRoute.Sitemap = []
+  let articleEntries: MetadataRoute.Sitemap = []
 
   try {
-    const [perfumes, houses] = await Promise.all([
+    const [perfumes, houses, articles] = await Promise.all([
       prisma.perfume.findMany({ select: { slug: true, updatedAt: true } }),
       prisma.perfumeHouse.findMany({ select: { slug: true, updatedAt: true } }),
+      getPublishedArticles(),
     ])
 
     perfumeEntries = perfumes.map((p) => ({
@@ -56,9 +59,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/houses/${h.slug}`,
       lastModified: h.updatedAt,
     }))
+
+    articleEntries = articles.map((article) => ({
+      url: `${baseUrl}/behind-the-bottle/${article.slug}`,
+      lastModified: article.publishedAt,
+    }))
   } catch {
     // e.g. missing DATABASE_URL in local tooling — still serve static URLs
   }
 
-  return [...staticEntries, ...vaultLetterEntries, ...houseEntries, ...perfumeEntries]
+  return [
+    ...staticEntries,
+    ...vaultLetterEntries,
+    ...houseEntries,
+    ...perfumeEntries,
+    ...articleEntries,
+  ]
 }

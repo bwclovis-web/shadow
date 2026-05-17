@@ -72,6 +72,7 @@ Optional service variables (only if you use those features):
 - Email (Resend): `RESEND_API_KEY`, `EMAIL_FROM` — must include a verified address, e.g. `Shadow and Sillage <alerts@shadowandsillage.com>` (not display name alone); verify sending domain in Resend dashboard
 - Web Push (optional): `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` — generate keys with `node scripts/generate-vapid-keys.mjs` (testing guide: `docs/testing-web-push.md`)
 - R2/Cloudflare storage variables (for image/storage scripts)
+- Sanity (Behind the Bottle blog): see **Sanity setup** below. Run `npm run sanity:check` to verify env vars.
 
 ## 5) Generate Prisma client + apply migrations
 
@@ -121,7 +122,43 @@ npm run test
 
 If both pass and the app opens at `localhost:3000`, your machine setup is complete.
 
-## 9) Common issues and fixes
+## 9) Sanity setup (Behind the Bottle blog, optional)
+
+1. Log in and create a project:
+
+```bash
+npm run sanity:login
+npx sanity projects create "Shadow and Sillage" --dataset production
+```
+
+Copy the **project ID** into `.env`:
+
+```env
+NEXT_PUBLIC_SANITY_PROJECT_ID="your-project-id"
+NEXT_PUBLIC_SANITY_DATASET="production"
+```
+
+2. In [Sanity Manage](https://www.sanity.io/manage) → your project → **API** → **CORS origins**, add:
+
+- `http://localhost:3000`
+- Your production URL (e.g. `https://shadowandsillage.com`)
+
+3. Verify and open the studio:
+
+```bash
+npm run sanity:check
+npm run sanity:dev
+```
+
+Or use the embedded studio at `http://localhost:3000/studio` while `npm run dev` is running.
+
+4. Create an **Article** in the studio (`title`, `slug`, `publishedAt`, `author`, `body`, optional `coverImage`, `perfumeRefs` / `houseRefs` slugs from this site).
+
+5. Optional — on publish, call `POST /api/sanity/revalidate` with header `Authorization: Bearer <SANITY_REVALIDATE_SECRET>` to refresh cached pages (set `SANITY_REVALIDATE_SECRET` in `.env`).
+
+Public blog: `/behind-the-bottle` (only when env vars are set). Perfume houses stay at `/houses`.
+
+## 10) Common issues and fixes
 
 - `JWT_SECRET environment variable is required`
   - Add `JWT_SECRET` to `.env` with a long random string.
@@ -132,7 +169,7 @@ If both pass and the app opens at `localhost:3000`, your machine setup is comple
 - Wrong DB targeted by scripts
   - Check `.env` and confirm `DATABASE_URL` / `LOCAL_DATABASE_URL` / `REMOTE_DATABASE_URL` values.
 
-## 10) Production-only schema sync (do not run for local setup)
+## 11) Production-only schema sync (do not run for local setup)
 
 If you ever need production schema sync, follow:
 

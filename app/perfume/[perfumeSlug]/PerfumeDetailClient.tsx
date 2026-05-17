@@ -24,7 +24,9 @@ import { useSessionStore } from "@/hooks/sessionStore"
 import { useDeletePerfume } from "@/lib/mutations/perfumes"
 import type { RecommendationPerfume } from "@/services/recommendations"
 
+import { RelatedArticlesSection } from "@/components/Containers/Blog/RelatedArticlesSection"
 import SimilarPerfumesCarousel from "@/components/Containers/Recommendations/SimilarPerfumesCarousel"
+import type { ArticleListItem } from "@/lib/sanity/types"
 
 const VAULT_PATH = "/the-vault"
 
@@ -40,6 +42,7 @@ type PerfumeDetailClientProps = {
   reviewsData: unknown
   reviewsPageSize: number
   similarPerfumes: RecommendationPerfume[]
+  relatedArticles: ArticleListItem[]
   selectedLetter: string | null
 }
 
@@ -55,6 +58,7 @@ const PerfumeDetailClient = ({
   reviewsData,
   reviewsPageSize,
   similarPerfumes,
+  relatedArticles,
   selectedLetter,
 }: PerfumeDetailClientProps) => {
   const { data: perfume } = usePerfume(initialPerfume.slug, initialPerfume)
@@ -189,6 +193,8 @@ const PerfumeDetailClient = ({
             selectedLetter={selectedLetter}
           />
         )}
+
+        <RelatedArticlesSection articles={relatedArticles} />
       </div>
     </section>
   )

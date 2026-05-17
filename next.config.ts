@@ -4,6 +4,7 @@ import createNextIntlPlugin from "next-intl/plugin"
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts")
 
 const nextConfig: NextConfig = {
+  transpilePackages: ["next-sanity"],
   experimental: {
     viewTransition: true,
     // Softer navigations: reuse prefetched RSC payloads briefly instead of always showing loading UI.
@@ -79,6 +80,11 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'www.theduabrand.com',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.sanity.io',
+        pathname: '/images/**',
       },
     ],
   },

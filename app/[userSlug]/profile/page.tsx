@@ -16,6 +16,7 @@ import {
 import type { UserAlert } from "@/types/database"
 import type { SessionUser } from "@/utils/session-from-request.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+import { publicAssetUrl } from "@/utils/public-asset-url.server"
 import { getProfileSlug } from "@/utils/user"
 
 import ProfileClient from "./ProfileClient"
@@ -81,6 +82,7 @@ export default async function ProfilePage({ params }: Props): Promise<React.Reac
       preferences={preferences}
       unreadCount={unreadCount}
       recommendedPerfumes={recommendedPerfumes}
+      bannerImage={publicAssetUrl("/images/profile.png")}
     />
   )
 }

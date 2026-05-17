@@ -45,6 +45,11 @@ const AboutDropdown = ({
 
   const aboutItems = [
     {
+      id: "behind-the-bottle",
+      label: t("editorial"),
+      path: "/behind-the-bottle",
+    },
+    {
       id: "how-we-work",
       label: t("howWeWork"),
       path: "/how-we-work",

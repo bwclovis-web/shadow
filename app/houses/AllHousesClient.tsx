@@ -4,6 +4,9 @@ import { useCallback, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
+import { BEHIND_THE_BOTTLE_PATH } from "@/constants/routes"
+
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import AlphabeticalNav from "@/components/Organisms/AlphabeticalNav"
 import DataDisplaySection from "@/components/Organisms/DataDisplaySection"
 import DataFilters from "@/components/Organisms/DataFilters"
@@ -25,6 +28,7 @@ const BANNER_IMAGE = "/images/behind-bottle.webp"
 interface AllHousesClientProps {
   heading: string
   subheading: string
+  showBlogLink?: boolean
   initialLetter?: string | null
   initialHouses?: unknown[]
   initialHousesTotal?: number
@@ -159,6 +163,7 @@ const buildHousesPath = (
 const AllHousesClient = ({
   heading,
   subheading,
+  showBlogLink = false,
   initialLetter = null,
   initialHouses = [],
   initialHousesTotal = 0,
@@ -282,6 +287,17 @@ const AllHousesClient = ({
         heading={heading}
         subheading={subheading}
       />
+
+      {showBlogLink ? (
+        <p className="inner-container -mt-6 mb-8 text-center">
+          <PrefetchLink
+            href={BEHIND_THE_BOTTLE_PATH}
+            className="text-blue-200 underline hover:text-noir-gold font-medium"
+          >
+            {t("readStories")}
+          </PrefetchLink>
+        </p>
+      ) : null}
 
       <DataFilters
         searchType="perfume-house"

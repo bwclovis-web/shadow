@@ -172,6 +172,24 @@
     "savePreferences": "Salva preferenze",
     "savingPreferences": "Salvataggio..."
   },
+  "behindTheBottle": {
+    "meta": {
+      "title": "Dietro il flacone - Shadow and Sillage",
+      "description": "Storie dal mondo del profumo: case, flaconi e cultura olfattiva."
+    },
+    "eyebrow": "Editoriale",
+    "heading": "Dietro il flacone",
+    "subheading": "Articoli su case di profumeria, flaconi iconici e cultura del profumo.",
+    "browseHouses": "Sfoglia tutte le case di profumeria →",
+    "empty": "Nessun articolo pubblicato. Torna presto.",
+    "notConfigured": "Il blog editoriale non è ancora collegato. Aggiungi le variabili Sanity per abilitare gli articoli.",
+    "article": {
+      "backToIndex": "← Tutti gli articoli"
+    },
+    "related": {
+      "heading": "Dal blog"
+    }
+  },
   "allHouses": {
     "meta": {
       "title": "Dietro il flacone - Shadow and Sillage",
@@ -179,6 +197,7 @@
     },
     "heading": "Dietro il flacone",
     "subheading": "Non fanno solo profumi, lasciano il segno.",
+    "readStories": "Leggi gli articoli editoriali →",
     "filters": {
       "houseType": "Filtra per tipo:",
       "sortBy": "Ordina per:"
@@ -728,6 +747,7 @@
     "signIn": "Accedi",
     "about": "Informazioni",
     "aboutUs": "Chi siamo",
+    "editorial": "Editoriale",
     "howWeWork": "Come funziona",
     "contactUs": "Contatti",
     "home": "Home",

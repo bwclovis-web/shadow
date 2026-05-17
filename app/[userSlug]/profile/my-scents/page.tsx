@@ -7,11 +7,12 @@ import { redirect } from "next/navigation"
 import { getTradersWantingUserListings } from "@/models/wishlist-matching.server"
 import { getUserPerfumes } from "@/models/user.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+import { publicAssetUrl } from "@/utils/public-asset-url.server"
 import { getProfileSlug } from "@/utils/user"
 
 import MyScentsPageClient from "./MyScentsPageClient"
 
-const BANNER_IMAGE = "/images/perfume.webp"
+const BANNER_IMAGE = publicAssetUrl("/images/perfumes.png")
 
 type Props = {
   params: Promise<{ userSlug: string }>

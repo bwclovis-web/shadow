@@ -5,11 +5,12 @@ import { getTranslations } from "next-intl/server"
 import { redirect } from "next/navigation"
 
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+import { publicAssetUrl } from "@/utils/public-asset-url.server"
 import { getProfileSlug } from "@/utils/user"
 
 import ChangePasswordPageClient from "./ChangePasswordPageClient"
 
-const BANNER_IMAGE = "/images/changePassword.png"
+const BANNER_IMAGE = publicAssetUrl("/images/changePassword.png")
 
 type Props = {
   params: Promise<{ userSlug: string }>
