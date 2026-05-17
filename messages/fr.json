@@ -948,10 +948,20 @@
       "description": "Vous perdrez tous les parfums et l'historique associés."
     }
   },
+  "houseDetail": {
+    "meta": {
+      "title": "{name} | Shadow and Sillage",
+      "descriptionFallback": "Explorez {name} : catalogue de parfums, profil de la maison et articles éditoriaux sur Shadow and Sillage."
+    }
+  },
   "singlePerfume": {
     "meta": {
       "title": "Détails du parfum - Shadow and Sillage",
-      "description": "Découvrez les détails d'un parfum."
+      "description": "Découvrez les détails d'un parfum.",
+      "titleWithHouse": "{name} — {house} | Shadow and Sillage",
+      "titleStandalone": "{name} | Shadow and Sillage",
+      "descriptionWithHouse": "Explorez {name} par {house} : notes, avis et annonces de la communauté sur Shadow and Sillage.",
+      "descriptionStandalone": "Explorez {name} : notes, avis et annonces de la communauté sur Shadow and Sillage."
     },
     "subheading": "Par : ",
     "notes": {

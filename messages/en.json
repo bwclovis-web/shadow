@@ -1055,10 +1055,20 @@
       "description": "Once deleted, you will lose all perfumes and history associated with this house."
     }
   },
+  "houseDetail": {
+    "meta": {
+      "title": "{name} | Shadow and Sillage",
+      "descriptionFallback": "Explore {name}: perfume catalog, house profile, and editorial stories on Shadow and Sillage."
+    }
+  },
   "singlePerfume": {
     "meta": {
       "title": "Perfume Details - Shadow and Sillage",
-      "description": "Discover the details of a specific perfume."
+      "description": "Discover the details of a specific perfume.",
+      "titleWithHouse": "{name} — {house} | Shadow and Sillage",
+      "titleStandalone": "{name} | Shadow and Sillage",
+      "descriptionWithHouse": "Explore {name} by {house}: notes, ratings, and community listings on Shadow and Sillage.",
+      "descriptionStandalone": "Explore {name}: notes, ratings, and community listings on Shadow and Sillage."
     },
     "similarPerfumes": "Similar perfumes",
     "subheading": "By: ",

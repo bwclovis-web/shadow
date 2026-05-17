@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
+import { buildPageMetadata } from "@/lib/seo/metadata"
 import { getHousesByLetterPaginated } from "@/models/house.server"
 import { isSanityConfigured } from "@/sanity/env"
 
@@ -11,10 +12,11 @@ const DEFAULT_PAGE_SIZE = 8
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("allHouses.meta")
-  return {
+  return buildPageMetadata({
     title: t("title"),
     description: t("description"),
-  }
+    canonicalPath: "/houses",
+  })
 }
 
 type Props = {

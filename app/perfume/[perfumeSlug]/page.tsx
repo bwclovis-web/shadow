@@ -4,6 +4,9 @@ import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 
 import { getArticlesForPerfumeSlug } from "@/lib/sanity/articles.server"
+import { buildPerfumeProductJsonLd } from "@/lib/seo/json-ld"
+import { buildPageMetadata } from "@/lib/seo/metadata"
+import { truncateDescription } from "@/lib/seo/truncate"
 import { getPerfumeDetailPayload } from "@/models/perfumeDetail.server"
 import { selectionFromVoteRow } from "@/models/perfumeSeasonVote.server"
 import { getPerfumeBySlug } from "@/models/perfume.server"
@@ -27,10 +30,21 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
     return { title: "Perfume not found" }
   }
   const t = await getTranslations("singlePerfume.meta")
-  return {
-    title: t("title"),
-    description: t("description"),
-  }
+  const houseName = perfume.perfumeHouse?.name
+  const title = houseName
+    ? t("titleWithHouse", { name: perfume.name, house: houseName })
+    : t("titleStandalone", { name: perfume.name })
+  const description =
+    truncateDescription(perfume.description) ??
+    (houseName
+      ? t("descriptionWithHouse", { name: perfume.name, house: houseName })
+      : t("descriptionStandalone", { name: perfume.name }))
+
+  return buildPageMetadata({
+    title,
+    description,
+    canonicalPath: `/perfume/${perfumeSlug}`,
+  })
 }
 
 export default async function PerfumeDetailPage({
@@ -71,8 +85,23 @@ export default async function PerfumeDetailPage({
     getArticlesForPerfumeSlug(perfumeSlug),
   ])
 
+  const jsonLd = buildPerfumeProductJsonLd({
+    name: perfume.name,
+    slug: perfume.slug,
+    description: perfume.description,
+    image: perfume.image,
+    perfumeHouse: perfume.perfumeHouse
+      ? { name: perfume.perfumeHouse.name, slug: perfume.perfumeHouse.slug }
+      : null,
+  })
+
   return (
-    <PerfumeDetailClient
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <PerfumeDetailClient
       initialPerfume={perfume}
       user={session?.user ?? null}
       isInUserWishlist={payload.isInUserWishlist}
@@ -91,5 +120,6 @@ export default async function PerfumeDetailPage({
       relatedArticles={relatedArticles}
       selectedLetter={resolvedSearchParams.letter ?? null}
     />
+    </>
   )
 }

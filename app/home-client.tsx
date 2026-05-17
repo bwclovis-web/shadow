@@ -35,8 +35,28 @@ export default function HomeClient({
   const tComponents = useTranslations("components.search")
   const mounted = useMounted()
 
-  // Lazy load GSAP animations after component mounts
+  // Lazy load GSAP animations after component mounts (skip when user prefers reduced motion)
   useEffect(() => {
+    const showHeroWithoutAnimation = () => {
+      if (!container.current) return
+      const heroTitle = container.current.querySelector<HTMLElement>(".hero-title")
+      const subtitle = container.current.querySelector<HTMLElement>(".subtitle")
+      if (heroTitle) {
+        heroTitle.style.opacity = "1"
+        heroTitle.style.transform = "none"
+      }
+      if (subtitle) {
+        subtitle.style.opacity = "1"
+        subtitle.style.filter = "none"
+        subtitle.style.transform = "none"
+      }
+    }
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      showHeroWithoutAnimation()
+      return
+    }
+
     const loadAnimations = async () => {
       const { gsap } = await import("gsap")
 
@@ -97,8 +117,9 @@ export default function HomeClient({
         src={LANDING_HERO}
         alt=""
         priority
+        fill
         sizes="100vw"
-        className="absolute object-cover w-full h-full filter grayscale-100% sepia-[0.5] mix-blend-multiply hero-image"
+        className="object-cover filter grayscale-100% sepia-[0.5] mix-blend-multiply hero-image"
       />
       <div className="absolute inset-0 bg-noir-black/85 mask-radial-from-10% mask-radial-to-74% md:mask-radial-from-25% md:mask-radial-to-44%" />
       <section className="text-noir-gold relative z-10 flex flex-col items-center gap-4 pt-50 md:pt-40">

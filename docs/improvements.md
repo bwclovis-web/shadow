@@ -120,7 +120,7 @@ _These features make the platform sticky. Users return because they have active 
 
 **Still open from Wave 1/2:** IMP-031 (report from trade UI), IMP-046 (listing photos on exchange cards), IMP-063 (trade milestone emails).
 
-**Next up:** Wave 3E — SEO pass
+**Next up:** Wave 3F — Bulk inventory editor
 
 ### 2A — Trade Lifecycle API and UI ✅
 
@@ -211,12 +211,12 @@ _These are the features no mobile-only competitor can easily replicate. They com
 | **3B** Scent DNA card | ✅ Done | IMP-210–214 |
 | **3C** Quiz depth | ✅ Done | IMP-220–223 |
 | **3D** Sanity blog | ✅ Done | IMP-230–236 |
-| **3E** SEO pass | ⏳ Not started | IMP-240–246 |
+| **3E** SEO pass | ✅ Done | IMP-240–246 (IMP-245 GSC submit is manual ops) |
 | **3F** Bulk inventory | ⏳ Not started | IMP-250–256 |
 | **3G** Shareable links | ⏳ Not started | IMP-260–263 |
 | **3H** Experience polish | ⏳ Not started | IMP-270–275 |
 
-**Next up:** 3E — SEO pass
+**Next up:** 3F — Bulk inventory editor
 
 ### 3A — Onboarding Flow ✅
 
@@ -261,15 +261,17 @@ _No new schema — all computed from existing data._
 
 **Shipped in:** `sanity/` studio (`schemaTypes/article.ts`, `sanity.config.ts`); `lib/sanity/` (client, queries, `articles.server.ts`, `image.ts`, `json-ld.ts`, types); `app/behind-the-bottle/` index + `[slug]` detail (`revalidate = 3600`, `PortableTextContent`, OG/Twitter + Article JSON-LD); `components/Containers/Blog/` (`ArticleCard`, `RelatedArticlesSection`); cross-links on `app/perfume/[perfumeSlug]/` and `app/houses/[houseSlug]/`; `app/api/sanity/revalidate/route.ts`; `npm run sanity:check` / `sanity:dev`; env in `scripts/env.example` and `docs/new computer set up.md` §9. Blog routes redirect to `/houses` when Sanity env is unset (`isSanityConfigured`).
 
-### 3E — SEO Pass
+### 3E — SEO Pass ✅
 
-- [ ] **IMP-240** Add JSON-LD `Product`/`Thing` structured data to `/perfume/[slug]` pages (name, description, image, brand)
-- [ ] **IMP-241** Add JSON-LD `Organization` to `/houses/[slug]` pages (name, country, foundingDate, url)
-- [ ] **IMP-242** Add `<meta name="description">` and Open Graph tags (`og:title`, `og:description`, `og:image`) to all perfume, house, and exchange pages
-- [ ] **IMP-243** Generate dynamic OG images for perfume pages (bottle image + name + house)
-- [ ] **IMP-244** Add canonical URL tags to all pages; verify no duplicate content from filter params
-- [ ] **IMP-245** Submit XML sitemap including all perfume, house, and article slugs; verify in Google Search Console
-- [ ] **IMP-246** Add `prefers-reduced-motion` gate to existing GSAP hero animation in [`app/home-client.tsx`](../app/home-client.tsx)
+- [x] **IMP-240** Add JSON-LD `Product`/`Thing` structured data to `/perfume/[slug]` pages (name, description, image, brand)
+- [x] **IMP-241** Add JSON-LD `Organization` to `/houses/[slug]` pages (name, country, foundingDate, url)
+- [x] **IMP-242** Add `<meta name="description">` and Open Graph tags (`og:title`, `og:description`, `og:image`) to all perfume, house, and exchange pages
+- [x] **IMP-243** Generate dynamic OG images for perfume pages (bottle image + name + house)
+- [x] **IMP-244** Add canonical URL tags to all pages; verify no duplicate content from filter params
+- [x] **IMP-245** Submit XML sitemap including all perfume, house, and article slugs; verify in Google Search Console
+- [x] **IMP-246** Add `prefers-reduced-motion` gate to existing GSAP hero animation in [`app/home-client.tsx`](../app/home-client.tsx)
+
+**Shipped in:** `lib/seo/` (`site-url.ts`, `metadata.ts`, `json-ld.ts`, `truncate.ts`); `metadataBase` on root `app/layout.tsx`; perfume + house detail pages (dynamic title/description, canonical, OG/Twitter, JSON-LD scripts); `/houses` index + `/the-exchange` metadata; `app/perfume/[perfumeSlug]/opengraph-image.tsx` (dynamic OG card with bottle); canonical strips filter params (perfume `letter`, house `pg`/`q`/`sort`, exchange discovery params); `app/sitemap.ts` + `app/robots.ts` (perfume, house, article slugs — submit `sitemap.xml` in GSC manually); `app/home-client.tsx` reduced-motion skip for GSAP hero; i18n `singlePerfume.meta`, `houseDetail.meta`.
 
 ### 3F — Bulk Inventory Editor
 
@@ -314,8 +316,8 @@ _No new schema — all computed from existing data._
 
 - **Completed (Wave 1):** 1A schema, 1B admin strikes + ban enforcement, 1C user reports + admin reports queue, 1D listing photos, 1E trader avatar + profile fields (region, social links), 1F transactional email (wishlist + decant alerts).
 - **Completed (Wave 2):** Full trade lifecycle (API, composer, thread card, profile tabs), reputation + community policy, exchange discovery filters, wishlist matching, activity feed, seasonal trending, Web Push (trade + message alerts, nav badge). See section tables above for IMP IDs.
-- **Completed (Wave 3, partial):** Onboarding banner (3 steps), Scent DNA card + share page, quiz depth (budget / concentration / house tier), Sanity blog (Behind the Bottle index + article pages, studio schema, perfume/house cross-links, JSON-LD/OG).
-- **Still open:** IMP-031 (report from trade UI), IMP-046 (photos on exchange cards), IMP-063 (`sendTradeEventEmail` — TODO in `trade.server.ts`). Wave 3E–3H unchanged.
+- **Completed (Wave 3, partial):** Onboarding, Scent DNA, quiz depth, Sanity blog, SEO pass (JSON-LD, OG, canonicals, dynamic perfume OG images, sitemap/robots).
+- **Still open:** IMP-031 (report from trade UI), IMP-046 (photos on exchange cards), IMP-063 (`sendTradeEventEmail` — TODO in `trade.server.ts`). Wave 3F–3H unchanged. IMP-245 GSC verification is a manual deploy-time step.
 - **Local schema:** Use **Prisma Migrate** (`npx prisma migrate dev` / `migrate deploy`) — see `docs/database-migrations.md` and `.cursor/rules/prisma-migrations-only.mdc`. Do **not** use `prisma db push` for routine work.
 - **Production schema (legacy):** Remote DB was synced May 2026 via `npm run db:push:prod` (`scripts/push-prod-schema.js` — `APPLY_TO_REMOTE_DB.sql` + `supplementalMigrations` for onboarding, quiz depth, and Web Push tables/columns). Verification passed for `Trade`, strikes, reports, listing fields, push prefs, `UserPushSubscription`, `UserConversationPresence`, etc. Prefer `npx prisma migrate deploy` against `REMOTE_DATABASE_URL` when migration history catches up; extend `supplementalMigrations` only when prod still lags checked-in migrations.
 - After schema changes: `npm run db:generate` and restart `npm run dev` (or delete `.next` + `node_modules/.prisma/client` if the client is stale on Windows).

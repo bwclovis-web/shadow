@@ -2,15 +2,9 @@ import type { MetadataRoute } from "next"
 
 import { prisma } from "@/lib/db"
 import { getPublishedArticles } from "@/lib/sanity/articles.server"
+import { getSiteUrl } from "@/lib/seo/site-url"
 
 export const revalidate = 86400
-
-function getBaseUrl(): string {
-  const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "")
-  if (fromEnv) return fromEnv
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
-  return "http://localhost:3000"
-}
 
 const STATIC_PATHS = [
   "/",
@@ -26,7 +20,7 @@ const STATIC_PATHS = [
 ] as const
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = getBaseUrl()
+  const baseUrl = getSiteUrl()
   const now = new Date()
 
   const staticEntries: MetadataRoute.Sitemap = STATIC_PATHS.map((path) => ({

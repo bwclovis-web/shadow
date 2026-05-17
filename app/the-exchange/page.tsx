@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
+import { buildPageMetadata } from "@/lib/seo/metadata"
 import { getPerfumeHouseSummaryById } from "@/models/house.server"
 import {
   getAvailablePerfumesForDecantingPaginated,
@@ -23,10 +24,12 @@ const PAGE_SIZE = 16
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("tradingPost.meta")
-  return {
+  return buildPageMetadata({
     title: t("title"),
     description: t("description"),
-  }
+    canonicalPath: "/the-exchange",
+    ogImage: "/images/perfumes.png",
+  })
 }
 
 type PageProps = {

@@ -18,6 +18,7 @@ import { TradeAlertUnreadProvider } from '@/components/Molecules/TradeAlertUnrea
 import { UserAlertsProvider } from '@/components/Molecules/UserAlertsProvider/UserAlertsProvider'
 import SiteFooter from '@/components/Organisms/SiteFooter/SiteFooter'
 import OnboardingBannerSlot from '@/components/Onboarding/OnboardingBannerSlot'
+import { getSiteUrl } from '@/lib/seo/site-url'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -34,6 +35,7 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
   title: 'Shadow and Sillage',
   description: 'Perfume trading platform',
   appleWebApp: {
