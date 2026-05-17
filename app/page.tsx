@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db"
 import { getRecentlyListedActivity } from "@/models/activity-feed.server"
+import { getSeasonalTrendingPerfumes } from "@/models/seasonal-trending.server"
 import { getAllFeatures } from '@/models/feature.server'
 import HomeClient from "./home-client"
 import type { Metadata } from "next"
@@ -14,13 +15,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const HomePage = async () => {
-  const [features, userCount, houseCount, perfumeCount, recentListings] =
+  const [features, userCount, houseCount, perfumeCount, recentListings, seasonalTrending] =
     await Promise.all([
       getAllFeatures(),
       prisma.user.count(),
       prisma.perfumeHouse.count(),
       prisma.perfume.count(),
       getRecentlyListedActivity(6),
+      getSeasonalTrendingPerfumes(10),
     ])
 
   const counts = {
@@ -34,6 +36,7 @@ const HomePage = async () => {
       features={features}
       counts={counts}
       recentListings={recentListings}
+      seasonalTrending={seasonalTrending}
     />
   )
 }

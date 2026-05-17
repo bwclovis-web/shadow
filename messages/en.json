@@ -551,6 +551,9 @@
     },
     "activityFeed": {
       "title": "Latest on the exchange"
+    },
+    "seasonalTrending": {
+      "title": "Trending this {season}"
     }
   },
   "howItWorks":{
@@ -1289,6 +1292,12 @@
       "description": "Fresh bottles recently added to the exchange.",
       "viewPerfume": "View {name}",
       "viewTrader": "View {name}'s profile"
+    },
+    "seasonalTrending": {
+      "title": "Trending this {season}",
+      "description": "Community season votes for the current time of year.",
+      "voteCount": "{count, plural, one {# vote} other {# votes}}",
+      "viewPerfume": "View {name}"
     },
     "listings": {
       "openButton": "View traders & listings",

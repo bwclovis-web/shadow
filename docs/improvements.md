@@ -163,11 +163,13 @@ _All enums already exist — this is UI only, no schema change._
 
 **Shipped in:** `models/activity-feed.server.ts`, `utils/time-ago.ts`, `components/Containers/Exchange/ActivityFeedSection.tsx`, `ActivityFeedItem.tsx`; exchange `page.tsx` / `TheExchangeClient.tsx`; home `page.tsx` / `home-client.tsx`; nav badge via `app/layout.tsx` → `MainNavigationLinks`; i18n `tradingPost.activityFeed`, `home.activityFeed`, `navigation.exchangeNewThisWeek`.
 
-### 2F — Seasonal Trending
+### 2F — Seasonal Trending ✅
 
-- [ ] **IMP-160** Query `UserPerfumeSeasonVote` aggregated by the current real-world season (spring: Mar–May, summer: Jun–Aug, fall: Sep–Nov, winter: Dec–Feb); return top 10 perfumes by vote count
-- [ ] **IMP-161** Surface as "Trending this season" section on the exchange sidebar and home page
-- [ ] **IMP-162** Auto-updates by season — no manual curation needed
+- [x] **IMP-160** Query `UserPerfumeSeasonVote` aggregated by the current real-world season (spring: Mar–May, summer: Jun–Aug, fall: Sep–Nov, winter: Dec–Feb); return top 10 perfumes by vote count
+- [x] **IMP-161** Surface as "Trending this season" section on the exchange sidebar and home page
+- [x] **IMP-162** Auto-updates by season — no manual curation needed
+
+**Shipped in:** `utils/season-calendar.ts`, `models/seasonal-trending.server.ts`, `components/Containers/Exchange/SeasonalTrendingSection.tsx`; exchange sidebar + `page.tsx` / `TheExchangeClient.tsx`; home `page.tsx` / `home-client.tsx`; i18n `tradingPost.seasonalTrending`, `home.seasonalTrending`.
 
 ### 2G — Web Push Notifications
 

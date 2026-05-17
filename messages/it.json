@@ -469,6 +469,9 @@
     },
     "activityFeed": {
       "title": "Ultime novità sullo scambio"
+    },
+    "seasonalTrending": {
+      "title": "Di tendenza in {season}"
     }
   },
   "howItWorks": {
@@ -1156,6 +1159,12 @@
       "description": "Bottiglie aggiunte di recente allo scambio.",
       "viewPerfume": "Vedi {name}",
       "viewTrader": "Vedi il profilo di {name}"
+    },
+    "seasonalTrending": {
+      "title": "Di tendenza in {season}",
+      "description": "Voti stagionali della community per il periodo dell'anno.",
+      "voteCount": "{count, plural, one {# voto} other {# voti}}",
+      "viewPerfume": "Vedi {name}"
     },
     "listings": {
       "openButton": "Vedi venditori e annunci",

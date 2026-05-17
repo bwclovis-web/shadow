@@ -9,6 +9,8 @@ import ActivityFeedSection from "@/components/Containers/Exchange/ActivityFeedSe
 import SearchBar from "@/components/Organisms/SearchBar"
 import { useMounted } from "@/hooks/useMounted"
 import type { ActivityFeedListingRow } from "@/models/activity-feed.server"
+import type { SeasonalTrendingResult } from "@/models/seasonal-trending.server"
+import SeasonalTrendingSection from "@/components/Containers/Exchange/SeasonalTrendingSection"
 
 type Feature = Awaited<ReturnType<typeof import("@/models/feature.server").getAllFeatures>>[number]
 
@@ -16,12 +18,14 @@ interface HomeClientProps {
   features: Feature[]
   counts: { users: number; houses: number; perfumes: number }
   recentListings?: ActivityFeedListingRow[]
+  seasonalTrending?: SeasonalTrendingResult
 }
 
 export default function HomeClient({
   features: _features,
   counts,
   recentListings = [],
+  seasonalTrending = { season: "spring", perfumes: [] },
 }: HomeClientProps) {
   const [searchType, setSearchType] = useState<"perfume-house" | "perfume">("perfume")
   const container = useRef<HTMLDivElement>(null)
@@ -158,13 +162,23 @@ export default function HomeClient({
         </div>
       </section>
 
-      {recentListings.length > 0 ? (
-        <section className="relative z-10 w-full max-w-4xl px-4 pb-8">
-          <ActivityFeedSection
-            listings={recentListings}
-            variant="compact"
-            className="rounded-md border border-noir-gold/40 bg-noir-black/70 p-4 backdrop-blur-sm"
-          />
+      {recentListings.length > 0 || seasonalTrending.perfumes.length > 0 ? (
+        <section className="relative z-10 flex w-full max-w-4xl flex-col gap-6 px-4 pb-8">
+          {seasonalTrending.perfumes.length > 0 ? (
+            <SeasonalTrendingSection
+              season={seasonalTrending.season}
+              perfumes={seasonalTrending.perfumes}
+              variant="compact"
+              className="rounded-md border border-noir-gold/40 bg-noir-black/70 p-4 backdrop-blur-sm"
+            />
+          ) : null}
+          {recentListings.length > 0 ? (
+            <ActivityFeedSection
+              listings={recentListings}
+              variant="compact"
+              className="rounded-md border border-noir-gold/40 bg-noir-black/70 p-4 backdrop-blur-sm"
+            />
+          ) : null}
         </section>
       ) : null}
     </div>

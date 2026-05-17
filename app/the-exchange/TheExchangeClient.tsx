@@ -373,27 +373,32 @@ const TheExchangeClient = ({
         <>
           <div className="inner-container py-6">
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(260px,300px)_1fr] lg:items-start">
-              {isLg ? (
-                <aside
-                  className="min-w-0 lg:sticky lg:top-4"
-                  aria-label={tf("toggle")}
-                >
-                  {filterPanel}
-                </aside>
-              ) : (
-                <details
-                  className="min-w-0 rounded-md border border-noir-light bg-noir-gray/80"
-                  open={mobileFiltersOpen}
-                  onToggle={e => setMobileFiltersOpen(e.currentTarget.open)}
-                >
-                  <summary className="cursor-pointer list-none px-4 py-3 font-semibold text-noir-gold [&::-webkit-details-marker]:hidden">
-                    {tf("toggle")}
-                  </summary>
-                  <div className="border-t border-noir-light/40 px-4 pb-4 pt-2">
-                    {filterPanel}
-                  </div>
-                </details>
-              )}
+              <div className="min-w-0 space-y-6 lg:sticky lg:top-4">
+                {isLg ? (
+                  <aside aria-label={tf("toggle")}>{filterPanel}</aside>
+                ) : (
+                  <details
+                    className="rounded-md border border-noir-light bg-noir-gray/80"
+                    open={mobileFiltersOpen}
+                    onToggle={e => setMobileFiltersOpen(e.currentTarget.open)}
+                  >
+                    <summary className="cursor-pointer list-none px-4 py-3 font-semibold text-noir-gold [&::-webkit-details-marker]:hidden">
+                      {tf("toggle")}
+                    </summary>
+                    <div className="border-t border-noir-light/40 px-4 pb-4 pt-2">
+                      {filterPanel}
+                    </div>
+                  </details>
+                )}
+                {seasonalTrending.perfumes.length > 0 ? (
+                  <SeasonalTrendingSection
+                    season={seasonalTrending.season}
+                    perfumes={seasonalTrending.perfumes}
+                    variant="sidebar"
+                    className="noir-border rounded-md border-noir-gold/40 bg-noir-gold/10 p-4"
+                  />
+                ) : null}
+              </div>
 
               <div className="min-w-0 space-y-6">
                 {discoveryChipItems.length > 0 ? (

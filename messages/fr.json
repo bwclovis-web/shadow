@@ -469,6 +469,9 @@
     },
     "activityFeed": {
       "title": "Dernières annonces sur l'échange"
+    },
+    "seasonalTrending": {
+      "title": "Tendances {season}"
     }
   },
   "howItWorks": {
@@ -1156,6 +1159,12 @@
       "description": "Flacons récemment ajoutés à l'échange.",
       "viewPerfume": "Voir {name}",
       "viewTrader": "Voir le profil de {name}"
+    },
+    "seasonalTrending": {
+      "title": "Tendances {season}",
+      "description": "Votes de saison de la communauté pour la période de l'année.",
+      "voteCount": "{count, plural, one {# vote} other {# votes}}",
+      "viewPerfume": "Voir {name}"
     },
     "listings": {
       "openButton": "Voir les vendeurs et annonces",
