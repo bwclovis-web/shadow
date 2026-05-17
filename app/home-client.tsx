@@ -11,7 +11,8 @@ import { useMounted } from "@/hooks/useMounted"
 import type { ActivityFeedListingRow } from "@/models/activity-feed.server"
 import type { SeasonalTrendingResult } from "@/models/seasonal-trending.server"
 import SeasonalTrendingSection from "@/components/Containers/Exchange/SeasonalTrendingSection"
-import landingHero from "@/public/images/landing-new.png"
+
+const LANDING_HERO = "/images/landing-new.png"
 
 type Feature = Awaited<ReturnType<typeof import("@/models/feature.server").getAllFeatures>>[number]
 
@@ -93,7 +94,7 @@ export default function HomeClient({
       ref={container}
     >
       <Image
-        src={landingHero}
+        src={LANDING_HERO}
         alt=""
         priority
         sizes="100vw"

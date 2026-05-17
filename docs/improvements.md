@@ -16,14 +16,14 @@ _Nothing in Wave 2 is meaningful without listing photos, a trade record, and a s
 |---------|--------|-------|
 | **1A** Schema | ✅ Done | IMP-001–014 |
 | **1B** Trader strikes (admin) | ✅ Done | IMP-020–027 |
-| **1C** User reports | ✅ Done | IMP-030, 032–033 (IMP-031 deferred to 2A) |
-| **1D** Listing photos | ✅ Done | IMP-040–047 |
-| **1E** Trader avatar / profile | ✅ Done | IMP-050–053 (IMP-051 trade timeline deferred to 2A) |
-| **1F** Email delivery | ✅ Done | IMP-060–062, 064 (IMP-063 deferred to 2A) |
+| **1C** User reports | ✅ Done | IMP-030, 032–033 (IMP-031 report-from-trade UI still open) |
+| **1D** Listing photos | ✅ Done | IMP-040–047 (IMP-046 exchange cards deferred) |
+| **1E** Trader avatar / profile | ✅ Done | IMP-050–053 |
+| **1F** Email delivery | ✅ Done | IMP-060–062, 064 (IMP-063 trade emails still open) |
 
-**Next up:** Wave 2A — Trade Lifecycle
+**Wave 1 complete.** See Wave 2 and Wave 3 progress below.
 
-### 1A — Schema (single `prisma db push`) ✅
+### 1A — Schema (Wave 1 baseline) ✅
 
 - [x] **IMP-001** Add `Trade` model: `id`, `initiatorId`, `counterpartyId`, `status` enum (`draft/pending/accepted/shipped/received/completed/declined/cancelled`), `notes`, `createdAt`, `updatedAt`
 - [x] **IMP-002** Add `TradeLineItem` model: `id`, `tradeId`, `userPerfumeId`, `role` (`offered`/`requested`), snapshot fields (`perfumeName`, `mlSnapshot`, `conditionSnapshot`) — no monetary fields
@@ -38,9 +38,9 @@ _Nothing in Wave 2 is meaningful without listing photos, a trade record, and a s
 - [x] **IMP-011** Add `strikeCount Int @default(0)` and `isBanned Boolean @default(false)` to `User`
 - [x] **IMP-012** Add `UserReport` model: `id`, `reporterId`, `reportedUserId`, `tradeId?`, `category` (enum: `scam/fakeItem/harassment/noShip/other`), `description String?`, `status` (`pending/reviewed/actioned`), `createdAt`
 - [x] **IMP-013** Add `User.onboardingCompletedAt DateTime?` for onboarding state tracking
-- [x] **IMP-014** Run `prisma db push` — all above in one push, all additive, no data loss (local `new_scent` @ localhost, May 2026)
+- [x] **IMP-014** Apply Wave 1 schema (local baseline May 2026; later environments via migrate deploy / legacy prod push script)
 
-**Shipped in:** `prisma/schema.prisma` — run `npm run db:push` on each environment, then `npm run db:generate` (restart dev server if Prisma client was cached).
+**Shipped in:** `prisma/schema.prisma` — local: `npx prisma migrate dev` or `migrate deploy`; production historical sync: `npm run db:push:prod` (see Notes). Then `npm run db:generate` (restart dev server if Prisma client was cached).
 
 ### 1B — Trader Strike System (admin) ✅
 
@@ -58,7 +58,7 @@ _Nothing in Wave 2 is meaningful without listing photos, a trade record, and a s
 ### 1C — User Report System ✅
 
 - [x] **IMP-030** Add "Report" button to trader profile page; opens modal with category dropdown + optional description field; calls `createUserReportAction`
-- [ ] **IMP-031** Add "Report" button inside trade timeline (once built); pre-fills `tradeId` on the report — deferred until trade timeline (Wave 2A)
+- [ ] **IMP-031** Add "Report" button inside trade UI (`TradeStatusCard` / thread); pre-fills `tradeId` on the report — trade lifecycle shipped (2A); report-from-trade UI still open
 - [x] **IMP-032** Add Reports queue tab to admin panel (alongside pending submissions); shows unreviewed reports with reporter, reported user, category, trade link
 - [x] **IMP-033** Add "Issue Strike" shortcut from report detail so admin can act in one click
 
@@ -82,15 +82,13 @@ _Nothing in Wave 2 is meaningful without listing photos, a trade record, and a s
 ### 1E — Trader Avatar and Profile Fields ✅
 
 - [x] **IMP-050** Add avatar image upload to user profile settings page (R2 pipeline, same component as IMP-040)
-- [x] **IMP-051** Surface avatar on trader profile header, message inbox rows, and trade timeline events — **trade timeline deferred** until Wave 2A trade UI exists
+- [x] **IMP-051** Surface avatar on trader profile header, message inbox rows, and `TradeStatusCard` in message threads (counterparty avatar on active trade)
 - [x] **IMP-052** Add region field to profile settings; surface as a chip on trader profile
 - [x] **IMP-053** Add optional social links (Fragrantica URL, Reddit username, Instagram handle) to profile settings; render as small icon links on trader profile
 
 **Shipped in:** `app/api/avatar-images/route.ts`, `utils/avatar-images-client.ts`, `utils/validation/fieldSchemas.ts` (`avatarImageSchema`); profile form in `app/[userSlug]/profile/ProfileClient.tsx` + `actions.ts` (`UpdateProfileSchema`); `components/Molecules/TraderAvatar/`, `components/Molecules/CountryTypeahead/`, `components/Atoms/CountryFlagBadge/`, `utils/country-list.ts` (shared with `data/countryList.json`); trader display in `app/trader-profile/[id]/TraderProfileClient.tsx` (avatar in `TitleBanner`), `app/trader-profile/[id]/aside/aside.tsx` + `components/Containers/TraderProfile/TraderProfileAboutExtras.tsx` + `TraderSocialLinks.tsx`; messages in `app/messages/MessagesClient.tsx`, `app/messages/[otherUserId]/ThreadClient.tsx`; `models/user.server.ts` / `models/user.query.ts` / `models/contactMessage.server.ts`; `hooks/useTrader.ts` (refetch on mount after profile edits); `flagcdn.com` in `next.config.ts` `remotePatterns`.
 
 **IMP-052 details:** Region uses the same country list as perfume houses (`CountryTypeahead` + hidden field stores country `id`). Trader profile About section shows country name with a PNG flag (`CountryFlagBadge` via flagcdn; ISO code fallback if the image fails). Legacy region values (`US`, `UK`, `AU`, `EU`, `other`) still resolve for display.
-
-**IMP-051 partial:** Avatars on trader profile banner and message inbox/thread rows are live; trade timeline avatars wait on IMP-107+ (2A).
 
 ### 1F — Email Delivery ✅
 
@@ -108,7 +106,23 @@ _Nothing in Wave 2 is meaningful without listing photos, a trade record, and a s
 
 _These features make the platform sticky. Users return because they have active trades, matches, and alerts._
 
-### 2A — Trade Lifecycle API and UI
+### Wave 2 progress (May 2026)
+
+| Section | Status | Items |
+|---------|--------|-------|
+| **2A** Trade lifecycle | ✅ Done | IMP-100–111 |
+| **2B** Reputation | ✅ Done | IMP-120–124 |
+| **2C** Exchange filters | ✅ Done | IMP-130–134 |
+| **2D** Wishlist matching | ✅ Done | IMP-140–144 |
+| **2E** Activity feed | ✅ Done | IMP-150–152 |
+| **2F** Seasonal trending | ✅ Done | IMP-160–162 |
+| **2G** Web push | ✅ Done | IMP-170–174 |
+
+**Still open from Wave 1/2:** IMP-031 (report from trade UI), IMP-046 (listing photos on exchange cards), IMP-063 (trade milestone emails).
+
+**Next up:** Wave 3E — SEO pass
+
+### 2A — Trade Lifecycle API and UI ✅
 
 - [x] **IMP-100** Create `app/api/trades/` route group; mirror auth, CSRF, and rate limits from [`app/api/contact-trader/route.ts`](../app/api/contact-trader/route.ts)
 - [x] **IMP-101** Implement `POST /api/trades` (create draft): validates `initiatorId`, `counterpartyId`, `lineItems`; creates `Trade` + `TradeLineItem` rows; fires `TradeEvent`
@@ -122,6 +136,8 @@ _These features make the platform sticky. Users return because they have active 
 - [x] **IMP-109** Add `hasActiveTrade` boolean to `ConversationSummary`; show "Active trade" badge on inbox rows in [`MessagesClient`](../app/messages/MessagesClient.tsx)
 - [x] **IMP-110** Add 15-second interval polling (or `router.refresh()` on window focus) to `ThreadClient` so received messages feel live
 - [x] **IMP-111** Add "Active trades" and "Trade history" tabs to trader profile; show completed count and success rate
+
+**Shipped in:** `models/trade.server.ts`, `app/api/trades/` (create + transition routes), `components/Molecules/TradeComposerModal/`, `TradeStatusCard`, `TradeListingPreview`; exchange + trader profile CTAs; `ThreadClient` / `MessagesClient` polling + active-trade badge; `TraderProfileTrades`, `app/[userSlug]/profile/trades/`; i18n `tradeStatus`, `tradeComposer`, `messages.*`, `traderProfile.trades`.
 
 ### 2B — Reputation ✅
 
@@ -187,6 +203,21 @@ _All enums already exist — this is UI only, no schema change._
 
 _These are the features no mobile-only competitor can easily replicate. They compound over time._
 
+### Wave 3 progress (May 2026)
+
+| Section | Status | Items |
+|---------|--------|-------|
+| **3A** Onboarding | ✅ Done | IMP-200–204 |
+| **3B** Scent DNA card | ✅ Done | IMP-210–214 |
+| **3C** Quiz depth | ✅ Done | IMP-220–223 |
+| **3D** Sanity blog | ✅ Done | IMP-230–236 |
+| **3E** SEO pass | ⏳ Not started | IMP-240–246 |
+| **3F** Bulk inventory | ⏳ Not started | IMP-250–256 |
+| **3G** Shareable links | ⏳ Not started | IMP-260–263 |
+| **3H** Experience polish | ⏳ Not started | IMP-270–275 |
+
+**Next up:** 3E — SEO pass
+
 ### 3A — Onboarding Flow ✅
 
 - [x] **IMP-200** Add onboarding banner component: shown on first login (when `onboardingCompletedAt` is null); dismissible with "Skip" at any step
@@ -218,15 +249,17 @@ _No new schema — all computed from existing data._
 
 **Shipped in:** migration `20260517130000_add_scent_profile_quiz_depth_fields`; `utils/scent-profile-preferences.ts`; quiz steps in `app/scent-quiz/` (`budget`, `concentration`, `house-tier`); `models/scent-profile.server.ts`; ranking in `services/recommendations/rules.service.ts` and `models/wishlist-matching.server.ts`; i18n `quiz.budget`, `quiz.concentration`, `quiz.houseTier`.
 
-### 3D — Sanity Blog (Behind the Bottle)
+### 3D — Sanity Blog (Behind the Bottle) ✅
 
-- [ ] **IMP-230** Install `@sanity/client` and `next-sanity`; configure Sanity project and dataset; store API token in env
-- [ ] **IMP-231** Define Sanity schema: `article` document type with `title`, `slug`, `publishedAt`, `author`, `body` (Portable Text), `coverImage`, `perfumeRefs` (array of references to perfume slugs), `houseRefs` (array of references to house slugs), `tags`
-- [ ] **IMP-232** Replace [`app/behind-the-bottle/page.tsx`](../app/behind-the-bottle/page.tsx) redirect with a real article index page; fetch via GROQ with ISR (revalidate: 3600)
-- [ ] **IMP-233** Build `app/behind-the-bottle/[slug]/page.tsx` article detail page; render Portable Text with `@portabletext/react`
-- [ ] **IMP-234** Cross-link articles: on `/perfume/[slug]` show a "From the blog" section querying articles with `perfumeRefs[]` containing that slug
-- [ ] **IMP-235** Cross-link articles: on `/houses/[slug]` show related articles via `houseRefs[]`
-- [ ] **IMP-236** Add JSON-LD `Article` schema to article detail pages; add OG image from Sanity image pipeline
+- [x] **IMP-230** Install `@sanity/client` and `next-sanity`; configure Sanity project and dataset; store API token in env
+- [x] **IMP-231** Define Sanity schema: `article` document type with `title`, `slug`, `publishedAt`, `author`, `body` (Portable Text), `coverImage`, `perfumeRefs` (array of references to perfume slugs), `houseRefs` (array of references to house slugs), `tags`
+- [x] **IMP-232** Replace [`app/behind-the-bottle/page.tsx`](../app/behind-the-bottle/page.tsx) redirect with a real article index page; fetch via GROQ with ISR (revalidate: 3600)
+- [x] **IMP-233** Build `app/behind-the-bottle/[slug]/page.tsx` article detail page; render Portable Text with `@portabletext/react`
+- [x] **IMP-234** Cross-link articles: on `/perfume/[slug]` show a "From the blog" section querying articles with `perfumeRefs[]` containing that slug
+- [x] **IMP-235** Cross-link articles: on `/houses/[slug]` show related articles via `houseRefs[]`
+- [x] **IMP-236** Add JSON-LD `Article` schema to article detail pages; add OG image from Sanity image pipeline
+
+**Shipped in:** `sanity/` studio (`schemaTypes/article.ts`, `sanity.config.ts`); `lib/sanity/` (client, queries, `articles.server.ts`, `image.ts`, `json-ld.ts`, types); `app/behind-the-bottle/` index + `[slug]` detail (`revalidate = 3600`, `PortableTextContent`, OG/Twitter + Article JSON-LD); `components/Containers/Blog/` (`ArticleCard`, `RelatedArticlesSection`); cross-links on `app/perfume/[perfumeSlug]/` and `app/houses/[houseSlug]/`; `app/api/sanity/revalidate/route.ts`; `npm run sanity:check` / `sanity:dev`; env in `scripts/env.example` and `docs/new computer set up.md` §9. Blog routes redirect to `/houses` when Sanity env is unset (`isSanityConfigured`).
 
 ### 3E — SEO Pass
 
@@ -279,8 +312,12 @@ _No new schema — all computed from existing data._
 
 ## Notes
 
-- **Completed (Wave 1):** 1A schema, 1B admin strikes + ban enforcement, 1C user reports + admin reports queue, 1D listing photos, 1E trader avatar + profile fields (region, social links). IMP-031 (report from trade timeline) and IMP-051 trade-timeline avatars wait on 2A trade UI.
-- All schema changes use **Prisma Migrate** (`prisma/migrations/`) — **not** `db push`. See `docs/database-migrations.md` and `.cursor/rules/prisma-migrations-only.mdc`.
+- **Completed (Wave 1):** 1A schema, 1B admin strikes + ban enforcement, 1C user reports + admin reports queue, 1D listing photos, 1E trader avatar + profile fields (region, social links), 1F transactional email (wishlist + decant alerts).
+- **Completed (Wave 2):** Full trade lifecycle (API, composer, thread card, profile tabs), reputation + community policy, exchange discovery filters, wishlist matching, activity feed, seasonal trending, Web Push (trade + message alerts, nav badge). See section tables above for IMP IDs.
+- **Completed (Wave 3, partial):** Onboarding banner (3 steps), Scent DNA card + share page, quiz depth (budget / concentration / house tier), Sanity blog (Behind the Bottle index + article pages, studio schema, perfume/house cross-links, JSON-LD/OG).
+- **Still open:** IMP-031 (report from trade UI), IMP-046 (photos on exchange cards), IMP-063 (`sendTradeEventEmail` — TODO in `trade.server.ts`). Wave 3E–3H unchanged.
+- **Local schema:** Use **Prisma Migrate** (`npx prisma migrate dev` / `migrate deploy`) — see `docs/database-migrations.md` and `.cursor/rules/prisma-migrations-only.mdc`. Do **not** use `prisma db push` for routine work.
+- **Production schema (legacy):** Remote DB was synced May 2026 via `npm run db:push:prod` (`scripts/push-prod-schema.js` — `APPLY_TO_REMOTE_DB.sql` + `supplementalMigrations` for onboarding, quiz depth, and Web Push tables/columns). Verification passed for `Trade`, strikes, reports, listing fields, push prefs, `UserPushSubscription`, `UserConversationPresence`, etc. Prefer `npx prisma migrate deploy` against `REMOTE_DATABASE_URL` when migration history catches up; extend `supplementalMigrations` only when prod still lags checked-in migrations.
 - After schema changes: `npm run db:generate` and restart `npm run dev` (or delete `.next` + `node_modules/.prisma/client` if the client is stale on Windows).
 - All new authenticated API routes mirror the auth, CSRF, and rate-limit patterns in [`app/api/contact-trader/route.ts`](../app/api/contact-trader/route.ts).
 - New test coverage follows [`app/api/contact-trader/route.test.ts`](../app/api/contact-trader/route.test.ts) style.
