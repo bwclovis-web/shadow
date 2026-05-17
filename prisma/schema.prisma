@@ -36,6 +36,8 @@ model User {
   SecurityAuditLog      SecurityAuditLog[]
   UserAlert             UserAlert[]
   alertPreferences      UserAlertPreferences?
+  pushSubscriptions     UserPushSubscription[]
+  conversationPresence  UserConversationPresence?
   UserPerfume           UserPerfume[]
   userPerfumeComments   UserPerfumeComment[]
   UserPerfumeRating     UserPerfumeRating[]
@@ -334,8 +336,30 @@ model UserAlertPreferences {
   decantAlertsEnabled   Boolean @default(true)
   emailWishlistAlerts   Boolean @default(false)
   emailDecantAlerts     Boolean @default(false)
+  pushEnabled           Boolean @default(false)
+  pushTradeAlerts       Boolean @default(true)
+  pushMessageAlerts     Boolean @default(true)
   maxAlerts             Int     @default(10)
   User                  User    @relation(fields: [userId], references: [id])
+}
+
+model UserPushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model UserConversationPresence {
+  userId            String   @id
+  counterpartUserId String?
+  updatedAt         DateTime @updatedAt
+  User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model PendingSubmission {

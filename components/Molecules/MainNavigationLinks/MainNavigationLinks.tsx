@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl"
 import AboutDropdown from "@/components/Molecules/AboutDropdown/AboutDropdown"
 import AdminDropdown from "@/components/Molecules/AdminDropdown/AdminDropdown"
 import { useDirectMessageUnreadCount } from "@/components/Molecules/DirectMessageUnread/DirectMessageUnreadProvider"
+import { useTradeAlertUnreadCount } from "@/components/Molecules/TradeAlertUnread/TradeAlertUnreadProvider"
 import { mainNavigation } from "@/data/navigation"
 import { styleMerge } from "@/utils/styleUtils"
 
@@ -53,6 +54,7 @@ export const MainNavigationLinks = ({
   const t = useTranslations("navigation")
   const pathname = usePathname()
   const directMessageUnread = useDirectMessageUnreadCount()
+  const tradeAlertUnread = useTradeAlertUnreadCount()
 
   const isActive = (path: string) =>
     pathname === path || pathname.startsWith(path + "/")
@@ -105,6 +107,14 @@ export const MainNavigationLinks = ({
               {directMessageUnread > 0 && (
                 <span className="shrink-0 rounded-full bg-blue-600 text-white text-xs font-medium px-2 py-0.5 min-w-[1.25rem] text-center tabular-nums">
                   {directMessageUnread > 9 ? "9+" : directMessageUnread}
+                </span>
+              )}
+              {tradeAlertUnread > 0 && (
+                <span
+                  className="shrink-0 rounded-full bg-noir-gold text-noir-black text-xs font-semibold px-2 py-0.5 min-w-[1.25rem] text-center tabular-nums"
+                  title={t("tradeAlertsUnread", { count: tradeAlertUnread })}
+                >
+                  {tradeAlertUnread > 9 ? "9+" : tradeAlertUnread}
                 </span>
               )}
             </span>

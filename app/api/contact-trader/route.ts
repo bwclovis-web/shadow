@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { prisma } from "@/lib/db"
 import { createContactMessage } from "@/models/contactMessage.server"
-import { createUserAlert } from "@/models/user-alerts.server"
+import { createUserAlert, dispatchPushForUserAlert } from "@/models/user-alerts.server"
 import type { AlertType } from "@/types/database"
 import { validateRateLimit } from "@/utils/api-validation.server"
 import { getContactMessageRateLimits } from "@/utils/rate-limit-config.server"
@@ -85,14 +85,28 @@ export async function POST(request: NextRequest) {
         ? `${sender.firstName} ${sender.lastName}`.trim()
         : sender?.username ?? "Someone"
 
+    const alertTitle = `New message from ${senderName}`
+    const alertMessage = subject?.trim()
+      ? `${subject.slice(0, 60)}${subject.length > 60 ? "…" : ""}`
+      : message.trim().slice(0, 80)
+    const alertMetadata = { messageId: created.id, senderId }
+
     await createUserAlert(
       recipientId,
       null,
       "new_trader_message" as AlertType,
-      `New message from ${senderName}`,
-      subject?.trim() ? `${subject.slice(0, 60)}${subject.length > 60 ? "…" : ""}` : message.trim().slice(0, 80),
-      { messageId: created.id, senderId }
+      alertTitle,
+      alertMessage,
+      alertMetadata
     )
+
+    dispatchPushForUserAlert({
+      userId: recipientId,
+      alertType: "new_trader_message",
+      title: alertTitle,
+      message: alertMessage,
+      metadata: alertMetadata,
+    })
 
     return createSuccessResponse({
       message: "Message sent successfully",

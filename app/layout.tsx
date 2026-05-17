@@ -13,7 +13,8 @@ import MobileNavigation from '@/components/Molecules/MobileNavigation'
 import ServiceWorkerRegistration from '@/components/Containers/ServiceWorkerRegistration'
 import { getNewListingsThisWeekCount } from '@/models/activity-feed.server'
 import { getUnreadDirectMessageCount } from '@/models/contactMessage.server'
-import { getUnreadAlertCount, getUserAlerts } from '@/models/user-alerts.server'
+import { getUnreadAlertCount, getUnreadTradeAlertCount, getUserAlerts } from '@/models/user-alerts.server'
+import { TradeAlertUnreadProvider } from '@/components/Molecules/TradeAlertUnread/TradeAlertUnreadProvider'
 import { UserAlertsProvider } from '@/components/Molecules/UserAlertsProvider/UserAlertsProvider'
 import SiteFooter from '@/components/Organisms/SiteFooter/SiteFooter'
 
@@ -57,6 +58,7 @@ export default async function RootLayout({
   let directMessageUnreadInitial = 0
   let initialAlerts: Awaited<ReturnType<typeof getUserAlerts>> = []
   let initialAlertUnreadCount = 0
+  let initialTradeAlertUnreadCount = 0
   let exchangeNewThisWeekCount = 0
   try {
     exchangeNewThisWeekCount = await getNewListingsThisWeekCount()
@@ -70,12 +72,14 @@ export default async function RootLayout({
       console.error("Failed to load unread message count:", error)
     }
     try {
-      const [alerts, unreadCount] = await Promise.all([
+      const [alerts, unreadCount, tradeUnreadCount] = await Promise.all([
         getUserAlerts(user.id, 10),
         getUnreadAlertCount(user.id),
+        getUnreadTradeAlertCount(user.id),
       ])
       initialAlerts = alerts ?? []
       initialAlertUnreadCount = unreadCount ?? 0
+      initialTradeAlertUnreadCount = tradeUnreadCount ?? 0
     } catch (error) {
       console.error("Failed to load user alerts:", error)
     }
@@ -90,6 +94,10 @@ export default async function RootLayout({
               userId={user?.id}
               initialCount={directMessageUnreadInitial}
             >
+              <TradeAlertUnreadProvider
+                userId={user?.id}
+                initialCount={initialTradeAlertUnreadCount}
+              >
               <UserAlertsProvider
                 userId={user?.id}
                 initialAlerts={initialAlerts}
@@ -108,6 +116,7 @@ export default async function RootLayout({
                   <SiteFooter />
                 </Providers>
               </UserAlertsProvider>
+              </TradeAlertUnreadProvider>
             </DirectMessageUnreadProvider>
           </NextIntlClientProvider>
           <div id="modal-portal" />

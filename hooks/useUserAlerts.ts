@@ -105,6 +105,7 @@ export const useUserAlerts = ({
           )
         )
         setUnreadCount(prev => Math.max(0, prev - 1))
+        dispatchUserAlertsRefresh()
       }
     } catch (error) {
       console.error("Failed to mark alert as read:", error)
@@ -124,6 +125,7 @@ export const useUserAlerts = ({
         if (wasUnread) {
           setUnreadCount(prev => Math.max(0, prev - 1))
         }
+        dispatchUserAlertsRefresh()
       }
     } catch (error) {
       console.error("Failed to dismiss alert:", error)

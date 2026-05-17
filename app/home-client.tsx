@@ -42,7 +42,7 @@ export default function HomeClient({
 
       gsap.from(".hero-title", {
         opacity: 0,
-        y: 50,
+        y: 20,
         duration: 1.2,
         ease: "power2.out",
       })
@@ -92,7 +92,7 @@ export default function HomeClient({
       ref={container}
     >
       <Image
-        src="/images/landing.png"
+        src="/images/landing-new.png"
         alt=""
         width={1200}
         height={800}
@@ -101,7 +101,7 @@ export default function HomeClient({
         className="absolute object-cover w-full h-full filter grayscale-100% sepia-[0.5] mix-blend-multiply hero-image"
       />
       <div className="absolute inset-0 bg-noir-black/85 mask-radial-from-10% mask-radial-to-74% md:mask-radial-from-25% md:mask-radial-to-44%" />
-      <section className="text-noir-gold relative z-10 flex flex-col items-center gap-4 pt-40 md:pt-0">
+      <section className="text-noir-gold relative z-10 flex flex-col items-center gap-4 pt-50 md:pt-0">
         <div className="text-shadow-lg/90 text-shadow-noir-black text-center">
           <h1 className="hero-title">
             {mounted ? tHome("heading") : "home.heading"}

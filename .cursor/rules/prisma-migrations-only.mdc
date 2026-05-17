@@ -1,0 +1,52 @@
+---
+description: Schema changes use Prisma Migrate only — never db push
+alwaysApply: true
+---
+
+# Prisma: Migrations Only (No `db push`)
+
+This project **does not** use `prisma db push` for schema changes. All schema changes are **versioned migration files** under `prisma/migrations/`.
+
+## Do not run
+
+- `prisma db push`
+- `npm run db:push`
+- `db push --force-reset` or any push-based sync for routine schema work
+
+(`db:push:prod` / `push-prod-schema.js` are legacy — prefer `migrate deploy` unless the user explicitly requests the prod push script.)
+
+## Standard workflow
+
+1. Edit `prisma/schema.prisma`
+2. Create and apply a migration locally:
+   ```bash
+   npx prisma migrate dev --name short_descriptive_name
+   ```
+3. Regenerate the client (also runs on `migrate dev`, but restart dev server if the client was cached):
+   ```bash
+   npm run db:generate
+   ```
+4. Commit the new folder under `prisma/migrations/` with the migration SQL
+
+## Applying migrations
+
+| Environment | Command |
+|-------------|---------|
+| Local (existing DB, pull latest migrations) | `npx prisma migrate deploy` |
+| Local (creating a new migration while developing) | `npx prisma migrate dev --name ...` |
+| Production / shared remote | `npx prisma migrate deploy` (after review; never `migrate reset`) |
+
+## New machine / fresh local DB
+
+After `DATABASE_URL` is set:
+
+```bash
+npm run db:generate
+npx prisma migrate deploy
+```
+
+## Safety
+
+- Migrations must be **additive** when possible (no drops/truncates without explicit user approval)
+- See also: `no-database-deletion` rule — no `migrate reset` on production or shared data
+- Full reference: `docs/database-migrations.md`

@@ -70,18 +70,21 @@ Optional service variables (only if you use those features):
 - `OPENAI_API_KEY` (AI note refresh scripts)
 - Stripe variables (`STRIPE_*`) for payments
 - Email (Resend): `RESEND_API_KEY`, `EMAIL_FROM` — must include a verified address, e.g. `Shadow and Sillage <alerts@shadowandsillage.com>` (not display name alone); verify sending domain in Resend dashboard
+- Web Push (optional): `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` — generate keys with `node scripts/generate-vapid-keys.mjs` (testing guide: `docs/testing-web-push.md`)
 - R2/Cloudflare storage variables (for image/storage scripts)
 
-## 5) Generate Prisma client + apply schema
+## 5) Generate Prisma client + apply migrations
+
+This project uses **migrations only** (not `db push`). See `docs/database-migrations.md`.
 
 Run:
 
 ```bash
 npm run db:generate
-npm run db:push
+npx prisma migrate deploy
 ```
 
-This creates/updates your local schema based on `prisma/schema.prisma`.
+This applies all migration SQL in `prisma/migrations/` to your local database.
 
 ## 6) (Optional) Load data into local DB
 
@@ -125,7 +128,7 @@ If both pass and the app opens at `localhost:3000`, your machine setup is comple
 - `Can't reach database server`
   - Confirm PostgreSQL is running and host/port/user/password in `DATABASE_URL` are correct.
 - Prisma schema mismatch errors
-  - Re-run `npm run db:generate` then `npm run db:push`.
+  - Re-run `npm run db:generate` then `npx prisma migrate deploy` (or `npx prisma migrate dev` if you are authoring a new migration).
 - Wrong DB targeted by scripts
   - Check `.env` and confirm `DATABASE_URL` / `LOCAL_DATABASE_URL` / `REMOTE_DATABASE_URL` values.
 

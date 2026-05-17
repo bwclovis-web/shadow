@@ -9,6 +9,7 @@ import ContactTraderForm from "@/components/Containers/Forms/ContactTraderForm"
 import { TraderAvatar } from "@/components/Molecules/TraderAvatar"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { useCSRF } from "@/hooks/useCSRF"
+import { useConversationPresence } from "@/hooks/useConversationPresence"
 import { getTraderDisplayName } from "@/utils/user"
 import { Button } from "@/components/Atoms/Button/Button"
 import { MdDeleteForever } from "react-icons/md"
@@ -65,6 +66,7 @@ export default function ThreadClient({
 }: ThreadClientProps) {
   const router = useRouter()
   const { addToHeaders } = useCSRF()
+  useConversationPresence(otherUser.id)
   const { modalOpen, toggleModal, closeModal, modalId } = useSessionStore()
   const DELETE_MODAL_ID = "delete-conversation"
   const deleteButtonRef = useRef<HTMLButtonElement>(null)

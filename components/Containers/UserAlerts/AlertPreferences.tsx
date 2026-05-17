@@ -9,6 +9,8 @@ import VooDooCheck from "@/components/Atoms/VooDooCheck"
 import VooDooDetails from "@/components/Atoms/VooDooDetails/VooDooDetails"
 import type { UserAlertPreferences } from "@/types/database"
 
+import { PushNotificationSection } from "./PushNotificationSection"
+
 interface AlertPreferencesProps {
   preferences: UserAlertPreferences
   onPreferencesChange: (
@@ -51,6 +53,9 @@ export const AlertPreferences = ({
     decantAlertsEnabled: preferences.decantAlertsEnabled,
     emailWishlistAlerts: preferences.emailWishlistAlerts,
     emailDecantAlerts: preferences.emailDecantAlerts,
+    pushEnabled: preferences.pushEnabled ?? false,
+    pushTradeAlerts: preferences.pushTradeAlerts ?? true,
+    pushMessageAlerts: preferences.pushMessageAlerts ?? true,
     maxAlerts: preferences.maxAlerts,
   })
 
@@ -61,6 +66,9 @@ export const AlertPreferences = ({
       decantAlertsEnabled: preferences.decantAlertsEnabled,
       emailWishlistAlerts: preferences.emailWishlistAlerts,
       emailDecantAlerts: preferences.emailDecantAlerts,
+      pushEnabled: preferences.pushEnabled ?? false,
+      pushTradeAlerts: preferences.pushTradeAlerts ?? true,
+      pushMessageAlerts: preferences.pushMessageAlerts ?? true,
       maxAlerts: preferences.maxAlerts,
     })
     setIsEditing(true)
@@ -188,6 +196,19 @@ export const AlertPreferences = ({
               </div>
             </div>
 
+            <PushNotificationSection
+              preferences={preferences}
+              isEditing
+              isSaving={isSaving}
+              editState={{
+                pushEnabled: editState.pushEnabled,
+                pushTradeAlerts: editState.pushTradeAlerts,
+                pushMessageAlerts: editState.pushMessageAlerts,
+              }}
+              onEditStateChange={patch => setEditState(prev => ({ ...prev, ...patch }))}
+              onPreferencesChange={onPreferencesChange}
+            />
+
             <div className="space-y-3">
               <h4 className="font-medium text-noir-gold-100">
                 {t("alertLimits")}
@@ -307,6 +328,19 @@ export const AlertPreferences = ({
                 </div>
               </div>
             </div>
+
+            <PushNotificationSection
+              preferences={preferences}
+              isEditing={false}
+              isSaving={false}
+              editState={{
+                pushEnabled: preferences.pushEnabled ?? false,
+                pushTradeAlerts: preferences.pushTradeAlerts ?? true,
+                pushMessageAlerts: preferences.pushMessageAlerts ?? true,
+              }}
+              onEditStateChange={() => {}}
+              onPreferencesChange={async () => false}
+            />
           </div>
         )}
       </div>

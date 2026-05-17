@@ -7,7 +7,7 @@ import {
 
 import { prisma } from "@/lib/db"
 import { createContactMessage } from "@/models/contactMessage.server"
-import { createUserAlert } from "@/models/user-alerts.server"
+import { createUserAlert, dispatchPushForUserAlert } from "@/models/user-alerts.server"
 import type { TradeForClient, TradeLineItemInput } from "@/types/trade"
 import type { AlertType } from "@/types/database"
 import { getUserDisplayName } from "@/utils/user"
@@ -164,14 +164,15 @@ const sendTradeAlert = async (
   const message = `Regarding ${perfumeLabel}`
 
   // TODO IMP-063: sendTradeEventEmail
-  await createUserAlert(
-    recipientId,
-    null,
-    rule.alertType,
+  const metadata = { tradeId: trade.id, action, actorUserId, senderId: actorUserId }
+  await createUserAlert(recipientId, null, rule.alertType, title, message, metadata)
+  dispatchPushForUserAlert({
+    userId: recipientId,
+    alertType: rule.alertType,
     title,
     message,
-    { tradeId: trade.id, action, actorUserId, senderId: actorUserId }
-  )
+    metadata,
+  })
 }
 
 const sendTradeAlertWithFallback = async (

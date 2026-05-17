@@ -9,7 +9,17 @@ const ServiceWorkerRegistration = () => {
       return
     }
 
-    if (import.meta.env?.DEV || !("serviceWorker" in navigator)) {
+    // Skip in dev: SW fetch interception breaks Next.js HMR and client navigations.
+    // Push can be tested with `npm run build && npm run start`, or opt in via env.
+    const enableInDev = process.env.NEXT_PUBLIC_ENABLE_PUSH_DEV === "true"
+    const skipInDev = process.env.NODE_ENV === "development" && !enableInDev
+
+    if (skipInDev || !("serviceWorker" in navigator)) {
+      if (skipInDev) {
+        void navigator.serviceWorker.getRegistrations().then(registrations => {
+          registrations.forEach(registration => void registration.unregister())
+        })
+      }
       return
     }
 

@@ -5,6 +5,7 @@ import {
   sendDecantInterestAlertEmail,
   sendWishlistAlertEmail,
 } from "@/utils/alert-email.server"
+import { sendPushForUserAlert } from "@/utils/push-notification.server"
 
 const ALERT_DEDUPE_WINDOW_MS = 24 * 60 * 60 * 1000
 
@@ -13,8 +14,19 @@ const defaultAlertPreferences = {
   decantAlertsEnabled: true,
   emailWishlistAlerts: false,
   emailDecantAlerts: false,
+  pushEnabled: false,
+  pushTradeAlerts: true,
+  pushMessageAlerts: true,
   maxAlerts: 10,
 } as const
+
+const TRADE_ALERT_TYPES = [
+  "trade_received",
+  "trade_accepted",
+  "trade_shipped",
+  "trade_completed",
+  "trade_cancelled",
+] as const satisfies readonly AlertType[]
 
 /**
  * Get user's active alerts (not dismissed, ordered by newest first)
@@ -80,6 +92,9 @@ export const updateUserAlertPreferences = async (
       decantAlertsEnabled: preferences.decantAlertsEnabled ?? true,
       emailWishlistAlerts: preferences.emailWishlistAlerts ?? false,
       emailDecantAlerts: preferences.emailDecantAlerts ?? false,
+      pushEnabled: preferences.pushEnabled ?? false,
+      pushTradeAlerts: preferences.pushTradeAlerts ?? true,
+      pushMessageAlerts: preferences.pushMessageAlerts ?? true,
       maxAlerts: preferences.maxAlerts ?? 10,
     },
   })
@@ -203,6 +218,28 @@ export const getUnreadAlertCount = async (userId: string): Promise<number> =>
       isDismissed: false,
     },
   })
+
+export const getUnreadTradeAlertCount = async (userId: string): Promise<number> =>
+  prisma.userAlert.count({
+    where: {
+      userId,
+      isRead: false,
+      isDismissed: false,
+      alertType: { in: [...TRADE_ALERT_TYPES] },
+    },
+  })
+
+export const dispatchPushForUserAlert = (options: {
+  userId: string
+  alertType: AlertType
+  title: string
+  message: string
+  metadata?: Record<string, unknown>
+}) => {
+  void sendPushForUserAlert(options).catch(err => {
+    console.error("[push] Failed to dispatch push alert:", err)
+  })
+}
 
 /**
  * Check if user should receive wishlist availability alerts

@@ -1,9 +1,12 @@
 # Production Schema Sync
 
+> **Project policy:** Schema changes are versioned in `prisma/migrations/`. Use `npx prisma migrate deploy` for production schema updates. Do **not** use `prisma db push` locally or for routine prod sync. See `docs/database-migrations.md`.
+
 This project has two separate workflows:
 
-- Schema changes (tables/columns/indexes/constraints): use `db:push:prod`
-- Data migration (copying rows): use `scripts/migrate-to-accelerate-fixed.js`
+- **Schema changes (preferred):** commit migration SQL → `npx prisma migrate deploy` on the target database
+- **Legacy schema sync script:** `db:push:prod` (avoid unless explicitly required)
+- **Data migration (copying rows):** use `scripts/migrate-to-accelerate-fixed.js`
 
 Do not use the data migration script for schema changes.
 

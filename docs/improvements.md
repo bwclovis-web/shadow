@@ -171,13 +171,15 @@ _All enums already exist — this is UI only, no schema change._
 
 **Shipped in:** `utils/season-calendar.ts`, `models/seasonal-trending.server.ts`, `components/Containers/Exchange/SeasonalTrendingSection.tsx`; exchange sidebar + `page.tsx` / `TheExchangeClient.tsx`; home `page.tsx` / `home-client.tsx`; i18n `tradingPost.seasonalTrending`, `home.seasonalTrending`.
 
-### 2G — Web Push Notifications
+### 2G — Web Push Notifications ✅
 
-- [ ] **IMP-170** Add `UserPushSubscription` model (already in schema plan): stores `userId`, `endpoint`, `p256dh`, `auth`, `createdAt`
-- [ ] **IMP-171** Build push subscription opt-in UI in alert preferences: "Enable push notifications" button calls `navigator.serviceWorker` subscription flow
-- [ ] **IMP-172** Deliver `tradeAccepted`, `tradeShipped`, `tradeCompleted` events via Web Push using the existing service worker
-- [ ] **IMP-173** Deliver new-message alerts via Web Push when the recipient tab is not focused
-- [ ] **IMP-174** Add trade alert badge count to the nav (unread trade events)
+- [x] **IMP-170** Add `UserPushSubscription` model (already in schema plan): stores `userId`, `endpoint`, `p256dh`, `auth`, `createdAt`
+- [x] **IMP-171** Build push subscription opt-in UI in alert preferences: "Enable push notifications" button calls `navigator.serviceWorker` subscription flow
+- [x] **IMP-172** Deliver `tradeAccepted`, `tradeShipped`, `tradeCompleted` events via Web Push using the existing service worker
+- [x] **IMP-173** Deliver new-message alerts via Web Push when the recipient tab is not focused
+- [x] **IMP-174** Add trade alert badge count to the nav (unread trade events)
+
+**Shipped in:** `UserPushSubscription`, `UserConversationPresence`, push prefs on `UserAlertPreferences`; `public/sw.js` push handlers; `utils/push-notification.server.ts`, `utils/push-client.ts`, `app/api/push/*`; `PushNotificationSection` in alert preferences; trade/message dispatch from `trade.server.ts` / `contact-trader`; gold trade badge on Messages nav via `TradeAlertUnreadProvider`. Env: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (generate with `node scripts/generate-vapid-keys.mjs`). Schema: `npx prisma migrate dev` (see `docs/database-migrations.md`). **Testing:** `docs/testing-web-push.md`.
 
 ---
 
@@ -272,7 +274,7 @@ _No new schema — all computed from existing data._
 ## Notes
 
 - **Completed (Wave 1):** 1A schema, 1B admin strikes + ban enforcement, 1C user reports + admin reports queue, 1D listing photos, 1E trader avatar + profile fields (region, social links). IMP-031 (report from trade timeline) and IMP-051 trade-timeline avatars wait on 2A trade UI.
-- All schema changes use `prisma db push` — no migration files.
+- All schema changes use **Prisma Migrate** (`prisma/migrations/`) — **not** `db push`. See `docs/database-migrations.md` and `.cursor/rules/prisma-migrations-only.mdc`.
 - After schema changes: `npm run db:generate` and restart `npm run dev` (or delete `.next` + `node_modules/.prisma/client` if the client is stale on Windows).
 - All new authenticated API routes mirror the auth, CSRF, and rate-limit patterns in [`app/api/contact-trader/route.ts`](../app/api/contact-trader/route.ts).
 - New test coverage follows [`app/api/contact-trader/route.test.ts`](../app/api/contact-trader/route.test.ts) style.

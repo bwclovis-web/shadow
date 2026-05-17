@@ -11,6 +11,9 @@ const defaultPreferences = {
   decantAlertsEnabled: true,
   emailWishlistAlerts: false,
   emailDecantAlerts: false,
+  pushEnabled: false,
+  pushTradeAlerts: true,
+  pushMessageAlerts: true,
   maxAlerts: 10,
 }
 
@@ -76,6 +79,9 @@ async function updatePreferences(
   if (typeof body.emailWishlistAlerts === "boolean") preferences.emailWishlistAlerts = body.emailWishlistAlerts
   if (typeof body.emailDecantAlerts === "boolean") preferences.emailDecantAlerts = body.emailDecantAlerts
   if (typeof body.maxAlerts === "number" && body.maxAlerts >= 1 && body.maxAlerts <= 100) preferences.maxAlerts = body.maxAlerts
+  if (typeof body.pushEnabled === "boolean") preferences.pushEnabled = body.pushEnabled
+  if (typeof body.pushTradeAlerts === "boolean") preferences.pushTradeAlerts = body.pushTradeAlerts
+  if (typeof body.pushMessageAlerts === "boolean") preferences.pushMessageAlerts = body.pushMessageAlerts
 
   try {
     const updated = await updateUserAlertPreferences(userId, preferences)

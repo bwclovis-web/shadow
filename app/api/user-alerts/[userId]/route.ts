@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getUnreadAlertCount, getUserAlerts } from "@/models/user-alerts.server"
+import {
+  getUnreadAlertCount,
+  getUnreadTradeAlertCount,
+  getUserAlerts,
+} from "@/models/user-alerts.server"
 import { authenticateUser } from "@/utils/server/auth.server"
 
 export async function GET(
@@ -15,13 +19,18 @@ export async function GET(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
   try {
-    const [alerts, unreadCount] = await Promise.all([
+    const [alerts, unreadCount, tradeUnreadCount] = await Promise.all([
       getUserAlerts(userId),
       getUnreadAlertCount(userId),
+      getUnreadTradeAlertCount(userId),
     ])
-    return NextResponse.json({ alerts: alerts ?? [], unreadCount: unreadCount ?? 0 })
+    return NextResponse.json({
+      alerts: alerts ?? [],
+      unreadCount: unreadCount ?? 0,
+      tradeUnreadCount: tradeUnreadCount ?? 0,
+    })
   } catch (error) {
     console.warn("UserAlert tables not available:", error)
-    return NextResponse.json({ alerts: [], unreadCount: 0 })
+    return NextResponse.json({ alerts: [], unreadCount: 0, tradeUnreadCount: 0 })
   }
 }
