@@ -12,6 +12,9 @@ export type NoteInferenceMode = "standard" | "strict"
 /** Post-extraction note validation: `llm` runs a single bulk classifier over unique notes; `off` skips. */
 export type NoteValidationMode = "llm" | "off"
 
+/** How product URLs are discovered before Selenium scraping. */
+export type DiscoveryMode = "auto" | "sitemap" | "shopify" | "woocommerce" | "manual"
+
 /** QA provenance for admin preview (stripped before DB import). */
 export type ScraperNoteSource =
   | "labeled_list"
@@ -20,6 +23,33 @@ export type ScraperNoteSource =
   | "llm_name_literal"
   | "llm_name_inferred"
   | "empty"
+  | "merchant_structured"
+  | "external_fragrantica"
+  | "external_basenotes"
+  | "external_parfumo"
+
+export type NoteConfidence = "high" | "medium" | "low"
+
+export type ImportBucket = "ready" | "needs_review" | "skip"
+
+export type DuplicateRisk = "none" | "low" | "high"
+
+export type ExternalNoteSource =
+  | "official"
+  | "fragrantica"
+  | "basenotes"
+  | "parfumo"
+  | "other"
+
+export interface ExternalNoteCandidate {
+  source: ExternalNoteSource
+  sourceUrl: string
+  openNotes: string[]
+  heartNotes: string[]
+  baseNotes: string[]
+  confidence: NoteConfidence
+  warnings: string[]
+}
 
 /**
  * Configuration submitted via the admin form to drive the generic scraper.
@@ -202,6 +232,21 @@ export interface ScraperConfig {
    * Env override: `NOTES_PIPELINE_VALIDATION` ("llm" | "off").
    */
   noteValidationMode?: NoteValidationMode
+
+  /** URL discovery: auto tries sitemap, Shopify JSON, WooCommerce API. `manual` uses collection selectors only. */
+  discoveryMode?: DiscoveryMode
+
+  /** Cap discovered product URLs (discovery modes). */
+  maxProducts?: number
+
+  /** Hint for discovery (`shopify`, `woocommerce`, `etsy`). */
+  platformHint?: string
+
+  /** When false, skip external Fragrantica/Basenotes/Parfumo note rescue. Default true. */
+  externalNoteRescue?: boolean
+
+  /** Persist run state under scraper/.runs/ and optional Prisma ScraperRun. */
+  jobId?: string
 }
 
 /**
@@ -227,6 +272,14 @@ export interface ScrapedItem {
   noirDescription?: string
   /** Provenance tag from the Python pipeline (e.g. "html_heading_layers", "llm"). */
   _noteSource?: string
+  noteConfidence?: NoteConfidence
+  noteWarnings?: string[]
+  qualityScore?: number
+  qualityIssues?: string[]
+  importBucket?: ImportBucket
+  externalNoteCandidates?: ExternalNoteCandidate[]
+  duplicateRisk?: DuplicateRisk
+  imageMigrationFailed?: boolean
 }
 
 /**
@@ -247,6 +300,16 @@ export interface PerfumeCsvRecord {
   detailURL: string
   /** Admin preview only — how notes were derived; omitted before DB import. */
   _noteSource?: ScraperNoteSource
+  noteConfidence?: NoteConfidence
+  noteWarnings?: string[]
+  qualityScore?: number
+  qualityIssues?: string[]
+  importBucket?: ImportBucket
+  externalNoteCandidates?: ExternalNoteCandidate[]
+  duplicateRisk?: DuplicateRisk
+  duplicateMatches?: { name: string; similarity: number }[]
+  /** Set after import when R2 migration failed for this row. */
+  imageMigrationFailed?: boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -282,6 +345,8 @@ export interface ScraperImportRequest {
   uploadImagesToR2: boolean
   /** When false, do not overwrite existing image URLs in the DB (only set image for new records or when current image is empty). Default true. */
   overwriteImageUrls?: boolean
+  /** When true, import rows flagged with duplicateRisk high (default skips them). */
+  allowHighDuplicateRisk?: boolean
   /** Same value as `_csrf` cookie when `x-csrf-token` header cannot be sent. */
   _csrf?: string
 }
@@ -294,6 +359,38 @@ export interface ScraperImportResponse {
   errors: string[]
   /** Names of perfumes whose R2 upload failed during import (for retry UI). */
   failedR2Names?: string[]
+  skippedDuplicateRiskCount?: number
+}
+
+/** Saved scraper preset (Prisma ScraperSource). */
+export interface ScraperSourcePreset {
+  id: string
+  houseName: string
+  baseUrl: string | null
+  platformType: string | null
+  configJson: ScraperConfig
+  status: string
+  lastRunAt: string | null
+  lastDiscoveredCount: number | null
+  lastScrapedCount: number | null
+  createdAt: string
+  updatedAt: string
+}
+
+/** Body for POST /api/admin/scraper/preview-user-import */
+export interface ScraperUserImportRequest {
+  rows: {
+    name: string
+    perfumeHouse: string
+    description?: string
+    image?: string
+    detailURL?: string
+    openNotes?: string[]
+    heartNotes?: string[]
+    baseNotes?: string[]
+    source?: "csv" | "fragrantica" | "parfumo" | "user"
+  }[]
+  _csrf?: string
 }
 
 /** Body accepted by POST /api/admin/scraper/retry-r2 */

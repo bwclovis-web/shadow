@@ -15,6 +15,8 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { prisma } from "@/lib/db"
 import { importPerfumeRecords } from "@/lib/import-perfume-csv"
+import { assessDuplicateRisk } from "@/lib/scraper/duplicate-review"
+import { stripPreviewFields } from "@/lib/scraper/strip-preview-fields"
 import { checkR2BucketExists } from "@/lib/r2"
 import { migratePerfumeImageToR2 } from "@/lib/r2-migrate"
 import type {
@@ -94,14 +96,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const validRecords = (body.records as unknown[]).filter(isValidRecord)
+  const allowHighDuplicateRisk = body.allowHighDuplicateRisk === true
+  const withDuplicateFlags = await assessDuplicateRisk(validRecords, { prismaClient: prisma })
+  const skippedDuplicateRiskCount = withDuplicateFlags.filter(
+    r => r.duplicateRisk === "high" && !allowHighDuplicateRisk,
+  ).length
+  const recordsToImport = withDuplicateFlags
+    .filter(r => r.duplicateRisk !== "high" || allowHighDuplicateRisk)
+    .map(stripPreviewFields)
 
-  if (validRecords.length === 0) {
+  if (recordsToImport.length === 0) {
+    const msg =
+      skippedDuplicateRiskCount > 0
+        ? `All ${validRecords.length} record(s) skipped due to high duplicate risk. Enable "Import possible duplicates" to proceed.`
+        : "No valid records to import"
     return NextResponse.json(
       {
         ok: false,
         importedCount: 0,
         r2UploadCount: 0,
-        errors: ["No valid records to import"],
+        errors: [msg],
+        skippedDuplicateRiskCount: skippedDuplicateRiskCount || undefined,
       } satisfies ScraperImportResponse,
       { status: 400 },
     )
@@ -114,7 +129,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // Step 1: Import records to DB
   const overwriteImageUrls = body.overwriteImageUrls !== false
-  const summary = await importPerfumeRecords(validRecords, {
+  const summary = await importPerfumeRecords(recordsToImport, {
     prismaClient: prisma,
     overwriteImageUrls,
   })
@@ -172,5 +187,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     r2UploadCount,
     errors,
     failedR2Names,
+    skippedDuplicateRiskCount: skippedDuplicateRiskCount > 0 ? skippedDuplicateRiskCount : undefined,
   } satisfies ScraperImportResponse)
 }

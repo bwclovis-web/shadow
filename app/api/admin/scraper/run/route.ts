@@ -24,8 +24,15 @@ import path from "path"
 
 import { NextResponse, type NextRequest } from "next/server"
 
+import { assessDuplicateRisk } from "@/lib/scraper/duplicate-review"
+import {
+  mapScrapedItemsToRecords,
+  pythonPipelineComplete,
+  scrapedItemsNeedPatternEtsyEnrichment,
+} from "@/lib/scraper/map-scraped-items"
 import { extractNotesForItems, type ScraperPipelineOptions } from "@/lib/scraper/notes-graph"
 import { isAllowedNotesPipelineModel, NOTES_PIPELINE_MODEL_ALLOWLIST } from "@/lib/scraper/notes-pipeline-models"
+import { prisma } from "@/lib/db"
 import type {
   PerfumeCsvRecord,
   ScrapedItem,
@@ -434,6 +441,24 @@ export async function POST(request: NextRequest): Promise<Response> {
           noteValidationMode: body.noteValidationMode === "off" ? "off" : "llm",
           notesPipelineModel: body.notesPipelineModel?.trim() || undefined,
           noirPipelineModel: body.noirPipelineModel?.trim() || undefined,
+          discoveryMode: body.discoveryMode ?? "auto",
+          maxProducts:
+            typeof body.maxProducts === "number" && body.maxProducts > 0
+              ? body.maxProducts
+              : undefined,
+          platformHint: body.platformHint?.trim() || undefined,
+          externalNoteRescue: body.externalNoteRescue !== false,
+          jobId: body.jobId?.trim() || undefined,
+          titleDashSegment: resolveTitleDashSegment(body),
+          titleColonSegment:
+            body.titleColonSegment === "before" ||
+            body.titleColonSegment === "after" ||
+            body.titleColonSegment === "none"
+              ? body.titleColonSegment
+              : "none",
+          titleTakeAfterFirstComma: body.titleTakeAfterFirstComma === true,
+          titleTakeBeforeFirstComma: body.titleTakeBeforeFirstComma === true,
+          titleStripNumbers: body.titleStripNumbers ?? false,
         }),
       )
       childStdin.end()
@@ -540,30 +565,24 @@ export async function POST(request: NextRequest): Promise<Response> {
           // When openNotes is a string array on the first item, Python ran its
           // HTML-aware pipeline and we can build PerfumeCsvRecord directly,
           // bypassing the Node.js LangGraph pipeline entirely.
-          const hasPythonNotes =
-            scrapedItems.length > 0 && Array.isArray(scrapedItems[0].openNotes)
+          const hasPythonNotes = pythonPipelineComplete(scrapedItems)
+          const needsPatternEtsyEnrichment =
+            hasPythonNotes && scrapedItemsNeedPatternEtsyEnrichment(scrapedItems)
 
-          if (hasPythonNotes) {
+          if (hasPythonNotes && !needsPatternEtsyEnrichment) {
             try {
               sendLine(controller, {
                 type: "log",
-                message: `Python notes pipeline complete — building ${scrapedItems.length} records directly.`,
+                message: `Python pipeline complete — building ${scrapedItems.length} preview records.`,
               })
             } catch {
               // ignore
             }
 
-            const records: PerfumeCsvRecord[] = scrapedItems.map(item => ({
-              name: item.name,
-              // Prefer Python-generated noir description when available
-              description: item.noirDescription || item.description,
-              image: item.image,
-              perfumeHouse: item.perfumeHouse ?? body.houseName,
-              openNotes: JSON.stringify(item.openNotes ?? []),
-              heartNotes: JSON.stringify(item.heartNotes ?? []),
-              baseNotes: JSON.stringify(item.baseNotes ?? []),
-              detailURL: item.detailURL,
-            }))
+            const records = await assessDuplicateRisk(
+              mapScrapedItemsToRecords(scrapedItems, body.houseName),
+              { prismaClient: prisma },
+            )
 
             result = {
               ok: true,
@@ -577,13 +596,16 @@ export async function POST(request: NextRequest): Promise<Response> {
             try {
               sendLine(controller, {
                 type: "log",
-                message: `Starting note extraction for ${scrapedItems.length} products (Node.js pipeline — progress lines follow).`,
+                message: needsPatternEtsyEnrichment
+                  ? `Python pipeline complete — enriching ${scrapedItems.length} Pattern/Etsy product(s) via Node.js (progress lines follow).`
+                  : `Starting note extraction for ${scrapedItems.length} products (Node.js pipeline — progress lines follow).`,
               })
             } catch {
               // ignore
             }
 
             const pipelineOptions: ScraperPipelineOptions = {
+              enrichOnly: needsPatternEtsyEnrichment,
               titleDashSegment: resolveTitleDashSegment(body),
               titleColonSegment:
                 body.titleColonSegment === "before" || body.titleColonSegment === "after" || body.titleColonSegment === "none"
@@ -614,7 +636,12 @@ export async function POST(request: NextRequest): Promise<Response> {
                 }
               },
             }
-            const { records, batchWarnings } = await extractNotesForItems(scrapedItems, body.houseName, pipelineOptions)
+            const { records: nodeRecords, batchWarnings } = await extractNotesForItems(
+              scrapedItems,
+              body.houseName,
+              pipelineOptions,
+            )
+            const records = await assessDuplicateRisk(nodeRecords, { prismaClient: prisma })
 
             result = {
               ok: true,

@@ -33,7 +33,7 @@ The following is a summary of the completed foundation. Do not re-implement or d
 
 These are not new features; they are unfinished pieces of already-shipped systems.
 
-- [ ] **IMP-031** Add "Report" button inside `TradeStatusCard` / thread; pre-fills `tradeId` on the report form (report system is shipped; only the trade-scoped entrypoint is missing)
+- [x] **IMP-031** Add "Report" button inside `TradeStatusCard` / thread; pre-fills `tradeId` on the report form (report system is shipped; only the trade-scoped entrypoint is missing)
 - [ ] **IMP-046** Add listing photo thumbnail strip + lightbox to exchange listing cards (photos are already uploaded and shown on trader profiles; exchange cards still show catalog image only)
 - [ ] **IMP-063** Wire `sendTradeEventEmail` for trade milestones (Resend is configured; email templates for wishlist/decant already send; trade event emails just need to be dispatched)
 
@@ -75,11 +75,13 @@ No competitor combines catalog-quality discovery, a guided swap flow, structured
 
 _Small surface area, high trust impact. Finish what users already expect._
 
-### A1 — Report from inside a Trade (IMP-031)
+### A1 — Report from inside a Trade (IMP-031) ✅
 
-- [ ] Add "Report this trader" button inside `TradeStatusCard` (pinned above thread messages)
-- [ ] Pre-fill `tradeId` and counterparty user ID in the existing `ReportTraderModal`
-- [ ] No new schema needed; `UserReport.tradeId` FK already exists
+- [x] Add "Report this trader" button inside `TradeStatusCard` (pinned above thread messages)
+- [x] Pre-fill `tradeId` and counterparty user ID in the existing `ReportTraderModal`
+- [x] No new schema needed; `UserReport.tradeId` FK already exists
+
+**Shipped in:** `TradeStatusCard` + reused `ReportTraderButton` / `ReportTraderModal`; trade-scoped modal id when multiple trades share a thread.
 
 ### A2 — Listing Photos on Exchange Cards (IMP-046)
 

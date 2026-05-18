@@ -92,6 +92,11 @@ export interface ScraperPipelineOptions {
   noirPipelineModel?: string
   /** Post-extraction LLM validator over the union of unique notes. Default `"llm"`; `"off"` disables. */
   noteValidationMode?: NoteValidationMode
+  /**
+   * When true, merge newly extracted notes into any `openNotes` / `heartNotes` / `baseNotes` already
+   * on scraped items (e.g. after the Python pipeline) instead of replacing them.
+   */
+  enrichOnly?: boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -133,6 +138,47 @@ function isLikelyHostnameOrEmpty(name: string): boolean {
   return false
 }
 
+/** Etsy / Pattern listing slugs often trail SEO phrases after `-a-`, `-an-`, `-for-`, etc. */
+const ETSY_SLUG_TAIL_STARTERS = new Set([
+  "a",
+  "an",
+  "the",
+  "and",
+  "for",
+  "with",
+  "or",
+  "in",
+  "on",
+  "to",
+  "of",
+  "at",
+  "by",
+  "is",
+  "it",
+  "as",
+])
+
+const trimEtsyListingSlug = (slug: string): string => {
+  const parts = slug.toLowerCase().split("-").filter(Boolean)
+  if (parts.length < 4) return slug
+  for (let i = 2; i < parts.length; i += 1) {
+    if (!ETSY_SLUG_TAIL_STARTERS.has(parts[i])) continue
+    const before = parts.slice(0, i)
+    const alphaWords = before.filter(p => p.length > 1 && !/^\d+$/.test(p))
+    if (alphaWords.length >= 2) return before.join("-")
+  }
+  return slug
+}
+
+const formatListingSlugAsTitle = (slug: string): string => {
+  const withSpaces = slug.replace(/-/g, " ")
+  return withSpaces
+    .replace(/\bno\s*(\d+[a-z]?)\b/gi, (_, n: string) => `No. ${n.toUpperCase()}`)
+    .replace(/\b\w/g, c => c.toUpperCase())
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
 /**
  * Derive a product name from a product detail URL when the scraper returns a hostname or empty.
  * e.g. .../p/lord-of-misrule-perfume -> "Lord of Misrule Perfume"
@@ -142,22 +188,41 @@ function nameFromProductUrl(detailURL: string): string | null {
   try {
     const pathname = new URL(detailURL).pathname
     const segments = pathname.split("/").filter(Boolean)
-    const slug = segments[segments.length - 1]
-    if (!slug || slug.length > 120) return null
-    const withSpaces = slug.replace(/-/g, " ")
-    const titleCased = withSpaces.replace(/\b\w/g, c => c.toUpperCase())
-    return titleCased.trim() || null
+    const rawSlug = segments[segments.length - 1]
+    if (!rawSlug || rawSlug.length > 120) return null
+    const slug =
+      /listing/i.test(pathname) || /patternbyetsy|etsy\.com/i.test(detailURL)
+        ? trimEtsyListingSlug(rawSlug)
+        : rawSlug
+    return formatListingSlugAsTitle(slug) || null
   } catch {
     return null
   }
 }
 
+const normalizeNameKey = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]+/g, "")
+
+/** Scraped Etsy titles often truncate before digits ("Burner Perfume No" vs slug `burner-perfume-no9b-…`). */
+const isLikelyTruncatedProductName = (name: string, detailURL: string): boolean => {
+  const t = name.trim()
+  if (!t || !detailURL?.trim()) return false
+  if (/\bno\.?\s*$/i.test(t)) return true
+  if (/\bvol\.?\s*$/i.test(t)) return true
+  const fromUrl = nameFromProductUrl(detailURL)
+  if (!fromUrl) return false
+  const nameKey = normalizeNameKey(t)
+  const urlKey = normalizeNameKey(fromUrl)
+  if (!nameKey || !urlKey || urlKey.length <= nameKey.length + 3) return false
+  return urlKey.startsWith(nameKey) || nameKey.startsWith(urlKey.slice(0, Math.max(8, nameKey.length)))
+}
+
 /** Resolve display name: use URL-derived name when scraped name is hostname/empty. */
 function resolveProductName(item: ScrapedItem): string {
   const raw = item.name?.trim() ?? ""
-  if (!isLikelyHostnameOrEmpty(raw)) return raw
   const fromUrl = nameFromProductUrl(item.detailURL ?? "")
-  return fromUrl ?? raw
+  if (isLikelyHostnameOrEmpty(raw)) return fromUrl ?? raw
+  if (fromUrl && isLikelyTruncatedProductName(raw, item.detailURL ?? "")) return fromUrl
+  return raw
 }
 
 /**
@@ -166,7 +231,14 @@ function resolveProductName(item: ScrapedItem): string {
  * alone drops the authoritative list and the LLM invents a pyramid from prose.
  */
 const resolveNotesSource = (item: ScrapedItem): string => {
-  const parts = [item.notesText, item.description]
+  /** Listing titles often carry "with notes of …" / "Note Structure" when body copy is noir-only. */
+  const nameForNotes =
+    typeof item.name === "string" &&
+    /\b(?:with\s+)?notes?\s+of\b/i.test(item.name) &&
+    /,/.test(item.name)
+      ? item.name.trim()
+      : ""
+  const parts = [item.notesText, nameForNotes, item.description]
     .map(s => (typeof s === "string" ? s.trim() : ""))
     .filter(Boolean)
   if (parts.length === 0) return ""
@@ -186,8 +258,17 @@ const hasExplicitNoteListSignal = (text: string): boolean => {
   if (/\bnote\s+di\s+(?:testa|cuore|fondo|olfattive)\s*:/i.test(t)) return true
   if (/\b(?:topnoten?|hartnoten?|basisnoten?)\s*:/i.test(t)) return true
   if (/\bnotas\s+de\s+(?:salida|coraz[oó]n|fondo)\s*:/i.test(t)) return true
+  if (/\bnotes?\s+of\s+[a-z]/i.test(t) && /,/.test(t)) return true
+  if (/\bwith\s+notes?\s+of\s+/i.test(t)) return true
   return false
 }
+
+export const isPatternByEtsyProductUrl = (detailURL: string): boolean =>
+  /patternbyetsy|etsy\.com\/listing/i.test(detailURL ?? "")
+
+/** Pattern-by-Etsy PDPs almost always have Note Structure; fetch when the scrape missed it. */
+const shouldAutoFetchPatternEtsyNotes = (detailURL: string, mergedBase: string): boolean =>
+  isPatternByEtsyProductUrl(detailURL) && !hasExplicitNoteListSignal(mergedBase)
 
 /** Same four "ingredients" the noir generator hammers — if that's all we extracted, PDP bootstrap likely failed first pass. */
 const NOIR_NOTE_CLICHE = new Set(["plum", "rose", "brown sugar", "golden honey"])
@@ -246,6 +327,59 @@ const stripHtmlToPlainText = (html: string): string =>
 
 /** Shopify PDPs use "Concentration :" / "Volume :" (space before colon). Match those headers, not bare \bVolume\b (avoids false stops inside note lists). */
 const FEATURED_LIST_SECTION_STOP = String.raw`(?=\s+Concentration\s*:|\s+Volume\s*:|\s+Size\s*:|\s+Shipping\s*:|\s+Ingredients\s*:|\s+Add to cart\b|\s+Buy it now\b|\s+You may also\b|Related products\b|Customer reviews\b|\s+📷|Tag us on|$)`
+
+/** Pattern-by-Etsy / Aether Arts PDP meta after the note pyramid (Series, Reviews, etc.). */
+const PATTERN_ETSY_NOTE_BLOCK_STOP = String.raw`(?=\s+Series\s*:|\s+Perfume\s+Family\s*:|\s+Unisex\s*:|\s+Contains\s+True\s+Animalics\s*:|\s+Reviews\s*:|\s+Returns\b|\s+Extra\s+Info\b|$)`
+
+/**
+ * Aether Arts / Pattern-by-Etsy pages pair accord pyramids ("Note Structure: Top Notes: Tawny Coat Accord")
+ * with explicit materials in prose ("Notes of Bergamot, Orange, Turmeric, and Saffron") and in the
+ * listing title ("with notes of Bergamot, Orange, …"). Pull those into labeled lines the structured
+ * parser already understands.
+ */
+const extractPatternEtsyNoteSegmentsFromPlain = (plain: string): string[] => {
+  const collapsed = (plain ?? "").replace(/\r/g, "\n").replace(/\s+/g, " ").trim()
+  if (!collapsed) return []
+
+  const segments: string[] = []
+
+  const noteStruct = collapsed.match(
+    new RegExp(String.raw`\bnote\s+structure\s*:\s*(.+?)${PATTERN_ETSY_NOTE_BLOCK_STOP}`, "i"),
+  )
+  if (noteStruct?.[1]) {
+    const block = (noteStruct[0] ?? "")
+      .replace(/^\s*note\s+structure\s*:\s*/i, "")
+      .trim()
+    if (block.length >= 12) segments.push(block)
+  }
+
+  for (const m of collapsed.matchAll(/\bnotes?\s+of\s+([^.;!?]{8,220})/gi)) {
+    let list = (m[1] ?? "").trim()
+    list = list.replace(/\s+give\s+the\s+scent\b[\s\S]*$/i, "").trim()
+    /** Skip noir prose ("Notes of lush jungle greenery…") — merchant lists start with a material name. */
+    if (!/^[A-Z]/.test(list)) continue
+    if (list && (/,/.test(list) || /\band\b/i.test(list)) && /[a-z]{3,}/i.test(list)) {
+      segments.push(`top notes: ${list}`)
+    }
+  }
+
+  const follow = collapsed.match(/\b(?:florals?|notes?)\s+follow(?:s|ed)?\s*:\s*([^.;!?]{8,160})/i)
+  if (follow?.[1]) segments.push(`heart notes: ${follow[1].trim()}`)
+
+  const completes = collapsed.match(
+    /\b(?:completes?|finishes?|closes?)\s+(?:the\s+composition\s+)?with\s+(?:a\s+)?(?:bit\s+of\s+)?(?:lavish\s+)?([^.!?]{6,100})/i,
+  )
+  if (completes?.[1]) segments.push(`base notes: ${completes[1].trim()}`)
+
+  for (const m of collapsed.matchAll(
+    /\b(?:a\s+touch\s+of|with\s+a\s+bit\s+of)\s+([A-Za-z][^.!?]{4,60})/gi,
+  )) {
+    const material = (m[1] ?? "").trim()
+    if (material) segments.push(`base notes: ${material}`)
+  }
+
+  return [...new Set(segments)]
+}
 
 const unescapeHtmlAttr = (s: string): string =>
   s
@@ -368,6 +502,9 @@ const extractFeaturedBlockFromPlain = (t: string): string | null => {
     const body = fragAre[1].trim()
     return `fragrance notes are ${body}.`.slice(0, 4000)
   }
+
+  const patternEtsy = extractPatternEtsyNoteSegmentsFromPlain(plain)
+  if (patternEtsy.length > 0) return patternEtsy.join("\n").slice(0, 4000)
 
   return null
 }
@@ -517,7 +654,8 @@ const augmentNotesSourceWithLabeledLists = (raw: string): string => {
   const collapsed = (raw ?? "").replace(/\r/g, "\n").replace(/\s+/g, " ").trim()
   if (!collapsed) return raw ?? ""
 
-  const segments: string[] = []
+  const segments: string[] = [...extractPatternEtsyNoteSegmentsFromPlain(collapsed)]
+
   const re = new RegExp(
     String.raw`\b((?:featured|key|main|primary|signature|dominant)\s+notes?)\s*:\s*(.+?)${FEATURED_LIST_SECTION_STOP}`,
     "gi",
@@ -531,8 +669,12 @@ const augmentNotesSourceWithLabeledLists = (raw: string): string => {
   if (segments.length === 0) return raw
 
   const boost = [...new Set(segments)].join("\n")
-  const head = boost.slice(0, Math.min(80, boost.length))
-  if (collapsed.toLowerCase().includes(head.toLowerCase())) return raw
+  const collapsedLc = collapsed.toLowerCase()
+  const allSegmentsAlreadyPresent = segments.every(seg => {
+    const key = seg.slice(0, Math.min(48, seg.length)).toLowerCase()
+    return key.length >= 8 && collapsedLc.includes(key)
+  })
+  if (allSegmentsAlreadyPresent) return raw
   return `${boost}\n\n${raw}`.trim()
 }
 
@@ -639,7 +781,7 @@ function cleanTitle(
   else if (opts.titleTakeAfterFirstComma) out = takeAfterFirstComma(out)
   if (opts.titleStripNumbers) out = stripNumbersFromTitle(out)
   if (opts.titleOmitWords?.length) out = omitWordsFromTitle(out, opts.titleOmitWords)
-  return out.replace(/\s+/g, " ").trim() || name
+  return out.replace(/\bthe\s+the\b/gi, "the").replace(/\s+/g, " ").trim() || name
 }
 
 /** Remove extracted note phrases from description text so it's not redundant with the notes fields. */
@@ -702,6 +844,73 @@ const maskParenGroups = (s: string): { masked: string; groups: string[] } => {
 const unmaskParenGroups = (s: string, groups: string[]): string =>
   s.replace(/«p(\d+)»/g, (_, i) => groups[Number(i)] ?? "")
 
+const splitParentheticalInnerNotes = (inner: string): string[] =>
+  inner
+    .split(/\s*(?:,|&|\+|\band\b)\s*/i)
+    .map(s => s.trim())
+    .filter(Boolean)
+
+/**
+ * Merchant accord lines use parentheses for materials ("Incense (Copal & Palo Santo)").
+ * Expand to separate notes with no "(" — e.g. copal, palo santo — and repair dangling "(" from bad splits.
+ */
+const expandParentheticalNoteParts = (parts: string[]): string[] => {
+  const out: string[] = []
+  for (const raw of parts) {
+    let t = raw.trim()
+    if (!t) continue
+    if (t.includes("(") && !t.includes(")")) {
+      t = t.replace(/\(\s*$/, "").trim()
+    }
+
+    const closed = t.match(/^(.+?)\s*\(([^)]+)\)\s*(.*)$/i)
+    if (closed) {
+      const prefix = closed[1].trim()
+      const innerParts = splitParentheticalInnerNotes(closed[2])
+      const suffix = closed[3].trim()
+      const prefixWithSuffix =
+        suffix && !/\baccord\b/i.test(prefix) ? `${prefix} ${suffix}`.trim() : prefix
+
+      if (innerParts.length === 0) {
+        if (prefixWithSuffix) out.push(prefixWithSuffix)
+        continue
+      }
+
+      const innerLc = new Set(innerParts.map(p => p.toLowerCase()))
+      if (
+        prefixWithSuffix &&
+        (!innerLc.has(prefixWithSuffix.toLowerCase()) || /\baccord\b/i.test(prefixWithSuffix))
+      ) {
+        out.push(prefixWithSuffix)
+      }
+      out.push(...innerParts)
+      continue
+    }
+
+    const orphan = t.match(/^(.+?)\s*\(([^)]+)$/i)
+    if (orphan) {
+      const prefix = orphan[1].trim()
+      const innerParts = splitParentheticalInnerNotes(orphan[2])
+      if (prefix) out.push(prefix)
+      out.push(...innerParts)
+      continue
+    }
+
+    out.push(t)
+  }
+  return out
+}
+
+const expandParentheticalLayers = (notes: {
+  openNotes: string[]
+  heartNotes: string[]
+  baseNotes: string[]
+}): { openNotes: string[]; heartNotes: string[]; baseNotes: string[] } => ({
+  openNotes: expandParentheticalNoteParts(notes.openNotes),
+  heartNotes: expandParentheticalNoteParts(notes.heartNotes),
+  baseNotes: expandParentheticalNoteParts(notes.baseNotes),
+})
+
 function splitNoteList(text: string): string[] {
   if (!text?.trim()) return []
   const normalized = text
@@ -723,7 +932,11 @@ function splitNoteList(text: string): string[] {
     .replace(/\s+\/\s+/g, ", ")
     .replace(/\s*;\s*/g, ", ")
     .replace(/\s*&\s*/g, ", ")
-    .replace(/\band\b/gi, ",")
+    .replace(/\band\b/gi, (match, offset, whole) => {
+      const after = whole.slice(offset + match.length)
+      if (/^\s+[\w-]+(?:\s+[\w-]+){0,3}\s+accord\b/i.test(after)) return match
+      return ","
+    })
 
   /**
    * Defense-in-depth: strip trailing e-commerce UI labels that occasionally cling to the last
@@ -1044,6 +1257,9 @@ const JUNK_NOTE_PATTERNS: RegExp[] = [
   /\bwhat does\b.*\b(smell|smells)\b/i,
   /\bmanly accord\b/i,
   /\bopening with\b/i,
+  /\bintermingle\b/i,
+  /\bweaving\b/i,
+  /\banimalic-foral\b/i,
   /\benhanced by\b/i,
   /\benriched by\b/i,
   /\bhints?\s+of\b/i,
@@ -1205,7 +1421,7 @@ const stripNoteListProsePrefix = (p: string): string =>
 /** Candidates from labeled Top/Middle/Base list lines (parentheticals, long accords). */
 const filterStructuredNoteParts = (parts: string[]): string[] => {
   const out: string[] = []
-  for (const raw of parts) {
+  for (const raw of expandParentheticalNoteParts(parts)) {
     const cleaned = stripNoteListProsePrefix(raw.trim())
     if (!cleaned) continue
     if (isScraperKeptNote(cleaned)) {
@@ -1955,6 +2171,10 @@ const isJunkScrapedDescription = (text: string | null | undefined): boolean => {
   const t = text?.trim() ?? ""
   if (!t) return false
   const lower = t.toLowerCase()
+  if (/original,\s*artisan\s+perfumes/i.test(lower) && /art in air/i.test(lower)) return true
+  if (/the scent story/i.test(lower) && /\b(?:top|middle|base)\s+notes?\s*:/i.test(lower)) {
+    return true
+  }
   if (/click\s+pic\s+to\s+see\s+all/i.test(lower)) return true
   if (/shea\s+butter\s*&\s*aloe\s+lotion/i.test(lower) && /\$\s*\d/.test(t)) return true
   if (/spray\s+mists\s*\$/i.test(lower)) return true
@@ -1966,7 +2186,7 @@ const isJunkScrapedDescription = (text: string | null | undefined): boolean => {
 }
 
 const NOIR_OPENING_VARIATIONS = [
-  "Open with a specific place (curb at 2am, service entrance, last booth, fire stairs).",
+  "Open with a specific place tied to the fragrance mood (rainy curb, service alley, last booth, hotel corridor) — never a random location unrelated to the scent.",
   "Open with an action or gesture (striking a match, checking a watch, snapping gloves shut, collar up).",
   "Open with light or weather (neon bleed in rain, fog halogen, wet asphalt glare).",
   "Open by treating one note from the list as a tangible object in the scene (not 'notes of …').",
@@ -1982,6 +2202,7 @@ Rules:
 - UNIQUE OPENING: Every description must start differently. NEVER begin with "A whisper of", "A cascade of", "A sun-drenched", "A warm", "A veil of", "A silken", "Somewhere", "Tonight", "In the heart", "Beneath the", or any opener starting with "A " plus an adjective. Prefer a strong noun, verb, place, or time clause as the first word.
 - NEVER repeat phrases across products in the same batch: "dances in the air", "mingles with", "lingers in the air", "envelops the senses", "weaves a", "unfurls like", "sun-kissed", "sun-drenched", "silken", "velvet", "tapestry", "cherished secret", "starlit sky".
 - Prefer concrete, odd noir specifics over stock luxury metaphor.
+- The opening image must fit THIS perfume's notes and name — do not drop in unrelated set dressing (e.g. fire stairs, random architecture) unless the materials suggest heat, smoke, or ash.
 - Grammar: every sentence must be complete — never leave empty subjects or objects (e.g. reject "scent of mingles", "as unfurls", "bouquet of unfurls"). If a note name is awkward in prose, rephrase the whole sentence.
 - Tone: alluring, enigmatic, slightly dangerous. No cute or cheerful language.
 - Return ONLY the description text — no labels, no "Description:", no quotes.`
@@ -2275,12 +2496,54 @@ const resolveNotesPipelineConcurrency = (): number => {
 
 type NotesLayers = { openNotes: string[]; heartNotes: string[]; baseNotes: string[] }
 
+const hasLayeredMerchantPyramid = (notes: NotesLayers): boolean =>
+  notes.openNotes.length > 0 && (notes.heartNotes.length > 0 || notes.baseNotes.length > 0)
+
+/** Drop trailing product-name tokens scraped into the last note (e.g. "jasmine absolute zarafa"). */
+const stripProductNameBleedFromNotes = (notes: NotesLayers, productName: string): NotesLayers => {
+  const lead = productName
+    .trim()
+    .split(/[\s,]+/)
+    .find(t => /^[a-z]{4,}$/i.test(t))
+    ?.toLowerCase()
+  if (!lead) return notes
+  const scrub = (arr: string[]): string[] =>
+    arr
+      .map(n => {
+        const parts = n.trim().split(/\s+/)
+        if (parts.length < 3) return n.trim()
+        if (parts[parts.length - 1]?.toLowerCase() !== lead) return n.trim()
+        return parts.slice(0, -1).join(" ").trim()
+      })
+      .filter(Boolean)
+  return {
+    openNotes: scrub(notes.openNotes),
+    heartNotes: scrub(notes.heartNotes),
+    baseNotes: scrub(notes.baseNotes),
+  }
+}
+
 /**
  * When the PDP has a labeled flat list (e.g. "Scent notes include …") but the model dropped a
  * rare material (often labdanum) or echoed most of the list without the full set, prefer the
  * regex-parsed list so exports match the merchant line on pages like
  * https://www.littleandgrim.com/products/attic-bedroom-perfume-oil
  */
+/** Add flat-list materials missing from an existing Top/Heart/Base pyramid (accord + materials). */
+export const mergeFlatMaterialsIntoLayeredPyramid = (notes: NotesLayers, flatAuth: string[]): NotesLayers => {
+  if (!hasLayeredMerchantPyramid(notes) || flatAuth.length < 2) return notes
+  const currentLc = new Set(
+    [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes].map(n => n.trim().toLowerCase()),
+  )
+  const missing = flatAuth.filter(f => !currentLc.has(f.trim().toLowerCase()))
+  if (missing.length === 0) return notes
+  return {
+    openNotes: uniqueNotes([...notes.openNotes, ...missing]),
+    heartNotes: notes.heartNotes,
+    baseNotes: notes.baseNotes,
+  }
+}
+
 const preferAuthoritativeFlatNoteList = (notes: NotesLayers, flatAuth: string[]): NotesLayers => {
   if (flatAuth.length < 3) return notes
 
@@ -2288,8 +2551,11 @@ const preferAuthoritativeFlatNoteList = (notes: NotesLayers, flatAuth: string[])
    * Long labeled lists ("Featured notes:", "Key notes:", etc.) are merchant-authored. When regex
    * extracts many materials, use that list as openNotes only — do not keep LLM/merge pollution
    * (e.g. plum/rose/honey echoed from marketing prose) mixed into base/heart.
+   *
+   * Never flatten an existing Top/Heart/Base pyramid — merge explicit materials instead.
    */
   if (flatAuth.length >= 7) {
+    if (hasLayeredMerchantPyramid(notes)) return mergeFlatMaterialsIntoLayeredPyramid(notes, flatAuth)
     return {
       openNotes: uniqueNotes(flatAuth),
       heartNotes: [],
@@ -2316,11 +2582,16 @@ const preferAuthoritativeFlatNoteList = (notes: NotesLayers, flatAuth: string[])
     // may only have captured a subset of a pyramid (e.g. the first layer before layer-label
     // colons caused junk filtering). Only override when the flat list is at least as large.
     if (flatAuth.length < current.length) return notes
+    if (hasLayeredMerchantPyramid(notes)) return mergeFlatMaterialsIntoLayeredPyramid(notes, flatAuth)
     return {
       openNotes: uniqueNotes(flatAuth),
       heartNotes: [],
       baseNotes: [],
     }
+  }
+
+  if (hasLayeredMerchantPyramid(notes) && missingFromCurrent.length > 0) {
+    return mergeFlatMaterialsIntoLayeredPyramid(notes, flatAuth)
   }
 
   return notes
@@ -2380,6 +2651,14 @@ const processSingleProductPhase1 = async (
   const sig = opts.abortSignal
   const resolvedName = resolveProductName(item)
   const name = cleanTitle(resolvedName, opts)
+  const existingFromPython: NotesLayers | null =
+    opts.enrichOnly === true
+      ? {
+          openNotes: (item.openNotes ?? []).map(n => n.trim().toLowerCase()).filter(Boolean),
+          heartNotes: (item.heartNotes ?? []).map(n => n.trim().toLowerCase()).filter(Boolean),
+          baseNotes: (item.baseNotes ?? []).map(n => n.trim().toLowerCase()).filter(Boolean),
+        }
+      : null
   opts.onProgress?.(
     `Notes pipeline ${index + 1}/${totalItems}: ${(name || resolvedName || "product").slice(0, 72)}`,
   )
@@ -2390,13 +2669,15 @@ const processSingleProductPhase1 = async (
    * and either gets confused or extracts shipping fragments as notes.
    */
   mergedBase = sanitizeCopyForNotePipeline(stripPolicyBoilerplate(mergedBase))
+  const detailUrl = item.detailURL?.trim() ?? ""
+  const autoPatternEtsyFetch = shouldAutoFetchPatternEtsyNotes(detailUrl, mergedBase)
   if (
-    opts.fetchPdpNoteBootstrap === true &&
+    (opts.fetchPdpNoteBootstrap === true || autoPatternEtsyFetch) &&
     !hasExplicitNoteListSignal(mergedBase) &&
-    item.detailURL?.trim().startsWith("http")
+    detailUrl.startsWith("http")
   ) {
     throwIfAborted(sig)
-    const boot = await tryFetchPdpNoteBootstrap(item.detailURL.trim(), sig, opts.onProgress)
+    const boot = await tryFetchPdpNoteBootstrap(detailUrl, sig, opts.onProgress)
     if (boot) {
       /**
        * Skip the merge if the bootstrap chunk is already substantially present in the description
@@ -2457,7 +2738,33 @@ const processSingleProductPhase1 = async (
       notes = extracted.layers
       if (extracted.extractionPath === "description") usedDescPathLlm = true
       if (extracted.extractionPath === "name_only") usedNameOnlyPath = true
-    } else if (
+    }
+
+    if (
+      (usedDescPathLlm || usedNameOnlyPath) &&
+      isPatternByEtsyProductUrl(detailUrl) &&
+      detailUrl.startsWith("http")
+    ) {
+      throwIfAborted(sig)
+      pdpNoteBootstrapCache.delete(detailUrl)
+      const boot = await tryFetchPdpNoteBootstrap(detailUrl, sig, opts.onProgress)
+      if (boot) {
+        const rescueSource = augmentNotesSourceWithLabeledLists(`${boot}\n\n${mergedBase}`)
+        const rescued = extractNotesFromStructuredText(rescueSource, minFlat)
+        const rescuedCount = noteLayerCount(rescued)
+        if (rescuedCount > noteLayerCount(notes)) {
+          notes = rescued
+          usedDescPathLlm = false
+          usedNameOnlyPath = false
+          pdpRescueApplied = true
+          opts.onProgress?.(
+            `Notes pipeline ${index + 1}/${totalItems}: replaced LLM notes with Pattern/Etsy PDP structure for ${(name || resolvedName || "product").slice(0, 48)}`,
+          )
+        }
+      }
+    }
+
+    if (
       totalParsedDirectly > 0 &&
       (notesSource?.length ?? 0) > 100 &&
       notesSource?.trim() &&
@@ -2481,6 +2788,8 @@ const processSingleProductPhase1 = async (
     }
 
     notes = preferAuthoritativeFlatNoteList(notes, extractFlatNotes(notesSource))
+    notes = expandParentheticalLayers(notes)
+    notes = stripProductNameBleedFromNotes(notes, name || resolvedName)
 
     /**
      * Apply the junk filter BEFORE the rescue check so narrative noise (e.g. "the night",
@@ -2494,6 +2803,14 @@ const processSingleProductPhase1 = async (
     }
     notes = dedupeNotesAcrossLayers(notes)
 
+    if (existingFromPython && noteLayerCount(existingFromPython) > 0) {
+      notes = dedupeNotesAcrossLayers({
+        openNotes: uniqueNotes([...existingFromPython.openNotes, ...notes.openNotes]),
+        heartNotes: uniqueNotes([...existingFromPython.heartNotes, ...notes.heartNotes]),
+        baseNotes: uniqueNotes([...existingFromPython.baseNotes, ...notes.baseNotes]),
+      })
+    }
+
     if (
       opts.fetchPdpNoteBootstrap === true &&
       item.detailURL?.trim().startsWith("http") &&
@@ -2501,12 +2818,13 @@ const processSingleProductPhase1 = async (
     ) {
       throwIfAborted(sig)
       pdpNoteBootstrapCache.delete(item.detailURL.trim())
-      const boot = await tryFetchPdpNoteBootstrap(item.detailURL.trim(), sig, opts.onProgress)
+      const boot = await tryFetchPdpNoteBootstrap(detailUrl, sig, opts.onProgress)
       if (boot) {
         const rescueSource = augmentNotesSourceWithLabeledLists(`${boot}\n\n${mergedBase}`)
         const rescuedFlat = extractFlatNotes(rescueSource)
         let rescued = extractNotesFromStructuredText(rescueSource, minFlat)
         rescued = preferAuthoritativeFlatNoteList(rescued, rescuedFlat)
+        rescued = expandParentheticalLayers(rescued)
         rescued = {
           openNotes: rescued.openNotes.filter(isScraperKeptNote),
           heartNotes: rescued.heartNotes.filter(isScraperKeptNote),

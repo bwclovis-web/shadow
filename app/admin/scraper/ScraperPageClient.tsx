@@ -13,6 +13,9 @@ import { Button } from "@/components/Atoms/Button/Button"
 import HouseTypeahead from "@/components/Molecules/HouseTypeahead/HouseTypeahead"
 import { useCSRF } from "@/hooks/useCSRF"
 import type {
+  DiscoveryMode,
+  ImportBucket,
+  NoteConfidence,
   NoteInferenceMode,
   NoteValidationMode,
   PerfumeCsvRecord,
@@ -21,6 +24,7 @@ import type {
   ScraperRetryR2Response,
   ScraperRunRequest,
   ScraperRunResponse,
+  ScraperSourcePreset,
   TitleDashSegment,
 } from "@/types/scraper"
 import { NOTES_PIPELINE_MODEL_ALLOWLIST } from "@/lib/scraper/notes-pipeline-models"
@@ -121,7 +125,23 @@ function countRecordsWithExtractedNotes(records: PerfumeCsvRecord[]): number {
   }).length
 }
 
-type PreviewRow = { name: string; notesPreview: string[]; noteSource?: ScraperNoteSource }
+type PreviewFilter =
+  | "all"
+  | "empty_notes"
+  | "low_confidence"
+  | "missing_image"
+  | "duplicate_risk"
+  | "needs_review"
+
+type PreviewRow = {
+  name: string
+  notesPreview: string[]
+  noteSource?: ScraperNoteSource
+  noteConfidence?: NoteConfidence
+  importBucket?: ImportBucket
+  duplicateRisk?: string
+  detailURL?: string
+}
 
 function noteSourceBadgeClass(source?: ScraperNoteSource): string {
   switch (source) {
@@ -142,6 +162,31 @@ function noteSourceBadgeClass(source?: ScraperNoteSource): string {
   }
 }
 
+const recordHasNotes = (r: PerfumeCsvRecord): boolean => {
+  try {
+    return (JSON.parse(r.openNotes ?? "[]") as string[]).length > 0
+  } catch {
+    return false
+  }
+}
+
+const filterRecords = (records: PerfumeCsvRecord[], filter: PreviewFilter): PerfumeCsvRecord[] => {
+  switch (filter) {
+    case "empty_notes":
+      return records.filter(r => !recordHasNotes(r))
+    case "low_confidence":
+      return records.filter(r => r.noteConfidence === "low")
+    case "missing_image":
+      return records.filter(r => !r.image?.trim())
+    case "duplicate_risk":
+      return records.filter(r => r.duplicateRisk === "high" || r.duplicateRisk === "low")
+    case "needs_review":
+      return records.filter(r => r.importBucket === "needs_review" || r.importBucket === "skip")
+    default:
+      return records
+  }
+}
+
 function buildPreviewRows(records: PerfumeCsvRecord[]): PreviewRow[] {
   return records.map((r) => {
     let notesPreview: string[] = []
@@ -150,7 +195,15 @@ function buildPreviewRows(records: PerfumeCsvRecord[]): PreviewRow[] {
     } catch {
       notesPreview = []
     }
-    return { name: r.name, notesPreview, noteSource: r._noteSource }
+    return {
+      name: r.name,
+      notesPreview,
+      noteSource: r._noteSource,
+      noteConfidence: r.noteConfidence,
+      importBucket: r.importBucket,
+      duplicateRisk: r.duplicateRisk,
+      detailURL: r.detailURL,
+    }
   })
 }
 
@@ -199,6 +252,12 @@ export function ScraperPageClient() {
   const [notesPipelineModel, setNotesPipelineModel] = useState("")
   const [noirPipelineModel, setNoirPipelineModel] = useState("")
   const [noteValidationMode, setNoteValidationMode] = useState<NoteValidationMode>("llm")
+  const [discoveryMode, setDiscoveryMode] = useState<DiscoveryMode>("auto")
+  const [maxProducts, setMaxProducts] = useState("")
+  const [externalNoteRescue, setExternalNoteRescue] = useState(true)
+  const [savedSources, setSavedSources] = useState<ScraperSourcePreset[]>([])
+  const [previewFilter, setPreviewFilter] = useState<PreviewFilter>("all")
+  const [allowHighDuplicateRisk, setAllowHighDuplicateRisk] = useState(false)
 
   // -- step 1 state (scrape + note extraction) --
   const [scraping, setScraping] = useState(false)
@@ -219,6 +278,20 @@ export function ScraperPageClient() {
   useEffect(() => {
     const saved = loadScrapeResultFromStorage()
     if (saved) setSavedScrapeResult(saved)
+  }, [])
+
+  useEffect(() => {
+    const loadSources = async () => {
+      try {
+        const res = await fetch("/api/admin/scraper/sources", { credentials: "include" })
+        if (!res.ok) return
+        const data = (await res.json()) as { sources?: ScraperSourcePreset[] }
+        if (data.sources) setSavedSources(data.sources)
+      } catch {
+        // ignore
+      }
+    }
+    void loadSources()
   }, [])
 
   // Show elapsed time while scraper is running
@@ -272,14 +345,19 @@ export function ScraperPageClient() {
     [collectionUrlsRaw]
   )
 
-  const records: PerfumeCsvRecord[] = useMemo(
+  const allRecords: PerfumeCsvRecord[] = useMemo(
     () => scrapeResult?.records ?? [],
     [scrapeResult?.records]
   )
 
+  const records: PerfumeCsvRecord[] = useMemo(
+    () => filterRecords(allRecords, previewFilter),
+    [allRecords, previewFilter]
+  )
+
   const notesExtractedCount = useMemo(
-    () => countRecordsWithExtractedNotes(records),
-    [records]
+    () => countRecordsWithExtractedNotes(allRecords),
+    [allRecords]
   )
 
   const previewRows = useMemo(() => buildPreviewRows(records), [records])
@@ -376,6 +454,12 @@ export function ScraperPageClient() {
       notesPipelineModel: notesPipelineModel.trim() || undefined,
       noirPipelineModel: noirPipelineModel.trim() || undefined,
       noteValidationMode,
+      discoveryMode,
+      maxProducts: (() => {
+        const n = parseInt(maxProducts, 10)
+        return Number.isFinite(n) && n > 0 ? n : undefined
+      })(),
+      externalNoteRescue,
     }
 
     const SCRAPER_REQUEST_TIMEOUT_MS = 90 * 60 * 1000 // 90 min — match server; avoid client aborting early
@@ -512,7 +596,7 @@ export function ScraperPageClient() {
     setImportError(null)
 
     const batches = chunkPerfumeCsvRecordsForImport(
-      scrapeResult.records,
+      allRecords,
       uploadImagesToR2,
       overwriteImageUrls,
     )
@@ -532,6 +616,7 @@ export function ScraperPageClient() {
             records: batches[i],
             uploadImagesToR2,
             overwriteImageUrls,
+            allowHighDuplicateRisk,
             ...(csrf ? { _csrf: csrf } : {}),
           }),
           credentials: "include",
@@ -726,6 +811,70 @@ export function ScraperPageClient() {
               onNameChange={setHouseName}
             />
           </Field>
+
+          <Field
+            label="URL discovery"
+            hint="Auto tries sitemap, Shopify /products.json, and WooCommerce API before collection-page link scraping."
+          >
+            <select
+              className={inputClass()}
+              value={discoveryMode}
+              onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                setDiscoveryMode(e.target.value as DiscoveryMode)
+              }
+            >
+              <option value="auto">Auto</option>
+              <option value="sitemap">Sitemap only</option>
+              <option value="shopify">Shopify JSON</option>
+              <option value="woocommerce">WooCommerce API</option>
+              <option value="manual">Manual (collection selectors only)</option>
+            </select>
+          </Field>
+
+          <Field label="Max products (discovery)" hint="Cap discovered URLs. Leave empty for no limit.">
+            <input
+              type="number"
+              min={1}
+              className={inputClass()}
+              value={maxProducts}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setMaxProducts(e.target.value)}
+              placeholder="e.g. 100"
+            />
+          </Field>
+
+          {savedSources.length > 0 && (
+            <Field label="Saved presets" hint="Load a previously saved scraper configuration.">
+              <select
+                className={inputClass()}
+                defaultValue=""
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => {
+                  const id = e.target.value
+                  if (!id) return
+                  const preset = savedSources.find(s => s.id === id)
+                  if (!preset) return
+                  const c = preset.configJson
+                  setHouseName(c.houseName)
+                  setCollectionUrlsRaw(c.collectionUrls.join("\n"))
+                  setProductLinkSelector(c.productLinkSelector)
+                  setNameSelector(c.nameSelector)
+                  setDescriptionSelector(c.descriptionSelector)
+                  setNotesSelector(c.notesSelector ?? "")
+                  setImageSelector(c.imageSelector)
+                  setSkipKeywordsRaw(c.skipKeywords.join(", "))
+                  setBaseUrl(c.baseUrl ?? "")
+                  if (c.discoveryMode) setDiscoveryMode(c.discoveryMode)
+                  if (c.titleDashSegment) setTitleDashSegment(c.titleDashSegment)
+                }}
+              >
+                <option value="">Select preset…</option>
+                {savedSources.map(s => (
+                  <option key={s.id} value={s.id}>
+                    {s.houseName} ({s.platformType ?? "generic"})
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
 
           <Field
             label="Collection URLs *"
@@ -1206,6 +1355,22 @@ export function ScraperPageClient() {
             <input
               type="checkbox"
               className="mt-0.5"
+              checked={externalNoteRescue}
+              onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                setExternalNoteRescue(e.target.checked)
+              }
+            />
+            <span className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium">External note rescue (reviewed candidates)</span>
+              <span className="text-xs text-muted-foreground">
+                When merchant notes are missing, search Fragrantica, Basenotes, and Parfumo for preview candidates. Never overwrites high-confidence merchant notes.
+              </span>
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3">
+            <input
+              type="checkbox"
+              className="mt-0.5"
               checked={generateNoirDescriptions}
               onChange={(e: ChangeEvent<HTMLInputElement>) =>
                 setGenerateNoirDescriptions(e.target.checked)
@@ -1221,9 +1386,56 @@ export function ScraperPageClient() {
           </label>
         </section>
 
-        <Button type="submit" variant="primary" disabled={scraping}>
-          {scraping ? "Running scraper…" : "Run scraper"}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button type="submit" variant="primary" disabled={scraping}>
+            {scraping ? "Running scraper…" : "Run scraper"}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={!houseName.trim() || scraping}
+            onClick={async () => {
+              const collectionUrls = collectionUrlsRaw
+                .split(/\n|,/)
+                .map(u => u.trim())
+                .filter(u => /^https?:\/\//i.test(u))
+              const body: ScraperRunRequest = {
+                houseName,
+                collectionUrls,
+                productLinkSelector,
+                nameSelector,
+                descriptionSelector,
+                notesSelector: notesSelector.trim() || undefined,
+                imageSelector,
+                skipKeywords: skipKeywordsRaw.split(",").map(k => k.trim()).filter(Boolean),
+                baseUrl: baseUrl || undefined,
+                titleDashSegment,
+                titleColonSegment,
+                titleTakeAfterFirstComma,
+                titleTakeBeforeFirstComma,
+                titleStripNumbers,
+                discoveryMode,
+              }
+              const csrf = getTokenWithFallback()
+              const res = await fetch("/api/admin/scraper/sources", {
+                method: "POST",
+                headers: addToHeaders({ "Content-Type": "application/json" }),
+                credentials: "include",
+                body: JSON.stringify({
+                  config: body,
+                  platformType: discoveryMode,
+                  ...(csrf ? { _csrf: csrf } : {}),
+                }),
+              })
+              if (res.ok) {
+                const data = (await res.json()) as { source?: ScraperSourcePreset }
+                if (data.source) setSavedSources(prev => [data.source!, ...prev])
+              }
+            }}
+          >
+            Save preset
+          </Button>
+        </div>
       </form>
 
       {/* Running indicator + live progress */}
@@ -1406,7 +1618,7 @@ export function ScraperPageClient() {
               </details>
             )}
 
-            {records.length > 0 && (
+            {allRecords.length > 0 && (
               <Button
                 variant="secondary"
                 className="mt-4"
@@ -1418,31 +1630,72 @@ export function ScraperPageClient() {
             )}
           </div>
 
-          {records.length > 0 && (
+          {allRecords.length > 0 && (
             <div className="rounded-lg border border-border bg-noir-dark border-noir-gold text-noir-gold-100">
-              <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
                 <h3 className="text-sm font-semibold">Products preview</h3>
-                <span className="text-xs text-muted-foreground">{records.length} items</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    className="rounded border border-input bg-background px-2 py-1 text-xs"
+                    value={previewFilter}
+                    onChange={(e: ChangeEvent<HTMLSelectElement>) =>
+                      setPreviewFilter(e.target.value as PreviewFilter)
+                    }
+                  >
+                    <option value="all">All ({allRecords.length})</option>
+                    <option value="empty_notes">Empty notes</option>
+                    <option value="low_confidence">Low note confidence</option>
+                    <option value="missing_image">Missing image</option>
+                    <option value="duplicate_risk">Duplicate risk</option>
+                    <option value="needs_review">Needs review / skip</option>
+                  </select>
+                  <span className="text-xs text-muted-foreground">
+                    Showing {records.length} of {allRecords.length}
+                  </span>
+                </div>
               </div>
               <div className="max-h-72 overflow-y-auto">
                 <table className="w-full text-xs">
                   <thead className="sticky top-0 bg-background">
                     <tr className="border-b border-border text-left text-muted-foreground">
                       <th className="px-4 py-2 font-medium">Name</th>
-                      <th className="px-4 py-2 font-medium">Source</th>
+                      <th className="px-4 py-2 font-medium">Conf.</th>
+                      <th className="px-4 py-2 font-medium">Bucket</th>
+                      <th className="px-4 py-2 font-medium">Dup.</th>
                       <th className="px-4 py-2 font-medium">Open notes</th>
                     </tr>
                   </thead>
                   <tbody>
                     {previewRows.map((row, i) => (
                       <tr key={i} className="border-b border-border last:border-0">
-                        <td className="max-w-[200px] truncate px-4 py-2 font-medium">{row.name}</td>
+                        <td className="max-w-[160px] truncate px-4 py-2 font-medium">
+                          {row.detailURL ? (
+                            <a
+                              href={row.detailURL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline hover:text-primary"
+                            >
+                              {row.name}
+                            </a>
+                          ) : (
+                            row.name
+                          )}
+                        </td>
                         <td className="whitespace-nowrap px-4 py-2">
                           <span
                             className={`inline-block rounded px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${noteSourceBadgeClass(row.noteSource)}`}
                           >
-                            {row.noteSource ?? "—"}
+                            {row.noteConfidence ?? row.noteSource ?? "—"}
                           </span>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-2 text-muted-foreground">
+                          {row.importBucket ?? "—"}
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-2 text-muted-foreground">
+                          {row.duplicateRisk && row.duplicateRisk !== "none"
+                            ? row.duplicateRisk
+                            : "—"}
                         </td>
                         <td className="px-4 py-2 text-muted-foreground">
                           {row.notesPreview.length > 0 ? row.notesPreview.join(", ") : (
@@ -1457,7 +1710,7 @@ export function ScraperPageClient() {
             </div>
           )}
 
-          {records.length > 0 && !importResult && (
+          {allRecords.length > 0 && !importResult && (
             <div className="rounded-lg border border-border p-4 bg-noir-dark border-noir-gold text-noir-gold-100">
               <h3 className="mb-1 text-base font-semibold">Import to database</h3>
               <p className="mb-4 text-sm text-muted-foreground">
@@ -1499,6 +1752,23 @@ export function ScraperPageClient() {
                 </span>
               </label>
 
+              <label className="mb-4 flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={allowHighDuplicateRisk}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setAllowHighDuplicateRisk(e.target.checked)
+                  }
+                />
+                <span className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium">Import possible duplicates</span>
+                  <span className="text-xs text-muted-foreground">
+                    When off, rows flagged with high duplicate risk are skipped during import.
+                  </span>
+                </span>
+              </label>
+
               {!importConfirmed ? (
                 <Button
                   type="button"
@@ -1506,12 +1776,12 @@ export function ScraperPageClient() {
                   onClick={() => setImportConfirmed(true)}
                   disabled={importing}
                 >
-                  Confirm import ({records.length} products)
+                  Confirm import ({allRecords.length} products)
                 </Button>
               ) : (
                 <div className="flex items-center gap-3">
                   <p className="text-sm font-medium">
-                    Are you sure? This will write {records.length} records to the database.
+                    Are you sure? This will write {allRecords.length} records to the database.
                   </p>
                   <Button
                     type="button"

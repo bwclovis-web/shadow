@@ -10,10 +10,12 @@ vi.mock("@langchain/openai", () => ({
   })),
 }))
 
+import { scrapedItemsNeedPatternEtsyEnrichment } from "./map-scraped-items"
 import { canonicalizeNote } from "./canonical-notes"
 import {
   computeBatchNoteUniformityWarnings,
   extractNotesForItems,
+  mergeFlatMaterialsIntoLayeredPyramid,
   sanitizeCopyForNotePipeline,
 } from "./notes-graph"
 
@@ -119,7 +121,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
         content: JSON.stringify({
           openNotes: ["plum", "rose"],
           heartNotes: ["brown sugar", "honey"],
-          baseNotes: ["amber", "wood"],
+          baseNotes: ["amber", "lacquered wood"],
         }),
       }
     })
@@ -138,7 +140,7 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
     expect(heart).toContain("brown sugar")
     expect(heart).toContain("honey")
     expect(base).toContain("amber")
-    expect(base).toContain("wood")
+    expect(base).toContain("lacquered wood")
   })
 
   it("prose-only description (no labels): LLM extracts materials and noir runs once notes are non-empty", async () => {
@@ -1467,5 +1469,279 @@ Base: white musk`
     expect(JSON.parse(records[0].openNotes)).toEqual(["bergamot"])
     expect(JSON.parse(records[0].heartNotes)).toEqual(["rose"])
     expect(JSON.parse(records[0].baseNotes)).toEqual(["sandalwood"])
+  })
+
+  it("expands parenthetical accord materials into separate notes without parentheses", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Mezcal & Masa",
+        description: `Top: pineapple sage accord
+Heart: roasted corn, smokey mezcal accord
+Base: mesoamerican incense (copal & palo santo), south american wood (guaiacwood & vetiver)`,
+        image: "",
+        detailURL: "https://aetherartsperfume.patternbyetsy.com/listing/4299882856/mezcal-masa",
+        perfumeHouse: "Aether Arts",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when layered parenthetical notes parse cleanly")
+    })
+
+    const { records } = await extractNotesForItems(items, "Aether Arts", {
+      generateNoirDescriptions: false,
+    })
+
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    expect(base).toEqual(
+      expect.arrayContaining(["copal", "palo santo", "guaiacwood", "vetiver", "mesoamerican incense"]),
+    )
+    expect(base.some(n => n.includes("("))).toBe(false)
+  })
+
+  it("Pattern/Etsy Top and Middle note lines in boilerplate description extract without LLM", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Earthrise",
+        description: `Original, Artisan Perfumes, Unique ScentsArt in Air
+The Scent StoryThey say an image is worth a thousand words.
+Top Notes: Atmosphere and Ocean Accord (Ozone, Salt Water)
+Middle Notes: Verdant Earth Accord (Rich Soil, Green and Flowering Plants)`,
+        image: "",
+        detailURL:
+          "https://aetherartsperfume.patternbyetsy.com/listing/1196922082/earthrise-an-homage-to-earth-day-and-a",
+        perfumeHouse: "Aether Arts",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when Top/Middle note lines are present")
+    })
+
+    const { records } = await extractNotesForItems(items, "Aether Arts", {
+      generateNoirDescriptions: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    expect(open).toEqual(expect.arrayContaining(["ozone", "salt water"]))
+    expect(heart).toEqual(expect.arrayContaining(["rich soil", "green", "flowering plants"]))
+    expect([...open, ...heart].some(n => n.includes("("))).toBe(false)
+    expect(records[0].description).toBe("")
+  })
+
+  it("prefers full Etsy listing slug when scraped title truncates before the number", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Burner Perfume No",
+        description: NOTES_TEXT_NO_LLM,
+        image: "",
+        detailURL:
+          "https://aetherartsperfume.patternbyetsy.com/listing/623994128/burner-perfume-no9b-android-a-future",
+        perfumeHouse: "Aether Arts",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run for simple layered notes")
+    })
+
+    const { records } = await extractNotesForItems(items, "Aether Arts", {
+      generateNoirDescriptions: false,
+    })
+
+    expect(records[0].name).toMatch(/Burner Perfume No\.?\s*9B/i)
+    expect(records[0].name).not.toBe("Burner Perfume No")
+  })
+
+  it("Zarafa: merges Note Structure accords with explicit materials from prose and title", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const items: ScrapedItem[] = [
+      {
+        name:
+          "Zarafa, a Giraffe-inspired, Animalic-Foral perfume with notes of Bergamot, Orange, Honey, Orange Blosson, Jasmine, Saffron, Turmeric, Musk",
+        description: `The Scent Story I created an animalic-floral with a honey-musk base. Notes of Bergamot, Orange, Turmeric, and Saffron give the scent a tawny, opening glow that mimics the colors of the giraffe's coat. Rich, indolic florals follow: Orange Blossom and Jasmine Absolute. A touch of Liatrix adds a subtle grass note. A lavish Honey-Musk accord with a bit of Amber completes the composition.
+Note Structure: Top Notes: Tawny Coat Accord Middle Notes: Indolic Floral Accord Base Notes: Honey-Musk Accord Series: No`,
+        image: "",
+        detailURL:
+          "https://aetherartsperfume.patternbyetsy.com/listing/1702274035/zarafa-a-giraffe-inspired-animalic-foral",
+        perfumeHouse: "Aether Arts",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when Note Structure and explicit materials are present")
+    })
+
+    const { records } = await extractNotesForItems(items, "Aether Arts", {
+      generateNoirDescriptions: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    expect(open).toEqual(
+      expect.arrayContaining([
+        "bergamot",
+        "orange",
+        "turmeric",
+        "saffron",
+        "tawny coat accord",
+      ]),
+    )
+    expect(heart).toEqual(
+      expect.arrayContaining(["orange blossom", "jasmine absolute", "indolic floral accord"]),
+    )
+    expect(base).toEqual(
+      expect.arrayContaining(["honey-musk accord", "amber", "liatrix"]),
+    )
+  })
+
+  it("Mayan Chocolate: Note Structure pyramid beats noir-only prose contamination", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Mayan Chocolate, An Exotic, Spicy, Green, Chocolate Perfume Inspired By The Jungles Of Mesoamerica Where The Cacao Tree Grows",
+        description: `Footsteps echo softly on damp stone as hints of rich cacao rise like steam. Notes of lush jungle greenery intermingle with a haunting orchid accord, weaving through the heavy scent of incense.
+Note Structure: Top Notes: Chilies and Spice Accord Middle Notes: Green Jungle and Orchid Accord Base Notes: Rich Chocolate, Exotic Woods and Incense Accord Series: No`,
+        image: "",
+        detailURL:
+          "https://aetherartsperfume.patternbyetsy.com/listing/1043798530/mayan-chocolate-an-exotic-spicy-green",
+        perfumeHouse: "Aether Arts",
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when merchant Note Structure is in the source text")
+    })
+
+    const { records } = await extractNotesForItems(items, "Aether Arts", {
+      generateNoirDescriptions: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    expect(open).toEqual(expect.arrayContaining(["chilies and spice accord"]))
+    expect(heart).toEqual(expect.arrayContaining(["green jungle and orchid accord"]))
+    expect(base).toEqual(
+      expect.arrayContaining(["rich chocolate", "exotic wood and incense accord"]),
+    )
+    expect(open).not.toEqual(expect.arrayContaining(["orchid accord"]))
+    expect(base).not.toEqual(expect.arrayContaining(["orchid accord"]))
+  })
+
+  it("mergeFlatMaterialsIntoLayeredPyramid keeps accord layers and adds missing flat materials", () => {
+    const merged = mergeFlatMaterialsIntoLayeredPyramid(
+      {
+        openNotes: ["tawny coat accord"],
+        heartNotes: ["indolic floral accord"],
+        baseNotes: ["honey-musk accord"],
+      },
+      ["bergamot", "orange", "turmeric", "saffron", "tawny coat accord"],
+    )
+    expect(merged.openNotes).toEqual(
+      expect.arrayContaining(["tawny coat accord", "bergamot", "orange", "turmeric", "saffron"]),
+    )
+    expect(merged.heartNotes).toEqual(["indolic floral accord"])
+    expect(merged.baseNotes).toEqual(["honey-musk accord"])
+  })
+
+  it("enrichOnly merges thin Python accord pyramid with explicit materials from description", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const items: ScrapedItem[] = [
+      {
+        name:
+          "Zarafa, a Giraffe-inspired, Animalic-Foral perfume with notes of Bergamot, Orange, Honey, Orange Blosson, Jasmine, Saffron, Turmeric, Musk",
+        description: `Notes of Bergamot, Orange, Turmeric, and Saffron give the scent a tawny glow. Rich, indolic florals follow: Orange Blossom and Jasmine Absolute. A touch of Liatrix adds a subtle grass note. A lavish Honey-Musk accord with a bit of Amber completes the composition.
+Note Structure: Top Notes: Tawny Coat Accord Middle Notes: Indolic Floral Accord Base Notes: Honey-Musk Accord Series: No`,
+        image: "",
+        detailURL:
+          "https://aetherartsperfume.patternbyetsy.com/listing/1702274035/zarafa-a-giraffe-inspired-animalic-foral",
+        perfumeHouse: "Aether Arts",
+        openNotes: ["tawny coat accord"],
+        heartNotes: ["indolic floral accord"],
+        baseNotes: ["honey-musk accord"],
+      },
+    ]
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when enrichOnly merges merchant structure")
+    })
+
+    const { records } = await extractNotesForItems(items, "Aether Arts", {
+      generateNoirDescriptions: false,
+      enrichOnly: true,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    expect(open).toEqual(
+      expect.arrayContaining(["tawny coat accord", "bergamot", "orange", "turmeric", "saffron"]),
+    )
+    expect(heart).toEqual(
+      expect.arrayContaining(["indolic floral accord", "orange blossom", "jasmine absolute"]),
+    )
+    expect(base).toEqual(
+      expect.arrayContaining(["honey-musk accord", "amber", "liatrix"]),
+    )
+  })
+})
+
+describe("scrapedItemsNeedPatternEtsyEnrichment", () => {
+  it("flags thin Pattern/Etsy pyramids and skips rich or non-Pattern listings", () => {
+    expect(
+      scrapedItemsNeedPatternEtsyEnrichment([
+        {
+          name: "Zarafa",
+          description: "",
+          image: "",
+          detailURL:
+            "https://aetherartsperfume.patternbyetsy.com/listing/1702274035/zarafa",
+          openNotes: ["accord a"],
+          heartNotes: ["accord b"],
+          baseNotes: ["accord c"],
+        },
+      ]),
+    ).toBe(true)
+
+    expect(
+      scrapedItemsNeedPatternEtsyEnrichment([
+        {
+          name: "Zarafa",
+          description: "",
+          image: "",
+          detailURL:
+            "https://aetherartsperfume.patternbyetsy.com/listing/1702274035/zarafa",
+          openNotes: ["a", "b", "c", "d"],
+          heartNotes: ["e", "f"],
+          baseNotes: ["g"],
+        },
+      ]),
+    ).toBe(false)
+
+    expect(
+      scrapedItemsNeedPatternEtsyEnrichment([
+        {
+          name: "Shopify scent",
+          description: "",
+          image: "",
+          detailURL: "https://example.com/products/foo",
+          openNotes: ["rose"],
+          heartNotes: [],
+          baseNotes: [],
+        },
+      ]),
+    ).toBe(false)
   })
 })

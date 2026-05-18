@@ -20,6 +20,7 @@ type ReportTraderButtonProps = {
   }
   viewerId?: string | null
   tradeId?: string | null
+  size?: "sm" | "md"
 }
 
 const ReportTraderButton = ({
@@ -27,6 +28,7 @@ const ReportTraderButton = ({
   trader,
   viewerId,
   tradeId,
+  size = "md",
 }: ReportTraderButtonProps) => {
   const t = useTranslations("userReport")
   const { modalOpen, toggleModal, modalId, closeModal } = useSessionStore()
@@ -37,21 +39,23 @@ const ReportTraderButton = ({
   }
 
   const traderName = getTraderDisplayName(trader)
+  const reportModalId = tradeId ? `report-trader-${tradeId}` : "report-trader"
 
   return (
     <>
       <Button
         variant="secondary"
         background="red"
+        size={size}
         onClick={() => {
-          toggleModal(modalTrigger, "report-trader", { traderId, traderName })
+          toggleModal(modalTrigger, reportModalId, { traderId, traderName })
         }}
         ref={modalTrigger}
       >
         {t("button")}
       </Button>
 
-      {modalOpen && modalId === "report-trader" && (
+      {modalOpen && modalId === reportModalId && (
         <Modal background="default" innerType="dark" animateStart="top">
           <ReportTraderModal
             reportedUserId={traderId}

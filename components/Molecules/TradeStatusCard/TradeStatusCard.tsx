@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button/Button"
 import FormField from "@/components/Atoms/FormField/FormField"
+import ReportTraderButton from "@/components/Containers/TraderProfile/ReportTraderButton"
 import TradeListingPreview from "@/components/Molecules/TradeListingPreview/TradeListingPreview"
 import { TradeStatusTimeline } from "@/components/Molecules/TradeStatusTimeline"
 import { TraderAvatar } from "@/components/Molecules/TraderAvatar"
@@ -223,6 +224,16 @@ const TradeStatusCard = ({
           ) : null}
         </div>
       ) : null}
+
+      <div className="mt-3 border-t border-noir-gold/20 pt-3">
+        <ReportTraderButton
+          traderId={otherUser.id}
+          trader={otherUser}
+          viewerId={currentUserId}
+          tradeId={trade.id}
+          size="sm"
+        />
+      </div>
     </div>
   )
 }

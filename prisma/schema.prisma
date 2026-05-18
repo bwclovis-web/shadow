@@ -662,3 +662,51 @@ enum PerfumeNoteType {
   heart
   base
 }
+
+/// Admin scraper preset — saved form config for repeatable house runs.
+model ScraperSource {
+  id                  String       @id @default(cuid())
+  houseName           String
+  baseUrl             String?
+  platformType        String?
+  configJson          Json
+  status              String       @default("active")
+  lastRunAt           DateTime?
+  lastDiscoveredCount Int?
+  lastScrapedCount    Int?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  runs                ScraperRun[]
+}
+
+model ScraperRun {
+  id              String           @id @default(cuid())
+  sourceId        String?
+  source          ScraperSource?   @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  status          String           @default("pending")
+  configJson      Json?
+  startedAt       DateTime?
+  finishedAt      DateTime?
+  discoveredCount Int?
+  scrapedCount    Int?
+  importedCount   Int?
+  errors          Json?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  items           ScraperRunItem[]
+}
+
+model ScraperRunItem {
+  id           String     @id @default(cuid())
+  runId        String
+  run          ScraperRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  detailURL    String
+  status       String     @default("pending")
+  rawJson      Json?
+  qualityScore Int?
+  error        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([runId, status])
+}

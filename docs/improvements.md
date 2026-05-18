@@ -16,7 +16,7 @@ _Nothing in Wave 2 is meaningful without listing photos, a trade record, and a s
 |---------|--------|-------|
 | **1A** Schema | ✅ Done | IMP-001–014 |
 | **1B** Trader strikes (admin) | ✅ Done | IMP-020–027 |
-| **1C** User reports | ✅ Done | IMP-030, 032–033 (IMP-031 report-from-trade UI still open) |
+| **1C** User reports | ✅ Done | IMP-030–033 |
 | **1D** Listing photos | ✅ Done | IMP-040–047 (IMP-046 exchange cards deferred) |
 | **1E** Trader avatar / profile | ✅ Done | IMP-050–053 |
 | **1F** Email delivery | ✅ Done | IMP-060–062, 064 (IMP-063 trade emails still open) |
@@ -58,7 +58,7 @@ _Nothing in Wave 2 is meaningful without listing photos, a trade record, and a s
 ### 1C — User Report System ✅
 
 - [x] **IMP-030** Add "Report" button to trader profile page; opens modal with category dropdown + optional description field; calls `createUserReportAction`
-- [ ] **IMP-031** Add "Report" button inside trade UI (`TradeStatusCard` / thread); pre-fills `tradeId` on the report — trade lifecycle shipped (2A); report-from-trade UI still open
+- [x] **IMP-031** Add "Report" button inside trade UI (`TradeStatusCard` / thread); pre-fills `tradeId` on the report
 - [x] **IMP-032** Add Reports queue tab to admin panel (alongside pending submissions); shows unreviewed reports with reporter, reported user, category, trade link
 - [x] **IMP-033** Add "Issue Strike" shortcut from report detail so admin can act in one click
 
@@ -118,7 +118,7 @@ _These features make the platform sticky. Users return because they have active 
 | **2F** Seasonal trending | ✅ Done | IMP-160–162 |
 | **2G** Web push | ✅ Done | IMP-170–174 |
 
-**Still open from Wave 1/2:** IMP-031 (report from trade UI), IMP-046 (listing photos on exchange cards), IMP-063 (trade milestone emails).
+**Still open from Wave 1/2:** IMP-046 (listing photos on exchange cards), IMP-063 (trade milestone emails).
 
 **Next up:** Wave 3F — Bulk inventory editor
 
@@ -319,7 +319,7 @@ _No new schema — all computed from existing data._
 - **Completed (Wave 1):** 1A schema, 1B admin strikes + ban enforcement, 1C user reports + admin reports queue, 1D listing photos, 1E trader avatar + profile fields (region, social links), 1F transactional email (wishlist + decant alerts).
 - **Completed (Wave 2):** Full trade lifecycle (API, composer, thread card, profile tabs), reputation + community policy, exchange discovery filters, wishlist matching, activity feed, seasonal trending, Web Push (trade + message alerts, nav badge). See section tables above for IMP IDs.
 - **Completed (Wave 3, partial):** Onboarding, Scent DNA, quiz depth, Sanity blog, SEO pass (JSON-LD, OG, canonicals, dynamic perfume OG images, sitemap/robots), experience polish (view transitions, GSAP stagger, mobile bottom nav, alert i18n, recently active, exchange keyboard shortcuts).
-- **Still open:** IMP-031 (report from trade UI), IMP-046 (photos on exchange cards), IMP-063 (`sendTradeEventEmail` — TODO in `trade.server.ts`). Wave 3F–3G unchanged. IMP-245 GSC verification is a manual deploy-time step.
+- **Still open:** IMP-046 (photos on exchange cards), IMP-063 (`sendTradeEventEmail` — TODO in `trade.server.ts`). Wave 3F–3G unchanged. IMP-245 GSC verification is a manual deploy-time step.
 - **Local schema:** Use **Prisma Migrate** (`npx prisma migrate dev` / `migrate deploy`) — see `docs/database-migrations.md` and `.cursor/rules/prisma-migrations-only.mdc`. Do **not** use `prisma db push` for routine work.
 - **Production schema (legacy):** Remote DB was synced May 2026 via `npm run db:push:prod` (`scripts/push-prod-schema.js` — `APPLY_TO_REMOTE_DB.sql` + `supplementalMigrations` for onboarding, quiz depth, and Web Push tables/columns). Verification passed for `Trade`, strikes, reports, listing fields, push prefs, `UserPushSubscription`, `UserConversationPresence`, etc. Prefer `npx prisma migrate deploy` against `REMOTE_DATABASE_URL` when migration history catches up; extend `supplementalMigrations` only when prod still lags checked-in migrations.
 - After schema changes: `npm run db:generate` and restart `npm run dev` (or delete `.next` + `node_modules/.prisma/client` if the client is stale on Windows).
