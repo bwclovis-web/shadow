@@ -6,6 +6,7 @@ import {
   articlesByHouseSlugQuery,
   articlesByPerfumeSlugQuery,
   articlesIndexQuery,
+  articlesIndexWithRefsQuery,
 } from "./queries"
 import type { ArticleDetail, ArticleListItem } from "./types"
 
@@ -13,6 +14,14 @@ export const getPublishedArticles = async (): Promise<ArticleListItem[]> => {
   if (!isSanityConfigured) return []
   return sanityFetch<ArticleListItem[]>({
     query: articlesIndexQuery,
+    tags: ["articles"],
+  })
+}
+
+export const getPublishedArticlesWithRefs = async (): Promise<ArticleListItem[]> => {
+  if (!isSanityConfigured) return []
+  return sanityFetch<ArticleListItem[]>({
+    query: articlesIndexWithRefsQuery,
     tags: ["articles"],
   })
 }

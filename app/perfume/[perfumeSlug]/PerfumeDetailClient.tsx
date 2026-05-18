@@ -25,6 +25,7 @@ import { useDeletePerfume } from "@/lib/mutations/perfumes"
 import type { RecommendationPerfume } from "@/services/recommendations"
 
 import { RelatedArticlesSection } from "@/components/Containers/Blog/RelatedArticlesSection"
+import FollowButton from "@/components/Containers/Follow/FollowButton"
 import SimilarPerfumesCarousel from "@/components/Containers/Recommendations/SimilarPerfumesCarousel"
 import type { ArticleListItem } from "@/lib/sanity/types"
 
@@ -43,6 +44,7 @@ type PerfumeDetailClientProps = {
   reviewsPageSize: number
   similarPerfumes: RecommendationPerfume[]
   relatedArticles: ArticleListItem[]
+  initialFollowing?: boolean
   selectedLetter: string | null
 }
 
@@ -59,6 +61,7 @@ const PerfumeDetailClient = ({
   reviewsPageSize,
   similarPerfumes,
   relatedArticles,
+  initialFollowing = false,
   selectedLetter,
 }: PerfumeDetailClientProps) => {
   const { data: perfume } = usePerfume(initialPerfume.slug, initialPerfume)
@@ -124,6 +127,14 @@ const PerfumeDetailClient = ({
       </HeroHeader>
 
       <div className="flex flex-col gap-6 mx-auto inner-container items-center">
+        <div className="w-full flex justify-end px-2">
+          <FollowButton
+            targetType="perfume"
+            targetId={perfume.id}
+            initialFollowing={initialFollowing}
+            viewerId={user?.id ?? null}
+          />
+        </div>
         <div className="w-full flex flex-col lg:flex-row gap-4">
           {user && (
             <PerfumeIcons

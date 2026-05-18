@@ -17,9 +17,12 @@ const defaultAlertPreferences = {
   emailTradeAlerts: false,
   emailSecurityAlerts: true,
   securityAlertsEnabled: true,
+  followAlertsEnabled: true,
+  emailFollowAlerts: false,
   pushEnabled: false,
   pushTradeAlerts: true,
   pushMessageAlerts: true,
+  pushFollowAlerts: true,
   maxAlerts: 10,
 } as const
 
@@ -98,9 +101,12 @@ export const updateUserAlertPreferences = async (
       emailTradeAlerts: preferences.emailTradeAlerts ?? false,
       emailSecurityAlerts: preferences.emailSecurityAlerts ?? true,
       securityAlertsEnabled: preferences.securityAlertsEnabled ?? true,
+      followAlertsEnabled: preferences.followAlertsEnabled ?? true,
+      emailFollowAlerts: preferences.emailFollowAlerts ?? false,
       pushEnabled: preferences.pushEnabled ?? false,
       pushTradeAlerts: preferences.pushTradeAlerts ?? true,
       pushMessageAlerts: preferences.pushMessageAlerts ?? true,
+      pushFollowAlerts: preferences.pushFollowAlerts ?? true,
       maxAlerts: preferences.maxAlerts ?? 10,
     },
   })
@@ -170,6 +176,9 @@ export const createUserAlert = async (
   if (alertType === "wishlist_available" && !preferences.wishlistAlertsEnabled) return null
   if (alertType === "decant_interest" && !preferences.decantAlertsEnabled) return null
   if (alertType === "suspicious_login" && preferences.securityAlertsEnabled === false) {
+    return null
+  }
+  if (alertType === "followed_activity" && preferences.followAlertsEnabled === false) {
     return null
   }
 

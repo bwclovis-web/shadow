@@ -1,3 +1,4 @@
+import FollowButton from "@/components/Containers/Follow/FollowButton"
 import ContactTraderButton from "@/components/Containers/TraderProfile/ContactTraderButton"
 import ReportTraderButton from "@/components/Containers/TraderProfile/ReportTraderButton"
 import TraderFeedbackSection from "@/components/Containers/TraderProfile/TraderFeedbackSection"
@@ -13,12 +14,14 @@ interface TraderProfileAsideProps {
   trader: TraderResponse
   viewer: SafeUser | null
   feedback: TraderFeedbackResponse
+  initialFollowing?: boolean
 }
 
 export const TraderProfileAside = ({
   trader,
   viewer,
   feedback,
+  initialFollowing = false,
 }: TraderProfileAsideProps) => {
   const t = useTranslations("traderProfile")
   const hasAboutText = Boolean(trader.traderAbout?.trim())
@@ -46,7 +49,13 @@ export const TraderProfileAside = ({
         viewerId={viewer?.id}
         initialData={feedback}
       />
-      <div className="mt-4 flex flex-col gap-4 lg:flex-row">
+      <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:flex-wrap">
+        <FollowButton
+          targetType="user"
+          targetId={trader.id}
+          initialFollowing={initialFollowing}
+          viewerId={viewer?.id ?? null}
+        />
         <ContactTraderButton
           traderId={trader.id}
           trader={trader}

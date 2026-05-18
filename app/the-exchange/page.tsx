@@ -7,7 +7,7 @@ import {
   getAvailablePerfumesForDecantingPaginated,
   getPerfumeById,
 } from "@/models/perfume.server"
-import { getRecentlyListedActivity } from "@/models/activity-feed.server"
+import { getFollowedActivity, getRecentlyListedActivity } from "@/models/activity-feed.server"
 import { getSeasonalTrendingPerfumes } from "@/models/seasonal-trending.server"
 import { getWishlistExchangeMatches } from "@/models/wishlist-matching.server"
 import { getPerfumeNotesByIds } from "@/models/tags.server"
@@ -60,6 +60,7 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
     initialPerfume,
     wishlistMatches,
     recentListings,
+    followedActivity,
     seasonalTrending,
   ] = await Promise.all([
       getAvailablePerfumesForDecantingPaginated({
@@ -83,6 +84,7 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
         ? getWishlistExchangeMatches(viewerId)
         : Promise.resolve([]),
       getRecentlyListedActivity(12),
+      viewerId ? getFollowedActivity(viewerId, 12) : Promise.resolve([]),
       getSeasonalTrendingPerfumes(10),
     ])
 
@@ -139,6 +141,7 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
       initialPerfume={initialPerfume}
       wishlistMatches={wishlistMatches}
       recentListings={recentListings}
+      followedActivity={followedActivity}
       seasonalTrending={seasonalTrending}
       traderReputationByUserId={traderReputationByUserId}
       viewerId={viewerId}

@@ -16,6 +16,15 @@ export const articlesIndexQuery = `
   }
 `
 
+export const articlesIndexWithRefsQuery = `
+  *[_type == "article" && defined(slug.current) && publishedAt <= now()]
+  | order(publishedAt desc) {
+    ${articleFields},
+    perfumeRefs,
+    houseRefs
+  }
+`
+
 export const articleBySlugQuery = `
   *[_type == "article" && slug.current == $slug && publishedAt <= now()][0] {
     ${articleFields},

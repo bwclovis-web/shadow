@@ -343,6 +343,17 @@ export const TradeShipTransitionSchema = z.object({
 })
 
 // Contact Trader
+export const FollowActionSchema = z
+  .object({
+    action: z.enum(["follow", "unfollow"]),
+    targetType: z.enum(["user", "house", "perfume"]),
+    targetId: z.string().min(1, { message: V.recipientIdRequired }),
+  })
+  .refine(
+    data => isValidPrismaRecordId(data.targetId),
+    { message: V.recipientIdRequired, path: ["targetId"] }
+  )
+
 export const ContactTraderSchema = z.object({
   recipientId: z.string().min(1, { message: V.recipientIdRequired }),
   subject: z
@@ -378,6 +389,7 @@ export const validationSchemas = {
   adminUserForm: AdminUserFormSchema,
   dataQualityReport: DataQualityReportSchema,
   contactTrader: ContactTraderSchema,
+  followAction: FollowActionSchema,
   createTrade: CreateTradeSchema,
   tradeShipTransition: TradeShipTransitionSchema,
 } as const

@@ -41,9 +41,9 @@ Customer-facing roadmap focused on discovery quality, trust, and retention loops
 
 ### Social-lite
 
-- [ ] **CF-050** Follow houses/traders/reviewers
-- [ ] **CF-051** Lightweight feed of followed activity
-- [ ] **CF-052** Notification preferences for follows
+- [x] **CF-050** Follow houses/traders/reviewers
+- [x] **CF-051** Lightweight feed of followed activity
+- [x] **CF-052** Notification preferences for follows
 
 ## Tier C: Delight and Retention
 

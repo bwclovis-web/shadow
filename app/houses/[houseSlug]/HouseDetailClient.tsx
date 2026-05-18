@@ -20,6 +20,7 @@ const PerfumeHouseAdminActions = dynamic(
   { ssr: false }
 )
 import { RelatedArticlesSection } from "@/components/Containers/Blog/RelatedArticlesSection"
+import FollowButton from "@/components/Containers/Follow/FollowButton"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import DangerModal from "@/components/Organisms/DangerModal"
 import Modal from "@/components/Organisms/Modal"
@@ -83,6 +84,7 @@ interface HouseDetailClientProps {
   >
   relatedArticles: ArticleListItem[]
   user?: { id?: string; role?: string } | null
+  initialFollowing?: boolean
   initialSearchParams: { pg: string; letter?: string; q?: string; sort?: string }
 }
 
@@ -90,6 +92,7 @@ const HouseDetailClient = ({
   initialPerfumeHouse,
   relatedArticles,
   user,
+  initialFollowing = false,
   initialSearchParams,
 }: HouseDetailClientProps) => {
   const t = useTranslations("singleHouse")
@@ -381,6 +384,15 @@ const HouseDetailClient = ({
           transitionKey={house.id}
           type="house"
         />
+
+        <div className="inner-container mt-4 flex justify-center">
+          <FollowButton
+            targetType="house"
+            targetId={house.id}
+            initialFollowing={initialFollowing}
+            viewerId={user?.id ?? null}
+          />
+        </div>
 
         <div className="flex flex-col gap-10 mx-auto max-w-6xl inner-container">
           {user?.role === "admin" && (

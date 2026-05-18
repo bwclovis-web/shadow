@@ -70,6 +70,8 @@ model User {
   disputesAsOtherParty  TradeDispute[]         @relation("DisputesAsOtherParty")
   disputesResolved      TradeDispute[]         @relation("DisputesResolvedByAdmin")
   ScentProfile              ScentProfile?
+  follows                   UserFollow[]         @relation("UserFollows")
+  followedBy                UserFollow[]         @relation("UserFollowedBy")
 }
 
 model PerfumeHouse {
@@ -88,6 +90,7 @@ model PerfumeHouse {
   updatedAt   DateTime  @updatedAt
   slug        String    @unique
   perfumes    Perfume[]
+  followedBy  UserFollow[]
 
   @@index([type, name], name: "idx_house_type_name")
 }
@@ -125,6 +128,7 @@ model Perfume {
   userPerfumeReview     UserPerfumeReview[]
   userPerfumeWishlist   UserPerfumeWishlist[]
   wishlistNotifications WishlistNotification[]
+  followedBy            UserFollow[]
 
   @@index([slug], name: "idx_perfume_slug")
   @@index([perfumeHouseId, createdAt], name: "idx_perfume_house_created")
@@ -378,11 +382,35 @@ model UserAlertPreferences {
   emailTradeAlerts      Boolean @default(false)
   emailSecurityAlerts   Boolean @default(true)
   securityAlertsEnabled Boolean @default(true)
+  followAlertsEnabled   Boolean @default(true)
+  emailFollowAlerts     Boolean @default(false)
   pushEnabled           Boolean @default(false)
   pushTradeAlerts       Boolean @default(true)
   pushMessageAlerts     Boolean @default(true)
+  pushFollowAlerts      Boolean @default(true)
   maxAlerts             Int     @default(10)
   User                  User    @relation(fields: [userId], references: [id])
+}
+
+model UserFollow {
+  id                 String   @id @default(cuid())
+  followerId         String
+  followingUserId    String?
+  followingHouseId   String?
+  followingPerfumeId String?
+  createdAt          DateTime @default(now())
+
+  follower         User          @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
+  followingUser    User?         @relation("UserFollowedBy", fields: [followingUserId], references: [id], onDelete: Cascade)
+  followingHouse   PerfumeHouse? @relation(fields: [followingHouseId], references: [id], onDelete: Cascade)
+  followingPerfume Perfume?      @relation(fields: [followingPerfumeId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingUserId])
+  @@unique([followerId, followingHouseId])
+  @@unique([followerId, followingPerfumeId])
+  @@index([followingUserId])
+  @@index([followingHouseId])
+  @@index([followingPerfumeId])
 }
 
 model UserPushSubscription {
@@ -676,6 +704,7 @@ enum AlertType {
   trade_completed
   trade_cancelled
   suspicious_login
+  followed_activity
 }
 
 enum TradeStatus {

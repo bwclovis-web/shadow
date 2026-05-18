@@ -8,7 +8,10 @@ import Select from "@/components/Atoms/Select"
 import ActivityFeedSection from "@/components/Containers/Exchange/ActivityFeedSection"
 import SearchBar from "@/components/Organisms/SearchBar"
 import { useMounted } from "@/hooks/useMounted"
-import type { ActivityFeedListingRow } from "@/models/activity-feed.server"
+import type {
+  ActivityFeedListingRow,
+  FollowedActivityItem,
+} from "@/models/activity-feed.server"
 import type { SeasonalTrendingResult } from "@/models/seasonal-trending.server"
 import SeasonalTrendingSection from "@/components/Containers/Exchange/SeasonalTrendingSection"
 
@@ -20,6 +23,7 @@ interface HomeClientProps {
   features: Feature[]
   counts: { users: number; houses: number; perfumes: number }
   recentListings?: ActivityFeedListingRow[]
+  followedActivity?: FollowedActivityItem[]
   seasonalTrending?: SeasonalTrendingResult
 }
 
@@ -27,6 +31,7 @@ export default function HomeClient({
   features: _features,
   counts,
   recentListings = [],
+  followedActivity = [],
   seasonalTrending = { season: "spring", perfumes: [] },
 }: HomeClientProps) {
   const [searchType, setSearchType] = useState<"perfume-house" | "perfume">("perfume")
@@ -193,9 +198,10 @@ export default function HomeClient({
               className="rounded-md border border-noir-gold/40 bg-noir-black/70 p-4 backdrop-blur-sm"
             />
           ) : null}
-          {recentListings.length > 0 ? (
+          {recentListings.length > 0 || followedActivity.length > 0 ? (
             <ActivityFeedSection
               listings={recentListings}
+              followedItems={followedActivity}
               variant="compact"
               className="rounded-md border border-noir-gold/40 bg-noir-black/70 p-4 backdrop-blur-sm"
             />

@@ -597,6 +597,18 @@ export const createDestashEntry = async ({
       // Don't fail the operation if scent profile update fails
     }
 
+    const availMl = parseFloat(available?.replace(/[^0-9.]/g, "") || "0")
+    if (availMl > 0 && userPerfume.perfume) {
+      const { notifyFollowersOfNewListing } = await import("@/models/follow-alerts.server")
+      void notifyFollowersOfNewListing({
+        actorUserId: userId,
+        userPerfumeId: userPerfume.id,
+        perfumeId,
+        perfumeName: userPerfume.perfume.name,
+        houseId: userPerfume.perfume.perfumeHouse?.id ?? null,
+      }).catch(err => console.error("[follow-alerts] listing notify failed:", err))
+    }
+
     return { success: true, userPerfume: { ...userPerfume, pausedAvailable: null } }
   } catch (error) {
     console.error("Error creating destash entry:", error)

@@ -219,9 +219,12 @@ export interface UserAlertPreferences {
   emailTradeAlerts: boolean
   emailSecurityAlerts: boolean
   securityAlertsEnabled: boolean
+  followAlertsEnabled: boolean
+  emailFollowAlerts: boolean
   pushEnabled: boolean
   pushTradeAlerts: boolean
   pushMessageAlerts: boolean
+  pushFollowAlerts: boolean
   maxAlerts: number
   user: User
 }

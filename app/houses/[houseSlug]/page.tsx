@@ -5,6 +5,7 @@ import { getArticlesForHouseSlug } from "@/lib/sanity/articles.server"
 import { buildHouseOrganizationJsonLd } from "@/lib/seo/json-ld"
 import { buildPageMetadata } from "@/lib/seo/metadata"
 import { truncateDescription } from "@/lib/seo/truncate"
+import { getFollowStateForViewer } from "@/models/user-follow.server"
 import { getPerfumeHouseBySlug } from "@/models/house.server"
 import { getTranslations } from "next-intl/server"
 import { houseDetailSortForApi } from "@/utils/house-perfumes-url-params"
@@ -66,6 +67,8 @@ export default async function HouseDetailPage({ params, searchParams }: Props) {
   }
 
   const user = session?.user ?? null
+  const viewerId = user?.id ?? null
+  const followState = await getFollowStateForViewer(viewerId, "house", perfumeHouse.id)
 
   const jsonLd = buildHouseOrganizationJsonLd({
     name: perfumeHouse.name,
@@ -87,6 +90,7 @@ export default async function HouseDetailPage({ params, searchParams }: Props) {
         initialPerfumeHouse={perfumeHouse}
         relatedArticles={relatedArticles}
         user={user}
+        initialFollowing={followState.following}
         initialSearchParams={{
           pg: resolvedSearchParams.pg ?? "1",
           letter: resolvedSearchParams.letter ?? undefined,

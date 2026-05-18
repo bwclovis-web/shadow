@@ -34,6 +34,8 @@ type TraderProfileClientProps = {
   activeTrades?: TradeForClient[]
   wishlistOverlap?: TraderWishlistOverlap | null
   scentDna: ScentDnaSnapshot
+  initialFollowing?: boolean
+  followerCount?: number
 }
 
 export default function TraderProfileClient({
@@ -43,6 +45,8 @@ export default function TraderProfileClient({
   activeTrades = [],
   wishlistOverlap = null,
   scentDna,
+  initialFollowing = false,
+  followerCount = 0,
 }: TraderProfileClientProps) {
   const { data: trader } = useTrader(initialTrader.id, initialTrader)
   const t = useTranslations("traderProfile")
@@ -84,6 +88,7 @@ export default function TraderProfileClient({
         <TraderProfileHeaderStats
           memberSince={memberSince}
           completedTradeCount={feedback.reputation.completedTradeCount}
+          followerCount={followerCount}
           lastActiveAt={
             (trader as { lastActiveAt?: Date | string | null }).lastActiveAt ?? null
           }
@@ -92,7 +97,12 @@ export default function TraderProfileClient({
 
       <div className="inner-container grid grid-cols-1 items-start gap-8 p-6 md:grid-cols-2 xl:grid-cols-3">
         {isLgView ? (
-          <TraderProfileAside trader={trader} viewer={viewer} feedback={feedback} />
+          <TraderProfileAside
+            trader={trader}
+            viewer={viewer}
+            feedback={feedback}
+            initialFollowing={initialFollowing}
+          />
         ) : (
           <VooDooDetails
             type="primary"
@@ -102,7 +112,12 @@ export default function TraderProfileClient({
             defaultOpen={false}
           >
             <div className="py-4">
-              <TraderProfileAside trader={trader} viewer={viewer} feedback={feedback} />
+              <TraderProfileAside
+            trader={trader}
+            viewer={viewer}
+            feedback={feedback}
+            initialFollowing={initialFollowing}
+          />
             </div>
           </VooDooDetails>
         )}

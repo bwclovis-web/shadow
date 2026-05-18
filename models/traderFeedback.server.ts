@@ -184,7 +184,7 @@ export async function submitTraderFeedback(input: TraderFeedbackSubmissionInput)
   )
 
   try {
-    return await prisma.traderFeedback.upsert({
+    const result = await prisma.traderFeedback.upsert({
       where: {
         traderId_reviewerId: { traderId, reviewerId },
       },
@@ -201,6 +201,13 @@ export async function submitTraderFeedback(input: TraderFeedbackSubmissionInput)
         ...(linkedTradeId ? { tradeId: linkedTradeId } : {}),
       },
     })
+
+    const { notifyFollowersOfReview } = await import("@/models/follow-alerts.server")
+    void notifyFollowersOfReview({ traderId, reviewerId, rating }).catch(err =>
+      console.error("[follow-alerts] review notify failed:", err)
+    )
+
+    return result
   } catch (error) {
     if (isMissingFeedbackTableError(error)) {
       throw new Error("Trader feedback system is not yet enabled.")

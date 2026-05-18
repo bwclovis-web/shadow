@@ -219,6 +219,16 @@ const sendTradeAlert = async (
       console.error("[email] Failed to send trade event email:", err)
     })
   }
+
+  if (rule.alertType === "trade_completed") {
+    const { notifyFollowersOfCompletedTrade } = await import("@/models/follow-alerts.server")
+    void notifyFollowersOfCompletedTrade({
+      tradeId: trade.id,
+      initiatorId: trade.initiatorId,
+      counterpartyId: trade.counterpartyId,
+      perfumeLabel,
+    }).catch(err => console.error("[follow-alerts] trade notify failed:", err))
+  }
 }
 
 const sendTradeAlertWithFallback = async (

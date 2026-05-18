@@ -52,6 +52,7 @@ const TheExchangeClient = ({
   initialPerfume = null,
   wishlistMatches = [],
   recentListings = [],
+  followedActivity = [],
   seasonalTrending = { season: "spring", perfumes: [] },
   traderReputationByUserId = {},
   viewerId = null,
@@ -482,8 +483,11 @@ const TheExchangeClient = ({
                     {t("search.keyboardHint")}
                   </p>
                 </div>
-                {recentListings.length > 0 ? (
-                  <ActivityFeedSection listings={recentListings} />
+                {recentListings.length > 0 || followedActivity.length > 0 ? (
+                  <ActivityFeedSection
+                    listings={recentListings}
+                    followedItems={followedActivity}
+                  />
                 ) : null}
                 {viewerId && wishlistMatches.length > 0 ? (
                   <WishlistMatchesSection

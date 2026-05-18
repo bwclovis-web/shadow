@@ -533,6 +533,10 @@
     "activityFeed": {
       "title": "Lo último en el intercambio"
     },
+    "followedActivityFeed": {
+      "title": "De quien sigues",
+      "description": "Listados, intercambios, reseñas y artículos de traders, casas y perfumes que sigues."
+    },
     "seasonalTrending": {
       "title": "Tendencias de {season}"
     }
@@ -1468,6 +1472,17 @@
       "viewPerfume": "Ver {name}",
       "viewTrader": "Ver el perfil de {name}"
     },
+    "followedActivityFeed": {
+      "title": "De quien sigues",
+      "description": "Actividad reciente de traders, casas y perfumes que sigues."
+    },
+    "followedActivity": {
+      "completedTrade": "completó un intercambio",
+      "tradeFallbackPerfume": "un intercambio",
+      "leftReview": "reseñó a",
+      "rating": "{count, plural, one {# estrella} other {# estrellas}}",
+      "newArticle": "Nuevo artículo Behind the Bottle"
+    },
     "seasonalTrending": {
       "title": "Tendencias de {season}",
       "description": "Votos de temporada de la comunidad para la época del año actual.",
@@ -1734,6 +1749,11 @@
         "admin": "Administrador"
       }
     }
+  },
+  "follow": {
+    "follow": "Seguir",
+    "following": "Siguiendo",
+    "signInToFollow": "Inicia sesión para seguir"
   },
   "wishlist": {
     "meta": {

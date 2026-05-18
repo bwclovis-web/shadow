@@ -41,6 +41,8 @@ const getAlertIconClassName = (alertType: UserAlert["alertType"]) => {
       return "text-noir-gold"
     case "suspicious_login":
       return "text-orange-600"
+    case "followed_activity":
+      return "text-noir-gold-500"
     default:
       return "text-gray-600"
   }
@@ -61,6 +63,11 @@ const alertLink = (alert: UserAlert) => {
   }
   if (isTradeAlert(alert.alertType as string) && senderId) {
     return messagesLink(senderId)
+  }
+  if ((alert.alertType as string) === "followed_activity") {
+    const targetUrl = alert.metadata?.targetUrl as string | undefined
+    if (targetUrl) return targetUrl.startsWith("/") ? targetUrl : `/${targetUrl}`
+    return "/the-exchange"
   }
   if (alert.Perfume) return perfumeLink(alert.Perfume.slug)
   return "/messages"
@@ -88,6 +95,7 @@ const alertTypeKey = (alertType: UserAlert["alertType"]) => {
     "trade_completed",
     "trade_cancelled",
     "suspicious_login",
+    "followed_activity",
   ] as const
   return known.includes(key as (typeof known)[number]) ? key : "default"
 }
@@ -126,6 +134,9 @@ export const AlertItem = ({
     if (isTradeAlert(alert.alertType as string)) return t("actions.viewTrade")
     if ((alert.alertType as string) === "suspicious_login") {
       return t("actions.viewSecurity")
+    }
+    if ((alert.alertType as string) === "followed_activity") {
+      return t("actions.viewFollowedActivity")
     }
     return t("actions.viewPerfume")
   })()

@@ -7,6 +7,7 @@ import { getArticlesForPerfumeSlug } from "@/lib/sanity/articles.server"
 import { buildPerfumeProductJsonLd } from "@/lib/seo/json-ld"
 import { buildPageMetadata } from "@/lib/seo/metadata"
 import { truncateDescription } from "@/lib/seo/truncate"
+import { getFollowStateForViewer } from "@/models/user-follow.server"
 import { getPerfumeDetailPayload } from "@/models/perfumeDetail.server"
 import { selectionFromVoteRow } from "@/models/perfumeSeasonVote.server"
 import { getPerfumeBySlug } from "@/models/perfume.server"
@@ -65,7 +66,8 @@ export default async function PerfumeDetailPage({
     notFound()
   }
 
-  const [payload, similarPerfumes, relatedArticles] = await Promise.all([
+  const viewerId = session?.userId ?? null
+  const [payload, similarPerfumes, relatedArticles, followState] = await Promise.all([
     getPerfumeDetailPayload(
       perfume.id,
       session?.userId ?? null,
@@ -83,6 +85,7 @@ export default async function PerfumeDetailPage({
         return []
       }),
     getArticlesForPerfumeSlug(perfumeSlug),
+    getFollowStateForViewer(viewerId, "perfume", perfume.id),
   ])
 
   const jsonLd = buildPerfumeProductJsonLd({
@@ -118,6 +121,7 @@ export default async function PerfumeDetailPage({
       reviewsPageSize={REVIEWS_PAGE_SIZE}
       similarPerfumes={similarPerfumes}
       relatedArticles={relatedArticles}
+      initialFollowing={followState.following}
       selectedLetter={resolvedSearchParams.letter ?? null}
     />
     </>

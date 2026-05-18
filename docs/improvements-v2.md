@@ -173,11 +173,11 @@ _Layer community graph and social identity on top of the shipped reputation, Sce
 
 ### C1 — Follow System (IMP-F02 / CF-050–052)
 
-- [ ] Follow traders, houses, and reviewers
-- [ ] `UserFollow` model: `followerId`, `followingUserId?`, `followingHouseId?`, `followingPerfumeId?`, `createdAt`
-- [ ] Followed activity in the existing activity feed: new listings, completed trades, new reviews, new blog articles
-- [ ] Notification preferences for followed activity (gated behind existing `UserAlertPreferences` pattern)
-- [ ] "X people follow this trader" count on trader profiles
+- [x] Follow traders, houses, and reviewers
+- [x] `UserFollow` model: `followerId`, `followingUserId?`, `followingHouseId?`, `followingPerfumeId?`, `createdAt`
+- [x] Followed activity in the existing activity feed: new listings, completed trades, new reviews, new blog articles
+- [x] Notification preferences for followed activity (gated behind existing `UserAlertPreferences` pattern)
+- [x] "X people follow this trader" count on trader profiles
 
 ### C2 — Contributor Badges
 

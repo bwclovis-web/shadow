@@ -533,6 +533,10 @@
     "activityFeed": {
       "title": "Dernières annonces sur l'échange"
     },
+    "followedActivityFeed": {
+      "title": "De vos abonnements",
+      "description": "Annonces, échanges, avis et articles des traders, maisons et parfums que vous suivez."
+    },
     "seasonalTrending": {
       "title": "Tendances {season}"
     }
@@ -1468,6 +1472,17 @@
       "viewPerfume": "Voir {name}",
       "viewTrader": "Voir le profil de {name}"
     },
+    "followedActivityFeed": {
+      "title": "De vos abonnements",
+      "description": "Activité récente des traders, maisons et parfums que vous suivez."
+    },
+    "followedActivity": {
+      "completedTrade": "a terminé un échange",
+      "tradeFallbackPerfume": "un échange",
+      "leftReview": "a évalué",
+      "rating": "{count, plural, one {# étoile} other {# étoiles}}",
+      "newArticle": "Nouvel article Behind the Bottle"
+    },
     "seasonalTrending": {
       "title": "Tendances {season}",
       "description": "Votes de saison de la communauté pour la période de l'année.",
@@ -1734,6 +1749,11 @@
         "admin": "Admin"
       }
     }
+  },
+  "follow": {
+    "follow": "Suivre",
+    "following": "Abonné",
+    "signInToFollow": "Connectez-vous pour suivre"
   },
   "wishlist": {
     "meta": {

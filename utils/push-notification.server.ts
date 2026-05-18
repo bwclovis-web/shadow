@@ -18,6 +18,8 @@ const TRADE_PUSH_ALERT_TYPES: AlertType[] = [
 
 const MESSAGE_PUSH_ALERT_TYPES: AlertType[] = ["new_trader_message"]
 
+const FOLLOW_PUSH_ALERT_TYPES: AlertType[] = ["followed_activity"]
+
 export type PushAlertPayload = {
   title: string
   body: string
@@ -45,6 +47,11 @@ const buildNotificationUrl = (
 
   if (alertType === "new_trader_message" && senderId) {
     return `${base}/messages/${senderId}`
+  }
+
+  if (alertType === "followed_activity" && typeof metadata?.targetUrl === "string") {
+    const path = metadata.targetUrl.startsWith("/") ? metadata.targetUrl : `/${metadata.targetUrl}`
+    return `${base}${path}`
   }
 
   return `${base}/profile`
@@ -85,6 +92,10 @@ const shouldSendPushForAlert = async (
     return true
   }
 
+  if (FOLLOW_PUSH_ALERT_TYPES.includes(alertType)) {
+    return preferences.pushFollowAlerts
+  }
+
   return false
 }
 
@@ -97,7 +108,11 @@ export const sendPushForUserAlert = async (options: {
 }): Promise<void> => {
   const { userId, alertType, title, message, metadata } = options
 
-  if (!TRADE_PUSH_ALERT_TYPES.includes(alertType) && !MESSAGE_PUSH_ALERT_TYPES.includes(alertType)) {
+  if (
+    !TRADE_PUSH_ALERT_TYPES.includes(alertType) &&
+    !MESSAGE_PUSH_ALERT_TYPES.includes(alertType) &&
+    !FOLLOW_PUSH_ALERT_TYPES.includes(alertType)
+  ) {
     return
   }
 

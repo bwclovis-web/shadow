@@ -59,6 +59,9 @@ export const AlertPreferences = ({
     pushEnabled: preferences.pushEnabled ?? false,
     pushTradeAlerts: preferences.pushTradeAlerts ?? true,
     pushMessageAlerts: preferences.pushMessageAlerts ?? true,
+    followAlertsEnabled: preferences.followAlertsEnabled ?? true,
+    emailFollowAlerts: preferences.emailFollowAlerts ?? false,
+    pushFollowAlerts: preferences.pushFollowAlerts ?? true,
     maxAlerts: preferences.maxAlerts,
   })
 
@@ -75,6 +78,9 @@ export const AlertPreferences = ({
       pushEnabled: preferences.pushEnabled ?? false,
       pushTradeAlerts: preferences.pushTradeAlerts ?? true,
       pushMessageAlerts: preferences.pushMessageAlerts ?? true,
+      followAlertsEnabled: preferences.followAlertsEnabled ?? true,
+      emailFollowAlerts: preferences.emailFollowAlerts ?? false,
+      pushFollowAlerts: preferences.pushFollowAlerts ?? true,
       maxAlerts: preferences.maxAlerts,
     })
     setIsEditing(true)
@@ -89,6 +95,7 @@ export const AlertPreferences = ({
     emailWishlistAlerts: state.wishlistAlertsEnabled ? state.emailWishlistAlerts : false,
     emailDecantAlerts: state.decantAlertsEnabled ? state.emailDecantAlerts : false,
     emailSecurityAlerts: state.securityAlertsEnabled ? state.emailSecurityAlerts : false,
+    emailFollowAlerts: state.followAlertsEnabled ? state.emailFollowAlerts : false,
   })
 
   const handleSave = async () => {
@@ -129,6 +136,14 @@ export const AlertPreferences = ({
           ...prev,
           securityAlertsEnabled,
           emailSecurityAlerts: securityAlertsEnabled ? prev.emailSecurityAlerts : false,
+        }
+      }
+      if (key === "followAlertsEnabled") {
+        const followAlertsEnabled = !prev.followAlertsEnabled
+        return {
+          ...prev,
+          followAlertsEnabled,
+          emailFollowAlerts: followAlertsEnabled ? prev.emailFollowAlerts : false,
         }
       }
       return {
@@ -187,6 +202,14 @@ export const AlertPreferences = ({
                   labelChecked={t("securityAlerts")}
                   labelUnchecked={t("securityAlerts")}
                 />
+
+                <VooDooCheck
+                  id="follow-alerts"
+                  checked={editState.followAlertsEnabled}
+                  onChange={() => togglePreference("followAlertsEnabled")}
+                  labelChecked={t("followAlerts")}
+                  labelUnchecked={t("followAlerts")}
+                />
               </div>
             </div>
 
@@ -233,6 +256,15 @@ export const AlertPreferences = ({
                   labelChecked={t("emailSecurityAlerts")}
                   labelUnchecked={t("emailSecurityAlerts")}
                 />
+
+                <VooDooCheck
+                  id="email-follow-alerts"
+                  checked={editState.emailFollowAlerts}
+                  disabled={!editState.followAlertsEnabled}
+                  onChange={() => togglePreference("emailFollowAlerts")}
+                  labelChecked={t("emailFollowAlerts")}
+                  labelUnchecked={t("emailFollowAlerts")}
+                />
               </div>
             </div>
 
@@ -244,6 +276,7 @@ export const AlertPreferences = ({
                 pushEnabled: editState.pushEnabled,
                 pushTradeAlerts: editState.pushTradeAlerts,
                 pushMessageAlerts: editState.pushMessageAlerts,
+                pushFollowAlerts: editState.pushFollowAlerts,
               }}
               onEditStateChange={patch => setEditState(prev => ({ ...prev, ...patch }))}
               onPreferencesChange={onPreferencesChange}
@@ -342,6 +375,13 @@ export const AlertPreferences = ({
                     </span>
                     <StatusBadge enabled={preferences.securityAlertsEnabled ?? true} />
                   </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-noir-gold-100">
+                      {t("followAlerts")}
+                    </span>
+                    <StatusBadge enabled={preferences.followAlertsEnabled ?? true} />
+                  </div>
                 </div>
               </div>
 
@@ -398,6 +438,7 @@ export const AlertPreferences = ({
                 pushEnabled: preferences.pushEnabled ?? false,
                 pushTradeAlerts: preferences.pushTradeAlerts ?? true,
                 pushMessageAlerts: preferences.pushMessageAlerts ?? true,
+                pushFollowAlerts: preferences.pushFollowAlerts ?? true,
               }}
               onEditStateChange={() => {}}
               onPreferencesChange={async () => false}

@@ -14,9 +14,12 @@ const defaultPreferences = {
   emailTradeAlerts: false,
   emailSecurityAlerts: true,
   securityAlertsEnabled: true,
+  followAlertsEnabled: true,
+  emailFollowAlerts: false,
   pushEnabled: false,
   pushTradeAlerts: true,
   pushMessageAlerts: true,
+  pushFollowAlerts: true,
   maxAlerts: 10,
 }
 
@@ -84,10 +87,13 @@ async function updatePreferences(
   if (typeof body.emailTradeAlerts === "boolean") preferences.emailTradeAlerts = body.emailTradeAlerts
   if (typeof body.emailSecurityAlerts === "boolean") preferences.emailSecurityAlerts = body.emailSecurityAlerts
   if (typeof body.securityAlertsEnabled === "boolean") preferences.securityAlertsEnabled = body.securityAlertsEnabled
+  if (typeof body.followAlertsEnabled === "boolean") preferences.followAlertsEnabled = body.followAlertsEnabled
+  if (typeof body.emailFollowAlerts === "boolean") preferences.emailFollowAlerts = body.emailFollowAlerts
   if (typeof body.maxAlerts === "number" && body.maxAlerts >= 1 && body.maxAlerts <= 100) preferences.maxAlerts = body.maxAlerts
   if (typeof body.pushEnabled === "boolean") preferences.pushEnabled = body.pushEnabled
   if (typeof body.pushTradeAlerts === "boolean") preferences.pushTradeAlerts = body.pushTradeAlerts
   if (typeof body.pushMessageAlerts === "boolean") preferences.pushMessageAlerts = body.pushMessageAlerts
+  if (typeof body.pushFollowAlerts === "boolean") preferences.pushFollowAlerts = body.pushFollowAlerts
 
   try {
     const updated = await updateUserAlertPreferences(userId, preferences)

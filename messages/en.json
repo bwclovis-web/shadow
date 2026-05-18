@@ -357,6 +357,8 @@
     "emailWishlistAlerts": "Email Wishlist Alerts",
     "emailDecantAlerts": "Email Decant Alerts",
     "emailTradeAlerts": "Email Trade Updates",
+    "followAlerts": "Followed activity",
+    "emailFollowAlerts": "Email followed activity",
     "securityAlerts": "Security Alerts",
     "securityAlertsDescription": "Unusual sign-in activity on your account",
     "emailSecurityAlerts": "Email Security Alerts",
@@ -376,6 +378,7 @@
     "pushEnabled": "Browser push",
     "pushTradeAlerts": "Trade updates",
     "pushMessageAlerts": "New messages",
+    "pushFollowAlerts": "Followed activity",
     "pushDescription": "Get notified when trades move forward or someone messages you (when you're not in that conversation).",
     "enablePush": "Enable push notifications",
     "disablePush": "Disable push notifications",
@@ -395,6 +398,7 @@
       "trade_completed": "Trade completed",
       "trade_cancelled": "Trade update",
       "suspicious_login": "Security",
+      "followed_activity": "Following",
       "default": "Alert"
     },
     "actions": {
@@ -402,6 +406,7 @@
       "viewMessage": "View message",
       "viewTrade": "View trade",
       "viewSecurity": "Security settings",
+      "viewFollowedActivity": "View activity",
       "viewPerfume": "View perfume",
       "markRead": "Mark read",
       "dismiss": "Dismiss",
@@ -746,6 +751,10 @@
     },
     "activityFeed": {
       "title": "Latest on the exchange"
+    },
+    "followedActivityFeed": {
+      "title": "From people you follow",
+      "description": "Listings, trades, reviews, and articles from traders, houses, and perfumes you follow."
     },
     "seasonalTrending": {
       "title": "Trending this {season}"
@@ -1734,6 +1743,17 @@
       "viewPerfume": "View {name}",
       "viewTrader": "View {name}'s profile"
     },
+    "followedActivityFeed": {
+      "title": "From people you follow",
+      "description": "Recent activity from traders, houses, and perfumes you follow."
+    },
+    "followedActivity": {
+      "completedTrade": "completed a trade",
+      "tradeFallbackPerfume": "a swap",
+      "leftReview": "reviewed",
+      "rating": "{count, plural, one {# star} other {# stars}}",
+      "newArticle": "New Behind the Bottle article"
+    },
     "seasonalTrending": {
       "title": "Trending this {season}",
       "description": "Community season votes for the current time of year.",
@@ -1822,7 +1842,8 @@
     "headerStats": {
       "ariaLabel": "Trader membership and trade history",
       "memberSince": "Member since",
-      "completedTrades": "Completed trades"
+      "completedTrades": "Completed trades",
+      "followers": "Followers"
     },
     "scentDna": {
       "meta": {
@@ -2013,6 +2034,11 @@
         "admin": "Admin"
       }
     }
+  },
+  "follow": {
+    "follow": "Follow",
+    "following": "Following",
+    "signInToFollow": "Sign in to follow"
   },
   "wishlist": {
     "meta": {

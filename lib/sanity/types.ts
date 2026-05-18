@@ -15,6 +15,8 @@ export type ArticleListItem = {
   excerpt?: string | null
   coverImage?: SanityImageAsset | null
   tags?: string[] | null
+  perfumeRefs?: string[] | null
+  houseRefs?: string[] | null
 }
 
 export type ArticleDetail = ArticleListItem & {
