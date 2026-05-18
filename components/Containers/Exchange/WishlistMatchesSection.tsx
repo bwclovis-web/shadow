@@ -8,7 +8,7 @@ import type { WishlistExchangeMatchRow } from "@/models/wishlist-matching.server
 import { Button } from "@/components/Atoms/Button"
 import { TradeComposerModal } from "@/components/Containers/Trade/TradeComposerModal"
 import { useTradeComposerModal } from "@/hooks/useTradeComposerModal"
-import LinkCard from "@/components/Organisms/LinkCard"
+import { ExchangePerfumeCard } from "@/components/Molecules/ExchangePerfumeCard"
 import Modal from "@/components/Organisms/Modal"
 import type { TraderReputationV1 } from "@/services/reputation/types"
 import {
@@ -120,16 +120,7 @@ const WishlistMatchesSection = ({
             key={perfume.id}
             className="min-w-[min(100%,280px)] max-w-[280px] shrink-0 snap-start"
           >
-            <LinkCard
-              data={{
-                ...perfume,
-                image: perfume.image ?? undefined,
-                perfumeHouse: perfume.perfumeHouse
-                  ? { name: perfume.perfumeHouse.name }
-                  : undefined,
-              }}
-              type="perfume"
-            >
+            <ExchangePerfumeCard perfume={perfume} viewerId={viewerId}>
               <MatchCardFooter
                 countLabel={tListings("summary", {
                   count: perfume.userPerfume.length,
@@ -137,7 +128,7 @@ const WishlistMatchesSection = ({
                 ctaLabel={tTradeComposer(getCardOfferCtaKey(perfume))}
                 onOffer={trigger => handleProposeSwapFromCard(perfume, trigger)}
               />
-            </LinkCard>
+            </ExchangePerfumeCard>
           </li>
         ))}
       </ul>

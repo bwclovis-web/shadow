@@ -169,6 +169,7 @@ const TradeComposer = ({
       <div className="space-y-4">
         <ExchangeListingPicker
           listings={pickListings}
+          perfumeImage={pickPerfumeMeta.perfumeImage}
           traderReputationByUserId={traderReputationByUserId}
           listResetKey={pickPerfumeMeta.perfumeId}
           onSelectListing={handlePick}

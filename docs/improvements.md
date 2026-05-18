@@ -17,9 +17,9 @@ _Nothing in Wave 2 is meaningful without listing photos, a trade record, and a s
 | **1A** Schema | ✅ Done | IMP-001–014 |
 | **1B** Trader strikes (admin) | ✅ Done | IMP-020–027 |
 | **1C** User reports | ✅ Done | IMP-030–033 |
-| **1D** Listing photos | ✅ Done | IMP-040–047 (IMP-046 exchange cards deferred) |
+| **1D** Listing photos | ✅ Done | IMP-040–047 |
 | **1E** Trader avatar / profile | ✅ Done | IMP-050–053 |
-| **1F** Email delivery | ✅ Done | IMP-060–062, 064 (IMP-063 trade emails still open) |
+| **1F** Email delivery | ✅ Done | IMP-060–064 (wishlist, decant, trade milestone emails) |
 
 **Wave 1 complete.** See Wave 2 and Wave 3 progress below.
 
@@ -74,10 +74,10 @@ _Nothing in Wave 2 is meaningful without listing photos, a trade record, and a s
 - [x] **IMP-043** Add decant format selector (atomizer / vial / original) and `mlRemaining` numeric input to listing editor; shown when listing amount is partial vs owned bottle size
 - [x] **IMP-044** Require at least 1 photo before a listing is published to the exchange (`LISTING_REQUIRE_PHOTO=false` to relax)
 - [x] **IMP-045** Render horizontal thumbnail strip in [`ItemsToTrade`](../components/Containers/TraderProfile/ItemsToTrade/ItemsToTrade.tsx) below `PerfumeHeader`; each thumbnail is 80×80; clicking opens lightbox (reuse existing `Modal`) with prev/next arrows
-- [ ] **IMP-046** Add same thumbnail strip + lightbox to exchange listing cards — **deferred**; exchange cards use catalog `perfume.image` only
+- [x] **IMP-046** Exchange listing cards: single-listing hero + photos; multi-listing catalog hero + mosaic + attributed lightbox; photos on listing picker rows
 - [x] **IMP-047** Overlay condition badge and `TradePreference` chip on listing thumbnails (trader profile / destash editor; not on exchange grid)
 
-**Shipped in:** `components/Molecules/ImageUploader/`, `components/Molecules/ListingPhotos/`, `app/api/listing-images/route.ts`, `models/listing-metadata.server.ts`, `utils/listing-images-client.ts`, `utils/listing-config.server.ts`, `utils/listing-display.ts`; wired in `DeStashForm`, `DestashManager`, `user.server.ts`, `user-perfumes` API, `ItemsToTrade` (large lightbox). Exchange browse (`TheExchangeClient`) shows catalog image only; listing photos remain on trader profile.
+**Shipped in:** `components/Molecules/ImageUploader/`, `components/Molecules/ListingPhotos/`, `app/api/listing-images/route.ts`, `models/listing-metadata.server.ts`, `utils/listing-images-client.ts`, `utils/listing-config.server.ts`, `utils/listing-display.ts`, `utils/exchange-listing-photos.ts`, `ExchangePerfumeCard`; wired in `DeStashForm`, `DestashManager`, `user.server.ts`, `user-perfumes` API, `ItemsToTrade`, `TheExchangeClient`, `WishlistMatchesSection`, `ExchangeListingPicker`.
 
 ### 1E — Trader Avatar and Profile Fields ✅
 
@@ -95,10 +95,10 @@ _Nothing in Wave 2 is meaningful without listing photos, a trade record, and a s
 - [x] **IMP-060** Install and configure Resend; store `RESEND_API_KEY` and `EMAIL_FROM` in env
 - [x] **IMP-061** Wire `sendWishlistAlertEmail` when a wishlisted item is listed (gated by `wishlistAlertsEnabled` + `emailWishlistAlerts`)
 - [x] **IMP-062** Wire `sendDecantInterestAlertEmail` (gated by `decantAlertsEnabled` + `emailDecantAlerts`)
-- [ ] **IMP-063** Add `sendTradeEventEmail` for trade milestones — **deferred to Wave 2A** when trade transition API exists
+- [x] **IMP-063** Add `sendTradeEventEmail` for trade milestones — wired in `sendTradeAlert` for `trade_received`, `trade_accepted`, `trade_shipped`, `trade_completed` (gated by `emailTradeAlerts`)
 - [x] **IMP-064** Plain-text transactional templates (perfume link + profile preferences link); HTML/noir branding deferred to v2
 
-**Shipped in:** `resend` package; `utils/email.server.ts`, `utils/alert-email.server.ts`; dispatch from `models/user-alerts.server.ts` after `createUserAlert`; re-exports in `utils/alert-processors.ts`; dependent email toggles in `AlertPreferences.tsx`; env documented in `docs/new computer set up.md`.
+**Shipped in:** `resend` package; `utils/email.server.ts`, `utils/alert-email.server.ts` (wishlist, decant, trade); wishlist/decant dispatch from `models/user-alerts.server.ts`; trade dispatch from `models/trade.server.ts` → `sendTradeAlert`; migration `20260518120000_add_email_trade_alerts`; email toggles in `AlertPreferences.tsx`; manual testing in `docs/live-testing.md`; env documented in `docs/new computer set up.md`.
 
 ---
 
@@ -118,7 +118,7 @@ _These features make the platform sticky. Users return because they have active 
 | **2F** Seasonal trending | ✅ Done | IMP-160–162 |
 | **2G** Web push | ✅ Done | IMP-170–174 |
 
-**Still open from Wave 1/2:** IMP-046 (listing photos on exchange cards), IMP-063 (trade milestone emails).
+**Wave 1/2 carry-forward:** All complete (including IMP-063 trade milestone emails, May 2026).
 
 **Next up:** Wave 3F — Bulk inventory editor
 
@@ -316,10 +316,10 @@ _No new schema — all computed from existing data._
 
 ## Notes
 
-- **Completed (Wave 1):** 1A schema, 1B admin strikes + ban enforcement, 1C user reports + admin reports queue, 1D listing photos, 1E trader avatar + profile fields (region, social links), 1F transactional email (wishlist + decant alerts).
+- **Completed (Wave 1):** 1A schema, 1B admin strikes + ban enforcement, 1C user reports + admin reports queue, 1D listing photos, 1E trader avatar + profile fields (region, social links), 1F transactional email (wishlist, decant, and trade milestone alerts).
 - **Completed (Wave 2):** Full trade lifecycle (API, composer, thread card, profile tabs), reputation + community policy, exchange discovery filters, wishlist matching, activity feed, seasonal trending, Web Push (trade + message alerts, nav badge). See section tables above for IMP IDs.
 - **Completed (Wave 3, partial):** Onboarding, Scent DNA, quiz depth, Sanity blog, SEO pass (JSON-LD, OG, canonicals, dynamic perfume OG images, sitemap/robots), experience polish (view transitions, GSAP stagger, mobile bottom nav, alert i18n, recently active, exchange keyboard shortcuts).
-- **Still open:** IMP-046 (photos on exchange cards), IMP-063 (`sendTradeEventEmail` — TODO in `trade.server.ts`). Wave 3F–3G unchanged. IMP-245 GSC verification is a manual deploy-time step.
+- **Still open:** Wave 3F–3G unchanged. IMP-245 GSC verification is a manual deploy-time step. Wave A carry-forward (IMP-031, IMP-046, IMP-063) tracked in `docs/improvements-v2.md`.
 - **Local schema:** Use **Prisma Migrate** (`npx prisma migrate dev` / `migrate deploy`) — see `docs/database-migrations.md` and `.cursor/rules/prisma-migrations-only.mdc`. Do **not** use `prisma db push` for routine work.
 - **Production schema (legacy):** Remote DB was synced May 2026 via `npm run db:push:prod` (`scripts/push-prod-schema.js` — `APPLY_TO_REMOTE_DB.sql` + `supplementalMigrations` for onboarding, quiz depth, and Web Push tables/columns). Verification passed for `Trade`, strikes, reports, listing fields, push prefs, `UserPushSubscription`, `UserConversationPresence`, etc. Prefer `npx prisma migrate deploy` against `REMOTE_DATABASE_URL` when migration history catches up; extend `supplementalMigrations` only when prod still lags checked-in migrations.
 - After schema changes: `npm run db:generate` and restart `npm run dev` (or delete `.next` + `node_modules/.prisma/client` if the client is stale on Windows).

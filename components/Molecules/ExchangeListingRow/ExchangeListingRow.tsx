@@ -6,6 +6,7 @@ import { GiTrade } from "react-icons/gi"
 import type { ExchangeUserPerfumeRow } from "@/app/the-exchange/exchange-types"
 import { Button } from "@/components/Atoms/Button/Button"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
+import ListingPhotos from "@/components/Molecules/ListingPhotos/ListingPhotos"
 import type { TraderReputationV1 } from "@/services/reputation/types"
 import { getExchangeListingTradeDisplay } from "@/utils/exchangeListingTradeDisplay"
 import { getPerfumeTypeLabel } from "@/data/SelectTypes"
@@ -14,6 +15,7 @@ import { getTraderDisplayName } from "@/utils/user"
 
 type ExchangeListingRowProps = {
   listing: ExchangeUserPerfumeRow
+  perfumeImage?: string | null
   reputation?: TraderReputationV1 | null
   onMakeOffer?: () => void
   onViewProfileClick?: () => void
@@ -23,6 +25,7 @@ type ExchangeListingRowProps = {
 
 const ExchangeListingRow = ({
   listing,
+  perfumeImage = null,
   reputation,
   onMakeOffer,
   onViewProfileClick,
@@ -78,6 +81,15 @@ const ExchangeListingRow = ({
           ({tRep("exchangeTrust", { score: reputation.score })})
         </span>
       ) : null}
+      <ListingPhotos
+        images={listing.images}
+        perfumeImage={perfumeImage}
+        condition={listing.condition}
+        tradePreference={listing.tradePreference}
+        tradeOnly={listing.tradeOnly}
+        className="mt-2"
+        lightboxSize="default"
+      />
       <p className="mt-2 text-noir-gold-100">
         <span className="text-noir-gold-500">{tProfile("amount")}:</span>{" "}
         <span className="font-medium text-noir-gold-100">

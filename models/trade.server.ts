@@ -8,7 +8,12 @@ import {
 import { prisma } from "@/lib/db"
 import { createContactMessage } from "@/models/contactMessage.server"
 import { touchUserLastActive } from "@/models/user-activity.server"
-import { createUserAlert, dispatchPushForUserAlert } from "@/models/user-alerts.server"
+import {
+  createUserAlert,
+  dispatchPushForUserAlert,
+  getUserAlertPreferences,
+} from "@/models/user-alerts.server"
+import { sendTradeEventEmail } from "@/utils/alert-email.server"
 import type { TradeForClient, TradeLineItemInput } from "@/types/trade"
 import type { AlertType } from "@/types/database"
 import { getUserDisplayName } from "@/utils/user"
@@ -177,7 +182,6 @@ const sendTradeAlert = async (
   const title = titles[rule.alertType] ?? `Trade update from ${actorName}`
   const message = `Regarding ${perfumeLabel}`
 
-  // TODO IMP-063: sendTradeEventEmail
   const metadata = { tradeId: trade.id, action, actorUserId, senderId: actorUserId }
   await createUserAlert(recipientId, null, rule.alertType, title, message, metadata)
   dispatchPushForUserAlert({
@@ -187,6 +191,34 @@ const sendTradeAlert = async (
     message,
     metadata,
   })
+
+  const [recipient, preferences] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: recipientId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        username: true,
+        profileSlug: true,
+      },
+    }),
+    getUserAlertPreferences(recipientId),
+  ])
+
+  if (recipient) {
+    void sendTradeEventEmail({
+      user: recipient,
+      preferences,
+      alertType: rule.alertType,
+      title,
+      message,
+      actorUserId,
+    }).catch(err => {
+      console.error("[email] Failed to send trade event email:", err)
+    })
+  }
 }
 
 const sendTradeAlertWithFallback = async (

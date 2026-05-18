@@ -12,7 +12,7 @@ The following is a summary of the completed foundation. Do not re-implement or d
 
 | Wave | What's done |
 |------|-------------|
-| **1A–1F** | Trade/TradeLineItem/TradeEvent schema, user reports + evidence photos, admin strikes/bans, reports queue, listing photos + condition metadata, avatar/profile fields, region + social links, transactional email |
+| **1A–1F** | Trade/TradeLineItem/TradeEvent schema, user reports + evidence photos, admin strikes/bans, reports queue, listing photos + condition metadata, avatar/profile fields, region + social links, transactional email (wishlist, decant, trade milestones) |
 | **2A** | Full trade lifecycle (create, accept, decline, ship, receive, complete, cancel), trade composer modal, TradeStatusCard in threads, inbox active-trade badges, profile trade tabs, 15-second polling |
 | **2B** | Reputation signals: completed trade count, member-since date, fast-responder badge, reliability score, community policy page |
 | **2C** | Exchange discovery filters: trade preference, bottle type, condition, region, has-photos toggle |
@@ -29,13 +29,13 @@ The following is a summary of the completed foundation. Do not re-implement or d
 
 ---
 
-## Still Open From Waves 1–2
+## Waves 1–2 carry-forward (complete)
 
-These are not new features; they are unfinished pieces of already-shipped systems.
+These were unfinished pieces of already-shipped systems; all are now done.
 
-- [x] **IMP-031** Add "Report" button inside `TradeStatusCard` / thread; pre-fills `tradeId` on the report form (report system is shipped; only the trade-scoped entrypoint is missing)
-- [ ] **IMP-046** Add listing photo thumbnail strip + lightbox to exchange listing cards (photos are already uploaded and shown on trader profiles; exchange cards still show catalog image only)
-- [ ] **IMP-063** Wire `sendTradeEventEmail` for trade milestones (Resend is configured; email templates for wishlist/decant already send; trade event emails just need to be dispatched)
+- [x] **IMP-031** Add "Report" button inside `TradeStatusCard` / thread; pre-fills `tradeId` on the report form
+- [x] **IMP-046** Add listing photo thumbnail strip + lightbox to exchange listing cards
+- [x] **IMP-063** Wire `sendTradeEventEmail` for trade milestones (`trade_received`, `trade_accepted`, `trade_shipped`, `trade_completed`; gated by `emailTradeAlerts`)
 
 ---
 
@@ -83,17 +83,21 @@ _Small surface area, high trust impact. Finish what users already expect._
 
 **Shipped in:** `TradeStatusCard` + reused `ReportTraderButton` / `ReportTraderModal`; trade-scoped modal id when multiple trades share a thread.
 
-### A2 — Listing Photos on Exchange Cards (IMP-046)
+### A2 — Listing Photos on Exchange Cards (IMP-046) ✅
 
-- [ ] Add first listing photo thumbnail to exchange listing cards in `TheExchangeClient`
-- [ ] Fall back to catalog `perfume.image` if no listing photos uploaded
-- [ ] Show condition badge overlay on the photo (same as trader profile thumbnails)
+- [x] Single-listing cards: listing primary as hero, `ListingPhotos` strip + lightbox, condition overlay on hero
+- [x] Multi-listing cards: catalog hero, per-listing mosaic teaser + attributed multi-trader lightbox
+- [x] Listing picker rows: `ListingPhotos` per trader when choosing a listing (`ExchangeListingPicker` / `ExchangeListingRow`)
 
-### A3 — Trade Milestone Emails (IMP-063)
+**Shipped in:** `utils/exchange-listing-photos.ts`, `ExchangePerfumeCard`, `ExchangeCardPhotos`, `ExchangeMultiListingPhotos`; wired in `TheExchangeClient`, `WishlistMatchesSection`, `ExchangeListingPicker`.
 
-- [ ] Wire `sendTradeEventEmail` in `trade.server.ts` for: `trade_received`, `trade_accepted`, `trade_shipped`, `trade_completed`
-- [ ] Reuse existing plain-text template pattern from `utils/alert-email.server.ts`
-- [ ] Gate on existing `emailWishlistAlerts` preference pattern; add `emailTradeAlerts` toggle
+### A3 — Trade Milestone Emails (IMP-063) ✅
+
+- [x] Wire `sendTradeEventEmail` in `trade.server.ts` for: `trade_received`, `trade_accepted`, `trade_shipped`, `trade_completed`
+- [x] Reuse existing plain-text template pattern from `utils/alert-email.server.ts`
+- [x] Add `emailTradeAlerts` toggle on `UserAlertPreferences` (opt-in, default `false`); decline/cancel stays in-app only
+
+**Shipped in:** `utils/alert-email.server.ts` (`sendTradeEventEmail`, `shouldSendTradeEmail`); dispatch from `sendTradeAlert` in `models/trade.server.ts` after in-app alert + push; migration `20260518120000_add_email_trade_alerts`; `AlertPreferences.tsx` + preferences API; i18n `emailTradeAlerts`; tests in `utils/alert-email.server.test.ts`. Manual test guide: `docs/live-testing.md`.
 
 ### A4 — Dispute Center MVP
 

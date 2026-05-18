@@ -241,6 +241,7 @@
     "emailNotifications": "Email Notifications",
     "emailWishlistAlerts": "Email Wishlist Alerts",
     "emailDecantAlerts": "Email Decant Alerts",
+    "emailTradeAlerts": "Email Trade Updates",
     "emailRequiresInApp": "Email alerts require the matching in-app alert to be enabled.",
     "alertLimits": "Alert Limits",
     "maxAlerts": "Maximum Alerts to Keep",
@@ -1420,7 +1421,11 @@
       "sortPriceHighLow": "Price (high to low)",
       "sortScoreHighLow": "Trader score (high to low)",
       "noTradersMatchFilter": "No listings match this preference. Try the All option above.",
-      "makeOffer": "Propose swap"
+      "makeOffer": "Propose swap",
+      "photosFromListings": "{count, plural, one {Photo from # listing} other {Photos from # listings}}",
+      "openListingPhoto": "Open photo from {trader}, image {index}",
+      "multiLightboxTitle": "Listing photos",
+      "photoIndex": "Photo {current} of {total}"
     }
   },
   "tradeComposer": {

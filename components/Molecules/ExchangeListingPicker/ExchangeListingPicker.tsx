@@ -27,6 +27,7 @@ const listingPriceSortValue = (up: ExchangeUserPerfumeRow): number | null => {
 
 export type ExchangeListingPickerProps = {
   listings: ExchangeUserPerfumeRow[]
+  perfumeImage?: string | null
   traderReputationByUserId?: Record<string, TraderReputationV1>
   listResetKey?: string
   onSelectListing: (row: ExchangeUserPerfumeRow) => void
@@ -38,6 +39,7 @@ export type ExchangeListingPickerProps = {
 
 export const ExchangeListingPicker = ({
   listings,
+  perfumeImage = null,
   traderReputationByUserId = {},
   listResetKey,
   onSelectListing,
@@ -174,6 +176,7 @@ export const ExchangeListingPicker = ({
             <ExchangeListingRow
               key={up.id}
               listing={up}
+              perfumeImage={perfumeImage}
               reputation={traderReputationByUserId[up.userId]}
               showProfileLink
               showMakeOffer={showMakeOffer}

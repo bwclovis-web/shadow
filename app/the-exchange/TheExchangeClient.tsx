@@ -11,7 +11,7 @@ import { PaginationBar } from "@/components/Molecules/PaginationBar"
 import { FilterChipStrip } from "@/components/Molecules/FilterChipStrip"
 import { DiscoveryFiltersPanel } from "@/components/Organisms/DiscoveryFiltersPanel"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
-import LinkCard from "@/components/Organisms/LinkCard"
+import { ExchangePerfumeCard } from "@/components/Molecules/ExchangePerfumeCard"
 import Modal from "@/components/Organisms/Modal"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
@@ -512,17 +512,8 @@ const TheExchangeClient = ({
                         data-exchange-card
                         className="relative opacity-0"
                       >
-                        <LinkCard
-                          data={{
-                            ...perfume,
-                            image: perfume.image ?? undefined,
-                            perfumeHouse: perfume.perfumeHouse
-                              ? { name: perfume.perfumeHouse.name }
-                              : undefined,
-                          }}
-                          type="perfume"
-                        >
-                          <div className="mt-2 rounded-md space-y-2">
+                        <ExchangePerfumeCard perfume={perfume} viewerId={viewerId}>
+                          <div className="rounded-md space-y-2">
                             <p className="text-sm font-medium text-noir-gold">
                               {tListings("summary", {
                                 count: perfume.userPerfume.length,
@@ -549,7 +540,7 @@ const TheExchangeClient = ({
                               </Button>
                             ) : null}
                           </div>
-                        </LinkCard>
+                        </ExchangePerfumeCard>
                       </li>
                     ))}
                   </ul>

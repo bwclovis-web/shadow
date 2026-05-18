@@ -53,6 +53,7 @@ export const AlertPreferences = ({
     decantAlertsEnabled: preferences.decantAlertsEnabled,
     emailWishlistAlerts: preferences.emailWishlistAlerts,
     emailDecantAlerts: preferences.emailDecantAlerts,
+    emailTradeAlerts: preferences.emailTradeAlerts ?? false,
     pushEnabled: preferences.pushEnabled ?? false,
     pushTradeAlerts: preferences.pushTradeAlerts ?? true,
     pushMessageAlerts: preferences.pushMessageAlerts ?? true,
@@ -66,6 +67,7 @@ export const AlertPreferences = ({
       decantAlertsEnabled: preferences.decantAlertsEnabled,
       emailWishlistAlerts: preferences.emailWishlistAlerts,
       emailDecantAlerts: preferences.emailDecantAlerts,
+      emailTradeAlerts: preferences.emailTradeAlerts ?? false,
       pushEnabled: preferences.pushEnabled ?? false,
       pushTradeAlerts: preferences.pushTradeAlerts ?? true,
       pushMessageAlerts: preferences.pushMessageAlerts ?? true,
@@ -193,6 +195,14 @@ export const AlertPreferences = ({
                   labelChecked={t("emailDecantAlerts")}
                   labelUnchecked={t("emailDecantAlerts")}
                 />
+
+                <VooDooCheck
+                  id="email-trade-alerts"
+                  checked={editState.emailTradeAlerts}
+                  onChange={() => togglePreference("emailTradeAlerts")}
+                  labelChecked={t("emailTradeAlerts")}
+                  labelUnchecked={t("emailTradeAlerts")}
+                />
               </div>
             </div>
 
@@ -317,6 +327,13 @@ export const AlertPreferences = ({
                       {t("emailDecantAlerts")}
                     </span>
                     <StatusBadge enabled={preferences.emailDecantAlerts} />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-noir-gold-100">
+                      {t("emailTradeAlerts")}
+                    </span>
+                    <StatusBadge enabled={preferences.emailTradeAlerts ?? false} />
                   </div>
 
                   <div className="flex items-center justify-between">

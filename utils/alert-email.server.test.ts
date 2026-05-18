@@ -2,8 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
   sendDecantInterestAlertEmail,
+  sendTradeEventEmail,
   sendWishlistAlertEmail,
   shouldSendDecantEmail,
+  shouldSendTradeEmail,
   shouldSendWishlistEmail,
 } from "./alert-email.server"
 
@@ -21,6 +23,7 @@ const basePrefs = {
   decantAlertsEnabled: true,
   emailWishlistAlerts: true,
   emailDecantAlerts: true,
+  emailTradeAlerts: true,
 }
 
 const recipient = {
@@ -99,6 +102,65 @@ describe("sendWishlistAlertEmail", () => {
       perfumeName: "Noir Epices",
       perfumeSlug: "noir-epices",
       message: "Noir Epices is now available.",
+    })
+
+    expect(sendTransactionalEmail).not.toHaveBeenCalled()
+  })
+})
+
+describe("shouldSendTradeEmail", () => {
+  it("returns true only when emailTradeAlerts is enabled", () => {
+    expect(shouldSendTradeEmail(basePrefs)).toBe(true)
+    expect(shouldSendTradeEmail({ ...basePrefs, emailTradeAlerts: false })).toBe(false)
+  })
+})
+
+describe("sendTradeEventEmail", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it("sends email for trade milestones when pref is enabled", async () => {
+    await sendTradeEventEmail({
+      user: recipient,
+      preferences: basePrefs,
+      alertType: "trade_accepted",
+      title: "Jane accepted your trade",
+      message: "Regarding Noir Epices",
+      actorUserId: "actor-2",
+    })
+
+    expect(sendTransactionalEmail).toHaveBeenCalledTimes(1)
+    expect(sendTransactionalEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: "trader@example.com",
+        subject: "Jane accepted your trade",
+        text: expect.stringContaining("https://example.com/messages/actor-2"),
+      })
+    )
+  })
+
+  it("does not send for trade_cancelled", async () => {
+    await sendTradeEventEmail({
+      user: recipient,
+      preferences: basePrefs,
+      alertType: "trade_cancelled",
+      title: "Trade cancelled",
+      message: "Regarding Noir Epices",
+      actorUserId: "actor-2",
+    })
+
+    expect(sendTransactionalEmail).not.toHaveBeenCalled()
+  })
+
+  it("does not send when email pref is off", async () => {
+    await sendTradeEventEmail({
+      user: recipient,
+      preferences: { ...basePrefs, emailTradeAlerts: false },
+      alertType: "trade_shipped",
+      title: "Jane marked your trade as shipped",
+      message: "Regarding Noir Epices",
+      actorUserId: "actor-2",
     })
 
     expect(sendTransactionalEmail).not.toHaveBeenCalled()

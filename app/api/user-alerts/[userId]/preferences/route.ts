@@ -11,6 +11,7 @@ const defaultPreferences = {
   decantAlertsEnabled: true,
   emailWishlistAlerts: false,
   emailDecantAlerts: false,
+  emailTradeAlerts: false,
   pushEnabled: false,
   pushTradeAlerts: true,
   pushMessageAlerts: true,
@@ -78,6 +79,7 @@ async function updatePreferences(
   if (typeof body.decantAlertsEnabled === "boolean") preferences.decantAlertsEnabled = body.decantAlertsEnabled
   if (typeof body.emailWishlistAlerts === "boolean") preferences.emailWishlistAlerts = body.emailWishlistAlerts
   if (typeof body.emailDecantAlerts === "boolean") preferences.emailDecantAlerts = body.emailDecantAlerts
+  if (typeof body.emailTradeAlerts === "boolean") preferences.emailTradeAlerts = body.emailTradeAlerts
   if (typeof body.maxAlerts === "number" && body.maxAlerts >= 1 && body.maxAlerts <= 100) preferences.maxAlerts = body.maxAlerts
   if (typeof body.pushEnabled === "boolean") preferences.pushEnabled = body.pushEnabled
   if (typeof body.pushTradeAlerts === "boolean") preferences.pushTradeAlerts = body.pushTradeAlerts

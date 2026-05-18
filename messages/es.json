@@ -159,6 +159,7 @@
     "emailNotifications": "Notificaciones por Email",
     "emailWishlistAlerts": "Notificaciones por Email de Lista de Deseos",
     "emailDecantAlerts": "Notificaciones por Email de Interés en Decants",
+    "emailTradeAlerts": "Notificaciones por email de intercambios",
     "emailRequiresInApp": "Las alertas por correo requieren que la alerta correspondiente en la aplicación esté activada.",
     "alertLimits": "Límites de Alertas",
     "maxAlerts": "Máximas Alertas a Mantener",
@@ -1274,7 +1275,11 @@
       "sortPriceHighLow": "Precio (mayor a menor)",
       "sortScoreHighLow": "Puntuación (mayor a menor)",
       "noTradersMatchFilter": "Ningún anuncio coincide con esta preferencia. Prueba con «Todas».",
-      "makeOffer": "Proponer intercambio"
+      "makeOffer": "Proponer intercambio",
+      "photosFromListings": "{count, plural, one {Foto de # anuncio} other {Fotos de # anuncios}}",
+      "openListingPhoto": "Abrir foto de {trader}, imagen {index}",
+      "multiLightboxTitle": "Fotos del anuncio",
+      "photoIndex": "Foto {current} de {total}"
     }
   },
   "tradeComposer": {

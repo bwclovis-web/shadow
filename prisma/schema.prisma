@@ -338,6 +338,7 @@ model UserAlertPreferences {
   decantAlertsEnabled   Boolean @default(true)
   emailWishlistAlerts   Boolean @default(false)
   emailDecantAlerts     Boolean @default(false)
+  emailTradeAlerts      Boolean @default(false)
   pushEnabled           Boolean @default(false)
   pushTradeAlerts       Boolean @default(true)
   pushMessageAlerts     Boolean @default(true)

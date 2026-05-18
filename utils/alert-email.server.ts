@@ -1,5 +1,5 @@
 import { PERFUME_PATH } from "@/constants/routes"
-import type { UserAlertPreferences } from "@/types/database"
+import type { AlertType, UserAlertPreferences } from "@/types/database"
 import {
   getAppBaseUrl,
   isSendableRecipientEmail,
@@ -13,7 +13,15 @@ type AlertPrefsSlice = Pick<
   | "decantAlertsEnabled"
   | "emailWishlistAlerts"
   | "emailDecantAlerts"
+  | "emailTradeAlerts"
 >
+
+const TRADE_EMAIL_ALERT_TYPES = [
+  "trade_received",
+  "trade_accepted",
+  "trade_shipped",
+  "trade_completed",
+] as const satisfies readonly AlertType[]
 
 type RecipientUser = {
   id: string
@@ -34,6 +42,10 @@ export const shouldSendDecantEmail = (
   preferences: AlertPrefsSlice | null | undefined
 ): boolean =>
   preferences?.decantAlertsEnabled === true && preferences?.emailDecantAlerts === true
+
+export const shouldSendTradeEmail = (
+  preferences: AlertPrefsSlice | null | undefined
+): boolean => preferences?.emailTradeAlerts === true
 
 const logEmailDebug = (message: string): void => {
   if (process.env.NODE_ENV === "development") {
@@ -138,5 +150,52 @@ export const sendDecantInterestAlertEmail = async (params: {
     logEmailDebug(`Sent decant email to ${params.user.email} (id: ${result.id ?? "unknown"})`)
   } else {
     logEmailDebug(`Decant email not sent to ${params.user.email} (check RESEND_API_KEY / EMAIL_FROM)`)
+  }
+}
+
+const buildTradeThreadUrl = (actorUserId: string): string =>
+  `${getAppBaseUrl()}/messages/${actorUserId}`
+
+export const sendTradeEventEmail = async (params: {
+  user: RecipientUser
+  preferences: AlertPrefsSlice | null | undefined
+  alertType: AlertType
+  title: string
+  message: string
+  actorUserId: string
+}): Promise<void> => {
+  if (!TRADE_EMAIL_ALERT_TYPES.includes(params.alertType as (typeof TRADE_EMAIL_ALERT_TYPES)[number])) {
+    return
+  }
+  if (!shouldSendTradeEmail(params.preferences)) {
+    logEmailDebug(
+      `Skipped trade email for ${params.user.email}: emailTradeAlerts=${params.preferences?.emailTradeAlerts}`
+    )
+    return
+  }
+  if (!isSendableRecipientEmail(params.user.email)) {
+    logEmailDebug(`Skipped trade email: invalid recipient ${params.user.email}`)
+    return
+  }
+
+  const displayName = getUserDisplayName(params.user)
+  const threadUrl = buildTradeThreadUrl(params.actorUserId)
+  const preferencesUrl = `${getAppBaseUrl()}${getProfilePathForUser(params.user)}`
+
+  const result = await sendTransactionalEmail({
+    to: params.user.email,
+    subject: params.title,
+    text: buildAlertEmailBody({
+      displayName,
+      message: `${params.title}\n\n${params.message}`,
+      actionUrl: `View trade conversation: ${threadUrl}`,
+      preferencesUrl,
+    }),
+  })
+
+  if (result.sent) {
+    logEmailDebug(`Sent trade email to ${params.user.email} (id: ${result.id ?? "unknown"})`)
+  } else {
+    logEmailDebug(`Trade email not sent to ${params.user.email} (check RESEND_API_KEY / EMAIL_FROM)`)
   }
 }
