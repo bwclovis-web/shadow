@@ -163,6 +163,7 @@
     "heading": "Disputes & Reports",
     "subheading": "Trade disputes and profile moderation",
     "tabs": {
+      "ariaLabel": "Dispute queues",
       "tradeDisputes": "Trade disputes",
       "profileReports": "Profile reports"
     },

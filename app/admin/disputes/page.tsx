@@ -6,10 +6,6 @@ import { getUserReportsForAdmin } from "@/models/user-report.server"
 
 import DisputesAdminClient from "./DisputesAdminClient"
 
-type PageProps = {
-  searchParams: Promise<{ tab?: string }>
-}
-
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("adminDisputes.meta")
   return {
@@ -18,22 +14,13 @@ export const generateMetadata = async (): Promise<Metadata> => {
   }
 }
 
-const AdminDisputesPage = async ({ searchParams }: PageProps) => {
-  const params = await searchParams
-  const defaultTab = params.tab === "profile" ? "profile" : "trade"
-
+const AdminDisputesPage = async () => {
   const [disputes, reports] = await Promise.all([
     getDisputesForAdmin("all"),
     getUserReportsForAdmin("all"),
   ])
 
-  return (
-    <DisputesAdminClient
-      disputes={disputes}
-      reports={reports}
-      defaultTab={defaultTab}
-    />
-  )
+  return <DisputesAdminClient disputes={disputes} reports={reports} />
 }
 
 export default AdminDisputesPage
