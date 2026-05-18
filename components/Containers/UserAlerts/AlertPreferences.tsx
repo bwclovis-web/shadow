@@ -54,6 +54,8 @@ export const AlertPreferences = ({
     emailWishlistAlerts: preferences.emailWishlistAlerts,
     emailDecantAlerts: preferences.emailDecantAlerts,
     emailTradeAlerts: preferences.emailTradeAlerts ?? false,
+    securityAlertsEnabled: preferences.securityAlertsEnabled ?? true,
+    emailSecurityAlerts: preferences.emailSecurityAlerts ?? true,
     pushEnabled: preferences.pushEnabled ?? false,
     pushTradeAlerts: preferences.pushTradeAlerts ?? true,
     pushMessageAlerts: preferences.pushMessageAlerts ?? true,
@@ -68,6 +70,8 @@ export const AlertPreferences = ({
       emailWishlistAlerts: preferences.emailWishlistAlerts,
       emailDecantAlerts: preferences.emailDecantAlerts,
       emailTradeAlerts: preferences.emailTradeAlerts ?? false,
+      securityAlertsEnabled: preferences.securityAlertsEnabled ?? true,
+      emailSecurityAlerts: preferences.emailSecurityAlerts ?? true,
       pushEnabled: preferences.pushEnabled ?? false,
       pushTradeAlerts: preferences.pushTradeAlerts ?? true,
       pushMessageAlerts: preferences.pushMessageAlerts ?? true,
@@ -84,6 +88,7 @@ export const AlertPreferences = ({
     ...state,
     emailWishlistAlerts: state.wishlistAlertsEnabled ? state.emailWishlistAlerts : false,
     emailDecantAlerts: state.decantAlertsEnabled ? state.emailDecantAlerts : false,
+    emailSecurityAlerts: state.securityAlertsEnabled ? state.emailSecurityAlerts : false,
   })
 
   const handleSave = async () => {
@@ -116,6 +121,14 @@ export const AlertPreferences = ({
           ...prev,
           decantAlertsEnabled,
           emailDecantAlerts: decantAlertsEnabled ? prev.emailDecantAlerts : false,
+        }
+      }
+      if (key === "securityAlertsEnabled") {
+        const securityAlertsEnabled = !prev.securityAlertsEnabled
+        return {
+          ...prev,
+          securityAlertsEnabled,
+          emailSecurityAlerts: securityAlertsEnabled ? prev.emailSecurityAlerts : false,
         }
       }
       return {
@@ -166,6 +179,14 @@ export const AlertPreferences = ({
                   labelChecked={t("decantAlerts")}
                   labelUnchecked={t("decantAlerts")}
                 />
+
+                <VooDooCheck
+                  id="security-alerts"
+                  checked={editState.securityAlertsEnabled}
+                  onChange={() => togglePreference("securityAlertsEnabled")}
+                  labelChecked={t("securityAlerts")}
+                  labelUnchecked={t("securityAlerts")}
+                />
               </div>
             </div>
 
@@ -202,6 +223,15 @@ export const AlertPreferences = ({
                   onChange={() => togglePreference("emailTradeAlerts")}
                   labelChecked={t("emailTradeAlerts")}
                   labelUnchecked={t("emailTradeAlerts")}
+                />
+
+                <VooDooCheck
+                  id="email-security-alerts"
+                  checked={editState.emailSecurityAlerts}
+                  disabled={!editState.securityAlertsEnabled}
+                  onChange={() => togglePreference("emailSecurityAlerts")}
+                  labelChecked={t("emailSecurityAlerts")}
+                  labelUnchecked={t("emailSecurityAlerts")}
                 />
               </div>
             </div>
@@ -305,6 +335,13 @@ export const AlertPreferences = ({
                     </span>
                     <StatusBadge enabled={preferences.decantAlertsEnabled} />
                   </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-noir-gold-100">
+                      {t("securityAlerts")}
+                    </span>
+                    <StatusBadge enabled={preferences.securityAlertsEnabled ?? true} />
+                  </div>
                 </div>
               </div>
 
@@ -334,6 +371,13 @@ export const AlertPreferences = ({
                       {t("emailTradeAlerts")}
                     </span>
                     <StatusBadge enabled={preferences.emailTradeAlerts ?? false} />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-noir-gold-100">
+                      {t("emailSecurityAlerts")}
+                    </span>
+                    <StatusBadge enabled={preferences.emailSecurityAlerts ?? true} />
                   </div>
 
                   <div className="flex items-center justify-between">

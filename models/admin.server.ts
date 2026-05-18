@@ -11,6 +11,7 @@ export interface UserWithCounts {
   role: UserRole
   strikeCount: number
   isBanned: boolean
+  twoFactorEnabledAt: Date | null
   createdAt: Date
   _count: {
     UserPerfume: number
@@ -39,6 +40,7 @@ export async function getAllUsersWithCounts(): Promise<UserWithCounts[]> {
         role: true,
         strikeCount: true,
         isBanned: true,
+        twoFactorEnabledAt: true,
         createdAt: true,
         _count: {
           select: {
@@ -79,6 +81,7 @@ export async function getUserWithCounts(userId: string): Promise<UserWithCounts 
         role: true,
         strikeCount: true,
         isBanned: true,
+        twoFactorEnabledAt: true,
         createdAt: true,
         _count: {
           select: {

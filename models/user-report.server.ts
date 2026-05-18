@@ -40,14 +40,12 @@ export const createUserReport = async ({
   reportedUserId,
   category,
   description,
-  tradeId,
   images,
 }: {
   reporterId: string
   reportedUserId: string
   category: UserReportCategory
   description?: string | null
-  tradeId?: string | null
   images?: string[]
 }): Promise<{ success: boolean; message: string; reportId?: string }> => {
   if (reporterId === reportedUserId) {
@@ -71,22 +69,6 @@ export const createUserReport = async ({
     return { success: false, message: "This account is no longer active" }
   }
 
-  if (tradeId) {
-    const trade = await prisma.trade.findUnique({
-      where: { id: tradeId },
-      select: { id: true, initiatorId: true, counterpartyId: true },
-    })
-    if (!trade) {
-      return { success: false, message: "Trade not found" }
-    }
-    const tradeInvolvesUsers =
-      (trade.initiatorId === reporterId && trade.counterpartyId === reportedUserId) ||
-      (trade.initiatorId === reportedUserId && trade.counterpartyId === reporterId)
-    if (!tradeInvolvesUsers) {
-      return { success: false, message: "Trade does not involve these users" }
-    }
-  }
-
   const trimmedDescription = description?.trim() || null
   const imageUrls = images ?? []
 
@@ -96,7 +78,6 @@ export const createUserReport = async ({
       reportedUserId,
       category,
       description: trimmedDescription,
-      tradeId: tradeId ?? null,
       images: imageUrls,
       status: "inProgress",
     },
@@ -133,12 +114,6 @@ export const getUserReportsForAdmin = async (
           lastName: true,
           strikeCount: true,
           isBanned: true,
-        },
-      },
-      trade: {
-        select: {
-          id: true,
-          status: true,
         },
       },
     },

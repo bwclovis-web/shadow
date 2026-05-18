@@ -30,7 +30,10 @@ const CommunityPolicyPage = async () => {
           <p>{t("shipping.contentThree")}</p>
         </div>
       </section>
-      <section className="inner-container mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
+      <section
+        id="disputes"
+        className="inner-container mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold"
+      >
         <h2 className="mb-4">2. {t("disputes.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("disputes.contentOne")}</p>

@@ -15,6 +15,8 @@ const defaultAlertPreferences = {
   emailWishlistAlerts: false,
   emailDecantAlerts: false,
   emailTradeAlerts: false,
+  emailSecurityAlerts: true,
+  securityAlertsEnabled: true,
   pushEnabled: false,
   pushTradeAlerts: true,
   pushMessageAlerts: true,
@@ -94,6 +96,8 @@ export const updateUserAlertPreferences = async (
       emailWishlistAlerts: preferences.emailWishlistAlerts ?? false,
       emailDecantAlerts: preferences.emailDecantAlerts ?? false,
       emailTradeAlerts: preferences.emailTradeAlerts ?? false,
+      emailSecurityAlerts: preferences.emailSecurityAlerts ?? true,
+      securityAlertsEnabled: preferences.securityAlertsEnabled ?? true,
       pushEnabled: preferences.pushEnabled ?? false,
       pushTradeAlerts: preferences.pushTradeAlerts ?? true,
       pushMessageAlerts: preferences.pushMessageAlerts ?? true,
@@ -165,6 +169,9 @@ export const createUserAlert = async (
 
   if (alertType === "wishlist_available" && !preferences.wishlistAlertsEnabled) return null
   if (alertType === "decant_interest" && !preferences.decantAlertsEnabled) return null
+  if (alertType === "suspicious_login" && preferences.securityAlertsEnabled === false) {
+    return null
+  }
 
   return prisma.$transaction(async tx => {
     const currentAlertCount = await tx.userAlert.count({

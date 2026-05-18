@@ -231,20 +231,24 @@ export const getTraderById = cache(async (id: string) => {
   return trader
 })
 
-export const signInCustomer = async (data: FormData) => {
+export type SignInCustomerResult =
+  | { kind: "not_found" }
+  | { kind: "invalid_password"; user: NonNullable<Awaited<ReturnType<typeof getUserByEmail>>> }
+  | { kind: "success"; user: NonNullable<Awaited<ReturnType<typeof getUserByEmail>>> }
+
+export const signInCustomer = async (data: FormData): Promise<SignInCustomerResult> => {
   const password = data.get("password") as string
   const email = data.get("email") as string
   const user = await getUserByEmail(email)
   if (!user) {
-    return null
+    return { kind: "not_found" }
   }
 
-  // Use enhanced password verification
   const isValidPassword = await verifyPassword(password, user.password)
   if (!isValidPassword) {
-    return null
+    return { kind: "invalid_password", user }
   }
-  return user
+  return { kind: "success", user }
 }
 
 // Enhanced password change functionality

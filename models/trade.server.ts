@@ -492,6 +492,63 @@ export const transitionTrade = async (
   return serializeTrade(updated)
 }
 
+const ADMIN_VOIDABLE_STATUSES: TradeStatus[] = [
+  "draft",
+  "pending",
+  "accepted",
+  "shipped",
+  "received",
+  "completed",
+]
+
+export const adminVoidTrade = async (
+  tradeId: string,
+  adminUserId: string,
+  disputeId?: string
+): Promise<TradeForClient> => {
+  const trade = await prisma.trade.findUnique({
+    where: { id: tradeId },
+    include: tradeInclude,
+  })
+
+  if (!trade) throw new Error("Trade not found")
+
+  if (trade.status === "cancelled" || trade.status === "declined") {
+    return serializeTrade(trade)
+  }
+
+  if (!ADMIN_VOIDABLE_STATUSES.includes(trade.status)) {
+    throw new Error(`Cannot void trade in status ${trade.status}`)
+  }
+
+  const metadata: Record<string, unknown> = {
+    adminVoid: true,
+    adminUserId,
+    ...(disputeId ? { disputeId } : {}),
+  }
+
+  const updated = await prisma.$transaction(async tx => {
+    const next = await tx.trade.update({
+      where: { id: tradeId },
+      data: { status: "cancelled" },
+      include: tradeInclude,
+    })
+
+    await tx.tradeEvent.create({
+      data: {
+        tradeId,
+        type: "admin_voided",
+        actorUserId: adminUserId,
+        metadata: metadata as Prisma.InputJsonValue,
+      },
+    })
+
+    return next
+  })
+
+  return serializeTrade(updated)
+}
+
 export const getTradeByIdForParticipant = async (
   tradeId: string,
   userId: string
@@ -548,10 +605,10 @@ export const getTradesForUserProfile = async (
           OR: [
             {
               initiatorId: profileUserId,
-              counterpartyId: viewerId,
+              counterpartyId: viewerId as string,
             },
             {
-              initiatorId: viewerId,
+              initiatorId: viewerId as string,
               counterpartyId: profileUserId,
             },
           ],

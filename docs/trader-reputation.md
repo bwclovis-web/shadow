@@ -20,7 +20,9 @@ Deliver an explainable v1 reputation model on top of existing `TraderFeedback` a
 | Messaging | `TraderContactMessage` — `senderId`, `recipientId`, `createdAt`, `read`; **no thread id**. First-reply timing is approximated with paired-message heuristics in v1 (limitations must be documented). |
 | Gap | No unified reputation score, no multi-badge breakdown (fast / reliable / top reviewed), no compact trust summary for reuse (e.g. exchange cards, message headers). |
 
-There is **no** trade-completion or dispute model today. “Reliable trader” in v1 is defined from **feedback and messaging proxies** until verified trade markers exist (see [`docs/CUSTOMER_FEATURES_BACKLOG.md`](CUSTOMER_FEATURES_BACKLOG.md), e.g. CF-042).
+**Trade disputes:** `TradeDispute` (see Wave A4 in [`docs/improvements-v2.md`](improvements-v2.md)) — bilateral cases per trade with admin resolution outcomes. Dispute rate metrics can query `TradeDispute` where `status = resolved`.
+
+“Reliable trader” in v1 is still primarily defined from **feedback and messaging proxies** until dispute/trade signals feed reputation (see [`docs/CUSTOMER_FEATURES_BACKLOG.md`](CUSTOMER_FEATURES_BACKLOG.md), e.g. CF-042).
 
 ---
 

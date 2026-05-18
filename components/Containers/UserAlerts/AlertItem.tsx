@@ -8,8 +8,10 @@ import {
   BsCheck,
   BsClock,
   BsHeartFill,
+  BsShieldExclamation,
   BsX,
 } from "react-icons/bs"
+import { getProfilePathForUser } from "@/utils/user"
 
 import { Button } from "@/components/Atoms/Button/Button"
 import type { UserAlert } from "@/types/database"
@@ -37,6 +39,8 @@ const getAlertIconClassName = (alertType: UserAlert["alertType"]) => {
     case "trade_completed":
     case "trade_cancelled":
       return "text-noir-gold"
+    case "suspicious_login":
+      return "text-orange-600"
     default:
       return "text-gray-600"
   }
@@ -47,6 +51,9 @@ const messagesLink = (otherUserId: string) => `/messages/${otherUserId}`
 const isTradeAlert = (alertType: string) => alertType.startsWith("trade_")
 
 const alertLink = (alert: UserAlert) => {
+  if ((alert.alertType as string) === "suspicious_login") {
+    return `${getProfilePathForUser(alert.User)}/security`
+  }
   if ((alert.alertType as string) === "pending_submission_approval") return "/admin/pending-submission"
   const senderId = alert.metadata?.senderId as string | undefined
   if ((alert.alertType as string) === "new_trader_message" && senderId) {
@@ -63,6 +70,8 @@ const AlertIcon = ({ alertType }: { alertType: UserAlert["alertType"] }) => {
   const cn = `h-4 w-4 ${getAlertIconClassName(alertType)}`
   if (alertType === "wishlist_available")
     return <BsHeartFill className={cn} />
+  if ((alertType as string) === "suspicious_login")
+    return <BsShieldExclamation className={cn} />
   return <BsBell className={cn} />
 }
 
@@ -78,6 +87,7 @@ const alertTypeKey = (alertType: UserAlert["alertType"]) => {
     "trade_shipped",
     "trade_completed",
     "trade_cancelled",
+    "suspicious_login",
   ] as const
   return known.includes(key as (typeof known)[number]) ? key : "default"
 }
@@ -114,6 +124,9 @@ export const AlertItem = ({
     }
     if (alert.alertType === "new_trader_message") return t("actions.viewMessage")
     if (isTradeAlert(alert.alertType as string)) return t("actions.viewTrade")
+    if ((alert.alertType as string) === "suspicious_login") {
+      return t("actions.viewSecurity")
+    }
     return t("actions.viewPerfume")
   })()
 

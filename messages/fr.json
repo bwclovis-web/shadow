@@ -278,6 +278,18 @@
       "description": "Connectez-vous pour accéder à votre profil et gérer votre collection.",
       "suspended": "Votre compte a été suspendu. Contactez le support si vous pensez qu'il s'agit d'une erreur."
     },
+    "verify2fa": {
+      "title": "Vérification à deux facteurs - Shadow and Sillage",
+      "description": "Entrez le code de votre application d'authentification.",
+      "heading": "Authentification à deux facteurs",
+      "subheading": "Entrez le code à 6 chiffres ou un code de secours.",
+      "codeLabel": "Code de vérification",
+      "backupCodeLabel": "Code de secours",
+      "submit": "Vérifier",
+      "useBackupCode": "Utiliser un code de secours",
+      "useAuthenticator": "Utiliser l'application d'authentification",
+      "errorTitle": "Erreur de vérification"
+    },
     "signUp": {
       "title": "S'inscrire - Shadow and Sillage",
       "description": "Créez un compte pour accéder à votre profil et gérer votre collection."
@@ -876,8 +888,33 @@
       "wishlist": "Ma liste de souhaits",
       "myTrades": "Mes échanges",
       "myScents": "Mes parfums",
-      "changePassword": "Changer le mot de passe"
+      "changePassword": "Changer le mot de passe",
+      "security": "Sécurité"
     }
+  },
+  "twoFactor": {
+    "title": "Sécurité du compte",
+    "subheading": "L'authentification à deux facteurs ajoute une étape à la connexion (optionnel).",
+    "adminRecommendation": "L'authentification à deux facteurs est recommandée pour les comptes admin.",
+    "disabledDescription": "Protégez votre compte avec une application d'authentification. C'est optionnel.",
+    "enableButton": "Activer l'authentification à deux facteurs",
+    "scanQr": "Scannez le QR code, puis confirmez avec le code à 6 chiffres et votre mot de passe.",
+    "qrAlt": "QR code authentificateur",
+    "manualKey": "Clé manuelle",
+    "currentPassword": "Mot de passe actuel",
+    "verificationCode": "Code à 6 chiffres",
+    "confirmEnable": "Confirmer et activer",
+    "backupCodesTitle": "Codes de secours",
+    "backupCodesWarning": "Conservez ces codes en lieu sûr. Chacun ne fonctionne qu'une fois.",
+    "enabledStatus": "L'authentification à deux facteurs est activée.",
+    "regenerateTitle": "Régénérer les codes de secours",
+    "regenerateButton": "Générer de nouveaux codes",
+    "disableTitle": "Désactiver l'authentification à deux facteurs",
+    "disableButton": "Désactiver 2FA",
+    "backupCodeLabel": "Code de secours",
+    "useBackupCode": "Utiliser un code de secours",
+    "useAuthenticator": "Utiliser l'application d'authentification",
+    "errorTitle": "Erreur"
   },
   "quiz": {
     "meta": {
@@ -1508,6 +1545,8 @@
       "softDelete": "Suppression douce",
       "delete": "Supprimer",
       "issueStrike": "Émettre un strike",
+      "reset2fa": "Réinitialiser 2FA",
+      "reset2faConfirm": "Réinitialiser l'authentification à deux facteurs pour cet utilisateur ?",
       "currentUser": "Utilisateur actuel",
       "admin": "Admin",
       "deleted": "Supprimé",

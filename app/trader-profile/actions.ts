@@ -36,7 +36,6 @@ export const createUserReportAction = async (
   const reportedUserId = formData.get("reportedUserId")
   const category = formData.get("category")
   const description = formData.get("description")
-  const tradeId = formData.get("tradeId")
 
   if (typeof reportedUserId !== "string" || !reportedUserId) {
     return { success: false, message: "Invalid request" }
@@ -53,7 +52,6 @@ export const createUserReportAction = async (
     reportedUserId,
     category: category as UserReportCategory,
     description: typeof description === "string" ? description : null,
-    tradeId: typeof tradeId === "string" && tradeId ? tradeId : null,
     images,
   })
 

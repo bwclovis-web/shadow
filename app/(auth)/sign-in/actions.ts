@@ -3,19 +3,30 @@
 import { cookies, headers } from "next/headers"
 import { redirect } from "next/navigation"
 
+import { isTwoFactorEnabled } from "@/models/two-factor.server"
 import { updateUser } from "@/models/user.query"
 import { touchUserLastActive } from "@/models/user-activity.server"
 import { signInCustomer } from "@/models/user.server"
 import { validateRateLimit } from "@/utils/api-validation.server"
 import { getAuthRateLimits } from "@/utils/rate-limit-config.server"
-import { getAuthCookieFlags } from "@/utils/security/auth-cookie.server"
+import { setSessionCookies } from "@/utils/security/auth-session-cookies.server"
+import {
+  assertAccountNotLocked,
+  getLoginContext,
+  isLoginHeuristicsEnabled,
+  recordLoginAttempt,
+} from "@/utils/security/login-security.server"
+import {
+  createPending2faToken,
+  getPending2faCookieName,
+  getPending2faCookieOptions,
+} from "@/utils/security/pending-2fa.server"
 import { createSession } from "@/utils/security/session-manager.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { getClientIdentifierFromHeaders } from "@/utils/server/request.server"
 import { getProfilePathForUser } from "@/utils/user"
 import { generateUniqueUsername } from "@/utils/username-generator.server"
 
-/** Next.js redirect() throws; re-throw so the redirect is performed. Not in next/navigation types in 16.x. */
 const isRedirectError = (error: unknown): boolean =>
   typeof error === "object" &&
   error !== null &&
@@ -23,22 +34,6 @@ const isRedirectError = (error: unknown): boolean =>
   String((error as { digest?: string }).digest).startsWith("NEXT_REDIRECT")
 
 export type SignInActionState = { error?: string } | null
-
-const setSessionCookies = async (
-  accessToken: string,
-  refreshToken: string
-): Promise<void> => {
-  const cookieStore = await cookies()
-  const flags = getAuthCookieFlags()
-  cookieStore.set("accessToken", accessToken, {
-    ...flags,
-    maxAge: 60 * 60,
-  })
-  cookieStore.set("refreshToken", refreshToken, {
-    ...flags,
-    maxAge: 60 * 60 * 24 * 7,
-  })
-}
 
 export const signInAction = async (
   _prevState: SignInActionState,
@@ -65,9 +60,40 @@ export const signInAction = async (
       throw res
     }
 
-    const existingUser = await signInCustomer(formData)
-    if (!existingUser) {
+    const signInResult = await signInCustomer(formData)
+    const loginCtx = isLoginHeuristicsEnabled()
+      ? await getLoginContext(await headers())
+      : null
+
+    if (signInResult.kind === "not_found") {
       return { error: "Invalid email or password" }
+    }
+
+    if (signInResult.kind === "invalid_password") {
+      if (loginCtx) {
+        await recordLoginAttempt({
+          userId: signInResult.user.id,
+          success: false,
+          ctx: loginCtx,
+          failureReason: "invalid_password",
+        })
+      }
+      return { error: "Invalid email or password" }
+    }
+
+    const existingUser = signInResult.user
+
+    if (isLoginHeuristicsEnabled()) {
+      try {
+        await assertAccountNotLocked(existingUser.id)
+      } catch (lockoutError) {
+        return {
+          error:
+            lockoutError instanceof Error
+              ? lockoutError.message
+              : "Too many failed sign-in attempts.",
+        }
+      }
     }
 
     if (existingUser.isBanned) {
@@ -79,6 +105,29 @@ export const signInAction = async (
       const username = await generateUniqueUsername()
       await updateUser(existingUser.id, { username })
       user = { ...existingUser, username }
+    }
+
+    if (isTwoFactorEnabled(user)) {
+      if (loginCtx) {
+        await recordLoginAttempt({
+          userId: user.id,
+          success: true,
+          ctx: loginCtx,
+          skipHeuristics: true,
+        })
+      }
+      const cookieStore = await cookies()
+      const pendingToken = createPending2faToken(user.id)
+      cookieStore.set(getPending2faCookieName(), pendingToken, getPending2faCookieOptions())
+      redirect("/sign-in/verify-2fa")
+    }
+
+    if (loginCtx) {
+      await recordLoginAttempt({
+        userId: user.id,
+        success: true,
+        ctx: loginCtx,
+      })
     }
 
     const { accessToken, refreshToken } = await createSession({

@@ -59,6 +59,7 @@ const UserRow = ({
   pendingAction,
   pendingUserId,
   roleFormAction,
+  resetTwoFactorFormAction,
 }: {
   user: UserWithCounts
   currentUserId: string
@@ -68,6 +69,7 @@ const UserRow = ({
   pendingAction: string | null
   pendingUserId: string | null
   roleFormAction?: (formData: FormData) => void
+  resetTwoFactorFormAction?: (formData: FormData) => void
 }) => {
   const t = useTranslations("userAdmin.table")
   const isCurrentUser = user.id === currentUserId
@@ -80,6 +82,7 @@ const UserRow = ({
 
   const displayName = getUserDisplayName(user)
   const canIssueStrike = !isCurrentUser && !isDeleted && !user.isBanned
+  const hasTwoFactor = user.twoFactorEnabledAt != null
 
   return (
     <tr
@@ -123,6 +126,28 @@ const UserRow = ({
           <span className="text-noir-gold-100/60">—</span>
         ) : (
           <div className="flex justify-end gap-2 flex-wrap">
+            {hasTwoFactor && resetTwoFactorFormAction && (
+              <form
+                action={resetTwoFactorFormAction}
+                onSubmit={(e) => {
+                  if (
+                    !window.confirm(t("reset2faConfirm"))
+                  ) {
+                    e.preventDefault()
+                  }
+                }}
+              >
+                <CSRFToken />
+                <input type="hidden" name="userId" value={user.id} />
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="rounded border border-noir-gold-500/70 px-2 py-1 text-noir-gold hover:bg-noir-gold/10 disabled:opacity-50"
+                >
+                  {t("reset2fa")}
+                </button>
+              </form>
+            )}
             <button
               type="button"
               onClick={() => onIssueStrike(user.id)}

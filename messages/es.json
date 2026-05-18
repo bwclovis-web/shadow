@@ -278,6 +278,18 @@
       "description": "Inicia sesión en tu cuenta para acceder a tu perfil y administrar tu colección.",
       "suspended": "Tu cuenta ha sido suspendida. Contacta con soporte si crees que es un error."
     },
+    "verify2fa": {
+      "title": "Verificación en dos pasos - Shadow and Sillage",
+      "description": "Introduce el código de tu aplicación de autenticación.",
+      "heading": "Autenticación en dos pasos",
+      "subheading": "Introduce el código de 6 dígitos o usa un código de respaldo.",
+      "codeLabel": "Código de verificación",
+      "backupCodeLabel": "Código de respaldo",
+      "submit": "Verificar",
+      "useBackupCode": "Usar código de respaldo",
+      "useAuthenticator": "Usar aplicación de autenticación",
+      "errorTitle": "Error de verificación"
+    },
     "signUp": {
       "title": "Registrarse - Shadow and Sillage",
       "description": "Crea una cuenta para acceder a tu perfil y administrar tu colección."
@@ -876,8 +888,33 @@
       "wishlist": "Mi Lista de Deseos",
       "myTrades": "Mis intercambios",
       "myScents": "Mis Aromas",
-      "changePassword": "Cambiar Contraseña"
+      "changePassword": "Cambiar Contraseña",
+      "security": "Seguridad"
     }
+  },
+  "twoFactor": {
+    "title": "Seguridad de la cuenta",
+    "subheading": "La autenticación en dos pasos añade un paso extra al iniciar sesión (opcional).",
+    "adminRecommendation": "Se recomienda la autenticación en dos pasos para cuentas de administrador.",
+    "disabledDescription": "Protege tu cuenta con una aplicación de autenticación. Es opcional.",
+    "enableButton": "Activar autenticación en dos pasos",
+    "scanQr": "Escanea el código QR y confirma con el código de 6 dígitos y tu contraseña.",
+    "qrAlt": "Código QR del autenticador",
+    "manualKey": "Clave manual",
+    "currentPassword": "Contraseña actual",
+    "verificationCode": "Código de 6 dígitos",
+    "confirmEnable": "Confirmar y activar",
+    "backupCodesTitle": "Códigos de respaldo",
+    "backupCodesWarning": "Guarda estos códigos en un lugar seguro. Cada uno solo funciona una vez.",
+    "enabledStatus": "La autenticación en dos pasos está activada.",
+    "regenerateTitle": "Regenerar códigos de respaldo",
+    "regenerateButton": "Generar nuevos códigos",
+    "disableTitle": "Desactivar autenticación en dos pasos",
+    "disableButton": "Desactivar 2FA",
+    "backupCodeLabel": "Código de respaldo",
+    "useBackupCode": "Usar código de respaldo",
+    "useAuthenticator": "Usar aplicación de autenticación",
+    "errorTitle": "Error"
   },
   "quiz": {
     "meta": {
@@ -1508,6 +1545,8 @@
       "softDelete": "Eliminación Suave",
       "delete": "Eliminar",
       "issueStrike": "Emitir Strike",
+      "reset2fa": "Restablecer 2FA",
+      "reset2faConfirm": "¿Restablecer la autenticación en dos pasos de este usuario?",
       "currentUser": "Usuario Actual",
       "admin": "Administrador",
       "deleted": "Eliminado",

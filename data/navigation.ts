@@ -14,7 +14,7 @@ export const adminNavigation = [
   { id: "5", label: "security monitor", key: "securityMonitor", path: "/admin/security-monitor" },
   { id: "6", label: "performance admin", key: "performanceAdmin", path: "/admin/performance-admin" },
   { id: "7", label: "pending submissions", key: "pendingSubmissions", path: "/admin/pending-submission" },
-  { id: "9", label: "user reports", key: "userReports", path: "/admin/reports" },
+  { id: "9", label: "disputes", key: "disputes", path: "/admin/disputes" },
   { id: "8", label: "house scraper", key: "houseScraper", path: "/admin/scraper" },
 ] as const
 
@@ -23,9 +23,11 @@ export const profileNavigation = [
   { id: "0", label: "Profile", key: "profile", path: "/profile" } as const,
   { id: "1", label: "My Wishlist", key: "wishlist", path: "/profile/wishlist" } as const,
   { id: "4", label: "My Reports", key: "myReports", path: "/profile/reports" } as const,
+  { id: "6", label: "My Disputes", key: "myDisputes", path: "/profile/disputes" } as const,
   { id: "5", label: "My Trades", key: "myTrades", path: "/profile/trades" } as const,
   { id: "2", label: "My Scents", key: "myScents", path: "/profile/my-scents" } as const,
   { id: "3", label: "Change Password", key: "changePassword", path: "/profile/change-password" } as const,
+  { id: "7", label: "Security", key: "security", path: "/profile/security" } as const,
 ] as const
 
 /** Profile nav item with dynamic path for the given user. Use when rendering profile links. */

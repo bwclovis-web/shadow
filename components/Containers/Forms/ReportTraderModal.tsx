@@ -26,14 +26,12 @@ const REPORT_CAMERA_MODAL_ID = "report-camera-capture"
 type ReportTraderModalProps = {
   reportedUserId: string
   traderName: string
-  tradeId?: string | null
   onSuccess?: () => void
 }
 
 const ReportTraderModal = ({
   reportedUserId,
   traderName,
-  tradeId,
   onSuccess,
 }: ReportTraderModalProps) => {
   const t = useTranslations("userReport")
@@ -73,7 +71,6 @@ const ReportTraderModal = ({
           <CSRFToken />
           <input type="hidden" name="reportedUserId" value={reportedUserId} />
           <input type="hidden" name="images" value={JSON.stringify(images)} />
-          {tradeId ? <input type="hidden" name="tradeId" value={tradeId} /> : null}
 
           <div>
             <label htmlFor="report-category" className="mb-1 block text-sm text-noir-gold-100">

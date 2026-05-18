@@ -46,7 +46,7 @@ const SecurityMonitorPage = async () => {
     outcome: "success",
   })
 
-  const security = getSecurityStats()
+  const security = await getSecurityStats()
   const rateLimit = getRateLimitStats()
   const audit = getAuditStats()
 

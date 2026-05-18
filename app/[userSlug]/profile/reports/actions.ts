@@ -39,7 +39,7 @@ export const withdrawReportAction = async (
   if (result.success) {
     const slug = getProfileSlug(session.user)
     revalidatePath(`/${slug}/profile/reports`)
-    revalidatePath("/admin/reports")
+    revalidatePath("/admin/disputes")
   }
   return result
 }

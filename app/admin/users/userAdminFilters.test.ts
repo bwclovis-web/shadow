@@ -13,6 +13,7 @@ const baseUser = (overrides: Partial<UserWithCounts>): UserWithCounts => ({
   role: "user",
   strikeCount: 0,
   isBanned: false,
+  twoFactorEnabledAt: null,
   createdAt: new Date(),
   _count: {
     UserPerfume: 0,

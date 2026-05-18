@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server"
 import { notFound, redirect } from "next/navigation"
 
 import { getThread, markThreadAsRead } from "@/models/contactMessage.server"
+import { getActiveDisputeTradeIds } from "@/models/trade-dispute.server"
 import { getActiveTradesForThread } from "@/models/trade.server"
 import { prisma } from "@/lib/db"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
@@ -69,22 +70,32 @@ export default async function ThreadPage({
 
   let thread: Awaited<ReturnType<typeof getThread>> = []
   let initialTrades: Awaited<ReturnType<typeof getActiveTradesForThread>> = []
+  let activeDisputeTradeIds: string[] = []
   try {
     ;[thread, initialTrades] = await Promise.all([
       getThread(session.user.id, otherUserId),
       getActiveTradesForThread(session.user.id, otherUserId),
     ])
+    activeDisputeTradeIds = await getActiveDisputeTradeIds(
+      session.user.id,
+      initialTrades.map((t) => t.id)
+    )
     await markThreadAsRead(session.user.id, otherUserId)
   } catch (error) {
     console.error("Failed to load thread:", error)
   }
 
+  const userSlug =
+    session.user.profileSlug ?? session.user.username ?? session.user.id
+
   return (
     <ThreadClient
       currentUserId={session.user.id}
+      userSlug={userSlug}
       otherUser={otherUser}
       initialThread={thread}
       initialTrades={initialTrades}
+      activeDisputeTradeIds={activeDisputeTradeIds}
     />
   )
 }

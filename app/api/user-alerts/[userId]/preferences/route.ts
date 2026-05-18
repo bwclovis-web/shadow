@@ -12,6 +12,8 @@ const defaultPreferences = {
   emailWishlistAlerts: false,
   emailDecantAlerts: false,
   emailTradeAlerts: false,
+  emailSecurityAlerts: true,
+  securityAlertsEnabled: true,
   pushEnabled: false,
   pushTradeAlerts: true,
   pushMessageAlerts: true,
@@ -80,6 +82,8 @@ async function updatePreferences(
   if (typeof body.emailWishlistAlerts === "boolean") preferences.emailWishlistAlerts = body.emailWishlistAlerts
   if (typeof body.emailDecantAlerts === "boolean") preferences.emailDecantAlerts = body.emailDecantAlerts
   if (typeof body.emailTradeAlerts === "boolean") preferences.emailTradeAlerts = body.emailTradeAlerts
+  if (typeof body.emailSecurityAlerts === "boolean") preferences.emailSecurityAlerts = body.emailSecurityAlerts
+  if (typeof body.securityAlertsEnabled === "boolean") preferences.securityAlertsEnabled = body.securityAlertsEnabled
   if (typeof body.maxAlerts === "number" && body.maxAlerts >= 1 && body.maxAlerts <= 100) preferences.maxAlerts = body.maxAlerts
   if (typeof body.pushEnabled === "boolean") preferences.pushEnabled = body.pushEnabled
   if (typeof body.pushTradeAlerts === "boolean") preferences.pushTradeAlerts = body.pushTradeAlerts

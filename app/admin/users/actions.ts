@@ -10,6 +10,7 @@ import {
   softDeleteUser,
   updateUserRole,
 } from "@/models/admin.server"
+import { adminResetTwoFactor } from "@/models/two-factor.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 
@@ -153,4 +154,41 @@ export const issueStrikeAction = async (
   }
 
   return result
+}
+
+export type ResetTwoFactorActionState = {
+  success: boolean
+  message: string
+} | null
+
+export const resetTwoFactorAction = async (
+  _prevState: ResetTwoFactorActionState,
+  formData: FormData
+): Promise<ResetTwoFactorActionState> => {
+  const cookieHeader = await getCookieHeader()
+  const session = await getSessionFromCookieHeader(cookieHeader, {
+    includeUser: true,
+  })
+
+  if (!session?.user) {
+    redirect("/sign-in?redirect=/admin/users")
+  }
+
+  if (session.user.role !== "admin") {
+    return { success: false, message: "Unauthorized" }
+  }
+
+  const request = new Request("http://localhost", { method: "POST" })
+  await requireCSRF(request, formData)
+
+  const userId = formData.get("userId")
+  if (typeof userId !== "string") {
+    return { success: false, message: "Invalid request" }
+  }
+
+  const result = await adminResetTwoFactor(userId, session.user.id)
+  if (result.success) {
+    return { success: true, message: result.message }
+  }
+  return { success: false, message: result.error }
 }

@@ -29,22 +29,34 @@ vi.mock("next/headers", () => ({
 vi.mock("@/utils/api-validation.server", () => ({
   validateRateLimit: vi.fn(),
 }))
+vi.mock("@/models/two-factor.server", () => ({
+  isTwoFactorEnabled: vi.fn().mockReturnValue(false),
+}))
 vi.mock("@/utils/rate-limit-config.server", () => ({
   getAuthRateLimits: vi.fn().mockReturnValue({
     signIn: { max: 5, windowMs: 60_000 },
+    verify2fa: { max: 10, windowMs: 300_000 },
   }),
 }))
 vi.mock("next/navigation", () => ({
   redirect: (...args: unknown[]) => mockRedirect(...args),
 }))
 vi.mock("@/utils/server/csrf.server", () => ({ requireCSRF: vi.fn().mockResolvedValue(undefined) }))
+vi.mock("@/utils/security/login-security.server", () => ({
+  isLoginHeuristicsEnabled: vi.fn().mockReturnValue(false),
+  getLoginContext: vi.fn(),
+  recordLoginAttempt: vi.fn(),
+  assertAccountNotLocked: vi.fn(),
+}))
 
+import { isTwoFactorEnabled } from "@/models/two-factor.server"
 import { updateUser } from "@/models/user.query"
 import { signInCustomer } from "@/models/user.server"
 import { generateUniqueUsername } from "@/utils/username-generator.server"
 import { signInAction } from "./actions"
 
 const mockSignInCustomer = vi.mocked(signInCustomer)
+const mockIsTwoFactorEnabled = vi.mocked(isTwoFactorEnabled)
 const mockUpdateUser = vi.mocked(updateUser)
 const mockGenerateUniqueUsername = vi.mocked(generateUniqueUsername)
 
@@ -59,10 +71,34 @@ describe("signInAction", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockCreateSession.mockResolvedValue({ accessToken: "a", refreshToken: "r" })
+    mockIsTwoFactorEnabled.mockReturnValue(false)
+  })
+
+  it("redirects to verify-2fa when 2FA is enabled", async () => {
+    mockSignInCustomer.mockResolvedValue({
+      kind: "success",
+      user: {
+        id: "user-2fa",
+        username: "TwoFaUser",
+        tokenVersion: 0,
+        twoFactorEnabledAt: new Date(),
+        totpSecretEncrypted: "enc",
+      },
+    } as Awaited<ReturnType<typeof signInCustomer>>)
+    mockIsTwoFactorEnabled.mockReturnValue(true)
+
+    try {
+      await signInAction(null, formData())
+    } catch (e) {
+      expect((e as Error).message).toBe("NEXT_REDIRECT")
+    }
+
+    expect(mockCreateSession).not.toHaveBeenCalled()
+    expect(mockRedirect).toHaveBeenCalledWith("/sign-in/verify-2fa")
   })
 
   it("returns error when credentials are invalid", async () => {
-    mockSignInCustomer.mockResolvedValue(null)
+    mockSignInCustomer.mockResolvedValue({ kind: "not_found" })
     const result = await signInAction(null, formData())
     expect(result).toEqual({ error: "Invalid email or password" })
     expect(mockCreateSession).not.toHaveBeenCalled()
@@ -71,10 +107,13 @@ describe("signInAction", () => {
 
   it("returns suspended error when user is banned", async () => {
     mockSignInCustomer.mockResolvedValue({
-      id: "banned-user",
-      username: "BannedUser",
-      tokenVersion: 0,
-      isBanned: true,
+      kind: "success",
+      user: {
+        id: "banned-user",
+        username: "BannedUser",
+        tokenVersion: 0,
+        isBanned: true,
+      },
     } as Awaited<ReturnType<typeof signInCustomer>>)
 
     const result = await signInAction(null, formData())
@@ -85,9 +124,12 @@ describe("signInAction", () => {
 
   it("when user has username, does not call generateUniqueUsername or updateUser and redirects to profile", async () => {
     mockSignInCustomer.mockResolvedValue({
-      id: "user-1",
-      username: "ExistingUser",
-      tokenVersion: 0,
+      kind: "success",
+      user: {
+        id: "user-1",
+        username: "ExistingUser",
+        tokenVersion: 0,
+      },
     } as Awaited<ReturnType<typeof signInCustomer>>)
 
     try {
@@ -104,9 +146,12 @@ describe("signInAction", () => {
 
   it("when user has null username, generates username, updates user, and redirects with new slug", async () => {
     mockSignInCustomer.mockResolvedValue({
-      id: "legacy-user-id",
-      username: null,
-      tokenVersion: 0,
+      kind: "success",
+      user: {
+        id: "legacy-user-id",
+        username: null,
+        tokenVersion: 0,
+      },
     } as Awaited<ReturnType<typeof signInCustomer>>)
     mockGenerateUniqueUsername.mockResolvedValue("DarkAlley_42")
 
@@ -126,9 +171,12 @@ describe("signInAction", () => {
 
   it("when user has empty string username, backfills and redirects with new slug", async () => {
     mockSignInCustomer.mockResolvedValue({
-      id: "user-empty",
-      username: "   ",
-      tokenVersion: 0,
+      kind: "success",
+      user: {
+        id: "user-empty",
+        username: "   ",
+        tokenVersion: 0,
+      },
     } as Awaited<ReturnType<typeof signInCustomer>>)
     mockGenerateUniqueUsername.mockResolvedValue("PaleShadow_99")
 

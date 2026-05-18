@@ -217,6 +217,8 @@ export interface UserAlertPreferences {
   emailWishlistAlerts: boolean
   emailDecantAlerts: boolean
   emailTradeAlerts: boolean
+  emailSecurityAlerts: boolean
+  securityAlertsEnabled: boolean
   pushEnabled: boolean
   pushTradeAlerts: boolean
   pushMessageAlerts: boolean

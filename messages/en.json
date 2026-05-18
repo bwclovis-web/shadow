@@ -72,6 +72,7 @@
       "errorAnalytics": "Error Analytics",
       "pendingSubmissions": "Pending Submissions",
       "userReports": "User Reports",
+      "disputes": "Disputes",
       "houseScraper": "House Scraper"
     },
     "perfumeHouse": {
@@ -97,6 +98,113 @@
       "noShip": "Did not ship",
       "other": "Other"
     }
+  },
+  "dispute": {
+    "button": "Open dispute",
+    "heading": "Open trade dispute",
+    "subheading": "Describe the issue with this trade. Our team will review both sides.",
+    "policyLink": "Read shipping, disputes & community rules",
+    "categoryLabel": "Category",
+    "categoryPlaceholder": "Select a category…",
+    "descriptionLabel": "Details",
+    "descriptionPlaceholder": "Describe what happened…",
+    "photosLabel": "Evidence photos (optional)",
+    "photosHint": "Up to 3 images to help our team review your dispute.",
+    "submit": "Submit dispute",
+    "submitting": "Submitting…",
+    "existingDispute": "A dispute is already open for this trade.",
+    "viewMyDisputes": "View my disputes",
+    "categories": {
+      "noShip": "Did not ship",
+      "fakeItem": "Fake or misrepresented item",
+      "notAsDescribed": "Not as described",
+      "scam": "Scam or fraud",
+      "other": "Other"
+    }
+  },
+  "myDisputes": {
+    "meta": {
+      "title": "My Disputes - Shadow and Sillage",
+      "description": "Track trade disputes you have opened or are party to."
+    },
+    "heading": "My Disputes",
+    "subheading": "Trade disputes you opened or are involved in",
+    "backToProfile": "Back to profile",
+    "empty": "You have no trade disputes.",
+    "withdraw": "Withdraw dispute",
+    "withdrawing": "Withdrawing…",
+    "otherParty": "Other trader",
+    "tradeStatus": "Trade status",
+    "categories": {
+      "noShip": "Did not ship",
+      "fakeItem": "Fake or misrepresented item",
+      "notAsDescribed": "Not as described",
+      "scam": "Scam or fraud",
+      "other": "Other"
+    },
+    "status": {
+      "open": "Open",
+      "underReview": "Under review",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    },
+    "outcomes": {
+      "noAction": "No action",
+      "warningIssued": "Warning issued",
+      "strikeIssued": "Strike issued",
+      "tradeVoided": "Trade voided"
+    }
+  },
+  "adminDisputes": {
+    "meta": {
+      "title": "Disputes - Admin - Shadow and Sillage",
+      "description": "Review trade disputes and profile reports."
+    },
+    "heading": "Disputes & Reports",
+    "subheading": "Trade disputes and profile moderation",
+    "tabs": {
+      "tradeDisputes": "Trade disputes",
+      "profileReports": "Profile reports"
+    },
+    "empty": "No disputes in this queue",
+    "filters": {
+      "open": "Open",
+      "underReview": "Under review",
+      "resolved": "Resolved",
+      "all": "All"
+    },
+    "status": {
+      "open": "Open",
+      "underReview": "Under review",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    },
+    "categories": {
+      "noShip": "Did not ship",
+      "fakeItem": "Fake or misrepresented item",
+      "notAsDescribed": "Not as described",
+      "scam": "Scam or fraud",
+      "other": "Other"
+    },
+    "outcomes": {
+      "noAction": "No action",
+      "warningIssued": "Warning issued",
+      "strikeIssued": "Strike issued",
+      "tradeVoided": "Trade voided"
+    },
+    "trade": "Trade",
+    "initiator": "Initiator",
+    "otherParty": "Other party",
+    "resolutionOutcome": "Outcome",
+    "markUnderReview": "Mark under review",
+    "showDetails": "Show details",
+    "hideDetails": "Hide details",
+    "noDescription": "No additional details provided.",
+    "adminNotesLabel": "Admin notes (internal)",
+    "saveNotes": "Save notes",
+    "resolveHeading": "Resolution",
+    "publicSummaryLabel": "Public summary (sent to both parties)",
+    "resolveDispute": "Resolve dispute"
   },
   "adminReports": {
     "meta": {
@@ -242,6 +350,9 @@
     "emailWishlistAlerts": "Email Wishlist Alerts",
     "emailDecantAlerts": "Email Decant Alerts",
     "emailTradeAlerts": "Email Trade Updates",
+    "securityAlerts": "Security Alerts",
+    "securityAlertsDescription": "Unusual sign-in activity on your account",
+    "emailSecurityAlerts": "Email Security Alerts",
     "emailRequiresInApp": "Email alerts require the matching in-app alert to be enabled.",
     "alertLimits": "Alert Limits",
     "maxAlerts": "Maximum Alerts to Keep",
@@ -276,12 +387,14 @@
       "trade_shipped": "Trade shipped",
       "trade_completed": "Trade completed",
       "trade_cancelled": "Trade update",
+      "suspicious_login": "Security",
       "default": "Alert"
     },
     "actions": {
       "reviewSubmission": "Review submission",
       "viewMessage": "View message",
       "viewTrade": "View trade",
+      "viewSecurity": "Security settings",
       "viewPerfume": "View perfume",
       "markRead": "Mark read",
       "dismiss": "Dismiss",
@@ -371,6 +484,18 @@
       "title": "Sign In - Shadow and Sillage",
       "description": "Sign in to your account to access your profile and manage your collection.",
       "suspended": "Your account has been suspended. Contact support if you believe this is an error."
+    },
+    "verify2fa": {
+      "title": "Two-factor verification - Shadow and Sillage",
+      "description": "Enter the code from your authenticator app to complete sign-in.",
+      "heading": "Two-factor authentication",
+      "subheading": "Enter the 6-digit code from your authenticator app, or use a backup code.",
+      "codeLabel": "Verification code",
+      "backupCodeLabel": "Backup code",
+      "submit": "Verify",
+      "useBackupCode": "Use a backup code instead",
+      "useAuthenticator": "Use authenticator app instead",
+      "errorTitle": "Verification error"
     },
     "signUp": {
       "title": "Sign Up - Shadow and Sillage",
@@ -980,10 +1105,36 @@
       "profile": "Profile",
       "wishlist": "My Wishlist",
       "myReports": "My Reports",
+      "myDisputes": "My Disputes",
       "myTrades": "My Trades",
       "myScents": "My Scents",
-      "changePassword": "Change Password"
+      "changePassword": "Change Password",
+      "security": "Security"
     }
+  },
+  "twoFactor": {
+    "title": "Account security",
+    "subheading": "Optional two-factor authentication adds a second step when you sign in.",
+    "adminRecommendation": "Two-factor authentication is recommended for admin and editor accounts.",
+    "disabledDescription": "Protect your account with an authenticator app. Enrollment is optional.",
+    "enableButton": "Enable two-factor authentication",
+    "scanQr": "Scan this QR code with your authenticator app, then enter the 6-digit code and your password to confirm.",
+    "qrAlt": "Authenticator QR code",
+    "manualKey": "Manual entry key",
+    "currentPassword": "Current password",
+    "verificationCode": "6-digit code",
+    "confirmEnable": "Confirm and enable",
+    "backupCodesTitle": "Backup codes",
+    "backupCodesWarning": "Save these codes in a secure place. Each code works once. You will not see them again.",
+    "enabledStatus": "Two-factor authentication is enabled on your account.",
+    "regenerateTitle": "Regenerate backup codes",
+    "regenerateButton": "Generate new backup codes",
+    "disableTitle": "Disable two-factor authentication",
+    "disableButton": "Disable 2FA",
+    "backupCodeLabel": "Backup code",
+    "useBackupCode": "Use a backup code instead",
+    "useAuthenticator": "Use authenticator app instead",
+    "errorTitle": "Error"
   },
   "quiz": {
     "meta": {
@@ -1253,7 +1404,7 @@
     "disputes": {
       "heading": "Dispute process",
       "contentOne": "If something goes wrong, message the other trader first and try to resolve it directly.",
-      "contentTwo": "If you cannot resolve the issue, use Report on their trader profile or, during an active trade, from the trade card. Include photos and a clear description.",
+      "contentTwo": "If you cannot resolve the issue, use Open dispute on the active trade card, or Report on their trader profile for off-trade issues. Include photos and a clear description.",
       "contentThree": "Our team reviews reports and may issue strikes or account actions. We do not hold funds or guarantee refunds — we help document disputes and enforce community rules."
     },
     "community": {
@@ -1667,6 +1818,8 @@
       "softDelete": "Soft Delete",
       "delete": "Delete",
       "issueStrike": "Issue Strike",
+      "reset2fa": "Reset 2FA",
+      "reset2faConfirm": "Reset two-factor authentication for this user? They will need to set it up again.",
       "currentUser": "Current User",
       "admin": "Admin",
       "deleted": "Deleted",

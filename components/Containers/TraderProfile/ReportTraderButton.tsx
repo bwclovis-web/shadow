@@ -19,7 +19,6 @@ type ReportTraderButtonProps = {
     email?: string
   }
   viewerId?: string | null
-  tradeId?: string | null
   size?: "sm" | "md"
 }
 
@@ -27,7 +26,6 @@ const ReportTraderButton = ({
   traderId,
   trader,
   viewerId,
-  tradeId,
   size = "md",
 }: ReportTraderButtonProps) => {
   const t = useTranslations("userReport")
@@ -39,10 +37,10 @@ const ReportTraderButton = ({
   }
 
   const traderName = getTraderDisplayName(trader)
-  const reportModalId = tradeId ? `report-trader-${tradeId}` : "report-trader"
+  const reportModalId = "report-trader"
 
   return (
-    <>
+  <div className="contents">
       <Button
         variant="secondary"
         background="red"
@@ -60,14 +58,13 @@ const ReportTraderButton = ({
           <ReportTraderModal
             reportedUserId={traderId}
             traderName={traderName}
-            tradeId={tradeId}
             onSuccess={() => {
               setTimeout(() => closeModal(), 1500)
             }}
           />
         </Modal>
       )}
-    </>
+  </div>
   )
 }
 

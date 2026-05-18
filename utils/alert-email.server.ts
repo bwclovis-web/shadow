@@ -1,3 +1,5 @@
+import type { DisputeResolutionOutcome } from "@prisma/client"
+
 import { PERFUME_PATH } from "@/constants/routes"
 import type { AlertType, UserAlertPreferences } from "@/types/database"
 import {
@@ -14,6 +16,8 @@ type AlertPrefsSlice = Pick<
   | "emailWishlistAlerts"
   | "emailDecantAlerts"
   | "emailTradeAlerts"
+  | "securityAlertsEnabled"
+  | "emailSecurityAlerts"
 >
 
 const TRADE_EMAIL_ALERT_TYPES = [
@@ -46,6 +50,12 @@ export const shouldSendDecantEmail = (
 export const shouldSendTradeEmail = (
   preferences: AlertPrefsSlice | null | undefined
 ): boolean => preferences?.emailTradeAlerts === true
+
+export const shouldSendSecurityEmail = (
+  preferences: AlertPrefsSlice | null | undefined
+): boolean =>
+  preferences?.securityAlertsEnabled !== false &&
+  preferences?.emailSecurityAlerts !== false
 
 const logEmailDebug = (message: string): void => {
   if (process.env.NODE_ENV === "development") {
@@ -197,5 +207,109 @@ export const sendTradeEventEmail = async (params: {
     logEmailDebug(`Sent trade email to ${params.user.email} (id: ${result.id ?? "unknown"})`)
   } else {
     logEmailDebug(`Trade email not sent to ${params.user.email} (check RESEND_API_KEY / EMAIL_FROM)`)
+  }
+}
+
+const DISPUTE_OUTCOME_LABELS: Record<DisputeResolutionOutcome, string> = {
+  noAction: "No further action",
+  warningIssued: "Warning issued",
+  strikeIssued: "Strike issued",
+  tradeVoided: "Trade voided by admin",
+}
+
+export const sendDisputeResolutionEmail = async (params: {
+  user: RecipientUser
+  disputeId: string
+  tradeId: string
+  outcome: DisputeResolutionOutcome
+  publicSummary: string | null
+}): Promise<void> => {
+  if (!isSendableRecipientEmail(params.user.email)) {
+    logEmailDebug(`Skipped dispute resolution email: invalid recipient ${params.user.email}`)
+    return
+  }
+
+  const baseUrl = getAppBaseUrl()
+  const displayName = getUserDisplayName(params.user)
+  const policyUrl = `${baseUrl}/community-policy#disputes`
+  const disputesUrl = `${baseUrl}${getProfilePathForUser(params.user)}/disputes`
+  const outcomeLabel = DISPUTE_OUTCOME_LABELS[params.outcome]
+  const summaryBlock = params.publicSummary
+    ? `\n\nSummary: ${params.publicSummary}`
+    : ""
+
+  const message = [
+    "Your trade dispute has been reviewed and resolved.",
+    "",
+    `Outcome: ${outcomeLabel}`,
+    `Trade reference: ${params.tradeId.slice(-8)}`,
+    summaryBlock,
+    "",
+    "Community policy: " + policyUrl,
+  ]
+    .filter(Boolean)
+    .join("\n")
+
+  const result = await sendTransactionalEmail({
+    to: params.user.email,
+    subject: "Trade dispute resolution — Shadow and Sillage",
+    text: buildAlertEmailBody({
+      displayName,
+      message,
+      actionUrl: `View your disputes: ${disputesUrl}`,
+      preferencesUrl: `${baseUrl}${getProfilePathForUser(params.user)}`,
+    }),
+  })
+
+  if (result.sent) {
+    logEmailDebug(
+      `Sent dispute resolution email to ${params.user.email} (dispute ${params.disputeId})`
+    )
+  } else {
+    logEmailDebug(
+      `Dispute resolution email not sent to ${params.user.email} (check RESEND_API_KEY / EMAIL_FROM)`
+    )
+  }
+}
+
+export const sendSecurityAlertEmail = async (params: {
+  user: RecipientUser
+  preferences: AlertPrefsSlice | null | undefined
+  title: string
+  message: string
+}): Promise<void> => {
+  if (!shouldSendSecurityEmail(params.preferences)) {
+    logEmailDebug(
+      `Skipped security email for ${params.user.email}: securityAlerts=${params.preferences?.securityAlertsEnabled}, emailSecurity=${params.preferences?.emailSecurityAlerts}`
+    )
+    return
+  }
+  if (!isSendableRecipientEmail(params.user.email)) {
+    logEmailDebug(`Skipped security email: invalid recipient ${params.user.email}`)
+    return
+  }
+
+  const baseUrl = getAppBaseUrl()
+  const displayName = getUserDisplayName(params.user)
+  const securityUrl = `${baseUrl}${getProfilePathForUser(params.user)}/security`
+  const preferencesUrl = `${baseUrl}${getProfilePathForUser(params.user)}`
+
+  const result = await sendTransactionalEmail({
+    to: params.user.email,
+    subject: params.title,
+    text: buildAlertEmailBody({
+      displayName,
+      message: params.message,
+      actionUrl: `Review security settings: ${securityUrl}`,
+      preferencesUrl,
+    }),
+  })
+
+  if (result.sent) {
+    logEmailDebug(`Sent security email to ${params.user.email} (id: ${result.id ?? "unknown"})`)
+  } else {
+    logEmailDebug(
+      `Security email not sent to ${params.user.email} (check RESEND_API_KEY / EMAIL_FROM)`
+    )
   }
 }

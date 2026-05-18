@@ -35,7 +35,13 @@ model User {
   subscriptionStartDate DateTime?
   isEarlyAdopter        Boolean                @default(false)
   tokenVersion          Int                    @default(0)
+  totpSecretEncrypted   String?
+  twoFactorEnabledAt    DateTime?
+  failedLoginAttempts   Int                    @default(0)
+  lastFailedLoginAt     DateTime?
   SecurityAuditLog      SecurityAuditLog[]
+  loginEvents           UserLoginEvent[]
+  twoFactorBackupCodes  UserTwoFactorBackupCode[]
   UserAlert             UserAlert[]
   alertPreferences      UserAlertPreferences?
   pushSubscriptions     UserPushSubscription[]
@@ -60,6 +66,9 @@ model User {
   strikesIssued         UserStrike[]           @relation("StrikesIssued")
   reportsFiled          UserReport[]           @relation("ReportsFiled")
   reportsReceived       UserReport[]           @relation("ReportsReceived")
+  disputesInitiated     TradeDispute[]         @relation("DisputesInitiated")
+  disputesAsOtherParty  TradeDispute[]         @relation("DisputesAsOtherParty")
+  disputesResolved      TradeDispute[]         @relation("DisputesResolvedByAdmin")
   ScentProfile              ScentProfile?
 }
 
@@ -296,6 +305,17 @@ model TraderFeedback {
   @@index([tradeId])
 }
 
+model UserTwoFactorBackupCode {
+  id        String    @id @default(cuid())
+  userId    String
+  codeHash  String
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 model SecurityAuditLog {
   id         String                @id
   userId     String?
@@ -309,6 +329,22 @@ model SecurityAuditLog {
   metadata   Json?
   createdAt  DateTime              @default(now())
   User       User?                 @relation(fields: [userId], references: [id])
+}
+
+model UserLoginEvent {
+  id                String   @id @default(cuid())
+  userId            String
+  success           Boolean
+  failureReason     String?
+  deviceFingerprint String
+  countryCode       String?
+  ipHash            String
+  userAgent         String?
+  createdAt         DateTime @default(now())
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, deviceFingerprint])
 }
 
 model UserAlert {
@@ -339,6 +375,8 @@ model UserAlertPreferences {
   emailWishlistAlerts   Boolean @default(false)
   emailDecantAlerts     Boolean @default(false)
   emailTradeAlerts      Boolean @default(false)
+  emailSecurityAlerts   Boolean @default(true)
+  securityAlertsEnabled Boolean @default(true)
   pushEnabled           Boolean @default(false)
   pushTradeAlerts       Boolean @default(true)
   pushMessageAlerts     Boolean @default(true)
@@ -417,7 +455,7 @@ model Trade {
   events         TradeEvent[]
   contactMessages TraderContactMessage[]
   feedback       TraderFeedback[]
-  reports        UserReport[]
+  disputes       TradeDispute[]
 
   @@index([initiatorId, status])
   @@index([counterpartyId, status])
@@ -470,7 +508,6 @@ model UserReport {
   id             String             @id @default(cuid())
   reporterId     String
   reportedUserId String
-  tradeId        String?
   category       UserReportCategory
   description    String?
   images         String[]           @default([])
@@ -478,12 +515,37 @@ model UserReport {
   createdAt      DateTime           @default(now())
   reporter       User               @relation("ReportsFiled", fields: [reporterId], references: [id])
   reportedUser   User               @relation("ReportsReceived", fields: [reportedUserId], references: [id])
-  trade          Trade?             @relation(fields: [tradeId], references: [id])
 
   @@index([status, createdAt])
   @@index([reportedUserId])
   @@index([reporterId])
+}
+
+model TradeDispute {
+  id                  String                     @id @default(cuid())
+  tradeId             String
+  initiatedByUserId   String
+  otherPartyUserId    String
+  category            DisputeCategory
+  description         String?
+  images              String[]                   @default([])
+  status              DisputeStatus              @default(open)
+  adminNotes          String?
+  resolutionOutcome   DisputeResolutionOutcome?
+  publicSummary       String?
+  resolvedAt          DateTime?
+  resolvedByAdminId   String?
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
+  trade               Trade                      @relation(fields: [tradeId], references: [id])
+  initiatedBy         User                       @relation("DisputesInitiated", fields: [initiatedByUserId], references: [id])
+  otherParty          User                       @relation("DisputesAsOtherParty", fields: [otherPartyUserId], references: [id])
+  resolvedByAdmin     User?                      @relation("DisputesResolvedByAdmin", fields: [resolvedByAdminId], references: [id])
+
+  @@index([status, createdAt])
   @@index([tradeId])
+  @@index([initiatedByUserId])
+  @@index([otherPartyUserId])
 }
 
 model ScentProfile {
@@ -612,6 +674,7 @@ enum AlertType {
   trade_shipped
   trade_completed
   trade_cancelled
+  suspicious_login
 }
 
 enum TradeStatus {
@@ -656,6 +719,28 @@ enum UserReportStatus {
   inProgress
   settled
   passed
+}
+
+enum DisputeCategory {
+  noShip
+  fakeItem
+  notAsDescribed
+  scam
+  other
+}
+
+enum DisputeStatus {
+  open
+  underReview
+  resolved
+  closed
+}
+
+enum DisputeResolutionOutcome {
+  noAction
+  warningIssued
+  strikeIssued
+  tradeVoided
 }
 
 enum PerfumeNoteType {

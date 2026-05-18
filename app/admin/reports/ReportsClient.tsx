@@ -311,19 +311,6 @@ const ReportsClient = ({ reports }: ReportsClientProps) => {
                           <ListingPhotos images={report.images} className="mb-3" />
                         )}
 
-                        {report.tradeId ? (
-                          <p>
-                            {t("tradeLink")}:{" "}
-                            <span className="font-mono text-noir-gold">
-                              {report.tradeId}
-                            </span>
-                            {report.trade ? (
-                              <span className="ml-2 text-noir-gold-100/70">
-                                ({report.trade.status})
-                              </span>
-                            ) : null}
-                          </p>
-                        ) : null}
                         <p className="mt-2 font-mono text-xs text-noir-gold-100/50">
                           {report.id}
                         </p>

@@ -14,9 +14,11 @@ import {
   deleteUserAction,
   updateUserRoleAction,
   issueStrikeAction,
+  resetTwoFactorAction,
   type DeleteUserActionState,
   type UpdateRoleActionState,
   type IssueStrikeActionState,
+  type ResetTwoFactorActionState,
 } from "./actions"
 import ConfirmDeleteModal from "./ConfirmDeleteModal"
 import ConfirmStrikeModal from "./ConfirmStrikeModal"
@@ -48,6 +50,10 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
   const [strikeState, strikeFormAction] = useActionState(
     issueStrikeAction,
     null as IssueStrikeActionState
+  )
+  const [reset2faState, reset2faFormAction] = useActionState(
+    resetTwoFactorAction,
+    null as ResetTwoFactorActionState
   )
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
@@ -107,6 +113,12 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
       router.refresh()
     }
   }, [strikeState?.success, router])
+
+  useEffect(() => {
+    if (reset2faState?.success) {
+      router.refresh()
+    }
+  }, [reset2faState?.success, router])
 
   const pendingAction = isSubmitting && selectedUserId ? deleteType : null
   const pendingUserId = isSubmitting ? selectedUserId : null
@@ -245,6 +257,7 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
                       pendingAction={pendingAction}
                       pendingUserId={pendingUserId}
                       roleFormAction={roleFormAction}
+                      resetTwoFactorFormAction={reset2faFormAction}
                     />
                   ))}
                 </tbody>

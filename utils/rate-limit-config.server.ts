@@ -47,10 +47,13 @@ export interface AuthRateLimits {
   refresh: RateLimitConfig
   /** Credential stuffing protection */
   signIn: RateLimitConfig
+  /** 2FA verification after password */
+  verify2fa: RateLimitConfig
 }
 
 export interface UserMutationRateLimits {
   changePassword: RateLimitConfig
+  twoFactor: RateLimitConfig
   reviewsPost: RateLimitConfig
   ratingsPost: RateLimitConfig
   seasonVotesPost: RateLimitConfig
@@ -126,6 +129,13 @@ export const getAuthRateLimits = (): AuthRateLimits => {
         60 *
         1000,
     },
+    verify2fa: {
+      max: parseIntEnv(process.env.AUTH_VERIFY_2FA_RATE_LIMIT_MAX, 10),
+      windowMs:
+        parseIntEnv(process.env.AUTH_VERIFY_2FA_RATE_LIMIT_WINDOW_MINUTES, 5) *
+        60 *
+        1000,
+    },
   }
   return authLimitsCache
 }
@@ -139,6 +149,13 @@ export const getUserMutationRateLimits = (): UserMutationRateLimits => {
       max: parseIntEnv(process.env.CHANGE_PASSWORD_RATE_LIMIT_MAX, 5),
       windowMs:
         parseIntEnv(process.env.CHANGE_PASSWORD_RATE_LIMIT_WINDOW_MINUTES, 60) *
+        60 *
+        1000,
+    },
+    twoFactor: {
+      max: parseIntEnv(process.env.TWO_FACTOR_RATE_LIMIT_MAX, 10),
+      windowMs:
+        parseIntEnv(process.env.TWO_FACTOR_RATE_LIMIT_WINDOW_MINUTES, 15) *
         60 *
         1000,
     },

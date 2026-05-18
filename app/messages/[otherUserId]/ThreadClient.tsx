@@ -47,6 +47,7 @@ type ThreadMessage = {
 
 interface ThreadClientProps {
   currentUserId: string
+  userSlug: string
   otherUser: {
     id: string
     username: string | null
@@ -56,13 +57,16 @@ interface ThreadClientProps {
   }
   initialThread: ThreadMessage[]
   initialTrades?: TradeForClient[]
+  activeDisputeTradeIds?: string[]
 }
 
 export default function ThreadClient({
   currentUserId,
+  userSlug,
   otherUser,
   initialThread: thread,
   initialTrades = [],
+  activeDisputeTradeIds = [],
 }: ThreadClientProps) {
   const router = useRouter()
   const { addToHeaders } = useCSRF()
@@ -178,6 +182,8 @@ export default function ThreadClient({
                 key={trade.id}
                 trade={trade}
                 currentUserId={currentUserId}
+                userSlug={userSlug}
+                hasActiveDispute={activeDisputeTradeIds.includes(trade.id)}
                 onUpdated={() => router.refresh()}
               />
             ))}

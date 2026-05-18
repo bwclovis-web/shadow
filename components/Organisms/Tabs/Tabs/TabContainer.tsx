@@ -12,6 +12,7 @@ interface TabsProps
   children: ReactElement[]
   auxComponent?: ReactElement
   type: "default" | "secondary"
+  defaultActiveTab?: number
 }
 
 const TabContainer  = ({
@@ -21,8 +22,9 @@ const TabContainer  = ({
   size = "md",
   auxComponent,
   type,
+  defaultActiveTab = 0,
 }: TabsProps) => {
-  const [activeTab, setActiveTab] = useState(0)
+  const [activeTab, setActiveTab] = useState(defaultActiveTab)
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
 
   const handleClick = (index: number) => {

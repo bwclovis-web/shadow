@@ -5,6 +5,7 @@ import {
   sendTradeEventEmail,
   sendWishlistAlertEmail,
   shouldSendDecantEmail,
+  shouldSendSecurityEmail,
   shouldSendTradeEmail,
   shouldSendWishlistEmail,
 } from "./alert-email.server"
@@ -112,6 +113,35 @@ describe("shouldSendTradeEmail", () => {
   it("returns true only when emailTradeAlerts is enabled", () => {
     expect(shouldSendTradeEmail(basePrefs)).toBe(true)
     expect(shouldSendTradeEmail({ ...basePrefs, emailTradeAlerts: false })).toBe(false)
+  })
+})
+
+describe("shouldSendSecurityEmail", () => {
+  it("returns true by default when security prefs are enabled", () => {
+    expect(
+      shouldSendSecurityEmail({
+        ...basePrefs,
+        securityAlertsEnabled: true,
+        emailSecurityAlerts: true,
+      })
+    ).toBe(true)
+  })
+
+  it("returns false when email or in-app security alerts are disabled", () => {
+    expect(
+      shouldSendSecurityEmail({
+        ...basePrefs,
+        securityAlertsEnabled: false,
+        emailSecurityAlerts: true,
+      })
+    ).toBe(false)
+    expect(
+      shouldSendSecurityEmail({
+        ...basePrefs,
+        securityAlertsEnabled: true,
+        emailSecurityAlerts: false,
+      })
+    ).toBe(false)
   })
 })
 

@@ -99,19 +99,27 @@ _Small surface area, high trust impact. Finish what users already expect._
 
 **Shipped in:** `utils/alert-email.server.ts` (`sendTradeEventEmail`, `shouldSendTradeEmail`); dispatch from `sendTradeAlert` in `models/trade.server.ts` after in-app alert + push; migration `20260518120000_add_email_trade_alerts`; `AlertPreferences.tsx` + preferences API; i18n `emailTradeAlerts`; tests in `utils/alert-email.server.test.ts`. Manual test guide: `docs/live-testing.md`.
 
-### A4 — Dispute Center MVP
+### A4 — Dispute Center MVP ✅
 
-- [ ] Extend existing admin reports queue with dispute intake: allow either party to open a formal dispute from a trade
-- [ ] Dispute record tracks: initiating party, trade ID, category, description, status (open / under review / resolved / closed), admin notes, resolution outcome
-- [ ] Admin resolves with outcome options: no action / warning issued / strike issued / trade voided
-- [ ] Email both parties when resolution is reached (using Resend; mirrors existing `mailto` admin action)
-- [ ] Link to community policy page from dispute flow
+- [x] Greenfield `TradeDispute` model (profile-only `UserReport` retained); schema via `db push`
+- [x] Either party opens dispute from trade (`OpenDisputeModal`); one active dispute per trade
+- [x] Lifecycle: open / underReview / resolved / closed; admin notes + resolution outcomes
+- [x] Admin `/admin/disputes` with `TabContainer` tabs: Trade disputes | Profile reports
+- [x] Resolve outcomes: no action / warning / strike / trade voided (`adminVoidTrade`)
+- [x] Resolution emails to both parties (`sendDisputeResolutionEmail`)
+- [x] Policy link in dispute flow; `/{slug}/profile/disputes` for users
+
+**Shipped in:** `prisma/schema.prisma` (`TradeDispute`), `models/trade-dispute.server.ts`, `models/trade.server.ts` (`adminVoidTrade`), `utils/alert-email.server.ts`, `app/admin/disputes/`, `app/trades/dispute-actions.ts`, `components/Containers/Forms/OpenDisputeModal.tsx`, `OpenDisputeButton.tsx`, `app/[userSlug]/profile/disputes/`, `scripts/backfill-trade-disputes.ts`
 
 ### A5 — Trust-adjacent QoL
 
 - [x] **IMP-274** Add "Recently active" indicator (last seen within 7 days) on trader profiles and inbox rows — shipped in Wave 3H (`User.lastActiveAt`, `RecentlyActiveBadge`, activity ping)
-- [ ] **SEC-001** Optional 2FA for admin accounts and high-trust traders
-- [ ] **SEC-002** Suspicious login heuristics (new device, new region, repeated failures) with user alert
+- [x] **SEC-001** Optional 2FA for admin accounts and high-trust traders
+- [x] **SEC-002** Suspicious login heuristics (new device, new region, repeated failures) with user alert
+
+**Shipped in (SEC-001):** `User.totpSecretEncrypted`, `User.twoFactorEnabledAt`, `UserTwoFactorBackupCode`; `models/two-factor.server.ts`, `utils/security/field-encryption.server.ts`, `utils/security/pending-2fa.server.ts`; sign-in branch + `/sign-in/verify-2fa`; `/{slug}/profile/security`; admin reset on `/admin/users`; env `TOTP_ENCRYPTION_KEY`.
+
+**Shipped in (SEC-002):** `UserLoginEvent`, `User.failedLoginAttempts` / `lastFailedLoginAt`; `AlertType.suspicious_login`; `UserAlertPreferences.securityAlertsEnabled` / `emailSecurityAlerts` (default on); `utils/security/login-security.server.ts`, `utils/security/security-audit.server.ts`; sign-in + verify-2fa integration; `sendSecurityAlertEmail`; alert UI + preferences; `getSecurityStats` on `/admin/security-monitor`; env `LOGIN_HEURISTICS_ENABLED`, `LOGIN_IP_HASH_PEPPER`. Schema via `npm run db:push`.
 - [ ] **SEC-003** Trust-tiered rate-limit profiles (higher limits for accounts with completed trades and no strikes)
 
 ---
