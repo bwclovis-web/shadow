@@ -989,6 +989,27 @@
       "minAmount": "Min (ml)",
       "maxAmount": "Max (ml)",
       "clearAll": "Clear Filters"
+    },
+    "bulk": {
+      "open": "Bulk add",
+      "close": "Close bulk add",
+      "title": "Bulk add to collection",
+      "description": "Add multiple perfumes in one session. Each row is saved as its own bottle.",
+      "perfumeLabel": "Perfume",
+      "perfumePlaceholder": "Search perfume name…",
+      "rowLabel": "Row {number}",
+      "removeRow": "Remove row",
+      "duplicateWarning": "You already have this perfume — another row will be added.",
+      "addRow": "Add row",
+      "saveAll": "Save all",
+      "savingAll": "Saving…",
+      "savedCount": "{count, plural, one {# saved} other {# saved}}",
+      "maxRowsTooltip": "Maximum {max} rows per session",
+      "status": {
+        "saving": "Saving…",
+        "saved": "Saved",
+        "error": "Error"
+      }
     }
   },
   "navigation": {

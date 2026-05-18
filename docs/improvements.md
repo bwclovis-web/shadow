@@ -212,11 +212,11 @@ _These are the features no mobile-only competitor can easily replicate. They com
 | **3C** Quiz depth | ✅ Done | IMP-220–223 |
 | **3D** Sanity blog | ✅ Done | IMP-230–236 |
 | **3E** SEO pass | ✅ Done | IMP-240–246 (IMP-245 GSC submit is manual ops) |
-| **3F** Bulk inventory | ⏳ Not started | IMP-250–256 |
+| **3F** Bulk inventory | 🔄 In progress | IMP-250 ✅; IMP-251–256 open |
 | **3G** Shareable links | ⏳ Not started | IMP-260–263 |
 | **3H** Experience polish | ✅ Done | IMP-270–275 |
 
-**Next up:** 3F — Bulk inventory editor
+**Next up:** 3F — IMP-251 CSV import (bulk grid shell shipped in IMP-250)
 
 ### 3A — Onboarding Flow ✅
 
@@ -275,7 +275,9 @@ _No new schema — all computed from existing data._
 
 ### 3F — Bulk Inventory Editor
 
-- [ ] **IMP-250** Build multi-row inventory grid: add multiple `UserPerfume` rows in one session with inline search for perfume name
+- [x] **IMP-250** Build multi-row inventory grid: add multiple `UserPerfume` rows in one session with inline search for perfume name
+
+**Shipped in (IMP-250):** `hooks/useBulkInventory.ts`; `components/Containers/MyScents/BulkInventoryGrid/`; **Bulk add** panel on `MyScentsPageClient` (toggle in title banner); per-row `SearchTypeahead` with house in results; sequential save via existing `POST /api/user-perfumes` (`action: add`); duplicate warning; 20-row cap; i18n `myScents.bulk.*`.
 - [ ] **IMP-251** Build CSV import: accept a `.csv` file with columns `perfumeName`, `house`, `mlRemaining`, `condition`, `tradePreference`
 - [ ] **IMP-252** Fuzzy-match each CSV row against existing catalog (perfume name + house); bucket results: confident (green) / uncertain (yellow) / no match (red)
 - [ ] **IMP-253** Build 3-step import review screen: confirm confident matches, pick suggestions for uncertain rows, decide to skip or "Submit to catalog" for unmatched rows

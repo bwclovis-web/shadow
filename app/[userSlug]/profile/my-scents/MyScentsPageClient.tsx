@@ -12,6 +12,7 @@ import { Button } from "@/components/Atoms/Button"
 import Select from "@/components/Atoms/Select/Select"
 import { PaginationBar } from "@/components/Molecules/PaginationBar"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
+import BulkInventoryGrid from "@/components/Containers/MyScents/BulkInventoryGrid/BulkInventoryGrid"
 import AddToCollectionModal from "@/components/Organisms/AddToCollectionModal"
 import type { OptimisticCollectionItem } from "@/hooks/useMyScentsForm"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
@@ -194,6 +195,11 @@ const MyScentsPageClient = ({
     return m
   }, [bottleEntries])
 
+  const existingPerfumeIds = useMemo(
+    () => new Set(userPerfumes.map(up => up.perfumeId)),
+    [userPerfumes]
+  )
+
   const {
     filteredData,
     selectedSort,
@@ -276,6 +282,7 @@ const MyScentsPageClient = ({
   const openModal = useSessionStore(s => s.openModal)
   const basePath = userSlug ? `/${userSlug}/profile/my-scents` : "/profile/my-scents"
   const [autoFocusAddSearch, setAutoFocusAddSearch] = useState(false)
+  const [bulkAddOpen, setBulkAddOpen] = useState(false)
 
   useEffect(() => {
     if (searchParams.get("onboarding") !== "add-bottle") return
@@ -324,13 +331,30 @@ const MyScentsPageClient = ({
         heading={t("heading")}
         subheading={t("subheading")}
       >
-        <AddToCollectionModal
-          onAddedToCollection={refreshCollection}
-          onOptimisticAddToCollection={handleOptimisticAdd}
-          onOptimisticAddRollback={handleOptimisticRollback}
-          autoFocusSearch={autoFocusAddSearch}
-        />
+        <div className="flex flex-wrap items-center gap-3">
+          <AddToCollectionModal
+            onAddedToCollection={refreshCollection}
+            onOptimisticAddToCollection={handleOptimisticAdd}
+            onOptimisticAddRollback={handleOptimisticRollback}
+            autoFocusSearch={autoFocusAddSearch}
+          />
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setBulkAddOpen(open => !open)}
+            aria-expanded={bulkAddOpen}
+          >
+            {bulkAddOpen ? t("bulk.close") : t("bulk.open")}
+          </Button>
+        </div>
       </TitleBanner>
+      {bulkAddOpen && (
+        <BulkInventoryGrid
+          existingPerfumeIds={existingPerfumeIds}
+          onClose={() => setBulkAddOpen(false)}
+          onAllSaved={refreshCollection}
+        />
+      )}
       <WishlistDemandSection demand={wishlistDemand} />
       <div className="noir-border relative inner-container mx-auto text-center flex flex-col items-center justify-center gap-4 p-4 my-6">
         <h2 className="mb-2">{t("collection.heading")}</h2>

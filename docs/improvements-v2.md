@@ -26,6 +26,7 @@ The following is a summary of the completed foundation. Do not re-implement or d
 | **3D** | Sanity blog (Behind the Bottle): articles cross-linked to perfumes and houses |
 | **3E** | SEO: JSON-LD, OG tags, dynamic OG images, canonical URLs, sitemap, robots |
 | **3H** | Experience polish: view transitions (compare, trade timeline, activity feed), GSAP stagger on exchange + feed, mobile bottom nav (exchange/messages/profile/alerts), alert-type i18n, recently-active indicator, exchange `/` and `Esc` shortcuts |
+| **B1 (partial)** | Bulk inventory grid (IMP-250): multi-row inline add on My Scents with per-row perfume search and sequential save |
 
 ---
 
@@ -130,7 +131,9 @@ _Trade lifecycle, matching, alerts, and reputation all exist. They need more inv
 
 ### B1 — Bulk Inventory Editor (IMP-250–254)
 
-- [ ] **IMP-250** Multi-row inventory grid: add multiple `UserPerfume` rows in one session with inline perfume name search
+- [x] **IMP-250** Multi-row inventory grid: add multiple `UserPerfume` rows in one session with inline perfume name search
+
+**Shipped in (IMP-250):** `hooks/useBulkInventory.ts`; `components/Containers/MyScents/BulkInventoryGrid/` (`BulkInventoryGrid.tsx`, `BulkInventoryRow.tsx`); inline panel on [`app/[userSlug]/profile/my-scents/MyScentsPageClient.tsx`](../app/[userSlug]/profile/my-scents/MyScentsPageClient.tsx) with **Bulk add** toggle next to Add to Collection; per-row `SearchTypeahead` → `GET /api/perfume`; sequential `POST /api/user-perfumes` (`action: add`, same as `MyScentsModal`); house name in search results; duplicate-in-collection warning; 20-row cap; i18n `myScents.bulk.*` (en, es, fr, it).
 - [ ] **IMP-251** CSV import: accept `.csv` with columns `perfumeName`, `house`, `mlRemaining`, `condition`, `tradePreference`
 - [ ] **IMP-252** Fuzzy-match each CSV row against catalog; bucket: confident (green) / uncertain (yellow) / no match (red)
 - [ ] **IMP-253** 3-step import review screen: confirm matches, pick suggestions for uncertain rows, submit unmatched to catalog queue
