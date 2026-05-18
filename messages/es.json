@@ -793,6 +793,95 @@
         "saved": "Saved",
         "error": "Error"
       }
+    },
+    "csvImport": {
+      "open": "Import CSV",
+      "close": "Close CSV import",
+      "title": "Import collection from CSV",
+      "description": "Upload a spreadsheet with your bottles. We will match each row to the catalog before anything is saved.",
+      "inventoryNotice": "Imported rows are saved to your inventory only—not live listings. List them on the Exchange when you are ready to trade.",
+      "downloadTemplate": "Download template",
+      "chooseFile": "Choose CSV file",
+      "parsing": "Parsing…",
+      "limitsHint": "Max {maxKb} KB · up to {maxRows} rows per import",
+      "closePanel": "Close",
+      "summary": "{ready} rows ready · {warnings} with warnings",
+      "truncated": "{total} rows found — showing the first {shown}",
+      "noDataRows": "No data rows found in the file.",
+      "nextReview": "Siguiente: Revisar coincidencias →",
+      "nextDisabledHint": "Corrige los encabezados o espera a que termine la coincidencia",
+      "nextDisabledHintMatching": "Buscando en el catálogo…",
+      "nextDisabledHintMatchError": "Corrige los errores de coincidencia o reintenta",
+      "nextDisabledHintReview": "La revisión de coincidencias aún no está disponible",
+      "matching": "Buscando en el catálogo…",
+      "matchSummary": "{confident} coincidencias · {uncertain} dudosas · {noMatch} sin coincidencia",
+      "matchError": "No se pudieron comparar las filas con el catálogo. Inténtalo de nuevo.",
+      "retryMatch": "Reintentar coincidencia",
+      "possibleMatch": "También: {name}",
+      "reviewDraftSaved": "Resultados guardados — continúa en el paso de revisión cuando esté disponible.",
+      "review": {
+        "title": "Revisar coincidencias",
+        "doneTitle": "Importación completada",
+        "confidentSection": "Coincidencias confirmadas",
+        "uncertainSection": "Coincidencias inciertas — elige la mejor opción",
+        "noMatchSection": "Sin coincidencia — enviar al catálogo u omitir",
+        "confirmAll": "Confirmar todas",
+        "skipRow": "Omitir",
+        "noneOfThese": "Ninguna de estas",
+        "back": "← Atrás",
+        "import": "Importar {count} filas",
+        "importing": "Importando…",
+        "importError": "Algunas filas no se importaron ({errors} errores).",
+        "done": "Importación completada — {committed} filas añadidas, {skipped} omitidas.",
+        "duplicateSkipped": "Las filas que ya estaban en tu colección se omitieron.",
+        "draftMissing": "No se encontraron los resultados. Vuelve atrás y sube tu CSV de nuevo.",
+        "noRowsSelected": "Selecciona al menos una fila para importar.",
+        "matchedAs": "Coincide con",
+        "includeRow": "Incluir {name}",
+        "pickMatch": "Elige una coincidencia del catálogo",
+        "submitCatalogAll": "Enviar todo al catálogo",
+        "submitCatalogHint": "Las filas seleccionadas serán revisadas por un administrador. Tu colección se actualiza tras la aprobación.",
+        "submitCatalogRow": "Enviar {name} al catálogo",
+        "submitCatalogDisabled": "Las filas sin nombre de perfume o casa no se pueden enviar.",
+        "submitCatalog": "Enviar {count} al catálogo",
+        "finalizeBoth": "Importar {importCount} · Enviar {catalogCount} al catálogo",
+        "catalogSubmitError": "No se pudieron enviar filas al catálogo. Inténtalo de nuevo.",
+        "catalogSubmitErrorCount": "{errors} envío(s) al catálogo fallaron.",
+        "doneCatalog": "{count} fila(s) enviadas para revisión del catálogo ({houses} solicitud(es) de casa nueva).",
+        "noRowsSelected": "Selecciona al menos una fila para importar o enviar al catálogo."
+      },
+      "columns": {
+        "perfumeName": "Perfume",
+        "house": "Casa",
+        "amount": "Cantidad",
+        "condition": "Condición",
+        "tradePreference": "Pref. intercambio",
+        "match": "Coincidencia",
+        "warnings": "Avisos"
+      },
+      "buckets": {
+        "confident": "Coincide",
+        "uncertain": "Dudoso",
+        "noMatch": "Sin coincidencia"
+      },
+      "headerErrors": {
+        "noRows": "The file is empty or has no header row.",
+        "missingHeaders": "Required columns missing: {columns}"
+      },
+      "notices": {
+        "semicolonDelimiter": "Detected semicolon-delimited file — parsed successfully.",
+        "mlRemainingColumn": "Column \"mlRemaining\" is not used — rename it to \"amount\" to import volumes."
+      },
+      "fileErrors": {
+        "tooLarge": "File is too large (max {maxKb} KB).",
+        "readFailed": "Could not read the file. Try again."
+      },
+      "errors": {
+        "invalid_amount": "Invalid amount — defaulted to full bottle",
+        "invalid_condition": "Unrecognized condition — left blank",
+        "invalid_trade_preference": "Unrecognized trade preference — defaulted to cash",
+        "duplicateRow": "Duplicate row (same name and house as row {row})"
+      }
     }
   },
   "navigation": {

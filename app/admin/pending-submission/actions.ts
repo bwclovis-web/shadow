@@ -3,11 +3,10 @@
 import { revalidatePath } from "next/cache"
 
 import {
+  approvePendingSubmission,
   getPendingSubmissionById,
   updatePendingSubmissionStatus,
 } from "@/models/pending-submission.server"
-import { createPerfume } from "@/models/perfume.server"
-import { createPerfumeHouse } from "@/models/house.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import {
   revalidateHouseDataCache,
@@ -57,51 +56,23 @@ export const processPendingSubmissionAction = async (
 
   if (actionType === "approve") {
     try {
-      const submissionData = submission.submissionData
-      const data =
-        submissionData &&
-        typeof submissionData === "object" &&
-        !Array.isArray(submissionData)
-          ? (submissionData as Record<string, unknown>)
-          : null
-      if (!data) {
-        return { success: false, error: "Invalid submission data" }
-      }
-      if (submission.submissionType === "perfume") {
-        const perfumeFormData = new FormData()
-        Object.entries(data).forEach(([key, value]) => {
-          if (Array.isArray(value)) {
-            value.forEach((v) => perfumeFormData.append(key, String(v)))
-          } else {
-            perfumeFormData.append(key, value as string)
-          }
-        })
-        await createPerfume(perfumeFormData)
-        revalidatePerfumeDataCache()
-        revalidateHouseDataCache()
-      } else {
-        const houseFormData = new FormData()
-        Object.entries(data).forEach(([key, value]) => {
-          houseFormData.append(key, value as string)
-        })
-        await createPerfumeHouse(houseFormData)
-        revalidateHouseDataCache()
-      }
-
-      await updatePendingSubmissionStatus(
-        submissionId,
-        "approved",
+      const result = await approvePendingSubmission(
+        {
+          ...submission,
+          submissionData: submission.submissionData as Record<string, unknown>,
+        },
         session.user.id,
         adminNotes
       )
 
-      revalidatePath("/admin/pending-submission")
-      return {
-        success: true,
-        message: `${
-          submission.submissionType === "perfume" ? "Perfume" : "Perfume house"
-        } created successfully`,
+      if (!result.success) {
+        return { success: false, error: result.error }
       }
+
+      revalidatePerfumeDataCache()
+      revalidateHouseDataCache()
+      revalidatePath("/admin/pending-submission")
+      return { success: true, message: result.message }
     } catch (error) {
       console.error("Error approving submission:", error)
       return {

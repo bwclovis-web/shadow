@@ -1,6 +1,23 @@
+import {
+  buildHouseFormDataFromSubmission,
+  buildPerfumeFormDataFromSubmission,
+  extractInventoryIntent,
+  isCsvImportSubmission,
+} from "@/lib/csv-import-pending-submission"
 import { prisma } from "@/lib/db"
 import type { PendingSubmission, PendingSubmissionStatus, PendingSubmissionType } from "@/types/database"
+import { createPerfumeHouse, getPerfumeHouseByName } from "./house.server"
+import { createPerfume } from "./perfume.server"
+import { addUserPerfume } from "./user.server"
 import { createUserAlert } from "./user-alerts.server"
+
+export type ApprovePendingSubmissionResult =
+  | { success: true; message: string }
+  | { success: false; error: string }
+
+type PendingSubmissionRecord = PendingSubmission & {
+  submissionData: Record<string, unknown>
+}
 
 /**
  * Create a new pending submission
@@ -187,5 +204,118 @@ export async function createAdminAlertsForPendingSubmission(
   )
 
   await Promise.all(alertPromises)
+}
+
+export const approvePendingSubmission = async (
+  submission: PendingSubmissionRecord,
+  reviewerId: string,
+  adminNotes?: string
+): Promise<ApprovePendingSubmissionResult> => {
+  const data =
+    submission.submissionData &&
+    typeof submission.submissionData === "object" &&
+    !Array.isArray(submission.submissionData)
+      ? (submission.submissionData as Record<string, unknown>)
+      : null
+
+  if (!data) {
+    return { success: false, error: "Invalid submission data" }
+  }
+
+  if (submission.submissionType === "perfume_house") {
+    const houseFormData = buildHouseFormDataFromSubmission(data)
+    await createPerfumeHouse(houseFormData)
+    await updatePendingSubmissionStatus(
+      submission.id,
+      "approved",
+      reviewerId,
+      adminNotes
+    )
+    return { success: true, message: "Perfume house created successfully" }
+  }
+
+  if (submission.submissionType !== "perfume") {
+    return { success: false, error: "Unsupported submission type" }
+  }
+
+  const pendingHouseSubmissionId =
+    typeof data.pendingHouseSubmissionId === "string"
+      ? data.pendingHouseSubmissionId
+      : undefined
+
+  if (pendingHouseSubmissionId) {
+    const linkedHouse = await getPendingSubmissionById(pendingHouseSubmissionId)
+    if (!linkedHouse) {
+      return {
+        success: false,
+        error: "Linked perfume house submission was not found",
+      }
+    }
+    if (linkedHouse.status === "pending") {
+      return {
+        success: false,
+        error: "Approve the linked perfume house submission first",
+      }
+    }
+    if (linkedHouse.status === "rejected") {
+      return {
+        success: false,
+        error:
+          "Linked perfume house submission was rejected. Reject this perfume submission as well.",
+      }
+    }
+  }
+
+  let resolvedHouseId =
+    typeof data.house === "string" && data.house.trim() ? data.house.trim() : undefined
+
+  if (!resolvedHouseId && typeof data.houseName === "string" && data.houseName.trim()) {
+    const house = await getPerfumeHouseByName(data.houseName)
+    if (house) {
+      resolvedHouseId = house.id
+    }
+  }
+
+  if (!resolvedHouseId) {
+    return {
+      success: false,
+      error: "Could not resolve perfume house for this submission",
+    }
+  }
+
+  const perfumeFormData = buildPerfumeFormDataFromSubmission(data, resolvedHouseId)
+  const newPerfume = await createPerfume(perfumeFormData)
+
+  const submitterId = submission.submittedBy
+  if (submitterId && isCsvImportSubmission(data)) {
+    const inventoryIntent = extractInventoryIntent(data)
+    if (inventoryIntent) {
+      const existing = await prisma.userPerfume.findFirst({
+        where: { userId: submitterId, perfumeId: newPerfume.id },
+        select: { id: true },
+      })
+      if (!existing) {
+        await addUserPerfume({
+          userId: submitterId,
+          perfumeId: newPerfume.id,
+          amount: inventoryIntent.amount,
+          ...(inventoryIntent.condition && { condition: inventoryIntent.condition }),
+          tradePreference: inventoryIntent.tradePreference,
+        })
+      }
+    }
+  }
+
+  await updatePendingSubmissionStatus(submission.id, "approved", reviewerId, adminNotes)
+
+  const collectionNote =
+    submitterId && isCsvImportSubmission(data)
+      ? " Submitter's collection was updated."
+      : ""
+
+  return {
+    success: true,
+    message: `Perfume created successfully.${collectionNote}`,
+  }
 }
 

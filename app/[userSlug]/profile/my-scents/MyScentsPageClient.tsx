@@ -13,6 +13,7 @@ import Select from "@/components/Atoms/Select/Select"
 import { PaginationBar } from "@/components/Molecules/PaginationBar"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import BulkInventoryGrid from "@/components/Containers/MyScents/BulkInventoryGrid/BulkInventoryGrid"
+import CsvImportPanel from "@/components/Containers/MyScents/CsvImport/CsvImportPanel"
 import AddToCollectionModal from "@/components/Organisms/AddToCollectionModal"
 import type { OptimisticCollectionItem } from "@/hooks/useMyScentsForm"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
@@ -283,6 +284,17 @@ const MyScentsPageClient = ({
   const basePath = userSlug ? `/${userSlug}/profile/my-scents` : "/profile/my-scents"
   const [autoFocusAddSearch, setAutoFocusAddSearch] = useState(false)
   const [bulkAddOpen, setBulkAddOpen] = useState(false)
+  const [csvImportOpen, setCsvImportOpen] = useState(false)
+
+  const openBulkAdd = useCallback(() => {
+    setCsvImportOpen(false)
+    setBulkAddOpen(open => !open)
+  }, [])
+
+  const openCsvImport = useCallback(() => {
+    setBulkAddOpen(false)
+    setCsvImportOpen(open => !open)
+  }, [])
 
   useEffect(() => {
     if (searchParams.get("onboarding") !== "add-bottle") return
@@ -341,10 +353,18 @@ const MyScentsPageClient = ({
           <Button
             type="button"
             variant="secondary"
-            onClick={() => setBulkAddOpen(open => !open)}
+            onClick={openBulkAdd}
             aria-expanded={bulkAddOpen}
           >
             {bulkAddOpen ? t("bulk.close") : t("bulk.open")}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={openCsvImport}
+            aria-expanded={csvImportOpen}
+          >
+            {csvImportOpen ? t("csvImport.close") : t("csvImport.open")}
           </Button>
         </div>
       </TitleBanner>
@@ -353,6 +373,12 @@ const MyScentsPageClient = ({
           existingPerfumeIds={existingPerfumeIds}
           onClose={() => setBulkAddOpen(false)}
           onAllSaved={refreshCollection}
+        />
+      )}
+      {csvImportOpen && (
+        <CsvImportPanel
+          onClose={() => setCsvImportOpen(false)}
+          onImportComplete={refreshCollection}
         />
       )}
       <WishlistDemandSection demand={wishlistDemand} />

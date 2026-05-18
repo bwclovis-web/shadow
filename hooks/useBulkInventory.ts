@@ -2,6 +2,8 @@ import { useCallback, useMemo, useState } from "react"
 
 import { useCSRF } from "@/hooks/useCSRF"
 
+// WARNING: action "add" does not persist condition or tradePreference — IMP-253 import action required.
+
 export const BULK_INVENTORY_MAX_ROWS = 20
 
 const USER_PERFUMES_API = "/api/user-perfumes"

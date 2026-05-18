@@ -1,4 +1,9 @@
-import { type PerfumeType, type TradePreference, SubscriptionStatus } from "@prisma/client"
+import {
+  type ListingCondition,
+  type PerfumeType,
+  type TradePreference,
+  SubscriptionStatus,
+} from "@prisma/client"
 import { cache } from "react"
 import { prisma } from "@/lib/db"
 import { updateScentProfileFromBehavior } from "@/models/scent-profile.server"
@@ -417,6 +422,8 @@ interface AddUserPerfumeParams {
   price?: string
   placeOfPurchase?: string
   type?: string
+  condition?: ListingCondition
+  tradePreference?: TradePreference
 }
 
 export const addUserPerfume = async ({
@@ -426,6 +433,8 @@ export const addUserPerfume = async ({
   price,
   placeOfPurchase,
   type: perfumeType,
+  condition,
+  tradePreference,
 }: AddUserPerfumeParams) => {
   try {
     // Always create a new UserPerfume record to allow multiple decants of the same perfume
@@ -438,6 +447,8 @@ export const addUserPerfume = async ({
         price,
         placeOfPurchase,
         ...(perfumeType && { type: perfumeType as PerfumeType }),
+        ...(condition && { condition }),
+        ...(tradePreference && { tradePreference }),
       },
       include: {
         perfume: true,

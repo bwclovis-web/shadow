@@ -26,7 +26,7 @@ The following is a summary of the completed foundation. Do not re-implement or d
 | **3D** | Sanity blog (Behind the Bottle): articles cross-linked to perfumes and houses |
 | **3E** | SEO: JSON-LD, OG tags, dynamic OG images, canonical URLs, sitemap, robots |
 | **3H** | Experience polish: view transitions (compare, trade timeline, activity feed), GSAP stagger on exchange + feed, mobile bottom nav (exchange/messages/profile/alerts), alert-type i18n, recently-active indicator, exchange `/` and `Esc` shortcuts |
-| **B1 (partial)** | Bulk inventory grid (IMP-250): multi-row inline add on My Scents with per-row perfume search and sequential save |
+| **B1** | Bulk inventory: IMP-250 grid ✅; IMP-251 CSV parse ✅; IMP-252 fuzzy-match ✅; IMP-253 review + commit ✅; IMP-254 catalog submit ✅ |
 
 ---
 
@@ -48,7 +48,7 @@ These were unfinished pieces of already-shipped systems; all are now done.
 - Cross-links between notes, houses, perfumers, accords
 
 ### What Parfumo does better than us (right now)
-- Cleaner wardrobe UI with shelves, usage tracking, and longevity/sillage graphics
+- Cleaner collection UI with shelves, usage tracking, and longevity/sillage graphics
 - "Parfumo Souk" — structured swap + giveaway + sample section
 - Barcode scanning to add bottles
 - Points system rewarding active members
@@ -134,21 +134,28 @@ _Trade lifecycle, matching, alerts, and reputation all exist. They need more inv
 - [x] **IMP-250** Multi-row inventory grid: add multiple `UserPerfume` rows in one session with inline perfume name search
 
 **Shipped in (IMP-250):** `hooks/useBulkInventory.ts`; `components/Containers/MyScents/BulkInventoryGrid/` (`BulkInventoryGrid.tsx`, `BulkInventoryRow.tsx`); inline panel on [`app/[userSlug]/profile/my-scents/MyScentsPageClient.tsx`](../app/[userSlug]/profile/my-scents/MyScentsPageClient.tsx) with **Bulk add** toggle next to Add to Collection; per-row `SearchTypeahead` → `GET /api/perfume`; sequential `POST /api/user-perfumes` (`action: add`, same as `MyScentsModal`); house name in search results; duplicate-in-collection warning; 20-row cap; i18n `myScents.bulk.*` (en, es, fr, it).
-- [ ] **IMP-251** CSV import: accept `.csv` with columns `perfumeName`, `house`, `mlRemaining`, `condition`, `tradePreference`
-- [ ] **IMP-252** Fuzzy-match each CSV row against catalog; bucket: confident (green) / uncertain (yellow) / no match (red)
-- [ ] **IMP-253** 3-step import review screen: confirm matches, pick suggestions for uncertain rows, submit unmatched to catalog queue
-- [ ] **IMP-254** Unmatched rows create `PendingSubmission` + draft `UserPerfume`; activate automatically on admin approval
+- [x] **IMP-251** CSV import: accept `.csv` with columns `perfumeName`, `house`, `amount`, `condition`, `tradePreference` (parse + preview only; no DB writes until IMP-253)
+
+**Shipped in (IMP-251):** `lib/csv-import-user.ts` (`parseCsvImportFile`, normalisation, 200-row / 500 KB limits); `hooks/useCsvImport.ts`; `components/Containers/MyScents/CsvImport/CsvImportPanel.tsx`; **Import CSV** toggle on `MyScentsPageClient`; template download; preview table + warnings; legacy `mlRemaining` header notice (maps to `amount` in docs); i18n `myScents.csvImport.*` (`inventoryNotice`: inventory-only, not live listings); `lib/csv-import-user.test.ts`; `docs/smoke-test-csv-import.md`.
+
+- [x] **IMP-252** Fuzzy-match each CSV row against catalog; bucket: confident (green) / uncertain (yellow) / no match (red)
+
+**Shipped in (IMP-252):** `lib/csv-import-match.ts` (types, `CONFIDENT_THRESHOLD` / `UNCERTAIN_THRESHOLD`, token-overlap scoring, exact name+house → green); `app/api/csv-import/match/route.ts` (`POST`, auth + CSRF + 10/min rate limit, house-scoped + name-only catalog queries); `hooks/useCsvImport.ts` (`runMatch`, `matchResult`, session draft key `shadow:csv-import-match-draft`); `CsvImportPanel.tsx` auto-match after parse, **Match** column badges, match summary bar, **Next: Review matches →** saves draft for IMP-253 (still no DB writes); `lib/csv-import-match.test.ts`; i18n `myScents.csvImport.matching|matchSummary|buckets.*` (en, es, fr, it); `docs/smoke-test-csv-import.md` IMP-252 section + checklist.
+- [x] **IMP-253** 3-step import review screen: confirm confident matches, pick suggestions for uncertain rows, batch commit to collection
+
+**Shipped in (IMP-253):** `components/Containers/MyScents/CsvImport/CsvImportReviewScreen.tsx` (3 buckets: confident checkboxes + confirm-all, uncertain radios + “none of these”, no-match skip-only); `hooks/useCsvImportCommit.ts` (decisions, import count, session draft load); `app/api/csv-import/commit/route.ts` + `lib/csv-import-commit.ts` (`POST`, auth + CSRF + 5/min rate limit; `addUserPerfume`; duplicate-in-collection skip; `condition` / `tradePreference` persisted; wishlist alerts); `CsvImportPanel.tsx` upload → review → done flow; `lib/csv-import-commit.test.ts`; i18n `myScents.csvImport.review.*`; smoke guide `docs/smoke-test-csv-import.md` IMP-253 section. **Not in IMP-253:** submit unmatched rows to catalog — **IMP-254** (UI shows “coming soon” for red rows).
+- [x] **IMP-254** Unmatched rows: `PendingSubmission` + inventory intent in `submissionData`; `UserPerfume` created on admin approval (not draft before approve — `perfumeId` is required today)
 
 ### B2 — Fragrantica Collection Import (IMP-255)
 
 - [ ] **IMP-255** Accept Fragrantica collection page URL; scrape owned fragrances; run through same fuzzy-match + review flow as CSV
 - [ ] Parfumo XML export (downloadable from their site) as a secondary import target
 
-### B3 — Private Wardrobe vs. Public Listings (IMP-256)
+### B3 — Private Inventory vs. Public Listings (IMP-256)
 
-- [ ] **IMP-256** Add "My Wardrobe" (all owned, private) vs. "My Listings" (available, exchange-visible) view split in user inventory
-- [ ] Wardrobe items can be marked "not trading" without being deleted
-- [ ] Wardrobe view shows collection stats (houses, families, total value of traded bottles)
+- [ ] **IMP-256** Add "My Inventory" (all owned, private) vs. "My Listings" (available, exchange-visible) view split in user inventory
+- [ ] Inventory items can be marked "not trading" without being deleted
+- [ ] Inventory view shows collection stats (houses, families, total value of traded bottles)
 
 ### B4 — Barcode / QR Scanning
 
@@ -249,9 +256,9 @@ _Features that compound over time and are hard for a catalog-only or swap-group 
 
 ### D6 — Collection Intelligence
 
-- [ ] "Trade candidates" surface on user's wardrobe: bottles they haven't used recently and that appear on other traders' wishlists
+- [ ] "Trade candidates" surface on user's inventory: bottles they haven't used recently and that appear on other traders' wishlists
 - [ ] "Seasonal gaps" insight: based on Scent DNA season affinity, suggest categories they're missing for the current season
-- [ ] "Duplicate alert": two listings for very similar items in the same wardrobe (same perfume, different sizes)
+- [ ] "Duplicate alert": two listings for very similar items in the same inventory (same perfume, different sizes)
 - [ ] All computed from existing `UserPerfume`, `UserPerfumeSeasonVote`, and wishlist data
 
 ---
@@ -327,7 +334,7 @@ Candidate Plus benefits:
 
 ```
 Wave A  →  Close open gaps + dispute center + trust security
-Wave B  →  Bulk inventory, import, wardrobe/listing split, barcode
+Wave B  →  Bulk inventory, import, inventory/listing split, barcode
 Wave C  →  Follows, badges, review helpfulness, journey, stats, shareable links
 Wave D  →  Saved searches, Match Score, decant splits, real-time chat, templates, collection intelligence
 Wave E  →  Plus subscription, boosted listings, affiliate

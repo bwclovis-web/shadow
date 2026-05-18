@@ -306,7 +306,14 @@
     "approve": "Approve",
     "approving": "Approving...",
     "reject": "Reject",
-    "rejecting": "Rejecting..."
+    "rejecting": "Rejecting...",
+    "csvImportBadge": "CSV import",
+    "inventoryIntent": "Collection intent (after approval)",
+    "inventoryAmount": "Amount",
+    "inventoryCondition": "Condition",
+    "inventoryTradePreference": "Trade preference",
+    "linkedHousePending": "Linked house submission must be approved first (ID: {id})",
+    "linkedHouseRejected": "Linked house submission was rejected — reject this perfume too"
   },
   "aboutUs": {
     "meta": {
@@ -1009,6 +1016,94 @@
         "saving": "Saving…",
         "saved": "Saved",
         "error": "Error"
+      }
+    },
+    "csvImport": {
+      "open": "Import CSV",
+      "close": "Close CSV import",
+      "title": "Import collection from CSV",
+      "description": "Upload a spreadsheet with your bottles. We will match each row to the catalog before anything is saved.",
+      "inventoryNotice": "Imported rows are saved to your inventory only—not live listings. List them on the Exchange when you are ready to trade.",
+      "downloadTemplate": "Download template",
+      "chooseFile": "Choose CSV file",
+      "parsing": "Parsing…",
+      "limitsHint": "Max {maxKb} KB · up to {maxRows} rows per import",
+      "closePanel": "Close",
+      "summary": "{ready} rows ready · {warnings} with warnings",
+      "truncated": "{total} rows found — showing the first {shown}",
+      "noDataRows": "No data rows found in the file.",
+      "nextReview": "Next: Review matches →",
+      "nextDisabledHint": "Fix header errors or wait for matching to complete",
+      "nextDisabledHintMatching": "Matching against catalog…",
+      "nextDisabledHintMatchError": "Fix match errors or retry matching",
+      "nextDisabledHintReview": "Match review is not available yet",
+      "matching": "Matching against catalog…",
+      "matchSummary": "{confident} matched · {uncertain} uncertain · {noMatch} not found",
+      "matchError": "Could not match rows against catalog. Try again.",
+      "retryMatch": "Retry matching",
+      "possibleMatch": "Also: {name}",
+      "reviewDraftSaved": "Match results saved — you can continue in the review step when it opens.",
+      "review": {
+        "title": "Review matches",
+        "doneTitle": "Import complete",
+        "confidentSection": "Confirmed matches",
+        "uncertainSection": "Uncertain matches — choose the best option",
+        "noMatchSection": "No match found — submit to catalog or skip",
+        "confirmAll": "Confirm all",
+        "submitCatalogAll": "Submit all to catalog",
+        "submitCatalogHint": "Selected rows will be reviewed by an admin. Your collection is updated after approval.",
+        "submitCatalogRow": "Submit {name} to catalog",
+        "submitCatalogDisabled": "Rows missing a perfume name or house cannot be submitted.",
+        "skipRow": "Skip",
+        "noneOfThese": "None of these",
+        "back": "← Back",
+        "import": "Import {count} rows",
+        "submitCatalog": "Submit {count} to catalog",
+        "finalizeBoth": "Import {importCount} · Submit {catalogCount} to catalog",
+        "importing": "Working…",
+        "importError": "Some rows failed to import ({errors} errors).",
+        "catalogSubmitError": "Could not submit rows to catalog. Try again.",
+        "catalogSubmitErrorCount": "{errors} catalog submission(s) failed.",
+        "done": "Import complete — {committed} rows added, {skipped} skipped.",
+        "doneCatalog": "{count} row(s) submitted for catalog review ({houses} new house request(s)).",
+        "duplicateSkipped": "Rows already in your collection were skipped.",
+        "draftMissing": "Match results were not found. Go back and upload your CSV again.",
+        "noRowsSelected": "Select at least one row to import or submit to catalog.",
+        "matchedAs": "Matched as",
+        "includeRow": "Include {name}",
+        "pickMatch": "Choose a catalog match"
+      },
+      "columns": {
+        "perfumeName": "Perfume",
+        "house": "House",
+        "amount": "Amount",
+        "condition": "Condition",
+        "tradePreference": "Trade pref.",
+        "match": "Match",
+        "warnings": "Warnings"
+      },
+      "buckets": {
+        "confident": "Matched",
+        "uncertain": "Uncertain",
+        "noMatch": "No match"
+      },
+      "headerErrors": {
+        "noRows": "The file is empty or has no header row.",
+        "missingHeaders": "Required columns missing: {columns}"
+      },
+      "notices": {
+        "semicolonDelimiter": "Detected semicolon-delimited file — parsed successfully.",
+        "mlRemainingColumn": "Column \"mlRemaining\" is not used — rename it to \"amount\" to import volumes."
+      },
+      "fileErrors": {
+        "tooLarge": "File is too large (max {maxKb} KB).",
+        "readFailed": "Could not read the file. Try again."
+      },
+      "errors": {
+        "invalid_amount": "Invalid amount — defaulted to full bottle",
+        "invalid_condition": "Unrecognized condition — left blank",
+        "invalid_trade_preference": "Unrecognized trade preference — defaulted to cash",
+        "duplicateRow": "Duplicate row (same name and house as row {row})"
       }
     }
   },

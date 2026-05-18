@@ -793,6 +793,95 @@
         "saved": "Saved",
         "error": "Error"
       }
+    },
+    "csvImport": {
+      "open": "Import CSV",
+      "close": "Close CSV import",
+      "title": "Import collection from CSV",
+      "description": "Upload a spreadsheet with your bottles. We will match each row to the catalog before anything is saved.",
+      "inventoryNotice": "Imported rows are saved to your inventory only—not live listings. List them on the Exchange when you are ready to trade.",
+      "downloadTemplate": "Download template",
+      "chooseFile": "Choose CSV file",
+      "parsing": "Parsing…",
+      "limitsHint": "Max {maxKb} KB · up to {maxRows} rows per import",
+      "closePanel": "Close",
+      "summary": "{ready} rows ready · {warnings} with warnings",
+      "truncated": "{total} rows found — showing the first {shown}",
+      "noDataRows": "No data rows found in the file.",
+      "nextReview": "Avanti: Rivedi le corrispondenze →",
+      "nextDisabledHint": "Correggi le intestazioni o attendi il completamento della corrispondenza",
+      "nextDisabledHintMatching": "Ricerca nel catalogo…",
+      "nextDisabledHintMatchError": "Correggi gli errori o riprova la corrispondenza",
+      "nextDisabledHintReview": "La revisione delle corrispondenze non è ancora disponibile",
+      "matching": "Ricerca nel catalogo…",
+      "matchSummary": "{confident} corrispondenze · {uncertain} incerte · {noMatch} senza corrispondenza",
+      "matchError": "Impossibile confrontare le righe con il catalogo. Riprova.",
+      "retryMatch": "Riprova corrispondenza",
+      "possibleMatch": "Anche: {name}",
+      "reviewDraftSaved": "Risultati salvati — continua nel passaggio di revisione quando sarà disponibile.",
+      "review": {
+        "title": "Rivedi le corrispondenze",
+        "doneTitle": "Importazione completata",
+        "confidentSection": "Corrispondenze confermate",
+        "uncertainSection": "Corrispondenze incerte — scegli l'opzione migliore",
+        "noMatchSection": "Nessuna corrispondenza — invia al catalogo o salta",
+        "confirmAll": "Conferma tutte",
+        "skipRow": "Salta",
+        "noneOfThese": "Nessuna di queste",
+        "back": "← Indietro",
+        "import": "Importa {count} righe",
+        "importing": "Importazione…",
+        "importError": "Alcune righe non sono state importate ({errors} errori).",
+        "done": "Importazione completata — {committed} righe aggiunte, {skipped} saltate.",
+        "duplicateSkipped": "Le righe già nella tua collezione sono state saltate.",
+        "draftMissing": "Risultati non trovati. Torna indietro e carica di nuovo il CSV.",
+        "noRowsSelected": "Seleziona almeno una riga da importare.",
+        "matchedAs": "Corrisponde a",
+        "includeRow": "Includi {name}",
+        "pickMatch": "Scegli una corrispondenza dal catalogo",
+        "submitCatalogAll": "Invia tutto al catalogo",
+        "submitCatalogHint": "Le righe selezionate saranno esaminate da un amministratore. La collezione si aggiorna dopo l'approvazione.",
+        "submitCatalogRow": "Invia {name} al catalogo",
+        "submitCatalogDisabled": "Le righe senza nome profumo o casa non possono essere inviate.",
+        "submitCatalog": "Invia {count} al catalogo",
+        "finalizeBoth": "Importa {importCount} · Invia {catalogCount} al catalogo",
+        "catalogSubmitError": "Impossibile inviare le righe al catalogo. Riprova.",
+        "catalogSubmitErrorCount": "{errors} invio/i al catalogo non riusciti.",
+        "doneCatalog": "{count} riga/e inviate per revisione catalogo ({houses} richiesta/e casa nuova).",
+        "noRowsSelected": "Seleziona almeno una riga da importare o inviare al catalogo."
+      },
+      "columns": {
+        "perfumeName": "Profumo",
+        "house": "Casa",
+        "amount": "Quantità",
+        "condition": "Condizione",
+        "tradePreference": "Pref. scambio",
+        "match": "Corrispondenza",
+        "warnings": "Avvisi"
+      },
+      "buckets": {
+        "confident": "Corrisponde",
+        "uncertain": "Incerto",
+        "noMatch": "Nessuna corrispondenza"
+      },
+      "headerErrors": {
+        "noRows": "The file is empty or has no header row.",
+        "missingHeaders": "Required columns missing: {columns}"
+      },
+      "notices": {
+        "semicolonDelimiter": "Detected semicolon-delimited file — parsed successfully.",
+        "mlRemainingColumn": "Column \"mlRemaining\" is not used — rename it to \"amount\" to import volumes."
+      },
+      "fileErrors": {
+        "tooLarge": "File is too large (max {maxKb} KB).",
+        "readFailed": "Could not read the file. Try again."
+      },
+      "errors": {
+        "invalid_amount": "Invalid amount — defaulted to full bottle",
+        "invalid_condition": "Unrecognized condition — left blank",
+        "invalid_trade_preference": "Unrecognized trade preference — defaulted to cash",
+        "duplicateRow": "Duplicate row (same name and house as row {row})"
+      }
     }
   },
   "navigation": {

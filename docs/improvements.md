@@ -212,11 +212,11 @@ _These are the features no mobile-only competitor can easily replicate. They com
 | **3C** Quiz depth | ✅ Done | IMP-220–223 |
 | **3D** Sanity blog | ✅ Done | IMP-230–236 |
 | **3E** SEO pass | ✅ Done | IMP-240–246 (IMP-245 GSC submit is manual ops) |
-| **3F** Bulk inventory | 🔄 In progress | IMP-250 ✅; IMP-251–256 open |
+| **3F** Bulk inventory | 🔄 In progress | IMP-250 ✅; IMP-251 ✅; IMP-252–256 open |
 | **3G** Shareable links | ⏳ Not started | IMP-260–263 |
 | **3H** Experience polish | ✅ Done | IMP-270–275 |
 
-**Next up:** 3F — IMP-251 CSV import (bulk grid shell shipped in IMP-250)
+**Next up:** 3F — IMP-252 CSV fuzzy-match + review (IMP-251 parse/preview shipped)
 
 ### 3A — Onboarding Flow ✅
 
@@ -278,12 +278,19 @@ _No new schema — all computed from existing data._
 - [x] **IMP-250** Build multi-row inventory grid: add multiple `UserPerfume` rows in one session with inline search for perfume name
 
 **Shipped in (IMP-250):** `hooks/useBulkInventory.ts`; `components/Containers/MyScents/BulkInventoryGrid/`; **Bulk add** panel on `MyScentsPageClient` (toggle in title banner); per-row `SearchTypeahead` with house in results; sequential save via existing `POST /api/user-perfumes` (`action: add`); duplicate warning; 20-row cap; i18n `myScents.bulk.*`.
-- [ ] **IMP-251** Build CSV import: accept a `.csv` file with columns `perfumeName`, `house`, `mlRemaining`, `condition`, `tradePreference`
-- [ ] **IMP-252** Fuzzy-match each CSV row against existing catalog (perfume name + house); bucket results: confident (green) / uncertain (yellow) / no match (red)
-- [ ] **IMP-253** Build 3-step import review screen: confirm confident matches, pick suggestions for uncertain rows, decide to skip or "Submit to catalog" for unmatched rows
-- [ ] **IMP-254** "Submit to catalog" for unmatched rows calls existing `createPendingSubmission`; creates `UserPerfume` row in draft state with `pendingSubmissionId`; activates automatically when admin approves
+- [x] **IMP-251** Build CSV import: accept a `.csv` file with columns `perfumeName`, `house`, `amount`, `condition`, `tradePreference`
+
+**Shipped in (IMP-251):** `lib/csv-import-user.ts`; `hooks/useCsvImport.ts`; `components/Containers/MyScents/CsvImport/CsvImportPanel.tsx`; **Import CSV** on `MyScentsPageClient`; parse/preview only (no DB writes); i18n `myScents.csvImport.*`; tests `lib/csv-import-user.test.ts`; smoke guide `docs/smoke-test-csv-import.md`. Uses `UserPerfume.amount` (not legacy `mlRemaining` schema field).
+
+- [x] **IMP-252** Fuzzy-match each CSV row against existing catalog (perfume name + house); bucket results: confident (green) / uncertain (yellow) / no match (red)
+
+**Shipped in (IMP-252):** `lib/csv-import-match.ts`; `app/api/csv-import/match/route.ts`; match badges + summary in `CsvImportPanel.tsx`; session draft `shadow:csv-import-match-draft`; `lib/csv-import-match.test.ts`; see `docs/improvements-v2.md` B1 for full file list.
+- [x] **IMP-253** Build 3-step import review screen: confirm confident matches, pick suggestions for uncertain rows, batch commit to collection
+
+**Shipped in (IMP-253):** `CsvImportReviewScreen.tsx`; `hooks/useCsvImportCommit.ts`; `app/api/csv-import/commit/route.ts`; `lib/csv-import-commit.ts`; review → **Import N rows** → `UserPerfume` writes; smoke guide `docs/smoke-test-csv-import.md` sections 23–31. Submit-to-catalog for unmatched rows is **IMP-254** (not shipped).
+- [x] **IMP-254** "Submit to catalog" for unmatched rows: `createPendingSubmission` with CSV inventory in `submissionData`; `UserPerfume` created when admin approves (extends pending-submission approve flow)
 - [ ] **IMP-255** Build Fragrantica profile import: parse a Fragrantica collection page URL (user provides); scrape owned fragrances via the existing scraper infrastructure; run through the same fuzzy-match and review flow as CSV
-- [ ] **IMP-256** Add "My Wardrobe" (all owned, private) vs "My Listings" (available, exchange-visible) view split in the user's inventory page
+- [ ] **IMP-256** Add "My Inventory" (all owned, private) vs "My Listings" (available, exchange-visible) view split in the user's inventory page
 
 ### 3G — Shareable Links and Social
 
