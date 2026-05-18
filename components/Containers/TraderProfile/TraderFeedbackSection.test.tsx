@@ -100,6 +100,13 @@ vi.mock("~/hooks/useTraderFeedback", () => ({
   }),
 }))
 
+vi.mock("@/lib/mutations/traderFeedbackVotes", () => ({
+  useVoteTraderFeedbackHelpfulness: () => ({
+    mutate: vi.fn(),
+    isPending: false,
+  }),
+}))
+
 describe("TraderFeedbackSection", () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -132,6 +139,10 @@ describe("TraderFeedbackSection", () => {
           comment: "Great trade experience!",
           createdAt: new Date("2024-01-05").toISOString(),
           updatedAt: new Date("2024-01-05").toISOString(),
+          helpfulCount: 3,
+          unhelpfulCount: 0,
+          viewerHelpfulnessVote: null,
+          verifiedSwap: true,
           reviewer: {
             id: "user-2",
             firstName: "Alex",
@@ -141,6 +152,7 @@ describe("TraderFeedbackSection", () => {
         },
       ],
       viewerFeedback: null,
+      contributorBadges: [],
       canLeaveFeedback: true,
       eligibleTradeId: null,
     }
@@ -158,6 +170,7 @@ describe("TraderFeedbackSection", () => {
     expect(screen.getByText("5/5")).toBeInTheDocument()
     expect(screen.getByText("Great trade experience!")).toBeInTheDocument()
     expect(screen.getByText("Alex Smith")).toBeInTheDocument()
+    expect(screen.getByText("Verified swap")).toBeInTheDocument()
   })
 
   it("prompts user to sign in when viewer is missing", () => {
@@ -171,6 +184,7 @@ describe("TraderFeedbackSection", () => {
       reputation: mockReputation("trader-2"),
       comments: [],
       viewerFeedback: null,
+      contributorBadges: [],
       canLeaveFeedback: true,
       eligibleTradeId: null,
     }
@@ -206,6 +220,7 @@ describe("TraderFeedbackSection", () => {
         createdAt: new Date("2024-02-01").toISOString(),
         updatedAt: new Date("2024-02-01").toISOString(),
       },
+      contributorBadges: [],
       canLeaveFeedback: true,
       eligibleTradeId: "trade-1",
     }
@@ -223,7 +238,12 @@ describe("TraderFeedbackSection", () => {
         initialData={initialFeedback}
       />)
 
-    expect(mockUseTraderFeedback).toHaveBeenCalledWith("trader-3", "viewer-1", initialFeedback)
+    expect(mockUseTraderFeedback).toHaveBeenCalledWith(
+      "trader-3",
+      "viewer-1",
+      initialFeedback,
+      "top"
+    )
     expect(screen.getByDisplayValue("Solid trade.")).toBeInTheDocument()
   })
 })

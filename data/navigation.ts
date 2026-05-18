@@ -26,8 +26,7 @@ export const profileNavigation = [
   { id: "6", label: "My Disputes", key: "myDisputes", path: "/profile/disputes" } as const,
   { id: "5", label: "My Trades", key: "myTrades", path: "/profile/trades" } as const,
   { id: "2", label: "My Scents", key: "myScents", path: "/profile/my-scents" } as const,
-  { id: "3", label: "Change Password", key: "changePassword", path: "/profile/change-password" } as const,
-  { id: "7", label: "Security", key: "security", path: "/profile/security" } as const,
+  { id: "7", label: "Account Security", key: "accountSecurity", path: "/profile/security" } as const,
 ] as const
 
 /** Profile nav item with dynamic path for the given user. Use when rendering profile links. */

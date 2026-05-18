@@ -55,6 +55,7 @@ model User {
   wishlistNotifications WishlistNotification[]
   traderFeedbackReceived TraderFeedback[] @relation("FeedbackForTrader")
   traderFeedbackLeft     TraderFeedback[] @relation("FeedbackFromReviewer")
+  traderFeedbackHelpfulnessVotes TraderFeedbackHelpfulnessVote[]
   pendingSubmissions    PendingSubmission[] @relation("SubmittedSubmissions")
   reviewedSubmissions   PendingSubmission[] @relation("ReviewedSubmissions")
   traderContactMessagesSent TraderContactMessage[] @relation("ContactMessagesSent")
@@ -291,23 +292,46 @@ model WishlistNotification {
   @@unique([userId, perfumeId])
 }
 
+enum TraderFeedbackHelpfulness {
+  helpful
+  unhelpful
+}
+
 model TraderFeedback {
-  id          String   @id @default(cuid())
-  traderId    String
-  reviewerId  String
-  tradeId     String?
-  rating      Int      /// Expected 1-5 scale; enforce in application logic.
-  comment     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  trader      User     @relation("FeedbackForTrader", fields: [traderId], references: [id])
-  reviewer    User     @relation("FeedbackFromReviewer", fields: [reviewerId], references: [id])
-  trade       Trade?   @relation(fields: [tradeId], references: [id])
+  id             String   @id @default(cuid())
+  traderId       String
+  reviewerId     String
+  tradeId        String?
+  rating         Int      /// Expected 1-5 scale; enforce in application logic.
+  comment        String?
+  helpfulCount   Int      @default(0)
+  unhelpfulCount Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  trader         User     @relation("FeedbackForTrader", fields: [traderId], references: [id])
+  reviewer       User     @relation("FeedbackFromReviewer", fields: [reviewerId], references: [id])
+  trade          Trade?   @relation(fields: [tradeId], references: [id])
+  helpfulnessVotes TraderFeedbackHelpfulnessVote[]
 
   @@unique([traderId, reviewerId])
   @@index([traderId])
   @@index([reviewerId])
   @@index([tradeId])
+}
+
+model TraderFeedbackHelpfulnessVote {
+  id         String                    @id @default(cuid())
+  feedbackId String
+  voterId    String
+  value      TraderFeedbackHelpfulness
+  createdAt  DateTime                  @default(now())
+  updatedAt  DateTime                  @updatedAt
+  feedback   TraderFeedback            @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  voter      User                      @relation(fields: [voterId], references: [id], onDelete: Cascade)
+
+  @@unique([feedbackId, voterId])
+  @@index([feedbackId])
+  @@index([voterId])
 }
 
 model UserTwoFactorBackupCode {

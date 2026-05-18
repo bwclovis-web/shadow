@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl"
 import { FaStar } from "react-icons/fa"
 
-import type { ReputationBadgeId, TraderReputationV1 } from "@/services/reputation/types"
+import type { TraderReputationV1 } from "@/services/reputation/types"
 import { MIN_REVIEWS_FOR_SCORE } from "@/services/reputation/v1-constants"
 import { TRADER_FEEDBACK_RATING_OPTIONS } from "@/utils/constants"
 
@@ -33,17 +33,6 @@ const StarDisplay = ({ value }: { value: number }) => {
   )
 }
 
-const BADGE_ORDER: ReputationBadgeId[] = [
-  "reliableTrader",
-  "topReviewed",
-  "fastResponder",
-]
-
-function sortBadges(ids: ReputationBadgeId[]): ReputationBadgeId[] {
-  const set = new Set(ids)
-  return BADGE_ORDER.filter((id) => set.has(id))
-}
-
 type TraderTrustSummaryProps = {
   reputation: TraderReputationV1
 }
@@ -61,8 +50,6 @@ const TraderTrustSummary = ({ reputation }: TraderTrustSummaryProps) => {
       : reputation.insufficientDataReason === "tooFewReviews"
         ? t("insufficientTooFew", { min: MIN_REVIEWS_FOR_SCORE })
         : null
-
-  const badges = sortBadges(reputation.badges)
 
   return (
     <section
@@ -120,18 +107,6 @@ const TraderTrustSummary = ({ reputation }: TraderTrustSummaryProps) => {
         </div>
       </div>
 
-      {badges.length > 0 ? (
-        <ul className="mt-4 flex flex-wrap gap-2" aria-label={t("badgesAria")}>
-          {badges.map((id) => (
-            <li key={id}>
-              <span className="inline-flex items-center rounded-full border border-noir-gold/50 bg-noir-gold/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-noir-gold">
-                {t(`badges.${id}`)}
-              </span>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-
       <details className="mt-4 rounded-md border border-noir-gold/30 bg-noir-black/40 p-3 text-sm text-noir-gold-100">
         <summary className="cursor-pointer font-medium text-noir-gold select-none">
           {t("explainTitle")}
@@ -140,6 +115,7 @@ const TraderTrustSummary = ({ reputation }: TraderTrustSummaryProps) => {
           <li>{t("explainIntro")}</li>
           <li>{t("explainScore", { minReviews: MIN_REVIEWS_FOR_SCORE })}</li>
           <li>{t("explainBadges")}</li>
+          <li>{t("explainBadgesInHeader")}</li>
           <li>{t("explainTradeReliability")}</li>
           <li>{t("explainMessaging")}</li>
         </ul>

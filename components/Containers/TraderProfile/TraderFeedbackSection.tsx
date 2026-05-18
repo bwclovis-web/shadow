@@ -1,9 +1,19 @@
-import { type FormEvent, memo, useCallback, useEffect, useMemo, useState } from "react"
+import {
+  type FormEvent,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react"
 import { useTranslations } from "next-intl"
-import { FaStar } from "react-icons/fa"
+import { FaStar, FaThumbsDown, FaThumbsUp } from "react-icons/fa"
 import { Button } from "~/components/Atoms/Button"
 import Select from "~/components/Atoms/Select"
+import type { TraderFeedbackSort } from "@/models/traderFeedback.server"
+import type { HelpfulnessVoteValue } from "@/models/traderFeedbackHelpfulness.server"
 import { useTraderFeedback, useTraderFeedbackMutations } from "@/hooks/useTraderFeedback"
+import { useVoteTraderFeedbackHelpfulness } from "@/lib/mutations/traderFeedbackVotes"
 import type {
   TraderFeedbackComment,
   TraderFeedbackResponse,
@@ -19,7 +29,7 @@ type TraderFeedbackSectionProps = {
   initialData?: TraderFeedbackResponse
 }
 
-function StarDisplay({ value }: { value: number }) {
+const StarDisplay = ({ value }: { value: number }) => {
   const normalizedValue = Math.max(0, Math.min(5, value || 0))
   return (
     <>
@@ -43,25 +53,61 @@ function StarDisplay({ value }: { value: number }) {
   )
 }
 
+type FeedbackCommentItemProps = {
+  commentEntry: TraderFeedbackComment
+  anonymousLabel: string
+  traderId: string
+  viewerId?: string | null
+  verifiedSwapLabel: string
+  helpfulLabel: string
+  unhelpfulLabel: string
+  loginToVoteLabel: string
+}
+
 const FeedbackCommentItem = memo(function FeedbackCommentItem({
   commentEntry,
   anonymousLabel,
-}: {
-  commentEntry: TraderFeedbackComment
-  anonymousLabel: string
-}) {
+  traderId,
+  viewerId,
+  verifiedSwapLabel,
+  helpfulLabel,
+  unhelpfulLabel,
+  loginToVoteLabel,
+}: FeedbackCommentItemProps) {
+  const voteMutation = useVoteTraderFeedbackHelpfulness()
   const displayName =
     formatUserName(commentEntry.reviewer) || anonymousLabel
   const dateLabel = new Date(commentEntry.createdAt).toLocaleDateString("en-US")
+
+  const cannotVote =
+    !viewerId ||
+    viewerId === commentEntry.reviewerId ||
+    viewerId === traderId
+
+  const handleVote = (value: HelpfulnessVoteValue) => {
+    if (cannotVote || voteMutation.isPending) return
+    const isSameAsCurrent = commentEntry.viewerHelpfulnessVote === value
+    voteMutation.mutate({
+      feedbackId: commentEntry.id,
+      value: isSameAsCurrent ? null : value,
+      traderId,
+      viewerId,
+    })
+  }
 
   return (
     <li className="border border-noir-gold/40 rounded-lg p-4 bg-noir-black/60">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="font-medium text-noir-gold">{displayName}</div>
-        <div className="flex items-center gap-2 text-noir-gold-500 text-sm">
+        <div className="flex items-center gap-2 text-noir-gold-500 text-sm flex-wrap">
           <StarDisplay value={commentEntry.rating} />
           <span>{commentEntry.rating}/5</span>
           <span className="text-noir-gold-500 text-xs">{dateLabel}</span>
+          {commentEntry.verifiedSwap && (
+            <span className="inline-flex items-center rounded-full border border-noir-gold/50 bg-noir-gold/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-noir-gold">
+              {verifiedSwapLabel}
+            </span>
+          )}
         </div>
       </div>
       {commentEntry.comment && (
@@ -69,6 +115,46 @@ const FeedbackCommentItem = memo(function FeedbackCommentItem({
           {commentEntry.comment}
         </p>
       )}
+      <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-noir-gold/20 pt-3">
+        {!viewerId ? (
+          <p className="text-xs text-noir-gold-500">{loginToVoteLabel}</p>
+        ) : (
+          <>
+            <button
+              type="button"
+              disabled={cannotVote || voteMutation.isPending}
+              aria-pressed={commentEntry.viewerHelpfulnessVote === "helpful"}
+              aria-label={helpfulLabel}
+              onClick={() => handleVote("helpful")}
+              className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs transition-colors disabled:opacity-50 ${
+                commentEntry.viewerHelpfulnessVote === "helpful"
+                  ? "border-noir-gold bg-noir-gold/20 text-noir-gold"
+                  : "border-noir-gold/40 text-noir-gold-300 hover:border-noir-gold/60"
+              }`}
+            >
+              <FaThumbsUp className="h-3.5 w-3.5" aria-hidden />
+              <span>{helpfulLabel}</span>
+              <span className="text-noir-gold-500">({commentEntry.helpfulCount})</span>
+            </button>
+            <button
+              type="button"
+              disabled={cannotVote || voteMutation.isPending}
+              aria-pressed={commentEntry.viewerHelpfulnessVote === "unhelpful"}
+              aria-label={unhelpfulLabel}
+              onClick={() => handleVote("unhelpful")}
+              className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs transition-colors disabled:opacity-50 ${
+                commentEntry.viewerHelpfulnessVote === "unhelpful"
+                  ? "border-noir-gold bg-noir-gold/20 text-noir-gold"
+                  : "border-noir-gold/40 text-noir-gold-300 hover:border-noir-gold/60"
+              }`}
+            >
+              <FaThumbsDown className="h-3.5 w-3.5" aria-hidden />
+              <span>{unhelpfulLabel}</span>
+              <span className="text-noir-gold-500">({commentEntry.unhelpfulCount})</span>
+            </button>
+          </>
+        )}
+      </div>
     </li>
   )
 })
@@ -79,11 +165,13 @@ const TraderFeedbackSection = memo(function TraderFeedbackSection({
   initialData,
 }: TraderFeedbackSectionProps) {
   const t = useTranslations("traderProfile.feedback")
+  const [sort, setSort] = useState<TraderFeedbackSort>("top")
 
   const { data, isLoading, isError, error } = useTraderFeedback(
     traderId,
     viewerId,
-    initialData
+    initialData,
+    sort
   )
   const {
     submitFeedback,
@@ -188,15 +276,51 @@ const TraderFeedbackSection = memo(function TraderFeedbackSection({
         <>
           <div className="space-y-4">
             {data?.comments && data.comments.length > 0 ? (
-              <ul className="space-y-3">
-                {data.comments.map((commentEntry) => (
-                  <FeedbackCommentItem
-                    key={commentEntry.id}
-                    commentEntry={commentEntry}
-                    anonymousLabel={anonymousLabel}
-                  />
-                ))}
-              </ul>
+              <>
+                <div
+                  className="flex items-center gap-2"
+                  role="group"
+                  aria-label={t("sortLabel")}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setSort("top")}
+                    className={`rounded-md border px-3 py-1 text-xs font-medium transition-colors ${
+                      sort === "top"
+                        ? "border-noir-gold bg-noir-gold/20 text-noir-gold"
+                        : "border-noir-gold/40 text-noir-gold-300 hover:border-noir-gold/60"
+                    }`}
+                  >
+                    {t("sortTop")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSort("recent")}
+                    className={`rounded-md border px-3 py-1 text-xs font-medium transition-colors ${
+                      sort === "recent"
+                        ? "border-noir-gold bg-noir-gold/20 text-noir-gold"
+                        : "border-noir-gold/40 text-noir-gold-300 hover:border-noir-gold/60"
+                    }`}
+                  >
+                    {t("sortRecent")}
+                  </button>
+                </div>
+                <ul className="space-y-3">
+                  {data.comments.map((commentEntry) => (
+                    <FeedbackCommentItem
+                      key={commentEntry.id}
+                      commentEntry={commentEntry}
+                      anonymousLabel={anonymousLabel}
+                      traderId={traderId}
+                      viewerId={viewerId}
+                      verifiedSwapLabel={t("verifiedSwap")}
+                      helpfulLabel={t("helpful")}
+                      unhelpfulLabel={t("unhelpful")}
+                      loginToVoteLabel={t("loginToVote")}
+                    />
+                  ))}
+                </ul>
+              </>
             ) : (
               <p className="text-noir-gold-500 text-sm">{t("noComments")}</p>
             )}

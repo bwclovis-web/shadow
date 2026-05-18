@@ -7,6 +7,7 @@ import {
   useDeleteTraderFeedback,
   useSubmitTraderFeedback,
 } from "~/lib/mutations/traderFeedback"
+import type { TraderFeedbackSort } from "@/models/traderFeedback.server"
 import {
   getTraderFeedback,
   queryKeys,
@@ -22,15 +23,17 @@ const STALE_TIME_MS = 60 * 1000
 export const useTraderFeedback = (
   traderId: string,
   viewerId?: string | null,
-  initialData?: TraderFeedbackResponse
+  initialData?: TraderFeedbackResponse,
+  sort: TraderFeedbackSort = "top"
 ) =>
   useQuery({
-    queryKey: queryKeys.traderFeedback.detail(traderId, viewerId),
+    queryKey: queryKeys.traderFeedback.detail(traderId, viewerId, sort),
     queryFn: ({ signal }) =>
       getTraderFeedback({
         traderId,
         viewerId,
         includeComments: true,
+        sort,
         signal,
       }),
     enabled: !!traderId,

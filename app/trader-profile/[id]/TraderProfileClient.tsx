@@ -18,7 +18,6 @@ import type { TradeForClient } from "@/types/trade"
 import { getTraderDisplayName } from "@/utils/user"
 import TraderProfileHeaderStats from "@/components/Containers/TraderProfile/TraderProfileHeaderStats"
 import TraderWishlistOverlapBanner from "@/components/Containers/TraderProfile/TraderWishlistOverlapBanner"
-import ScentDnaCard from "@/components/Containers/TraderProfile/ScentDnaCard/ScentDnaCard"
 import type { ScentDnaSnapshot } from "@/models/scent-dna.server"
 import type { TraderWishlistOverlap } from "@/models/wishlist-matching.server"
 import { TraderProfileAside } from "./aside/aside"
@@ -80,11 +79,6 @@ export default function TraderProfileClient({
           avatarImage={trader.avatarImage}
           size="lg"
         />
-        <ScentDnaCard
-          scentDna={scentDna}
-          traderName={traderName}
-          shareUrl={`/trader-profile/${trader.id}/scent-dna`}
-        />
         <TraderProfileHeaderStats
           memberSince={memberSince}
           completedTradeCount={feedback.reputation.completedTradeCount}
@@ -92,6 +86,8 @@ export default function TraderProfileClient({
           lastActiveAt={
             (trader as { lastActiveAt?: Date | string | null }).lastActiveAt ?? null
           }
+          reputationBadges={feedback.reputation.badges}
+          contributorBadges={feedback.contributorBadges}
         />
       </TitleBanner>
 
@@ -102,6 +98,8 @@ export default function TraderProfileClient({
             viewer={viewer}
             feedback={feedback}
             initialFollowing={initialFollowing}
+            scentDna={scentDna}
+            traderName={traderName}
           />
         ) : (
           <VooDooDetails
@@ -113,11 +111,13 @@ export default function TraderProfileClient({
           >
             <div className="py-4">
               <TraderProfileAside
-            trader={trader}
-            viewer={viewer}
-            feedback={feedback}
-            initialFollowing={initialFollowing}
-          />
+                trader={trader}
+                viewer={viewer}
+                feedback={feedback}
+                initialFollowing={initialFollowing}
+                scentDna={scentDna}
+                traderName={traderName}
+              />
             </div>
           </VooDooDetails>
         )}

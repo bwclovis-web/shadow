@@ -57,6 +57,7 @@ export interface UserMutationRateLimits {
   reviewsPost: RateLimitConfig
   ratingsPost: RateLimitConfig
   seasonVotesPost: RateLimitConfig
+  feedbackVotesPost: RateLimitConfig
 }
 
 let contactMessageLimitsCache: ContactMessageRateLimits | null = null
@@ -177,6 +178,13 @@ export const getUserMutationRateLimits = (): UserMutationRateLimits => {
       max: parseIntEnv(process.env.SEASON_VOTES_POST_RATE_LIMIT_MAX, 120),
       windowMs:
         parseIntEnv(process.env.SEASON_VOTES_POST_RATE_LIMIT_WINDOW_MINUTES, 15) *
+        60 *
+        1000,
+    },
+    feedbackVotesPost: {
+      max: parseIntEnv(process.env.FEEDBACK_VOTES_POST_RATE_LIMIT_MAX, 120),
+      windowMs:
+        parseIntEnv(process.env.FEEDBACK_VOTES_POST_RATE_LIMIT_WINDOW_MINUTES, 15) *
         60 *
         1000,
     },

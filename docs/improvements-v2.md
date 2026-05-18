@@ -181,20 +181,22 @@ _Layer community graph and social identity on top of the shipped reputation, Sce
 
 ### C2 — Contributor Badges
 
-- [ ] Reuse existing signals (fast-responder badge already exists; reliability score already exists)
-- [ ] New badges:
+- [x] Reuse existing signals (fast-responder badge already exists; reliability score already exists)
+- [x] Phase 1 contributor badges (see [`docs/contributor-badges-spec.md`](contributor-badges-spec.md)):
   - **Trusted Swapper** — ≥ 5 completed trades with no strikes
-  - **Helpful Reviewer** — ≥ 3 reviews with net positive helpfulness votes
   - **Rare Collector** — holds or has traded ≥ 1 perfume from a house with fewer than 50 members
-  - **Decant Host** — organised ≥ 1 completed decant split
   - **Community Pillar** — follows 10+ traders AND is followed by 10+
-- [ ] Badges surface on trader profile header alongside existing reputation chips
+- [x] Badges surface on trader profile header alongside existing reputation chips
+- [x] **Helpful Reviewer** — ≥ 3 reviews with net positive helpfulness votes (C3 / CF-040)
+- [ ] **Decant Host** — organised ≥ 1 completed decant split (blocked on D3 / DecantSplit)
+
+**Shipped in (Phase 1):** `services/reputation/contributor/` (`computeContributorBadges`, `loadContributorBadges`, `rareCollector.server`); `contributorBadges` on `getTraderFeedbackForProfile` + `GET /api/trader-feedback`; `TraderBadgeChips` + `TraderProfileHeaderStats`; `getFollowingCountForUser` / `getFollowCountsForUsers` in `user-follow.server.ts`; i18n `traderProfile.contributorBadges.*`.
 
 ### C3 — Review Helpfulness (CF-040–042)
 
-- [ ] **CF-040** Helpful / unhelpful voting on `TraderFeedback` reviews
-- [ ] **CF-041** Surface top reviews by helpfulness + recency (not just newest)
-- [ ] **CF-042** "Verified swap" marker on reviews linked to a completed trade (FK already exists)
+- [x] **CF-040** Helpful / unhelpful voting on `TraderFeedback` reviews
+- [x] **CF-041** Surface top reviews by helpfulness + recency (not just newest)
+- [x] **CF-042** "Verified swap" marker on reviews linked to a completed trade (FK already exists)
 
 ### C4 — Scent Journey Timeline (IMP-F03 / CF-060)
 

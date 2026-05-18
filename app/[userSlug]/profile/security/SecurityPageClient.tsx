@@ -10,6 +10,8 @@ import ErrorDisplay from "@/components/Containers/ErrorDisplay/ErrorDisplay"
 import { CSRFToken } from "@/components/Molecules/CSRFToken/CSRFToken"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 
+import { ChangePasswordForm } from "@/components/Molecules/ChangePasswordForm/ChangePasswordForm"
+
 import {
   confirmEnrollmentAction,
   disableTwoFactorAction,
@@ -41,6 +43,7 @@ const SecurityPageClient = ({
   isAdmin,
 }: SecurityPageClientProps) => {
   const t = useTranslations("twoFactor")
+  const tPassword = useTranslations("password")
   const router = useRouter()
   const [useBackupForDisable, setUseBackupForDisable] = useState(false)
 
@@ -83,6 +86,16 @@ const SecurityPageClient = ({
         subheading={t("subheading")}
       />
       <div className="inner-container max-w-lg mx-auto py-8 space-y-8">
+        <div className="bg-white shadow-lg rounded-lg p-6 space-y-4">
+          <h2 className="font-semibold text-gray-900">{tPassword("changePassword")}</h2>
+          <p className="text-sm text-gray-700">{tPassword("updatePasswordToKeepAccountSecure")}</p>
+          <ChangePasswordForm hideHeading />
+        </div>
+
+        <h2 className="text-lg font-semibold text-noir-gold-100 pt-2">
+          {t("twoFactorSectionTitle")}
+        </h2>
+
         {isAdmin && !twoFactorEnabled && (
           <p className="text-sm text-noir-gold-100/90 border border-noir-gold-500/40 rounded p-3">
             {t("adminRecommendation")}

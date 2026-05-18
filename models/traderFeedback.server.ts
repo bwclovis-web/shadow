@@ -1,7 +1,13 @@
 import { Prisma } from "@prisma/client"
 
 import { prisma } from "@/lib/db"
+import {
+  getHelpfulnessAggregatesForFeedbackIds,
+  type HelpfulnessVoteValue,
+} from "@/models/traderFeedbackHelpfulness.server"
 import { computeTraderReputationV1 } from "@/services/reputation/computeReputation"
+import { loadContributorBadges } from "@/services/reputation/contributor/loadContributorBadges.server"
+import type { ContributorBadgeIdPhase1 } from "@/services/reputation/contributor/types"
 import { loadTraderMessageReplyStats } from "@/services/reputation/loadReputationInputs.server"
 import { getTraderTradeStats } from "@/services/reputation/tradeStats.server"
 import type { TraderReputationV1 } from "@/services/reputation/types"
@@ -10,6 +16,8 @@ import { validateRating } from "@/utils/server/api-route-helpers.server"
 
 /** Default number of feedback items returned in list endpoints */
 const DEFAULT_LIST_LIMIT = 10
+
+export type TraderFeedbackSort = "top" | "recent"
 
 export interface TraderFeedbackSubmissionInput {
   traderId: string
@@ -34,6 +42,10 @@ export interface TraderFeedbackListItem {
   comment: string | null
   createdAt: string
   updatedAt: string
+  helpfulCount: number
+  unhelpfulCount: number
+  viewerHelpfulnessVote: HelpfulnessVoteValue | null
+  verifiedSwap: boolean
   reviewer: {
     id: string
     firstName: string | null
@@ -57,6 +69,7 @@ export interface TraderFeedbackProfileData {
   comments: TraderFeedbackListItem[]
   viewerFeedback: TraderFeedbackViewerEntry | null
   reputation: TraderReputationV1
+  contributorBadges: ContributorBadgeIdPhase1[]
   /** Viewer may submit new feedback (completed trade when gating is enabled) */
   canLeaveFeedback: boolean
   eligibleTradeId: string | null
@@ -68,21 +81,34 @@ const isMissingFeedbackTableError = (error: unknown): boolean =>
 type FeedbackWithReviewer = Prisma.TraderFeedbackGetPayload<{
   include: {
     reviewer: { select: { id: true; firstName: true; lastName: true; username: true } }
+    trade: { select: { status: true } }
   }
 }>
 
-function serializeFeedbackEntry(entry: FeedbackWithReviewer): TraderFeedbackListItem {
-  return {
-    id: entry.id,
-    traderId: entry.traderId,
-    reviewerId: entry.reviewerId,
-    rating: entry.rating,
-    comment: entry.comment,
-    createdAt: entry.createdAt.toISOString(),
-    updatedAt: entry.updatedAt.toISOString(),
-    reviewer: entry.reviewer,
+const isVerifiedSwap = (entry: FeedbackWithReviewer): boolean =>
+  Boolean(entry.tradeId && entry.trade?.status === "completed")
+
+const serializeFeedbackEntry = (
+  entry: FeedbackWithReviewer,
+  aggregate: {
+    helpfulCount: number
+    unhelpfulCount: number
+    viewerVote: HelpfulnessVoteValue | null
   }
-}
+): TraderFeedbackListItem => ({
+  id: entry.id,
+  traderId: entry.traderId,
+  reviewerId: entry.reviewerId,
+  rating: entry.rating,
+  comment: entry.comment,
+  createdAt: entry.createdAt.toISOString(),
+  updatedAt: entry.updatedAt.toISOString(),
+  helpfulCount: aggregate.helpfulCount,
+  unhelpfulCount: aggregate.unhelpfulCount,
+  viewerHelpfulnessVote: aggregate.viewerVote,
+  verifiedSwap: isVerifiedSwap(entry),
+  reviewer: entry.reviewer,
+})
 
 /**
  * Most recent completed trade between two users (for feedback linkage).
@@ -269,21 +295,42 @@ export async function getTraderFeedbackSummary(traderId: string): Promise<Trader
   }
 }
 
+const listOrderBy = (
+  sort: TraderFeedbackSort
+): Prisma.TraderFeedbackOrderByWithRelationInput[] =>
+  sort === "recent"
+    ? [{ createdAt: "desc" }]
+    : [
+        { helpfulCount: "desc" },
+        { unhelpfulCount: "asc" },
+        { createdAt: "desc" },
+      ]
+
 /**
- * Paginated list of feedback for a trader (newest first), with reviewer info.
+ * Paginated list of feedback for a trader, with reviewer info and helpfulness.
  */
-export async function getTraderFeedbackList(
+export const getTraderFeedbackList = async (
   traderId: string,
-  options: { limit?: number; offset?: number } = {}
-): Promise<TraderFeedbackListItem[]> {
-  const { limit = DEFAULT_LIST_LIMIT, offset = 0 } = options
+  options: {
+    limit?: number
+    offset?: number
+    sort?: TraderFeedbackSort
+    viewerId?: string | null
+  } = {}
+): Promise<TraderFeedbackListItem[]> => {
+  const {
+    limit = DEFAULT_LIST_LIMIT,
+    offset = 0,
+    sort = "top",
+    viewerId = null,
+  } = options
 
   try {
     const feedback = await prisma.traderFeedback.findMany({
       where: { traderId },
       take: limit,
       skip: offset,
-      orderBy: { createdAt: "desc" },
+      orderBy: listOrderBy(sort),
       include: {
         reviewer: {
           select: {
@@ -293,9 +340,25 @@ export async function getTraderFeedbackList(
             username: true,
           },
         },
+        trade: {
+          select: { status: true },
+        },
       },
     })
-    return feedback.map(serializeFeedbackEntry)
+
+    const aggregates = await getHelpfulnessAggregatesForFeedbackIds(
+      feedback.map((f) => f.id),
+      viewerId
+    )
+
+    return feedback.map((entry) => {
+      const aggregate = aggregates.get(entry.id) ?? {
+        helpfulCount: entry.helpfulCount,
+        unhelpfulCount: entry.unhelpfulCount,
+        viewerVote: null,
+      }
+      return serializeFeedbackEntry(entry, aggregate)
+    })
   } catch (error) {
     if (isMissingFeedbackTableError(error)) {
       return []
@@ -328,32 +391,51 @@ export async function getTraderFeedbackByReviewer(
  * Use in RSC (trader profile page) or API GET to avoid sequential requests.
  * Set includeList: false to skip the comments query when only summary/viewer feedback is needed.
  */
-export async function getTraderFeedbackForProfile(
+export const getTraderFeedbackForProfile = async (
   traderId: string,
   viewerId: string | null,
-  options: { listLimit?: number; listOffset?: number; includeList?: boolean } = {}
-): Promise<TraderFeedbackProfileData> {
+  options: {
+    listLimit?: number
+    listOffset?: number
+    includeList?: boolean
+    sort?: TraderFeedbackSort
+  } = {}
+): Promise<TraderFeedbackProfileData> => {
   const {
     listLimit = DEFAULT_LIST_LIMIT,
     listOffset = 0,
     includeList = true,
+    sort = "top",
   } = options
 
-  const [summary, comments, viewerRecord, messageStats, tradeStats, eligibleTradeId] =
-    await Promise.all([
-      getTraderFeedbackSummary(traderId),
-      includeList
-        ? getTraderFeedbackList(traderId, { limit: listLimit, offset: listOffset })
-        : Promise.resolve([]),
-      viewerId && viewerId !== traderId
-        ? getTraderFeedbackByReviewer(traderId, viewerId)
-        : Promise.resolve(null),
-      loadTraderMessageReplyStats(traderId),
-      getTraderTradeStats(traderId),
-      viewerId && viewerId !== traderId
-        ? findCompletedTradeBetweenUsers(traderId, viewerId)
-        : Promise.resolve(null),
-    ])
+  const [
+    summary,
+    comments,
+    viewerRecord,
+    messageStats,
+    tradeStats,
+    eligibleTradeId,
+    contributorResult,
+  ] = await Promise.all([
+    getTraderFeedbackSummary(traderId),
+    includeList
+      ? getTraderFeedbackList(traderId, {
+          limit: listLimit,
+          offset: listOffset,
+          sort,
+          viewerId,
+        })
+      : Promise.resolve([]),
+    viewerId && viewerId !== traderId
+      ? getTraderFeedbackByReviewer(traderId, viewerId)
+      : Promise.resolve(null),
+    loadTraderMessageReplyStats(traderId),
+    getTraderTradeStats(traderId),
+    viewerId && viewerId !== traderId
+      ? findCompletedTradeBetweenUsers(traderId, viewerId)
+      : Promise.resolve(null),
+    loadContributorBadges(traderId),
+  ])
 
   const viewerFeedback: TraderFeedbackViewerEntry | null = viewerRecord
     ? {
@@ -389,6 +471,7 @@ export async function getTraderFeedbackForProfile(
     comments,
     viewerFeedback,
     reputation,
+    contributorBadges: contributorResult.badges,
     canLeaveFeedback,
     eligibleTradeId,
   }

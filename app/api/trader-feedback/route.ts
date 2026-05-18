@@ -27,6 +27,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Invalid trader ID" }, { status: 400 })
     }
     const includeComments = params.getBoolean("includeComments")
+    const sortRaw = params.get("sort")?.trim().toLowerCase()
+    const sort = sortRaw === "recent" ? "recent" : "top"
     const viewerRaw = params.get("viewerId")
     let viewerId: string | null = null
     if (viewerRaw?.trim()) {
@@ -42,6 +44,7 @@ export async function GET(request: NextRequest) {
       comments,
       viewerFeedback,
       reputation,
+      contributorBadges,
       canLeaveFeedback,
       eligibleTradeId,
     } = await getTraderFeedbackForProfile(
@@ -49,6 +52,7 @@ export async function GET(request: NextRequest) {
       viewerId && viewerId !== traderId ? viewerId : null,
       {
         includeList: includeComments,
+        sort,
         ...(includeComments && {
           listLimit: pagination.limit,
           listOffset: pagination.skip,
@@ -62,6 +66,7 @@ export async function GET(request: NextRequest) {
       comments,
       viewerFeedback,
       reputation,
+      contributorBadges,
       canLeaveFeedback,
       eligibleTradeId,
     })

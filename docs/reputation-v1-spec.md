@@ -59,3 +59,7 @@ When `TRADER_FEEDBACK_REQUIRES_COMPLETED_TRADE` is not `"false"` (default: requi
 ## API / DTO
 
 Public payloads must not include message bodies. Include aggregates: median hours, sample count, score, badges, review average, review count, `completedTradeCount`, `tradeReliabilityPercent`, `canLeaveFeedback`, `eligibleTradeId`.
+
+## Contributor badges (C2)
+
+Separate from reputation v1 badges. See [contributor-badges-spec.md](./contributor-badges-spec.md). Profile payloads also include `contributorBadges`.

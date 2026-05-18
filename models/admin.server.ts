@@ -156,6 +156,7 @@ export async function deleteUserSafely(
       // Two separate deleteMany calls to avoid any OR/query issues
       await tx.traderContactMessage.deleteMany({ where: { senderId: userId } })
       await tx.traderContactMessage.deleteMany({ where: { recipientId: userId } })
+      await tx.traderFeedbackHelpfulnessVote.deleteMany({ where: { voterId: userId } })
       await tx.traderFeedback.deleteMany({ where: { traderId: userId } })
       await tx.traderFeedback.deleteMany({ where: { reviewerId: userId } })
       await tx.scentProfile.deleteMany({ where: { userId } })

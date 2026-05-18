@@ -15,6 +15,7 @@ type ScentDnaCardProps = {
   traderName: string
   shareUrl?: string
   variant?: "compact" | "share"
+  className?: string
 }
 
 const FAMILY_CHIP_CLASS =
@@ -31,6 +32,7 @@ const ScentDnaCard = ({
   traderName,
   shareUrl,
   variant = "compact",
+  className = "",
 }: ScentDnaCardProps) => {
   const t = useTranslations("traderProfile.scentDna")
   const [copyState, setCopyState] = useState<"idle" | "copied" | "error">("idle")
@@ -56,12 +58,14 @@ const ScentDnaCard = ({
     }
   }, [shareUrl])
 
+  const sectionClass = `noir-border bg-noir-black/70 text-left ${
+    isSharePage ? "mx-auto max-w-md p-6" : "w-full p-4"
+  } ${className}`.trim()
+
   if (isEmpty) {
     return (
       <section
-        className={`noir-border mx-auto max-w-md bg-noir-black/70 text-left ${
-          isSharePage ? "p-6" : "mt-3 p-4"
-        }`}
+        className={sectionClass}
         aria-label={t("ariaLabel")}
       >
         <h2 className="text-base font-semibold text-noir-gold">{t("title")}</h2>
@@ -79,9 +83,7 @@ const ScentDnaCard = ({
 
   return (
     <section
-      className={`noir-border mx-auto max-w-md bg-noir-black/70 text-left ${
-        isSharePage ? "p-6" : "mt-3 p-4"
-      }`}
+      className={sectionClass}
       aria-label={t("ariaLabel", { traderName })}
     >
       <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">

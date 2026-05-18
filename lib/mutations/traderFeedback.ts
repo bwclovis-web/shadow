@@ -50,10 +50,7 @@ export function useSubmitTraderFeedback() {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.traderFeedback.detail(
-          variables.traderId,
-          variables.viewerId ?? null
-        ),
+        queryKey: ["traderFeedback", variables.traderId],
         exact: false,
       })
     },
@@ -87,10 +84,7 @@ export function useDeleteTraderFeedback() {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
-        queryKey: queryKeys.traderFeedback.detail(
-          variables.traderId,
-          variables.viewerId ?? null
-        ),
+        queryKey: ["traderFeedback", variables.traderId],
         exact: false,
       })
     },

@@ -1,11 +1,13 @@
 import FollowButton from "@/components/Containers/Follow/FollowButton"
 import ContactTraderButton from "@/components/Containers/TraderProfile/ContactTraderButton"
 import ReportTraderButton from "@/components/Containers/TraderProfile/ReportTraderButton"
+import ScentDnaCard from "@/components/Containers/TraderProfile/ScentDnaCard/ScentDnaCard"
 import TraderFeedbackSection from "@/components/Containers/TraderProfile/TraderFeedbackSection"
 import TraderProfileAboutExtras from "@/components/Containers/TraderProfile/TraderProfileAboutExtras"
 import TraderTrustSummary from "@/components/Containers/TraderProfile/TraderTrustSummary"
 import { TraderFeedbackResponse } from "@/lib/queries/traderFeedback"
 import { TraderResponse } from "@/lib/queries/user"
+import type { ScentDnaSnapshot } from "@/models/scent-dna.server"
 import { resolveTraderCountry } from "@/utils/country-list"
 import { SafeUser } from "@/types"
 import { useTranslations } from "next-intl"
@@ -15,6 +17,8 @@ interface TraderProfileAsideProps {
   viewer: SafeUser | null
   feedback: TraderFeedbackResponse
   initialFollowing?: boolean
+  scentDna: ScentDnaSnapshot
+  traderName: string
 }
 
 export const TraderProfileAside = ({
@@ -22,6 +26,8 @@ export const TraderProfileAside = ({
   viewer,
   feedback,
   initialFollowing = false,
+  scentDna,
+  traderName,
 }: TraderProfileAsideProps) => {
   const t = useTranslations("traderProfile")
   const hasAboutText = Boolean(trader.traderAbout?.trim())
@@ -43,6 +49,12 @@ export const TraderProfileAside = ({
           <TraderProfileAboutExtras trader={trader} />
         </div>
       ) : null}
+      <ScentDnaCard
+        className="mb-4"
+        scentDna={scentDna}
+        traderName={traderName}
+        shareUrl={`/trader-profile/${trader.id}/scent-dna`}
+      />
       <TraderTrustSummary reputation={feedback.reputation} />
       <TraderFeedbackSection
         traderId={trader.id}

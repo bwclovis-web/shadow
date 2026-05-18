@@ -827,7 +827,7 @@
       "deleteComment": "Elimina commento",
       "makePublic": "Rendi pubblico",
       "makePrivate": "Rendi privato",
-      "noComments": "Ancora nessun commento. Sii il primo a condividere i tuoi pensieri! Questi commenti sono visibili solo a te e sono solo per uso personale."
+      "noComments": "Questi commenti sono visibili solo a te e sono solo per uso personale."
     },
     "search": {
       "placeholder": "Cerca i tuoi profumi...",
@@ -1067,13 +1067,13 @@
       "wishlist": "La mia wishlist",
       "myTrades": "I miei scambi",
       "myScents": "I miei profumi",
-      "changePassword": "Cambia password",
-      "security": "Sicurezza"
+      "accountSecurity": "Sicurezza account"
     }
   },
   "twoFactor": {
     "title": "Sicurezza account",
-    "subheading": "L'autenticazione a due fattori aggiunge un passaggio all'accesso (opzionale).",
+    "subheading": "Aggiorna la password e gestisci l'autenticazione a due fattori (opzionale).",
+    "twoFactorSectionTitle": "Autenticazione a due fattori",
     "adminRecommendation": "L'autenticazione a due fattori è consigliata per gli account admin.",
     "disabledDescription": "Proteggi il tuo account con un'app di autenticazione. È opzionale.",
     "enableButton": "Attiva autenticazione a due fattori",
@@ -1658,9 +1658,16 @@
       "explainTitle": "Cosa significa",
       "explainIntro": "Questo punteggio è chiaro e visibile a tutti. Riassume come altri membri valutano questo trader e quanto velocemente di solito risponde ai messaggi.",
       "explainScore": "Mostriamo un numero solo dopo almeno {minReviews} recensioni. Con dati sufficienti sui tempi di risposta, le valutazioni pesano il 75% e la velocità di prima risposta il 25%; altrimenti solo le valutazioni.",
-      "explainBadges": "I badge sono indipendenti: Molto recensito = almeno 5 recensioni e media ≥ 4,5. Trader affidabile = almeno 10 recensioni e media ≥ 4,6. Risponde in fretta = almeno 5 intervalli misurati e mediana sotto 48 ore.",
+      "explainBadges": "I badge sono indipendenti: Molto recensito = almeno 5 recensioni e media ≥ 4,5. Trader affidabile = almeno 10 recensioni e media ≥ 4,6. Risponde in fretta = mediana prima risposta sotto 24 h. I badge contributore (Scambiatore affidabile, Pilastro della community, Collezionista raro) premiano scambi, follow e case di nicchia.",
+      "explainBadgesInHeader": "I badge di reputazione e contributore compaiono sotto l'intestazione del profilo.",
       "explainMessaging": "I tempi si deducono dai messaggi di contatto; senza thread formali è un segnale approssimativo.",
       "exchangeTrust": "{score}/100"
+    },
+    "contributorBadges": {
+      "trustedSwapper": "Scambiatore affidabile",
+      "communityPillar": "Pilastro della community",
+      "rareCollector": "Collezionista raro",
+      "helpfulReviewer": "Recensore utile"
     },
     "feedback": {
       "title": "Feedback venditore",
@@ -1683,6 +1690,14 @@
       "updateButton": "Aggiorna feedback",
       "deleteButton": "Rimuovi feedback",
       "loginPrompt": "Accedi per lasciare feedback.",
+      "requiresCompletedTrade": "Completa uno scambio con questo membro prima di lasciare feedback.",
+      "verifiedSwap": "Scambio verificato",
+      "helpful": "Utile",
+      "unhelpful": "Non utile",
+      "loginToVote": "Accedi per votare se le recensioni sono utili.",
+      "sortLabel": "Ordina recensioni",
+      "sortTop": "Migliori recensioni",
+      "sortRecent": "Più recenti",
       "validation": {
         "ratingRequired": "La valutazione è obbligatoria."
       }

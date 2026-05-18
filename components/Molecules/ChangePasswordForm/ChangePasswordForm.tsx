@@ -4,7 +4,7 @@ import { type ChangeEvent, useActionState, useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 import { BsFillEyeFill, BsFillEyeSlashFill } from "react-icons/bs"
 
-import { changePasswordAction } from "@/app/[userSlug]/profile/change-password/actions"
+import { changePasswordAction } from "@/app/[userSlug]/profile/security/actions"
 import { Button } from "@/components/Atoms/Button"
 import { CSRFToken } from "@/components/Molecules/CSRFToken"
 import PasswordStrengthIndicator from "@/components/Organisms/PasswordStrengthIndicator"

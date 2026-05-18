@@ -29,15 +29,15 @@ Customer-facing roadmap focused on discovery quality, trust, and retention loops
 
 ### Reputation Layer
 
-- [ ] **CF-030** Trader reputation score v1
-- [ ] **CF-031** Breakdown badges (fast responder, reliable trader, top reviewed)
-- [ ] **CF-032** Public trust profile summary
+- [x] **CF-030** Trader reputation score v1
+- [x] **CF-031** Breakdown badges (fast responder, reliable trader, top reviewed) + contributor badges Phase 1 (trusted swapper, community pillar, rare collector)
+- [x] **CF-032** Public trust profile summary
 
 ### Review Quality
 
-- [ ] **CF-040** Helpful/unhelpful voting
-- [ ] **CF-041** Top review surfaces by helpfulness + recency
-- [ ] **CF-042** Verified trade/purchase markers (when evidence available)
+- [x] **CF-040** Helpful/unhelpful voting
+- [x] **CF-041** Top review surfaces by helpfulness + recency
+- [x] **CF-042** Verified trade/purchase markers (when evidence available)
 
 ### Social-lite
 

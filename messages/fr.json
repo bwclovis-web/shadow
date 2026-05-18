@@ -827,7 +827,7 @@
       "deleteComment": "Supprimer le commentaire",
       "makePublic": "Rendre public",
       "makePrivate": "Rendre privé",
-      "noComments": "Aucun commentaire pour l'instant. Soyez le premier à partager vos idées ! Ces commentaires ne sont visibles que par vous et sont réservés à un usage personnel."
+      "noComments": "Ces commentaires ne sont visibles que par vous et sont réservés à un usage personnel."
     },
     "search": {
       "placeholder": "Rechercher vos parfums...",
@@ -1067,13 +1067,13 @@
       "wishlist": "Ma liste de souhaits",
       "myTrades": "Mes échanges",
       "myScents": "Mes parfums",
-      "changePassword": "Changer le mot de passe",
-      "security": "Sécurité"
+      "accountSecurity": "Sécurité du compte"
     }
   },
   "twoFactor": {
     "title": "Sécurité du compte",
-    "subheading": "L'authentification à deux facteurs ajoute une étape à la connexion (optionnel).",
+    "subheading": "Mettez à jour votre mot de passe et gérez l'authentification à deux facteurs (optionnel).",
+    "twoFactorSectionTitle": "Authentification à deux facteurs",
     "adminRecommendation": "L'authentification à deux facteurs est recommandée pour les comptes admin.",
     "disabledDescription": "Protégez votre compte avec une application d'authentification. C'est optionnel.",
     "enableButton": "Activer l'authentification à deux facteurs",
@@ -1658,9 +1658,16 @@
       "explainTitle": "Ce que cela signifie",
       "explainIntro": "Ce score est clair et visible par tous. Il résume comment les autres membres évaluent ce vendeur et la rapidité habituelle de réponse aux messages.",
       "explainScore": "Un nombre n'apparaît qu'après au moins {minReviews} avis. Avec assez de données de délai de réponse, les avis comptent pour 75 % et la vitesse de première réponse pour 25 % ; sinon, seulement les avis.",
-      "explainBadges": "Les badges sont indépendants : Très bien noté = au moins 5 avis et moyenne ≥ 4,5. Vendeur fiable = au moins 10 avis et moyenne ≥ 4,6. Réponse rapide = au moins 5 intervalles mesurés et médiane sous 48 h.",
+      "explainBadges": "Les badges sont indépendants : Très bien noté = au moins 5 avis et moyenne ≥ 4,5. Vendeur fiable = au moins 10 avis et moyenne ≥ 4,6. Réponse rapide = médiane de première réponse sous 24 h. Les badges contributeur (Échangeur de confiance, Pilier de la communauté, Collectionneur rare) récompensent les échanges, les abonnements et les maisons de niche.",
+      "explainBadgesInHeader": "Les badges de réputation et de contributeur apparaissent sous l'en-tête du profil.",
       "explainMessaging": "Les délais sont déduits des messages de contact ; sans fil formel, c'est une estimation.",
       "exchangeTrust": "{score}/100"
+    },
+    "contributorBadges": {
+      "trustedSwapper": "Échangeur de confiance",
+      "communityPillar": "Pilier de la communauté",
+      "rareCollector": "Collectionneur rare",
+      "helpfulReviewer": "Critique utile"
     },
     "feedback": {
       "title": "Avis sur le vendeur",
@@ -1683,6 +1690,14 @@
       "updateButton": "Mettre à jour l'avis",
       "deleteButton": "Supprimer l'avis",
       "loginPrompt": "Connectez-vous pour laisser un avis.",
+      "requiresCompletedTrade": "Terminez un échange avec ce membre avant de laisser un avis.",
+      "verifiedSwap": "Échange vérifié",
+      "helpful": "Utile",
+      "unhelpful": "Pas utile",
+      "loginToVote": "Connectez-vous pour voter sur l'utilité des avis.",
+      "sortLabel": "Trier les avis",
+      "sortTop": "Meilleurs avis",
+      "sortRecent": "Plus récents",
       "validation": {
         "ratingRequired": "La note est obligatoire."
       }

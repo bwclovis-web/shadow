@@ -26,6 +26,36 @@ export const getFollowerCountForUser = async (userId: string): Promise<number> =
     where: { followingUserId: userId },
   })
 
+export const getFollowingCountForUser = async (userId: string): Promise<number> =>
+  prisma.userFollow.count({
+    where: { followerId: userId, followingUserId: { not: null } },
+  })
+
+export type FollowCounts = {
+  followerCount: number
+  followingCount: number
+}
+
+export const getFollowCountsForUsers = async (
+  userIds: string[]
+): Promise<Map<string, FollowCounts>> => {
+  const unique = [...new Set(userIds)]
+  const result = new Map<string, FollowCounts>()
+  if (unique.length === 0) return result
+
+  await Promise.all(
+    unique.map(async (userId) => {
+      const [followerCount, followingCount] = await Promise.all([
+        getFollowerCountForUser(userId),
+        getFollowingCountForUser(userId),
+      ])
+      result.set(userId, { followerCount, followingCount })
+    })
+  )
+
+  return result
+}
+
 export const isFollowing = async (
   followerId: string,
   targetType: FollowTargetType,

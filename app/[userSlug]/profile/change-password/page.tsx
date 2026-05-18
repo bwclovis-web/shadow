@@ -1,32 +1,16 @@
-import type { Metadata } from "next"
 import type React from "react"
-import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
-import { getTranslations } from "next-intl/server"
 import { redirect } from "next/navigation"
 
-import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
-import { publicAssetUrl } from "@/utils/public-asset-url.server"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getProfileSlug } from "@/utils/user"
-
-import ChangePasswordPageClient from "./ChangePasswordPageClient"
-
-const BANNER_IMAGE = publicAssetUrl("/images/changePassword.png")
+import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
 type Props = {
   params: Promise<{ userSlug: string }>
 }
 
-export const generateMetadata = async ({
-  params,
-}: Props): Promise<Metadata> => {
-  await params
-  const t = await getTranslations("password")
-  return {
-    title: t("changePassword"),
-  }
-}
-
-export default async function ChangePasswordPage({
+/** Legacy route — password settings live on Account Security. */
+export default async function ChangePasswordRedirectPage({
   params,
 }: Props): Promise<React.ReactElement> {
   const { userSlug } = await params
@@ -40,9 +24,5 @@ export default async function ChangePasswordPage({
   }
 
   const slug = getProfileSlug(session.user)
-  if (slug !== userSlug) {
-    redirect(`/${slug}/profile/change-password`)
-  }
-
-  return <ChangePasswordPageClient bannerImage={BANNER_IMAGE} />
+  redirect(`/${slug}/profile/security`)
 }

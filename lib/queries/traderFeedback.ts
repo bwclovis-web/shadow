@@ -1,3 +1,6 @@
+import type { HelpfulnessVoteValue } from "@/models/traderFeedbackHelpfulness.server"
+import type { TraderFeedbackSort } from "@/models/traderFeedback.server"
+import type { ContributorBadgeIdPhase1 } from "@/services/reputation/contributor/types"
 import type { TraderReputationV1 } from "@/services/reputation/types"
 import { REPUTATION_V1_VERSION } from "@/services/reputation/v1-constants"
 
@@ -32,6 +35,10 @@ export interface TraderFeedbackComment {
   comment: string | null
   createdAt: string
   updatedAt: string
+  helpfulCount: number
+  unhelpfulCount: number
+  viewerHelpfulnessVote: HelpfulnessVoteValue | null
+  verifiedSwap: boolean
   reviewer: {
     id: string
     firstName: string | null
@@ -54,6 +61,7 @@ export interface TraderFeedbackResponse {
   comments: TraderFeedbackComment[]
   viewerFeedback: TraderFeedbackViewerEntry | null
   reputation: TraderReputationV1
+  contributorBadges: ContributorBadgeIdPhase1[]
   canLeaveFeedback: boolean
   eligibleTradeId: string | null
 }
@@ -62,21 +70,35 @@ export interface TraderFeedbackQueryParams {
   traderId: string
   includeComments?: boolean
   viewerId?: string | null
+  sort?: TraderFeedbackSort
   signal?: AbortSignal
 }
 
 export const queryKeys = {
   traderFeedback: {
-    detail: (traderId: string, viewerId?: string | null) => ["traderFeedback", traderId, viewerId ?? null] as const,
+    detail: (
+      traderId: string,
+      viewerId?: string | null,
+      sort?: TraderFeedbackSort
+    ) => ["traderFeedback", traderId, viewerId ?? null, sort ?? "top"] as const,
   },
 } as const
 
-export async function getTraderFeedback(params: TraderFeedbackQueryParams): Promise<TraderFeedbackResponse> {
-  const { traderId, includeComments = true, viewerId, signal } = params
+export const getTraderFeedback = async (
+  params: TraderFeedbackQueryParams
+): Promise<TraderFeedbackResponse> => {
+  const {
+    traderId,
+    includeComments = true,
+    viewerId,
+    sort = "top",
+    signal,
+  } = params
 
   const searchParams = new URLSearchParams({
     traderId,
     includeComments: String(includeComments),
+    sort,
   })
 
   if (viewerId) {
@@ -111,6 +133,7 @@ export async function getTraderFeedback(params: TraderFeedbackQueryParams): Prom
     comments: data.comments ?? [],
     viewerFeedback: data.viewerFeedback ?? null,
     reputation: data.reputation ?? fallbackReputation(traderId),
+    contributorBadges: data.contributorBadges ?? [],
     canLeaveFeedback: data.canLeaveFeedback ?? true,
     eligibleTradeId: data.eligibleTradeId ?? null,
   }

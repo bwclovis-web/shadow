@@ -1047,7 +1047,7 @@
       "deleteComment": "Delete Comment",
       "makePublic": "Make public",
       "makePrivate": "Make private",
-      "noComments": "No comments yet. Be the first to share your thoughts! These comments are only visible to you and are for personal use only.",
+      "noComments": "These comments are only visible to you and are for personal use only.",
       "error": "Error submitting comment. Please try again.",
       "failed": "Failed to add comment",
       "deleteError": "Error deleting comment",
@@ -1298,13 +1298,13 @@
       "myDisputes": "My Disputes",
       "myTrades": "My Trades",
       "myScents": "My Scents",
-      "changePassword": "Change Password",
-      "security": "Security"
+      "accountSecurity": "Account Security"
     }
   },
   "twoFactor": {
     "title": "Account security",
-    "subheading": "Optional two-factor authentication adds a second step when you sign in.",
+    "subheading": "Update your password and manage optional two-factor authentication.",
+    "twoFactorSectionTitle": "Two-factor authentication",
     "adminRecommendation": "Two-factor authentication is recommended for admin and editor accounts.",
     "disabledDescription": "Protect your account with an authenticator app. Enrollment is optional.",
     "enableButton": "Enable two-factor authentication",
@@ -1938,13 +1938,20 @@
       "explainTitle": "What this means",
       "explainIntro": "This score is rule-based and visible to everyone. It summarizes how other members rate this trader and how quickly they usually answer contact messages.",
       "explainScore": "We show a number only after at least {minReviews} peer reviews. When enough reply-timing data exists, peer ratings count for 75% of the score and typical first-reply speed for 25%; otherwise the score reflects ratings only.",
-      "explainBadges": "Badges are independent: Top reviewed means at least 5 reviews with a 4.5+ average. Reliable trader means at least 10 reviews with a 4.6+ average. Fast responder means a median first-reply under 24 hours across your last 10 conversation partners (minimum 3 measured replies).",
+      "explainBadges": "Badges are independent: Top reviewed means at least 5 reviews with a 4.5+ average. Reliable trader means at least 10 reviews with a 4.6+ average. Fast responder means a median first-reply under 24 hours across your last 10 conversation partners (minimum 3 measured replies). Contributor badges (Trusted swapper, Community pillar, Rare collector) reward trades, follows, and niche-house collections.",
+      "explainBadgesInHeader": "Reputation and contributor badges appear under the profile header.",
       "explainTradeReliability": "Trade reliability is completed trades divided by completed plus trades this member cancelled. Declined offers are not counted.",
       "explainMessaging": "Reply times use contact messages grouped by conversation partner (no formal thread id), considering only the 10 most recent partners.",
       "tradeReliabilityLabel": "Trade reliability",
       "tradeReliabilityValue": "{percent}%",
       "tradeReliabilityInsufficient": "Not enough trade history for a reliability score yet.",
       "exchangeTrust": "{score}/100"
+    },
+    "contributorBadges": {
+      "trustedSwapper": "Trusted swapper",
+      "communityPillar": "Community pillar",
+      "rareCollector": "Rare collector",
+      "helpfulReviewer": "Helpful reviewer"
     },
     "feedback": {
       "title": "Trader Feedback",
@@ -1968,6 +1975,13 @@
       "deleteButton": "Remove feedback",
       "loginPrompt": "Sign in to leave feedback and help build community trust.",
       "requiresCompletedTrade": "Complete a trade with this member before leaving feedback.",
+      "verifiedSwap": "Verified swap",
+      "helpful": "Helpful",
+      "unhelpful": "Unhelpful",
+      "loginToVote": "Sign in to vote on whether reviews are helpful.",
+      "sortLabel": "Sort reviews",
+      "sortTop": "Top reviews",
+      "sortRecent": "Most recent",
       "validation": {
         "ratingRequired": "Rating is required before submitting."
       }

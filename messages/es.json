@@ -827,7 +827,7 @@
       "deleteComment": "Eliminar comentario",
       "makePublic": "Hacer público",
       "makePrivate": "Hacer privado",
-      "noComments": "Aún no hay comentarios. ¡Sé el primero en compartir tus pensamientos! Estos comentarios solo son visibles para ti y son solo para uso personal."
+      "noComments": "Estos comentarios solo son visibles para ti y son solo para uso personal."
     },
     "search": {
       "placeholder": "Busca tus perfumes...",
@@ -1067,13 +1067,13 @@
       "wishlist": "Mi Lista de Deseos",
       "myTrades": "Mis intercambios",
       "myScents": "Mis Aromas",
-      "changePassword": "Cambiar Contraseña",
-      "security": "Seguridad"
+      "accountSecurity": "Seguridad de la cuenta"
     }
   },
   "twoFactor": {
     "title": "Seguridad de la cuenta",
-    "subheading": "La autenticación en dos pasos añade un paso extra al iniciar sesión (opcional).",
+    "subheading": "Actualiza tu contraseña y gestiona la autenticación en dos pasos (opcional).",
+    "twoFactorSectionTitle": "Autenticación en dos pasos",
     "adminRecommendation": "Se recomienda la autenticación en dos pasos para cuentas de administrador.",
     "disabledDescription": "Protege tu cuenta con una aplicación de autenticación. Es opcional.",
     "enableButton": "Activar autenticación en dos pasos",
@@ -1658,9 +1658,16 @@
       "explainTitle": "Qué significa esto",
       "explainIntro": "Esta puntuación es transparente y visible para todos. Resume cómo otros miembros valoran a este comerciante y la rapidez con que suele contestar mensajes de contacto.",
       "explainScore": "Solo mostramos un número tras al menos {minReviews} reseñas entre pares. Con datos suficientes de tiempos de respuesta, las valoraciones pesan un 75% y la velocidad típica de primera respuesta un 25%; si no, solo las valoraciones.",
-      "explainBadges": "Las insignias son independientes: Muy reseñado = al menos 5 reseñas y media ≥ 4,5. Comerciante fiable = al menos 10 reseñas y media ≥ 4,6. Responde rápido = al menos 5 intervalos medidos y mediana bajo 48 horas.",
+      "explainBadges": "Las insignias son independientes: Muy reseñado = al menos 5 reseñas y media ≥ 4,5. Comerciante fiable = al menos 10 reseñas y media ≥ 4,6. Responde rápido = mediana de primera respuesta bajo 24 h. Las insignias de contribución (Intercambio de confianza, Pilar de la comunidad, Coleccionista raro) reconocen intercambios, seguidores y casas de nicho.",
+      "explainBadgesInHeader": "Las insignias de reputación y de contribución aparecen bajo el encabezado del perfil.",
       "explainMessaging": "Los tiempos de respuesta se infieren de mensajes de contacto; no hay hilos formales, es una señal aproximada.",
       "exchangeTrust": "{score}/100"
+    },
+    "contributorBadges": {
+      "trustedSwapper": "Intercambio de confianza",
+      "communityPillar": "Pilar de la comunidad",
+      "rareCollector": "Coleccionista raro",
+      "helpfulReviewer": "Reseñador útil"
     },
     "feedback": {
       "title": "Comentarios del Comerciante",
@@ -1683,6 +1690,14 @@
       "updateButton": "Actualizar comentario",
       "deleteButton": "Eliminar comentario",
       "loginPrompt": "Inicia sesión para dejar comentarios y ayudar a construir la confianza de la comunidad.",
+      "requiresCompletedTrade": "Completa un intercambio con este miembro antes de dejar comentarios.",
+      "verifiedSwap": "Intercambio verificado",
+      "helpful": "Útil",
+      "unhelpful": "No útil",
+      "loginToVote": "Inicia sesión para votar si las reseñas son útiles.",
+      "sortLabel": "Ordenar reseñas",
+      "sortTop": "Mejores reseñas",
+      "sortRecent": "Más recientes",
       "validation": {
         "ratingRequired": "Se requiere calificación antes de enviar."
       }
