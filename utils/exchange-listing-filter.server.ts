@@ -7,9 +7,9 @@ import {
   type ExchangeRegionBucket,
 } from "@/utils/discovery-filters"
 import { prisma } from "@/lib/db"
+import { EXCHANGE_SAMPLE_MAX_ML } from "@/utils/exchange-constants"
 
-/** Max ml for classifying a listing as a sample (exchange bottle-type filter). */
-export const EXCHANGE_SAMPLE_MAX_ML = 10
+export { EXCHANGE_SAMPLE_MAX_ML }
 
 const parseMlSql = (column: string) =>
   `(NULLIF(REGEXP_REPLACE(TRIM(${column}), '[^0-9.]', '', 'g'), ''))::numeric`

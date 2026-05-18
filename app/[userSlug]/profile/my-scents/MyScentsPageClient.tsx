@@ -9,6 +9,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useSessionStore } from "@/hooks/sessionStore"
 
 import { Button } from "@/components/Atoms/Button"
+import VooDooDetails from "@/components/Atoms/VooDooDetails"
 import Select from "@/components/Atoms/Select/Select"
 import { PaginationBar } from "@/components/Molecules/PaginationBar"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
@@ -21,17 +22,30 @@ import { getPerfumeTypeLabel } from "@/data/SelectTypes"
 import { useResponsivePageSize } from "@/hooks/useMediaQuery"
 import { useDataWithFilters } from "@/hooks/useDataWithFilters"
 import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
+import InventoryStatsStrip from "@/components/Containers/MyScents/InventoryStatsStrip"
+import MyListingsPanel from "@/components/Containers/MyScents/MyListingsPanel"
+import MyScentsViewTabs from "@/components/Containers/MyScents/MyScentsViewTabs"
 import WishlistDemandSection from "@/components/Containers/MyScents/WishlistDemandSection"
+import {
+  getActiveListings,
+  getBottleEntries,
+  getInventoryListingStatus,
+  getPausedListings,
+  isActiveListing,
+  isPausedListing,
+  parseMl,
+} from "@/lib/user-inventory"
+import { computeCollectionCounts } from "@/lib/user-inventory-stats"
+import type { UserInventoryStats } from "@/models/user-inventory-stats.server"
 import type { TraderWantingUserListingRow } from "@/models/wishlist-matching.server"
+import type { MyScentsView, UserPerfumeForClient } from "@/types/my-scents-client"
 import type { SortOption } from "@/utils/sortUtils"
+import { styleMerge } from "@/utils/styleUtils"
 
 const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
 const USER_PERFUMES_API = "/api/user-perfumes"
 
-const parseAmountMl = (amount: string): number => {
-  const n = parseFloat((amount ?? "").replace(/[^0-9.]/g, "") || "0")
-  return isNaN(n) ? 0 : n
-}
+export type { UserPerfumeForClient }
 
 const CUSTOM_FILTERS = {
   house: {
@@ -41,55 +55,23 @@ const CUSTOM_FILTERS = {
   minAmt: {
     predicate: (item: UserPerfumeForClient, value: string) => {
       if (!value) return true
-      return parseAmountMl(item.amount) >= parseFloat(value)
+      return parseMl(item.amount) >= parseFloat(value)
     },
   },
   maxAmt: {
     predicate: (item: UserPerfumeForClient, value: string) => {
       if (!value) return true
-      return parseAmountMl(item.amount) <= parseFloat(value)
+      return parseMl(item.amount) <= parseFloat(value)
     },
   },
 } as const
 
-/** User perfume as passed from server (createdAt serialized as string). */
-export type UserPerfumeForClient = {
-  id: string
-  userId: string
-  perfumeId: string
-  amount: string
-  available: string | null
-  price: string | null
-  placeOfPurchase: string | null
-  tradePrice: string | null
-  tradePreference: string | null
-  tradeOnly: boolean | null
-  type: string | null
-  createdAt: string
-  perfume: {
-    id: string
-    name: string
-    slug: string
-    image: string | null
-    description: string | null
-    perfumeHouse: {
-      id: string
-      name: string
-      slug: string
-    } | null
-  }
-  _count: { comments: number }
-}
-
 type MyScentsPageClientProps = {
   userPerfumes: UserPerfumeForClient[]
   wishlistDemand?: TraderWantingUserListingRow[]
+  inventoryStats: UserInventoryStats
   bannerImage: string
 }
-
-/** Returns only "real bottle" entries – excludes standalone destash rows (amount === "0"). */
-const getBottleEntries = (list: UserPerfumeForClient[]): UserPerfumeForClient[] =>
-  list.filter((up) => up.amount !== "0")
 
 const buildBottleLabel = (up: UserPerfumeForClient, bottleCount: number): string | null => {
   if (bottleCount < 2) return null
@@ -98,6 +80,43 @@ const buildBottleLabel = (up: UserPerfumeForClient, bottleCount: number): string
   const amtStr = up.amount && up.amount !== "0" && !isNaN(amtNum) ? `${amtNum.toFixed(1)} ml` : null
   const parts = [typeLabel, amtStr].filter(Boolean)
   return parts.length > 0 ? parts.join(" · ") : null
+}
+
+/** Keep client pause state when a soft navigation returns stale server listing fields. */
+const mergeUserPerfumesWithServer = (
+  local: UserPerfumeForClient[],
+  server: UserPerfumeForClient[]
+): UserPerfumeForClient[] => {
+  if (local.length === 0) return server
+
+  const serverById = new Map(server.map((up) => [up.id, up]))
+  const merged = local.map((row) => {
+    const fromServer = serverById.get(row.id)
+    if (!fromServer) return row
+    if (isPausedListing(row) && isActiveListing(fromServer)) {
+      return {
+        ...fromServer,
+        available: "0",
+        pausedAvailable: row.pausedAvailable ?? fromServer.pausedAvailable,
+      }
+    }
+    if (isActiveListing(row) && isPausedListing(fromServer)) {
+      return {
+        ...fromServer,
+        available: row.available,
+        pausedAvailable: null,
+      }
+    }
+    return { ...row, ...fromServer }
+  })
+
+  for (const row of server) {
+    if (!local.some((up) => up.id === row.id)) {
+      merged.push(row)
+    }
+  }
+
+  return merged
 }
 
 const serializeUserPerfume = (up: Record<string, unknown>): UserPerfumeForClient => {
@@ -112,6 +131,10 @@ const serializeUserPerfume = (up: Record<string, unknown>): UserPerfumeForClient
     ...up,
     createdAt: createdAtStr,
     available: up.available ?? null,
+    pausedAvailable:
+      up.pausedAvailable != null && up.pausedAvailable !== ""
+        ? String(up.pausedAvailable)
+        : null,
     price: up.price ?? null,
     placeOfPurchase: up.placeOfPurchase ?? null,
     tradePrice: up.tradePrice ?? null,
@@ -151,6 +174,10 @@ const buildOptimisticUserPerfume = (
       : null,
   },
   _count: { comments: 0 },
+  images: [],
+  condition: null,
+  decantFormat: null,
+  mlRemaining: null,
 })
 
 const SORT_OPTIONS: SortOption[] = ["name-asc", "name-desc", "created-desc", "created-asc"]
@@ -158,17 +185,34 @@ const SORT_OPTIONS: SortOption[] = ["name-asc", "name-desc", "created-desc", "cr
 const MyScentsPageClient = ({
   userPerfumes: initialUserPerfumes,
   wishlistDemand = [],
+  inventoryStats,
   bannerImage,
 }: MyScentsPageClientProps) => {
   const params = useParams()
   const userSlug = params?.userSlug as string
   const [userPerfumes, setUserPerfumes] = useState<UserPerfumeForClient[]>(initialUserPerfumes)
+  const [stats, setStats] = useState<UserInventoryStats>(inventoryStats)
   const t = useTranslations("myScents")
   const tSort = useTranslations("sortOptions")
+  const tTabs = useTranslations("myScents.tabs")
+  const tStatus = useTranslations("myScents.listingStatus")
 
   useEffect(() => {
-    setUserPerfumes(initialUserPerfumes)
+    setUserPerfumes((prev) => mergeUserPerfumesWithServer(prev, initialUserPerfumes))
   }, [initialUserPerfumes])
+
+  useEffect(() => {
+    setStats(inventoryStats)
+  }, [inventoryStats])
+
+  const liveInventoryStats = useMemo((): UserInventoryStats => {
+    const { bottleCount, houseCount } = computeCollectionCounts(userPerfumes)
+    return {
+      ...stats,
+      bottleCount,
+      houseCount,
+    }
+  }, [userPerfumes, stats])
 
   const refreshCollection = useCallback(async () => {
     const res = await fetch(USER_PERFUMES_API, { credentials: "include" })
@@ -176,6 +220,9 @@ const MyScentsPageClient = ({
     const data = await res.json().catch(() => ({}))
     if (!data?.success || !Array.isArray(data.userPerfumes)) return
     setUserPerfumes(data.userPerfumes.map(serializeUserPerfume))
+    if (data.inventoryStats) {
+      setStats(data.inventoryStats as UserInventoryStats)
+    }
   }, [])
 
   const handleOptimisticAdd = useCallback((optimisticItem: OptimisticCollectionItem) => {
@@ -187,6 +234,8 @@ const MyScentsPageClient = ({
   }, [])
 
   const bottleEntries = useMemo(() => getBottleEntries(userPerfumes), [userPerfumes])
+  const activeListings = useMemo(() => getActiveListings(userPerfumes), [userPerfumes])
+  const pausedListings = useMemo(() => getPausedListings(userPerfumes), [userPerfumes])
 
   const bottleCountByPerfumeId = useMemo(() => {
     const m = new Map<string, number>()
@@ -282,6 +331,27 @@ const MyScentsPageClient = ({
   const searchParams = useSearchParams()
   const openModal = useSessionStore(s => s.openModal)
   const basePath = userSlug ? `/${userSlug}/profile/my-scents` : "/profile/my-scents"
+  const activeView: MyScentsView =
+    searchParams.get("view") === "listings" ? "listings" : "inventory"
+
+  const handleListingChange = useCallback((updated: UserPerfumeForClient) => {
+    setUserPerfumes((prev) =>
+      prev.map((up) => (up.id === updated.id ? { ...up, ...updated } : up))
+    )
+  }, [])
+
+  const setActiveView = useCallback(
+    (view: MyScentsView) => {
+      const next = new URLSearchParams(searchParams.toString())
+      if (view === "inventory") next.delete("view")
+      else next.set("view", "listings")
+      next.delete("pg")
+      const qs = next.toString()
+      router.replace(`${basePath}${qs ? `?${qs}` : ""}`, { scroll: false })
+    },
+    [basePath, router, searchParams]
+  )
+
   const [autoFocusAddSearch, setAutoFocusAddSearch] = useState(false)
   const [bulkAddOpen, setBulkAddOpen] = useState(false)
   const [csvImportOpen, setCsvImportOpen] = useState(false)
@@ -382,38 +452,68 @@ const MyScentsPageClient = ({
         />
       )}
       <WishlistDemandSection demand={wishlistDemand} />
-      <div className="noir-border relative inner-container mx-auto text-center flex flex-col items-center justify-center gap-4 p-4 my-6">
-        <h2 className="mb-2">{t("collection.heading")}</h2>
-        {bottleEntries.length > 0 && (
-          <>
-            <div className="w-full mb-2">
-              <SearchInput
-                value={searchQuery}
-                onChange={setSearchQuery}
-                placeholder={t("search.placeholder")}
-              />
-            </div>
+      <div className="noir-border relative inner-container mx-auto my-6 p-4">
+        <MyScentsViewTabs
+          activeView={activeView}
+          onViewChange={setActiveView}
+          ariaLabel={tTabs("ariaLabel")}
+          inventoryLabel={tTabs("inventory")}
+          listingsLabel={tTabs("listings")}
+          listingsCount={activeListings.length + pausedListings.length}
+          listingsPanel={
+            <MyListingsPanel
+              activeListings={activeListings}
+              pausedListings={pausedListings}
+              basePath={basePath}
+              onListingChange={handleListingChange}
+            />
+          }
+          inventoryPanel={
+            <>
+              <h2 className="text-center text-xl text-noir-gold">{t("inventory.heading")}</h2>
+              {bottleEntries.length > 0 && (
+                <div className="mb-4 w-full">
+                  <SearchInput
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    placeholder={t("search.placeholder")}
+                  />
+                </div>
+              )}
+              <VooDooDetails
+                name="inventory-at-a-glance"
+                type="primary"
+                background="dark"
+                summary={t("inventory.atAGlance")}
+                className="mb-4 w-full"
+                defaultOpen
+              >
+                <div className="px-3 pb-4 pt-2">
+                  <InventoryStatsStrip stats={liveInventoryStats} />
+                </div>
+              </VooDooDetails>
+              {bottleEntries.length > 0 && (
+                <>
+                  <div className="mb-2 flex w-full flex-col items-end justify-between gap-4 border-b border-t border-noir-gold py-4 md:flex-row">
+                    <Select
+                      selectId="my-scents-sort"
+                      selectData={sortSelectData}
+                      action={handleSortChange}
+                      defaultId={selectedSort}
+                      label={t("filters.sort")}
+                      size="compact"
+                    />
 
-            <div className="w-full flex flex-col md:flex-row gap-4 items-end justify-between mb-2 border-b border-noir-gold py-4 border-t">
-              <Select
-                selectId="my-scents-sort"
-                selectData={sortSelectData}
-                action={handleSortChange}
-                defaultId={selectedSort}
-                label={t("filters.sort")}
-                size="compact"
-              />
+                    <Select
+                      selectId="my-scents-house"
+                      selectData={houseOptions}
+                      action={handleHouseChange}
+                      defaultId={customFilterValues.house || "all"}
+                      label={t("filters.house")}
+                      size="compact"
+                    />
 
-              <Select
-                selectId="my-scents-house"
-                selectData={houseOptions}
-                action={handleHouseChange}
-                defaultId={customFilterValues.house || "all"}
-                label={t("filters.house")}
-                size="compact"
-              />
-
-              <div className="flex gap-2 items-end">
+                    <div className="flex gap-2 items-end">
                 <div className="flex flex-col items-start">
                   <label
                     htmlFor="my-scents-min-amt"
@@ -492,11 +592,24 @@ const MyScentsPageClient = ({
                     : BOTTLE_PLACEHOLDER
                 const bottleCount = bottleCountByPerfumeId.get(userPerfume.perfumeId) ?? 0
                 const bottleLabel = buildBottleLabel(userPerfume, bottleCount)
+                const listingStatus = getInventoryListingStatus(userPerfume, userPerfumes)
                 return (
                   <li
                     key={userPerfume.id}
-                    className="flex flex-col items-center justify-center border-4 border-double border-noir-gold p-1"
+                    className="relative flex flex-col items-center justify-center border-4 border-double border-noir-gold p-1"
                   >
+                    <span
+                      className={styleMerge(
+                        "absolute right-1 top-1 z-10 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                        listingStatus === "listed"
+                          ? "bg-noir-gold/30 text-noir-gold"
+                          : listingStatus === "partiallyListed"
+                            ? "bg-noir-gold/20 text-noir-gold-100"
+                            : "bg-noir-black/60 text-noir-gold-500"
+                      )}
+                    >
+                      {tStatus(listingStatus)}
+                    </span>
                     <Link
                       href={`${basePath}/${userPerfume.id}`}
                       className="block"
@@ -535,6 +648,9 @@ const MyScentsPageClient = ({
             )}
           </div>
         )}
+            </>
+          }
+        />
       </div>
     </section>
   )

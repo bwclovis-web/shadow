@@ -642,6 +642,63 @@
       "title": "Mis Aromas - Shadow and Sillage",
       "description": "Administra tu colección personal de perfumes."
     },
+    "tabs": {
+      "ariaLabel": "Vistas de Mis Aromas",
+      "inventory": "Mi inventario",
+      "listings": "Mis anuncios"
+    },
+    "inventory": {
+      "heading": "Mi inventario",
+      "atAGlance": "Inventario de un vistazo"
+    },
+    "stats": {
+      "bottles": "Botellas",
+      "bottlesHint": "Perfumes únicos en tu colección",
+      "houses": "Casas",
+      "housesHint": "Casas de perfumería distintas",
+      "families": "Familias principales",
+      "familiesHint": "Familias de notas en tu colección",
+      "familiesEmpty": "Añade botellas para ver familias",
+      "tradedValue": "Valor de anuncios intercambiados",
+      "tradedValueAmount": "${amount}",
+      "tradedValueEmpty": "—",
+      "tradedValueFootnote": "Suma de precios pedidos en botellas de intercambios completados (pago fuera de la plataforma)."
+    },
+    "listingStatus": {
+      "notTrading": "Sin intercambio",
+      "listed": "En venta",
+      "partiallyListed": "Parcialmente en venta"
+    },
+    "listingKind": {
+      "decant": "Decant",
+      "sample": "Muestra",
+      "full": "Botella completa",
+      "partial": "Parcial"
+    },
+    "listings": {
+      "listedMl": "{ml} ml en venta",
+      "pausedMl": "{ml} ml en pausa",
+      "pausedBadge": "En pausa",
+      "pausedHeading": "Anuncios en pausa",
+      "pausedSubheading": "Están ocultos del intercambio. Reanuda para publicar la misma cantidad.",
+      "pause": "Pausar venta",
+      "pausing": "Pausando…",
+      "resume": "Reanudar venta",
+      "resuming": "Reanudando…",
+      "resumeFailed": "No se pudo reanudar este anuncio. Inténtalo de nuevo o edítalo.",
+      "pauseFailed": "No se pudo pausar este anuncio. Inténtalo de nuevo.",
+      "edit": "Editar anuncio",
+      "empty": {
+        "heading": "Sin anuncios activos",
+        "subheading": "Haz destash desde una botella en Mi inventario para aparecer en el intercambio.",
+        "cta": "Ir a Mi inventario"
+      }
+    },
+    "listingSummary": {
+      "listed": "{ml} ml en venta en el intercambio.",
+      "viewListings": "Ver mis anuncios",
+      "notTrading": "Sin venta — nada publicado en el intercambio."
+    },
     "collection": {
       "heading": "Mi Colección de Perfumes",
       "itemsCount": "{{count}} artículos en tu colección",
@@ -710,6 +767,14 @@
     "destashManager": {
       "title": "Gestión de Desocultados",
       "description": "Crea, edita y administra múltiples desocultados para este perfume. Cada desocultado puede tener su propia cantidad, precio y preferencias de intercambio.",
+      "pauseAll": "Pausar todos los anuncios",
+      "pausedHeading": "Anuncios en pausa",
+      "pausedLabel": "En pausa",
+      "pausedAmount": "{ml} ml (estaba en venta)",
+      "resume": "Reanudar venta",
+      "resuming": "Reanudando…",
+      "removePaused": "Eliminar anuncio",
+      "removing": "Eliminando…",
       "addNew": "Agregar Nuevo Desocultado",
       "createNew": "Crear Nuevo Desocultado",
       "editDestash": "Editar Desocultado",
@@ -1740,7 +1805,10 @@
     "lightboxTitle": "Foto del anuncio",
     "previousPhoto": "Foto anterior",
     "nextPhoto": "Foto siguiente",
-    "closeLightbox": "Cerrar"
+    "closeLightbox": "Cerrar",
+    "errors": {
+      "photoRequired": "Se requiere al menos una foto del anuncio para publicar en el intercambio."
+    }
   },
   "onboarding": {
     "bannerLabel": "Primeros pasos",

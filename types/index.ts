@@ -128,6 +128,7 @@ export interface UserPerfumeI {
   perfume: PerfumeI
   amount: string
   available: string
+  pausedAvailable?: string | null
   price?: string
   type?: string
   placeOfPurchase?: string

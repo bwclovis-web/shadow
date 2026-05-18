@@ -4,6 +4,7 @@ import { deleteFromR2, getR2KeyFromPublicUrl } from "@/lib/r2"
 
 import {
   deleteListingImagesFromR2,
+  LISTING_PUBLISH_ERROR_CODES,
   parseListingImagesJson,
   parseListingMetadataFromFormData,
   validateListingPublish,
@@ -48,7 +49,7 @@ describe("listing-metadata.server", () => {
       })
     ).toEqual({
       ok: false,
-      error: "At least one listing photo is required to publish on the exchange.",
+      errorCode: LISTING_PUBLISH_ERROR_CODES.photoRequired,
     })
 
     expect(
@@ -57,6 +58,14 @@ describe("listing-metadata.server", () => {
         condition: null,
         decantFormat: null,
       })
+    ).toEqual({ ok: true })
+
+    expect(
+      validateListingPublish(
+        "10",
+        { images: [], condition: null, decantFormat: null },
+        { resumingPausedListing: true }
+      )
     ).toEqual({ ok: true })
   })
 

@@ -74,17 +74,31 @@ export const deleteListingImagesFromR2 = async (images: string[]) => {
   }
 }
 
+export const LISTING_PUBLISH_ERROR_CODES = {
+  photoRequired: "photoRequired",
+} as const
+
+export type ListingPublishErrorCode =
+  (typeof LISTING_PUBLISH_ERROR_CODES)[keyof typeof LISTING_PUBLISH_ERROR_CODES]
+
+export type ListingPublishValidation =
+  | { ok: true }
+  | { ok: false; errorCode: ListingPublishErrorCode }
+
 export const validateListingPublish = (
   availableAmount: string,
-  metadata: ListingMetadataInput
-): { ok: true } | { ok: false; error: string } => {
+  metadata: ListingMetadataInput,
+  options?: { resumingPausedListing?: boolean }
+): ListingPublishValidation => {
   const available = parseFloat(availableAmount?.replace(/[^0-9.]/g, "") || "0")
   if (available <= 0) return { ok: true }
+
+  if (options?.resumingPausedListing) return { ok: true }
 
   if (isListingPhotoRequired() && metadata.images.length === 0) {
     return {
       ok: false,
-      error: "At least one listing photo is required to publish on the exchange.",
+      errorCode: LISTING_PUBLISH_ERROR_CODES.photoRequired,
     }
   }
 

@@ -153,9 +153,11 @@ _Trade lifecycle, matching, alerts, and reputation all exist. They need more inv
 
 ### B3 — Private Inventory vs. Public Listings (IMP-256)
 
-- [ ] **IMP-256** Add "My Inventory" (all owned, private) vs. "My Listings" (available, exchange-visible) view split in user inventory
-- [ ] Inventory items can be marked "not trading" without being deleted
-- [ ] Inventory view shows collection stats (houses, families, total value of traded bottles)
+- [x] **IMP-256** Add "My Inventory" (all owned, private) vs. "My Listings" (available, exchange-visible) view split in user inventory
+- [x] Inventory items can be marked "not trading" without being deleted
+- [x] Inventory view shows collection stats (houses, families, total value of traded bottles)
+
+**Shipped in (IMP-256):** `lib/user-inventory.ts` (classification helpers); `models/user-inventory-stats.server.ts`; `MyScentsPageClient.tsx` tabs (`?view=inventory|listings`), `InventoryStatsStrip`, listing status chips; `MyListingsPanel.tsx` (pause via `available: 0`); `MySingleScentClient.tsx` listing summary + `#destash`; `DestashManager` pause-all; i18n `myScents.tabs|stats|listings|listingStatus|listingKind|listingSummary`; `types/my-scents-client.ts`.
 
 ### B4 — Barcode / QR Scanning
 

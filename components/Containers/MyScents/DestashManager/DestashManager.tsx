@@ -7,18 +7,21 @@ import { useCSRF } from "@/hooks/useCSRF"
 import { useSessionStore } from "@/hooks/sessionStore"
 import type { UserPerfumeI } from "@/types"
 
+import {
+  getActiveListings,
+  getPausedListings,
+  getResumeListingMl,
+  isCollectionBottle,
+  parseMl,
+} from "@/lib/user-inventory"
+import { resolveListingApiError } from "@/lib/resolve-listing-api-error"
+
 import DestashForm, { type DeStashData } from "../DeStashForm/DeStashForm"
 import DestashItem from "./DestashItem"
-
-const parseMl = (value?: string | null) => {
-  const n = parseFloat((value ?? "").replace(/[^0-9.]/g, "") || "0")
-  return Number.isFinite(n) ? n : 0
-}
+import PausedDestashItem from "./PausedDestashItem"
 
 const totalDestashedForPerfume = (entriesForPerfume: UserPerfumeI[]) =>
   entriesForPerfume.reduce((sum, e) => sum + parseMl(e.available), 0)
-
-const isCollectionBottle = (entry: UserPerfumeI) => parseMl(entry.amount) > 0
 
 const standaloneDestashMl = (entriesForPerfume: UserPerfumeI[]) =>
   entriesForPerfume
@@ -59,9 +62,12 @@ const DestashManager = ({
   currentBottleId,
 }: DestashManagerProps) => {
   const t = useTranslations("myScents.destashManager")
+  const tListingErrors = useTranslations("listing.errors")
   const { addToFormData } = useCSRF()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
+  const [resumeTargetId, setResumeTargetId] = useState<string | null>(null)
+  const [removeTargetId, setRemoveTargetId] = useState<string | null>(null)
   const [submitState, setSubmitState] = useState<"idle" | "submitting">("idle")
   const [submitData, setSubmitData] = useState<{
     success?: boolean
@@ -108,14 +114,11 @@ const DestashManager = ({
       previousStateRef.current === "submitting" && submitState === "idle"
 
     if (transitionedToIdle && submittedRef.current && !isSuccess) {
-      const err =
-        responseData &&
-        typeof responseData === "object" &&
-        "error" in responseData &&
-        typeof (responseData as { error?: string }).error === "string"
-          ? (responseData as { error: string }).error
-          : null
-      setSubmitError(err)
+      const payload =
+        responseData && typeof responseData === "object"
+          ? (responseData as { error?: string; errorCode?: string })
+          : {}
+      setSubmitError(resolveListingApiError(payload, tListingErrors))
     }
 
     if (transitionedToIdle && isSuccess && submittedRef.current) {
@@ -145,13 +148,12 @@ const DestashManager = ({
     }
 
     previousStateRef.current = submitState
-  }, [submitState, submitData, setUserPerfumes])
+  }, [submitState, submitData, setUserPerfumes, tListingErrors])
 
-  // Filter destashes for this perfume
-  const destashes = userPerfumes.filter(up => up.perfumeId === perfumeId && parseFloat(up.available || "0") > 0)
+  const entriesForPerfume = userPerfumes.filter((up) => up.perfumeId === perfumeId)
+  const destashes = getActiveListings(entriesForPerfume)
+  const pausedDestashes = getPausedListings(entriesForPerfume)
 
-  // Calculate total owned and total destashed for this perfume
-  const entriesForPerfume = userPerfumes.filter(up => up.perfumeId === perfumeId)
   const totalOwned = entriesForPerfume.reduce((sum, entry) => {
     const amt = parseFloat(entry.amount?.replace(/[^0-9.]/g, "") || "0")
     return sum + (isNaN(amt) ? 0 : amt)
@@ -174,21 +176,70 @@ const DestashManager = ({
     setIsCreating(false)
   }
 
-  const handleDelete = (userPerfumeId: string) => {
-    const destash = userPerfumes.find((up) => up.id === userPerfumeId)
-    closeModal()
-    if (destash) {
-      setUserPerfumes((prev) =>
-        prev.map((perfume) =>
-          perfume.id === userPerfumeId ? { ...perfume, available: "0" } : perfume
-        )
-      )
+  const pauseListing = (userPerfumeId: string) => {
+    setUserPerfumes((prev) =>
+      prev.map((perfume) => {
+        if (perfume.id !== userPerfumeId) return perfume
+        const listed = parseMl(perfume.available)
+        if (listed <= 0) return perfume
+        return {
+          ...perfume,
+          available: "0",
+          pausedAvailable: perfume.available,
+        }
+      })
+    )
+    const formData = new FormData()
+    formData.append("action", "decant")
+    formData.append("userPerfumeId", userPerfumeId)
+    formData.append("perfumeId", perfumeId)
+    formData.append("amount", "0")
+    submitForm(formData)
+  }
+
+  const resumeListing = async (userPerfumeId: string, pausedAvailable: string) => {
+    setResumeTargetId(userPerfumeId)
+    try {
       const formData = new FormData()
       formData.append("action", "decant")
       formData.append("userPerfumeId", userPerfumeId)
       formData.append("perfumeId", perfumeId)
-      formData.append("amount", "0")
-      submitForm(formData)
+      formData.append("amount", pausedAvailable)
+      formData.append("resumePaused", "true")
+      await submitForm(formData)
+    } finally {
+      setResumeTargetId(null)
+    }
+  }
+
+  const removePausedListing = (userPerfumeId: string) => {
+    setRemoveTargetId(userPerfumeId)
+    setUserPerfumes((prev) =>
+      prev.map((perfume) =>
+        perfume.id === userPerfumeId
+          ? { ...perfume, pausedAvailable: null }
+          : perfume
+      )
+    )
+    const formData = new FormData()
+    formData.append("action", "decant")
+    formData.append("userPerfumeId", userPerfumeId)
+    formData.append("perfumeId", perfumeId)
+    formData.append("amount", "0")
+    submitForm(formData).finally(() => setRemoveTargetId(null))
+  }
+
+  const handleDelete = (userPerfumeId: string) => {
+    closeModal()
+    if (userPerfumes.find((up) => up.id === userPerfumeId)) {
+      pauseListing(userPerfumeId)
+    }
+  }
+
+  const handlePauseAll = () => {
+    if (destashes.length === 0) return
+    for (const destash of destashes) {
+      pauseListing(destash.id)
     }
   }
 
@@ -249,14 +300,27 @@ const DestashManager = ({
           {t("title")}
         </h3>
         {!isCreating && !editingId && (
-          <Button
-            onClick={handleCreateNew}
-            variant="primary"
-            size="sm"
-            leftIcon={<MdAdd size={18} />}
-          >
-            {t("addNew")}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {destashes.length > 1 && (
+              <Button
+                onClick={handlePauseAll}
+                variant="secondary"
+                size="sm"
+                disabled={submitState === "submitting"}
+              >
+                {t("pauseAll")}
+              </Button>
+            )}
+            <Button
+              onClick={handleCreateNew}
+              variant="primary"
+              size="sm"
+              leftIcon={<MdAdd size={18} />}
+              disabled={submitState === "submitting"}
+            >
+              {t("addNew")}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -267,19 +331,43 @@ const DestashManager = ({
       {/* List of existing destashes */}
       {!isCreating && !editingId && (
         <div className="space-y-3">
-          {destashes.length === 0 ? (
+          {destashes.length === 0 && pausedDestashes.length === 0 ? (
             <p className="text-noir-dark italic leading-none text-center py-4 text-sm">
               {t("noDestashes")}
             </p>
           ) : (
-            destashes.map(destash => (
-              <DestashItem
-                key={destash.id}
-                destash={destash}
-                onEdit={() => handleEdit(destash.id)}
-                onDelete={() => handleDelete(destash.id)}
-              />
-            ))
+            <>
+              {destashes.map((destash) => (
+                <DestashItem
+                  key={destash.id}
+                  destash={destash}
+                  onEdit={() => handleEdit(destash.id)}
+                  onDelete={() => handleDelete(destash.id)}
+                />
+              ))}
+              {pausedDestashes.length > 0 && (
+                <div className="space-y-2 border-t border-noir-gold/20 pt-4">
+                  <h4 className="text-sm font-semibold text-noir-dark">
+                    {t("pausedHeading")}
+                  </h4>
+                  {pausedDestashes.map((destash) => (
+                    <PausedDestashItem
+                      key={destash.id}
+                      destash={destash}
+                      isResuming={resumeTargetId === destash.id}
+                      isRemoving={removeTargetId === destash.id}
+                      onResume={() =>
+                        resumeListing(
+                          destash.id,
+                          destash.pausedAvailable ?? String(getResumeListingMl(destash))
+                        )
+                      }
+                      onRemove={() => removePausedListing(destash.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

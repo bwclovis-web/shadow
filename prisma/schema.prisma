@@ -137,6 +137,7 @@ model UserPerfume {
   perfumeId           String
   amount              String               @default("0")
   available           String               @default("0")
+  pausedAvailable     String?
   price               String?
   placeOfPurchase     String?
   tradePrice          String?

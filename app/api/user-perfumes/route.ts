@@ -12,6 +12,7 @@ import {
   updatePerfumeComment,
   updateUserPerfumeAmount,
 } from "@/models/user.server"
+import { getUserInventoryStats } from "@/models/user-inventory-stats.server"
 import { parseListingMetadataFromFormData } from "@/models/listing-metadata.server"
 import { processWishlistAvailabilityAlerts } from "@/utils/alert-processors"
 import { authenticateUser } from "@/utils/server/auth.server"
@@ -25,9 +26,13 @@ export async function GET(request: NextRequest) {
     if (!authResult.success) {
       return NextResponse.json({ success: false, error: authResult.error }, { status: authResult.status ?? 401 })
     }
-    const userPerfumes = await getUserPerfumes(authResult.user!.id)
-    const allPerfumes = await fetchAllPerfumesForCatalog()
-    return NextResponse.json({ success: true, userPerfumes, allPerfumes })
+    const userId = authResult.user!.id
+    const [userPerfumes, allPerfumes, inventoryStats] = await Promise.all([
+      getUserPerfumes(userId),
+      fetchAllPerfumesForCatalog(),
+      getUserInventoryStats(userId),
+    ])
+    return NextResponse.json({ success: true, userPerfumes, allPerfumes, inventoryStats })
   } catch (error) {
     const appError = ErrorHandler.handle(error, { api: "user-perfumes", action: "loader" })
     return NextResponse.json({ success: false, error: appError.userMessage }, { status: 500 })
@@ -116,6 +121,7 @@ export async function POST(request: NextRequest) {
           tradePreference,
           tradeOnly,
           listing,
+          resumePaused: formData.get("resumePaused") === "true",
         })
         if (amount && parseFloat(amount) > 0 && perfumeId) {
           try {

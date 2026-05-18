@@ -1,7 +1,7 @@
 "use client"
 
 import { getFormProps, useForm } from "@conform-to/react"
-import { useRef } from "react"
+import { useCallback, useRef } from "react"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button"
@@ -35,7 +35,7 @@ const MyScentsModal = ({
   onOptimisticAddRollback,
   autoFocusSearch = false,
 }: MyScentsModalProps) => {
-  const { modalData } = useSessionStore()
+  const { modalData, closeModal } = useSessionStore()
   const t = useTranslations("myScents.modal")
 
   const priceInputRef = useRef<HTMLInputElement>(null)
@@ -45,13 +45,18 @@ const MyScentsModal = ({
     id: "perfume-form",
   })
 
+  const handleAddSuccess = useCallback(() => {
+    closeModal()
+    onAddedToCollection?.()
+  }, [closeModal, onAddedToCollection])
+
   const {
     selectedPerfume,
     perfumeData,
     setPerfumeData,
     handleClick,
     handleAddPerfume,
-  } = useMyScentsForm(perfume, onAddedToCollection, {
+  } = useMyScentsForm(perfume, handleAddSuccess, {
     onOptimisticAdd: onOptimisticAddToCollection,
     onOptimisticAddRollback,
   })

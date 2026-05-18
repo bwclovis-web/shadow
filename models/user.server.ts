@@ -29,6 +29,12 @@ import {
   listingMetadataToPrismaData,
   validateListingPublish,
 } from "./listing-metadata.server"
+import {
+  attachPausedAvailable,
+  fetchPausedAvailableByUser,
+  getPausedAvailable,
+  setPausedAvailable,
+} from "./user-perfume-pause.server"
 import { userPerfumeListingSelect } from "./user-perfume-listing-fields"
 import { getUserByEmail } from "./user.query"
 
@@ -367,9 +373,9 @@ export const getUserPerfumes = async (userId: string) => {
       },
     },
   })
-  
-  // Only fetch comments if specifically needed, or fetch separately
-  return userPerfumes
+
+  const pauseById = await fetchPausedAvailableByUser(userId)
+  return attachPausedAvailable(userPerfumes, pauseById)
 }
 
 /**
@@ -500,7 +506,7 @@ export const createDestashEntry = async ({
     }
     const publishCheck = validateListingPublish(available, listingMeta)
     if (!publishCheck.ok) {
-      return { success: false, error: publishCheck.error }
+      return { success: false, errorCode: publishCheck.errorCode }
     }
     // Get all user's entries for this perfume to calculate totals
     const existingEntries = await prisma.userPerfume.findMany({
@@ -550,36 +556,36 @@ export const createDestashEntry = async ({
         amount: true,
         available: true,
         price: true,
-        placeOfPurchase: true,
-        tradePrice: true,
-        tradePreference: true,
-        tradeOnly: true,
-        type: true,
-        createdAt: true,
-        ...userPerfumeListingSelect,
-        perfume: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            image: true,
-            description: true,
-            perfumeHouse: {
-              select: {
-                id: true,
-                name: true,
-                slug: true,
-              },
+      placeOfPurchase: true,
+      tradePrice: true,
+      tradePreference: true,
+      tradeOnly: true,
+      type: true,
+      createdAt: true,
+      ...userPerfumeListingSelect,
+      perfume: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          image: true,
+          description: true,
+          perfumeHouse: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
             },
           },
         },
-        _count: {
-          select: {
-            comments: true,
-          },
+      },
+      _count: {
+        select: {
+          comments: true,
         },
       },
-    })
+    },
+  })
 
     try {
       await updateScentProfileFromBehavior(userId, {
@@ -591,7 +597,7 @@ export const createDestashEntry = async ({
       // Don't fail the operation if scent profile update fails
     }
 
-    return { success: true, userPerfume }
+    return { success: true, userPerfume: { ...userPerfume, pausedAvailable: null } }
   } catch (error) {
     console.error("Error creating destash entry:", error)
     return { success: false, error: "Failed to create destash entry" }
@@ -727,6 +733,7 @@ export const updateAvailableAmount = async (params: {
   tradePreference?: string
   tradeOnly?: boolean
   listing?: ListingMetadataInput
+  resumePaused?: boolean
 }) => {
   try {
     const {
@@ -737,6 +744,7 @@ export const updateAvailableAmount = async (params: {
       tradePreference,
       tradeOnly,
       listing,
+      resumePaused = false,
     } = params
 
     // Check if the user owns this user perfume entry
@@ -751,15 +759,40 @@ export const updateAvailableAmount = async (params: {
       return { success: false, error: "Perfume not found in your collection" }
     }
 
-    const listingMeta: ListingMetadataInput = listing ?? {
+    const parseAvailMl = (value: string | null | undefined) =>
+      parseFloat((value ?? "").replace(/[^0-9.]/g, "") || "0") || 0
+
+    const pausedStoredRaw = await getPausedAvailable(existingPerfume.id, userId)
+    const pausedStoredMl = parseAvailMl(pausedStoredRaw)
+    const newDestashAmount = parseAmountToNumber(availableAmount) || 0
+    const existingAvailableMl = parseAvailMl(existingPerfume.available)
+    const isResumingPausedListing =
+      newDestashAmount > 0 &&
+      existingAvailableMl <= 0 &&
+      (pausedStoredMl > 0 || resumePaused)
+
+    let listingMeta: ListingMetadataInput = listing ?? {
       images: existingPerfume.images ?? [],
       condition: existingPerfume.condition ?? null,
       decantFormat: existingPerfume.decantFormat ?? null,
     }
 
-    const publishCheck = validateListingPublish(availableAmount, listingMeta)
+    if (isResumingPausedListing && listingMeta.images.length === 0) {
+      const perfume = await prisma.perfume.findUnique({
+        where: { id: existingPerfume.perfumeId },
+        select: { image: true },
+      })
+      const catalogImage = perfume?.image?.trim()
+      if (catalogImage) {
+        listingMeta = { ...listingMeta, images: [catalogImage] }
+      }
+    }
+
+    const publishCheck = validateListingPublish(availableAmount, listingMeta, {
+      resumingPausedListing: isResumingPausedListing,
+    })
     if (!publishCheck.ok) {
-      return { success: false, error: publishCheck.error }
+      return { success: false, errorCode: publishCheck.errorCode }
     }
 
     // Get all user's entries for this perfume to calculate totals
@@ -782,8 +815,30 @@ export const updateAvailableAmount = async (params: {
         return sum + (isNaN(avail) ? 0 : avail)
       }, 0)
 
-    // Parse the new destash amount
-    const newDestashAmount = parseAmountToNumber(availableAmount) || 0
+    const isSoftPause = newDestashAmount <= 0 && existingAvailableMl > 0
+
+    if (isSoftPause) {
+      const pausedSnapshot = existingPerfume.available ?? availableAmount
+      const pauseData: Record<string, unknown> = { available: "0" }
+      if (tradePrice !== undefined && tradePrice !== null) {
+        pauseData.tradePrice = tradePrice
+      }
+      if (tradePreference && typeof tradePreference === "string" && tradePreference.trim()) {
+        pauseData.tradePreference = tradePreference
+      }
+      if (typeof tradeOnly === "boolean") {
+        pauseData.tradeOnly = tradeOnly
+      }
+      const updatedPerfume = await updatePerfumeInDatabase(
+        existingPerfume.id,
+        pauseData
+      )
+      await setPausedAvailable(existingPerfume.id, userId, pausedSnapshot)
+      return {
+        success: true,
+        userPerfume: { ...updatedPerfume, pausedAvailable: pausedSnapshot },
+      }
+    }
 
     // Validate: total destashed (others + new) cannot exceed total owned
     if (totalOwned > 0 && (totalDestashedOthers + newDestashAmount) > totalOwned) {
@@ -794,24 +849,36 @@ export const updateAvailableAmount = async (params: {
       }
     }
 
-    const isUnpublishing = newDestashAmount <= 0
+    const isClearingPausedListing =
+      newDestashAmount <= 0 && existingAvailableMl <= 0 && pausedStoredMl > 0
 
-    if (isUnpublishing && existingPerfume.images?.length) {
+    const isHardUnpublish =
+      newDestashAmount <= 0 && existingAvailableMl <= 0 && pausedStoredMl <= 0
+
+    if ((isHardUnpublish || isClearingPausedListing) && existingPerfume.images?.length) {
       await deleteListingImagesFromR2(existingPerfume.images)
     }
 
     // Prepare update data
+    const shouldApplyListingMeta =
+      listing !== undefined ||
+      (isResumingPausedListing && listingMeta.images.length > 0)
+
     const updateData = prepareUpdateData(
       availableAmount,
       tradePrice,
       tradePreference,
       tradeOnly,
-      isUnpublishing
+      isHardUnpublish || isClearingPausedListing
         ? emptyListingMetadata()
-        : listing !== undefined
+        : shouldApplyListingMeta
           ? listingMeta
           : undefined
     )
+
+    if (isClearingPausedListing) {
+      updateData.available = "0"
+    }
 
     // Update the perfume with new data
     const updatedPerfume = await updatePerfumeInDatabase(
@@ -819,7 +886,17 @@ export const updateAvailableAmount = async (params: {
       updateData
     )
 
-    return { success: true, userPerfume: updatedPerfume }
+    const nextPausedAvailable =
+      newDestashAmount > 0 || isClearingPausedListing ? null : pausedStoredRaw
+
+    if (newDestashAmount > 0 || isClearingPausedListing) {
+      await setPausedAvailable(existingPerfume.id, userId, null)
+    }
+
+    return {
+      success: true,
+      userPerfume: { ...updatedPerfume, pausedAvailable: nextPausedAvailable },
+    }
   } catch (error) {
      
     console.error("Error updating available amount:", error)

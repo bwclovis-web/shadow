@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
+import { Link } from "next-view-transitions"
 import { useRouter } from "next/navigation"
 
 import VooDooDetails from "@/components/Atoms/VooDooDetails"
@@ -18,6 +19,7 @@ import { usePerfumeComments } from "@/hooks/usePerfumeComments"
 import { useSessionStore } from "@/hooks/sessionStore"
 import type { Comment } from "@/types/comments"
 import type { PerfumeI, UserPerfumeI } from "@/types"
+import { getActiveListings, parseMl } from "@/lib/user-inventory"
 import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
 
 const BOTTLE_BANNER = "/images/single-bottle.webp"
@@ -54,6 +56,7 @@ const MySingleScentClient = ({
 }: MySingleScentClientProps) => {
   const router = useRouter()
   const t = useTranslations("myScents.listItem")
+  const tListing = useTranslations("myScents.listingSummary")
   const { modalOpen, modalId, closeModal } = useSessionStore()
   const { addToFormData } = useCSRF()
 
@@ -240,13 +243,13 @@ const MySingleScentClient = ({
     )
     return sum + (Number.isNaN(amt) ? 0 : amt)
   }, 0)
-  const totalDestashed = entriesForThisPerfume.reduce((sum, entry) => {
-    const avail = parseFloat(
-      (entry.available ?? "").toString().replace(/[^0-9.]/g, "") || "0"
-    )
-    return sum + (Number.isNaN(avail) ? 0 : avail)
-  }, 0)
+  const activeListingsForPerfume = getActiveListings(entriesForThisPerfume)
+  const totalDestashed = activeListingsForPerfume.reduce(
+    (sum, entry) => sum + parseMl(entry.available),
+    0
+  )
   const remainingAmount = totalAmount - totalDestashed
+  const myScentsBase = `/${userSlug}/profile/my-scents`
 
   // Totals grouped by type (only real bottle entries – amount !== "0")
   const byTypeMap = entriesForThisPerfume
@@ -317,6 +320,21 @@ const MySingleScentClient = ({
             )
           }}
         />
+        <div className="noir-border mt-4 rounded border border-noir-gold/40 bg-noir-black/30 p-3 text-sm">
+          {totalDestashed > 0 ? (
+            <p className="text-noir-gold-100">
+              {tListing("listed", { ml: totalDestashed.toFixed(1) })}{" "}
+              <Link
+                href={`${myScentsBase}?view=listings`}
+                className="text-noir-gold underline hover:text-noir-gold-100"
+              >
+                {tListing("viewListings")}
+              </Link>
+            </p>
+          ) : (
+            <p className="text-noir-gold-500 italic">{tListing("notTrading")}</p>
+          )}
+        </div>
         <VooDooDetails
           summary={t("viewComments")}
           className="text-start text-noir-dark py-3 mt-3 bg-noir-gold noir-border-dk px-2 relative open:bg-noir-gold-100"
@@ -329,6 +347,7 @@ const MySingleScentClient = ({
           className="text-start text-noir-dark font-bold py-3 mt-3 bg-noir-gold px-2 rounded noir-border-dk relative open:bg-noir-gold-100"
           name="inner-details"
         >
+          <div id="destash">
           <DestashManager
             perfumeId={perfume.id}
             userPerfumes={userPerfumesListState}
@@ -336,6 +355,7 @@ const MySingleScentClient = ({
             apiBasePath={USER_PERFUMES_API}
             currentBottleId={finalPerfume.id}
           />
+          </div>
         </VooDooDetails>
       </div>
     </>

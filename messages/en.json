@@ -857,6 +857,63 @@
       "title": "My Scents - Shadow and Sillage",
       "description": "Manage your personal collection of perfumes."
     },
+    "tabs": {
+      "ariaLabel": "My Scents views",
+      "inventory": "My Inventory",
+      "listings": "My Listings"
+    },
+    "inventory": {
+      "heading": "My Inventory",
+      "atAGlance": "Inventory at a glance"
+    },
+    "stats": {
+      "bottles": "Bottles",
+      "bottlesHint": "Unique perfumes in your collection",
+      "houses": "Houses",
+      "housesHint": "Distinct perfume houses represented",
+      "families": "Top families",
+      "familiesHint": "Note families across your collection",
+      "familiesEmpty": "Add bottles to see families",
+      "tradedValue": "Traded listing value",
+      "tradedValueAmount": "${amount}",
+      "tradedValueEmpty": "—",
+      "tradedValueFootnote": "Sum of ask prices on bottles from completed trades (off-platform payment)."
+    },
+    "listingStatus": {
+      "notTrading": "Not trading",
+      "listed": "Listed",
+      "partiallyListed": "Partially listed"
+    },
+    "listingKind": {
+      "decant": "Decant",
+      "sample": "Sample",
+      "full": "Full bottle",
+      "partial": "Partial"
+    },
+    "listings": {
+      "listedMl": "{ml} ml listed",
+      "pausedMl": "{ml} ml paused",
+      "pausedBadge": "Paused",
+      "pausedHeading": "Paused listings",
+      "pausedSubheading": "These are hidden from the exchange. Resume to list the same amount again.",
+      "pause": "Pause trading",
+      "pausing": "Pausing…",
+      "resume": "Resume trading",
+      "resuming": "Resuming…",
+      "resumeFailed": "Could not resume this listing. Try again or edit the listing.",
+      "pauseFailed": "Could not pause this listing. Try again.",
+      "edit": "Edit listing",
+      "empty": {
+        "heading": "No active listings",
+        "subheading": "Destash from a bottle in My Inventory to appear on the exchange.",
+        "cta": "Go to My Inventory"
+      }
+    },
+    "listingSummary": {
+      "listed": "{ml} ml listed on the exchange.",
+      "viewListings": "View My Listings",
+      "notTrading": "Not trading — nothing listed on the exchange."
+    },
     "collection": {
       "heading": "My Perfume Collection",
       "itemsCount": "{{count}} items in your collection",
@@ -925,6 +982,14 @@
     "destashManager": {
       "title": "Destash Management",
       "description": "Create, edit, and manage multiple destashes for this perfume. Each destash can have its own amount, price, and trade preferences.",
+      "pauseAll": "Pause all listings",
+      "pausedHeading": "Paused listings",
+      "pausedLabel": "Paused",
+      "pausedAmount": "{ml} ml (was listed)",
+      "resume": "Resume trading",
+      "resuming": "Resuming…",
+      "removePaused": "Remove listing",
+      "removing": "Removing…",
       "addNew": "Add New Destash",
       "createNew": "Create New Destash",
       "editDestash": "Edit Destash",
@@ -2035,7 +2100,10 @@
     "lightboxTitle": "Listing photo",
     "previousPhoto": "Previous photo",
     "nextPhoto": "Next photo",
-    "closeLightbox": "Close"
+    "closeLightbox": "Close",
+    "errors": {
+      "photoRequired": "At least one listing photo is required to publish on the exchange."
+    }
   },
   "onboarding": {
     "bannerLabel": "Getting started",

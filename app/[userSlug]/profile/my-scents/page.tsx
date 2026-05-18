@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server"
 import { redirect } from "next/navigation"
 
 import { getTradersWantingUserListings } from "@/models/wishlist-matching.server"
+import { getUserInventoryStats } from "@/models/user-inventory-stats.server"
 import { getUserPerfumes } from "@/models/user.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { publicAssetUrl } from "@/utils/public-asset-url.server"
@@ -47,15 +48,17 @@ export default async function MyScentsPage({
     redirect(`/${slug}/profile/my-scents`)
   }
 
-  const [userPerfumes, wishlistDemand] = await Promise.all([
+  const [userPerfumes, wishlistDemand, inventoryStats] = await Promise.all([
     getUserPerfumes(session.user.id),
     getTradersWantingUserListings(session.user.id),
+    getUserInventoryStats(session.user.id),
   ])
 
   const serialized = userPerfumes.map((up) => ({
     ...up,
     createdAt: up.createdAt.toISOString(),
     available: up.available ?? null,
+    pausedAvailable: up.pausedAvailable ?? null,
     price: up.price ?? null,
     placeOfPurchase: up.placeOfPurchase ?? null,
     tradePrice: up.tradePrice ?? null,
@@ -68,6 +71,7 @@ export default async function MyScentsPage({
     <MyScentsPageClient
       userPerfumes={serialized}
       wishlistDemand={wishlistDemand}
+      inventoryStats={inventoryStats}
       bannerImage={BANNER_IMAGE}
     />
   )

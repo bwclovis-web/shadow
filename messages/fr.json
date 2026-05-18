@@ -642,6 +642,63 @@
       "title": "My Scents - Shadow and Sillage",
       "description": "Gérez votre collection de parfums."
     },
+    "tabs": {
+      "ariaLabel": "Vues Mes Parfums",
+      "inventory": "Mon inventaire",
+      "listings": "Mes annonces"
+    },
+    "inventory": {
+      "heading": "Mon inventaire",
+      "atAGlance": "Inventaire en un coup d'œil"
+    },
+    "stats": {
+      "bottles": "Flacons",
+      "bottlesHint": "Parfums uniques dans votre collection",
+      "houses": "Maisons",
+      "housesHint": "Maisons de parfumerie distinctes",
+      "families": "Familles principales",
+      "familiesHint": "Familles de notes dans votre collection",
+      "familiesEmpty": "Ajoutez des flacons pour voir les familles",
+      "tradedValue": "Valeur des annonces échangées",
+      "tradedValueAmount": "{amount} $",
+      "tradedValueEmpty": "—",
+      "tradedValueFootnote": "Somme des prix demandés sur les flacons des échanges terminés (paiement hors plateforme)."
+    },
+    "listingStatus": {
+      "notTrading": "Pas en vente",
+      "listed": "En vente",
+      "partiallyListed": "Partiellement en vente"
+    },
+    "listingKind": {
+      "decant": "Décant",
+      "sample": "Échantillon",
+      "full": "Flacon entier",
+      "partial": "Partiel"
+    },
+    "listings": {
+      "listedMl": "{ml} ml en vente",
+      "pausedMl": "{ml} ml en pause",
+      "pausedBadge": "En pause",
+      "pausedHeading": "Annonces en pause",
+      "pausedSubheading": "Masquées de l'échange. Reprenez pour publier la même quantité.",
+      "pause": "Mettre en pause",
+      "pausing": "Mise en pause…",
+      "resume": "Reprendre la vente",
+      "resuming": "Reprise…",
+      "resumeFailed": "Impossible de reprendre cette annonce. Réessayez ou modifiez-la.",
+      "pauseFailed": "Impossible de mettre en pause cette annonce. Réessayez.",
+      "edit": "Modifier l'annonce",
+      "empty": {
+        "heading": "Aucune annonce active",
+        "subheading": "Déstockez depuis un flacon dans Mon inventaire pour apparaître sur l'échange.",
+        "cta": "Aller à Mon inventaire"
+      }
+    },
+    "listingSummary": {
+      "listed": "{ml} ml en vente sur l'échange.",
+      "viewListings": "Voir mes annonces",
+      "notTrading": "Pas en vente — rien publié sur l'échange."
+    },
     "collection": {
       "heading": "Ma collection de parfums",
       "itemsCount": "{{count}} articles dans votre collection",
@@ -710,6 +767,14 @@
     "destashManager": {
       "title": "Gestion du déstockage",
       "description": "Créez et gérez plusieurs déstockages pour ce parfum.",
+      "pauseAll": "Mettre en pause toutes les annonces",
+      "pausedHeading": "Annonces en pause",
+      "pausedLabel": "En pause",
+      "pausedAmount": "{ml} ml (était en vente)",
+      "resume": "Reprendre la vente",
+      "resuming": "Reprise…",
+      "removePaused": "Supprimer l'annonce",
+      "removing": "Suppression…",
       "addNew": "Ajouter un déstockage",
       "createNew": "Créer un nouveau déstockage",
       "editDestash": "Modifier le déstockage",
@@ -1740,7 +1805,10 @@
     "lightboxTitle": "Photo de l'annonce",
     "previousPhoto": "Photo précédente",
     "nextPhoto": "Photo suivante",
-    "closeLightbox": "Fermer"
+    "closeLightbox": "Fermer",
+    "errors": {
+      "photoRequired": "Au moins une photo de l'annonce est requise pour publier sur l'échange."
+    }
   },
   "onboarding": {
     "bannerLabel": "Premiers pas",

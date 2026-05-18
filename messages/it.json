@@ -642,6 +642,63 @@
       "title": "My Scents - Shadow and Sillage",
       "description": "Gestisci la tua collezione di profumi."
     },
+    "tabs": {
+      "ariaLabel": "Viste I miei profumi",
+      "inventory": "Il mio inventario",
+      "listings": "I miei annunci"
+    },
+    "inventory": {
+      "heading": "Il mio inventario",
+      "atAGlance": "Inventario a colpo d'occhio"
+    },
+    "stats": {
+      "bottles": "Flaconi",
+      "bottlesHint": "Profumi unici nella tua collezione",
+      "houses": "Case",
+      "housesHint": "Case profumeristiche distinte",
+      "families": "Famiglie principali",
+      "familiesHint": "Famiglie di note nella tua collezione",
+      "familiesEmpty": "Aggiungi flaconi per vedere le famiglie",
+      "tradedValue": "Valore annunci scambiati",
+      "tradedValueAmount": "${amount}",
+      "tradedValueEmpty": "—",
+      "tradedValueFootnote": "Somma dei prezzi richiesti sui flaconi degli scambi completati (pagamento fuori piattaforma)."
+    },
+    "listingStatus": {
+      "notTrading": "Non in vendita",
+      "listed": "In vendita",
+      "partiallyListed": "Parzialmente in vendita"
+    },
+    "listingKind": {
+      "decant": "Decant",
+      "sample": "Campione",
+      "full": "Flacone intero",
+      "partial": "Parziale"
+    },
+    "listings": {
+      "listedMl": "{ml} ml in vendita",
+      "pausedMl": "{ml} ml in pausa",
+      "pausedBadge": "In pausa",
+      "pausedHeading": "Annunci in pausa",
+      "pausedSubheading": "Nascosti dallo scambio. Riprendi per pubblicare la stessa quantità.",
+      "pause": "Metti in pausa",
+      "pausing": "In pausa…",
+      "resume": "Riprendi vendita",
+      "resuming": "Ripresa…",
+      "resumeFailed": "Impossibile riprendere questo annuncio. Riprova o modificalo.",
+      "pauseFailed": "Impossibile mettere in pausa questo annuncio. Riprova.",
+      "edit": "Modifica annuncio",
+      "empty": {
+        "heading": "Nessun annuncio attivo",
+        "subheading": "Fai destash da un flacone in Il mio inventario per comparire nello scambio.",
+        "cta": "Vai a Il mio inventario"
+      }
+    },
+    "listingSummary": {
+      "listed": "{ml} ml in vendita nello scambio.",
+      "viewListings": "Vedi i miei annunci",
+      "notTrading": "Non in vendita — nulla pubblicato nello scambio."
+    },
     "collection": {
       "heading": "La mia collezione",
       "itemsCount": "{{count}} articoli nella tua collezione",
@@ -710,6 +767,14 @@
     "destashManager": {
       "title": "Gestione destock",
       "description": "Crea e gestisci più destock per questo profumo.",
+      "pauseAll": "Metti in pausa tutti gli annunci",
+      "pausedHeading": "Annunci in pausa",
+      "pausedLabel": "In pausa",
+      "pausedAmount": "{ml} ml (era in vendita)",
+      "resume": "Riprendi vendita",
+      "resuming": "Ripresa…",
+      "removePaused": "Rimuovi annuncio",
+      "removing": "Rimuovendo…",
       "addNew": "Aggiungi destock",
       "createNew": "Crea nuovo destock",
       "editDestash": "Modifica destock",
@@ -1740,7 +1805,10 @@
     "lightboxTitle": "Foto dell'annuncio",
     "previousPhoto": "Foto precedente",
     "nextPhoto": "Foto successiva",
-    "closeLightbox": "Chiudi"
+    "closeLightbox": "Chiudi",
+    "errors": {
+      "photoRequired": "È richiesta almeno una foto dell'annuncio per pubblicare nello scambio."
+    }
   },
   "onboarding": {
     "bannerLabel": "Per iniziare",

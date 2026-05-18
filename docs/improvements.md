@@ -290,7 +290,7 @@ _No new schema — all computed from existing data._
 **Shipped in (IMP-253):** `CsvImportReviewScreen.tsx`; `hooks/useCsvImportCommit.ts`; `app/api/csv-import/commit/route.ts`; `lib/csv-import-commit.ts`; review → **Import N rows** → `UserPerfume` writes; smoke guide `docs/smoke-test-csv-import.md` sections 23–31. Submit-to-catalog for unmatched rows is **IMP-254** (not shipped).
 - [x] **IMP-254** "Submit to catalog" for unmatched rows: `createPendingSubmission` with CSV inventory in `submissionData`; `UserPerfume` created when admin approves (extends pending-submission approve flow)
 - [ ] **IMP-255** Build Fragrantica profile import: parse a Fragrantica collection page URL (user provides); scrape owned fragrances via the existing scraper infrastructure; run through the same fuzzy-match and review flow as CSV
-- [ ] **IMP-256** Add "My Inventory" (all owned, private) vs "My Listings" (available, exchange-visible) view split in the user's inventory page
+- [x] **IMP-256** Add "My Inventory" (all owned, private) vs "My Listings" (available, exchange-visible) view split in the user's inventory page
 
 ### 3G — Shareable Links and Social
 
