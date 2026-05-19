@@ -562,12 +562,21 @@ export const adminVoidTrade = async (
 export const getTradeByIdForParticipant = async (
   tradeId: string,
   userId: string
+): Promise<TradeForClient | null> => getTradeByIdForViewer(tradeId, userId)
+
+export const getTradeByIdForViewer = async (
+  tradeId: string,
+  viewerId: string,
+  options?: { viewerRole?: string }
 ): Promise<TradeForClient | null> => {
+  const isAdmin = options?.viewerRole === "admin"
   const trade = await prisma.trade.findFirst({
-    where: {
-      id: tradeId,
-      OR: [{ initiatorId: userId }, { counterpartyId: userId }],
-    },
+    where: isAdmin
+      ? { id: tradeId }
+      : {
+          id: tradeId,
+          OR: [{ initiatorId: viewerId }, { counterpartyId: viewerId }],
+        },
     include: tradeInclude,
   })
   return trade ? serializeTrade(trade) : null

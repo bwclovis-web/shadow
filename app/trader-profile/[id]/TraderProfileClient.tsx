@@ -18,6 +18,7 @@ import type { TradeForClient } from "@/types/trade"
 import { getTraderDisplayName } from "@/utils/user"
 import TraderProfileHeaderStats from "@/components/Containers/TraderProfile/TraderProfileHeaderStats"
 import TraderWishlistOverlapBanner from "@/components/Containers/TraderProfile/TraderWishlistOverlapBanner"
+import { CopyShareLinkButton } from "@/components/Atoms/CopyShareLinkButton"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { ScentJourneyTimeline } from "@/components/Containers/TraderProfile/ScentJourneyTimeline"
 import type { ScentDnaSnapshot } from "@/models/scent-dna.server"
@@ -95,6 +96,10 @@ export default function TraderProfileClient({
           }
           reputationBadges={feedback.reputation.badges}
           contributorBadges={feedback.contributorBadges}
+        />
+        <CopyShareLinkButton
+          sharePath={`/trader-profile/${trader.id}`}
+          className="mt-4 justify-center"
         />
       </TitleBanner>
 

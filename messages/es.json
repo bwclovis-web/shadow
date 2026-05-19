@@ -1541,6 +1541,20 @@
     "error": "No se pudo enviar la oferta.",
     "openMessages": "Abrir conversación"
   },
+  "shareLinks": {
+    "copyLink": "Copiar enlace",
+    "linkCopied": "Enlace copiado",
+    "copyLinkError": "No se pudo copiar el enlace"
+  },
+  "tradeDetail": {
+    "meta": {
+      "title": "Detalles del intercambio - Shadow and Sillage",
+      "description": "Ver y gestionar una propuesta de intercambio entre comerciantes."
+    },
+    "heading": "Detalles del intercambio",
+    "subheading": "Comparte este enlace en Discord o Reddit para referirte a este intercambio.",
+    "openMessages": "Abrir conversación"
+  },
   "tradeStatus": {
     "tradeWith": "Intercambio con {name}",
     "theyOffer": "Su anuncio",
@@ -1835,9 +1849,25 @@
       "private": "Privado",
       "available": "🎉 ¡DISPONIBLE EN EL INTERCAMBIO! 🎉",
       "addedOn": "Agregado el",
-      "availableMessage": "Este artículo aparecerá en tu perfil de comerciante",
-      "unavailableMessage": "Este artículo es privado y no aparecerá en tu perfil de comerciante",
+      "availableMessage": "Este artículo aparecerá en tu perfil y en la lista compartida",
+      "unavailableMessage": "Este artículo es privado y no aparecerá en tu perfil ni en la lista compartida",
       "bottlePreference": "Formato del frasco"
+    },
+    "share": {
+      "stripTitle": "Comparte tu lista de deseos",
+      "stripHint": "Solo los artículos marcados como públicos aparecen en tu página compartida. Cambia la visibilidad en cada tarjeta.",
+      "previewPublicPage": "Vista previa de la página compartida"
+    },
+    "public": {
+      "meta": {
+        "title": "Lista de deseos de {traderName} - Shadow and Sillage",
+        "description": "Perfumes que {traderName} busca en Shadow and Sillage."
+      },
+      "heading": "{traderName} busca",
+      "subheading": "Lista de deseos pública en Shadow and Sillage",
+      "itemCount": "{count, plural, one {# perfume} other {# perfumes}}",
+      "empty": "Aún no hay artículos públicos en la lista.",
+      "viewProfile": "Ver perfil del comerciante"
     }
   },
   "validation": {

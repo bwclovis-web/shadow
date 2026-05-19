@@ -1541,6 +1541,20 @@
     "error": "Impossible d'envoyer l'offre.",
     "openMessages": "Ouvrir la conversation"
   },
+  "shareLinks": {
+    "copyLink": "Copier le lien",
+    "linkCopied": "Lien copié",
+    "copyLinkError": "Impossible de copier le lien"
+  },
+  "tradeDetail": {
+    "meta": {
+      "title": "Détails de l'échange - Shadow and Sillage",
+      "description": "Voir et gérer une proposition d'échange entre vendeurs."
+    },
+    "heading": "Détails de l'échange",
+    "subheading": "Partagez ce lien sur Discord ou Reddit pour référencer cet échange.",
+    "openMessages": "Ouvrir la conversation"
+  },
   "tradeStatus": {
     "tradeWith": "Échange avec {name}",
     "theyOffer": "Leur annonce",
@@ -1835,9 +1849,25 @@
       "private": "Privé",
       "available": "🎉 DISPONIBLE SUR LA BOURSE ! 🎉",
       "addedOn": "Ajouté le",
-      "availableMessage": "Cet article apparaîtra sur votre profil",
-      "unavailableMessage": "Cet article est privé et n'apparaîtra pas sur votre profil",
+      "availableMessage": "Cet article apparaîtra sur votre profil et votre liste partagée",
+      "unavailableMessage": "Cet article est privé et n'apparaîtra ni sur votre profil ni sur votre liste partagée",
       "bottlePreference": "Format du flacon"
+    },
+    "share": {
+      "stripTitle": "Partager votre liste de souhaits",
+      "stripHint": "Seuls les articles marqués publics apparaissent sur votre page partagée. Modifiez la visibilité sur chaque carte.",
+      "previewPublicPage": "Aperçu de la page partagée"
+    },
+    "public": {
+      "meta": {
+        "title": "Liste de souhaits de {traderName} - Shadow and Sillage",
+        "description": "Parfums recherchés par {traderName} sur Shadow and Sillage."
+      },
+      "heading": "{traderName} recherche",
+      "subheading": "Liste de souhaits publique sur Shadow and Sillage",
+      "itemCount": "{count, plural, one {# parfum} other {# parfums}}",
+      "empty": "Aucun article public pour le moment.",
+      "viewProfile": "Voir le profil du vendeur"
     }
   },
   "validation": {

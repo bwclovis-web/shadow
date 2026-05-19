@@ -4,6 +4,8 @@ import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 
 import { VooDooLink } from "@/components/Atoms/Button"
+import { CopyShareLinkButton } from "@/components/Atoms/CopyShareLinkButton"
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import WishlistItemCard from "@/components/Organisms/WishlistItemCard/WishlistItemCard"
 
@@ -39,12 +41,14 @@ type WishlistPageClientProps = {
   wishlist: WishlistItemForClient[]
   bannerImage: string
   userSlug: string
+  userId: string
 }
 
 const WishlistPageClient = ({
   wishlist,
   bannerImage,
   userSlug,
+  userId,
 }: WishlistPageClientProps) => {
   const t = useTranslations("wishlist")
   const router = useRouter()
@@ -60,6 +64,22 @@ const WishlistPageClient = ({
           {wishlist.length} {t("itemsInWishlist")}
         </p>
       </TitleBanner>
+
+      <div className="inner-container mb-6 px-4">
+        <div className="noir-border mx-auto max-w-2xl p-4">
+          <h2 className="text-base font-semibold text-noir-gold">{t("share.stripTitle")}</h2>
+          <p className="mt-1 text-sm text-noir-gold-100">{t("share.stripHint")}</p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <CopyShareLinkButton sharePath={`/wishlist/${userId}`} />
+            <PrefetchLink
+              href={`/wishlist/${userId}`}
+              className="text-sm font-medium text-noir-gold underline-offset-2 hover:underline"
+            >
+              {t("share.previewPublicPage")}
+            </PrefetchLink>
+          </div>
+        </div>
+      </div>
 
       {wishlist.length === 0 ? (
         <div className="noir-border mx-auto my-6 flex max-w-max flex-col items-center justify-center gap-4 p-4 text-center">

@@ -51,6 +51,7 @@ export default async function WishlistPage({
       wishlist={wishlist}
       bannerImage={BANNER_IMAGE}
       userSlug={userSlug}
+      userId={session.user.id}
     />
   )
 }

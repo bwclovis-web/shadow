@@ -214,11 +214,13 @@ _Layer community graph and social identity on top of the shipped reputation, Sce
 
 **Shipped in:** `models/community-stats.server.ts` (`getCommunityStats`, `unstable_cache` 1h, month-keyed trade count); `components/Containers/Home/CommunityStatsStrip.tsx`; home hero in `app/page.tsx` / `app/home-client.tsx` (replaces prior users/houses/perfumes hero counters); catalog totals (users, houses, perfumes) moved to footer via `models/catalog-stats.server.ts`, `components/Organisms/SiteFooter/CatalogStatsStrip.tsx`; i18n `home.communityStats.*`, `siteFooter.catalogStats.*` (en); `models/community-stats.server.test.ts`, `models/catalog-stats.server.test.ts`
 
-### C6 — Shareable Links (IMP-260–262)
+### C6 — Shareable Links (IMP-260–262) ✅
 
-- [ ] **IMP-260** Public/private toggle on `UserPerfumeWishlist`; shareable URL `/wishlist/[userId]`
-- [ ] **IMP-261** `/trades/[tradeId]` visible only to participants and admin (useful for off-platform DM references)
-- [ ] **IMP-262** "Copy link" button on trader profile and wishlist pages for sharing on Reddit / Discord
+- [x] **IMP-260** Public/private toggle on `UserPerfumeWishlist`; shareable URL `/wishlist/[userId]`
+- [x] **IMP-261** `/trades/[tradeId]` visible only to participants and admin (useful for off-platform DM references)
+- [x] **IMP-262** "Copy link" button on trader profile and wishlist pages for sharing on Reddit / Discord
+
+**Shipped in:** per-item `isPublic` on `UserPerfumeWishlist` (existing toggle on `WishlistItemCard`); `getPublicWishlistForUser` + `app/wishlist/[userId]/`; `getTradeByIdForViewer` + `app/trades/[tradeId]/`; `CopyShareLinkButton`; copy links on trader profile, private wishlist share strip, public wishlist, `TradeStatusCard`, and trade detail page; i18n `shareLinks`, `tradeDetail`, `wishlist.share`, `wishlist.public` (en, es, fr, it).
 
 ---
 

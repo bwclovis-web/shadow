@@ -6,6 +6,7 @@ import { useState } from "react"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button/Button"
+import { CopyShareLinkButton } from "@/components/Atoms/CopyShareLinkButton"
 import FormField from "@/components/Atoms/FormField/FormField"
 import OpenDisputeButton from "@/components/Containers/TraderProfile/OpenDisputeButton"
 import TradeListingPreview from "@/components/Molecules/TradeListingPreview/TradeListingPreview"
@@ -101,7 +102,10 @@ const TradeStatusCard = ({
           size="sm"
         />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-noir-gold">{t("tradeWith", { name: otherName })}</p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-noir-gold">{t("tradeWith", { name: otherName })}</p>
+            <CopyShareLinkButton sharePath={`/trades/${trade.id}`} />
+          </div>
           <TradeStatusTimeline tradeId={trade.id} status={trade.status} className="mt-2" />
         </div>
       </div>

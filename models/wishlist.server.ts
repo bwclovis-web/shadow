@@ -99,6 +99,57 @@ export const isInWishlist = async (userId: string, perfumeId: string) => {
   return count > 0
 }
 
+export type PublicWishlistItem = {
+  id: string
+  perfumeId: string
+  isPublic: boolean
+  bottlePreference: WishlistBottlePreference
+  createdAt: Date
+  perfume: {
+    id: string
+    name: string
+    slug: string
+    image: string | null
+    perfumeHouse: { id: string; name: string; slug: string } | null
+  }
+}
+
+export const getPublicWishlistForUser = async (
+  userId: string
+): Promise<PublicWishlistItem[]> => {
+  return prisma.userPerfumeWishlist.findMany({
+    where: {
+      userId,
+      isPublic: true,
+    },
+    select: {
+      id: true,
+      perfumeId: true,
+      isPublic: true,
+      bottlePreference: true,
+      createdAt: true,
+      perfume: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          image: true,
+          perfumeHouse: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  })
+}
+
 export const getUserWishlist = async (userId: string) => {
   const wishlist = await prisma.userPerfumeWishlist.findMany({
     where: {

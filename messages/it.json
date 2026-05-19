@@ -1541,6 +1541,20 @@
     "error": "Impossibile inviare l'offerta.",
     "openMessages": "Apri conversazione"
   },
+  "shareLinks": {
+    "copyLink": "Copia link",
+    "linkCopied": "Link copiato",
+    "copyLinkError": "Impossibile copiare il link"
+  },
+  "tradeDetail": {
+    "meta": {
+      "title": "Dettagli scambio - Shadow and Sillage",
+      "description": "Visualizza e gestisci una proposta di scambio tra trader."
+    },
+    "heading": "Dettagli scambio",
+    "subheading": "Condividi questo link su Discord o Reddit per riferirti a questo scambio.",
+    "openMessages": "Apri conversazione"
+  },
   "tradeStatus": {
     "tradeWith": "Scambio con {name}",
     "theyOffer": "Il loro annuncio",
@@ -1835,9 +1849,25 @@
       "private": "Privato",
       "available": "🎉 DISPONIBILE NEL MERCATO! 🎉",
       "addedOn": "Aggiunto il",
-      "availableMessage": "Questo articolo apparirà sul tuo profilo",
-      "unavailableMessage": "Questo articolo è privato e non apparirà sul tuo profilo",
+      "availableMessage": "Questo articolo apparirà sul tuo profilo e sulla wishlist condivisa",
+      "unavailableMessage": "Questo articolo è privato e non apparirà sul profilo né sulla wishlist condivisa",
       "bottlePreference": "Formato del flacone"
+    },
+    "share": {
+      "stripTitle": "Condividi la tua wishlist",
+      "stripHint": "Solo gli articoli contrassegnati come pubblici compaiono sulla pagina condivisa. Modifica la visibilità su ogni scheda.",
+      "previewPublicPage": "Anteprima pagina condivisa"
+    },
+    "public": {
+      "meta": {
+        "title": "Wishlist di {traderName} - Shadow and Sillage",
+        "description": "Profumi cercati da {traderName} su Shadow and Sillage."
+      },
+      "heading": "{traderName} cerca",
+      "subheading": "Wishlist pubblica su Shadow and Sillage",
+      "itemCount": "{count, plural, one {# profumo} other {# profumi}}",
+      "empty": "Nessun articolo pubblico nella wishlist.",
+      "viewProfile": "Vedi profilo trader"
     }
   },
   "validation": {

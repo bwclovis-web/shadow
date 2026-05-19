@@ -1821,6 +1821,20 @@
     "error": "Could not send offer. Please try again.",
     "openMessages": "Open conversation"
   },
+  "shareLinks": {
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied",
+    "copyLinkError": "Could not copy link"
+  },
+  "tradeDetail": {
+    "meta": {
+      "title": "Trade details - Shadow and Sillage",
+      "description": "View and manage a swap proposal between traders."
+    },
+    "heading": "Trade details",
+    "subheading": "Share this link in Discord or Reddit to refer to this swap.",
+    "openMessages": "Open conversation"
+  },
   "tradeStatus": {
     "tradeWith": "Trade with {name}",
     "theyOffer": "Their listing",
@@ -2127,9 +2141,25 @@
       "private": "Private",
       "available": "🎉 AVAILABLE IN TRADING POST! 🎉",
       "addedOn": "Added on",
-      "availableMessage": "This item will appear on your trader profile",
-      "unavailableMessage": "This item is private and will not appear on your trader profile",
+      "availableMessage": "This item will appear on your trader profile and shared wishlist",
+      "unavailableMessage": "This item is private and will not appear on your trader profile or shared wishlist",
       "bottlePreference": "Bottle preference"
+    },
+    "share": {
+      "stripTitle": "Share your wishlist",
+      "stripHint": "Only items marked public appear on your shared page. Toggle visibility on each card below.",
+      "previewPublicPage": "Preview shared page"
+    },
+    "public": {
+      "meta": {
+        "title": "{traderName}'s wishlist - Shadow and Sillage",
+        "description": "Perfumes {traderName} is looking for on Shadow and Sillage."
+      },
+      "heading": "{traderName} is looking for",
+      "subheading": "Public wishlist on Shadow and Sillage",
+      "itemCount": "{count, plural, one {# perfume} other {# perfumes}}",
+      "empty": "No public wishlist items yet.",
+      "viewProfile": "View trader profile"
     }
   },
   "404": {
