@@ -1,4 +1,5 @@
 import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { MdAdd } from "react-icons/md"
 
@@ -16,9 +17,11 @@ import {
 } from "@/lib/user-inventory"
 import { resolveListingApiError } from "@/lib/resolve-listing-api-error"
 
+import DecantSplitWizard from "../DecantSplit/DecantSplitWizard"
 import DestashForm, { type DeStashData } from "../DeStashForm/DeStashForm"
 import DestashItem from "./DestashItem"
 import PausedDestashItem from "./PausedDestashItem"
+import { isDecantSplitsEnabledClient } from "@/utils/decant-splits-enabled"
 
 const totalDestashedForPerfume = (entriesForPerfume: UserPerfumeI[]) =>
   entriesForPerfume.reduce((sum, e) => sum + parseMl(e.available), 0)
@@ -62,12 +65,15 @@ const DestashManager = ({
   currentBottleId,
 }: DestashManagerProps) => {
   const t = useTranslations("myScents.destashManager")
+  const tSplits = useTranslations("decantSplits.wizard")
+  const router = useRouter()
   const tListingErrors = useTranslations("listing.errors")
   const { addToFormData } = useCSRF()
   const [editingId, setEditingId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [resumeTargetId, setResumeTargetId] = useState<string | null>(null)
   const [removeTargetId, setRemoveTargetId] = useState<string | null>(null)
+  const [showSplitWizard, setShowSplitWizard] = useState(false)
   const [submitState, setSubmitState] = useState<"idle" | "submitting">("idle")
   const [submitData, setSubmitData] = useState<{
     success?: boolean
@@ -320,9 +326,31 @@ const DestashManager = ({
             >
               {t("addNew")}
             </Button>
+            {isDecantSplitsEnabledClient() && (
+              <Button
+                onClick={() => setShowSplitWizard(true)}
+                variant="secondary"
+                size="sm"
+                disabled={submitState === "submitting" || showSplitWizard}
+              >
+                {tSplits("startGroupSplit")}
+              </Button>
+            )}
           </div>
         )}
       </div>
+
+      {showSplitWizard && (
+        <DecantSplitWizard
+          perfumeId={perfumeId}
+          sourceUserPerfumeId={currentBottleId}
+          onCreated={splitId => {
+            setShowSplitWizard(false)
+            router.push(`/splits/${splitId}`)
+          }}
+          onCancel={() => setShowSplitWizard(false)}
+        />
+      )}
 
       <p className="text-sm text-noir-dark font-medium wrap-anywhere">
         {t("description")}

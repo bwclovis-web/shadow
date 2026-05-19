@@ -172,6 +172,24 @@
     },
     "savePreferences": "Enregistrer les préférences",
     "savingPreferences": "Enregistrement...",
+    "pushNotifications": "Notifications push",
+    "pushEnabled": "Notifications navigateur",
+    "pushTradeAlerts": "Mises à jour d'échange",
+    "pushMessageAlerts": "Nouveaux messages",
+    "pushFollowAlerts": "Activité des abonnements",
+    "pushDescription": "Soyez averti quand un échange avance ou qu'un message arrive (si vous n'êtes pas déjà dans la conversation).",
+    "enablePush": "Activer les notifications push",
+    "disablePush": "Désactiver les notifications push",
+    "pushWorking": "En cours…",
+    "pushDenied": "Permission de notification refusée. Activez-la dans les paramètres du navigateur.",
+    "pushUnsupported": "Les notifications push ne sont pas prises en charge par ce navigateur.",
+    "pushNotConfigured": "Les notifications push ne sont pas encore configurées sur ce serveur.",
+    "pushSubscribeFailed": "Impossible d'activer les notifications push. Réessayez plus tard.",
+    "followAlerts": "Activité suivie",
+    "emailFollowAlerts": "E-mail — activité suivie",
+    "securityAlerts": "Alertes de sécurité",
+    "securityAlertsDescription": "Activité de connexion inhabituelle sur votre compte",
+    "emailSecurityAlerts": "E-mail — alertes de sécurité",
     "types": {
       "wishlist_available": "Liste de souhaits",
       "decant_interest": "Intérêt",
@@ -182,12 +200,20 @@
       "trade_shipped": "Échange expédié",
       "trade_completed": "Échange terminé",
       "trade_cancelled": "Mise à jour d'échange",
+      "suspicious_login": "Sécurité",
+      "followed_activity": "Abonnements",
+      "split_slot_claimed": "Part réclamée",
+      "split_shipped": "Part expédiée",
+      "split_completed": "Part terminée",
+      "split_cancelled": "Part annulée",
       "default": "Alerte"
     },
     "actions": {
       "reviewSubmission": "Examiner la soumission",
       "viewMessage": "Voir le message",
       "viewTrade": "Voir l'échange",
+      "viewSecurity": "Paramètres de sécurité",
+      "viewFollowedActivity": "Voir l'activité",
       "viewPerfume": "Voir le parfum",
       "markRead": "Marquer lu",
       "dismiss": "Ignorer",
@@ -848,7 +874,16 @@
       "deleteComment": "Supprimer le commentaire",
       "makePublic": "Rendre public",
       "makePrivate": "Rendre privé",
-      "noComments": "Ces commentaires ne sont visibles que par vous et sont réservés à un usage personnel."
+      "noComments": "Ces commentaires ne sont visibles que par vous et sont réservés à un usage personnel.",
+      "error": "Erreur lors de l'envoi du commentaire. Veuillez réessayer.",
+      "failed": "Impossible d'ajouter le commentaire",
+      "deleteError": "Erreur lors de la suppression du commentaire",
+      "deleteFailed": "Impossible de supprimer le commentaire",
+      "title": "Commentaires",
+      "description": "Ajoutez ici vos notes personnelles sur ce parfum.",
+      "addLabel": "Ajouter un commentaire :",
+      "submitting": "Envoi en cours…",
+      "submit": "Envoyer"
     },
     "search": {
       "placeholder": "Rechercher vos parfums...",
@@ -1746,7 +1781,8 @@
       "trustedSwapper": "Échangeur de confiance",
       "communityPillar": "Pilier de la communauté",
       "rareCollector": "Collectionneur rare",
-      "helpfulReviewer": "Critique utile"
+      "helpfulReviewer": "Critique utile",
+      "decantHost": "Hôte de décant"
     },
     "feedback": {
       "title": "Avis sur le vendeur",
@@ -1956,6 +1992,64 @@
     },
     "errors": {
       "mustSignIn": "Vous devez être connecté."
+    }
+  },
+  "decantSplits": {
+    "meta": {
+      "title": "Part groupée — {perfume}",
+      "description": "Rejoignez une part groupée de {perfume} sur Shadow and Sillage.",
+      "notFoundTitle": "Part introuvable",
+      "notFoundDescription": "Cette part groupée a peut-être pris fin ou a été supprimée."
+    },
+    "exchange": {
+      "openSplitChip": "Part groupée · {count} places ouvertes"
+    },
+    "wizard": {
+      "title": "Lancer une part groupée",
+      "startGroupSplit": "Lancer une part groupée",
+      "budget": "{remaining} ml disponibles à verser ({owned} en collection − {listed} en annonce − {reserved} dans des parts actives).",
+      "totalMlLabel": "Total de ml à verser",
+      "slotCountLabel": "Nombre de places",
+      "slotMlLabel": "Ml par place",
+      "slotSum": "Total des places : {sum} ml (objectif : {total} ml)",
+      "priceHintLabel": "Indication de prix (facultatif, hors plateforme)",
+      "notesLabel": "Notes pour les participants",
+      "disclaimer": "Je comprends que Shadow and Sillage ne traite pas les paiements ni les envois. Je coordonnerai le paiement et l'affranchissement avec les participants hors plateforme.",
+      "disclaimerRequired": "Veuillez accepter l'avertissement sur les paiements.",
+      "cancel": "Annuler",
+      "back": "Retour",
+      "next": "Suivant",
+      "create": "Créer la part",
+      "creating": "Création…",
+      "createFailed": "Impossible de créer la part. Vérifiez votre budget en ml et réessayez."
+    },
+    "dashboard": {
+      "title": "Parts groupées",
+      "hosting": "Vous organisez",
+      "participating": "Places que vous avez réclamées"
+    },
+    "detail": {
+      "disclaimer": "Les paiements et envois se font directement entre vendeurs. Shadow and Sillage suit uniquement les statuts et ne détient pas de fonds.",
+      "hostedBy": "Organisé par",
+      "status": "Statut : {status}",
+      "openSlots": "{count, plural, one {# place ouverte} other {# places ouvertes}}",
+      "priceHint": "Indication de prix : {hint}",
+      "slotsTitle": "Places",
+      "slotStatus": {
+        "open": "Ouverte",
+        "claimed": "Réclamée",
+        "paid": "Payée",
+        "received": "Reçue",
+        "released": "Libérée"
+      },
+      "claimant": "Réclamée par {name}",
+      "claimSlot": "Réclamer une place",
+      "markPaid": "Marquer payée",
+      "confirmReceived": "Confirmer la réception",
+      "markShipped": "Marquer la part comme expédiée",
+      "cancelSplit": "Annuler la part",
+      "signInToClaim": "Connectez-vous pour réclamer une place.",
+      "actionFailed": "L'action a échoué. Veuillez réessayer."
     }
   }
 }

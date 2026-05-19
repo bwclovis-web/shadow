@@ -1,6 +1,6 @@
 import type { HelpfulnessVoteValue } from "@/models/traderFeedbackHelpfulness.server"
 import type { TraderFeedbackSort } from "@/models/traderFeedback.server"
-import type { ContributorBadgeIdPhase1 } from "@/services/reputation/contributor/types"
+import type { ContributorBadgeId } from "@/services/reputation/contributor/types"
 import type { TraderReputationV1 } from "@/services/reputation/types"
 import { REPUTATION_V1_VERSION } from "@/services/reputation/v1-constants"
 
@@ -61,7 +61,7 @@ export interface TraderFeedbackResponse {
   comments: TraderFeedbackComment[]
   viewerFeedback: TraderFeedbackViewerEntry | null
   reputation: TraderReputationV1
-  contributorBadges: ContributorBadgeIdPhase1[]
+  contributorBadges: ContributorBadgeId[]
   canLeaveFeedback: boolean
   eligibleTradeId: string | null
 }

@@ -7,7 +7,7 @@ import {
 } from "@/models/traderFeedbackHelpfulness.server"
 import { computeTraderReputationV1 } from "@/services/reputation/computeReputation"
 import { loadContributorBadges } from "@/services/reputation/contributor/loadContributorBadges.server"
-import type { ContributorBadgeIdPhase1 } from "@/services/reputation/contributor/types"
+import type { ContributorBadgeId } from "@/services/reputation/contributor/types"
 import { loadTraderMessageReplyStats } from "@/services/reputation/loadReputationInputs.server"
 import { getTraderTradeStats } from "@/services/reputation/tradeStats.server"
 import type { TraderReputationV1 } from "@/services/reputation/types"
@@ -69,7 +69,7 @@ export interface TraderFeedbackProfileData {
   comments: TraderFeedbackListItem[]
   viewerFeedback: TraderFeedbackViewerEntry | null
   reputation: TraderReputationV1
-  contributorBadges: ContributorBadgeIdPhase1[]
+  contributorBadges: ContributorBadgeId[]
   /** Viewer may submit new feedback (completed trade when gating is enabled) */
   canLeaveFeedback: boolean
   eligibleTradeId: string | null

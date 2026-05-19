@@ -12,6 +12,7 @@ import { FilterChipStrip } from "@/components/Molecules/FilterChipStrip"
 import { DiscoveryFiltersPanel } from "@/components/Organisms/DiscoveryFiltersPanel"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import { ExchangePerfumeCard } from "@/components/Molecules/ExchangePerfumeCard"
+import { ExchangeOpenSplitChip } from "@/components/Molecules/ExchangeOpenSplitChip/ExchangeOpenSplitChip"
 import Modal from "@/components/Organisms/Modal"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
@@ -56,9 +57,11 @@ const TheExchangeClient = ({
   seasonalTrending = { season: "spring", perfumes: [] },
   traderReputationByUserId = {},
   viewerId = null,
+  openSplitChipsByPerfumeId = {},
 }: ExchangePageData) => {
   const t = useTranslations("tradingPost")
   const tListings = useTranslations("tradingPost.listings")
+  const tSplits = useTranslations("decantSplits.exchange")
   const tTradeComposer = useTranslations("tradeComposer")
   const tf = useTranslations("tradingPost.filters")
   const tSeason = useTranslations("singlePerfume.seasonVote.season")
@@ -518,6 +521,16 @@ const TheExchangeClient = ({
                       >
                         <ExchangePerfumeCard perfume={perfume} viewerId={viewerId}>
                           <div className="rounded-md space-y-2">
+                            {(openSplitChipsByPerfumeId[perfume.id]?.length ?? 0) > 0 && (
+                              <ExchangeOpenSplitChip
+                                chips={openSplitChipsByPerfumeId[perfume.id]!}
+                                label={tSplits("openSplitChip", {
+                                  count:
+                                    openSplitChipsByPerfumeId[perfume.id]![0]!
+                                      .openSlotCount,
+                                })}
+                              />
+                            )}
                             <p className="text-sm font-medium text-noir-gold">
                               {tListings("summary", {
                                 count: perfume.userPerfume.length,

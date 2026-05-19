@@ -20,6 +20,13 @@ const MESSAGE_PUSH_ALERT_TYPES: AlertType[] = ["new_trader_message"]
 
 const FOLLOW_PUSH_ALERT_TYPES: AlertType[] = ["followed_activity"]
 
+const SPLIT_PUSH_ALERT_TYPES: AlertType[] = [
+  "split_slot_claimed",
+  "split_shipped",
+  "split_completed",
+  "split_cancelled",
+]
+
 export type PushAlertPayload = {
   title: string
   body: string
@@ -54,6 +61,13 @@ const buildNotificationUrl = (
     return `${base}${path}`
   }
 
+  if (
+    alertType.startsWith("split_") &&
+    typeof metadata?.splitId === "string"
+  ) {
+    return `${base}/splits/${metadata.splitId}`
+  }
+
   return `${base}/profile`
 }
 
@@ -66,7 +80,7 @@ export const buildPushAlertPayload = (
   title,
   body: message,
   url: buildNotificationUrl(alertType, metadata),
-  tag: `${alertType}-${String(metadata?.tradeId ?? metadata?.messageId ?? Date.now())}`,
+  tag: `${alertType}-${String(metadata?.tradeId ?? metadata?.splitId ?? metadata?.messageId ?? Date.now())}`,
   alertType,
 })
 
@@ -94,6 +108,10 @@ const shouldSendPushForAlert = async (
 
   if (FOLLOW_PUSH_ALERT_TYPES.includes(alertType)) {
     return preferences.pushFollowAlerts
+  }
+
+  if (SPLIT_PUSH_ALERT_TYPES.includes(alertType)) {
+    return preferences.decantAlertsEnabled && preferences.pushTradeAlerts
   }
 
   return false

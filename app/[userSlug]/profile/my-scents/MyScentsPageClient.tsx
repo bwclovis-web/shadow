@@ -23,6 +23,7 @@ import { useResponsivePageSize } from "@/hooks/useMediaQuery"
 import { useDataWithFilters } from "@/hooks/useDataWithFilters"
 import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
 import InventoryStatsStrip from "@/components/Containers/MyScents/InventoryStatsStrip"
+import DecantSplitsPanel from "@/components/Containers/MyScents/DecantSplit/DecantSplitsPanel"
 import MyListingsPanel from "@/components/Containers/MyScents/MyListingsPanel"
 import MyScentsViewTabs from "@/components/Containers/MyScents/MyScentsViewTabs"
 import WishlistDemandSection from "@/components/Containers/MyScents/WishlistDemandSection"
@@ -461,12 +462,15 @@ const MyScentsPageClient = ({
           listingsLabel={tTabs("listings")}
           listingsCount={activeListings.length + pausedListings.length}
           listingsPanel={
-            <MyListingsPanel
-              activeListings={activeListings}
-              pausedListings={pausedListings}
-              basePath={basePath}
-              onListingChange={handleListingChange}
-            />
+            <>
+              <DecantSplitsPanel />
+              <MyListingsPanel
+                activeListings={activeListings}
+                pausedListings={pausedListings}
+                basePath={basePath}
+                onListingChange={handleListingChange}
+              />
+            </>
           }
           inventoryPanel={
             <>

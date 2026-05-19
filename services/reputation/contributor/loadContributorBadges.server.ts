@@ -5,6 +5,8 @@ import {
 } from "@/models/user-follow.server"
 import { getTraderTradeStats } from "@/services/reputation/tradeStats.server"
 
+import { countCompletedSplitsAsHost } from "@/models/decant-split.server"
+
 import { computeContributorBadges } from "./computeContributorBadges"
 import { countPositiveHelpfulReviewsByReviewer } from "./helpfulReviewer.server"
 import { qualifiesForRareCollector } from "./rareCollector.server"
@@ -20,6 +22,7 @@ export const loadContributorBadgeInputs = async (
     followingUserCount,
     rareCollector,
     positiveHelpfulReviewCount,
+    completedDecantSplitCount,
   ] = await Promise.all([
     getTraderTradeStats(traderId),
     prisma.user.findUnique({
@@ -30,6 +33,7 @@ export const loadContributorBadgeInputs = async (
     getFollowingCountForUser(traderId),
     qualifiesForRareCollector(traderId),
     countPositiveHelpfulReviewsByReviewer(traderId),
+    countCompletedSplitsAsHost(traderId),
   ])
 
   return {
@@ -40,6 +44,7 @@ export const loadContributorBadgeInputs = async (
     followingUserCount,
     qualifiesForRareCollector: rareCollector,
     positiveHelpfulReviewCount,
+    completedDecantSplitCount,
   }
 }
 

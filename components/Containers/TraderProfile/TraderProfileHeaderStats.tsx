@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl"
 
 import { RecentlyActiveBadge } from "@/components/Atoms/RecentlyActiveBadge"
 import TraderBadgeChips from "@/components/Containers/TraderProfile/TraderBadgeChips"
-import type { ContributorBadgeIdPhase1 } from "@/services/reputation/contributor/types"
+import type { ContributorBadgeId } from "@/services/reputation/contributor/types"
 import type { ReputationBadgeId } from "@/services/reputation/types"
 
 type TraderProfileHeaderStatsProps = {
@@ -13,7 +13,7 @@ type TraderProfileHeaderStatsProps = {
   followerCount?: number
   lastActiveAt?: Date | string | null
   reputationBadges?: ReputationBadgeId[]
-  contributorBadges?: ContributorBadgeIdPhase1[]
+  contributorBadges?: ContributorBadgeId[]
 }
 
 const TraderProfileHeaderStats = ({

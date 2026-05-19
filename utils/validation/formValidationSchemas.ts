@@ -342,6 +342,63 @@ export const TradeShipTransitionSchema = z.object({
     .transform(val => val?.trim() || undefined),
 })
 
+export const CreateDecantSplitSchema = z.object({
+  perfumeId: z
+    .string()
+    .min(1)
+    .refine(isValidPrismaRecordId, { message: V.perfumeIdRequired }),
+  sourceUserPerfumeId: z
+    .string()
+    .optional()
+    .transform(val => val?.trim() || undefined)
+    .refine(val => !val || isValidPrismaRecordId(val), {
+      message: V.userPerfumeIdRequired,
+    }),
+  totalMl: z.coerce.number().positive({ message: V.amountFormat }),
+  slotMl: z
+    .string()
+    .min(1)
+    .transform((raw, ctx) => {
+      try {
+        const parsed = JSON.parse(raw) as unknown
+        if (!Array.isArray(parsed) || parsed.length < 1) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "At least one slot is required" })
+          return z.NEVER
+        }
+        const nums = parsed.map(n => Number(n))
+        if (nums.some(n => !Number.isFinite(n) || n <= 0)) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Invalid slot ml values" })
+          return z.NEVER
+        }
+        return nums
+      } catch {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Invalid slot ml JSON" })
+        return z.NEVER
+      }
+    }),
+  priceHint: z
+    .string()
+    .max(100)
+    .optional()
+    .transform(val => val?.trim() || undefined),
+  notes: z
+    .string()
+    .max(2000)
+    .optional()
+    .transform(val => val?.trim() || undefined),
+  decantFormat: z.enum(["atomizer", "vial", "original"]).optional(),
+  condition: z
+    .enum(["sealed", "mint", "lightlyUsed", "heavilyUsed", "damaged"])
+    .optional(),
+})
+
+export const DecantSplitSlotActionSchema = z.object({
+  slotId: z
+    .string()
+    .min(1)
+    .refine(isValidPrismaRecordId, { message: V.userPerfumeIdRequired }),
+})
+
 // Contact Trader
 export const FollowActionSchema = z
   .object({
@@ -392,4 +449,6 @@ export const validationSchemas = {
   followAction: FollowActionSchema,
   createTrade: CreateTradeSchema,
   tradeShipTransition: TradeShipTransitionSchema,
+  createDecantSplit: CreateDecantSplitSchema,
+  decantSplitSlotAction: DecantSplitSlotActionSchema,
 } as const

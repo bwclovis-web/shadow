@@ -73,6 +73,9 @@ model User {
   ScentProfile              ScentProfile?
   follows                   UserFollow[]         @relation("UserFollows")
   followedBy                UserFollow[]         @relation("UserFollowedBy")
+  decantSplitsHosted        DecantSplit[]        @relation("DecantSplitsHosted")
+  decantSplitSlotsClaimed   DecantSplitSlot[]    @relation("DecantSplitSlotsClaimed")
+  decantSplitEvents         DecantSplitEvent[]   @relation("DecantSplitEventActor")
 }
 
 model PerfumeHouse {
@@ -130,6 +133,7 @@ model Perfume {
   userPerfumeWishlist   UserPerfumeWishlist[]
   wishlistNotifications WishlistNotification[]
   followedBy            UserFollow[]
+  decantSplits          DecantSplit[]
 
   @@index([slug], name: "idx_perfume_slug")
   @@index([perfumeHouseId, createdAt], name: "idx_perfume_house_created")
@@ -161,6 +165,7 @@ model UserPerfume {
   pendingSubmission   PendingSubmission?   @relation(fields: [pendingSubmissionId], references: [id])
   comments            UserPerfumeComment[]
   tradeLineItems      TradeLineItem[]
+  decantSplitsSourced DecantSplit[]      @relation("DecantSplitSource")
 
   @@index([userId, available], name: "idx_user_perfume_user_available")
   @@index([perfumeId, available], name: "idx_user_perfume_perfume_available")
@@ -544,6 +549,61 @@ model TradeEvent {
   @@index([actorUserId])
 }
 
+model DecantSplit {
+  id                  String            @id @default(cuid())
+  hostUserId          String
+  perfumeId           String
+  sourceUserPerfumeId String?
+  totalMl             Float
+  status              DecantSplitStatus @default(open)
+  priceHint           String?
+  notes               String?
+  decantFormat        DecantFormat?
+  condition           ListingCondition?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  shippedAt           DateTime?
+  completedAt         DateTime?
+  host                User              @relation("DecantSplitsHosted", fields: [hostUserId], references: [id])
+  perfume             Perfume           @relation(fields: [perfumeId], references: [id])
+  sourceUserPerfume   UserPerfume?      @relation("DecantSplitSource", fields: [sourceUserPerfumeId], references: [id])
+  slots               DecantSplitSlot[]
+  events              DecantSplitEvent[]
+
+  @@index([hostUserId, status])
+  @@index([perfumeId, status])
+}
+
+model DecantSplitSlot {
+  id             String                @id @default(cuid())
+  splitId        String
+  ml             Float
+  status         DecantSplitSlotStatus @default(open)
+  claimantUserId String?
+  claimedAt      DateTime?
+  paidAt         DateTime?
+  receivedAt     DateTime?
+  split          DecantSplit           @relation(fields: [splitId], references: [id], onDelete: Cascade)
+  claimant       User?                 @relation("DecantSplitSlotsClaimed", fields: [claimantUserId], references: [id])
+
+  @@index([splitId, status])
+  @@index([claimantUserId])
+}
+
+model DecantSplitEvent {
+  id          String      @id @default(cuid())
+  splitId     String
+  type        String
+  actorUserId String
+  metadata    Json?
+  createdAt   DateTime    @default(now())
+  split       DecantSplit @relation(fields: [splitId], references: [id], onDelete: Cascade)
+  actor       User        @relation("DecantSplitEventActor", fields: [actorUserId], references: [id])
+
+  @@index([splitId, createdAt])
+  @@index([actorUserId])
+}
+
 model UserStrike {
   id        String   @id @default(cuid())
   userId    String
@@ -729,6 +789,26 @@ enum AlertType {
   trade_cancelled
   suspicious_login
   followed_activity
+  split_slot_claimed
+  split_shipped
+  split_completed
+  split_cancelled
+}
+
+enum DecantSplitStatus {
+  open
+  filling
+  shipped
+  completed
+  cancelled
+}
+
+enum DecantSplitSlotStatus {
+  open
+  claimed
+  paid
+  received
+  released
 }
 
 enum TradeStatus {

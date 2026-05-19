@@ -13,6 +13,7 @@ const base = (
   followingUserCount: 0,
   qualifiesForRareCollector: false,
   positiveHelpfulReviewCount: 0,
+  completedDecantSplitCount: 0,
   ...overrides,
 })
 
@@ -77,6 +78,13 @@ describe("computeContributorBadges", () => {
     expect(r.badges).not.toContain("helpfulReviewer")
   })
 
+  it("awards decantHost after one completed split as host", () => {
+    const r = computeContributorBadges(
+      base({ completedDecantSplitCount: 1 })
+    )
+    expect(r.badges).toContain("decantHost")
+  })
+
   it("sorts badges in display order", () => {
     const r = computeContributorBadges(
       base({
@@ -85,6 +93,7 @@ describe("computeContributorBadges", () => {
         followingUserCount: 10,
         qualifiesForRareCollector: true,
         positiveHelpfulReviewCount: 3,
+        completedDecantSplitCount: 1,
       })
     )
     expect(r.badges).toEqual([
@@ -92,6 +101,7 @@ describe("computeContributorBadges", () => {
       "communityPillar",
       "rareCollector",
       "helpfulReviewer",
+      "decantHost",
     ])
   })
 })

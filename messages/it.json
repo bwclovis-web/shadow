@@ -172,6 +172,24 @@
     },
     "savePreferences": "Salva preferenze",
     "savingPreferences": "Salvataggio...",
+    "pushNotifications": "Notifiche push",
+    "pushEnabled": "Notifiche del browser",
+    "pushTradeAlerts": "Aggiornamenti scambi",
+    "pushMessageAlerts": "Nuovi messaggi",
+    "pushFollowAlerts": "Attività seguiti",
+    "pushDescription": "Ricevi avvisi quando uno scambio avanza o qualcuno ti scrive (se non sei già in quella conversazione).",
+    "enablePush": "Attiva notifiche push",
+    "disablePush": "Disattiva notifiche push",
+    "pushWorking": "Elaborazione…",
+    "pushDenied": "Permesso notifiche negato. Abilitalo nelle impostazioni del browser.",
+    "pushUnsupported": "Questo browser non supporta le notifiche push.",
+    "pushNotConfigured": "Le notifiche push non sono ancora configurate su questo server.",
+    "pushSubscribeFailed": "Impossibile attivare le notifiche push. Riprova più tardi.",
+    "followAlerts": "Attività seguita",
+    "emailFollowAlerts": "Email — attività seguita",
+    "securityAlerts": "Avvisi di sicurezza",
+    "securityAlertsDescription": "Accesso insolito al tuo account",
+    "emailSecurityAlerts": "Email — avvisi di sicurezza",
     "types": {
       "wishlist_available": "Lista dei desideri",
       "decant_interest": "Interesse",
@@ -182,12 +200,20 @@
       "trade_shipped": "Scambio spedito",
       "trade_completed": "Scambio completato",
       "trade_cancelled": "Aggiornamento scambio",
+      "suspicious_login": "Sicurezza",
+      "followed_activity": "Seguiti",
+      "split_slot_claimed": "Posto prenotato",
+      "split_shipped": "Divisione spedita",
+      "split_completed": "Divisione completata",
+      "split_cancelled": "Divisione annullata",
       "default": "Avviso"
     },
     "actions": {
       "reviewSubmission": "Revisiona invio",
       "viewMessage": "Vedi messaggio",
       "viewTrade": "Vedi scambio",
+      "viewSecurity": "Impostazioni sicurezza",
+      "viewFollowedActivity": "Vedi attività",
       "viewPerfume": "Vedi profumo",
       "markRead": "Segna letto",
       "dismiss": "Ignora",
@@ -848,7 +874,16 @@
       "deleteComment": "Elimina commento",
       "makePublic": "Rendi pubblico",
       "makePrivate": "Rendi privato",
-      "noComments": "Questi commenti sono visibili solo a te e sono solo per uso personale."
+      "noComments": "Questi commenti sono visibili solo a te e sono solo per uso personale.",
+      "error": "Errore durante l'invio del commento. Riprova.",
+      "failed": "Impossibile aggiungere il commento",
+      "deleteError": "Errore durante l'eliminazione del commento",
+      "deleteFailed": "Impossibile eliminare il commento",
+      "title": "Commenti",
+      "description": "Qui puoi aggiungere le tue note personali su questo profumo.",
+      "addLabel": "Aggiungi un commento:",
+      "submitting": "Invio in corso…",
+      "submit": "Invia"
     },
     "search": {
       "placeholder": "Cerca i tuoi profumi...",
@@ -1746,7 +1781,8 @@
       "trustedSwapper": "Scambiatore affidabile",
       "communityPillar": "Pilastro della community",
       "rareCollector": "Collezionista raro",
-      "helpfulReviewer": "Recensore utile"
+      "helpfulReviewer": "Recensore utile",
+      "decantHost": "Host decant"
     },
     "feedback": {
       "title": "Feedback venditore",
@@ -1956,6 +1992,64 @@
     },
     "errors": {
       "mustSignIn": "Devi accedere."
+    }
+  },
+  "decantSplits": {
+    "meta": {
+      "title": "Divisione di gruppo — {perfume}",
+      "description": "Partecipa a una divisione di gruppo di {perfume} su Shadow and Sillage.",
+      "notFoundTitle": "Divisione non trovata",
+      "notFoundDescription": "Questa divisione di gruppo potrebbe essere terminata o rimossa."
+    },
+    "exchange": {
+      "openSplitChip": "Divisione di gruppo · {count} posti liberi"
+    },
+    "wizard": {
+      "title": "Avvia divisione di gruppo",
+      "startGroupSplit": "Avvia divisione di gruppo",
+      "budget": "{remaining} ml disponibili da versare ({owned} in collezione − {listed} in annuncio − {reserved} in divisioni attive).",
+      "totalMlLabel": "Ml totali da versare",
+      "slotCountLabel": "Numero di posti",
+      "slotMlLabel": "Ml per posto",
+      "slotSum": "Totale posti: {sum} ml (obiettivo: {total} ml)",
+      "priceHintLabel": "Indicazione prezzo (facoltativo, fuori piattaforma)",
+      "notesLabel": "Note per i partecipanti",
+      "disclaimer": "Comprendo che Shadow and Sillage non gestisce pagamenti né spedizioni. Coordino pagamento e affrancatura con i partecipanti fuori piattaforma.",
+      "disclaimerRequired": "Accetta l'avviso sui pagamenti.",
+      "cancel": "Annulla",
+      "back": "Indietro",
+      "next": "Avanti",
+      "create": "Crea divisione",
+      "creating": "Creazione…",
+      "createFailed": "Impossibile creare la divisione. Controlla il budget in ml e riprova."
+    },
+    "dashboard": {
+      "title": "Divisioni di gruppo",
+      "hosting": "Organizzi",
+      "participating": "Posti che hai prenotato"
+    },
+    "detail": {
+      "disclaimer": "Pagamenti e spedizioni sono concordati direttamente tra i venditori. Shadow and Sillage traccia solo lo stato e non detiene fondi.",
+      "hostedBy": "Organizzato da",
+      "status": "Stato: {status}",
+      "openSlots": "{count, plural, one {# posto libero} other {# posti liberi}}",
+      "priceHint": "Indicazione prezzo: {hint}",
+      "slotsTitle": "Posti",
+      "slotStatus": {
+        "open": "Libero",
+        "claimed": "Prenotato",
+        "paid": "Pagato",
+        "received": "Ricevuto",
+        "released": "Rilasciato"
+      },
+      "claimant": "Prenotato da {name}",
+      "claimSlot": "Prenota posto",
+      "markPaid": "Segna pagato",
+      "confirmReceived": "Conferma ricezione",
+      "markShipped": "Segna divisione spedita",
+      "cancelSplit": "Annulla divisione",
+      "signInToClaim": "Accedi per prenotare un posto.",
+      "actionFailed": "Azione non riuscita. Riprova."
     }
   }
 }

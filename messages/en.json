@@ -400,6 +400,10 @@
       "trade_cancelled": "Trade update",
       "suspicious_login": "Security",
       "followed_activity": "Following",
+      "split_slot_claimed": "Split claim",
+      "split_shipped": "Split shipped",
+      "split_completed": "Split completed",
+      "split_cancelled": "Split cancelled",
       "default": "Alert"
     },
     "actions": {
@@ -2038,7 +2042,8 @@
       "trustedSwapper": "Trusted swapper",
       "communityPillar": "Community pillar",
       "rareCollector": "Rare collector",
-      "helpfulReviewer": "Helpful reviewer"
+      "helpfulReviewer": "Helpful reviewer",
+      "decantHost": "Decant host"
     },
     "feedback": {
       "title": "Trader Feedback",
@@ -2264,6 +2269,64 @@
     },
     "errors": {
       "mustSignIn": "You must be signed in."
+    }
+  },
+  "decantSplits": {
+    "meta": {
+      "title": "{perfume} group split",
+      "description": "Join a group decant split for {perfume} on Shadow and Sillage.",
+      "notFoundTitle": "Split not found",
+      "notFoundDescription": "This decant split may have ended or been removed."
+    },
+    "exchange": {
+      "openSplitChip": "Group split · {count} slots open"
+    },
+    "wizard": {
+      "title": "Start a group split",
+      "startGroupSplit": "Start group split",
+      "budget": "{remaining} ml available to pour ({owned} owned − {listed} listed − {reserved} in active splits).",
+      "totalMlLabel": "Total ml to pour",
+      "slotCountLabel": "Number of slots",
+      "slotMlLabel": "Ml per slot",
+      "slotSum": "Slots total {sum} ml (pour target {total} ml)",
+      "priceHintLabel": "Price hint (optional, off-platform)",
+      "notesLabel": "Notes for claimants",
+      "disclaimer": "I understand Shadow and Sillage does not process payments or shipping. I will coordinate payment and postage with claimants off-platform.",
+      "disclaimerRequired": "Please accept the payment disclaimer.",
+      "cancel": "Cancel",
+      "back": "Back",
+      "next": "Next",
+      "create": "Create split",
+      "creating": "Creating…",
+      "createFailed": "Could not create split. Check your ml budget and try again."
+    },
+    "dashboard": {
+      "title": "Group splits",
+      "hosting": "You are hosting",
+      "participating": "Slots you claimed"
+    },
+    "detail": {
+      "disclaimer": "Payments and shipping are arranged directly between traders. Shadow and Sillage tracks status only and does not hold funds.",
+      "hostedBy": "Hosted by",
+      "status": "Status: {status}",
+      "openSlots": "{count, plural, one {# slot open} other {# slots open}}",
+      "priceHint": "Price hint: {hint}",
+      "slotsTitle": "Slots",
+      "slotStatus": {
+        "open": "Open",
+        "claimed": "Claimed",
+        "paid": "Paid",
+        "received": "Received",
+        "released": "Released"
+      },
+      "claimant": "Claimed by {name}",
+      "claimSlot": "Claim slot",
+      "markPaid": "Mark paid",
+      "confirmReceived": "Confirm received",
+      "markShipped": "Mark entire split shipped",
+      "cancelSplit": "Cancel split",
+      "signInToClaim": "Sign in to claim a slot.",
+      "actionFailed": "Action failed. Please try again."
     }
   }
 }

@@ -45,6 +45,7 @@ const DeStashForm = ({
 }: DeStashFormProps) => {
   const t = useTranslations("myScents.listItem")
   const tListing = useTranslations("listing")
+  const tDisclaimer = useTranslations("decantSplits.wizard")
   const available = userPerfume?.available || "0"
   const tradePriceVal = userPerfume?.tradePrice || ""
   const tradePreferenceVal =
@@ -61,6 +62,7 @@ const DeStashForm = ({
       images: userPerfume?.images ?? [],
       condition: (userPerfume?.condition as ListingCondition | null) ?? null,
       decantFormat: (userPerfume?.decantFormat as DecantFormat | null) ?? null,
+      disclaimerAccepted: false,
     }),
     [
       available,
@@ -96,9 +98,14 @@ const DeStashForm = ({
         }
       }
 
+      const listingMl = parseFloat(values.deStashAmount)
+      if (!isNaN(listingMl) && listingMl > 0 && !values.disclaimerAccepted) {
+        errors.disclaimerAccepted = tDisclaimer("disclaimerRequired")
+      }
+
       return errors
     },
-    [maxAvailable, t]
+    [maxAvailable, t, tDisclaimer]
   )
 
   const onSubmit = useCallback(
@@ -308,13 +315,31 @@ const DeStashForm = ({
                 />
               </fieldset>
             </div>
+            <label className="flex items-start gap-2 text-sm text-noir-dark">
+              <input
+                type="checkbox"
+                checked={values.disclaimerAccepted}
+                onChange={event =>
+                  setValue("disclaimerAccepted", event.target.checked)
+                }
+                className="mt-1"
+              />
+              <span>{tDisclaimer("disclaimer")}</span>
+            </label>
+            {errors.disclaimerAccepted && (
+              <p className="text-red-500 text-sm">{errors.disclaimerAccepted}</p>
+            )}
           </>
         )}
 
         <div className="flex gap-2">
           <Button
             type="submit"
-            disabled={!isValid || deStashAmount < 0}
+            disabled={
+              !isValid ||
+              deStashAmount < 0 ||
+              (showPriceAndTrade && !values.disclaimerAccepted)
+            }
             variant="primary"
           >
             {buttonText}

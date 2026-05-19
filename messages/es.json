@@ -172,6 +172,24 @@
     },
     "savePreferences": "Guardar Preferencias",
     "savingPreferences": "Guardando...",
+    "pushNotifications": "Notificaciones push",
+    "pushEnabled": "Notificaciones del navegador",
+    "pushTradeAlerts": "Actualizaciones de intercambio",
+    "pushMessageAlerts": "Mensajes nuevos",
+    "pushFollowAlerts": "Actividad de seguidos",
+    "pushDescription": "Recibe avisos cuando avancen los intercambios o te escriban (si no estás ya en esa conversación).",
+    "enablePush": "Activar notificaciones push",
+    "disablePush": "Desactivar notificaciones push",
+    "pushWorking": "Procesando…",
+    "pushDenied": "Se denegó el permiso de notificaciones. Actívalo en la configuración del navegador.",
+    "pushUnsupported": "Este navegador no admite notificaciones push.",
+    "pushNotConfigured": "Las notificaciones push aún no están configuradas en este servidor.",
+    "pushSubscribeFailed": "No se pudieron activar las notificaciones push. Inténtalo más tarde.",
+    "followAlerts": "Actividad seguida",
+    "emailFollowAlerts": "Correo — actividad seguida",
+    "securityAlerts": "Alertas de seguridad",
+    "securityAlertsDescription": "Actividad de inicio de sesión inusual en tu cuenta",
+    "emailSecurityAlerts": "Correo — alertas de seguridad",
     "types": {
       "wishlist_available": "Lista de deseos",
       "decant_interest": "Interés",
@@ -182,12 +200,20 @@
       "trade_shipped": "Intercambio enviado",
       "trade_completed": "Intercambio completado",
       "trade_cancelled": "Actualización de intercambio",
+      "suspicious_login": "Seguridad",
+      "followed_activity": "Seguidos",
+      "split_slot_claimed": "Plaza reclamada",
+      "split_shipped": "Reparto enviado",
+      "split_completed": "Reparto completado",
+      "split_cancelled": "Reparto cancelado",
       "default": "Alerta"
     },
     "actions": {
       "reviewSubmission": "Revisar envío",
       "viewMessage": "Ver mensaje",
       "viewTrade": "Ver intercambio",
+      "viewSecurity": "Configuración de seguridad",
+      "viewFollowedActivity": "Ver actividad",
       "viewPerfume": "Ver perfume",
       "markRead": "Marcar leído",
       "dismiss": "Descartar",
@@ -848,7 +874,16 @@
       "deleteComment": "Eliminar comentario",
       "makePublic": "Hacer público",
       "makePrivate": "Hacer privado",
-      "noComments": "Estos comentarios solo son visibles para ti y son solo para uso personal."
+      "noComments": "Estos comentarios solo son visibles para ti y son solo para uso personal.",
+      "error": "Error al enviar el comentario. Inténtalo de nuevo.",
+      "failed": "No se pudo añadir el comentario",
+      "deleteError": "Error al eliminar el comentario",
+      "deleteFailed": "No se pudo eliminar el comentario",
+      "title": "Comentarios",
+      "description": "Aquí puedes añadir tus notas personales sobre el aroma.",
+      "addLabel": "Añadir un comentario:",
+      "submitting": "Enviando…",
+      "submit": "Enviar"
     },
     "search": {
       "placeholder": "Busca tus perfumes...",
@@ -1746,7 +1781,8 @@
       "trustedSwapper": "Intercambio de confianza",
       "communityPillar": "Pilar de la comunidad",
       "rareCollector": "Coleccionista raro",
-      "helpfulReviewer": "Reseñador útil"
+      "helpfulReviewer": "Reseñador útil",
+      "decantHost": "Anfitrión de decants"
     },
     "feedback": {
       "title": "Comentarios del Comerciante",
@@ -1956,6 +1992,64 @@
     },
     "errors": {
       "mustSignIn": "Debes iniciar sesión."
+    }
+  },
+  "decantSplits": {
+    "meta": {
+      "title": "Reparto grupal — {perfume}",
+      "description": "Únete a un reparto grupal de {perfume} en Shadow and Sillage.",
+      "notFoundTitle": "Reparto no encontrado",
+      "notFoundDescription": "Este reparto grupal puede haber terminado o haberse eliminado."
+    },
+    "exchange": {
+      "openSplitChip": "Reparto grupal · {count} plazas libres"
+    },
+    "wizard": {
+      "title": "Iniciar reparto grupal",
+      "startGroupSplit": "Iniciar reparto grupal",
+      "budget": "{remaining} ml disponibles para verter ({owned} en colección − {listed} en anuncio − {reserved} en repartos activos).",
+      "totalMlLabel": "Total de ml a verter",
+      "slotCountLabel": "Número de plazas",
+      "slotMlLabel": "Ml por plaza",
+      "slotSum": "Total de plazas: {sum} ml (objetivo: {total} ml)",
+      "priceHintLabel": "Precio orientativo (opcional, fuera de la plataforma)",
+      "notesLabel": "Notas para los participantes",
+      "disclaimer": "Entiendo que Shadow and Sillage no procesa pagos ni envíos. Coordinaré el pago y el franqueo con los participantes fuera de la plataforma.",
+      "disclaimerRequired": "Acepta el aviso sobre pagos.",
+      "cancel": "Cancelar",
+      "back": "Atrás",
+      "next": "Siguiente",
+      "create": "Crear reparto",
+      "creating": "Creando…",
+      "createFailed": "No se pudo crear el reparto. Comprueba tu presupuesto en ml e inténtalo de nuevo."
+    },
+    "dashboard": {
+      "title": "Repartos grupales",
+      "hosting": "Organizas",
+      "participating": "Plazas que reclamaste"
+    },
+    "detail": {
+      "disclaimer": "Los pagos y envíos se acuerdan directamente entre vendedores. Shadow and Sillage solo hace seguimiento del estado y no custodia fondos.",
+      "hostedBy": "Organizado por",
+      "status": "Estado: {status}",
+      "openSlots": "{count, plural, one {# plaza libre} other {# plazas libres}}",
+      "priceHint": "Precio orientativo: {hint}",
+      "slotsTitle": "Plazas",
+      "slotStatus": {
+        "open": "Libre",
+        "claimed": "Reclamada",
+        "paid": "Pagada",
+        "received": "Recibida",
+        "released": "Liberada"
+      },
+      "claimant": "Reclamada por {name}",
+      "claimSlot": "Reclamar plaza",
+      "markPaid": "Marcar pagada",
+      "confirmReceived": "Confirmar recepción",
+      "markShipped": "Marcar reparto enviado",
+      "cancelSplit": "Cancelar reparto",
+      "signInToClaim": "Inicia sesión para reclamar una plaza.",
+      "actionFailed": "La acción falló. Inténtalo de nuevo."
     }
   }
 }

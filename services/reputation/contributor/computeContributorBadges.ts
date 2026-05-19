@@ -5,22 +5,23 @@ import {
   TRUSTED_SWAPPER_MIN_COMPLETED_TRADES,
 } from "./constants"
 import type {
-  ContributorBadgeIdPhase1,
+  ContributorBadgeId,
   ContributorBadgeInputs,
   ContributorBadgesResult,
 } from "./types"
 
-const CONTRIBUTOR_BADGE_ORDER: ContributorBadgeIdPhase1[] = [
+const CONTRIBUTOR_BADGE_ORDER: ContributorBadgeId[] = [
   "trustedSwapper",
   "communityPillar",
   "rareCollector",
   "helpfulReviewer",
+  "decantHost",
 ]
 
 const collectContributorBadges = (
   input: ContributorBadgeInputs
-): ContributorBadgeIdPhase1[] => {
-  const badges: ContributorBadgeIdPhase1[] = []
+): ContributorBadgeId[] => {
+  const badges: ContributorBadgeId[] = []
 
   if (
     input.completedTradeCount >= TRUSTED_SWAPPER_MIN_COMPLETED_TRADES &&
@@ -46,12 +47,16 @@ const collectContributorBadges = (
     badges.push("helpfulReviewer")
   }
 
+  if (input.completedDecantSplitCount >= 1) {
+    badges.push("decantHost")
+  }
+
   return badges
 }
 
 const sortContributorBadges = (
-  ids: ContributorBadgeIdPhase1[]
-): ContributorBadgeIdPhase1[] => {
+  ids: ContributorBadgeId[]
+): ContributorBadgeId[] => {
   const set = new Set(ids)
   return CONTRIBUTOR_BADGE_ORDER.filter((id) => set.has(id))
 }

@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl"
 
-import type { ContributorBadgeIdPhase1 } from "@/services/reputation/contributor/types"
+import type { ContributorBadgeId } from "@/services/reputation/contributor/types"
 import type { ReputationBadgeId } from "@/services/reputation/types"
 
 const REPUTATION_BADGE_ORDER: ReputationBadgeId[] = [
@@ -11,16 +11,17 @@ const REPUTATION_BADGE_ORDER: ReputationBadgeId[] = [
   "fastResponder",
 ]
 
-const CONTRIBUTOR_BADGE_ORDER: ContributorBadgeIdPhase1[] = [
+const CONTRIBUTOR_BADGE_ORDER: ContributorBadgeId[] = [
   "trustedSwapper",
   "communityPillar",
   "rareCollector",
   "helpfulReviewer",
+  "decantHost",
 ]
 
 type DisplayBadge =
   | { kind: "reputation"; id: ReputationBadgeId }
-  | { kind: "contributor"; id: ContributorBadgeIdPhase1 }
+  | { kind: "contributor"; id: ContributorBadgeId }
 
 const sortReputationBadges = (ids: ReputationBadgeId[]): ReputationBadgeId[] => {
   const set = new Set(ids)
@@ -28,15 +29,15 @@ const sortReputationBadges = (ids: ReputationBadgeId[]): ReputationBadgeId[] => 
 }
 
 const sortContributorBadges = (
-  ids: ContributorBadgeIdPhase1[]
-): ContributorBadgeIdPhase1[] => {
+  ids: ContributorBadgeId[]
+): ContributorBadgeId[] => {
   const set = new Set(ids)
   return CONTRIBUTOR_BADGE_ORDER.filter((id) => set.has(id))
 }
 
 const mergeDisplayBadges = (
   reputationBadges: ReputationBadgeId[],
-  contributorBadges: ContributorBadgeIdPhase1[]
+  contributorBadges: ContributorBadgeId[]
 ): DisplayBadge[] => [
   ...sortReputationBadges(reputationBadges).map(
     (id): DisplayBadge => ({ kind: "reputation", id })
@@ -48,7 +49,7 @@ const mergeDisplayBadges = (
 
 type TraderBadgeChipsProps = {
   reputationBadges?: ReputationBadgeId[]
-  contributorBadges?: ContributorBadgeIdPhase1[]
+  contributorBadges?: ContributorBadgeId[]
   className?: string
 }
 

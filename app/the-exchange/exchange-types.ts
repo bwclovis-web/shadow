@@ -6,6 +6,7 @@ import type {
 import type { SeasonalTrendingResult } from "@/models/seasonal-trending.server"
 import type { WishlistExchangeMatchEnriched } from "@/services/trade-match"
 import type { TraderReputationV1 } from "@/services/reputation/types"
+import type { OpenSplitChip } from "@/types/decant-split"
 
 export type ExchangePaginationMeta = {
   totalCount: number
@@ -61,4 +62,5 @@ export type ExchangePageData = {
   seasonalTrending?: SeasonalTrendingResult
   traderReputationByUserId?: Record<string, TraderReputationV1>
   viewerId?: string | null
+  openSplitChipsByPerfumeId?: Record<string, OpenSplitChip[]>
 }

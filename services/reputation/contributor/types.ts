@@ -18,9 +18,10 @@ export interface ContributorBadgeInputs {
   followingUserCount: number
   qualifiesForRareCollector: boolean
   positiveHelpfulReviewCount: number
+  completedDecantSplitCount: number
 }
 
 export interface ContributorBadgesResult {
   traderId: string
-  badges: ContributorBadgeIdPhase1[]
+  badges: ContributorBadgeId[]
 }

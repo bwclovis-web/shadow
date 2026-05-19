@@ -188,7 +188,7 @@ _Layer community graph and social identity on top of the shipped reputation, Sce
   - **Community Pillar** — follows 10+ traders AND is followed by 10+
 - [x] Badges surface on trader profile header alongside existing reputation chips
 - [x] **Helpful Reviewer** — ≥ 3 reviews with net positive helpfulness votes (C3 / CF-040)
-- [ ] **Decant Host** — organised ≥ 1 completed decant split (blocked on D3 / DecantSplit)
+- [x] **Decant Host** — organised ≥ 1 completed decant split (blocked on D3 / DecantSplit)
 
 **Shipped in (Phase 1):** `services/reputation/contributor/` (`computeContributorBadges`, `loadContributorBadges`, `rareCollector.server`); `contributorBadges` on `getTraderFeedbackForProfile` + `GET /api/trader-feedback`; `TraderBadgeChips` + `TraderProfileHeaderStats`; `getFollowingCountForUser` / `getFollowCountsForUsers` in `user-follow.server.ts`; i18n `traderProfile.contributorBadges.*`.
 
@@ -245,12 +245,14 @@ _Features that compound over time and are hard for a catalog-only or swap-group 
 
 ### D3 — Decant Splits (IMP-F01)
 
-- [ ] `DecantSplit` model: `id`, `hostUserId`, `perfumeId`, `totalMl`, `status` (open/filling/shipped/completed), `priceHint`, `notes`, `createdAt`
-- [ ] `DecantSplitSlot` model: `id`, `splitId`, `claimantUserId?`, `ml`, `status` (open/claimed/paid/received)
-- [ ] Host creates split; claimants claim slots; host marks shipped; claimants confirm received
-- [ ] Host reputation extended with "Decant Host" badge after first completed split
-- [ ] Off-platform payment disclaimer on every split page
-- [ ] Notify all slot claimants when host marks shipped (push + email)
+- [x] `DecantSplit` model: `id`, `hostUserId`, `perfumeId`, `totalMl`, `status` (open/filling/shipped/completed), `priceHint`, `notes`, `createdAt`
+- [x] `DecantSplitSlot` model: `id`, `splitId`, `claimantUserId?`, `ml`, `status` (open/claimed/paid/received)
+- [x] Host creates split; claimants claim slots; host marks shipped; claimants confirm received
+- [x] Host reputation extended with "Decant Host" badge after first completed split
+- [x] Off-platform payment disclaimer on every split page
+- [x] Notify all slot claimants when host marks shipped (push + email)
+
+**Shipped in:** `prisma/schema.prisma` (`DecantSplit`, `DecantSplitSlot`, `DecantSplitEvent`); `lib/decant-split-ml.ts`; `models/decant-split.server.ts`; `app/api/decant-splits/*`; `app/splits/[splitId]`; `DecantSplitWizard`, `DestashManager` entry; exchange chip (`ExchangeOpenSplitChip`); alerts/email/push; `decantHost` contributor badge; `docs/user-guide-decants.md`, `docs/smoke-test-decant-splits.md`.
 
 ### D4 — Real-Time Messaging (IMP-F04)
 

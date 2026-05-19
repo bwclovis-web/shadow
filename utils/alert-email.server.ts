@@ -27,6 +27,13 @@ const TRADE_EMAIL_ALERT_TYPES = [
   "trade_completed",
 ] as const satisfies readonly AlertType[]
 
+const SPLIT_EMAIL_ALERT_TYPES = [
+  "split_slot_claimed",
+  "split_shipped",
+  "split_completed",
+  "split_cancelled",
+] as const satisfies readonly AlertType[]
+
 type RecipientUser = {
   id: string
   email: string
@@ -165,6 +172,59 @@ export const sendDecantInterestAlertEmail = async (params: {
 
 const buildTradeThreadUrl = (actorUserId: string): string =>
   `${getAppBaseUrl()}/messages/${actorUserId}`
+
+export const sendSplitEventEmail = async (params: {
+  user: RecipientUser
+  preferences: AlertPrefsSlice | null | undefined
+  alertType: AlertType
+  title: string
+  message: string
+}): Promise<void> => {
+  if (
+    !SPLIT_EMAIL_ALERT_TYPES.includes(
+      params.alertType as (typeof SPLIT_EMAIL_ALERT_TYPES)[number]
+    )
+  ) {
+    return
+  }
+  if (!shouldSendDecantEmail(params.preferences)) {
+    logEmailDebug(
+      `Skipped split email for ${params.user.email}: decantAlerts=${params.preferences?.decantAlertsEnabled}, emailDecant=${params.preferences?.emailDecantAlerts}`
+    )
+    return
+  }
+  if (!isSendableRecipientEmail(params.user.email)) {
+    logEmailDebug(`Skipped split email: invalid recipient ${params.user.email}`)
+    return
+  }
+
+  const displayName = getUserDisplayName(params.user)
+  const preferencesUrl = `${getAppBaseUrl()}${getProfilePathForUser(params.user)}`
+  const splitId =
+    typeof (params as { splitId?: string }).splitId === "string"
+      ? (params as { splitId?: string }).splitId
+      : null
+  const actionUrl = splitId
+    ? `${getAppBaseUrl()}/splits/${splitId}`
+    : `${getAppBaseUrl()}/the-exchange`
+
+  const result = await sendTransactionalEmail({
+    to: params.user.email,
+    subject: params.title,
+    text: buildAlertEmailBody({
+      displayName,
+      message: `${params.title}\n\n${params.message}`,
+      actionUrl: `View split: ${actionUrl}`,
+      preferencesUrl,
+    }),
+  })
+
+  if (result.sent) {
+    logEmailDebug(`Sent split email to ${params.user.email} (id: ${result.id ?? "unknown"})`)
+  } else {
+    logEmailDebug(`Split email not sent to ${params.user.email}`)
+  }
+}
 
 export const sendTradeEventEmail = async (params: {
   user: RecipientUser

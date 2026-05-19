@@ -43,6 +43,11 @@ const getAlertIconClassName = (alertType: UserAlert["alertType"]) => {
       return "text-orange-600"
     case "followed_activity":
       return "text-noir-gold-500"
+    case "split_slot_claimed":
+    case "split_shipped":
+    case "split_completed":
+    case "split_cancelled":
+      return "text-noir-gold"
     default:
       return "text-gray-600"
   }
@@ -68,6 +73,10 @@ const alertLink = (alert: UserAlert) => {
     const targetUrl = alert.metadata?.targetUrl as string | undefined
     if (targetUrl) return targetUrl.startsWith("/") ? targetUrl : `/${targetUrl}`
     return "/the-exchange"
+  }
+  if ((alert.alertType as string).startsWith("split_")) {
+    const splitId = alert.metadata?.splitId as string | undefined
+    if (splitId) return `/splits/${splitId}`
   }
   if (alert.Perfume) return perfumeLink(alert.Perfume.slug)
   return "/messages"
@@ -96,6 +105,10 @@ const alertTypeKey = (alertType: UserAlert["alertType"]) => {
     "trade_cancelled",
     "suspicious_login",
     "followed_activity",
+    "split_slot_claimed",
+    "split_shipped",
+    "split_completed",
+    "split_cancelled",
   ] as const
   return known.includes(key as (typeof known)[number]) ? key : "default"
 }

@@ -12,7 +12,9 @@ import { getSeasonalTrendingPerfumes } from "@/models/seasonal-trending.server"
 import { getWishlistExchangeMatches } from "@/models/wishlist-matching.server"
 import { getPerfumeNotesByIds } from "@/models/tags.server"
 import { loadTraderReputationsForUserIds } from "@/services/reputation/loadReputationInputs.server"
+import { listOpenSplitChipsForPerfumes } from "@/models/decant-split.server"
 import { enrichWishlistExchangeMatches } from "@/services/trade-match"
+import { isDecantSplitsEnabled } from "@/utils/decant-splits-enabled.server"
 import { parseDiscoveryFiltersFromSearchParams } from "@/utils/discovery-filters"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
@@ -141,6 +143,19 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
         )
       : []
 
+  const perfumeIdsForSplits = availablePerfumes.map(p => p.id)
+  const openSplitChips = isDecantSplitsEnabled()
+    ? await listOpenSplitChipsForPerfumes(perfumeIdsForSplits)
+    : []
+  const openSplitChipsByPerfumeId = openSplitChips.reduce<
+    Record<string, typeof openSplitChips>
+  >((acc, chip) => {
+    const list = acc[chip.perfumeId] ?? []
+    list.push(chip)
+    acc[chip.perfumeId] = list
+    return acc
+  }, {})
+
   return (
     <TheExchangeClient
       availablePerfumes={availablePerfumes}
@@ -155,6 +170,7 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
       seasonalTrending={seasonalTrending}
       traderReputationByUserId={traderReputationByUserId}
       viewerId={viewerId}
+      openSplitChipsByPerfumeId={openSplitChipsByPerfumeId}
     />
   )
 }
