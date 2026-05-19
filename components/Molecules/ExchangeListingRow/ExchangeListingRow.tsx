@@ -87,10 +87,7 @@ const ExchangeListingRow = ({
       ) : null}
       {matchExplanation ? (
         <div className="mt-2">
-          <TradeMatchReasonLine
-            reasons={matchExplanation.reasons}
-            primaryReasons={matchExplanation.primaryReasons}
-          />
+          <TradeMatchReasonLine reasons={matchExplanation.reasons} />
         </div>
       ) : null}
       <ListingPhotos

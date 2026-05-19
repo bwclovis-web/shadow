@@ -1,16 +1,13 @@
 "use client"
 
 import { useLocale, useTranslations } from "next-intl"
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
 import { MdInfoOutline } from "react-icons/md"
 
 import IconPopover from "@/components/Molecules/IconPopover"
 import type { TradeMatchReason } from "@/services/trade-match"
 import type { NoteFamilyId } from "@/utils/scent-dna/note-families"
 import { styleMerge } from "@/utils/styleUtils"
-
-const defaultChipClassName =
-  "rounded border border-noir-gold/20 bg-noir-black/40 px-2 py-0.5 text-xs text-noir-gold-100"
 
 const defaultTriggerClassName =
   "border border-noir-gold/35 text-noir-gold-400 hover:text-noir-gold-100 hover:border-noir-gold/55 rounded-full"
@@ -20,25 +17,26 @@ const defaultContentClassName =
 
 type TradeMatchReasonLineProps = {
   reasons: TradeMatchReason[]
+  /** @deprecated All reasons are shown in the popover; ignored. */
   primaryReasons?: TradeMatchReason[]
   /** i18n root, e.g. tradingPost.matchReason */
   translationNamespace?: string
   className?: string
-  chipClassName?: string
   panelClassName?: string
   buttonClassName?: string
   contentClassName?: string
+  /** Show short label beside the info icon (default true). */
+  showTriggerLabel?: boolean
 }
 
 export const TradeMatchReasonLine = ({
   reasons,
-  primaryReasons,
   translationNamespace = "tradingPost.matchReason",
   className,
-  chipClassName,
   panelClassName,
   buttonClassName,
   contentClassName,
+  showTriggerLabel = true,
 }: TradeMatchReasonLineProps) => {
   const t = useTranslations(translationNamespace)
   const tFamilies = useTranslations("traderProfile.scentDna.families")
@@ -78,51 +76,43 @@ export const TradeMatchReasonLine = ({
     [t, tFamilies, locale]
   )
 
-  const inline = primaryReasons ?? reasons.slice(0, 2)
-  const inlineLabels = inline
-    .map(r => labelForReason(r))
-    .filter((text): text is string => Boolean(text))
+  const labeledReasons = useMemo(
+    () =>
+      reasons
+        .map((reason, index) => ({
+          reason,
+          index,
+          text: labelForReason(reason),
+        }))
+        .filter((row): row is typeof row & { text: string } => Boolean(row.text)),
+    [reasons, labelForReason]
+  )
 
-  if (inlineLabels.length === 0) return null
-
-  const allLabels = reasons
-    .map(r => labelForReason(r))
-    .filter((text): text is string => Boolean(text))
-
-  const showPopover = allLabels.length > inlineLabels.length
+  if (labeledReasons.length === 0) return null
 
   return (
-    <div className={styleMerge("flex flex-wrap items-center gap-1.5", className)}>
-      <ul className="flex flex-wrap gap-1.5" aria-label={t("inlineAriaLabel")}>
-        {inlineLabels.map((text, index) => (
-          <li
-            key={`${inline[index]?.kind ?? index}-${text}`}
-            className={styleMerge(defaultChipClassName, chipClassName)}
-          >
-            {text}
-          </li>
-        ))}
-      </ul>
-      {showPopover ? (
-        <IconPopover
-          ariaLabel={t("whyAriaLabel")}
-          icon={<MdInfoOutline size={18} className="text-current" />}
-          panelClassName={panelClassName}
-          buttonClassName={styleMerge(defaultTriggerClassName, buttonClassName)}
-        >
-          <ul
-            className={styleMerge(
-              "m-0 list-disc space-y-1 pl-4 text-left",
-              defaultContentClassName,
-              contentClassName
-            )}
-          >
-            {allLabels.map(text => (
-              <li key={text}>{text}</li>
-            ))}
-          </ul>
-        </IconPopover>
+    <span className={styleMerge("inline-flex items-center gap-1.5", className)}>
+      {showTriggerLabel ? (
+        <span className="text-xs text-noir-gold-100/90">{t("triggerLabel")}</span>
       ) : null}
-    </div>
+      <IconPopover
+        ariaLabel={t("whyAriaLabel")}
+        icon={<MdInfoOutline size={18} className="text-current shrink-0" />}
+        panelClassName={panelClassName}
+        buttonClassName={styleMerge(defaultTriggerClassName, buttonClassName)}
+      >
+        <ul
+          className={styleMerge(
+            "m-0 list-disc space-y-1.5 pl-4 text-left",
+            defaultContentClassName,
+            contentClassName
+          )}
+        >
+          {labeledReasons.map(({ reason, index, text }) => (
+            <li key={`${reason.kind}-${index}`}>{text}</li>
+          ))}
+        </ul>
+      </IconPopover>
+    </span>
   )
 }

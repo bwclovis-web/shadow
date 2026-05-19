@@ -134,10 +134,7 @@ const OnboardingMatchesList = ({
                 </p>
                 {match.matchExplanation ? (
                   <div className="mt-1.5">
-                    <TradeMatchReasonLine
-                      reasons={match.matchExplanation.reasons}
-                      primaryReasons={match.matchExplanation.primaryReasons}
-                    />
+                    <TradeMatchReasonLine reasons={match.matchExplanation.reasons} />
                   </div>
                 ) : null}
               </div>

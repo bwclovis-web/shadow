@@ -32,8 +32,8 @@ Constants: [`services/trade-match/v1-constants.ts`](../services/trade-match/v1-c
 
 ## Display rules
 
-- Inline: up to **2** reasons (`TRADE_MATCH_INLINE_REASON_LIMIT`), film noir chips (`border-noir-gold/20`, `bg-noir-black/40`).
-- Additional reasons: info popover (same pattern as `RecommendationReasonLine`).
+- All reasons appear in a single info popover (bulleted list); optional “Why this swap fits” label beside the icon trigger.
+- No inline reason chips on cards.
 - i18n: `tradingPost.matchReason.*`, `myScents.wishlistDemand.matchReason.*`; family names reuse `traderProfile.scentDna.families`.
 
 ## Implementation

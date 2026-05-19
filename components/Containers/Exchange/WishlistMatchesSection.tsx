@@ -167,10 +167,7 @@ const MatchCardFooter = ({
 }) => (
   <div className="mt-2 space-y-2">
     {matchExplanation ? (
-      <TradeMatchReasonLine
-        reasons={matchExplanation.reasons}
-        primaryReasons={matchExplanation.primaryReasons}
-      />
+      <TradeMatchReasonLine reasons={matchExplanation.reasons} />
     ) : null}
     <p className="text-sm font-medium text-noir-gold">{countLabel}</p>
     <Button

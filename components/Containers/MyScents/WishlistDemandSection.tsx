@@ -66,7 +66,6 @@ const WishlistDemandSection = ({ demand }: WishlistDemandSectionProps) => {
                 <div className="mt-2">
                   <TradeMatchReasonLine
                     reasons={row.matchExplanation.reasons}
-                    primaryReasons={row.matchExplanation.primaryReasons}
                     translationNamespace="myScents.wishlistDemand.matchReason"
                   />
                 </div>

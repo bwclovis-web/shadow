@@ -943,8 +943,9 @@
       "title": "Someone wants what you have",
       "description": "These traders have your listed perfumes on their public wishlist.",
       "matchReason": {
+        "triggerLabel": "Why this swap fits",
+        "whyAriaLabel": "Why this swap fits — full details",
         "inlineAriaLabel": "Why this swap fits",
-        "whyAriaLabel": "More reasons this swap fits",
         "onYourWishlist": "On your wishlist",
         "theyWantYours": "They want what you have",
         "wishlistOverlapDepth": "Wants {count} of your bottles",
@@ -1766,8 +1767,9 @@
       "description": "Wishlist perfumes that traders are listing right now."
     },
     "matchReason": {
+      "triggerLabel": "Why this swap fits",
+      "whyAriaLabel": "Why this swap fits — full details",
       "inlineAriaLabel": "Why this swap fits",
-      "whyAriaLabel": "More reasons this swap fits",
       "onYourWishlist": "On your wishlist",
       "theyWantYours": "They want what you have",
       "wishlistOverlapDepth": "Wants {count} of your bottles",

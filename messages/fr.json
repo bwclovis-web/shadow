@@ -722,8 +722,9 @@
       "title": "Quelqu'un veut ce que vous avez",
       "description": "Ces traders ont sur leur wishlist publique les parfums que vous proposez.",
       "matchReason": {
+        "triggerLabel": "Pourquoi cet échange convient",
+        "whyAriaLabel": "Pourquoi cet échange convient — détails",
         "inlineAriaLabel": "Pourquoi cet échange convient",
-        "whyAriaLabel": "Autres raisons pour lesquelles cet échange convient",
         "onYourWishlist": "Sur votre wishlist",
         "theyWantYours": "Ils veulent ce que vous avez",
         "wishlistOverlapDepth": "Veulent {count} de vos flacons",
@@ -1487,8 +1488,9 @@
       "description": "Parfums de votre wishlist actuellement proposés par la communauté."
     },
     "matchReason": {
+      "triggerLabel": "Pourquoi cet échange convient",
+      "whyAriaLabel": "Pourquoi cet échange convient — détails",
       "inlineAriaLabel": "Pourquoi cet échange convient",
-      "whyAriaLabel": "Autres raisons pour lesquelles cet échange convient",
       "onYourWishlist": "Sur votre wishlist",
       "theyWantYours": "Ils veulent ce que vous avez",
       "wishlistOverlapDepth": "Veulent {count} de vos flacons",

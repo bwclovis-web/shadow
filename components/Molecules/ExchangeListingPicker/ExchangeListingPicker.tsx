@@ -6,7 +6,6 @@ import { useTranslations } from "next-intl"
 import type { ExchangeUserPerfumeRow } from "@/app/the-exchange/exchange-types"
 import { selectVariants, selectWrapperVariants } from "@/components/Atoms/Select/select-variants"
 import { ExchangeListingRow } from "@/components/Molecules/ExchangeListingRow"
-import { TradeMatchReasonLine } from "@/components/Molecules/TradeMatchReasonLine"
 import type { TraderReputationV1 } from "@/services/reputation/types"
 import type { TradeMatchExplanation } from "@/services/trade-match"
 import {

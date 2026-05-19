@@ -722,8 +722,9 @@
       "title": "Alguien quiere lo que tienes",
       "description": "Estos traders tienen en su wishlist pública los perfumes que tú listas.",
       "matchReason": {
+        "triggerLabel": "Por qué encaja este intercambio",
+        "whyAriaLabel": "Por qué encaja este intercambio — detalles",
         "inlineAriaLabel": "Por qué encaja este intercambio",
-        "whyAriaLabel": "Más motivos por los que encaja",
         "onYourWishlist": "En tu wishlist",
         "theyWantYours": "Quieren lo que tienes",
         "wishlistOverlapDepth": "Quieren {count} de tus frascos",
@@ -1487,8 +1488,9 @@
       "description": "Perfumes de tu wishlist que otros traders están listando ahora."
     },
     "matchReason": {
+      "triggerLabel": "Por qué encaja este intercambio",
+      "whyAriaLabel": "Por qué encaja este intercambio — detalles",
       "inlineAriaLabel": "Por qué encaja este intercambio",
-      "whyAriaLabel": "Más motivos por los que encaja",
       "onYourWishlist": "En tu wishlist",
       "theyWantYours": "Quieren lo que tienes",
       "wishlistOverlapDepth": "Quieren {count} de tus frascos",
