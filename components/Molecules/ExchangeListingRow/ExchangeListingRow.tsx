@@ -7,7 +7,9 @@ import type { ExchangeUserPerfumeRow } from "@/app/the-exchange/exchange-types"
 import { Button } from "@/components/Atoms/Button/Button"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import ListingPhotos from "@/components/Molecules/ListingPhotos/ListingPhotos"
+import { TradeMatchReasonLine } from "@/components/Molecules/TradeMatchReasonLine"
 import type { TraderReputationV1 } from "@/services/reputation/types"
+import type { TradeMatchExplanation } from "@/services/trade-match"
 import { getExchangeListingTradeDisplay } from "@/utils/exchangeListingTradeDisplay"
 import { getPerfumeTypeLabel } from "@/data/SelectTypes"
 import { getTradeCtaLabelKey } from "@/types/trade"
@@ -17,6 +19,7 @@ type ExchangeListingRowProps = {
   listing: ExchangeUserPerfumeRow
   perfumeImage?: string | null
   reputation?: TraderReputationV1 | null
+  matchExplanation?: TradeMatchExplanation | null
   onMakeOffer?: () => void
   onViewProfileClick?: () => void
   showMakeOffer?: boolean
@@ -27,6 +30,7 @@ const ExchangeListingRow = ({
   listing,
   perfumeImage = null,
   reputation,
+  matchExplanation,
   onMakeOffer,
   onViewProfileClick,
   showMakeOffer = false,
@@ -80,6 +84,14 @@ const ExchangeListingRow = ({
         <span className="ml-2 text-noir-gold-500">
           ({tRep("exchangeTrust", { score: reputation.score })})
         </span>
+      ) : null}
+      {matchExplanation ? (
+        <div className="mt-2">
+          <TradeMatchReasonLine
+            reasons={matchExplanation.reasons}
+            primaryReasons={matchExplanation.primaryReasons}
+          />
+        </div>
       ) : null}
       <ListingPhotos
         images={listing.images}

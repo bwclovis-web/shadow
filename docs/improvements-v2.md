@@ -238,10 +238,10 @@ _Features that compound over time and are hard for a catalog-only or swap-group 
 
 ### D2 — Trade Match Score
 
-- [ ] Surface a "why this swap fits" explanation on every wishlist match and recommended listing card
-- [ ] Score factors: wishlist overlap depth, Scent DNA family match, shared region (shipping ease), counterparty response speed, counterparty reliability score, trade history with similar items
-- [ ] Explanation copy examples: "They want what you have," "Same region → easier shipping," "Top-rated swapper," "Your DNA overlaps on woods and orientals"
-- [ ] Reuses shipped signals; no new schema needed for v1
+- [x] Surface a "why this swap fits" explanation on every wishlist match and recommended listing card
+- [x] Score factors: wishlist overlap depth, Scent DNA family match, shared region (shipping ease), counterparty response speed, counterparty reliability score, trade history with similar items (similar-trade deferred to D2.1; see `docs/trade-match-score-v1.md`)
+- [x] Explanation copy examples: "They want what you have," "Same region → easier shipping," "Top-rated swapper," "Your DNA overlaps on woods and orientals"
+- [x] Reuses shipped signals; no new schema needed for v1
 
 ### D3 — Decant Splits (IMP-F01)
 

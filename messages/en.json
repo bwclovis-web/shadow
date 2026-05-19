@@ -941,7 +941,20 @@
     },
     "wishlistDemand": {
       "title": "Someone wants what you have",
-      "description": "These traders have your listed perfumes on their public wishlist."
+      "description": "These traders have your listed perfumes on their public wishlist.",
+      "matchReason": {
+        "inlineAriaLabel": "Why this swap fits",
+        "whyAriaLabel": "More reasons this swap fits",
+        "onYourWishlist": "On your wishlist",
+        "theyWantYours": "They want what you have",
+        "wishlistOverlapDepth": "Wants {count} of your bottles",
+        "scentDnaOverlap": "Your DNA overlaps on {families}",
+        "sameRegion": "Same region — easier shipping",
+        "topRatedSwapper": "Top-rated swapper",
+        "fastResponder": "Usually replies quickly",
+        "reliableSwapper": "Reliable swap history",
+        "similarTradeHistory": "Swapped this bottle before"
+      }
     },
     "listItem": {
       "destashed": "DeStashed",
@@ -1751,6 +1764,19 @@
     "wishlistMatches": {
       "title": "Matches for you",
       "description": "Wishlist perfumes that traders are listing right now."
+    },
+    "matchReason": {
+      "inlineAriaLabel": "Why this swap fits",
+      "whyAriaLabel": "More reasons this swap fits",
+      "onYourWishlist": "On your wishlist",
+      "theyWantYours": "They want what you have",
+      "wishlistOverlapDepth": "Wants {count} of your bottles",
+      "scentDnaOverlap": "Your DNA overlaps on {families}",
+      "sameRegion": "Same region — easier shipping",
+      "topRatedSwapper": "Top-rated swapper",
+      "fastResponder": "Usually replies quickly",
+      "reliableSwapper": "Reliable swap history",
+      "similarTradeHistory": "Swapped this bottle before"
     },
     "activityFeed": {
       "title": "Just listed",

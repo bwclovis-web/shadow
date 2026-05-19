@@ -5,6 +5,8 @@ import { getTranslations } from "next-intl/server"
 import { redirect } from "next/navigation"
 
 import { getTradersWantingUserListings } from "@/models/wishlist-matching.server"
+import { loadTraderReputationsForUserIds } from "@/services/reputation/loadReputationInputs.server"
+import { enrichWishlistDemandRows } from "@/services/trade-match"
 import { getUserInventoryStats } from "@/models/user-inventory-stats.server"
 import { getUserPerfumes } from "@/models/user.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
@@ -48,11 +50,22 @@ export default async function MyScentsPage({
     redirect(`/${slug}/profile/my-scents`)
   }
 
-  const [userPerfumes, wishlistDemand, inventoryStats] = await Promise.all([
+  const [userPerfumes, wishlistDemandRaw, inventoryStats] = await Promise.all([
     getUserPerfumes(session.user.id),
     getTradersWantingUserListings(session.user.id),
     getUserInventoryStats(session.user.id),
   ])
+
+  const demandTraderIds = wishlistDemandRaw.map(row => row.trader.id)
+  const reputationMap =
+    demandTraderIds.length > 0
+      ? await loadTraderReputationsForUserIds(demandTraderIds)
+      : new Map()
+  const wishlistDemand = await enrichWishlistDemandRows(
+    session.user.id,
+    wishlistDemandRaw,
+    Object.fromEntries(reputationMap)
+  )
 
   const serialized = userPerfumes.map((up) => ({
     ...up,

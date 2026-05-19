@@ -12,6 +12,7 @@ import { getSeasonalTrendingPerfumes } from "@/models/seasonal-trending.server"
 import { getWishlistExchangeMatches } from "@/models/wishlist-matching.server"
 import { getPerfumeNotesByIds } from "@/models/tags.server"
 import { loadTraderReputationsForUserIds } from "@/services/reputation/loadReputationInputs.server"
+import { enrichWishlistExchangeMatches } from "@/services/trade-match"
 import { parseDiscoveryFiltersFromSearchParams } from "@/utils/discovery-filters"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
@@ -131,6 +132,15 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
     traderIds.length > 0 ? await loadTraderReputationsForUserIds(traderIds) : new Map()
   const traderReputationByUserId = Object.fromEntries(reputationMap)
 
+  const enrichedWishlistMatches =
+    viewerId && wishlistMatches.length > 0
+      ? await enrichWishlistExchangeMatches(
+          viewerId,
+          wishlistMatches,
+          traderReputationByUserId
+        )
+      : []
+
   return (
     <TheExchangeClient
       availablePerfumes={availablePerfumes}
@@ -139,7 +149,7 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
       initialNoteTags={initialNoteTags}
       initialHouse={initialHouse}
       initialPerfume={initialPerfume}
-      wishlistMatches={wishlistMatches}
+      wishlistMatches={enrichedWishlistMatches}
       recentListings={recentListings}
       followedActivity={followedActivity}
       seasonalTrending={seasonalTrending}

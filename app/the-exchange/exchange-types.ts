@@ -4,7 +4,7 @@ import type {
   FollowedActivityItem,
 } from "@/models/activity-feed.server"
 import type { SeasonalTrendingResult } from "@/models/seasonal-trending.server"
-import type { WishlistExchangeMatchRow } from "@/models/wishlist-matching.server"
+import type { WishlistExchangeMatchEnriched } from "@/services/trade-match"
 import type { TraderReputationV1 } from "@/services/reputation/types"
 
 export type ExchangePaginationMeta = {
@@ -55,7 +55,7 @@ export type ExchangePageData = {
   initialNoteTags: Tag[]
   initialHouse: { id: string; name: string } | null
   initialPerfume: { id: string; name: string } | null
-  wishlistMatches?: WishlistExchangeMatchRow[]
+  wishlistMatches?: WishlistExchangeMatchEnriched[]
   recentListings?: ActivityFeedListingRow[]
   followedActivity?: FollowedActivityItem[]
   seasonalTrending?: SeasonalTrendingResult

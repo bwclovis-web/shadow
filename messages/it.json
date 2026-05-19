@@ -720,7 +720,20 @@
     },
     "wishlistDemand": {
       "title": "Qualcuno vuole quello che hai",
-      "description": "Questi trader hanno nella wishlist pubblica i profumi che tu proponi."
+      "description": "Questi trader hanno nella wishlist pubblica i profumi che tu proponi.",
+      "matchReason": {
+        "inlineAriaLabel": "Perché questo scambio ha senso",
+        "whyAriaLabel": "Altri motivi per cui questo scambio ha senso",
+        "onYourWishlist": "Nella tua wishlist",
+        "theyWantYours": "Vogliono quello che hai",
+        "wishlistOverlapDepth": "Vogliono {count} dei tuoi flaconi",
+        "scentDnaOverlap": "Il tuo DNA si sovrappone su {families}",
+        "sameRegion": "Stessa regione — spedizione più facile",
+        "topRatedSwapper": "Trader molto valutato",
+        "fastResponder": "Di solito risponde in fretta",
+        "reliableSwapper": "Storico scambi affidabile",
+        "similarTradeHistory": "Ha già scambiato questo flacone"
+      }
     },
     "listItem": {
       "destashed": "Destockato",
@@ -1472,6 +1485,19 @@
     "wishlistMatches": {
       "title": "Corrispondenze per te",
       "description": "Profumi della tua wishlist attualmente in vendita sulla piattaforma."
+    },
+    "matchReason": {
+      "inlineAriaLabel": "Perché questo scambio ha senso",
+      "whyAriaLabel": "Altri motivi per cui questo scambio ha senso",
+      "onYourWishlist": "Nella tua wishlist",
+      "theyWantYours": "Vogliono quello che hai",
+      "wishlistOverlapDepth": "Vogliono {count} dei tuoi flaconi",
+      "scentDnaOverlap": "Il tuo DNA si sovrappone su {families}",
+      "sameRegion": "Stessa regione — spedizione più facile",
+      "topRatedSwapper": "Trader molto valutato",
+      "fastResponder": "Di solito risponde in fretta",
+      "reliableSwapper": "Storico scambi affidabile",
+      "similarTradeHistory": "Ha già scambiato questo flacone"
     },
     "activityFeed": {
       "title": "Appena inseriti",

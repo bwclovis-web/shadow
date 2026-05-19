@@ -6,14 +6,15 @@ import { LuUsers } from "react-icons/lu"
 
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { TraderAvatar } from "@/components/Molecules/TraderAvatar"
-import type { TraderWantingUserListingRow } from "@/models/wishlist-matching.server"
+import { TradeMatchReasonLine } from "@/components/Molecules/TradeMatchReasonLine"
+import type { TraderWantingUserListingEnriched } from "@/services/trade-match"
 import { normalizeRemoteImageSrc } from "@/utils/styleUtils"
 import { getTraderDisplayName } from "@/utils/user"
 
 const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
 
 type WishlistDemandSectionProps = {
-  demand: TraderWantingUserListingRow[]
+  demand: TraderWantingUserListingEnriched[]
 }
 
 const WishlistDemandSection = ({ demand }: WishlistDemandSectionProps) => {
@@ -61,6 +62,15 @@ const WishlistDemandSection = ({ demand }: WishlistDemandSectionProps) => {
                 />
                 <span className="font-medium text-noir-gold">{traderName}</span>
               </PrefetchLink>
+              {row.matchExplanation ? (
+                <div className="mt-2">
+                  <TradeMatchReasonLine
+                    reasons={row.matchExplanation.reasons}
+                    primaryReasons={row.matchExplanation.primaryReasons}
+                    translationNamespace="myScents.wishlistDemand.matchReason"
+                  />
+                </div>
+              ) : null}
               <ul className="mt-3 flex flex-wrap gap-2">
                 {row.perfumes.map(perfume => {
                   const thumb = normalizeRemoteImageSrc(perfume.image)

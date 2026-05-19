@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/db"
 import { getWishlistExchangeMatches } from "@/models/wishlist-matching.server"
 import { getPersonalizedRecommendations } from "@/services/recommendations"
+import { loadTraderReputationsForUserIds } from "@/services/reputation/loadReputationInputs.server"
+import {
+  enrichOnboardingMatches,
+  type OnboardingTraderMatchEnriched,
+} from "@/services/trade-match"
 import { getProfileSlug, getTraderDisplayName } from "@/utils/user"
 
 const ONBOARDING_MATCH_LIMIT = 3
@@ -39,7 +44,7 @@ export type OnboardingState = {
   steps: OnboardingSteps
   activeStep: OnboardingStepId
   profileSlug: string
-  matches: OnboardingTraderMatch[]
+  matches: OnboardingTraderMatchEnriched[]
 }
 
 const traderUserSelect = {
@@ -258,10 +263,19 @@ export const getOnboardingState = async (
     profileSlug: user.profileSlug,
   })
 
-  const matches =
-    steps.quiz && steps.bottle
-      ? await getOnboardingTraderMatches(userId)
-      : []
+  const rawMatches =
+    steps.quiz && steps.bottle ? await getOnboardingTraderMatches(userId) : []
+
+  const counterpartyIds = rawMatches.map(m => m.counterpartyId)
+  const reputationMap =
+    counterpartyIds.length > 0
+      ? await loadTraderReputationsForUserIds(counterpartyIds)
+      : new Map()
+  const matches = await enrichOnboardingMatches(
+    userId,
+    rawMatches,
+    Object.fromEntries(reputationMap)
+  )
 
   return {
     showBanner: true,

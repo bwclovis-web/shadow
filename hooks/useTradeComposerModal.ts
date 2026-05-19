@@ -9,6 +9,7 @@ import {
 } from "@/constants/modalIds"
 import { useSessionStore } from "@/hooks/sessionStore"
 import type { TraderReputationV1 } from "@/services/reputation/types"
+import type { TradeMatchExplanation } from "@/services/trade-match"
 import type { TradeComposerInit, TradeListingSeed } from "@/types/trade"
 
 export type TradeComposerModalData =
@@ -23,6 +24,7 @@ export type TradeComposerModalData =
         perfumeImage?: string | null
       }
       traderReputationByUserId?: Record<string, TraderReputationV1>
+      matchExplanationByListingId?: Record<string, TradeMatchExplanation>
     }
 
 export const useTradeComposerModal = () => {
@@ -52,6 +54,7 @@ export const useTradeComposerModal = () => {
       options?: {
         trigger?: HTMLButtonElement | null
         traderReputationByUserId?: Record<string, TraderReputationV1>
+        matchExplanationByListingId?: Record<string, TradeMatchExplanation>
       }
     ) => {
       const trigger = options?.trigger
@@ -61,6 +64,7 @@ export const useTradeComposerModal = () => {
         listingsToPick,
         perfumeMeta,
         traderReputationByUserId: options?.traderReputationByUserId,
+        matchExplanationByListingId: options?.matchExplanationByListingId,
       } satisfies TradeComposerModalData)
     },
     [toggleModal]

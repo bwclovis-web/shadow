@@ -37,7 +37,7 @@ import {
 } from "@/lib/user-inventory"
 import { computeCollectionCounts } from "@/lib/user-inventory-stats"
 import type { UserInventoryStats } from "@/models/user-inventory-stats.server"
-import type { TraderWantingUserListingRow } from "@/models/wishlist-matching.server"
+import type { TraderWantingUserListingEnriched } from "@/services/trade-match"
 import type { MyScentsView, UserPerfumeForClient } from "@/types/my-scents-client"
 import type { SortOption } from "@/utils/sortUtils"
 import { styleMerge } from "@/utils/styleUtils"
@@ -68,7 +68,7 @@ const CUSTOM_FILTERS = {
 
 type MyScentsPageClientProps = {
   userPerfumes: UserPerfumeForClient[]
-  wishlistDemand?: TraderWantingUserListingRow[]
+  wishlistDemand?: TraderWantingUserListingEnriched[]
   inventoryStats: UserInventoryStats
   bannerImage: string
 }

@@ -14,6 +14,7 @@ import { CSRFToken } from "@/components/Molecules/CSRFToken"
 import TradeListingPreview from "@/components/Molecules/TradeListingPreview/TradeListingPreview"
 import { useCSRF } from "@/hooks/useCSRF"
 import type { TraderReputationV1 } from "@/services/reputation/types"
+import type { TradeMatchExplanation } from "@/services/trade-match"
 import type { TradeComposerInit, TradeListingSeed } from "@/types/trade"
 import { isCashOnlyListing, tradeListingSeedFromExchangeRow } from "@/types/trade"
 import { getTraderDisplayName } from "@/utils/user"
@@ -47,6 +48,7 @@ type TradeComposerProps = {
     perfumeImage?: string | null
   }
   traderReputationByUserId?: Record<string, TraderReputationV1>
+  matchExplanationByListingId?: Record<string, TradeMatchExplanation>
   onPickListing?: (seed: TradeListingSeed, init: TradeComposerInit) => void
   onViewProfileClick?: () => void
 }
@@ -58,6 +60,7 @@ const TradeComposer = ({
   pickListings,
   pickPerfumeMeta,
   traderReputationByUserId,
+  matchExplanationByListingId,
   onPickListing,
   onViewProfileClick,
 }: TradeComposerProps) => {
@@ -171,6 +174,7 @@ const TradeComposer = ({
           listings={pickListings}
           perfumeImage={pickPerfumeMeta.perfumeImage}
           traderReputationByUserId={traderReputationByUserId}
+          matchExplanationByListingId={matchExplanationByListingId}
           listResetKey={pickPerfumeMeta.perfumeId}
           onSelectListing={handlePick}
           onViewProfileClick={onViewProfileClick}

@@ -45,6 +45,7 @@ const TradeComposerModal = ({
           pickListings={data.listingsToPick}
           pickPerfumeMeta={data.perfumeMeta}
           traderReputationByUserId={data.traderReputationByUserId}
+          matchExplanationByListingId={data.matchExplanationByListingId}
           onViewProfileClick={onViewProfileClick}
           onPickListing={(_seed, init) => {
             onListingPicked?.(init)

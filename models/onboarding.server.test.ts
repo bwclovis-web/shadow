@@ -23,6 +23,14 @@ vi.mock("@/services/recommendations", () => ({
   getPersonalizedRecommendations: vi.fn().mockResolvedValue([]),
 }))
 
+vi.mock("@/services/reputation/loadReputationInputs.server", () => ({
+  loadTraderReputationsForUserIds: vi.fn().mockResolvedValue(new Map()),
+}))
+
+vi.mock("@/services/trade-match", () => ({
+  enrichOnboardingMatches: vi.fn().mockResolvedValue([]),
+}))
+
 import { prisma } from "@/lib/db"
 import {
   dismissOnboarding,

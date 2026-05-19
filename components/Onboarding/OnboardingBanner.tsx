@@ -18,11 +18,12 @@ import { CSRFToken } from "@/components/Molecules/CSRFToken"
 import Modal from "@/components/Organisms/Modal"
 import { useCSRF } from "@/hooks/useCSRF"
 import { useTradeComposerModal } from "@/hooks/useTradeComposerModal"
+import { TradeMatchReasonLine } from "@/components/Molecules/TradeMatchReasonLine"
 import type {
   OnboardingState,
   OnboardingStepId,
-  OnboardingTraderMatch,
 } from "@/models/onboarding.server"
+import type { OnboardingTraderMatchEnriched } from "@/services/trade-match"
 import {
   getTradeCtaLabelKey,
   tradeListingSeedFromExchangeRow,
@@ -42,7 +43,7 @@ const STEP_ORDER: OnboardingStepId[] = ["quiz", "bottle", "matches"]
 const OnboardingMatchesList = ({
   matches,
 }: {
-  matches: OnboardingTraderMatch[]
+  matches: OnboardingTraderMatchEnriched[]
 }) => {
   const t = useTranslations("onboarding.matches")
   const tTrade = useTranslations("tradeComposer")
@@ -54,7 +55,7 @@ const OnboardingMatchesList = ({
   } = useTradeComposerModal()
 
   const handleConnect = useCallback(
-    (match: OnboardingTraderMatch, trigger: HTMLButtonElement | null) => {
+    (match: OnboardingTraderMatchEnriched, trigger: HTMLButtonElement | null) => {
       openComposer(
         {
           seed: tradeListingSeedFromExchangeRow(
@@ -131,6 +132,14 @@ const OnboardingMatchesList = ({
                   {match.counterpartyDisplayName}
                   {match.perfumeHouse ? ` · ${match.perfumeHouse}` : ""}
                 </p>
+                {match.matchExplanation ? (
+                  <div className="mt-1.5">
+                    <TradeMatchReasonLine
+                      reasons={match.matchExplanation.reasons}
+                      primaryReasons={match.matchExplanation.primaryReasons}
+                    />
+                  </div>
+                ) : null}
               </div>
               <Button
                 type="button"

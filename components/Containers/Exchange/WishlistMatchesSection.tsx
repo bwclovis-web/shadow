@@ -4,7 +4,8 @@ import { useCallback } from "react"
 import { useTranslations } from "next-intl"
 import { FaHeart } from "react-icons/fa6"
 
-import type { WishlistExchangeMatchRow } from "@/models/wishlist-matching.server"
+import { TradeMatchReasonLine } from "@/components/Molecules/TradeMatchReasonLine"
+import type { WishlistExchangeMatchEnriched } from "@/services/trade-match"
 import { Button } from "@/components/Atoms/Button"
 import { TradeComposerModal } from "@/components/Containers/Trade/TradeComposerModal"
 import { useTradeComposerModal } from "@/hooks/useTradeComposerModal"
@@ -19,7 +20,7 @@ import {
 import { getTraderDisplayName } from "@/utils/user"
 
 type WishlistMatchesSectionProps = {
-  matches: WishlistExchangeMatchRow[]
+  matches: WishlistExchangeMatchEnriched[]
   viewerId: string
   traderReputationByUserId?: Record<string, TraderReputationV1>
 }
@@ -41,7 +42,7 @@ const WishlistMatchesSection = ({
   } = useTradeComposerModal()
 
   const handleProposeSwapFromCard = useCallback(
-    (perfume: WishlistExchangeMatchRow, trigger: HTMLButtonElement | null) => {
+    (perfume: WishlistExchangeMatchEnriched, trigger: HTMLButtonElement | null) => {
       const listings = perfume.userPerfume.filter(up => up.userId !== viewerId)
       if (listings.length === 0) return
 
@@ -67,12 +68,13 @@ const WishlistMatchesSection = ({
       openListingPicker(listings, perfumeMeta, {
         trigger,
         traderReputationByUserId,
+        matchExplanationByListingId: perfume.listingMatchExplanations,
       })
     },
     [viewerId, openComposer, openListingPicker, traderReputationByUserId]
   )
 
-  const getCardOfferCtaKey = (perfume: WishlistExchangeMatchRow) => {
+  const getCardOfferCtaKey = (perfume: WishlistExchangeMatchEnriched) => {
     const listings = perfume.userPerfume.filter(up => up.userId !== viewerId)
     if (listings.length === 1) {
       const up = listings[0]!
@@ -126,6 +128,7 @@ const WishlistMatchesSection = ({
                   count: perfume.userPerfume.length,
                 })}
                 ctaLabel={tTradeComposer(getCardOfferCtaKey(perfume))}
+                matchExplanation={perfume.matchExplanation}
                 onOffer={trigger => handleProposeSwapFromCard(perfume, trigger)}
               />
             </ExchangePerfumeCard>
@@ -154,13 +157,21 @@ const WishlistMatchesSection = ({
 const MatchCardFooter = ({
   countLabel,
   ctaLabel,
+  matchExplanation,
   onOffer,
 }: {
   countLabel: string
   ctaLabel: string
+  matchExplanation?: WishlistExchangeMatchEnriched["matchExplanation"]
   onOffer: (trigger: HTMLButtonElement | null) => void
 }) => (
   <div className="mt-2 space-y-2">
+    {matchExplanation ? (
+      <TradeMatchReasonLine
+        reasons={matchExplanation.reasons}
+        primaryReasons={matchExplanation.primaryReasons}
+      />
+    ) : null}
     <p className="text-sm font-medium text-noir-gold">{countLabel}</p>
     <Button
       type="button"
