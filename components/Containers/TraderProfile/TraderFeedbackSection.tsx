@@ -256,7 +256,10 @@ const TraderFeedbackSection = memo(function TraderFeedbackSection({
   const anonymousLabel = t("anonymousReviewer")
 
   return (
-    <section className="noir-border relative w-full p-4 space-y-6 bg-noir-black/40">
+    <section
+      id="reviews"
+      className="noir-border relative w-full p-4 space-y-6 bg-noir-black/40"
+    >
       <header>
         <h2>{t("title")}</h2>
         <p className="text-noir-gold-100">{t("subtitle")}</p>

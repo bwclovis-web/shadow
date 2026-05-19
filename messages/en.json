@@ -1920,6 +1920,28 @@
       "activeSummary": "Active trades ({count})",
       "historySummary": "Trade history ({count})"
     },
+    "scentJourney": {
+      "title": "Scent journey",
+      "summary": "Recent activity from {traderName}'s collection, trades, and reviews",
+      "ariaLabel": "Scent journey timeline",
+      "empty": "No public activity yet — listings, trades, and reviews will appear here.",
+      "bottleAdded": "Added to collection",
+      "tradeCompleted": "Completed a swap",
+      "tradeWith": "With {name} — {perfumes}",
+      "tradeFallbackPerfume": "a swap",
+      "reviewWritten": "Reviewed {name}",
+      "rating": "{count, plural, one {# star} other {# stars}}",
+      "scentDnaQuiz": "Updated Scent DNA from the quiz",
+      "scentDnaRefined": "Refined Scent DNA profile",
+      "blogHouse": "Behind the Bottle — from a house in their collection",
+      "blogPerfume": "Behind the Bottle — mentions a bottle they own",
+      "viewPerfume": "View perfume",
+      "viewTrade": "View messages",
+      "viewSwapPartner": "View swap partner",
+      "viewReview": "View review",
+      "viewScentDna": "View Scent DNA",
+      "viewArticle": "Read article"
+    },
     "reputation": {
       "ariaLabel": "Trader trust and reputation",
       "title": "Trust summary",

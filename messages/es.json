@@ -1639,6 +1639,28 @@
       "activeSummary": "Intercambios activos ({count})",
       "historySummary": "Historial ({count})"
     },
+    "scentJourney": {
+      "title": "Recorrido olfativo",
+      "summary": "Actividad reciente de {traderName}: colección, intercambios y reseñas",
+      "ariaLabel": "Línea de tiempo del recorrido olfativo",
+      "empty": "Aún no hay actividad pública — los listados, intercambios y reseñas aparecerán aquí.",
+      "bottleAdded": "Añadido a la colección",
+      "tradeCompleted": "Intercambio completado",
+      "tradeWith": "Con {name} — {perfumes}",
+      "tradeFallbackPerfume": "un intercambio",
+      "reviewWritten": "Reseñó a {name}",
+      "rating": "{count, plural, one {# estrella} other {# estrellas}}",
+      "scentDnaQuiz": "Actualizó el ADN olfativo con el cuestionario",
+      "scentDnaRefined": "Perfil de ADN olfativo refinado",
+      "blogHouse": "Detrás de la botella — de una casa de su colección",
+      "blogPerfume": "Detrás de la botella — menciona un frasco que posee",
+      "viewPerfume": "Ver perfume",
+      "viewTrade": "Ver mensajes",
+      "viewSwapPartner": "Ver compañero de intercambio",
+      "viewReview": "Ver reseña",
+      "viewScentDna": "Ver ADN olfativo",
+      "viewArticle": "Leer artículo"
+    },
     "reputation": {
       "ariaLabel": "Confianza y reputación del comerciante",
       "title": "Resumen de confianza",

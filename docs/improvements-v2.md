@@ -198,12 +198,14 @@ _Layer community graph and social identity on top of the shipped reputation, Sce
 - [x] **CF-041** Surface top reviews by helpfulness + recency (not just newest)
 - [x] **CF-042** "Verified swap" marker on reviews linked to a completed trade (FK already exists)
 
-### C4 — Scent Journey Timeline (IMP-F03 / CF-060)
+### C4 — Scent Journey Timeline (IMP-F03 / CF-060) ✅
 
-- [ ] Chronological public timeline on trader profile: bottles added, trades completed, reviews written, Scent DNA changes, blog mentions
-- [ ] Each event is a card: date, type icon, brief description, CTA (view trade / view review / view perfume)
-- [ ] Private events (declined trades, removed listings) are excluded
-- [ ] Reuses existing `TradeEvent`, `TraderFeedback`, `UserPerfume`, and blog cross-link data — no new schema needed
+- [x] Chronological public timeline on trader profile: bottles added, trades completed, reviews written, Scent DNA changes, blog mentions
+- [x] Each event is a card: date, type icon, brief description, CTA (view trade / view review / view perfume)
+- [x] Private events (declined trades, removed listings) are excluded
+- [x] Reuses existing `TradeEvent`, `TraderFeedback`, `UserPerfume`, and blog cross-link data — no new schema needed
+
+**Shipped in:** `models/scent-journey.server.ts` (`getScentJourneyForUser`); `components/Containers/TraderProfile/ScentJourneyTimeline/`; wired on `app/trader-profile/[id]/page.tsx` + `TraderProfileClient.tsx`; `TraderFeedbackSection` `#reviews` anchor; i18n `traderProfile.scentJourney.*` (en, es, fr, it); `models/scent-journey.server.test.ts`
 
 ### C5 — Community Stats Strip (IMP-263)
 

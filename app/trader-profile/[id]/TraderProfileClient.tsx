@@ -18,7 +18,9 @@ import type { TradeForClient } from "@/types/trade"
 import { getTraderDisplayName } from "@/utils/user"
 import TraderProfileHeaderStats from "@/components/Containers/TraderProfile/TraderProfileHeaderStats"
 import TraderWishlistOverlapBanner from "@/components/Containers/TraderProfile/TraderWishlistOverlapBanner"
+import { ScentJourneyTimeline } from "@/components/Containers/TraderProfile/ScentJourneyTimeline"
 import type { ScentDnaSnapshot } from "@/models/scent-dna.server"
+import type { ScentJourneyItem } from "@/models/scent-journey.server"
 import type { TraderWishlistOverlap } from "@/models/wishlist-matching.server"
 import { TraderProfileAside } from "./aside/aside"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
@@ -35,6 +37,7 @@ type TraderProfileClientProps = {
   scentDna: ScentDnaSnapshot
   initialFollowing?: boolean
   followerCount?: number
+  scentJourney?: ScentJourneyItem[]
 }
 
 export default function TraderProfileClient({
@@ -46,6 +49,7 @@ export default function TraderProfileClient({
   scentDna,
   initialFollowing = false,
   followerCount = 0,
+  scentJourney = [],
 }: TraderProfileClientProps) {
   const { data: trader } = useTrader(initialTrader.id, initialTrader)
   const t = useTranslations("traderProfile")
@@ -135,6 +139,23 @@ export default function TraderProfileClient({
               viewerId={viewer.id}
             />
           ) : null}
+
+          <div className="noir-border relative p-4">
+            <h2 className="mb-2 text-center">{t("scentJourney.title")}</h2>
+            <VooDooDetails
+              type="primary"
+              name="scentJourney"
+              summary={t("scentJourney.summary", { traderName })}
+              background="dark"
+              defaultOpen={scentJourney.length > 0}
+            >
+              <ScentJourneyTimeline
+                items={scentJourney}
+                traderId={trader.id}
+                viewerId={viewer?.id ?? null}
+              />
+            </VooDooDetails>
+          </div>
 
           <div className="noir-border relative p-4">
             <h2 className="mb-2 text-center">

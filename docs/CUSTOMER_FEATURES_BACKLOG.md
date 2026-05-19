@@ -47,7 +47,7 @@ Customer-facing roadmap focused on discovery quality, trust, and retention loops
 
 ## Tier C: Delight and Retention
 
-- [ ] **CF-060** "Scent journey" timeline of user activity
+- [x] **CF-060** "Scent journey" timeline of user activity
 - [ ] **CF-061** Seasonal collection suggestions personalized by profile
 - [ ] **CF-062** Re-engagement nudges for abandoned watchlists
 

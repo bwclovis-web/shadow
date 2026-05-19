@@ -11,6 +11,7 @@ import { getTraderFeedbackForProfile } from "@/models/traderFeedback.server"
 import { getTradesForUserProfile } from "@/models/trade.server"
 import { getViewerOverlapWithTraderWishlist } from "@/models/wishlist-matching.server"
 import { getScentDnaForUser } from "@/models/scent-dna.server"
+import { getScentJourneyForUser } from "@/models/scent-journey.server"
 import { getFollowStateForViewer } from "@/models/user-follow.server"
 import { getTraderById } from "@/models/user.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
@@ -52,13 +53,15 @@ export default async function TraderProfilePage({
   const viewer = session?.user ?? null
   const viewerId = viewer?.id ?? null
 
-  const [feedback, activeTrades, wishlistOverlap, scentDna, followState] = await Promise.all([
-    getTraderFeedbackForProfile(trader.id, viewerId),
-    getTradesForUserProfile(trader.id, viewerId, "active"),
-    getViewerOverlapWithTraderWishlist(viewerId, trader.id),
-    getScentDnaForUser(trader.id),
-    getFollowStateForViewer(viewerId, "user", trader.id),
-  ])
+  const [feedback, activeTrades, wishlistOverlap, scentDna, followState, scentJourney] =
+    await Promise.all([
+      getTraderFeedbackForProfile(trader.id, viewerId),
+      getTradesForUserProfile(trader.id, viewerId, "active"),
+      getViewerOverlapWithTraderWishlist(viewerId, trader.id),
+      getScentDnaForUser(trader.id),
+      getFollowStateForViewer(viewerId, "user", trader.id),
+      getScentJourneyForUser(trader.id),
+    ])
 
   return (
     <TraderProfileClient
@@ -70,6 +73,7 @@ export default async function TraderProfilePage({
       scentDna={scentDna}
       initialFollowing={followState.following}
       followerCount={followState.followerCount ?? 0}
+      scentJourney={scentJourney}
     />
   )
 }
