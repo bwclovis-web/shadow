@@ -297,7 +297,7 @@ _No new schema — all computed from existing data._
 - [ ] **IMP-260** Add public/private toggle to `UserPerfumeWishlist`; generate a clean shareable URL `/wishlist/[userId]`
 - [ ] **IMP-261** Add shareable link to trade proposals: `/trades/[tradeId]` visible only to participants (and admin); useful for referencing in DMs off-platform
 - [ ] **IMP-262** Add "Copy link" button to trader profile and wishlist pages for sharing on Reddit and Discord
-- [ ] **IMP-263** Add community stats strip to the home page: "X bottles listed · X trades completed this month · X members" — aggregate DB counts, cached and updated every hour
+- [x] **IMP-263** Add community stats strip to the home page: "X bottles listed · X trades completed this month · X members" — aggregate DB counts, cached and updated every hour (catalog users/houses/perfumes totals in site footer)
 
 ### 3H — Experience Polish ✅
 

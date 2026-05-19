@@ -207,10 +207,12 @@ _Layer community graph and social identity on top of the shipped reputation, Sce
 
 **Shipped in:** `models/scent-journey.server.ts` (`getScentJourneyForUser`, `SCENT_JOURNEY_PROFILE_LIMIT` 5 / `SCENT_JOURNEY_FULL_LIMIT` 30); `components/Containers/TraderProfile/ScentJourneyTimeline/`; profile preview on `app/trader-profile/[id]/` with “View full journey” CTA when more than 5 events; full page `app/trader-profile/[id]/scent-journey/` (not in main or mobile nav); `TraderFeedbackSection` `#reviews` anchor; i18n `traderProfile.scentJourney.*` (en, es, fr, it); `models/scent-journey.server.test.ts`
 
-### C5 — Community Stats Strip (IMP-263)
+### C5 — Community Stats Strip (IMP-263) ✅
 
-- [ ] **IMP-263** Home page strip: "X bottles listed · X trades completed this month · X members" — aggregate DB counts cached hourly
-- [ ] Motivates new users and signals platform health to casual visitors
+- [x] **IMP-263** Home page strip: "X bottles listed · X trades completed this month · X members" — aggregate DB counts cached hourly
+- [x] Motivates new users and signals platform health to casual visitors
+
+**Shipped in:** `models/community-stats.server.ts` (`getCommunityStats`, `unstable_cache` 1h, month-keyed trade count); `components/Containers/Home/CommunityStatsStrip.tsx`; home hero in `app/page.tsx` / `app/home-client.tsx` (replaces prior users/houses/perfumes hero counters); catalog totals (users, houses, perfumes) moved to footer via `models/catalog-stats.server.ts`, `components/Organisms/SiteFooter/CatalogStatsStrip.tsx`; i18n `home.communityStats.*`, `siteFooter.catalogStats.*` (en); `models/community-stats.server.test.ts`, `models/catalog-stats.server.test.ts`
 
 ### C6 — Shareable Links (IMP-260–262)
 

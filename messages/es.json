@@ -530,6 +530,13 @@
       "houses": "Casas",
       "perfumes": "Perfumes"
     },
+    "communityStats": {
+      "bottlesListed": "{count, number} botellas publicadas",
+      "tradesThisMonth": "{count, number} intercambios completados este mes",
+      "members": "{count, number} miembros",
+      "separator": "·",
+      "ariaLabel": "{bottlesListed, number} botellas publicadas, {tradesThisMonth, number} intercambios completados este mes, {members, number} miembros"
+    },
     "activityFeed": {
       "title": "Lo último en el intercambio"
     },

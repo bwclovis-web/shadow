@@ -530,6 +530,13 @@
       "houses": "Case",
       "perfumes": "Profumi"
     },
+    "communityStats": {
+      "bottlesListed": "{count, number} flaconi in lista",
+      "tradesThisMonth": "{count, number} scambi completati questo mese",
+      "members": "{count, number} membri",
+      "separator": "·",
+      "ariaLabel": "{bottlesListed, number} flaconi in lista, {tradesThisMonth, number} scambi completati questo mese, {members, number} membri"
+    },
     "activityFeed": {
       "title": "Ultime novità sullo scambio"
     },

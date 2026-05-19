@@ -1,13 +1,18 @@
 import { getTranslations } from "next-intl/server"
 import Link from "next/link"
 
+import CatalogStatsStrip from "@/components/Organisms/SiteFooter/CatalogStatsStrip"
+import { getCatalogStats } from "@/models/catalog-stats.server"
+
 const SiteFooter = async () => {
   const t = await getTranslations("siteFooter")
+  const catalogStats = await getCatalogStats()
 
   return (
     <footer className="border-t border-noir-gold/20 bg-noir-black/80 py-8">
       <div className="inner-container flex flex-col items-center gap-3 text-center text-sm text-noir-gold-500 md:flex-row md:justify-between md:text-left">
         <p>{t("copyright", { year: new Date().getFullYear() })}</p>
+        <CatalogStatsStrip stats={catalogStats} />
         <nav aria-label={t("navAria")} className="flex flex-wrap justify-center gap-4">
           <Link
             href="/community-policy"

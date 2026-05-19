@@ -6,14 +6,16 @@ import { useTranslations } from "next-intl"
 
 import Select from "@/components/Atoms/Select"
 import ActivityFeedSection from "@/components/Containers/Exchange/ActivityFeedSection"
+import CommunityStatsStrip from "@/components/Containers/Home/CommunityStatsStrip"
+import SeasonalTrendingSection from "@/components/Containers/Exchange/SeasonalTrendingSection"
 import SearchBar from "@/components/Organisms/SearchBar"
 import { useMounted } from "@/hooks/useMounted"
 import type {
   ActivityFeedListingRow,
   FollowedActivityItem,
 } from "@/models/activity-feed.server"
+import type { CommunityStats } from "@/models/community-stats.server"
 import type { SeasonalTrendingResult } from "@/models/seasonal-trending.server"
-import SeasonalTrendingSection from "@/components/Containers/Exchange/SeasonalTrendingSection"
 
 const LANDING_HERO = "/images/landing-new.png"
 
@@ -21,7 +23,7 @@ type Feature = Awaited<ReturnType<typeof import("@/models/feature.server").getAl
 
 interface HomeClientProps {
   features: Feature[]
-  counts: { users: number; houses: number; perfumes: number }
+  communityStats: CommunityStats
   recentListings?: ActivityFeedListingRow[]
   followedActivity?: FollowedActivityItem[]
   seasonalTrending?: SeasonalTrendingResult
@@ -29,7 +31,7 @@ interface HomeClientProps {
 
 export default function HomeClient({
   features: _features,
-  counts,
+  communityStats,
   recentListings = [],
   followedActivity = [],
   seasonalTrending = { season: "spring", perfumes: [] },
@@ -136,38 +138,7 @@ export default function HomeClient({
             {mounted ? tHome("subheading") : "home.subheading"}
           </p>
         </div>
-        <div className="flex flex-wrap justify-center gap-6 md:gap-8 mt-4 mb-6">
-          <div className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-noir-gold">
-              {counts.users.toLocaleString("en-US")}
-            </div>
-            <div className="text-sm md:text-base text-noir-gold/80">
-              {mounted
-                ? tHome("stats.users")
-                : "home.stats.users"}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-noir-gold">
-              {counts.houses.toLocaleString("en-US")}
-            </div>
-            <div className="text-sm md:text-base text-noir-gold/80">
-              {mounted
-                ? tHome("stats.houses")
-                : "home.stats.houses"}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl md:text-4xl font-bold text-noir-gold">
-              {counts.perfumes.toLocaleString("en-US")}
-            </div>
-            <div className="text-sm md:text-base text-noir-gold/80">
-              {mounted
-                ? tHome("stats.perfumes")
-                : "home.stats.perfumes"}
-            </div>
-          </div>
-        </div>
+        <CommunityStatsStrip stats={communityStats} className="mt-4 mb-6 max-w-2xl" />
         <div className="flex flex-col-reverse md:flex-row items-baseline justify-start w-full max-w-4xl mt-6 gap-4 md:gap-0">
           <Select
             size="expanded"

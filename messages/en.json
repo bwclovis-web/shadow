@@ -750,6 +750,13 @@
       "houses": "Houses",
       "perfumes": "Perfumes"
     },
+    "communityStats": {
+      "bottlesListed": "{count, number} bottles listed",
+      "tradesThisMonth": "{count, number} trades completed this month",
+      "members": "{count, number} members",
+      "separator": "·",
+      "ariaLabel": "{bottlesListed, number} bottles listed, {tradesThisMonth, number} trades completed this month, {members, number} members"
+    },
     "activityFeed": {
       "title": "Latest on the exchange"
     },
@@ -1577,7 +1584,14 @@
     "copyright": "© {year} Shadow and Sillage",
     "navAria": "Site links",
     "communityPolicy": "Community policy",
-    "terms": "Terms and conditions"
+    "terms": "Terms and conditions",
+    "catalogStats": {
+      "users": "{count, number} users",
+      "houses": "{count, number} houses",
+      "perfumes": "{count, number} perfumes",
+      "separator": "·",
+      "ariaLabel": "{users, number} users, {houses, number} houses, {perfumes, number} perfumes"
+    }
   },
   "communityPolicy": {
     "meta": {
