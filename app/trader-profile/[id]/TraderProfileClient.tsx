@@ -18,6 +18,7 @@ import type { TradeForClient } from "@/types/trade"
 import { getTraderDisplayName } from "@/utils/user"
 import TraderProfileHeaderStats from "@/components/Containers/TraderProfile/TraderProfileHeaderStats"
 import TraderWishlistOverlapBanner from "@/components/Containers/TraderProfile/TraderWishlistOverlapBanner"
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { ScentJourneyTimeline } from "@/components/Containers/TraderProfile/ScentJourneyTimeline"
 import type { ScentDnaSnapshot } from "@/models/scent-dna.server"
 import type { ScentJourneyItem } from "@/models/scent-journey.server"
@@ -38,6 +39,7 @@ type TraderProfileClientProps = {
   initialFollowing?: boolean
   followerCount?: number
   scentJourney?: ScentJourneyItem[]
+  scentJourneyHasMore?: boolean
 }
 
 export default function TraderProfileClient({
@@ -50,6 +52,7 @@ export default function TraderProfileClient({
   initialFollowing = false,
   followerCount = 0,
   scentJourney = [],
+  scentJourneyHasMore = false,
 }: TraderProfileClientProps) {
   const { data: trader } = useTrader(initialTrader.id, initialTrader)
   const t = useTranslations("traderProfile")
@@ -154,6 +157,16 @@ export default function TraderProfileClient({
                 traderId={trader.id}
                 viewerId={viewer?.id ?? null}
               />
+              {scentJourneyHasMore ? (
+                <p className="mt-4 text-center">
+                  <PrefetchLink
+                    href={`/trader-profile/${trader.id}/scent-journey`}
+                    className="text-sm font-medium text-noir-gold underline-offset-2 hover:underline"
+                  >
+                    {t("scentJourney.viewFull")}
+                  </PrefetchLink>
+                </p>
+              ) : null}
             </VooDooDetails>
           </div>
 

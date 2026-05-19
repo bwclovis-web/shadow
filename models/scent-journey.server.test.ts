@@ -113,7 +113,7 @@ describe("scent-journey.server", () => {
     )
   })
 
-  it("emits scent DNA quiz and refined events when applicable", async () => {
+  it("collapses scent DNA to a single latest event", async () => {
     const createdAt = new Date("2024-01-01T00:00:00.000Z")
     const lastQuizAt = new Date("2024-03-01T00:00:00.000Z")
     const updatedAt = new Date("2024-09-01T00:00:00.000Z")
@@ -127,9 +127,35 @@ describe("scent-journey.server", () => {
     const result = await getScentJourneyForUser("u1", 10)
     const dnaEvents = result.filter(item => item.kind === "scent_dna")
 
-    expect(dnaEvents).toHaveLength(2)
-    expect(dnaEvents.map(e => e.variant)).toEqual(
-      expect.arrayContaining(["quiz", "refined"])
-    )
+    expect(dnaEvents).toHaveLength(1)
+    expect(dnaEvents[0]?.variant).toBe("refined")
+  })
+
+  it("dedupes bottle adds to one card per perfume", async () => {
+    const recent = new Date("2025-06-01T00:00:00.000Z")
+    const older = new Date("2024-01-01T00:00:00.000Z")
+
+    userPerfumeFindManyMock
+      .mockResolvedValueOnce([
+        {
+          id: "up-new",
+          createdAt: recent,
+          perfumeId: "p-1",
+          perfume: { name: "Aventus", slug: "aventus", image: null },
+        },
+        {
+          id: "up-old",
+          createdAt: older,
+          perfumeId: "p-1",
+          perfume: { name: "Aventus", slug: "aventus", image: null },
+        },
+      ])
+      .mockResolvedValueOnce([])
+
+    const result = await getScentJourneyForUser("u1", 10)
+    const bottles = result.filter(item => item.kind === "bottle_added")
+
+    expect(bottles).toHaveLength(1)
+    expect(bottles[0]?.userPerfumeId).toBe("up-new")
   })
 })

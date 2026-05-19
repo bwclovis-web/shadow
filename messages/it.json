@@ -1640,6 +1640,14 @@
       "historySummary": "Cronologia ({count})"
     },
     "scentJourney": {
+      "meta": {
+        "title": "Percorso olfattivo di {traderName}",
+        "description": "Attività cronologica di collezione, scambi, recensioni e DNA olfattivo di {traderName} su Shadow and Sillage."
+      },
+      "pageHeading": "Percorso olfattivo di {traderName}",
+      "pageSubheading": "Aggiunte alla collezione, scambi completati, recensioni, aggiornamenti DNA olfattivo e menzioni sul blog.",
+      "viewFull": "Vedi percorso completo",
+      "backToProfile": "Torna al profilo di {traderName}",
       "title": "Percorso olfattivo",
       "summary": "Attività recente di {traderName}: collezione, scambi e recensioni",
       "ariaLabel": "Cronologia del percorso olfattivo",

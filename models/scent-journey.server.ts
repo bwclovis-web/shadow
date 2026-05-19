@@ -6,7 +6,10 @@ import { getPublishedArticlesWithRefs } from "@/lib/sanity/articles.server"
 import type { ArticleListItem } from "@/lib/sanity/types"
 import { getTraderDisplayName } from "@/utils/user"
 
-const DEFAULT_LIMIT = 30
+/** Preview on `/trader-profile/[id]` */
+export const SCENT_JOURNEY_PROFILE_LIMIT = 5
+/** Default when no limit is passed (e.g. a future full-page route) */
+export const SCENT_JOURNEY_FULL_LIMIT = 30
 const PER_SOURCE_TAKE = 40
 const PROFILE_UPDATE_BUFFER_MS = 2_000
 
@@ -63,6 +66,76 @@ const commentPreview = (comment: string | null | undefined): string | null => {
   if (!comment?.trim()) return null
   const trimmed = comment.trim()
   return trimmed.length > 120 ? `${trimmed.slice(0, 117)}...` : trimmed
+}
+
+const uniqueStrings = (values: string[]): string[] => [...new Set(values)]
+
+/** One journey card per perfume — keep the most recent add. */
+const dedupeBottleAddedByPerfume = (
+  events: ScentJourneyBottleAdded[]
+): ScentJourneyBottleAdded[] => {
+  const byPerfumeId = new Map<string, ScentJourneyBottleAdded>()
+  for (const event of events) {
+    const existing = byPerfumeId.get(event.perfumeId)
+    if (!existing || event.at.getTime() > existing.at.getTime()) {
+      byPerfumeId.set(event.perfumeId, event)
+    }
+  }
+  return [...byPerfumeId.values()]
+}
+
+/** One Scent DNA card — prefer the latest meaningful update. */
+const collapseScentDnaEvents = (
+  events: ScentJourneyScentDna[]
+): ScentJourneyScentDna[] => {
+  if (events.length <= 1) return events
+  return [
+    events.reduce((latest, event) =>
+      event.at.getTime() > latest.at.getTime() ? event : latest
+    ),
+  ]
+}
+
+const dedupeBlogMentionsByArticle = (
+  events: ScentJourneyBlogMention[]
+): ScentJourneyBlogMention[] => {
+  const byArticleId = new Map<string, ScentJourneyBlogMention>()
+  for (const event of events) {
+    if (!byArticleId.has(event.article._id)) {
+      byArticleId.set(event.article._id, event)
+    }
+  }
+  return [...byArticleId.values()]
+}
+
+const journeyDedupeKey = (item: ScentJourneyItem): string => {
+  switch (item.kind) {
+    case "bottle_added":
+      return `bottle:${item.perfumeId}`
+    case "trade_completed":
+      return `trade:${item.tradeId}`
+    case "review_written":
+      return `review:${item.feedbackId}`
+    case "scent_dna":
+      return "scent_dna"
+    case "blog_mention":
+      return `blog:${item.article._id}`
+    default:
+      return "unknown"
+  }
+}
+
+/** Final pass: one row per logical event (newest timestamp wins). */
+const dedupeJourneyItems = (items: ScentJourneyItem[]): ScentJourneyItem[] => {
+  const byKey = new Map<string, ScentJourneyItem>()
+  for (const item of items) {
+    const key = journeyDedupeKey(item)
+    const existing = byKey.get(key)
+    if (!existing || item.at.getTime() > existing.at.getTime()) {
+      byKey.set(key, item)
+    }
+  }
+  return [...byKey.values()]
 }
 
 const getBottleAddedEvents = async (
@@ -143,7 +216,7 @@ const getTradeCompletedEvents = async (
       kind: "trade_completed" as const,
       at: trade.updatedAt,
       tradeId: trade.id,
-      perfumeNames: trade.lineItems.map(li => li.perfumeName),
+      perfumeNames: uniqueStrings(trade.lineItems.map(li => li.perfumeName)),
       counterpartyId: counterparty.id,
       counterpartyName: getTraderDisplayName(counterparty),
     }
@@ -276,11 +349,13 @@ const getBlogMentionEvents = async (
     if (matched.length >= take) break
   }
 
-  return matched.sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, take)
+  return dedupeBlogMentionsByArticle(matched)
+    .sort((a, b) => b.at.getTime() - a.at.getTime())
+    .slice(0, take)
 }
 
 export const getScentJourneyForUser = cache(
-  async (userId: string, limit = DEFAULT_LIMIT): Promise<ScentJourneyItem[]> => {
+  async (userId: string, limit = SCENT_JOURNEY_FULL_LIMIT): Promise<ScentJourneyItem[]> => {
     const perSource = Math.max(limit, PER_SOURCE_TAKE)
 
     const [bottles, trades, reviews, scentDna, blogs] = await Promise.all([
@@ -291,8 +366,14 @@ export const getScentJourneyForUser = cache(
       getBlogMentionEvents(userId, perSource),
     ])
 
-    return [...bottles, ...trades, ...reviews, ...scentDna, ...blogs]
-      .sort((a, b) => b.at.getTime() - a.at.getTime())
-      .slice(0, limit)
+    const merged = dedupeJourneyItems([
+      ...dedupeBottleAddedByPerfume(bottles),
+      ...trades,
+      ...reviews,
+      ...collapseScentDnaEvents(scentDna),
+      ...blogs,
+    ])
+
+    return merged.sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, limit)
   }
 )

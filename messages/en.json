@@ -1921,6 +1921,14 @@
       "historySummary": "Trade history ({count})"
     },
     "scentJourney": {
+      "meta": {
+        "title": "{traderName}'s Scent journey",
+        "description": "Chronological activity from {traderName}'s collection, trades, reviews, and Scent DNA on Shadow and Sillage."
+      },
+      "pageHeading": "{traderName}'s Scent journey",
+      "pageSubheading": "Collection additions, completed swaps, reviews, Scent DNA updates, and blog mentions.",
+      "viewFull": "View full journey",
+      "backToProfile": "Back to {traderName}'s profile",
       "title": "Scent journey",
       "summary": "Recent activity from {traderName}'s collection, trades, and reviews",
       "ariaLabel": "Scent journey timeline",

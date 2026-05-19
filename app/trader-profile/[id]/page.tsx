@@ -11,7 +11,10 @@ import { getTraderFeedbackForProfile } from "@/models/traderFeedback.server"
 import { getTradesForUserProfile } from "@/models/trade.server"
 import { getViewerOverlapWithTraderWishlist } from "@/models/wishlist-matching.server"
 import { getScentDnaForUser } from "@/models/scent-dna.server"
-import { getScentJourneyForUser } from "@/models/scent-journey.server"
+import {
+  getScentJourneyForUser,
+  SCENT_JOURNEY_PROFILE_LIMIT,
+} from "@/models/scent-journey.server"
 import { getFollowStateForViewer } from "@/models/user-follow.server"
 import { getTraderById } from "@/models/user.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
@@ -60,8 +63,11 @@ export default async function TraderProfilePage({
       getViewerOverlapWithTraderWishlist(viewerId, trader.id),
       getScentDnaForUser(trader.id),
       getFollowStateForViewer(viewerId, "user", trader.id),
-      getScentJourneyForUser(trader.id),
+      getScentJourneyForUser(trader.id, SCENT_JOURNEY_PROFILE_LIMIT + 1),
     ])
+
+  const scentJourneyHasMore = scentJourney.length > SCENT_JOURNEY_PROFILE_LIMIT
+  const scentJourneyPreview = scentJourney.slice(0, SCENT_JOURNEY_PROFILE_LIMIT)
 
   return (
     <TraderProfileClient
@@ -73,7 +79,8 @@ export default async function TraderProfilePage({
       scentDna={scentDna}
       initialFollowing={followState.following}
       followerCount={followState.followerCount ?? 0}
-      scentJourney={scentJourney}
+      scentJourney={scentJourneyPreview}
+      scentJourneyHasMore={scentJourneyHasMore}
     />
   )
 }

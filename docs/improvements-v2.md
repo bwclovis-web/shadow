@@ -205,7 +205,7 @@ _Layer community graph and social identity on top of the shipped reputation, Sce
 - [x] Private events (declined trades, removed listings) are excluded
 - [x] Reuses existing `TradeEvent`, `TraderFeedback`, `UserPerfume`, and blog cross-link data — no new schema needed
 
-**Shipped in:** `models/scent-journey.server.ts` (`getScentJourneyForUser`); `components/Containers/TraderProfile/ScentJourneyTimeline/`; wired on `app/trader-profile/[id]/page.tsx` + `TraderProfileClient.tsx`; `TraderFeedbackSection` `#reviews` anchor; i18n `traderProfile.scentJourney.*` (en, es, fr, it); `models/scent-journey.server.test.ts`
+**Shipped in:** `models/scent-journey.server.ts` (`getScentJourneyForUser`, `SCENT_JOURNEY_PROFILE_LIMIT` 5 / `SCENT_JOURNEY_FULL_LIMIT` 30); `components/Containers/TraderProfile/ScentJourneyTimeline/`; profile preview on `app/trader-profile/[id]/` with “View full journey” CTA when more than 5 events; full page `app/trader-profile/[id]/scent-journey/` (not in main or mobile nav); `TraderFeedbackSection` `#reviews` anchor; i18n `traderProfile.scentJourney.*` (en, es, fr, it); `models/scent-journey.server.test.ts`
 
 ### C5 — Community Stats Strip (IMP-263)
 
