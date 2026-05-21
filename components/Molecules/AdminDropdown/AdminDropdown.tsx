@@ -24,6 +24,8 @@ interface AdminDropdownProps {
   onNavClick?: () => void
 }
 
+const ADMIN_MENU_ID = "admin-menu"
+
 const AdminDropdown = ({
   className,
   variant = "desktop",
@@ -90,6 +92,7 @@ const AdminDropdown = ({
         )}
         aria-expanded={isOpen}
         aria-haspopup="true"
+        aria-controls={ADMIN_MENU_ID}
       >
         {tNav("admin")}
         <FaChevronDown
@@ -98,11 +101,16 @@ const AdminDropdown = ({
             isOpen && "rotate-180"
           )}
           size={12}
+          aria-hidden
+          focusable={false}
         />
       </button>
 
-      {isOpen && (
-        <div className={dropdownClasses}>
+      <div
+        id={ADMIN_MENU_ID}
+        className={dropdownClasses}
+        hidden={!isOpen}
+      >
           <ul className="py-2">
             {adminNavigation.map((item) => (
               <li key={item.id}>
@@ -119,8 +127,7 @@ const AdminDropdown = ({
               </li>
             ))}
           </ul>
-        </div>
-      )}
+      </div>
     </div>
   )
 }

@@ -12,6 +12,7 @@ import ErrorDisplay from "@/components/Containers/ErrorDisplay/ErrorDisplay"
 import { CSRFToken } from "@/components/Molecules/CSRFToken/CSRFToken"
 import { UserLogInSchema } from "@/utils/validation/formValidationSchemas"
 import { signInAction, type SignInActionState } from "@/app/(auth)/sign-in/actions"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const SignInClient = () => {
   const emailInputRef = useRef<HTMLInputElement | null>(null)
@@ -29,7 +30,8 @@ const SignInClient = () => {
   })
 
   return (
-    <section className="flex flex-col p-1 md:px-4 w-full mx-auto">
+    <main id="main-content">
+      <PageWrapper>
       <form
         {...getFormProps(signInForm)}
         action={formAction}
@@ -69,7 +71,8 @@ const SignInClient = () => {
           {t("submit")}
         </Button>
       </form>
-    </section>
+    </PageWrapper>
+    </main>
   )
 }
 

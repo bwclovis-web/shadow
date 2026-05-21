@@ -1,5 +1,7 @@
 "use client"
 
+import { formatDateTime } from "@/utils/formatters"
+
 interface StatsJsonPageProps {
   title: string
   stats: unknown
@@ -11,7 +13,7 @@ export const StatsJsonPage = ({ title, stats, timestamp }: StatsJsonPageProps) =
     <div className="max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
       <p className="text-sm text-gray-500 mb-4">
-        Last updated: {new Date(timestamp).toLocaleString()}
+        Last updated: {formatDateTime(timestamp)}
       </p>
       <pre className="bg-gray-900 text-gray-100 p-6 rounded-lg overflow-x-auto text-sm font-mono">
         {JSON.stringify({ stats, timestamp }, null, 2)}

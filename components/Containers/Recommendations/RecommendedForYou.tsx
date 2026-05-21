@@ -5,6 +5,7 @@ import { useMemo } from "react"
 
 import type { RecommendationPerfume } from "@/services/recommendations"
 import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
+import { perfumeImageTransitionName } from "@/utils/view-transition-names"
 
 import { RecommendationReasonLine } from "./RecommendationReasonLine"
 
@@ -73,7 +74,9 @@ const RecommendedForYou = ({ perfumes, limit = PERFUME_LIMIT }: RecommendedForYo
                   className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-lg mb-2 mx-auto dark:brightness-90"
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
                   style={
-                    { viewTransitionName: `perfume-image-${similar.id}` } as React.CSSProperties
+                    {
+                      viewTransitionName: perfumeImageTransitionName(similar.id),
+                    } as React.CSSProperties
                   }
                 />
                 {similar.perfumeHouse && (

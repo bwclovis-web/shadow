@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("communityPolicy.meta")
@@ -15,14 +16,15 @@ const CommunityPolicyPage = async () => {
   const t = await getTranslations("communityPolicy")
 
   return (
-    <article>
+    <main id="main-content">
       <TitleBanner
         imagePos="object-center"
         image="/images/terms.webp"
         heading={t("heading")}
         subheading={t("subheading")}
       />
-      <section className="inner-container mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
+      <PageWrapper isArticle={true}>
+      <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
         <h2 className="mb-4">1. {t("shipping.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("shipping.contentOne")}</p>
@@ -32,7 +34,7 @@ const CommunityPolicyPage = async () => {
       </section>
       <section
         id="disputes"
-        className="inner-container mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold"
+        className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold"
       >
         <h2 className="mb-4">2. {t("disputes.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
@@ -41,7 +43,7 @@ const CommunityPolicyPage = async () => {
           <p>{t("disputes.contentThree")}</p>
         </div>
       </section>
-      <section className="inner-container mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
+      <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
         <h2 className="mb-4">3. {t("community.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("community.contentOne")}</p>
@@ -49,14 +51,15 @@ const CommunityPolicyPage = async () => {
           <p>{t("community.contentThree")}</p>
         </div>
       </section>
-      <section className="inner-container mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
+      <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
         <h2 className="mb-4">4. {t("offPlatform.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("offPlatform.contentOne")}</p>
           <p>{t("offPlatform.contentTwo")}</p>
         </div>
       </section>
-    </article>
+    </PageWrapper>
+    </main>
   )
 }
 

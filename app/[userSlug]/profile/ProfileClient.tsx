@@ -28,6 +28,7 @@ import {
   updateProfileAction,
   type UpdateProfileActionState,
 } from "./actions"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 type ProfileClientProps = {
   user: SessionUser
@@ -269,7 +270,7 @@ const ProfileClient = ({
   const hasErrors = state?.errors && Object.keys(state.errors).length > 0
 
   return (
-    <>
+    <main id="main-content">
       <TitleBanner
         image={bannerImage}
         heading={t("heading")}
@@ -279,7 +280,7 @@ const ProfileClient = ({
           {getUserDisplayName(displayUser)}
         </span>
       </TitleBanner>
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 inner-container mt-12">
+      <PageWrapper className="grid grid-cols-1 lg:grid-cols-2 gap-6 inner-container">
         <div className="lg:col-span-1">
           <h2 className="text-2xl font-bold mb-4 text-noir-gold">
             {t("updateProfile")}
@@ -310,12 +311,12 @@ const ProfileClient = ({
             initialUnreadCount={unreadCount}
           />
         </div>
-      </section>
+      </PageWrapper>
 
-      <section className="inner-container mt-12">
+      <section className="inner-container mt-6 mb-12">
         <RecommendedForYou perfumes={recommendedPerfumes} />
       </section>
-    </>
+    </main>
   )
 }
 

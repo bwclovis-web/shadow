@@ -12,6 +12,7 @@ import {
   createHouseAction,
   type CreateHouseActionState,
 } from "./actions"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/createHouse.png"
 
@@ -23,18 +24,20 @@ const CreateHouseClient = () => {
   )
 
   return (
-    <section>
+    <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
         heading={t("heading")}
         subheading={t("subheading")}
       />
+      <PageWrapper>
       <PerfumeHouseForm
         formType={FORM_TYPES.CREATE_HOUSE_FORM}
         lastResult={state as SubmissionResult | null}
         action={formAction}
       />
-    </section>
+      </PageWrapper>
+    </main>
   )
 }
 

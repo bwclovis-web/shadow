@@ -1230,6 +1230,14 @@
     "contactUs": "Contact Us",
     "home": "Home",
     "search": "Search",
+    "aria": {
+      "primary": "Primary navigation",
+      "mobile": "Mobile navigation",
+      "mobileBottom": "Mobile bottom navigation",
+      "menuLinks": "Main menu",
+      "openMenu": "Open menu",
+      "openMenuUnread": "Open menu, unread messages"
+    },
     "mobileBottom": {
       "exchange": "Exchange",
       "messages": "Messages",

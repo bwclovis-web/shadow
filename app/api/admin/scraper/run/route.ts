@@ -25,11 +25,7 @@ import path from "path"
 import { NextResponse, type NextRequest } from "next/server"
 
 import { assessDuplicateRisk } from "@/lib/scraper/duplicate-review"
-import {
-  mapScrapedItemsToRecords,
-  pythonPipelineComplete,
-  scrapedItemsNeedPatternEtsyEnrichment,
-} from "@/lib/scraper/map-scraped-items"
+import { pythonPipelineComplete } from "@/lib/scraper/map-scraped-items"
 import { extractNotesForItems, type ScraperPipelineOptions } from "@/lib/scraper/notes-graph"
 import { isAllowedNotesPipelineModel, NOTES_PIPELINE_MODEL_ALLOWLIST } from "@/lib/scraper/notes-pipeline-models"
 import { prisma } from "@/lib/db"
@@ -561,97 +557,67 @@ export async function POST(request: NextRequest): Promise<Response> {
             return
           }
 
-          // Check whether the Python pipeline already extracted notes.
-          // When openNotes is a string array on the first item, Python ran its
-          // HTML-aware pipeline and we can build PerfumeCsvRecord directly,
-          // bypassing the Node.js LangGraph pipeline entirely.
+          // Python may have pre-extracted notes; Node always refines (split blobs, fill layers, merchant trust).
           const hasPythonNotes = pythonPipelineComplete(scrapedItems)
-          const needsPatternEtsyEnrichment =
-            hasPythonNotes && scrapedItemsNeedPatternEtsyEnrichment(scrapedItems)
 
-          if (hasPythonNotes && !needsPatternEtsyEnrichment) {
-            try {
-              sendLine(controller, {
-                type: "log",
-                message: `Python pipeline complete — building ${scrapedItems.length} preview records.`,
-              })
-            } catch {
-              // ignore
-            }
+          try {
+            sendLine(controller, {
+              type: "log",
+              message: hasPythonNotes
+                ? `Python pipeline complete — refining ${scrapedItems.length} product(s) via Node.js (progress lines follow).`
+                : `Starting note extraction for ${scrapedItems.length} products (Node.js pipeline — progress lines follow).`,
+            })
+          } catch {
+            // ignore
+          }
 
-            const records = await assessDuplicateRisk(
-              mapScrapedItemsToRecords(scrapedItems, body.houseName),
-              { prismaClient: prisma },
-            )
+          const pipelineOptions: ScraperPipelineOptions = {
+            enrichOnly: hasPythonNotes,
+            titleDashSegment: resolveTitleDashSegment(body),
+            titleColonSegment:
+              body.titleColonSegment === "before" || body.titleColonSegment === "after" || body.titleColonSegment === "none"
+                ? body.titleColonSegment
+                : "none",
+            titleTakeAfterFirstComma: body.titleTakeAfterFirstComma === true,
+            titleTakeBeforeFirstComma: body.titleTakeBeforeFirstComma === true,
+            titleStripNumbers: body.titleStripNumbers ?? false,
+            titleOmitWords: Array.isArray(body.titleOmitWords) ? body.titleOmitWords : [],
+            generateNoirDescriptions: body.generateNoirDescriptions ?? true,
+            fetchPdpNoteBootstrap: body.fetchPdpNoteBootstrap !== false,
+            noteInferenceMode: body.noteInferenceMode === "strict" ? "strict" : "standard",
+            minConfidentFlatNotes:
+              typeof body.minConfidentFlatNotes === "number" &&
+              body.minConfidentFlatNotes >= 1 &&
+              body.minConfidentFlatNotes <= 50
+                ? Math.floor(body.minConfidentFlatNotes)
+                : undefined,
+            notesPipelineModel: body.notesPipelineModel?.trim() || undefined,
+            noirPipelineModel: body.noirPipelineModel?.trim() || undefined,
+            noteValidationMode: body.noteValidationMode === "off" ? "off" : "llm",
+            abortSignal: request.signal,
+            onProgress: (message: string) => {
+              try {
+                sendLine(controller, { type: "log", message })
+              } catch {
+                // stream closed
+              }
+            },
+          }
+          const { records: nodeRecords, batchWarnings } = await extractNotesForItems(
+            scrapedItems,
+            body.houseName,
+            pipelineOptions,
+          )
+          const records = await assessDuplicateRisk(nodeRecords, { prismaClient: prisma })
 
-            result = {
-              ok: true,
-              scrapedCount: scrapedItems.length,
-              records,
-              csvContent: toCsv(records),
-              errors: [],
-              scraperLog: scraperLog.trim() || undefined,
-            }
-          } else {
-            try {
-              sendLine(controller, {
-                type: "log",
-                message: needsPatternEtsyEnrichment
-                  ? `Python pipeline complete — enriching ${scrapedItems.length} Pattern/Etsy product(s) via Node.js (progress lines follow).`
-                  : `Starting note extraction for ${scrapedItems.length} products (Node.js pipeline — progress lines follow).`,
-              })
-            } catch {
-              // ignore
-            }
-
-            const pipelineOptions: ScraperPipelineOptions = {
-              enrichOnly: needsPatternEtsyEnrichment,
-              titleDashSegment: resolveTitleDashSegment(body),
-              titleColonSegment:
-                body.titleColonSegment === "before" || body.titleColonSegment === "after" || body.titleColonSegment === "none"
-                  ? body.titleColonSegment
-                  : "none",
-              titleTakeAfterFirstComma: body.titleTakeAfterFirstComma === true,
-              titleTakeBeforeFirstComma: body.titleTakeBeforeFirstComma === true,
-              titleStripNumbers: body.titleStripNumbers ?? false,
-              titleOmitWords: Array.isArray(body.titleOmitWords) ? body.titleOmitWords : [],
-              generateNoirDescriptions: body.generateNoirDescriptions ?? true,
-              fetchPdpNoteBootstrap: body.fetchPdpNoteBootstrap !== false,
-              noteInferenceMode: body.noteInferenceMode === "strict" ? "strict" : "standard",
-              minConfidentFlatNotes:
-                typeof body.minConfidentFlatNotes === "number" &&
-                body.minConfidentFlatNotes >= 1 &&
-                body.minConfidentFlatNotes <= 50
-                  ? body.minConfidentFlatNotes
-                  : undefined,
-              notesPipelineModel: body.notesPipelineModel?.trim() || undefined,
-              noirPipelineModel: body.noirPipelineModel?.trim() || undefined,
-              noteValidationMode: body.noteValidationMode === "off" ? "off" : "llm",
-              abortSignal: request.signal,
-              onProgress: (message: string) => {
-                try {
-                  sendLine(controller, { type: "log", message })
-                } catch {
-                  // stream closed
-                }
-              },
-            }
-            const { records: nodeRecords, batchWarnings } = await extractNotesForItems(
-              scrapedItems,
-              body.houseName,
-              pipelineOptions,
-            )
-            const records = await assessDuplicateRisk(nodeRecords, { prismaClient: prisma })
-
-            result = {
-              ok: true,
-              scrapedCount: scrapedItems.length,
-              records,
-              csvContent: toCsv(records),
-              errors: [],
-              scraperLog: scraperLog.trim() || undefined,
-              batchWarnings: batchWarnings.length > 0 ? batchWarnings : undefined,
-            }
+          result = {
+            ok: true,
+            scrapedCount: scrapedItems.length,
+            records,
+            csvContent: toCsv(records),
+            errors: [],
+            scraperLog: scraperLog.trim() || undefined,
+            batchWarnings: batchWarnings.length > 0 ? batchWarnings : undefined,
           }
           detachAbortListener()
           invokeClientAbort = null

@@ -7,6 +7,7 @@ import PendingSubmissionModal from "@/components/Containers/Forms/PendingSubmiss
 import { Button } from "@/components/Atoms/Button/Button"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { useSessionStore } from "@/hooks/sessionStore"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/contact.webp"
 
@@ -29,14 +30,14 @@ const ContactUsClient = () => {
   }
 
   return (
-    <section>
+    <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
         heading={t("heading")}
         subheading={t("subheading")}
       />
 
-      <article className="inner-container py-12">
+      <PageWrapper>
         <div className="max-w-4xl mx-auto md:px-4 md:max-w-full">
           <div className="max-w-none">
             <div className="flex flex-col lg:flex-row gap-6">
@@ -102,11 +103,10 @@ const ContactUsClient = () => {
             </div>
           </div>
         </div>
-      </article>
-
+      </PageWrapper>
       <PendingSubmissionModal submissionType="perfume" />
       <PendingSubmissionModal submissionType="perfume_house" />
-    </section>
+    </main>
   )
 }
 

@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server"
 
 import TitleBanner from "@/components/Organisms/TitleBanner"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/about.webp"
 
@@ -8,14 +9,13 @@ const AboutUsContent = async () => {
   const t = await getTranslations("aboutUs")
 
   return (
-    <section>
+    <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
         heading={t("heading")}
         subheading={t("subheading")}
       />
-
-      <article className="inner-container py-12">
+      <PageWrapper>
         <div className="max-w-4xl mx-auto">
           <div className="prose prose-lg prose-invert max-w-none">
             <h2 className="text-noir-gold text-2xl font-bold mb-6">
@@ -30,8 +30,8 @@ const AboutUsContent = async () => {
             </div>
           </div>
         </div>
-      </article>
-    </section>
+      </PageWrapper>
+    </main>
   )
 }
 

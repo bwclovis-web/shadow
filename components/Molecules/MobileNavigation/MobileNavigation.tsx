@@ -12,7 +12,7 @@ import NavigationLinks from "./components/NavigationLinks"
 import QuickActions from "./components/QuickActions"
 import UserSection from "./components/UserSection"
 
-interface MobileNavigationProps extends HTMLProps<HTMLDivElement> {
+interface MobileNavigationProps extends HTMLProps<HTMLElement> {
   user?: {
     id?: string
     username?: string | null
@@ -42,7 +42,10 @@ const MobileNavigation = ({
   }
 
   return (
-    <div className={styleMerge("mobile-nav lg:hidden fixed w-full z-30 top-0", className)}>
+    <nav
+      className={styleMerge("mobile-nav lg:hidden fixed w-full z-30 top-0", className)}
+      aria-label={t("aria.mobile")}
+    >
       <MobileHeader
         logoText={t("logo")}
         menuButtonRef={menuButtonRef as RefObject<HTMLButtonElement>}
@@ -56,7 +59,10 @@ const MobileNavigation = ({
       {/* Mobile Menu Modal */}
       {modalOpen && modalId === MOBILE_MENU_ID && (
         <Modal animateStart="left" background="default" innerType="dark">
-          <div className="flex flex-col w-full h-full max-h-[90vh] pointer-events-auto overflow-y-auto">
+          <div
+            id={MOBILE_MENU_ID}
+            className="flex flex-col w-full h-full max-h-[90vh] pointer-events-auto overflow-y-auto"
+          >
             {/* Header */}
             <div className="flex justify-between items-center p-4 border-b border-noir-gold-500/20 mb-4 sticky top-0 bg-noir-black/95 backdrop-blur-sm">
               <h2 className="text-noir-gold font-semibold text-xl">{t("menu")}</h2>
@@ -73,7 +79,7 @@ const MobileNavigation = ({
           </div>
         </Modal>
       )}
-    </div>
+    </nav>
   )
 }
 

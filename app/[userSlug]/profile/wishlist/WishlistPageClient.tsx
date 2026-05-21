@@ -12,6 +12,7 @@ import WishlistItemCard from "@/components/Organisms/WishlistItemCard/WishlistIt
 import type { WishlistBottlePreference } from "@/lib/mutations/wishlist"
 
 import { revalidateWishlistPage } from "./actions"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 /** Shape of a single wishlist item as returned by getUserWishlist (serializable from server). */
 export type WishlistItemForClient = {
@@ -54,7 +55,7 @@ const WishlistPageClient = ({
   const router = useRouter()
 
   return (
-    <section>
+    <main id="main-content">
       <TitleBanner
         image={bannerImage}
         heading={t("heading")}
@@ -64,8 +65,8 @@ const WishlistPageClient = ({
           {wishlist.length} {t("itemsInWishlist")}
         </p>
       </TitleBanner>
-
-      <div className="inner-container mb-6 px-4">
+      <PageWrapper>
+      <div className="mb-6 px-4">
         <div className="noir-border mx-auto max-w-2xl p-4">
           <h2 className="text-base font-semibold text-noir-gold">{t("share.stripTitle")}</h2>
           <p className="mt-1 text-sm text-noir-gold-100">{t("share.stripHint")}</p>
@@ -93,7 +94,7 @@ const WishlistPageClient = ({
           </VooDooLink>
         </div>
       ) : (
-        <div className="inner-container grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
           {wishlist.map((item) => {
             const isAvailable = item.perfume.userPerfume.length > 0
             const availableAmount = item.perfume.userPerfume.reduce(
@@ -116,7 +117,8 @@ const WishlistPageClient = ({
           })}
         </div>
       )}
-    </section>
+      </PageWrapper>
+    </main>
   )
 }
 

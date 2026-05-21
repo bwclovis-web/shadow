@@ -10,6 +10,7 @@ import { Button } from "@/components/Atoms/Button/Button"
 import { CSRFToken } from "@/components/Molecules/CSRFToken"
 import ListingPhotos from "@/components/Molecules/ListingPhotos/ListingPhotos"
 import type { TradeDisputeWithRelations } from "@/models/trade-dispute.server"
+import { formatDateTime } from "@/utils/formatters"
 import { getTraderDisplayName } from "@/utils/user"
 import StrikeIndicators from "@/app/admin/users/StrikeIndicators"
 
@@ -35,14 +36,6 @@ const RESOLUTION_OUTCOMES: DisputeResolutionOutcome[] = [
 
 const ACTIVE_STATUSES: DisputeStatus[] = ["open", "underReview"]
 
-const formatDate = (date: Date | string) =>
-  new Date(date).toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
 
 const inputClassName =
   "w-full rounded border border-noir-gold-500/50 bg-noir-black px-3 py-2 text-sm text-noir-gold-100"
@@ -142,7 +135,7 @@ const TradeDisputesTab = ({ disputes }: TradeDisputesTabProps) => {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <p className="text-sm text-noir-gold-100/70">
-                      {formatDate(dispute.createdAt)}
+                      {formatDateTime(dispute.createdAt)}
                     </p>
                     <p className="mt-1 text-sm text-noir-gold-100/90">
                       {t("trade")}:{" "}

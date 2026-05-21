@@ -42,16 +42,12 @@ type ExchangeNewListingsBadgeProviderProps = {
   children: ReactNode
 }
 
-const getInitialBadgeCount = (serverCount: number): number => {
-  if (typeof window === "undefined") return serverCount
-  return readLastSeenAt() ? 0 : serverCount
-}
-
 export const ExchangeNewListingsBadgeProvider = ({
   initialCount,
   children,
 }: ExchangeNewListingsBadgeProviderProps) => {
-  const [count, setCount] = useState(() => getInitialBadgeCount(initialCount))
+  // Always match SSR on first paint; localStorage is read in effects only.
+  const [count, setCount] = useState(initialCount)
   const pathname = usePathname()
 
   const markExchangeSeen = useCallback(() => {

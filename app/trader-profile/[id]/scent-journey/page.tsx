@@ -14,6 +14,7 @@ import { getTraderById } from "@/models/user.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { getTraderDisplayName } from "@/utils/user"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 type Props = {
   params: Promise<{ id: string }>
@@ -69,13 +70,13 @@ export default async function TraderScentJourneyPage({
   const profileHref = `/trader-profile/${trader.id}`
 
   return (
-    <section>
+    <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
         heading={t("pageHeading", { traderName })}
         subheading={t("pageSubheading")}
       />
-      <div className="inner-container mx-auto max-w-2xl px-4 py-10">
+      <PageWrapper>
         <p className="mb-6">
           <Link
             href={profileHref}
@@ -89,7 +90,7 @@ export default async function TraderScentJourneyPage({
           traderId={trader.id}
           viewerId={viewerId}
         />
-      </div>
-    </section>
+      </PageWrapper>
+    </main>
   )
 }

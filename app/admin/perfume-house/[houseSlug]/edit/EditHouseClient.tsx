@@ -13,6 +13,7 @@ import {
   type EditHouseActionState,
   type RetryHouseImageActionState,
 } from "./actions"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/createHouse.png"
 
@@ -51,21 +52,23 @@ const EditHouseClient = ({ initialHouse }: EditHouseClientProps) => {
   }
 
   return (
-    <section>
+    <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
         heading={`Editing ${initialHouse.name}`}
         subheading="Update perfume house details"
       />
-      <PerfumeHouseForm
-        formType={FORM_TYPES.EDIT_HOUSE_FORM}
-        lastResult={state as SubmissionResult | null}
-        data={formData}
-        action={formAction}
-        retryImageAction={retryAction}
-        retryImageState={retryState}
-      />
-    </section>
+        <PageWrapper>
+        <PerfumeHouseForm
+          formType={FORM_TYPES.EDIT_HOUSE_FORM}
+          lastResult={state as SubmissionResult | null}
+          data={formData}
+          action={formAction}
+          retryImageAction={retryAction}
+          retryImageState={retryState}
+        />
+      </PageWrapper>
+    </main>
   )
 }
 

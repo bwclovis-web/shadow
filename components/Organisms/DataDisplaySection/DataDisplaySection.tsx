@@ -79,7 +79,7 @@ const DataDisplaySection = ({
     pagination !== undefined && pagination.totalPages > 1
 
   return (
-    <div className="inner-container my-6 h-60vh" id="data-list">
+    <div className="mt-6 h-70vh" id="data-list">
       {isLoading ? (
         <div className="text-center py-8 text-noir-gold">
           {tCommon("loading")} for letter &quot;{selectedLetter}

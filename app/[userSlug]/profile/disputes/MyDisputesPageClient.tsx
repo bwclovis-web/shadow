@@ -10,12 +10,14 @@ import { Button } from "@/components/Atoms/Button/Button"
 import { CSRFToken } from "@/components/Molecules/CSRFToken"
 import ListingPhotos from "@/components/Molecules/ListingPhotos/ListingPhotos"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
+import { formatDateTime } from "@/utils/formatters"
 import { getTraderDisplayName } from "@/utils/user"
 
 import {
   withdrawDisputeAction,
   type WithdrawDisputeActionState,
 } from "./actions"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 export type MyDisputeRow = {
   id: string
@@ -48,15 +50,6 @@ type MyDisputesPageClientProps = {
   currentUserId: string
 }
 
-const formatDate = (date: Date | string) =>
-  new Date(date).toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
-
 const MyDisputesPageClient = ({
   disputes,
   bannerImage,
@@ -77,7 +70,7 @@ const MyDisputesPageClient = ({
   }, [state?.success, router])
 
   return (
-    <section>
+    <main id="main-content">
       <TitleBanner
         image={bannerImage}
         heading={t("heading")}
@@ -91,7 +84,7 @@ const MyDisputesPageClient = ({
         </Link>
       </TitleBanner>
 
-      <div className="inner-container py-8">
+      <PageWrapper>
         {state && (
           <div
             className={`mb-6 rounded-md border p-4 ${
@@ -105,7 +98,7 @@ const MyDisputesPageClient = ({
         )}
 
         {disputes.length === 0 ? (
-          <p className="py-12 text-center text-noir-gold-100/80">{t("empty")}</p>
+          <h2 className="py-12 text-center text-noir-gold-100/80">{t("empty")}</h2>
         ) : (
           <ul className="space-y-4">
             {disputes.map((dispute) => {
@@ -126,7 +119,7 @@ const MyDisputesPageClient = ({
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                       <p className="text-sm text-noir-gold-100/70">
-                        {formatDate(dispute.createdAt)}
+                        {formatDateTime(dispute.createdAt)}
                       </p>
                       <h3 className="mt-1 text-lg text-noir-gold-100">
                         {t("otherParty")}:{" "}
@@ -184,8 +177,8 @@ const MyDisputesPageClient = ({
             })}
           </ul>
         )}
-      </div>
-    </section>
+      </PageWrapper>
+    </main>
   )
 }
 

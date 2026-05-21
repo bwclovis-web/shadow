@@ -24,6 +24,8 @@ interface ProfileDropdownProps {
   onNavClick?: () => void
 }
 
+const PROFILE_MENU_ID = "profile-menu"
+
 const ProfileDropdown = ({
   className,
   variant = "desktop",
@@ -92,6 +94,7 @@ const ProfileDropdown = ({
         )}
         aria-expanded={isOpen}
         aria-haspopup="true"
+        aria-controls={PROFILE_MENU_ID}
       >
         {tNav("profile")}
         <FaChevronDown
@@ -100,11 +103,16 @@ const ProfileDropdown = ({
             isOpen && "rotate-180"
           )}
           size={12}
+          aria-hidden
+          focusable={false}
         />
       </button>
 
-      {isOpen && (
-        <div className={dropdownClasses}>
+      <div
+        id={PROFILE_MENU_ID}
+        className={dropdownClasses}
+        hidden={!isOpen}
+      >
           <ul className="py-2">
             {profileItems.map((item) => (
               <li key={item.id}>
@@ -121,8 +129,7 @@ const ProfileDropdown = ({
               </li>
             ))}
           </ul>
-        </div>
-      )}
+      </div>
     </div>
   )
 }

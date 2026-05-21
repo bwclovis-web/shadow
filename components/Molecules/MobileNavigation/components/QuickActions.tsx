@@ -19,7 +19,7 @@ const QuickActions = ({ onNavClick }: QuickActionsProps) => {
           onClick={onNavClick}
           className="flex flex-col items-center gap-2 text-noir-gold hover:text-noir-light p-3 rounded-lg hover:bg-noir-black/30 mobile-touch-target transition-colors duration-200"
         >
-          <AiFillHome size={20} />
+          <AiFillHome size={20} aria-hidden focusable={false} />
           <span className="text-sm font-medium">{t("home")}</span>
         </Link>
       <button
@@ -33,7 +33,7 @@ const QuickActions = ({ onNavClick }: QuickActionsProps) => {
         }}
         className="flex cursor-pointer flex-col items-center gap-2 text-noir-gold hover:text-noir-light p-3 rounded-lg hover:bg-noir-black/30 mobile-touch-target transition-colors duration-200"
       >
-        <FaMagnifyingGlass size={20} />
+        <FaMagnifyingGlass size={20} aria-hidden focusable={false} />
         <span className="text-sm font-medium">{t("search")}</span>
       </button>
       </div>

@@ -20,6 +20,7 @@ import {
   sortItems,
   type SortOption,
 } from "@/utils/sortUtils"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const ROUTE_PATH = "/houses"
 
@@ -280,15 +281,16 @@ const AllHousesClient = ({
     )
   }
 
-  return (
-    <section>
+  return (  
+    <main id="main-content">
+      
       <TitleBanner
         image={BANNER_IMAGE}
         heading={heading}
         subheading={subheading}
       />
-
-      {showBlogLink ? (
+    <PageWrapper>
+      {/* {showBlogLink ? (
         <p className="inner-container -mt-6 mb-8 text-center">
           <PrefetchLink
             href={BEHIND_THE_BOTTLE_PATH}
@@ -297,7 +299,7 @@ const AllHousesClient = ({
             {t("readStories")}
           </PrefetchLink>
         </p>
-      ) : null}
+      ) : null} */}
 
       <DataFilters
         searchType="perfume-house"
@@ -330,7 +332,8 @@ const AllHousesClient = ({
         onPrefetchNext={onPrefetchNext}
         onPrefetchPage={onPrefetchPage}
       />
-    </section>
+      </PageWrapper>
+    </main>
   )
 }
 

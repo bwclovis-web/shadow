@@ -5,12 +5,14 @@ import { Link } from "next-view-transitions"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button"
+import { formatDateTime } from "@/utils/formatters"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import type {
   AuditStats,
   RateLimitStats,
   SecurityStats,
 } from "@/app/admin/types/security-stats"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/security.webp"
 
@@ -79,13 +81,13 @@ const SecurityMonitorClient = ({
     security.recentEvents?.length > 0 && Array.isArray(security.recentEvents)
 
   return (
-    <div className="min-h-screen">
+    <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
         heading={t("heading")}
         subheading={t("subheading")}
       />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <PageWrapper>
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-4">
             <span className="text-sm text-noir-gold">
@@ -295,7 +297,7 @@ const SecurityMonitorClient = ({
                     <tr key={event.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {event.timestamp
-                          ? new Date(event.timestamp).toLocaleString("en-US")
+                          ? formatDateTime(event.timestamp)
                           : "N/A"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -417,8 +419,8 @@ const SecurityMonitorClient = ({
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </PageWrapper>
+    </main>
   )
 }
 

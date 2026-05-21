@@ -15,6 +15,7 @@ import { useSessionStore } from "@/hooks/sessionStore"
 import { getTraderDisplayName } from "@/utils/user"
 import { Button } from "@/components/Atoms/Button"
 import { MdDeleteForever } from "react-icons/md"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/messages.png"
 const DELETE_MODAL_ID = "delete-conversation"
@@ -100,14 +101,14 @@ export default function MessagesClient({
           />
         </Modal>
       )}
-      <section>
+      <main id="main-content">
         <TitleBanner
           image={BANNER_IMAGE}
           heading={t("heading")}
           subheading={t("subheading")}
         />
 
-        <div className="inner-container py-8">
+        <PageWrapper>
           {conversations.length === 0 ? (
             <p className="text-noir-gold-500">You have no conversations yet.</p>
           ) : (
@@ -201,8 +202,8 @@ export default function MessagesClient({
               })}
             </ul>
           )}
-        </div>
-      </section>
+        </PageWrapper>
+      </main>
     </>
   )
 }

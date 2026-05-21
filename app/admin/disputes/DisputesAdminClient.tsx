@@ -11,6 +11,7 @@ import type { UserReportWithRelations } from "@/models/user-report.server"
 
 import ProfileReportsTab from "./ProfileReportsTab"
 import TradeDisputesTab from "./TradeDisputesTab"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/complaints.png"
 
@@ -47,14 +48,14 @@ const DisputesAdminClient = ({
   )
 
   return (
-    <div>
+    <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
         heading={t("heading")}
         subheading={t("subheading")}
       />
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <PageWrapper>
         <ViewTabs<DisputesTab>
           activeTab={activeTab}
           onTabChange={setActiveTab}
@@ -72,8 +73,8 @@ const DisputesAdminClient = ({
             },
           ]}
         />
-      </div>
-    </div>
+      </PageWrapper>
+    </main>
   )
 }
 

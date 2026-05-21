@@ -8,6 +8,7 @@ import TitleBanner from "@/components/Organisms/TitleBanner"
 import { getScentDnaForUser } from "@/models/scent-dna.server"
 import { getTraderById } from "@/models/user.server"
 import { getTraderDisplayName } from "@/utils/user"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 type Props = {
   params: Promise<{ id: string }>
@@ -57,20 +58,20 @@ export default async function TraderScentDnaPage({
   const sharePath = `/trader-profile/${trader.id}/scent-dna`
 
   return (
-    <section>
+    <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
         heading={t("sharePageHeading", { traderName })}
         subheading={t("sharePageSubheading")}
       />
-      <div className="inner-container flex justify-center px-4 py-10">
+      <PageWrapper className="flex justify-center">
         <ScentDnaCard
           scentDna={scentDna}
           traderName={traderName}
           shareUrl={sharePath}
           variant="share"
         />
-      </div>
-    </section>
+      </PageWrapper>
+    </main>
   )
 }

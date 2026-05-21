@@ -39,6 +39,7 @@ import {
   SCENT_QUIZ_ROUTE,
   type StepId,
 } from "./constants"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/quiz.png"
 
@@ -242,14 +243,14 @@ export default function ScentQuizClient({
   }
 
   return (
-    <section>
+    <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
         heading={t("banner.heading")}
         subheading={t("banner.subheading")}
       />
 
-      <div className="inner-container mx-auto pb-8">
+      <PageWrapper>
         {step === "welcome" && (
           <div className="mt-8 space-y-6">
             <p className="text-noir-gold-100 text-lg">{t("welcome.body")}</p>
@@ -496,7 +497,7 @@ export default function ScentQuizClient({
             </div>
           </form>
         )}
-      </div>
-    </section>
+      </PageWrapper>
+    </main>
   )
 }

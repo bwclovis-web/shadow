@@ -49,7 +49,7 @@ const LogoutButton = () => {
         aria-label={t("logout")}
         className="bg-noir-light hover:bg-noir-dark hover:text-noir-light rounded-full p-2 transition-colors duration-300 text-noir-black"
       >
-        <RiLogoutBoxRLine size={20} />
+        <RiLogoutBoxRLine size={20} aria-hidden focusable={false} />
       </Button>
     </form>
   )

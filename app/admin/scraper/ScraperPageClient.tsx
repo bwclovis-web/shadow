@@ -1,219 +1,53 @@
 "use client"
 
-import {
-  type ChangeEvent,
-  type FormEvent,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react"
 
-import { Button } from "@/components/Atoms/Button/Button"
-import HouseTypeahead from "@/components/Molecules/HouseTypeahead/HouseTypeahead"
 import { useCSRF } from "@/hooks/useCSRF"
 import type {
   DiscoveryMode,
-  ImportBucket,
-  NoteConfidence,
   NoteInferenceMode,
   NoteValidationMode,
   PerfumeCsvRecord,
   ScraperImportResponse,
-  ScraperNoteSource,
   ScraperRetryR2Response,
   ScraperRunRequest,
   ScraperRunResponse,
   ScraperSourcePreset,
   TitleDashSegment,
 } from "@/types/scraper"
-import { NOTES_PIPELINE_MODEL_ALLOWLIST } from "@/lib/scraper/notes-pipeline-models"
 import {
   chunkPerfumeCsvRecordsForImport,
   chunkPerfumeCsvRecordsForRetryR2,
 } from "@/utils/scraper-import-chunking"
 
-// ---------------------------------------------------------------------------
-// Persist last successful result so you can restore after closing tab / failed import
-// ---------------------------------------------------------------------------
-const SCRAPER_SAVED_RESULT_KEY = "scraper-last-result"
+import { SHOPIFY_DEFAULTS } from "./partials/constants"
+import {
+  buildPreviewRows,
+  filterRecords,
+  type PreviewFilter,
+} from "./partials/preview"
+import { ScrapeResultsPanel } from "./partials/ScrapeResultsPanel"
+import { ScraperErrorPanel } from "./partials/ScraperErrorPanel"
+import { ScraperFormActions } from "./partials/ScraperFormActions"
+import { ScraperHouseSection } from "./partials/ScraperHouseSection"
+import { ScraperRunningIndicator } from "./partials/ScraperRunningIndicator"
+import { ScraperSavedResultsBanner } from "./partials/ScraperSavedResultsBanner"
+import { ScraperSelectorsSection } from "./partials/ScraperSelectorsSection"
+import { ScraperSkipRulesSection } from "./partials/ScraperSkipRulesSection"
+import { ScraperTitleDescriptionSection } from "./partials/ScraperTitleDescriptionSection"
+import {
+  clearSavedScrapeResult,
+  loadScrapeResultFromStorage,
+  saveScrapeResultToStorage,
+} from "./partials/storage"
+import {
+  countRecordsWithExtractedNotes,
+  summarizeCollectionUrlsInput,
+} from "./partials/url-utils"
 
-function saveScrapeResultToStorage(data: ScraperRunResponse) {
-  try {
-    localStorage.setItem(SCRAPER_SAVED_RESULT_KEY, JSON.stringify(data))
-  } catch {
-    // quota exceeded or private mode
-  }
-}
-
-function loadScrapeResultFromStorage(): ScraperRunResponse | null {
-  try {
-    const raw = localStorage.getItem(SCRAPER_SAVED_RESULT_KEY)
-    if (!raw) return null
-    const data = JSON.parse(raw) as unknown
-    if (!data || typeof data !== "object") return null
-    const d = data as Record<string, unknown>
-    if (d.ok !== true || !Array.isArray(d.records)) return null
-    return data as ScraperRunResponse
-  } catch {
-    return null
-  }
-}
-
-function clearSavedScrapeResult() {
-  try {
-    localStorage.removeItem(SCRAPER_SAVED_RESULT_KEY)
-  } catch {
-    // ignore
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Shopify defaults
-// ---------------------------------------------------------------------------
-const SHOPIFY_DEFAULTS = {
-  productLinkSelector: "a[href*='/products/']",
-  nameSelector: "h1",
-  descriptionSelector: ".product__description",
-  imageSelector: ".product__media img",
-}
-
-// ---------------------------------------------------------------------------
-// Small layout helpers
-// ---------------------------------------------------------------------------
-interface FieldProps {
-  label: string
-  hint?: string
-  children: React.ReactNode
-}
-
-function Field({ label, hint, children }: FieldProps) {
-  return (
-    <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-foreground">{label}</label>
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
-      {children}
-    </div>
-  )
-}
-
-function inputClass(extra = "") {
-  return `w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 ${extra}`
-}
-
-function summarizeCollectionUrlsInput(raw: string): string | null {
-  const trimmed = raw.trim()
-  if (!trimmed) return null
-  const parsed = trimmed.split(/\n|,/).map((u) => u.trim()).filter(Boolean)
-  const valid = parsed.filter((u) => /^https?:\/\//i.test(u))
-  if (valid.length === 0) {
-    return "No valid URLs — each line or segment must start with http:// or https://"
-  }
-  if (valid.length < parsed.length) {
-    return `${valid.length} collection URL(s) (${parsed.length - valid.length} line(s) skipped — not valid URLs)`
-  }
-  return `${valid.length} collection URL(s) — all will be visited`
-}
-
-function countRecordsWithExtractedNotes(records: PerfumeCsvRecord[]): number {
-  return records.filter((r) => {
-    try {
-      return (JSON.parse(r.openNotes ?? "[]") as string[]).length > 0
-    } catch {
-      return false
-    }
-  }).length
-}
-
-type PreviewFilter =
-  | "all"
-  | "empty_notes"
-  | "low_confidence"
-  | "missing_image"
-  | "duplicate_risk"
-  | "needs_review"
-
-type PreviewRow = {
-  name: string
-  notesPreview: string[]
-  noteSource?: ScraperNoteSource
-  noteConfidence?: NoteConfidence
-  importBucket?: ImportBucket
-  duplicateRisk?: string
-  detailURL?: string
-}
-
-function noteSourceBadgeClass(source?: ScraperNoteSource): string {
-  switch (source) {
-    case "labeled_list":
-      return "bg-emerald-900/50 text-emerald-100"
-    case "pdp_bootstrap":
-      return "bg-cyan-900/50 text-cyan-100"
-    case "llm_description":
-      return "bg-blue-900/50 text-blue-100"
-    case "llm_name_literal":
-      return "bg-violet-900/50 text-violet-100"
-    case "llm_name_inferred":
-      return "bg-amber-900/50 text-amber-100"
-    case "empty":
-      return "bg-neutral-800 text-neutral-400"
-    default:
-      return "bg-neutral-800 text-neutral-400"
-  }
-}
-
-const recordHasNotes = (r: PerfumeCsvRecord): boolean => {
-  try {
-    return (JSON.parse(r.openNotes ?? "[]") as string[]).length > 0
-  } catch {
-    return false
-  }
-}
-
-const filterRecords = (records: PerfumeCsvRecord[], filter: PreviewFilter): PerfumeCsvRecord[] => {
-  switch (filter) {
-    case "empty_notes":
-      return records.filter(r => !recordHasNotes(r))
-    case "low_confidence":
-      return records.filter(r => r.noteConfidence === "low")
-    case "missing_image":
-      return records.filter(r => !r.image?.trim())
-    case "duplicate_risk":
-      return records.filter(r => r.duplicateRisk === "high" || r.duplicateRisk === "low")
-    case "needs_review":
-      return records.filter(r => r.importBucket === "needs_review" || r.importBucket === "skip")
-    default:
-      return records
-  }
-}
-
-function buildPreviewRows(records: PerfumeCsvRecord[]): PreviewRow[] {
-  return records.map((r) => {
-    let notesPreview: string[] = []
-    try {
-      notesPreview = (JSON.parse(r.openNotes) as string[]).slice(0, 4)
-    } catch {
-      notesPreview = []
-    }
-    return {
-      name: r.name,
-      notesPreview,
-      noteSource: r._noteSource,
-      noteConfidence: r.noteConfidence,
-      importBucket: r.importBucket,
-      duplicateRisk: r.duplicateRisk,
-      detailURL: r.detailURL,
-    }
-  })
-}
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
-export function ScraperPageClient() {
+export const ScraperPageClient = () => {
   const { addToHeaders, getTokenWithFallback } = useCSRF()
 
-  // -- scraper config state --
   const [houseName, setHouseName] = useState("")
   const [collectionUrlsRaw, setCollectionUrlsRaw] = useState("")
   const [sampleProductUrl, setSampleProductUrl] = useState("")
@@ -241,11 +75,8 @@ export function ScraperPageClient() {
   const [generateNoirDescriptions, setGenerateNoirDescriptions] = useState(true)
   const [etsyHeaded, setEtsyHeaded] = useState(false)
   const [headed, setHeaded] = useState(false)
-  /** When false, collect size-named products and deduplicate by cleaned name instead of skipping them outright. */
   const [skipSizeVariants, setSkipSizeVariants] = useState(true)
-  /** Optional delay in ms between each collection URL (e.g. 5000 for Lush to avoid ERR_CONNECTION_RESET). */
   const [delayBetweenUrlsMs, setDelayBetweenUrlsMs] = useState<string>("")
-  /** Optional retries per page load when connection is reset. */
   const [retryAttempts, setRetryAttempts] = useState<string>("")
   const [noteInferenceMode, setNoteInferenceMode] = useState<NoteInferenceMode>("standard")
   const [minConfidentFlatNotes, setMinConfidentFlatNotes] = useState("")
@@ -259,22 +90,18 @@ export function ScraperPageClient() {
   const [previewFilter, setPreviewFilter] = useState<PreviewFilter>("all")
   const [allowHighDuplicateRisk, setAllowHighDuplicateRisk] = useState(false)
 
-  // -- step 1 state (scrape + note extraction) --
   const [scraping, setScraping] = useState(false)
   const [scrapeElapsedSeconds, setScrapeElapsedSeconds] = useState(0)
   const [scrapeProgressLog, setScrapeProgressLog] = useState<string[]>([])
   const [scrapeResult, setScrapeResult] = useState<ScraperRunResponse | null>(null)
   const [scrapeError, setScrapeError] = useState<string | null>(null)
-  /** Result of "Check connection": null = not run, "checking", "ok", or error message */
   const [connectionCheck, setConnectionCheck] = useState<null | "checking" | "ok" | string>(null)
-  /** Saved result from a previous run (for restore after tab close / failed import) */
   const [savedScrapeResult, setSavedScrapeResult] = useState<ScraperRunResponse | null>(null)
 
   const scrapeAbortRef = useRef<AbortController | null>(null)
   const scrapeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const userCancelledScrapeRef = useRef(false)
 
-  // On mount: check for saved result from a previous run
   useEffect(() => {
     const saved = loadScrapeResultFromStorage()
     if (saved) setSavedScrapeResult(saved)
@@ -294,7 +121,6 @@ export function ScraperPageClient() {
     void loadSources()
   }, [])
 
-  // Show elapsed time while scraper is running
   useEffect(() => {
     if (!scraping) {
       setScrapeElapsedSeconds(0)
@@ -307,7 +133,6 @@ export function ScraperPageClient() {
     return () => clearInterval(interval)
   }, [scraping])
 
-  // Warn when leaving the page while scraper is running (tab close, refresh, or navigate away)
   useEffect(() => {
     if (!scraping) return
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -342,27 +167,26 @@ export function ScraperPageClient() {
 
   const collectionUrlsHint = useMemo(
     () => summarizeCollectionUrlsInput(collectionUrlsRaw),
-    [collectionUrlsRaw]
+    [collectionUrlsRaw],
   )
 
   const allRecords: PerfumeCsvRecord[] = useMemo(
     () => scrapeResult?.records ?? [],
-    [scrapeResult?.records]
+    [scrapeResult?.records],
   )
 
   const records: PerfumeCsvRecord[] = useMemo(
     () => filterRecords(allRecords, previewFilter),
-    [allRecords, previewFilter]
+    [allRecords, previewFilter],
   )
 
   const notesExtractedCount = useMemo(
     () => countRecordsWithExtractedNotes(allRecords),
-    [allRecords]
+    [allRecords],
   )
 
   const previewRows = useMemo(() => buildPreviewRows(records), [records])
 
-  // -- step 2 state (import + R2) --
   const [uploadImagesToR2, setUploadImagesToR2] = useState(true)
   const [overwriteImageUrls, setOverwriteImageUrls] = useState(true)
   const [importing, setImporting] = useState(false)
@@ -373,39 +197,12 @@ export function ScraperPageClient() {
   const [retryR2Result, setRetryR2Result] = useState<ScraperRetryR2Response | null>(null)
   const [retryR2Error, setRetryR2Error] = useState<string | null>(null)
 
-  // ---------------------------------------------------------------------------
-  // Step 1: Run scraper
-  // ---------------------------------------------------------------------------
-  const handleScrape = async (e: FormEvent) => {
-    e.preventDefault()
-    if (!houseName.trim()) {
-      setScrapeError("Please enter or select a house name.")
-      return
-    }
-
-    setScraping(true)
-    setScrapeResult(null)
-    setScrapeError(null)
-    setConnectionCheck(null)
-    setImportResult(null)
-    setImportError(null)
-    setImportConfirmed(false)
-    setRetryR2Result(null)
-    setRetryR2Error(null)
-
+  const buildScraperRunRequest = (): ScraperRunRequest => {
     const collectionUrls = collectionUrlsRaw
       .split(/\n|,/)
       .map(u => u.trim())
       .filter(Boolean)
       .filter(u => /^https?:\/\//i.test(u))
-
-    if (collectionUrls.length === 0) {
-      setScrapeError(
-        "Add at least one collection URL. Each line or comma-separated value must start with http:// or https://.",
-      )
-      setScraping(false)
-      return
-    }
 
     const skipKeywords = skipKeywordsRaw
       .split(",")
@@ -417,7 +214,7 @@ export function ScraperPageClient() {
       .map(w => w.trim())
       .filter(Boolean)
 
-    const body: ScraperRunRequest = {
+    return {
       houseName,
       collectionUrls,
       sampleProductUrl: sampleProductUrl || undefined,
@@ -461,8 +258,50 @@ export function ScraperPageClient() {
       })(),
       externalNoteRescue,
     }
+  }
 
-    const SCRAPER_REQUEST_TIMEOUT_MS = 90 * 60 * 1000 // 90 min — match server; avoid client aborting early
+  const handleLoadPreset = (preset: ScraperSourcePreset) => {
+    const c = preset.configJson
+    setHouseName(c.houseName)
+    setCollectionUrlsRaw(c.collectionUrls.join("\n"))
+    setProductLinkSelector(c.productLinkSelector)
+    setNameSelector(c.nameSelector)
+    setDescriptionSelector(c.descriptionSelector)
+    setNotesSelector(c.notesSelector ?? "")
+    setImageSelector(c.imageSelector)
+    setSkipKeywordsRaw(c.skipKeywords.join(", "))
+    setBaseUrl(c.baseUrl ?? "")
+    if (c.discoveryMode) setDiscoveryMode(c.discoveryMode)
+    if (c.titleDashSegment) setTitleDashSegment(c.titleDashSegment)
+  }
+
+  const handleScrape = async (e: FormEvent) => {
+    e.preventDefault()
+    if (!houseName.trim()) {
+      setScrapeError("Please enter or select a house name.")
+      return
+    }
+
+    setScraping(true)
+    setScrapeResult(null)
+    setScrapeError(null)
+    setConnectionCheck(null)
+    setImportResult(null)
+    setImportError(null)
+    setImportConfirmed(false)
+    setRetryR2Result(null)
+    setRetryR2Error(null)
+
+    const body = buildScraperRunRequest()
+    if (body.collectionUrls.length === 0) {
+      setScrapeError(
+        "Add at least one collection URL. Each line or comma-separated value must start with http:// or https://.",
+      )
+      setScraping(false)
+      return
+    }
+
+    const SCRAPER_REQUEST_TIMEOUT_MS = 90 * 60 * 1000
     const ac = new AbortController()
     scrapeAbortRef.current = ac
     userCancelledScrapeRef.current = false
@@ -504,7 +343,11 @@ export function ScraperPageClient() {
           const trimmed = line.trim()
           if (!trimmed) continue
           try {
-            const obj = JSON.parse(trimmed) as { type: string; message?: string; data?: ScraperRunResponse }
+            const obj = JSON.parse(trimmed) as {
+              type: string
+              message?: string
+              data?: ScraperRunResponse
+            }
             if (obj.type === "log" && typeof obj.message === "string") {
               setScrapeProgressLog(prev => [...prev, obj.message!])
             } else if (obj.type === "result" && obj.data) {
@@ -585,9 +428,6 @@ export function ScraperPageClient() {
     setScrapeProgressLog(prev => [...prev, "— Cancelled by user —"])
   }
 
-  // ---------------------------------------------------------------------------
-  // Step 2: Confirm & import
-  // ---------------------------------------------------------------------------
   const handleImport = async () => {
     if (!scrapeResult?.records?.length) return
 
@@ -634,11 +474,8 @@ export function ScraperPageClient() {
         }
 
         if (!res.ok || !data.ok) {
-          const prefix =
-            batches.length > 1 ? `Batch ${i + 1} of ${batches.length}: ` : ""
-          setImportError(
-            prefix + (data.errors?.join("\n") ?? `Server error ${res.status}`),
-          )
+          const prefix = batches.length > 1 ? `Batch ${i + 1} of ${batches.length}: ` : ""
+          setImportError(prefix + (data.errors?.join("\n") ?? `Server error ${res.status}`))
           return
         }
 
@@ -713,11 +550,8 @@ export function ScraperPageClient() {
           return
         }
         if (!res.ok || !data.ok) {
-          const prefix =
-            batches.length > 1 ? `Batch ${i + 1} of ${batches.length}: ` : ""
-          setRetryR2Error(
-            prefix + (data.errors?.join("\n") ?? `Server error ${res.status}`),
-          )
+          const prefix = batches.length > 1 ? `Batch ${i + 1} of ${batches.length}: ` : ""
+          setRetryR2Error(prefix + (data.errors?.join("\n") ?? `Server error ${res.status}`))
           return
         }
         attemptedCount += data.attemptedCount
@@ -749,10 +583,6 @@ export function ScraperPageClient() {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // CSV download
-  // ---------------------------------------------------------------------------
-  /** Ping scraper health endpoint to verify server is reachable (for troubleshooting "Failed to fetch"). */
   const handleCheckConnection = async () => {
     setConnectionCheck("checking")
     try {
@@ -781,9 +611,25 @@ export function ScraperPageClient() {
     URL.revokeObjectURL(url)
   }
 
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
+  const handleSavePreset = async () => {
+    const body = buildScraperRunRequest()
+    const csrf = getTokenWithFallback()
+    const res = await fetch("/api/admin/scraper/sources", {
+      method: "POST",
+      headers: addToHeaders({ "Content-Type": "application/json" }),
+      credentials: "include",
+      body: JSON.stringify({
+        config: body,
+        platformType: discoveryMode,
+        ...(csrf ? { _csrf: csrf } : {}),
+      }),
+    })
+    if (res.ok) {
+      const data = (await res.json()) as { source?: ScraperSourcePreset }
+      if (data.source) setSavedSources(prev => [data.source!, ...prev])
+    }
+  }
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
       <div className="mb-8">
@@ -794,1091 +640,147 @@ export function ScraperPageClient() {
         </p>
       </div>
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Step 1: Scraper configuration form                                  */}
-      {/* ------------------------------------------------------------------ */}
       <form onSubmit={handleScrape} className="flex flex-col gap-6">
-        {/* House */}
-        <section className="flex flex-col gap-4 rounded-lg border border-noir-border p-4 bg-noir-dark border-noir-gold text-noir-gold-100">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            House
-          </h2>
+        <ScraperHouseSection
+          houseName={houseName}
+          setHouseName={setHouseName}
+          discoveryMode={discoveryMode}
+          setDiscoveryMode={setDiscoveryMode}
+          maxProducts={maxProducts}
+          setMaxProducts={setMaxProducts}
+          savedSources={savedSources}
+          onLoadPreset={handleLoadPreset}
+          collectionUrlsRaw={collectionUrlsRaw}
+          setCollectionUrlsRaw={setCollectionUrlsRaw}
+          collectionUrlsHint={collectionUrlsHint}
+          sampleProductUrl={sampleProductUrl}
+          setSampleProductUrl={setSampleProductUrl}
+          baseUrl={baseUrl}
+          setBaseUrl={setBaseUrl}
+          skipSizeVariants={skipSizeVariants}
+          setSkipSizeVariants={setSkipSizeVariants}
+          headed={headed}
+          setHeaded={setHeaded}
+          etsyHeaded={etsyHeaded}
+          setEtsyHeaded={setEtsyHeaded}
+          delayBetweenUrlsMs={delayBetweenUrlsMs}
+          setDelayBetweenUrlsMs={setDelayBetweenUrlsMs}
+          retryAttempts={retryAttempts}
+          setRetryAttempts={setRetryAttempts}
+        />
 
-          <Field label="House name *" hint="Search for an existing house or type a new one.">
-            <HouseTypeahead
-              name="_houseId"
-              defaultName={houseName}
-              onNameChange={setHouseName}
-            />
-          </Field>
+        <ScraperSelectorsSection
+          productLinkSelector={productLinkSelector}
+          setProductLinkSelector={setProductLinkSelector}
+          nameSelector={nameSelector}
+          setNameSelector={setNameSelector}
+          descriptionSelector={descriptionSelector}
+          setDescriptionSelector={setDescriptionSelector}
+          notesSelector={notesSelector}
+          setNotesSelector={setNotesSelector}
+          imageSelector={imageSelector}
+          setImageSelector={setImageSelector}
+        />
 
-          <Field
-            label="URL discovery"
-            hint="Auto tries sitemap, Shopify /products.json, and WooCommerce API before collection-page link scraping."
-          >
-            <select
-              className={inputClass()}
-              value={discoveryMode}
-              onChange={(e: ChangeEvent<HTMLSelectElement>) =>
-                setDiscoveryMode(e.target.value as DiscoveryMode)
-              }
-            >
-              <option value="auto">Auto</option>
-              <option value="sitemap">Sitemap only</option>
-              <option value="shopify">Shopify JSON</option>
-              <option value="woocommerce">WooCommerce API</option>
-              <option value="manual">Manual (collection selectors only)</option>
-            </select>
-          </Field>
+        <ScraperSkipRulesSection
+          skipKeywordsRaw={skipKeywordsRaw}
+          setSkipKeywordsRaw={setSkipKeywordsRaw}
+        />
 
-          <Field label="Max products (discovery)" hint="Cap discovered URLs. Leave empty for no limit.">
-            <input
-              type="number"
-              min={1}
-              className={inputClass()}
-              value={maxProducts}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setMaxProducts(e.target.value)}
-              placeholder="e.g. 100"
-            />
-          </Field>
+        <ScraperTitleDescriptionSection
+          titleDashSegment={titleDashSegment}
+          setTitleDashSegment={setTitleDashSegment}
+          titleColonSegment={titleColonSegment}
+          setTitleColonSegment={setTitleColonSegment}
+          titleTakeBeforeFirstComma={titleTakeBeforeFirstComma}
+          setTitleTakeBeforeFirstComma={setTitleTakeBeforeFirstComma}
+          titleTakeAfterFirstComma={titleTakeAfterFirstComma}
+          setTitleTakeAfterFirstComma={setTitleTakeAfterFirstComma}
+          titleStripNumbers={titleStripNumbers}
+          setTitleStripNumbers={setTitleStripNumbers}
+          titleOmitWordsRaw={titleOmitWordsRaw}
+          setTitleOmitWordsRaw={setTitleOmitWordsRaw}
+          noteInferenceMode={noteInferenceMode}
+          setNoteInferenceMode={setNoteInferenceMode}
+          minConfidentFlatNotes={minConfidentFlatNotes}
+          setMinConfidentFlatNotes={setMinConfidentFlatNotes}
+          notesPipelineModel={notesPipelineModel}
+          setNotesPipelineModel={setNotesPipelineModel}
+          noirPipelineModel={noirPipelineModel}
+          setNoirPipelineModel={setNoirPipelineModel}
+          noteValidationMode={noteValidationMode}
+          setNoteValidationMode={setNoteValidationMode}
+          externalNoteRescue={externalNoteRescue}
+          setExternalNoteRescue={setExternalNoteRescue}
+          generateNoirDescriptions={generateNoirDescriptions}
+          setGenerateNoirDescriptions={setGenerateNoirDescriptions}
+        />
 
-          {savedSources.length > 0 && (
-            <Field label="Saved presets" hint="Load a previously saved scraper configuration.">
-              <select
-                className={inputClass()}
-                defaultValue=""
-                onChange={(e: ChangeEvent<HTMLSelectElement>) => {
-                  const id = e.target.value
-                  if (!id) return
-                  const preset = savedSources.find(s => s.id === id)
-                  if (!preset) return
-                  const c = preset.configJson
-                  setHouseName(c.houseName)
-                  setCollectionUrlsRaw(c.collectionUrls.join("\n"))
-                  setProductLinkSelector(c.productLinkSelector)
-                  setNameSelector(c.nameSelector)
-                  setDescriptionSelector(c.descriptionSelector)
-                  setNotesSelector(c.notesSelector ?? "")
-                  setImageSelector(c.imageSelector)
-                  setSkipKeywordsRaw(c.skipKeywords.join(", "))
-                  setBaseUrl(c.baseUrl ?? "")
-                  if (c.discoveryMode) setDiscoveryMode(c.discoveryMode)
-                  if (c.titleDashSegment) setTitleDashSegment(c.titleDashSegment)
-                }}
-              >
-                <option value="">Select preset…</option>
-                {savedSources.map(s => (
-                  <option key={s.id} value={s.id}>
-                    {s.houseName} ({s.platformType ?? "generic"})
-                  </option>
-                ))}
-              </select>
-            </Field>
-          )}
-
-          <Field
-            label="Collection URLs *"
-            hint="One URL per line or comma-separated. Each must start with http:// or https://. All listed pages are visited."
-          >
-            <textarea
-              className={inputClass("min-h-[100px] resize-y font-mono text-xs")}
-              required
-              value={collectionUrlsRaw}
-              onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
-                setCollectionUrlsRaw(e.target.value)
-              }
-              placeholder={
-                "https://blackheartedtart.com/collections/perfumes\nhttps://blackheartedtart.com/collections/perfumes?page=2"
-              }
-            />
-            {collectionUrlsHint ? (
-              <p className="mt-1 text-xs text-muted-foreground">{collectionUrlsHint}</p>
-            ) : null}
-          </Field>
-
-          <Field
-            label="Sample product URL"
-            hint="Optional: a single product page to reference when tuning selectors."
-          >
-            <input
-              className={inputClass()}
-              type="url"
-              value={sampleProductUrl}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setSampleProductUrl(e.target.value)}
-              placeholder="https://blackheartedtart.com/products/50-ft-queenie"
-            />
-          </Field>
-
-          <Field
-            label="Base URL"
-            hint="Used to convert relative links/images to absolute URLs. Usually the homepage."
-          >
-            <input
-              className={inputClass()}
-              type="url"
-              value={baseUrl}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setBaseUrl(e.target.value)}
-              placeholder="https://blackheartedtart.com"
-            />
-          </Field>
-
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              checked={skipSizeVariants}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setSkipSizeVariants(e.target.checked)}
-              className="mt-1"
-            />
-            <span className="text-sm">
-              <strong>Skip size variants</strong> — When checked (default), products whose names contain a size measurement (e.g. <code className="rounded bg-muted px-0.5">100ml</code>, <code className="rounded bg-muted px-0.5">1.7 fl oz</code>) are skipped, assuming a size-free listing of the same product also exists. <strong>Uncheck</strong> when the site puts sizes in all product names — the scraper will collect everything and deduplicate by cleaned name, keeping the bare listing when both a sized and an unsized variant exist.
-            </span>
-          </label>
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              checked={headed}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setHeaded(e.target.checked)}
-              className="mt-1"
-            />
-            <span className="text-sm">
-              <strong>Open visible browser</strong> — Use when a site blocks headless Chrome (e.g. thoo.it returns 403). A visible Chrome window will open. If you still get 403, install <code className="rounded bg-muted px-0.5">undetected-chromedriver</code> and run again. Run locally; leave unchecked on a server.
-            </span>
-          </label>
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              checked={etsyHeaded}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setEtsyHeaded(e.target.checked)}
-              className="mt-1"
-            />
-            <span className="text-sm">
-              <strong>Etsy: open browser window</strong> — Use when Etsy shows CAPTCHA. A visible Chrome window will open so you can solve it. Run locally (e.g. <code className="rounded bg-muted px-0.5">npm run dev</code>); leave unchecked on a server.
-            </span>
-          </label>
-          <div className="mt-3 flex flex-wrap items-center gap-4">
-            <Field
-              label="Delay between collection URLs (ms)"
-              hint="e.g. 5000 for Lush to avoid ERR_CONNECTION_RESET. Leave empty for no delay."
-            >
-              <input
-                type="number"
-                min={0}
-                step={1000}
-                placeholder="none"
-                className={inputClass()}
-                value={delayBetweenUrlsMs}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setDelayBetweenUrlsMs(e.target.value)}
-              />
-            </Field>
-            <Field
-              label="Retry attempts per page"
-              hint="Retries when a page fails to load (e.g. connection reset). Leave empty for no retries."
-            >
-              <input
-                type="number"
-                min={1}
-                max={10}
-                placeholder="1"
-                className={inputClass()}
-                value={retryAttempts}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setRetryAttempts(e.target.value)}
-              />
-            </Field>
-          </div>
-        </section>
-
-        {/* Selectors */}
-        <section className="flex flex-col gap-4 rounded-lg border border-border p-4 bg-noir-dark border-noir-gold text-noir-gold-100">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            CSS Selectors
-          </h2>
-          <details className="text-xs text-muted-foreground">
-            <summary className="cursor-pointer font-medium text-foreground">Selector tips (avoid &quot;invalid selector&quot; errors)</summary>
-            <ul className="mt-2 list-inside list-disc space-y-1 pl-1">
-              <li>Use standard CSS only — no <code className="rounded bg-muted px-0.5">:contains()</code> or jQuery-only selectors.</li>
-              <li>Product link selector must match links on the collection page (e.g. <code className="rounded bg-muted px-0.5">a[href*=&apos;/products/&apos;]</code>). Inspect the page to see the real <code className="rounded bg-muted px-0.5">href</code> pattern.</li>
-              <li>No newlines or extra spaces inside a selector.</li>
-            </ul>
-          </details>
-
-          <Field
-            label="Product link selector *"
-            hint="Valid CSS only (no :contains()). Use a[href*='/products/'] (Shopify), a[href*='/product/'] (thoo.it, WooCommerce), or a[href*='/p/']. Inspect the collection page to see the link href pattern."
-          >
-            <input
-              className={inputClass("font-mono text-xs")}
-              required
-              value={productLinkSelector}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setProductLinkSelector(e.target.value)
-              }
-              placeholder="a[href*='/products/']"
-            />
-          </Field>
-
-          <Field label="Product name selector *" hint="Element containing the product name.">
-            <input
-              className={inputClass("font-mono text-xs")}
-              required
-              value={nameSelector}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setNameSelector(e.target.value)}
-            />
-          </Field>
-
-          <Field
-            label="Description selector *"
-            hint="Element containing the product description."
-          >
-            <input
-              className={inputClass("font-mono text-xs")}
-              required
-              value={descriptionSelector}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setDescriptionSelector(e.target.value)
-              }
-            />
-          </Field>
-
-          <Field
-            label="Notes selector (optional)"
-            hint="Element containing fragrance notes. If blank, the description selector text is used for note extraction."
-          >
-            <input
-              className={inputClass("font-mono text-xs")}
-              value={notesSelector}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setNotesSelector(e.target.value)
-              }
-              placeholder="Leave blank to use description"
-            />
-          </Field>
-
-          <Field
-            label="Image selector *"
-            hint="CSS for the main product image. For PhotoSwipe galleries use .pswp__zoom-wrap .pswp__img (scraper will open the lightbox to capture the full-size image)."
-          >
-            <input
-              className={inputClass("font-mono text-xs")}
-              required
-              value={imageSelector}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setImageSelector(e.target.value)}
-            />
-          </Field>
-        </section>
-
-        {/* Skip rules */}
-        <section className="flex flex-col gap-4 rounded-lg border border-border p-4 bg-noir-dark border-noir-gold text-noir-gold-100">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Skip rules
-          </h2>
-
-          <Field
-            label="Skip keywords"
-            hint="Comma-separated. Products whose names contain any of these words are skipped. Size patterns (30ml, 3.4 fl oz, etc.) are always skipped automatically."
-          >
-            <input
-              className={inputClass()}
-              value={skipKeywordsRaw}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setSkipKeywordsRaw(e.target.value)}
-            />
-          </Field>
-        </section>
-
-        {/* Title & description rules */}
-        <section className="flex flex-col gap-4 rounded-lg border border-border p-4 bg-noir-dark border-noir-gold text-noir-gold-100">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Title & description
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            Clean product names and choose how descriptions are generated. Notes are always extracted;
-            you can strip them from the source text and have LangGraph write new film noir themed copy.
-          </p>
-          <fieldset className="flex flex-col gap-2 border-0 p-0">
-            <legend className="text-sm font-medium">First title separator (<code className="text-xs"> - </code>, <code className="text-xs">–</code>, <code className="text-xs">—</code>, <code className="text-xs">~</code>, <code className="text-xs">.</code>, <code className="text-xs">|</code>)</legend>
-            <p className="text-xs text-muted-foreground">
-              Many shops use <code className="text-xs">Title - subtitle or size</code> (or an en/em dash instead of hyphen) or <code className="text-xs">Title | variant</code>. Choose which side to keep for the imported perfume name.
-            </p>
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="radio"
-                className="mt-0.5"
-                name="titleDashSegment"
-                checked={titleDashSegment === "none"}
-                onChange={() => setTitleDashSegment("none")}
-              />
-              <span className="flex flex-col gap-0.5">
-                <span className="text-sm">Keep full title</span>
-                <span className="text-xs text-muted-foreground">No split on the first separator.</span>
-              </span>
-            </label>
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="radio"
-                className="mt-0.5"
-                name="titleDashSegment"
-                checked={titleDashSegment === "before"}
-                onChange={() => setTitleDashSegment("before")}
-              />
-              <span className="flex flex-col gap-0.5">
-                <span className="text-sm">Use text before first separator</span>
-                <span className="text-xs text-muted-foreground">
-                  e.g. &quot;Velvet Vanilla - 50ml&quot; → &quot;Velvet Vanilla&quot;
-                </span>
-              </span>
-            </label>
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="radio"
-                className="mt-0.5"
-                name="titleDashSegment"
-                checked={titleDashSegment === "after"}
-                onChange={() => setTitleDashSegment("after")}
-              />
-              <span className="flex flex-col gap-0.5">
-                <span className="text-sm">Use text after first separator</span>
-                <span className="text-xs text-muted-foreground">
-                  e.g. &quot;House - Night Rose&quot; → &quot;Night Rose&quot;
-                </span>
-              </span>
-            </label>
-          </fieldset>
-          <fieldset className="flex flex-col gap-2 border-0 p-0">
-            <legend className="text-sm font-medium">First colon in product name (<code className="text-xs">:</code>)</legend>
-            <p className="text-xs text-muted-foreground">
-              Use this independently from the separator rule above for formats like <code className="text-xs">Title: Subtitle</code>.
-            </p>
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="radio"
-                className="mt-0.5"
-                name="titleColonSegment"
-                checked={titleColonSegment === "none"}
-                onChange={() => setTitleColonSegment("none")}
-              />
-              <span className="flex flex-col gap-0.5">
-                <span className="text-sm">Keep full title</span>
-                <span className="text-xs text-muted-foreground">No split on the first colon.</span>
-              </span>
-            </label>
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="radio"
-                className="mt-0.5"
-                name="titleColonSegment"
-                checked={titleColonSegment === "before"}
-                onChange={() => setTitleColonSegment("before")}
-              />
-              <span className="flex flex-col gap-0.5">
-                <span className="text-sm">Use text before first colon</span>
-                <span className="text-xs text-muted-foreground">
-                  e.g. &quot;Velvet Vanilla: extrait&quot; → &quot;Velvet Vanilla&quot;
-                </span>
-              </span>
-            </label>
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="radio"
-                className="mt-0.5"
-                name="titleColonSegment"
-                checked={titleColonSegment === "after"}
-                onChange={() => setTitleColonSegment("after")}
-              />
-              <span className="flex flex-col gap-0.5">
-                <span className="text-sm">Use text after first colon</span>
-                <span className="text-xs text-muted-foreground">
-                  e.g. &quot;House: Night Rose&quot; → &quot;Night Rose&quot;
-                </span>
-              </span>
-            </label>
-          </fieldset>
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              className="mt-0.5"
-              checked={titleTakeBeforeFirstComma}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                const checked = e.target.checked
-                setTitleTakeBeforeFirstComma(checked)
-                if (checked) setTitleTakeAfterFirstComma(false)
-              }}
-            />
-            <span className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium">Use text before first comma</span>
-              <span className="text-xs text-muted-foreground">
-                Independent control. e.g. &quot;Brand, Night Rose&quot; → &quot;Brand&quot;.
-              </span>
-            </span>
-          </label>
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              className="mt-0.5"
-              checked={titleTakeAfterFirstComma}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                const checked = e.target.checked
-                setTitleTakeAfterFirstComma(checked)
-                if (checked) setTitleTakeBeforeFirstComma(false)
-              }}
-            />
-            <span className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium">Use text after first comma</span>
-              <span className="text-xs text-muted-foreground">
-                Independent control. e.g. &quot;Brand, Night Rose&quot; → &quot;Night Rose&quot;.
-              </span>
-            </span>
-          </label>
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              className="mt-0.5"
-              checked={titleStripNumbers}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setTitleStripNumbers(e.target.checked)
-              }
-            />
-            <span className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium">Strip numbers and sizes from name</span>
-              <span className="text-xs text-muted-foreground">
-                Remove 30ml, 1.7 fl oz, etc. from product names.
-              </span>
-            </span>
-          </label>
-          <Field
-            label="Words to omit from title"
-            hint="Comma-separated. These words/phrases are stripped from product names (case-insensitive). Size patterns are already stripped by the option above."
-          >
-            <input
-              className={inputClass()}
-              value={titleOmitWordsRaw}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setTitleOmitWordsRaw(e.target.value)}
-            />
-          </Field>
-          <Field
-            label="Note inference mode"
-            hint="Standard may infer notes from name/theme when the page has no list. Strict keeps only merchant-listed notes (regex + optional PDP fetch); some rows may have empty notes."
-          >
-            <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
-              <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="radio"
-                  name="noteInferenceMode"
-                  checked={noteInferenceMode === "standard"}
-                  onChange={() => setNoteInferenceMode("standard")}
-                />
-                <span className="text-sm">Standard</span>
-              </label>
-              <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="radio"
-                  name="noteInferenceMode"
-                  checked={noteInferenceMode === "strict"}
-                  onChange={() => setNoteInferenceMode("strict")}
-                />
-                <span className="text-sm">Strict</span>
-              </label>
-            </div>
-          </Field>
-          <Field
-            label="Min flat note list size (optional)"
-            hint="1–50. Merchant flat lists with at least this many items skip merge LLM. Leave blank for default (2)."
-          >
-            <input
-              className={inputClass()}
-              inputMode="numeric"
-              value={minConfidentFlatNotes}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setMinConfidentFlatNotes(e.target.value.replace(/\D/g, ""))
-              }
-              placeholder="2"
-            />
-          </Field>
-          <Field
-            label="Extraction / merge / translate model"
-            hint="Blank uses OPENAI_NOTES_PIPELINE_MODEL from env, then gpt-4o-mini."
-          >
-            <select
-              className={inputClass()}
-              value={notesPipelineModel}
-              onChange={(e: ChangeEvent<HTMLSelectElement>) => setNotesPipelineModel(e.target.value)}
-            >
-              <option value="">Env default</option>
-              {NOTES_PIPELINE_MODEL_ALLOWLIST.map(m => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field
-            label="Noir description model"
-            hint="Blank uses OPENAI_NOTES_PIPELINE_NOIR_MODEL or the extraction model."
-          >
-            <select
-              className={inputClass()}
-              value={noirPipelineModel}
-              onChange={(e: ChangeEvent<HTMLSelectElement>) => setNoirPipelineModel(e.target.value)}
-            >
-              <option value="">Env / extraction default</option>
-              {NOTES_PIPELINE_MODEL_ALLOWLIST.map(m => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-          </Field>
-          <Field
-            label="Bulk LLM note validator"
-            hint="On (default) runs a single classification call over the union of extracted notes and drops prose / sensory fragments (e.g. 'a sweet', 'glowing amber warmth', 'sunlit burst of melon'). Off disables it."
-          >
-            <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
-              <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="radio"
-                  name="noteValidationMode"
-                  checked={noteValidationMode === "llm"}
-                  onChange={() => setNoteValidationMode("llm")}
-                />
-                <span className="text-sm">On (LLM validator)</span>
-              </label>
-              <label className="flex cursor-pointer items-center gap-2">
-                <input
-                  type="radio"
-                  name="noteValidationMode"
-                  checked={noteValidationMode === "off"}
-                  onChange={() => setNoteValidationMode("off")}
-                />
-                <span className="text-sm">Off</span>
-              </label>
-            </div>
-          </Field>
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              className="mt-0.5"
-              checked={externalNoteRescue}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setExternalNoteRescue(e.target.checked)
-              }
-            />
-            <span className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium">External note rescue (reviewed candidates)</span>
-              <span className="text-xs text-muted-foreground">
-                When merchant notes are missing, search Fragrantica, Basenotes, and Parfumo for preview candidates. Never overwrites high-confidence merchant notes.
-              </span>
-            </span>
-          </label>
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
-              className="mt-0.5"
-              checked={generateNoirDescriptions}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                setGenerateNoirDescriptions(e.target.checked)
-              }
-            />
-            <span className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium">Generate film noir themed descriptions</span>
-              <span className="text-xs text-muted-foreground">
-                Use notes + original copy to write unique, sexy, mysterious descriptions. Uncheck to
-                keep original text with note phrases removed.
-              </span>
-            </span>
-          </label>
-        </section>
-
-        <div className="flex flex-wrap gap-2">
-          <Button type="submit" variant="primary" disabled={scraping}>
-            {scraping ? "Running scraper…" : "Run scraper"}
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={!houseName.trim() || scraping}
-            onClick={async () => {
-              const collectionUrls = collectionUrlsRaw
-                .split(/\n|,/)
-                .map(u => u.trim())
-                .filter(u => /^https?:\/\//i.test(u))
-              const body: ScraperRunRequest = {
-                houseName,
-                collectionUrls,
-                productLinkSelector,
-                nameSelector,
-                descriptionSelector,
-                notesSelector: notesSelector.trim() || undefined,
-                imageSelector,
-                skipKeywords: skipKeywordsRaw.split(",").map(k => k.trim()).filter(Boolean),
-                baseUrl: baseUrl || undefined,
-                titleDashSegment,
-                titleColonSegment,
-                titleTakeAfterFirstComma,
-                titleTakeBeforeFirstComma,
-                titleStripNumbers,
-                discoveryMode,
-              }
-              const csrf = getTokenWithFallback()
-              const res = await fetch("/api/admin/scraper/sources", {
-                method: "POST",
-                headers: addToHeaders({ "Content-Type": "application/json" }),
-                credentials: "include",
-                body: JSON.stringify({
-                  config: body,
-                  platformType: discoveryMode,
-                  ...(csrf ? { _csrf: csrf } : {}),
-                }),
-              })
-              if (res.ok) {
-                const data = (await res.json()) as { source?: ScraperSourcePreset }
-                if (data.source) setSavedSources(prev => [data.source!, ...prev])
-              }
-            }}
-          >
-            Save preset
-          </Button>
-        </div>
+        <ScraperFormActions
+          scraping={scraping}
+          houseName={houseName}
+          onSavePreset={handleSavePreset}
+        />
       </form>
 
-      {/* Running indicator + live progress */}
       {scraping && (
-        <div className="mt-8 rounded-lg border p-6 bg-noir-dark border-noir-gold text-noir-gold-100">
-          <p className="animate-pulse font-medium text-center text-sm">
-            Scraper is running — this may take several minutes for large houses…
-          </p>
-          <div className="mt-3 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <p className="font-mono text-xs text-muted-foreground">
-              Elapsed: {Math.floor(scrapeElapsedSeconds / 60)}m {scrapeElapsedSeconds % 60}s
-            </p>
-            <Button type="button" variant="secondary" size="sm" onClick={handleCancelScrape}>
-              Cancel scrape
-            </Button>
-          </div>
-          {scrapeProgressLog.length > 0 && (
-            <div className="mt-4 rounded border border-border bg-black/30 p-3">
-              <p className="mb-2 text-xs font-medium text-muted-foreground">Progress</p>
-              <pre className="max-h-48 overflow-y-auto font-mono text-xs whitespace-pre-wrap break-words">
-                {scrapeProgressLog.join("\n")}
-              </pre>
-            </div>
-          )}
-          <p className="mt-3 text-center text-xs font-medium text-amber-600 dark:text-amber-400">
-            Do not close this tab or navigate away — you will lose the results.
-          </p>
-        </div>
+        <ScraperRunningIndicator
+          scrapeElapsedSeconds={scrapeElapsedSeconds}
+          scrapeProgressLog={scrapeProgressLog}
+          onCancelScrape={handleCancelScrape}
+        />
       )}
 
-      {/* Restore previous run — avoid re-scraping after tab close or failed import */}
       {savedScrapeResult && !scrapeResult && !scraping && (
-        <div className="mt-8 rounded-lg border border-green-600/50 bg-green-950/20 p-4 text-sm text-green-800 dark:text-green-200">
-          <p className="font-medium">Previous scrape results saved</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            You have results from a previous run ({savedScrapeResult.scrapedCount} products). Restore them to confirm &
-            import without re-running the scraper.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              onClick={() => {
-                setScrapeResult(savedScrapeResult)
-                clearSavedScrapeResult()
-                setSavedScrapeResult(null)
-              }}
-            >
-              Restore previous results
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                clearSavedScrapeResult()
-                setSavedScrapeResult(null)
-              }}
-            >
-              Clear saved results
-            </Button>
-          </div>
-        </div>
+        <ScraperSavedResultsBanner
+          savedScrapeResult={savedScrapeResult}
+          onRestore={() => {
+            setScrapeResult(savedScrapeResult)
+            clearSavedScrapeResult()
+            setSavedScrapeResult(null)
+          }}
+          onClear={() => {
+            clearSavedScrapeResult()
+            setSavedScrapeResult(null)
+          }}
+        />
       )}
 
-      {/* Scrape error + troubleshooting */}
       {scrapeError && (
-        <div className="mt-8 space-y-4 bg-noir-dark border border-noir-gold text-noir-gold-100">
-          {connectionCheck === "ok" && (scrapeError.includes("Failed to fetch") || scrapeError.includes("timed out")) && (
-            <div className="rounded-lg border border-amber-500/60 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-200">
-              <p className="font-semibold">Server is reachable — this was likely a timeout</p>
-              <p className="mt-1 text-xs">
-                The run took too long and the connection was closed before the server could respond. Use <strong>1–2 collection URLs only</strong> to test; if that works, run in smaller batches (e.g. one or two collection pages per run) so each run finishes in a few minutes.
-              </p>
-            </div>
-          )}
-          <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
-            <p className="font-semibold">Scraper error</p>
-            <pre className="mt-1 whitespace-pre-wrap text-xs">{scrapeError}</pre>
-            {scrapeError.toLowerCase().includes("invalid selector") && (
-              <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">
-                Fix: use a valid CSS selector (no spaces/newlines, no :contains()). Inspect the collection page in
-                DevTools and match the actual link structure — e.g. a[href*=&apos;/products/&apos;] for Shopify, or
-                a[href*=&apos;/p/&apos;] for some other sites.
-              </p>
-            )}
-          </div>
-          <div className="rounded-lg border border-border bg-muted/20 p-4 text-sm">
-            <p className="font-semibold text-foreground">Troubleshooting</p>
-            <ol className="mt-2 list-inside list-decimal space-y-1 text-muted-foreground">
-              <li>Confirm the dev server is running (e.g. <code className="rounded bg-muted px-1">npm run dev</code>) and check that terminal for errors.</li>
-              <li>Use <strong>Check connection</strong> below to see if the API is reachable from this browser.</li>
-              <li>If the run was long, the request may have timed out — try with fewer collection URLs (e.g. one page) first.</li>
-              <li>Open <a href="/api/admin/scraper/health" target="_blank" rel="noopener noreferrer" className="text-primary underline">/api/admin/scraper/health</a> in a new tab: you should see <code className="rounded bg-muted px-1">{"{ \"ok\": true }"}</code> when signed in as admin.</li>
-            </ol>
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={handleCheckConnection}
-                disabled={connectionCheck === "checking"}
-              >
-                {connectionCheck === "checking" ? "Checking…" : "Check connection"}
-              </Button>
-              {connectionCheck === "ok" && (
-                <span className="text-sm text-green-600 dark:text-green-400">Connection OK — server is reachable.</span>
-              )}
-              {connectionCheck && connectionCheck !== "checking" && connectionCheck !== "ok" && (
-                <span className="text-sm text-destructive">Connection failed: {connectionCheck}</span>
-              )}
-            </div>
-          </div>
-        </div>
+        <ScraperErrorPanel
+          scrapeError={scrapeError}
+          connectionCheck={connectionCheck}
+          onCheckConnection={handleCheckConnection}
+        />
       )}
 
-      {/* ------------------------------------------------------------------ */}
-      {/* Step 2: Review + confirm import (always show when we have a result)  */}
-      {/* ------------------------------------------------------------------ */}
       {scrapeResult && (
-        <div className="mt-8 flex flex-col gap-6 ">
-          {/* Summary bar */}
-          <div className="rounded-lg border border-border p-4 bg-noir-dark border-noir-gold text-noir-gold-100">
-            <h2 className="mb-3 text-lg font-semibold">Scrape results</h2>
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
-              <div>
-                <dt className="text-muted-foreground">Products found</dt>
-                <dd className="text-2xl font-bold text-noir-gold-500">{scrapeResult.scrapedCount}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Notes extracted</dt>
-                <dd className="text-2xl font-bold text-noir-gold-500">
-                  {notesExtractedCount}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Scrape errors</dt>
-                <dd
-                  className={`text-2xl font-bold ${scrapeResult.errors.length > 0 ? "text-destructive" : ""}`}
-                >
-                  {scrapeResult.errors.length}
-                </dd>
-              </div>
-            </dl>
-
-            {scrapeResult.errors.length > 0 && (
-              <div className="mt-3 rounded border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
-                <p className="font-medium">Messages</p>
-                <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs">
-                  {scrapeResult.errors.map((e, i) => (
-                    <li key={i}>{e}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {scrapeResult.batchWarnings && scrapeResult.batchWarnings.length > 0 && (
-              <div className="mt-3 rounded border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200">
-                <p className="font-medium">Batch warnings</p>
-                <ul className="mt-1 list-inside list-disc space-y-0.5 text-xs">
-                  {scrapeResult.batchWarnings.map((w, i) => (
-                    <li key={i}>{w}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {scrapeResult.scraperLog && (
-              <details className="mt-3" open={scrapeResult.scrapedCount === 0}>
-                <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
-                  Scraper log (Python stderr)
-                  {scrapeResult.scrapedCount === 0 && (
-                    <span className="ml-2 text-amber-600 dark:text-amber-400">(expanded — no products found, check log for why)</span>
-                  )}
-                </summary>
-                <pre className="mt-2 max-h-48 overflow-y-auto rounded border border-border bg-muted/30 p-2 font-mono text-xs whitespace-pre-wrap">
-                  {scrapeResult.scraperLog}
-                </pre>
-              </details>
-            )}
-
-            {allRecords.length > 0 && (
-              <Button
-                variant="secondary"
-                className="mt-4"
-                onClick={handleDownloadCsv}
-                type="button"
-              >
-                Download CSV
-              </Button>
-            )}
-          </div>
-
-          {allRecords.length > 0 && (
-            <div className="rounded-lg border border-border bg-noir-dark border-noir-gold text-noir-gold-100">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
-                <h3 className="text-sm font-semibold">Products preview</h3>
-                <div className="flex flex-wrap items-center gap-2">
-                  <select
-                    className="rounded border border-input bg-background px-2 py-1 text-xs"
-                    value={previewFilter}
-                    onChange={(e: ChangeEvent<HTMLSelectElement>) =>
-                      setPreviewFilter(e.target.value as PreviewFilter)
-                    }
-                  >
-                    <option value="all">All ({allRecords.length})</option>
-                    <option value="empty_notes">Empty notes</option>
-                    <option value="low_confidence">Low note confidence</option>
-                    <option value="missing_image">Missing image</option>
-                    <option value="duplicate_risk">Duplicate risk</option>
-                    <option value="needs_review">Needs review / skip</option>
-                  </select>
-                  <span className="text-xs text-muted-foreground">
-                    Showing {records.length} of {allRecords.length}
-                  </span>
-                </div>
-              </div>
-              <div className="max-h-72 overflow-y-auto">
-                <table className="w-full text-xs">
-                  <thead className="sticky top-0 bg-background">
-                    <tr className="border-b border-border text-left text-muted-foreground">
-                      <th className="px-4 py-2 font-medium">Name</th>
-                      <th className="px-4 py-2 font-medium">Conf.</th>
-                      <th className="px-4 py-2 font-medium">Bucket</th>
-                      <th className="px-4 py-2 font-medium">Dup.</th>
-                      <th className="px-4 py-2 font-medium">Open notes</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {previewRows.map((row, i) => (
-                      <tr key={i} className="border-b border-border last:border-0">
-                        <td className="max-w-[160px] truncate px-4 py-2 font-medium">
-                          {row.detailURL ? (
-                            <a
-                              href={row.detailURL}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="underline hover:text-primary"
-                            >
-                              {row.name}
-                            </a>
-                          ) : (
-                            row.name
-                          )}
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-2">
-                          <span
-                            className={`inline-block rounded px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide ${noteSourceBadgeClass(row.noteSource)}`}
-                          >
-                            {row.noteConfidence ?? row.noteSource ?? "—"}
-                          </span>
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-2 text-muted-foreground">
-                          {row.importBucket ?? "—"}
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-2 text-muted-foreground">
-                          {row.duplicateRisk && row.duplicateRisk !== "none"
-                            ? row.duplicateRisk
-                            : "—"}
-                        </td>
-                        <td className="px-4 py-2 text-muted-foreground">
-                          {row.notesPreview.length > 0 ? row.notesPreview.join(", ") : (
-                            <span className="italic opacity-50">none extracted</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {allRecords.length > 0 && !importResult && (
-            <div className="rounded-lg border border-border p-4 bg-noir-dark border-noir-gold text-noir-gold-100">
-              <h3 className="mb-1 text-base font-semibold">Import to database</h3>
-              <p className="mb-4 text-sm text-muted-foreground">
-                Review the products above, then confirm to write them to the database.
-                This will create or update Perfume and PerfumeHouse records.
-              </p>
-
-              <label className="mb-3 flex cursor-pointer items-start gap-3">
-                <input
-                  type="checkbox"
-                  className="mt-0.5"
-                  checked={overwriteImageUrls}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setOverwriteImageUrls(e.target.checked)
-                  }
-                />
-                <span className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium">Overwrite existing image URLs</span>
-                  <span className="text-xs text-muted-foreground">
-                    When on, import replaces current image URLs with scraped ones. When off, existing images are left unchanged (new records still get scraped images).
-                  </span>
-                </span>
-              </label>
-
-              <label className="mb-4 flex cursor-pointer items-start gap-3">
-                <input
-                  type="checkbox"
-                  className="mt-0.5"
-                  checked={uploadImagesToR2}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setUploadImagesToR2(e.target.checked)
-                  }
-                />
-                <span className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium">Upload images to R2</span>
-                  <span className="text-xs text-muted-foreground">
-                    Upload all imported images to your R2 bucket and update DB URLs. Images already on R2 are skipped automatically. Keep this on to ensure every perfume is served from your own CDN.
-                  </span>
-                </span>
-              </label>
-
-              <label className="mb-4 flex cursor-pointer items-start gap-3">
-                <input
-                  type="checkbox"
-                  className="mt-0.5"
-                  checked={allowHighDuplicateRisk}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setAllowHighDuplicateRisk(e.target.checked)
-                  }
-                />
-                <span className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium">Import possible duplicates</span>
-                  <span className="text-xs text-muted-foreground">
-                    When off, rows flagged with high duplicate risk are skipped during import.
-                  </span>
-                </span>
-              </label>
-
-              {!importConfirmed ? (
-                <Button
-                  type="button"
-                  variant="primary"
-                  onClick={() => setImportConfirmed(true)}
-                  disabled={importing}
-                >
-                  Confirm import ({allRecords.length} products)
-                </Button>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <p className="text-sm font-medium">
-                    Are you sure? This will write {allRecords.length} records to the database.
-                  </p>
-                  <Button
-                    type="button"
-                    variant="primary"
-                    onClick={handleImport}
-                    disabled={importing}
-                  >
-                    {importing ? "Importing…" : "Yes, import"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => setImportConfirmed(false)}
-                    disabled={importing}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Import error */}
-          {importError && (
-            <div className="rounded-lg border border-destructive bg-destructive/10 p-4 text-sm text-destructive">
-              <p className="font-semibold">Import error</p>
-              <pre className="mt-1 whitespace-pre-wrap text-xs">{importError}</pre>
-            </div>
-          )}
-
-          {/* Import success */}
-          {importResult && (
-            <div className="rounded-lg border border-border p-4 bg-noir-dark border-noir-gold text-noir-gold-100">
-              <h3 className="mb-3 text-base font-semibold">Import complete</h3>
-              <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
-                <div>
-                  <dt className="text-muted-foreground">Imported</dt>
-                  <dd className="text-2xl font-bold">{importResult.importedCount}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">R2 uploads</dt>
-                  <dd className="text-2xl font-bold">{importResult.r2UploadCount}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Errors</dt>
-                  <dd
-                    className={`text-2xl font-bold ${importResult.errors.length > 0 ? "text-destructive" : ""}`}
-                  >
-                    {importResult.errors.length}
-                  </dd>
-                </div>
-              </dl>
-
-              {importResult.errors.length > 0 && (
-                <details className="mt-3">
-                  <summary className="cursor-pointer text-xs text-muted-foreground">
-                    Show import errors
-                  </summary>
-                  <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-destructive">
-                    {importResult.errors.map((e, i) => (
-                      <li key={i}>{e}</li>
-                    ))}
-                  </ul>
-                </details>
-              )}
-
-              {uploadImagesToR2 && (
-                <div className="mt-4 rounded-md border border-border/70 bg-background/30 p-3">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <p className="text-xs text-muted-foreground">
-                      If some image hosts returned 403, retry R2 uploads without re-importing notes/data.
-                    </p>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={handleRetryR2Uploads}
-                      disabled={retryingR2 || importing || !scrapeResult?.records?.length}
-                    >
-                      {retryingR2 ? "Retrying R2 uploads..." : "Retry failed R2 uploads"}
-                    </Button>
-                  </div>
-
-                  {retryR2Error && (
-                    <pre className="mt-2 whitespace-pre-wrap text-xs text-destructive">{retryR2Error}</pre>
-                  )}
-
-                  {retryR2Result && (
-                    <div className="mt-2 text-xs text-foreground">
-                      Retried {retryR2Result.attemptedCount} images: {retryR2Result.uploadedCount} uploaded,{" "}
-                      {retryR2Result.skippedCount} skipped, {retryR2Result.errors.length} errors.
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        <ScrapeResultsPanel
+          scrapeResult={scrapeResult}
+          notesExtractedCount={notesExtractedCount}
+          allRecords={allRecords}
+          records={records}
+          previewFilter={previewFilter}
+          setPreviewFilter={setPreviewFilter}
+          previewRows={previewRows}
+          onDownloadCsv={handleDownloadCsv}
+          importResult={importResult}
+          importError={importError}
+          overwriteImageUrls={overwriteImageUrls}
+          setOverwriteImageUrls={setOverwriteImageUrls}
+          uploadImagesToR2={uploadImagesToR2}
+          setUploadImagesToR2={setUploadImagesToR2}
+          allowHighDuplicateRisk={allowHighDuplicateRisk}
+          setAllowHighDuplicateRisk={setAllowHighDuplicateRisk}
+          importConfirmed={importConfirmed}
+          setImportConfirmed={setImportConfirmed}
+          importing={importing}
+          onImport={handleImport}
+          retryingR2={retryingR2}
+          retryR2Error={retryR2Error}
+          retryR2Result={retryR2Result}
+          onRetryR2Uploads={handleRetryR2Uploads}
+        />
       )}
     </div>
   )

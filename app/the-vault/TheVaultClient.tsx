@@ -17,6 +17,7 @@ import {
   sortItems,
   type SortOption,
 } from "@/utils/sortUtils"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const ROUTE_PATH = "/the-vault"
 const BANNER_IMAGE = "/images/vault.webp"
@@ -159,13 +160,14 @@ const TheVaultClient = ({
   }
 
   return (
-    <section>
+    <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
         heading={t("heading")}
         subheading={t("subheading")}
       />
 
+      <PageWrapper>
       <DataFilters
         searchType="perfume"
         sortOptions={sortOptions}
@@ -195,8 +197,9 @@ const TheVaultClient = ({
         onPageChange={goToPage}
         onPrefetchNext={onPrefetchNext}
         onPrefetchPage={onPrefetchPage}
-      />
-    </section>
+        />
+      </PageWrapper>
+    </main>
   )
 }
 

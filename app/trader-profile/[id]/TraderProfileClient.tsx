@@ -26,6 +26,7 @@ import type { ScentJourneyItem } from "@/models/scent-journey.server"
 import type { TraderWishlistOverlap } from "@/models/wishlist-matching.server"
 import { TraderProfileAside } from "./aside/aside"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const DESKTOP_MEDIA = "(min-width: 1024px)"
 const BANNER_IMAGE = "/images/trade.webp"
@@ -76,7 +77,7 @@ export default function TraderProfileClient({
         : new Date().toISOString()
 
   return (
-    <section>
+    <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
         heading={t("heading", { traderName })}
@@ -103,7 +104,8 @@ export default function TraderProfileClient({
         />
       </TitleBanner>
 
-      <div className="inner-container grid grid-cols-1 items-start gap-8 p-6 md:grid-cols-2 xl:grid-cols-3">
+      <PageWrapper>
+      <div className="grid grid-cols-1 items-start gap-8 px-6 md:grid-cols-2 xl:grid-cols-3">
         {isLgView ? (
           <TraderProfileAside
             trader={trader}
@@ -235,6 +237,7 @@ export default function TraderProfileClient({
           </div>
         </div>
       </div>
-    </section>
+      </PageWrapper>
+    </main>
   )
 }

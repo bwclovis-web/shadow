@@ -44,7 +44,7 @@ const BulkInventoryGrid = ({
 
   return (
     <section
-      className="inner-container mx-auto my-6 noir-border p-4 md:p-6 space-y-4"
+      className="mx-auto mb-6 noir-border p-4 md:p-6 space-y-4"
       aria-labelledby="bulk-inventory-heading"
       data-testid="bulk-inventory-grid"
     >

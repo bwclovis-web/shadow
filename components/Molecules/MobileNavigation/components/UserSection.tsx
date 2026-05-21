@@ -28,7 +28,7 @@ const UserSection = ({ user, onNavClick }: UserSectionProps) => {
           onClick={onNavClick}
           className="flex items-center gap-3 text-noir-gold hover:text-noir-light font-semibold text-lg py-4 px-4 border border-transparent transition-colors duration-400 rounded-lg hover:bg-noir-black/30 mobile-touch-target"
         >
-          <FaUser size={20} />
+          <FaUser size={20} aria-hidden focusable={false} />
           <span>{t("signIn")}</span>
         </Link>
       ) : (

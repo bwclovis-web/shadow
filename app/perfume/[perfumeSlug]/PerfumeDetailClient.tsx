@@ -23,11 +23,13 @@ import { usePerfume } from "@/hooks/usePerfume"
 import { useSessionStore } from "@/hooks/sessionStore"
 import { useDeletePerfume } from "@/lib/mutations/perfumes"
 import type { RecommendationPerfume } from "@/services/recommendations"
+import { perfumeImageTransitionName } from "@/utils/view-transition-names"
 
 import { RelatedArticlesSection } from "@/components/Containers/Blog/RelatedArticlesSection"
 import FollowButton from "@/components/Containers/Follow/FollowButton"
 import SimilarPerfumesCarousel from "@/components/Containers/Recommendations/SimilarPerfumesCarousel"
 import type { ArticleListItem } from "@/lib/sanity/types"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const VAULT_PATH = "/the-vault"
 
@@ -106,13 +108,13 @@ const PerfumeDetailClient = ({
   }
 
   return (
-    <section className="relative z-10 min-h-screen">
+    <main id="main-content" className="relative z-10 min-h-screen">
       <HeroHeader
         title={perfume.name}
         image={perfume.image ?? undefined}
         imageAlt={perfume.name}
         transitionKey={perfume.id}
-        viewTransitionName={`perfume-image-${perfume.id}`}
+        viewTransitionName={perfumeImageTransitionName(perfume.id)}
       >
         <h1 className="capitalize">{perfume.name}</h1>
         <p className="text-lg tracking-wide mt-2 text-noir-gold-500">
@@ -126,7 +128,8 @@ const PerfumeDetailClient = ({
         </p>
       </HeroHeader>
 
-      <div className="flex flex-col gap-6 mx-auto inner-container items-center">
+    <PageWrapper> 
+      <div className="flex flex-col gap-6 mx-auto items-center">
         <div className="w-full flex justify-end px-2">
           <FollowButton
             targetType="perfume"
@@ -204,10 +207,10 @@ const PerfumeDetailClient = ({
             selectedLetter={selectedLetter}
           />
         )}
-
         <RelatedArticlesSection articles={relatedArticles} />
       </div>
-    </section>
+      </PageWrapper>
+    </main>
   )
 }
 

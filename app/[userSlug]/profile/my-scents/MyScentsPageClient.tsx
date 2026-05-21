@@ -42,6 +42,8 @@ import type { TraderWantingUserListingEnriched } from "@/services/trade-match"
 import type { MyScentsView, UserPerfumeForClient } from "@/types/my-scents-client"
 import type { SortOption } from "@/utils/sortUtils"
 import { styleMerge } from "@/utils/styleUtils"
+import { userBottleImageTransitionName } from "@/utils/view-transition-names"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
 const USER_PERFUMES_API = "/api/user-perfumes"
@@ -407,14 +409,14 @@ const MyScentsPageClient = ({
   )
 
   return (
-    <section>
+    <main id="main-content">
       <TitleBanner
         imagePos="object-bottom"
         image={bannerImage}
         heading={t("heading")}
         subheading={t("subheading")}
       >
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 mx-auto max-w-max">
           <AddToCollectionModal
             onAddedToCollection={refreshCollection}
             onOptimisticAddToCollection={handleOptimisticAdd}
@@ -439,6 +441,7 @@ const MyScentsPageClient = ({
           </Button>
         </div>
       </TitleBanner>
+      <PageWrapper>
       {bulkAddOpen && (
         <BulkInventoryGrid
           existingPerfumeIds={existingPerfumeIds}
@@ -446,6 +449,7 @@ const MyScentsPageClient = ({
           onAllSaved={refreshCollection}
         />
       )}
+      
       {csvImportOpen && (
         <CsvImportPanel
           onClose={() => setCsvImportOpen(false)}
@@ -453,7 +457,7 @@ const MyScentsPageClient = ({
         />
       )}
       <WishlistDemandSection demand={wishlistDemand} />
-      <div className="noir-border relative inner-container mx-auto my-6 p-4">
+      <div className="noir-border relative mx-auto p-4">
         <MyScentsViewTabs
           activeView={activeView}
           onViewChange={setActiveView}
@@ -629,7 +633,7 @@ const MyScentsPageClient = ({
                         sizes="(max-width: 768px) 50vw, 33vw"
                         style={
                           {
-                            viewTransitionName: `perfume-image-${userPerfume.id}`,
+                            viewTransitionName: userBottleImageTransitionName(userPerfume.id),
                           } as React.CSSProperties
                         }
                       />
@@ -655,8 +659,9 @@ const MyScentsPageClient = ({
             </>
           }
         />
-      </div>
-    </section>
+        </div>
+      </PageWrapper>
+    </main>
   )
 }
 

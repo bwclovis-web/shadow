@@ -32,6 +32,7 @@ import { compareIdsExceedMax, normalizeCompareIds } from "@/utils/compare-ids"
 import { DISCOVERY_QUERY } from "@/utils/discovery-filters"
 import { normalizeRemoteImageSrc, styleMerge, validImageRegex } from "@/utils/styleUtils"
 import { perfumeImageTransitionName } from "@/utils/view-transition-names"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/compare.png"
 const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
@@ -318,10 +319,10 @@ function ComparePageInner({ userId }: { userId: string | null }) {
   }, [orderedIds, pathname])
 
   return (
-    <section className="relative z-10 min-h-screen pb-4">
+    <main id="main-content">
       <TitleBanner image={BANNER_IMAGE} heading={t("pageHeading")} subheading={t("pageSubheading")} />
 
-      <div className="inner-container py-8">
+      <PageWrapper>
         {invalidLinkNotice ? (
           <div
             className="max-w-6xl mx-auto mb-4 rounded-sm border border-amber-600/40 bg-amber-900/20 px-4 py-3 text-sm text-noir-gold-100"
@@ -409,8 +410,8 @@ function ComparePageInner({ userId }: { userId: string | null }) {
             ))}
           </div>
         )}
-      </div>
-    </section>
+      </PageWrapper>
+    </main>
   )
 }
 

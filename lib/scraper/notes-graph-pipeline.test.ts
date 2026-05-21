@@ -11,7 +11,7 @@ vi.mock("@langchain/openai", () => ({
 }))
 
 import { scrapedItemsNeedPatternEtsyEnrichment } from "./map-scraped-items"
-import { canonicalizeNote } from "./canonical-notes"
+import { canonicalizeNote, explodeSpaceSeparatedNoteBlob } from "./canonical-notes"
 import {
   computeBatchNoteUniformityWarnings,
   extractNotesForItems,
@@ -35,6 +35,51 @@ describe("sanitizeCopyForNotePipeline", () => {
 
   it("fixes common LLM typo I cone → I come", () => {
     expect(sanitizeCopyForNotePipeline("I cone to this fragrance.")).toBe("I come to this fragrance.")
+  })
+})
+
+describe("explodeSpaceSeparatedNoteBlob", () => {
+  it("splits space-joined single-word materials (Amaterasu base)", () => {
+    expect(explodeSpaceSeparatedNoteBlob("vanilla caramel coffee litchi incense praline")).toEqual([
+      "vanilla",
+      "caramel",
+      "coffee",
+      "litchi",
+      "incense",
+      "praline",
+    ])
+  })
+
+  it("splits space-joined top notes (Amaterasu open)", () => {
+    expect(explodeSpaceSeparatedNoteBlob("pear bergamot tangerine")).toEqual([
+      "pear",
+      "bergamot",
+      "tangerine",
+    ])
+  })
+
+  it("explodeSpaceSeparatedNoteBlob splits Milk Orchid space-joined materials", () => {
+    expect(explodeSpaceSeparatedNoteBlob("coconut fig milk almond blossom")).toEqual([
+      "coconut",
+      "fig",
+      "milk",
+      "almond",
+      "blossom",
+    ])
+    expect(explodeSpaceSeparatedNoteBlob("vanilla orchid magnolia")).toEqual([
+      "vanilla",
+      "orchid",
+      "magnolia",
+    ])
+  })
+
+  it("explodeSpaceSeparatedNoteBlob splits decorative ✧ separators", () => {
+    expect(explodeSpaceSeparatedNoteBlob("vanilla ✧ mimosa")).toEqual(["vanilla", "mimosa"])
+    expect(explodeSpaceSeparatedNoteBlob("amber ✧ musk ✧ vetiver")).toEqual([
+      "amber",
+      "musk",
+      "vetiver",
+    ])
   })
 })
 
@@ -1396,6 +1441,152 @@ Base: white musk`
     expect(d).not.toMatch(/sizes\s+5\s*ml/i)
     expect(d).not.toMatch(/processing/i)
     expect(d).not.toMatch(/roller\s+balls/i)
+  })
+
+  it("Andromedas Moon Ink Mark: keeps all merchant Top/Heart/Base notes including warmth phrasing", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "llm")
+    const inkMarkDesc =
+      "Inspired by Ink Mark Eau De Parfum A smooth inky swirl of sandalwood, incense, and amber. The Vibe Picture a drop of deep violet ink touching water. Notes Top: Inky violet air • aromatic lift Heart: Incense smoke • soft powdery woods Base: Sandalwood • amber warmth • lingering woody glow How It Wears Projection: Medium Available Sizes 5ml"
+    invokeMock.mockImplementation((input: { messages?: { content?: string }[] }) => {
+      const sys = String(input?.messages?.[0]?.content ?? "")
+      if (sys.includes("perfumery expert")) {
+        return { content: '{"valid":[]}' }
+      }
+      return { content: '{"openNotes":[],"heartNotes":[],"baseNotes":[]}' }
+    })
+    const items: ScrapedItem[] = [
+      {
+        name: "Andromedas Ink Mark Louis Vuitton",
+        description: inkMarkDesc,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromeda-s-inspired-by-ink-mark-eau-de-parfum-louis-vuitton",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+      noteInferenceMode: "strict",
+      noteValidationMode: "llm",
+    })
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    expect(open).toEqual(expect.arrayContaining(["inky violet air", "aromatic lift"]))
+    expect(heart).toEqual(expect.arrayContaining(["incense smoke"]))
+    expect(heart.some(n => /soft powdery wood/i.test(n))).toBe(true)
+    expect(base).toEqual(expect.arrayContaining(["sandalwood", "amber warmth", "lingering woody glow"]))
+    expect(records[0]._noteSource).toBe("labeled_list")
+  })
+
+  it("Andromedas Black Tie glued Fragrance Notes: materials not Main Accords", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run")
+    })
+    const gluedDesc = `ANDROMEDAS MOON EAU DE PARFUM Inspired by Black Tie Originally by Celine I was told there was an issue with the formula. The Vibe A couture vanilla wrapped in powdery iris. Fragrance Notes White Orris / IrisSoft powder, elegant and refined VanillaSmooth, tailored sweetness CedarwoodClean structure and woody depth MuskSoft, skin-like finish Tree MossCool green shadow for depth Main Accords: powdery • vanilla • iris • woody • musky • mossy When to Wear Perfect for evenings. Available Sizes 5ml • 15ml`
+    const items: ScrapedItem[] = [
+      {
+        name: "Inspired By Black Tie Cline",
+        description: gluedDesc,
+        image: "",
+        detailURL: "https://www.andromedasmoon.com/products/andromedas-inspired-by-black-tie-eau-de-parfum-celine",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+    const open = JSON.parse(records[0].openNotes) as string[]
+    expect(open).toEqual(expect.arrayContaining(["white orris", "iris", "vanilla", "cedarwood", "musk"]))
+    expect(open).not.toEqual(expect.arrayContaining(["powdery", "woody", "musky", "mossy"]))
+    vi.unstubAllEnvs()
+  })
+
+  it("Andromedas Mochi Milk: layered Scent Notes without marketing bullet junk", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run")
+    })
+    const mochiDesc =
+      "Inspired by Mochi Milk A delicate daydream. Scent Notes Top: Marshmallow, Peach Nectar, Soft Incense Heart: Steamed Milk, Vanilla Bean, Jasmine, Creamy Rice Base: White Musk, Australian Sandalwood, Golden Amber Cozy and soft For milk lovers, pastel girls, and fans of soft skin scents Extrait de Parfum strength for long-lasting wear and gentle projection Hand-blended with care by Andromedas Moon ORIGINAL MANUFACTURERS PICTURES"
+    const items: ScrapedItem[] = [
+      {
+        name: "Mochi Milk Dedcool",
+        description: mochiDesc,
+        image: "",
+        detailURL: "https://www.andromedasmoon.com/products/andromedas-inspired-by-mochi-milk-eau-de-parfum-dedcool-1",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+    expect(open).toEqual(expect.arrayContaining(["marshmallow", "peach nectar", "soft incense"]))
+    expect(heart).toEqual(expect.arrayContaining(["steamed milk", "vanilla bean", "jasmine", "creamy rice"]))
+    expect(base).toEqual(expect.arrayContaining(["white musk", "australian sandalwood", "golden amber"]))
+    expect(all).not.toEqual(expect.arrayContaining(["with", "pastel girls", "fans", "gentle projection"]))
+    vi.unstubAllEnvs()
+  })
+
+  it("Andromedas Fantasmagory: PDP rescue replaces contaminated LLM notes", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () =>
+        `<html><body><p>Inspired by Fantasmagory Eau De Parfum Notes: Anise • Ginger • Almond • Floral Notes • Vanilla • Leather Note Breakdown Top Anise • Ginger Middle Almond • Floral Notes Base Vanilla • Leather Available Sizes 5ml</p></body></html>`,
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    invokeMock.mockImplementation(async (input: { messages?: { role?: string; content?: string }[] }) => {
+      const sys = String(input?.messages?.find(m => m.role === "system")?.content ?? "")
+      if (sys.includes("master perfumer")) {
+        return {
+          content: JSON.stringify({
+            openNotes: ["tahitian vanilla", "vetiver scent description tihota on fire", "fluffy glow"],
+            heartNotes: ["brown sugar", "almond", "milk"],
+            baseNotes: ["amber", "a soft golden sweetness", "glowing"],
+          }),
+        }
+      }
+      return { content: '{"openNotes":[],"heartNotes":[],"baseNotes":[]}' }
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Fantasmagory Lv",
+        description:
+          "A flickering streetlamp casts a warm glow. tahitian vanilla and vetiver scent description tihota on fire. brown sugar almond milk marshmallow.",
+        image: "",
+        detailURL: "https://www.andromedasmoon.com/products/andromedas-inspired-by-fantasmagory-eau-de-parfum-lv",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: true,
+    })
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+    expect(all).toEqual(expect.arrayContaining(["anise", "ginger", "almond", "vanilla", "leather"]))
+    expect(all.some(n => /tihota|scent description/i.test(n))).toBe(false)
+    expect(fetchMock).toHaveBeenCalled()
+    vi.unstubAllGlobals()
+    vi.unstubAllEnvs()
   })
 
   it("stripPolicyBoilerplate truncates Processing/Packing/Shipping trail", async () => {

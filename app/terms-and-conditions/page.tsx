@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("termsAndConditions.meta")
@@ -14,21 +15,22 @@ export const generateMetadata = async (): Promise<Metadata> => {
 const TermsAndConditionsPage = async () => {
   const t = await getTranslations("termsAndConditions")
   return (
-    <article>
+    <main id="main-content">
       <TitleBanner
         imagePos="object-center"
         image="/images/terms.webp"
         heading={t("heading")}
         subheading={t("subheading")}
       />
-      <section className="inner-container mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
+      <PageWrapper isArticle={true}>
+      <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
         <h2 className="mb-4">1. {t("gist.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("gist.contentOne")}</p>
           <p>{t("gist.contentTwo")}</p>
         </div>
       </section>
-      <section className="inner-container mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
+      <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
         <h2 className="mb-4">2. {t("tradingAndListing.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("tradingAndListing.contentOne")}</p>
@@ -38,7 +40,7 @@ const TermsAndConditionsPage = async () => {
           <p>{t("tradingAndListing.contentFive")}</p>
         </div>
       </section>
-      <section className="inner-container mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
+      <section className=" mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
         <h2 className="mb-4">3. {t("accountsAndConduct.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("accountsAndConduct.contentOne")}</p>
@@ -46,7 +48,7 @@ const TermsAndConditionsPage = async () => {
           <p>{t("accountsAndConduct.contentThree")}</p>
         </div>
       </section>
-      <section className="inner-container mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
+      <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
         <h2 className="mb-4">4. {t("reviewsAndNotes.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("reviewsAndNotes.contentOne")}</p>
@@ -54,20 +56,20 @@ const TermsAndConditionsPage = async () => {
           <p>{t("reviewsAndNotes.contentThree")}</p>
         </div>
       </section>
-      <section className="inner-container mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
+      <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
         <h2 className="mb-4">5. {t("noGuarantee.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("noGuarantee.contentOne")}</p>
         </div>
       </section>
-      <section className="inner-container mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
+      <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
         <h2 className="mb-4">6. {t("liability.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("liability.contentOne")}</p>
           <p>{t("liability.contentTwo")}</p>
         </div>
       </section>
-      <section className="inner-container mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
+      <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
         <h2 className="mb-4">7. {t("privacy.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("privacy.contentOne")}</p>
@@ -80,19 +82,20 @@ const TermsAndConditionsPage = async () => {
           <li>{t("privacy.contentList.five")}</li>
         </ul>
       </section>
-      <section className="inner-container mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
+      <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
         <h2 className="mb-4">8. {t("changes.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("changes.contentOne")}</p>
         </div>
       </section>
-      <section className="inner-container mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold mb-20">
+      <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold mb-20">
         <h2 className="mb-4">9. {t("closing.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("closing.contentOne")}</p>
         </div>
       </section>
-    </article>
+      </PageWrapper>
+    </main>
   )
 }
 

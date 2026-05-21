@@ -7,6 +7,7 @@ import VooDooDetails from "@/components/Atoms/VooDooDetails"
 import { TradeStatusCard } from "@/components/Molecules/TradeStatusCard"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import type { TradeForClient } from "@/types/trade"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 type TradesPageClientProps = {
   activeTrades: TradeForClient[]
@@ -28,7 +29,7 @@ const TradesPageClient = ({
   const hasAny = activeTrades.length > 0 || historyTrades.length > 0
 
   return (
-    <section>
+    <main id="main-content">
       <TitleBanner
         image={bannerImage}
         heading={t("heading")}
@@ -42,11 +43,11 @@ const TradesPageClient = ({
         </Link>
       </TitleBanner>
 
-      <div className="inner-container p-6">
+      <PageWrapper>
         {!hasAny ? (
-          <p className="text-center text-noir-gold-100">{t("empty")}</p>
+          <h2 className="text-center text-noir-gold-100">{t("empty")}</h2>
         ) : (
-          <div className="mx-auto flex max-w-3xl flex-col gap-4">
+          <div className="mx-auto flex flex-col gap-4">
             {activeTrades.length > 0 ? (
               <VooDooDetails
                 name="myActiveTrades"
@@ -75,7 +76,7 @@ const TradesPageClient = ({
                 background="dark"
                 defaultOpen={false}
               >
-                <div className="space-y-3 py-2">
+                <div className="space-y-6 py-4">
                   {historyTrades.map(trade => (
                     <TradeStatusCard
                       key={trade.id}
@@ -89,8 +90,8 @@ const TradesPageClient = ({
             ) : null}
           </div>
         )}
-      </div>
-    </section>
+      </PageWrapper>
+    </main>
   )
 }
 

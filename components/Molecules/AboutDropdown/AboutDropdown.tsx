@@ -14,6 +14,8 @@ interface AboutDropdownProps {
   onNavClick?: () => void
 }
 
+const ABOUT_MENU_ID = "about-menu"
+
 const AboutDropdown = ({
   className,
   variant = "desktop",
@@ -92,6 +94,7 @@ const AboutDropdown = ({
         )}
         aria-expanded={isOpen}
         aria-haspopup="true"
+        aria-controls={ABOUT_MENU_ID}
       >
         {t("about")}
         <FaChevronDown
@@ -99,11 +102,16 @@ const AboutDropdown = ({
             isOpen ? "rotate-180" : ""
           }`}
           size={12}
+          aria-hidden
+          focusable={false}
         />
       </button>
 
-      {isOpen && (
-        <div className={dropdownClasses}>
+      <div
+        id={ABOUT_MENU_ID}
+        className={dropdownClasses}
+        hidden={!isOpen}
+      >
           <ul className="py-2">
             {aboutItems.map((item) => (
               <li key={item.id}>
@@ -122,8 +130,7 @@ const AboutDropdown = ({
               </li>
             ))}
           </ul>
-        </div>
-      )}
+      </div>
     </div>
   )
 }

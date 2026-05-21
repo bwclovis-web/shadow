@@ -43,7 +43,8 @@ const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
   className,
   user,
 }) => {
-  const t = useTranslations("navigation.mobileBottom")
+  const t = useTranslations("navigation")
+  const tBottom = useTranslations("navigation.mobileBottom")
   const pathname = usePathname()
   const messageUnread = useDirectMessageUnreadCount()
   const alertsCtx = useUserAlertsContext()
@@ -71,14 +72,17 @@ const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
       )}
       data-testid="mobile-bottom-navigation"
     >
-      <nav className="flex items-stretch justify-around max-w-lg mx-auto">
+      <nav
+        className="flex items-stretch justify-around max-w-lg mx-auto"
+        aria-label={t("aria.mobileBottom")}
+      >
         <PrefetchLink
           href={EXCHANGE_PATH}
           className={navItemClass(isActive(EXCHANGE_PATH))}
           aria-current={isActive(EXCHANGE_PATH) ? "page" : undefined}
         >
-          <FaExchangeAlt size={22} aria-hidden />
-          <span className="text-[11px] font-medium leading-tight">{t("exchange")}</span>
+          <FaExchangeAlt size={22} aria-hidden focusable={false} />
+          <span className="text-[11px] font-medium leading-tight">{tBottom("exchange")}</span>
         </PrefetchLink>
 
         <PrefetchLink
@@ -86,9 +90,9 @@ const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
           className={navItemClass(user?.id ? isActive(MESSAGES_PATH) : isActive(SIGN_IN, true))}
           aria-current={user?.id && isActive(MESSAGES_PATH) ? "page" : undefined}
         >
-          <MdMail size={24} aria-hidden />
+          <MdMail size={24} aria-hidden focusable={false} />
           <Badge count={messageUnread} />
-          <span className="text-[11px] font-medium leading-tight">{t("messages")}</span>
+          <span className="text-[11px] font-medium leading-tight">{tBottom("messages")}</span>
         </PrefetchLink>
 
         <PrefetchLink
@@ -102,9 +106,9 @@ const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
               : undefined
           }
         >
-          <FaUser size={20} aria-hidden />
+          <FaUser size={20} aria-hidden focusable={false} />
           <span className="text-[11px] font-medium leading-tight">
-            {user?.id ? t("profile") : t("signIn")}
+            {user?.id ? tBottom("profile") : tBottom("signIn")}
           </span>
         </PrefetchLink>
 
@@ -112,9 +116,9 @@ const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
           href={alertsHref}
           className={navItemClass(false)}
         >
-          <BsBell size={20} aria-hidden />
+          <BsBell size={20} aria-hidden focusable={false} />
           <Badge count={alertUnread} />
-          <span className="text-[11px] font-medium leading-tight">{t("alerts")}</span>
+          <span className="text-[11px] font-medium leading-tight">{tBottom("alerts")}</span>
         </PrefetchLink>
       </nav>
     </div>

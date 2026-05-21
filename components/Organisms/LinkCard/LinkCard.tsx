@@ -2,6 +2,7 @@ import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { PerfumeCompareToggle } from "@/components/Molecules/PerfumeCompareToggle/PerfumeCompareToggle"
 import { HOUSE_DETAIL_PATH, PERFUME_PATH } from "@/constants/routes"
 import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
+import { perfumeImageTransitionName } from "@/utils/view-transition-names"
 import Image from "next/image"
 
 interface LinkCardProps {
@@ -41,6 +42,9 @@ const LinkCard = ({
     ? `${basePath}/${data.slug}?letter=${selectedLetter}`
     : `${basePath}/${data.slug}`
 
+  const imageTransitionName =
+    type === "perfume" ? perfumeImageTransitionName(data.id) : undefined
+
   return (
     <div className="relative aspect-square w-full h-full min-h-72 group noir-border overflow-hidden transition-all duration-300 ease-in-out bg-noir-dark/70 backdrop-blur-sm">
       <PrefetchLink
@@ -70,7 +74,11 @@ const LinkCard = ({
             transition-all duration-500 ease-in-out scale-150 h-full aspect-square object-fill object-center
             filter grayscale-100 group-hover:grayscale-0 group-hover:scale-110 group-hover:mask-radial-from-30% group-hover:mask-radial-to-100%"
               sizes="(max-width: 640px) 70vw, (max-width: 1024px) 25vw, 20vw"
-              style={{ viewTransitionName: `perfume-image-${data.id}` } as React.CSSProperties}
+              style={
+                imageTransitionName
+                  ? ({ viewTransitionName: imageTransitionName } as React.CSSProperties)
+                  : undefined
+              }
             />
           ) : (
             <Image
@@ -84,7 +92,11 @@ const LinkCard = ({
             transition-all duration-500 ease-in-out scale-120 h-full aspect-square
             filter grayscale-100 group-hover:grayscale-0 group-hover:scale-100 group-hover:mask-radial-from-30% group-hover:mask-radial-to-100%"
               sizes="(max-width: 640px) 70vw, (max-width: 1024px) 25vw, 30vw"
-              style={{ viewTransitionName: `perfume-image-${data.id}` } as React.CSSProperties}
+              style={
+                imageTransitionName
+                  ? ({ viewTransitionName: imageTransitionName } as React.CSSProperties)
+                  : undefined
+              }
             />
           )}
           {data.type && (

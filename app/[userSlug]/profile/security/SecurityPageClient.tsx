@@ -11,6 +11,7 @@ import { CSRFToken } from "@/components/Molecules/CSRFToken/CSRFToken"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 
 import { ChangePasswordForm } from "@/components/Molecules/ChangePasswordForm/ChangePasswordForm"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 import {
   confirmEnrollmentAction,
@@ -79,16 +80,18 @@ const SecurityPageClient = ({
   }, [confirmState?.success, disableState?.success, router])
 
   return (
-    <section>
+    <main id="main-content">
       <TitleBanner
         image={bannerImage}
         heading={t("title")}
         subheading={t("subheading")}
       />
-      <div className="inner-container max-w-lg mx-auto py-8 space-y-8">
+      <PageWrapper>
         <div className="bg-white shadow-lg rounded-lg p-6 space-y-4">
           <h2 className="font-semibold text-gray-900">{tPassword("changePassword")}</h2>
-          <p className="text-sm text-gray-700">{tPassword("updatePasswordToKeepAccountSecure")}</p>
+          <p className="text-sm text-gray-700">
+            {tPassword("updatePasswordToKeepAccountSecure")}
+          </p>
           <ChangePasswordForm hideHeading />
         </div>
 
@@ -260,8 +263,8 @@ const SecurityPageClient = ({
             </div>
           </>
         )}
-      </div>
-    </section>
+      </PageWrapper>
+    </main>
   )
 }
 

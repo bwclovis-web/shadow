@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 
 import { CSRFTokenProvider } from "@/components/Molecules/CSRFToken"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/quality.webp"
 
@@ -27,18 +28,18 @@ const DataQualityClient = ({ isAdmin }: DataQualityClientProps) => {
   const t = useTranslations("dataQuality")
 
   return (
-    <>
+    <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
         heading={t("heading")}
         subheading={t("subheading")}
       />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <PageWrapper>
         <CSRFTokenProvider>
           <DataQualityDashboard isAdmin={isAdmin} />
         </CSRFTokenProvider>
-      </div>
-    </>
+      </PageWrapper>
+    </main>
   )
 }
 

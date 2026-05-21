@@ -38,6 +38,7 @@ import SeasonalTrendingSection from "@/components/Containers/Exchange/SeasonalTr
 import WishlistMatchesSection from "@/components/Containers/Exchange/WishlistMatchesSection"
 import { buildExchangeDiscoveryChipItems } from "./buildExchangeDiscoveryChipItems"
 import type { ExchangePageData } from "./exchange-types"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 export type { ExchangePageData } from "./exchange-types"
 
@@ -413,7 +414,7 @@ const TheExchangeClient = ({
   ])
 
   return (
-    <section>
+    <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
         heading={t("heading")}
@@ -424,6 +425,7 @@ const TheExchangeClient = ({
         </span>
       </TitleBanner>
 
+      <PageWrapper>
       {isEmptyExchange ? (
         <div className="text-center py-8 bg-noir-gray/80 rounded-md mt-8 border-2 border-noir-light">
           <h2 className="text-noir-light font-black text-3xl text-shadow-md text-shadow-noir-dark">
@@ -432,7 +434,6 @@ const TheExchangeClient = ({
         </div>
       ) : (
         <>
-          <div className="inner-container py-6">
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(260px,300px)_1fr] lg:items-start">
               <div className="min-w-0 space-y-6 lg:sticky lg:top-4">
                 {isLg ? (
@@ -564,7 +565,6 @@ const TheExchangeClient = ({
                 )}
               </div>
             </div>
-          </div>
 
           {pagination.totalPages > 1 && (
             <PaginationBar
@@ -591,7 +591,8 @@ const TheExchangeClient = ({
           ) : null}
         </>
       )}
-    </section>
+      </PageWrapper>
+    </main>
   )
 }
 

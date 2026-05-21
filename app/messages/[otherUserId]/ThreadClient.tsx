@@ -10,6 +10,7 @@ import { TraderAvatar } from "@/components/Molecules/TraderAvatar"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { useCSRF } from "@/hooks/useCSRF"
 import { useConversationPresence } from "@/hooks/useConversationPresence"
+import { formatDateTime } from "@/utils/formatters"
 import { getTraderDisplayName } from "@/utils/user"
 import { Button } from "@/components/Atoms/Button/Button"
 import { MdDeleteForever } from "react-icons/md"
@@ -18,6 +19,7 @@ import { TradeStatusCard } from "@/components/Molecules/TradeStatusCard"
 import { useSessionStore } from "@/hooks/sessionStore"
 import Modal from "@/components/Organisms/Modal"
 import type { TradeForClient } from "@/types/trade"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/messages.png"
 
@@ -60,14 +62,14 @@ interface ThreadClientProps {
   activeDisputeTradeIds?: string[]
 }
 
-export default function ThreadClient({
+const ThreadClient = ({
   currentUserId,
   userSlug,
   otherUser,
   initialThread: thread,
   initialTrades = [],
   activeDisputeTradeIds = [],
-}: ThreadClientProps) {
+}: ThreadClientProps) => {
   const router = useRouter()
   const { addToHeaders } = useCSRF()
   useConversationPresence(otherUser.id)
@@ -144,14 +146,14 @@ export default function ThreadClient({
           />
         </Modal>
       )}
-    <section>
+    <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
         heading={`Conversation with ${otherUserName}`}
         subheading="Message thread"
       />
 
-      <div className="inner-container py-8">
+      <PageWrapper>
         <div className="flex flex-wrap items-center gap-4 mb-6">
           <Link
             href="/messages"
@@ -263,16 +265,10 @@ export default function ThreadClient({
             onSuccess={() => router.refresh()}
           />
         </div>
-      </div>
-    </section>
+      </PageWrapper>
+    </main>
     </>
   )
 }
 
-function formatDateTime(date: Date | string): string {
-  const d = typeof date === "string" ? new Date(date) : date
-  return d.toLocaleString(undefined, {
-    dateStyle: "short",
-    timeStyle: "short",
-  })
-}
+export default ThreadClient

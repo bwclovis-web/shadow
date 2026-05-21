@@ -8,6 +8,7 @@ import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import { FORM_TYPES } from "@/constants/general"
 
 import { editPerfumeAction, type EditPerfumeActionState } from "./actions"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/createPerfume.png"
 
@@ -41,20 +42,22 @@ const EditPerfumeClient = ({ initialPerfume }: EditPerfumeClientProps) => {
   }
 
   return (
-    <section>
+    <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
         imagePos="object-center"
         heading={`Editing ${initialPerfume.name}`}
         subheading="Update perfume details"
       />
+      <PageWrapper>
       <PerfumeForm
         formType={FORM_TYPES.EDIT_PERFUME_FORM}
         lastResult={state as SubmissionResult | null}
         data={formData}
         action={formAction}
-      />
-    </section>
+        />
+      </PageWrapper>
+    </main>
   )
 }
 

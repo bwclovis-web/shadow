@@ -17,6 +17,7 @@ import {
   processPendingSubmissionAction,
   type PendingSubmissionActionState,
 } from "./actions"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/userAdmin.webp"
 
@@ -86,14 +87,14 @@ const PendingSubmissionClient = ({
 
   return (
     <CSRFTokenProvider>
-      <div>
+      <main id="main-content">
         <TitleBanner
           image={BANNER_IMAGE}
           heading={t("heading")}
           subheading={t("subheading")}
         />
 
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <PageWrapper>
           {state && (
             <div
               className={`mb-6 rounded-md p-4 ${
@@ -331,8 +332,8 @@ const PendingSubmissionClient = ({
               })
             )}
           </div>
-        </div>
-      </div>
+        </PageWrapper>
+      </main>
     </CSRFTokenProvider>
   )
 }

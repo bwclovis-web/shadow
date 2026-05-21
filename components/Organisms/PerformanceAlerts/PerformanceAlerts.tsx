@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { formatDateTime } from "@/utils/formatters"
 import { styleMerge } from "@/utils/styleUtils"
 
 /** Chrome-only; not in Performance type definition */
@@ -430,7 +431,7 @@ const PerformanceAlerts = ({
                     <div>
                       <div className="font-semibold">{alert.message}</div>
                       <div className="text-sm opacity-75">
-                        {new Date(alert.timestamp).toLocaleString("en-US")}
+                        {formatDateTime(alert.timestamp)}
                       </div>
                     </div>
                   </div>
@@ -467,7 +468,7 @@ const PerformanceAlerts = ({
                         {alert.message}
                       </div>
                       <div className="text-xs text-gray-500">
-                        {new Date(alert.timestamp).toLocaleString("en-US")}
+                        {formatDateTime(alert.timestamp)}
                       </div>
                     </div>
                   </div>

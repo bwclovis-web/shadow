@@ -29,6 +29,7 @@ import {
   type RoleFilter,
   type StrikeFilter,
 } from "./userAdminFilters"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/userAdmin.webp"
 
@@ -140,14 +141,14 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
 
   return (
     <CSRFTokenProvider>
-      <div>
+      <main id="main-content">
         <TitleBanner
           image={BANNER_IMAGE}
           heading={t("heading")}
           subheading={t("subheading")}
         />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <PageWrapper>
           {state && !state.success && (
             <div className="mb-6 rounded-md border border-red-400 bg-red-100 p-4 text-red-700">
               {state.message}
@@ -298,8 +299,8 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
             <input type="hidden" name="userId" value={selectedUserId ?? ""} />
             <FormPendingSync onPendingChange={setIsStrikeSubmitting} />
           </form>
-        </div>
-      </div>
+        </PageWrapper>
+      </main>
     </CSRFTokenProvider>
   )
 }

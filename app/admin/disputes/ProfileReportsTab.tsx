@@ -12,6 +12,7 @@ import ListingPhotos from "@/components/Molecules/ListingPhotos/ListingPhotos"
 import DangerModal from "@/components/Organisms/DangerModal"
 import Modal from "@/components/Organisms/Modal"
 import type { UserReportWithRelations } from "@/models/user-report.server"
+import { formatDateTime } from "@/utils/formatters"
 import { getTraderDisplayName } from "@/utils/user"
 import StrikeIndicators from "@/app/admin/users/StrikeIndicators"
 import ConfirmStrikeModal from "@/app/admin/users/ConfirmStrikeModal"
@@ -40,14 +41,6 @@ type StrikeTarget = {
   defaultReason: string
 }
 
-const formatDate = (date: Date | string) =>
-  new Date(date).toLocaleString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  })
 
 const ProfileReportsTab = ({ reports }: ProfileReportsTabProps) => {
   const router = useRouter()
@@ -188,7 +181,7 @@ const ProfileReportsTab = ({ reports }: ProfileReportsTabProps) => {
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div>
                         <p className="text-sm text-noir-gold-100/70">
-                          {formatDate(report.createdAt)}
+                          {formatDateTime(report.createdAt)}
                         </p>
                         <h3 className="mt-1 text-lg text-noir-gold-100">
                           {t("reportedUser")}:{" "}

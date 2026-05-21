@@ -13,6 +13,7 @@ const NOTE_CANONICAL_PHRASES: [string, string][] = [
   ["feve tonka", "tonka bean"],
   ["lily of the valley", "lily of the valley"],
   ["ylang ylang", "ylang ylang"],
+  ["tree moss", "tree moss"],
   ["white musk", "white musk"],
   ["black musk", "black musk"],
   ["soft musk", "soft musk"],
@@ -264,6 +265,216 @@ const classifyVolatilityToken = (token: string): "open" | "heart" | "base" => {
   }
   return "heart"
 }
+
+/**
+ * Words that signal a multi-token merchant phrase (e.g. "inky violet air"), not a run of
+ * single-word materials jammed together by a bad scrape or LLM merge.
+ */
+const SPACE_LIST_PROSE_MODIFIERS = new Set([
+  "soft",
+  "powdery",
+  "inky",
+  "golden",
+  "airy",
+  "delicate",
+  "warm",
+  "cool",
+  "sweet",
+  "rich",
+  "deep",
+  "bright",
+  "smoky",
+  "creamy",
+  "juicy",
+  "lush",
+  "silken",
+  "velvety",
+  "lingering",
+  "honeyed",
+  "steaming",
+  "mist",
+  "lift",
+  "glow",
+  "warmth",
+  "air",
+  "smoke",
+  "petals",
+  "structure",
+  "radiance",
+  "sparkle",
+])
+
+let singleWordMaterialsCache: Set<string> | null = null
+
+const EXTRA_SINGLE_WORD_MATERIALS = [
+  "litchi",
+  "litchee",
+  "lychee",
+  "passionfruit",
+  "passion fruit",
+  "orchid",
+  "hibiscus",
+  "fig",
+  "nectar",
+  "saffron",
+  "oudh",
+  "milk",
+  "mimosa",
+  "brown",
+  "blossom",
+  "coconut",
+  "almond",
+]
+
+/** Common indie-house multi-word note phrases (Andromeda's Moon, etc.). */
+const MERCHANT_MULTI_WORD_PHRASES: string[] = [
+  "lingering woody glow",
+  "amber warmth",
+  "inky violet air",
+  "aromatic lift",
+  "incense smoke",
+  "soft powdery woods",
+  "soft powdery wood",
+  "powdery woods",
+  "almond blossom",
+  "vanilla orchid magnolia",
+  "honeyed sweetness",
+  "lavender mist",
+  "steaming black tea",
+  "balsamic amber",
+  "golden amber",
+  "white musk",
+  "peach nectar",
+  "vanilla bean",
+  "fig milk",
+]
+
+const getExplodePhrases = (): string[] => {
+  const phrases = new Set<string>()
+  for (const [, to] of NOTE_CANONICAL_PHRASES) phrases.add(to.toLowerCase())
+  for (const [from] of NOTE_CANONICAL_PHRASES) phrases.add(from.toLowerCase())
+  for (const p of MERCHANT_MULTI_WORD_PHRASES) phrases.add(p.toLowerCase())
+  for (const bucket of [OPEN_VOLATILITY, HEART_VOLATILITY, BASE_VOLATILITY]) {
+    for (const n of bucket) {
+      if (n.includes(" ")) phrases.add(n.toLowerCase())
+    }
+  }
+  return [...phrases].sort((a, b) => b.split(/\s+/).length - a.split(/\s+/).length)
+}
+
+const greedyPhraseSplit = (raw: string): string[] | null => {
+  const words = raw.trim().split(/\s+/).filter(Boolean)
+  if (words.length < 2) return null
+  const phrases = getExplodePhrases()
+  const materials = getSingleWordNoteMaterials()
+  const out: string[] = []
+  let i = 0
+  while (i < words.length) {
+    let matched = false
+    for (const phrase of phrases) {
+      const pw = phrase.split(/\s+/).filter(Boolean)
+      if (i + pw.length > words.length) continue
+      const slice = words.slice(i, i + pw.length).join(" ").toLowerCase()
+      if (slice === phrase.toLowerCase()) {
+        const c = canonicalizeNote(slice)
+        if (c) out.push(c)
+        i += pw.length
+        matched = true
+        break
+      }
+    }
+    if (matched) continue
+    const w = words[i].toLowerCase()
+    const m = NOTE_CANONICAL_TOKENS[w] ?? w
+    if (materials.has(m)) {
+      out.push(canonicalizeNote(m))
+      i += 1
+      continue
+    }
+    return null
+  }
+  return out.length >= 2 ? out : null
+}
+
+/**
+ * Split a single CSV note cell that incorrectly contains space-joined materials
+ * ("vanilla caramel coffee litchi incense praline") into separate notes.
+ */
+export const explodeSpaceSeparatedNoteBlob = (raw: string): string[] => {
+  const s = raw.trim()
+  if (!s) return []
+
+  if (/[,;•·|✧✦\u2726-\u2728]/.test(s)) {
+    return s
+      .split(/[,;•·|✧✦\u2726-\u2728]+/)
+      .map(part => canonicalizeNote(part))
+      .filter(Boolean)
+  }
+
+  if (matchesKnownMultiWordPhrase(s)) {
+    const c = canonicalizeNote(s)
+    return c ? [c] : []
+  }
+
+  const words = s.split(/\s+/).filter(Boolean)
+  const materials = getSingleWordNoteMaterials()
+  const mapped =
+    words.length >= 2
+      ? words.map(w => {
+          const lc = w.toLowerCase()
+          return NOTE_CANONICAL_TOKENS[lc] ?? lc
+        })
+      : []
+
+  if (words.length >= 3 && mapped.length === words.length && mapped.every(w => materials.has(w))) {
+    return mapped.map(w => canonicalizeNote(w)).filter(Boolean)
+  }
+
+  const greedy = greedyPhraseSplit(s)
+  if (greedy) return greedy
+
+  if (words.length < 3) {
+    const c = canonicalizeNote(s)
+    return c ? [c] : []
+  }
+
+  if (!mapped.every(w => materials.has(w))) {
+    const c = canonicalizeNote(s)
+    return c ? [c] : []
+  }
+
+  return mapped.map(w => canonicalizeNote(w)).filter(Boolean)
+}
+
+const getSingleWordNoteMaterials = (): Set<string> => {
+  if (singleWordMaterialsCache) return singleWordMaterialsCache
+  const s = new Set<string>()
+  for (const bucket of [OPEN_VOLATILITY, HEART_VOLATILITY, BASE_VOLATILITY]) {
+    for (const n of bucket) {
+      if (!n.includes(" ")) s.add(n)
+    }
+  }
+  for (const v of Object.values(NOTE_CANONICAL_TOKENS)) s.add(v)
+  for (const k of Object.keys(NOTE_CANONICAL_TOKENS)) s.add(k)
+  for (const extra of EXTRA_SINGLE_WORD_MATERIALS) s.add(extra)
+  singleWordMaterialsCache = s
+  return s
+}
+
+const matchesKnownMultiWordPhrase = (text: string): boolean => {
+  const lc = text.trim().toLowerCase().replace(/\s+/g, " ")
+  if (!lc || !lc.includes(" ")) return false
+  for (const [from, to] of NOTE_CANONICAL_PHRASES) {
+    if (lc === from || lc === to) return true
+  }
+  return (
+    OPEN_VOLATILITY.has(lc) || HEART_VOLATILITY.has(lc) || BASE_VOLATILITY.has(lc)
+  )
+}
+
+/** Expand any merged space-separated blobs in a note layer array. */
+export const expandLayerNoteBlobs = (notes: string[]): string[] =>
+  notes.flatMap(explodeSpaceSeparatedNoteBlob)
 
 /** Map a single note string to canonical English (lowercase). */
 export const canonicalizeNote = (raw: string): string => {

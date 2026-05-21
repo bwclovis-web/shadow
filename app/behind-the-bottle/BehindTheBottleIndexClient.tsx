@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { ArticleCard } from "@/components/Containers/Blog/ArticleCard"
 import type { ArticleListItem } from "@/lib/sanity/types"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 type BehindTheBottleIndexClientProps = {
   articles: ArticleListItem[]
@@ -18,7 +19,8 @@ const BehindTheBottleIndexClient = ({
   const t = useTranslations("behindTheBottle")
 
   return (
-    <section className="inner-container py-12">
+    <main id="main-content">
+      <PageWrapper>
       <header className="max-w-3xl mx-auto text-center mb-12">
         <p className="text-noir-gold-100 uppercase tracking-widest text-sm mb-3">{t("eyebrow")}</p>
         <h1 className="font-headline text-4xl md:text-5xl text-noir-gold mb-4">{t("heading")}</h1>
@@ -42,7 +44,8 @@ const BehindTheBottleIndexClient = ({
           ))}
         </div>
       )}
-    </section>
+      </PageWrapper>
+    </main>
   )
 }
 

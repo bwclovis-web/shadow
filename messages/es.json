@@ -1031,6 +1031,14 @@
     "contactUs": "Contáctanos",
     "home": "Inicio",
     "search": "Buscar",
+    "aria": {
+      "primary": "Navegación principal",
+      "mobile": "Navegación móvil",
+      "mobileBottom": "Navegación inferior móvil",
+      "menuLinks": "Menú principal",
+      "openMenu": "Abrir menú",
+      "openMenuUnread": "Abrir menú, mensajes sin leer"
+    },
     "mobileBottom": {
       "exchange": "Intercambio",
       "messages": "Mensajes",
@@ -1603,6 +1611,19 @@
     "success": "Tu oferta fue enviada.",
     "error": "No se pudo enviar la oferta.",
     "openMessages": "Abrir conversación"
+  },
+  "siteFooter": {
+    "copyright": "© {year} Shadow and Sillage",
+    "navAria": "Enlaces del sitio",
+    "communityPolicy": "Política comunitaria",
+    "terms": "Términos y condiciones",
+    "catalogStats": {
+      "users": "{count, number} usuarios",
+      "houses": "{count, number} casas",
+      "perfumes": "{count, number} perfumes",
+      "separator": "·",
+      "ariaLabel": "{users, number} usuarios, {houses, number} casas, {perfumes, number} perfumes"
+    }
   },
   "shareLinks": {
     "copyLink": "Copiar enlace",

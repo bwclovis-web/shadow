@@ -55,13 +55,14 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
           {!user ? (
             <PrefetchLink
               href={SIGN_IN}
+              aria-label={t("signIn")}
               className={styleMerge(
                 navLinkBase,
                 "flex",
                 isActive(SIGN_IN, true) && navLinkActive
               )}
             >
-              <FaUser size={20} title="Sign In" />
+              <FaUser size={20} aria-hidden focusable={false} />
             </PrefetchLink>
           ) : (
             <>
@@ -73,6 +74,7 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
       </div>
       <nav
         className="relative z-10 hidden lg:flex justify-between px-30 items-center justify-around"
+        aria-label={t("aria.primary")}
         data-cy="GlobalNavigation"
       >
         <PrefetchLink href="/" className="px-2 block">

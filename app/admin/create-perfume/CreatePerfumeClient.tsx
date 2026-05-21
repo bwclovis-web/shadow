@@ -12,6 +12,7 @@ import {
   createPerfumeAction,
   type CreatePerfumeActionState,
 } from "./actions"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/createPerfume.png"
 
@@ -23,20 +24,22 @@ const CreatePerfumeClient = () => {
   )
 
   return (
-    <section>
+    <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
         imagePos="object-center"
         heading={t("heading")}
         subheading={t("subheading")}
       />
-      <PerfumeForm
-        formType={FORM_TYPES.CREATE_PERFUME_FORM}
-        lastResult={state as SubmissionResult | null}
-        data={null}
-        action={formAction}
-      />
-    </section>
+      <PageWrapper>
+        <PerfumeForm
+          formType={FORM_TYPES.CREATE_PERFUME_FORM}
+          lastResult={state as SubmissionResult | null}
+          data={null}
+          action={formAction}
+        />
+      </PageWrapper>
+    </main>
   )
 }
 

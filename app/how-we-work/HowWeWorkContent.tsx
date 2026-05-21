@@ -2,6 +2,7 @@ import Image from "next/image"
 import { getTranslations } from "next-intl/server"
 
 import TitleBanner from "@/components/Organisms/TitleBanner"
+import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
 
 const IMAGES = {
   banner: "/images/work.webp",
@@ -21,14 +22,14 @@ const HowWeWorkContent = async () => {
   const t = await getTranslations("howItWorks")
 
   return (
-    <section>
+    <main>
       <TitleBanner
         image={IMAGES.banner}
         heading={t("heading")}
         subheading={t("subheading")}
       />
 
-      <section className="inner-container py-12">
+      <PageWrapper>
         <article className="mx-auto">
           <div className="prose prose-lg prose-invert gap-10 flex flex-col">
             <section className="gap-6 flex flex-col lg:flex-row border-b border-noir-gold pb-10 items-center">
@@ -134,8 +135,8 @@ const HowWeWorkContent = async () => {
             </section>
           </div>
         </article>
-      </section>
-    </section>
+      </PageWrapper>
+    </main>
   )
 }
 

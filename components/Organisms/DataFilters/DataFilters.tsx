@@ -41,7 +41,7 @@ const DataFilters = ({
   return (
     <div
       className={styleMerge(
-        "inner-container lg:py-4 flex flex-col gap-6 lg:flex-row md:justify-between md:items-center noir-border mt-4 py-2",
+        "lg:p-4 flex flex-col gap-6 lg:flex-row md:justify-between md:items-center noir-border",
         className
       )}
     >
