@@ -32,7 +32,7 @@ import { compareIdsExceedMax, normalizeCompareIds } from "@/utils/compare-ids"
 import { DISCOVERY_QUERY } from "@/utils/discovery-filters"
 import { normalizeRemoteImageSrc, styleMerge, validImageRegex } from "@/utils/styleUtils"
 import { perfumeImageTransitionName } from "@/utils/view-transition-names"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/compare.png"
 const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"

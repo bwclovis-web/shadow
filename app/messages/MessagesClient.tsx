@@ -15,7 +15,7 @@ import { useSessionStore } from "@/hooks/sessionStore"
 import { getTraderDisplayName } from "@/utils/user"
 import { Button } from "@/components/Atoms/Button"
 import { MdDeleteForever } from "react-icons/md"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/messages.png"
 const DELETE_MODAL_ID = "delete-conversation"

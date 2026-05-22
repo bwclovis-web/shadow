@@ -7,7 +7,7 @@ import VooDooDetails from "@/components/Atoms/VooDooDetails"
 import { TradeStatusCard } from "@/components/Molecules/TradeStatusCard"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import type { TradeForClient } from "@/types/trade"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 type TradesPageClientProps = {
   activeTrades: TradeForClient[]

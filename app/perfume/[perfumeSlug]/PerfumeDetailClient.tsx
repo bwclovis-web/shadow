@@ -29,7 +29,7 @@ import { RelatedArticlesSection } from "@/components/Containers/Blog/RelatedArti
 import FollowButton from "@/components/Containers/Follow/FollowButton"
 import SimilarPerfumesCarousel from "@/components/Containers/Recommendations/SimilarPerfumesCarousel"
 import type { ArticleListItem } from "@/lib/sanity/types"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const VAULT_PATH = "/the-vault"
 

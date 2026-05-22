@@ -11,7 +11,7 @@ import { CSRFToken } from "@/components/Molecules/CSRFToken/CSRFToken"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 
 import { ChangePasswordForm } from "@/components/Molecules/ChangePasswordForm/ChangePasswordForm"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 import {
   confirmEnrollmentAction,

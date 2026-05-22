@@ -27,7 +27,7 @@ import type { TraderWishlistOverlap } from "@/models/wishlist-matching.server"
 import { DESKTOP_MEDIA } from "@/constants/breakpoints"
 import { TraderProfileAside } from "./aside/aside"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/trade.webp"
 

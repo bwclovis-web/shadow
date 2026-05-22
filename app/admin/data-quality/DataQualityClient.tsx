@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl"
 
 import { CSRFTokenProvider } from "@/components/Molecules/CSRFToken"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/quality.webp"
 

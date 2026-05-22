@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { ArticleCard } from "@/components/Containers/Blog/ArticleCard"
 import type { ArticleListItem } from "@/lib/sanity/types"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 type BehindTheBottleIndexClientProps = {
   articles: ArticleListItem[]

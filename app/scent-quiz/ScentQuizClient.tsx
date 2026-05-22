@@ -39,7 +39,7 @@ import {
   SCENT_QUIZ_ROUTE,
   type StepId,
 } from "./constants"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/quiz.png"
 

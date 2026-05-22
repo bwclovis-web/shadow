@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { getRateLimitStats } from "@/utils/security/rate-limit-monitor.server"
 
 import { StatsJsonPage } from "../components/StatsJsonPage"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {

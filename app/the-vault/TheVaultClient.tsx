@@ -17,7 +17,7 @@ import {
   sortItems,
   type SortOption,
 } from "@/utils/sortUtils"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const ROUTE_PATH = "/the-vault"
 const BANNER_IMAGE = "/images/vault.webp"

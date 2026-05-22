@@ -2,7 +2,7 @@ import Image from "next/image"
 import { getTranslations } from "next-intl/server"
 
 import TitleBanner from "@/components/Organisms/TitleBanner"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const IMAGES = {
   banner: "/images/work.webp",

@@ -8,7 +8,7 @@ import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import { FORM_TYPES } from "@/constants/general"
 
 import { editPerfumeAction, type EditPerfumeActionState } from "./actions"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/createPerfume.png"
 

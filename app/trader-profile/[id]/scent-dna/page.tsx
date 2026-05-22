@@ -8,7 +8,7 @@ import TitleBanner from "@/components/Organisms/TitleBanner"
 import { getScentDnaForUser } from "@/models/scent-dna.server"
 import { getTraderById } from "@/models/user.server"
 import { getTraderDisplayName } from "@/utils/user"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 type Props = {
   params: Promise<{ id: string }>

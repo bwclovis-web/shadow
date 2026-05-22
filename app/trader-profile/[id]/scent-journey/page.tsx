@@ -14,7 +14,7 @@ import { getTraderById } from "@/models/user.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { getTraderDisplayName } from "@/utils/user"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 type Props = {
   params: Promise<{ id: string }>

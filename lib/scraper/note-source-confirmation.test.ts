@@ -156,6 +156,7 @@ Middle Notes: Verdant Earth Accord (Rich Soil, Green and Flowering Plants)`
     expect(isObviousNonMaterialNote("rgba")).toBe(true)
     expect(isObviousNonMaterialNote("linear-gradient")).toBe(true)
     expect(isObviousNonMaterialNote("rum-like warmth f note")).toBe(true)
+    expect(isObviousNonMaterialNote("rum-like warmth f")).toBe(true)
     expect(isObviousNonMaterialNote("a soft golden sweetness")).toBe(true)
     expect(isObviousNonMaterialNote("sandalwood")).toBe(false)
     expect(isObviousNonMaterialNote("orange blossom")).toBe(false)

@@ -28,7 +28,7 @@ import {
   updateProfileAction,
   type UpdateProfileActionState,
 } from "./actions"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 type ProfileClientProps = {
   user: SessionUser

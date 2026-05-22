@@ -17,7 +17,7 @@ import {
   withdrawReportAction,
   type WithdrawReportActionState,
 } from "./actions"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 export type MyReportRow = {
   id: string

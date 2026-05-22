@@ -17,7 +17,7 @@ import {
   withdrawDisputeAction,
   type WithdrawDisputeActionState,
 } from "./actions"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 export type MyDisputeRow = {
   id: string

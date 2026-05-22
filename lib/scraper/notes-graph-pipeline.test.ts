@@ -11,7 +11,7 @@ vi.mock("@langchain/openai", () => ({
 }))
 
 import { scrapedItemsNeedPatternEtsyEnrichment } from "./map-scraped-items"
-import { canonicalizeNote, explodeSpaceSeparatedNoteBlob } from "./canonical-notes"
+import { canonicalizeNote, explodeSpaceSeparatedNoteBlob, splitGluedMerchantNoteRun } from "./canonical-notes"
 import {
   computeBatchNoteUniformityWarnings,
   extractNotesForItems,
@@ -104,6 +104,20 @@ describe("explodeSpaceSeparatedNoteBlob", () => {
       "mahogany",
       "tonka bean",
     ])
+  })
+
+  it("splitGluedMerchantNoteRun parses Andromeda Main Notes runs without commas", () => {
+    const lower = "bourbon vanilla orange blossom vanilla caviar lavender rum"
+    expect(splitGluedMerchantNoteRun(lower)).toEqual([
+      "bourbon vanilla",
+      "orange blossom",
+      "vanilla caviar",
+      "lavender",
+      "rum",
+    ])
+    expect(
+      splitGluedMerchantNoteRun("Bourbon Vanilla Orange Blossom Vanilla Caviar Lavender Rum"),
+    ).toEqual(["bourbon vanilla", "orange blossom", "vanilla caviar", "lavender", "rum"])
   })
 })
 
@@ -1712,6 +1726,48 @@ Base: white musk`
       ...JSON.parse(records[1].baseNotes),
     ] as string[]
     expect(libreAll).not.toEqual(expect.arrayContaining(["touch", "rum-like warmth f note"]))
+  })
+
+  it("Andromedas Libre Vanille: Main Notes block (no colon) extracts materials and cleans description", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const libreDesc =
+      "Andromedas Moon Inspired by Libre Vanille Couture Eau De Parfum Inspired by Yves Saint Laurent A rich, elegant vanilla with a golden couture feel smooth, upscale, and softly sensual. This scent wraps warm bourbon vanilla around glowing orange blossom and airy lavender, then finishes with a touch of rum or a polished gourmand-floral impression that feels dressed in black and gold. Fragrance Profile Main Notes Bourbon Vanilla Orange Blossom Vanilla Caviar Lavender Rum Overall Vibe Golden vanilla White floral glow Soft lavender elegance Sweet warmth Refined evening glamour"
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when Main Notes block is present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Andromedas Inspired By Libre Vanille Couture Yves Saint Laurent",
+        description: libreDesc,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromeda-s-inspired-by-libre-vanille-couture-eau-de-parfum-yves-saint-laurent",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    expect(invokeMock).not.toHaveBeenCalled()
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const all = [
+      ...open,
+      ...(JSON.parse(records[0].heartNotes) as string[]),
+      ...(JSON.parse(records[0].baseNotes) as string[]),
+    ]
+    expect(all).toEqual(
+      expect.arrayContaining(["bourbon vanilla", "orange blossom", "vanilla caviar", "lavender", "rum"]),
+    )
+    expect(all).not.toEqual(expect.arrayContaining(["rum-like warmth f", "touch"]))
+    expect(records[0].description).not.toMatch(/fragrance\s+profile|main\s+notes|overall\s+vibe/i)
+    expect(records[0].description).not.toMatch(/touch\s+of\s+or\s+a/i)
   })
 
   it("stripPolicyBoilerplate truncates Processing/Packing/Shipping trail", async () => {

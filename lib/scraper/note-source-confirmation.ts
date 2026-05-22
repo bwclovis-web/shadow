@@ -250,6 +250,12 @@ export const isObviousNonMaterialNote = (note: string): boolean => {
   if (/\bscent\s+description\b/i.test(n)) return true
   if (/\btihota\s+on\s+fire\b/i.test(n)) return true
   if (/\ba\s+soft\s+golden\s+sweetness\b/i.test(n)) return true
+  if (/\b(?:rum|whisky|whiskey)-like\b/i.test(n)) return true
+  if (/\b(?:warmth|embrace|finish)\s+f\b/i.test(n)) return true
+  if (/\s+\bf\b$/i.test(n)) return true
+  if (/-like\b/i.test(n) && /\bwarmth\b/i.test(n)) return true
+  if (/\bgourmand-floral\b/i.test(n)) return true
+  if (/\bpolished\b/i.test(n) && /\bimpression\b/i.test(n)) return true
   return false
 }
 

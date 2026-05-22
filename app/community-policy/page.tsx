@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("communityPolicy.meta")

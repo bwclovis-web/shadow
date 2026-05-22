@@ -29,7 +29,7 @@ import {
   type RoleFilter,
   type StrikeFilter,
 } from "./userAdminFilters"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/userAdmin.webp"
 

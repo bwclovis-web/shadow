@@ -39,7 +39,7 @@ import SeasonalTrendingSection from "@/components/Containers/Exchange/SeasonalTr
 import WishlistMatchesSection from "@/components/Containers/Exchange/WishlistMatchesSection"
 import { buildExchangeDiscoveryChipItems } from "./buildExchangeDiscoveryChipItems"
 import type { ExchangePageData } from "./exchange-types"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 export type { ExchangePageData } from "./exchange-types"
 

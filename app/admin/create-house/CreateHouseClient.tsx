@@ -12,7 +12,7 @@ import {
   createHouseAction,
   type CreateHouseActionState,
 } from "./actions"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/createHouse.png"
 

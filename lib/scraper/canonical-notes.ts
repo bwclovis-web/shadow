@@ -336,6 +336,7 @@ const EXTRA_SINGLE_WORD_MATERIALS = [
   "ginger",
   "sugar",
   "cane",
+  "rum",
 ]
 
 /** Filler words between materials in bad space-joined merchant blobs (skip during greedy split). */
@@ -393,6 +394,9 @@ const MERCHANT_MULTI_WORD_PHRASES: string[] = [
   "powdery notes",
   "woody notes",
   "floral notes",
+  "bourbon vanilla",
+  "vanilla caviar",
+  "glowing orange blossom",
 ]
 
 const getExplodePhrases = (): string[] => {
@@ -444,6 +448,27 @@ const greedyPhraseSplit = (raw: string): string[] | null => {
     return null
   }
   return out.length >= 2 ? out : null
+}
+
+/**
+ * Andromeda's Moon / Shopify PDPs: "Main Notes Bourbon Vanilla Orange Blossom … Rum" (no colon, no commas).
+ * Greedy phrase split first; falls back to comma/decorator split or a single canonical note.
+ */
+export const splitGluedMerchantNoteRun = (raw: string): string[] => {
+  const s = raw.trim().replace(/\s+/g, " ")
+  if (!s) return []
+  if (/[,;•·|✧✦]/.test(s)) {
+    return s
+      .split(/[,;•·|✧✦]+/)
+      .map(part => canonicalizeNote(part))
+      .filter(Boolean)
+  }
+  const greedy = greedyPhraseSplit(s)
+  if (greedy && greedy.length >= 2) return greedy
+  const exploded = explodeSpaceSeparatedNoteBlob(s)
+  if (exploded.length >= 2) return exploded
+  const c = canonicalizeNote(s)
+  return c ? [c] : []
 }
 
 /**

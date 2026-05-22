@@ -431,7 +431,7 @@ const PerformanceAlerts = ({
                     <div>
                       <div className="font-semibold">{alert.message}</div>
                       <div className="text-sm opacity-75">
-                        {formatDateTime(alert.timestamp)}
+                        {formatDateTime(new Date(alert.timestamp))}
                       </div>
                     </div>
                   </div>
@@ -468,7 +468,7 @@ const PerformanceAlerts = ({
                         {alert.message}
                       </div>
                       <div className="text-xs text-gray-500">
-                        {formatDateTime(alert.timestamp)}
+                        {formatDateTime(new Date(alert.timestamp))}
                       </div>
                     </div>
                   </div>

@@ -7,7 +7,7 @@ import PendingSubmissionModal from "@/components/Containers/Forms/PendingSubmiss
 import { Button } from "@/components/Atoms/Button/Button"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { useSessionStore } from "@/hooks/sessionStore"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/contact.webp"
 

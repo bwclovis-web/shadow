@@ -12,7 +12,7 @@ import WishlistItemCard from "@/components/Organisms/WishlistItemCard/WishlistIt
 import type { WishlistBottlePreference } from "@/lib/mutations/wishlist"
 
 import { revalidateWishlistPage } from "./actions"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 /** Shape of a single wishlist item as returned by getUserWishlist (serializable from server). */
 export type WishlistItemForClient = {

@@ -11,7 +11,7 @@ import type { UserReportWithRelations } from "@/models/user-report.server"
 
 import ProfileReportsTab from "./ProfileReportsTab"
 import TradeDisputesTab from "./TradeDisputesTab"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/complaints.png"
 

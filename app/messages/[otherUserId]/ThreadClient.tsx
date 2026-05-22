@@ -19,7 +19,7 @@ import { TradeStatusCard } from "@/components/Molecules/TradeStatusCard"
 import { useSessionStore } from "@/hooks/sessionStore"
 import Modal from "@/components/Organisms/Modal"
 import type { TradeForClient } from "@/types/trade"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/messages.png"
 

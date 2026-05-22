@@ -43,7 +43,7 @@ import type { MyScentsView, UserPerfumeForClient } from "@/types/my-scents-clien
 import type { SortOption } from "@/utils/sortUtils"
 import { styleMerge } from "@/utils/styleUtils"
 import { userBottleImageTransitionName } from "@/utils/view-transition-names"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
 const USER_PERFUMES_API = "/api/user-perfumes"

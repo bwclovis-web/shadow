@@ -33,6 +33,7 @@ import {
   canonicalizeNoteLayers,
   expandLayerNoteBlobs,
   HYPHEN_PROTECTED_NOTE_FRAGMENTS,
+  splitGluedMerchantNoteRun,
 } from "@/lib/scraper/canonical-notes"
 import {
   buildNoteConfirmationCorpus,
@@ -258,6 +259,7 @@ const resolveNotesSource = (item: ScrapedItem): string => {
 const hasExplicitNoteListSignal = (text: string): boolean => {
   const t = text
   if (/\b(?:featured|key|main|primary|signature|dominant)\s+notes?\s*:/i.test(t)) return true
+  if (/\b(?:fragrance\s+profile\s+)?main\s+notes?\s+(?![:\-\u2013\u2014–—])[A-Za-z]/i.test(t)) return true
   if (/\bscent\s+notes?\s+include\b/i.test(t)) return true
   if (/\bscent\s+notes?\s+(?:top|heart|base)\s*:/i.test(t)) return true
   if (/\bnote\s+breakdown\b/i.test(t)) return true
@@ -600,6 +602,16 @@ const extractFeaturedBlockFromPlain = (t: string): string | null => {
   const shopifyIndie = extractShopifyIndieNoteSegmentsFromPlain(plain)
   if (shopifyIndie.length > 0) return shopifyIndie.join("\n").slice(0, 4000)
 
+  const mainNotesGlued = plain.match(
+    /\b(?:fragrance\s+profile\s+)?main\s+notes?\s+(?![:\-\u2013\u2014–—])([A-Za-z][^.!?]{8,220}?)(?=\s+Overall\s+Vibe|\s+Main\s+Accords?|\s+When\s+to\s+Wear|\s+Available\s+Sizes?|\s+How\s+(?:It\s+)?Wears|$)/i,
+  )
+  if (mainNotesGlued?.[1]) {
+    const parsed = splitGluedMerchantNoteRun(mainNotesGlued[1].trim())
+    if (parsed.length >= 2) {
+      return `main notes: ${parsed.join(", ")}`.slice(0, 4000)
+    }
+  }
+
   return null
 }
 
@@ -925,19 +937,36 @@ function cleanTitle(
   return out.replace(/\bthe\s+the\b/gi, "the").replace(/\s+/g, " ").trim() || name
 }
 
+const leavesBrokenProseAfterNoteStrip = (after: string): boolean =>
+  /\btouch\s+of\s+or\b/i.test(after) ||
+  /\bof\s+or\s+a\b/i.test(after) ||
+  /\bfins?\s+with\s+or\b/i.test(after) ||
+  /\bthen\s+finishes\s+with\s+a\s+touch\s+of\s+or\b/i.test(after)
+
+const repairBrokenProseAfterNoteStrip = (text: string): string =>
+  text
+    .replace(/\btouch\s+of\s+or\s+a\b/gi, "touch of")
+    .replace(/\bthen\s+finishes\s+with\s+a\s+touch\s+of\s+or\s+a\b/gi, "then finishes with")
+    .replace(/\s+or\s+or\s+/gi, " or ")
+    .replace(/\s{2,}/g, " ")
+    .trim()
+
 /** Remove extracted note phrases from description text so it's not redundant with the notes fields. */
 function stripNotesFromDescription(description: string, notes: string[]): string {
   if (!description?.trim() || notes.length === 0) return description
   let text = description
   for (const note of notes) {
-    if (!note?.trim()) continue
-    const re = new RegExp(
-      note.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+"),
-      "gi",
-    )
-    text = text.replace(re, " ").replace(/\s+/g, " ").trim()
+    const trimmed = note?.trim()
+    if (!trimmed || isObviousNonMaterialNote(trimmed)) continue
+    const wordCount = trimmed.split(/\s+/).filter(Boolean).length
+    if (wordCount > 4) continue
+    const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+")
+    const re = new RegExp(`\\b${escaped}\\b`, "gi")
+    const next = text.replace(re, " ").replace(/\s+/g, " ").trim()
+    if (next !== text && leavesBrokenProseAfterNoteStrip(next)) continue
+    text = next
   }
-  return text.trim()
+  return repairBrokenProseAfterNoteStrip(text)
 }
 
 function uniqueNotes(notes: string[]): string[] {
@@ -1122,6 +1151,8 @@ function stripTrailingNonNoteSections(text: string): string {
  */
 /** Indie Shopify PDP template sections — strip from stored descriptions only (not pre-extraction). */
 const PDP_SECTION_BOILERPLATE_START_PATTERNS: RegExp[] = [
+  /\bfragrance\s+profile\b/i,
+  /\boverall\s+vibe\b/i,
   /\bscent\s+vibe\b/i,
   /\bnotes\s+top\s*:/i,
   /\bhow\s+it\s+wears\b/i,
@@ -1378,6 +1409,9 @@ const JUNK_NOTE_PATTERNS: RegExp[] = [
   /^\b(?:rgba|margin|padding|border|display|flex|grid|position|z-index|font-size|background|opacity|transform|transition)(?:-\w+)?\b$/i,
   /^\b(?:touch|then|fabric|h[1-6])\b$/i,
   /\b(?:f|of)\s+note\b/i,
+  /\b(?:rum|whisky|whiskey)-like\b/i,
+  /\b(?:warmth|embrace)\s+f\b/i,
+  /\s+\bf\b$/i,
   /\b(buy|shop|order|add to cart|checkout|shipping|delivery|free|sale|discount|price|quantity|qty|sku)\b/i,
   /\b(livrare|cumpara|adauga|comanda|rapid|gratuit)\b/i, // Romanian commerce
   /\b(livraison|acheter|commande|gratuit)\b/i, // French commerce
@@ -1916,6 +1950,14 @@ function extractFlatNotes(text: string): string[] {
     const chunk = truncateFlatNotesChunk(raw ?? "")
     const parsed = filterStructuredNoteParts(splitNoteList(chunk))
     found.push(...parsed)
+  }
+
+  const collapsed = source.replace(/\r/g, "\n").replace(/\s+/g, " ").trim()
+  const mainNotesGlued = collapsed.match(
+    /\b(?:fragrance\s+profile\s+)?main\s+notes?\s+(?![:\-\u2013\u2014–—])([A-Za-z][^.!?]{8,220}?)(?=\s+Overall\s+Vibe|\s+Main\s+Accords?|\s+When\s+to\s+Wear|\s+Available\s+Sizes?|\s+How\s+(?:It\s+)?Wears|$)/i,
+  )
+  if (mainNotesGlued?.[1]) {
+    found.push(...splitGluedMerchantNoteRun(mainNotesGlued[1].trim()))
   }
 
   for (const re of FLAT_NOTE_LIST_PATTERNS) {

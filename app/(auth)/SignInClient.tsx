@@ -12,7 +12,7 @@ import ErrorDisplay from "@/components/Containers/ErrorDisplay/ErrorDisplay"
 import { CSRFToken } from "@/components/Molecules/CSRFToken/CSRFToken"
 import { UserLogInSchema } from "@/utils/validation/formValidationSchemas"
 import { signInAction, type SignInActionState } from "@/app/(auth)/sign-in/actions"
-import PageWrapper from "@/components/Containers/Pagewrapper/PageWrapper"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const SignInClient = () => {
   const emailInputRef = useRef<HTMLInputElement | null>(null)
