@@ -256,6 +256,8 @@ export const isObviousNonMaterialNote = (note: string): boolean => {
   if (/-like\b/i.test(n) && /\bwarmth\b/i.test(n)) return true
   if (/\bgourmand-floral\b/i.test(n)) return true
   if (/\bpolished\b/i.test(n) && /\bimpression\b/i.test(n)) return true
+  if (/\bor\s+andromedas\b/i.test(n)) return true
+  if (/\bandromedas\s+moon\b/i.test(n)) return true
   return false
 }
 

@@ -417,7 +417,7 @@ const extractProseMaterialCue = (capture: string): string => {
   const t = capture.trim()
   if (!t) return t
   const head = t.match(
-    /^([A-Za-z][\p{L}'-]{1,24}(?:\s+[A-Za-z][\p{L}'-]{1,24}){0,2})(?:\s+(?:adds?|with|and|that|which|a|an|the|give)\b|\s*[,;])/iu,
+    /^([A-Za-z][\p{L}'-]{1,24}(?:\s+[A-Za-z][\p{L}'-]{1,24}){0,2})(?:\s+(?:adds?|with|and|or|that|which|a|an|the|give)\b|\s*[,;])/iu,
   )
   const raw = head?.[1] ? head[1].trim() : (t.split(/\s+(?:adds?|with|that|which|give)\b/i)[0] ?? t).trim()
   return raw.replace(/\s+adds?\b.*$/i, "").trim()
@@ -428,6 +428,9 @@ const extractPatternEtsyNoteSegmentsFromPlain = (plain: string): string[] => {
   if (!collapsed) return []
 
   const segments: string[] = []
+  const hasMainNotesBlock = /\b(?:fragrance\s+profile\s+)?main\s+notes?\s+(?![:\-\u2013\u2014–—])[A-Za-z]/i.test(
+    collapsed,
+  )
 
   const noteStruct = collapsed.match(
     new RegExp(String.raw`\bnote\s+structure\s*:\s*(.+?)${PATTERN_ETSY_NOTE_BLOCK_STOP}`, "i"),
@@ -454,21 +457,23 @@ const extractPatternEtsyNoteSegmentsFromPlain = (plain: string): string[] => {
   if (follow?.[1]) segments.push(`heart notes: ${follow[1].trim()}`)
 
   const bitOfAmber = collapsed.match(/\bwith\s+a\s+bit\s+of\s+([A-Za-z][\w-]+)\b/i)
-  if (bitOfAmber?.[1]) segments.push(`base notes: ${bitOfAmber[1].trim()}`)
+  if (!hasMainNotesBlock && bitOfAmber?.[1]) segments.push(`base notes: ${bitOfAmber[1].trim()}`)
 
   const completes = collapsed.match(
     /\b(?:completes?|finishes?|closes?)\s+(?:the\s+composition\s+)?with\s+(?:a\s+)?(?:bit\s+of\s+)?(?:lavish\s+)?([^.!?]{6,100})/i,
   )
-  if (completes?.[1]) {
+  if (!hasMainNotesBlock && completes?.[1]) {
     const material = extractProseMaterialCue(completes[1])
     if (material) segments.push(`base notes: ${material}`)
   }
 
-  for (const m of collapsed.matchAll(
-    /\b(?:a\s+touch\s+of|with\s+a\s+bit\s+of)\s+([A-Za-z][^.!?]{4,60})/gi,
-  )) {
-    const material = extractProseMaterialCue((m[1] ?? "").trim())
-    if (material) segments.push(`base notes: ${material}`)
+  if (!hasMainNotesBlock) {
+    for (const m of collapsed.matchAll(
+      /\b(?:a\s+touch\s+of|with\s+a\s+bit\s+of)\s+([A-Za-z][^.!?]{4,60})/gi,
+    )) {
+      const material = extractProseMaterialCue((m[1] ?? "").trim())
+      if (material) segments.push(`base notes: ${material}`)
+    }
   }
 
   return [...new Set(segments)]

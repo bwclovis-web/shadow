@@ -337,6 +337,7 @@ const EXTRA_SINGLE_WORD_MATERIALS = [
   "sugar",
   "cane",
   "rum",
+  "caviar",
 ]
 
 /** Filler words between materials in bad space-joined merchant blobs (skip during greedy split). */
@@ -420,20 +421,20 @@ const greedyPhraseSplit = (raw: string): string[] | null => {
   const out: string[] = []
   let i = 0
   while (i < words.length) {
-    let matched = false
+    let bestLen = 0
     for (const phrase of phrases) {
       const pw = phrase.split(/\s+/).filter(Boolean)
-      if (i + pw.length > words.length) continue
+      if (pw.length <= bestLen || i + pw.length > words.length) continue
       const slice = words.slice(i, i + pw.length).join(" ").toLowerCase()
-      if (slice === phrase.toLowerCase()) {
-        const c = canonicalizeNote(slice)
-        if (c) out.push(c)
-        i += pw.length
-        matched = true
-        break
-      }
+      if (slice === phrase.toLowerCase()) bestLen = pw.length
     }
-    if (matched) continue
+    if (bestLen > 0) {
+      const chunk = words.slice(i, i + bestLen).join(" ").toLowerCase()
+      const c = canonicalizeNote(chunk)
+      if (c) out.push(c)
+      i += bestLen
+      continue
+    }
     const w = words[i].toLowerCase()
     if (NOTE_BLOB_FILLER_WORDS.has(w) && out.length > 0) {
       i += 1
@@ -463,12 +464,77 @@ export const splitGluedMerchantNoteRun = (raw: string): string[] => {
       .map(part => canonicalizeNote(part))
       .filter(Boolean)
   }
-  const greedy = greedyPhraseSplit(s)
-  if (greedy && greedy.length >= 2) return greedy
+
+  const words = s.split(/\s+/).filter(Boolean)
+  const materials = getSingleWordNoteMaterials()
+  const phrases = new Set(getExplodePhrases())
+  const isKnownChunk = (chunk: string): boolean => {
+    const lc = chunk.trim().toLowerCase()
+    if (!lc) return false
+    if (phrases.has(lc)) return true
+    if (matchesKnownMultiWordPhrase(lc)) return true
+    const token = NOTE_CANONICAL_TOKENS[lc] ?? lc
+    return !lc.includes(" ") && materials.has(token)
+  }
+
+  const longestKnownWalk = (): string[] => {
+    const out: string[] = []
+    let i = 0
+    while (i < words.length) {
+      let matched = false
+      for (let len = Math.min(4, words.length - i); len >= 1; len--) {
+        const chunk = words.slice(i, i + len).join(" ")
+        if (!isKnownChunk(chunk)) continue
+        const c = canonicalizeNote(chunk)
+        if (!c) continue
+        out.push(c)
+        i += len
+        matched = true
+        break
+      }
+      if (!matched) return []
+    }
+    return out
+  }
+
+  const walked = longestKnownWalk()
+  if (walked.length >= 2) return splitKnownTailMaterial(walked)
+
+  /** Andromeda "Main Notes Bourbon Vanilla Orange Blossom … Rum" — Title Case pairs + optional tail. */
+  if (words.length >= 4 && words.every(w => /^[A-Za-z][a-z'-]*$/u.test(w))) {
+    const paired: string[] = []
+    let j = 0
+    while (j + 1 < words.length) {
+      const c = canonicalizeNote(`${words[j]} ${words[j + 1]}`)
+      if (c) paired.push(c)
+      j += 2
+    }
+    if (j < words.length) {
+      const tail = canonicalizeNote(words[j] ?? "")
+      if (tail) paired.push(tail)
+    }
+    if (paired.length >= 2) return splitKnownTailMaterial(paired)
+  }
+
+  const greedy = greedyPhraseSplit(s.toLowerCase())
+  if (greedy && greedy.length >= 2) return splitKnownTailMaterial(greedy)
   const exploded = explodeSpaceSeparatedNoteBlob(s)
-  if (exploded.length >= 2) return exploded
+  if (exploded.length >= 2) return splitKnownTailMaterial(exploded)
   const c = canonicalizeNote(s)
   return c ? [c] : []
+}
+
+const TAIL_SINGLE_MATERIALS = new Set(["rum", "musk", "oud", "amber", "benzoin", "vetiver"])
+
+/** Split paired tail notes like "lavender rum" when the merchant list ends with a solo material. */
+const splitKnownTailMaterial = (notes: string[]): string[] => {
+  if (notes.length === 0) return notes
+  const last = notes[notes.length - 1]?.trim().toLowerCase() ?? ""
+  const parts = last.split(/\s+/).filter(Boolean)
+  if (parts.length === 2 && TAIL_SINGLE_MATERIALS.has(parts[1])) {
+    return [...notes.slice(0, -1), parts[0], parts[1]].map(n => canonicalizeNote(n)).filter(Boolean)
+  }
+  return notes
 }
 
 /**
@@ -541,6 +607,9 @@ const matchesKnownMultiWordPhrase = (text: string): boolean => {
   if (!lc || !lc.includes(" ")) return false
   for (const [from, to] of NOTE_CANONICAL_PHRASES) {
     if (lc === from || lc === to) return true
+  }
+  for (const p of MERCHANT_MULTI_WORD_PHRASES) {
+    if (lc === p.toLowerCase()) return true
   }
   return (
     OPEN_VOLATILITY.has(lc) || HEART_VOLATILITY.has(lc) || BASE_VOLATILITY.has(lc)
