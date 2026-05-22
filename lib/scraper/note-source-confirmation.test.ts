@@ -7,6 +7,7 @@ import {
   confirmNoteLayersAgainstSource,
   extractUnlabeledFragranceNotesBlock,
   isNoteSubstantiatedInSource,
+  isObviousNonMaterialNote,
 } from "./note-source-confirmation"
 
 const invokeMock = vi.hoisted(() => vi.fn())
@@ -146,5 +147,17 @@ Middle Notes: Verdant Earth Accord (Rich Soil, Green and Flowering Plants)`
     expect(open).not.toEqual(expect.arrayContaining(["polished office wear"]))
     expect(open).not.toEqual(expect.arrayContaining(["or when you want to feel expensive"]))
     vi.unstubAllEnvs()
+  })
+
+  it("isObviousNonMaterialNote rejects CSS bleed and truncated prose fragments", () => {
+    expect(isObviousNonMaterialNote("touch")).toBe(true)
+    expect(isObviousNonMaterialNote("then")).toBe(true)
+    expect(isObviousNonMaterialNote("fabric")).toBe(true)
+    expect(isObviousNonMaterialNote("rgba")).toBe(true)
+    expect(isObviousNonMaterialNote("linear-gradient")).toBe(true)
+    expect(isObviousNonMaterialNote("rum-like warmth f note")).toBe(true)
+    expect(isObviousNonMaterialNote("a soft golden sweetness")).toBe(true)
+    expect(isObviousNonMaterialNote("sandalwood")).toBe(false)
+    expect(isObviousNonMaterialNote("orange blossom")).toBe(false)
   })
 })

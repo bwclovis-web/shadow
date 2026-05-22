@@ -14,9 +14,18 @@ const ReactQueryDevtools = dynamic(
   { ssr: false }
 )
 
-export function Providers({ children }: { children: React.ReactNode }) {
+type ProvidersProps = {
+  children: React.ReactNode
+  /** When false, skips /api/auth/refresh (avoids 401 noise for logged-out visitors). */
+  enableTokenRefresh?: boolean
+}
+
+export function Providers({
+  children,
+  enableTokenRefresh = false,
+}: ProvidersProps) {
   const [queryClient] = useState(() => new QueryClient())
-  useTokenRefresh()
+  useTokenRefresh(enableTokenRefresh)
 
   return (
     <QueryClientProvider client={queryClient}>

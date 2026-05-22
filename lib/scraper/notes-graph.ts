@@ -40,6 +40,7 @@ import {
   extractUnlabeledFragranceNotesBlock,
   isNoteSubstantiatedInSource,
   looksLikeProseNotePhrase,
+  isObviousNonMaterialNote,
 } from "@/lib/scraper/note-source-confirmation"
 import { isDisplayableScentNote } from "@/utils/validation/note-validation.server"
 
@@ -305,7 +306,7 @@ const isLikelyNoirClicheOnlyNotes = (notes: {
  * merchant almost certainly has more notes available on the PDP.
  */
 const JUNK_NOTE_RESCUE_RE =
-  /\b(?:scent\s+description|pastel\s+girls|gentle\s+projection|hand-blended|for\s+milk\s+lovers|tihota\s+on\s+fire|a\s+soft\s+golden|the\s+caramelized\s+warmth)\b/i
+  /\b(?:scent\s+description|pastel\s+girls|gentle\s+projection|hand-blended|for\s+milk\s+lovers|tihota\s+on\s+fire|a\s+soft\s+golden|the\s+caramelized\s+warmth|(?:f|of)\s+note|linear-gradient|rgba\s*\()\b/i
 
 const hasObviousJunkExtractedNotes = (notes: {
   openNotes: string[]
@@ -316,7 +317,10 @@ const hasObviousJunkExtractedNotes = (notes: {
   return union.some(
     n =>
       JUNK_NOTE_RESCUE_RE.test(n) ||
-      /^(?:with|fans|soft|cozy|roller|airy|whipped|glowing|kissed|fluffy|fabric)$/i.test(n.trim()),
+      isObviousNonMaterialNote(n) ||
+      /^(?:with|fans|soft|cozy|roller|airy|whipped|glowing|kissed|fluffy|fabric|touch|then|rgba|margin|h[1-6])$/i.test(
+        n.trim(),
+      ),
   )
 }
 
@@ -1370,6 +1374,10 @@ const JUNK_NOTE_PATTERNS: RegExp[] = [
   /[.!?;:(){}\[\]"]/, // punctuation → sentence fragment or copy
   /\d{2,}/, // numbers like sizes, prices, percentages
   /\d+(?:rem|em|ch|vw|vh|px|pt)\b/i, // CSS / layout tokens (e.g. 1rem, 12px)
+  /\b(?:linear-gradient|rgba\s*\(|rgb\s*\(|hsl\s*\()\b/i,
+  /^\b(?:rgba|margin|padding|border|display|flex|grid|position|z-index|font-size|background|opacity|transform|transition)(?:-\w+)?\b$/i,
+  /^\b(?:touch|then|fabric|h[1-6])\b$/i,
+  /\b(?:f|of)\s+note\b/i,
   /\b(buy|shop|order|add to cart|checkout|shipping|delivery|free|sale|discount|price|quantity|qty|sku)\b/i,
   /\b(livrare|cumpara|adauga|comanda|rapid|gratuit)\b/i, // Romanian commerce
   /\b(livraison|acheter|commande|gratuit)\b/i, // French commerce
@@ -1592,8 +1600,20 @@ const filterNotesByTrust = (arr: string[], trusted: Set<string>): string[] =>
     return trusted.has(lc) ? isMerchantLabeledNote(n) : isScraperKeptNote(n)
   })
 
+/** Expand space-joined blobs, re-filter junk, and dedupe before CSV export. */
+const finalizeNoteLayersForExport = (
+  notes: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] },
+  merchantTrustedNotes: Set<string>,
+): { openNotes: string[]; heartNotes: string[]; baseNotes: string[] } =>
+  dedupeNotesAcrossLayers({
+    openNotes: filterNotesByTrust(uniqueNotes(notes.openNotes), merchantTrustedNotes),
+    heartNotes: filterNotesByTrust(uniqueNotes(notes.heartNotes), merchantTrustedNotes),
+    baseNotes: filterNotesByTrust(uniqueNotes(notes.baseNotes), merchantTrustedNotes),
+  })
+
 const looksLikeJunkNote = (note: string): boolean => {
   if (!note?.trim()) return true
+  if (isObviousNonMaterialNote(note)) return true
   const n = note.trim().toLowerCase()
   if (n.split(/\s+/).length > 4) return true
   const hasProtectedHyphen = HYPHEN_PROTECTED_NOTE_FRAGMENTS.some(p => n.includes(p))
@@ -2486,6 +2506,12 @@ const isJunkScrapedDescription = (text: string | null | undefined): boolean => {
   if (/^\s*\/\*/.test(t) && /\b(max-width|margin\s*:\s*0\s+auto|\.am-wrapper|linear-gradient)\b/i.test(lower)) {
     return true
   }
+  if (
+    /\b(?:rgba|linear-gradient|max-width|margin\s*:\s*0)\b/i.test(lower) &&
+    /\b(?:h[1-6]|\.am-wrapper|#comp-)\b/i.test(lower)
+  ) {
+    return true
+  }
   return false
 }
 
@@ -3189,6 +3215,8 @@ const processSingleProductPhase1 = async (
         notes = dedupeNotesAcrossLayers(notes)
       }
     }
+
+    notes = finalizeNoteLayersForExport(notes, merchantTrustedNotes)
 
     const resolveNoteSource = (): ScraperNoteSource => {
       if (noteLayerCount(notes) === 0) return "empty"

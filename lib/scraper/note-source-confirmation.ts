@@ -223,12 +223,41 @@ const PROSE_FRAGMENT_TOKENS = new Set([
   "difference",
   "invest",
   "testing",
+  "touch",
+  "then",
+  "fabric",
+  "rgba",
+  "margin",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
 ])
+
+/** CSS / HTML / truncated prose tokens that must never become pyramid notes. */
+export const isObviousNonMaterialNote = (note: string): boolean => {
+  const n = note.trim().toLowerCase()
+  if (!n) return true
+  if (/^(?:touch|then|fabric|rgba|margin|h[1-6])$/i.test(n)) return true
+  if (/\b(?:linear-gradient|rgba\s*\(|rgb\s*\(|hsl\s*\()\b/i.test(n)) return true
+  if (/\b(?:max-width|font-size|z-index|display|position|opacity|transform|transition)\b/i.test(n)) {
+    return true
+  }
+  if (/\b(?:f|of)\s+note\b/i.test(n)) return true
+  if (/\b(?:warmth|like)\b.*\b(?:f|of)\s+note\b/i.test(n)) return true
+  if (/\bscent\s+description\b/i.test(n)) return true
+  if (/\btihota\s+on\s+fire\b/i.test(n)) return true
+  if (/\ba\s+soft\s+golden\s+sweetness\b/i.test(n)) return true
+  return false
+}
 
 /** Sentence tails from Pattern/Etsy prose cues — not pyramid materials even when they appear in source text. */
 export const looksLikeProseNotePhrase = (note: string): boolean => {
   const n = note.trim().toLowerCase()
   if (!n) return true
+  if (isObviousNonMaterialNote(n)) return true
   if (
     /\b(?:adds?\s+a|\badds\b|give\s+the\s+scent|giraffe-inspired|animalic-foral|perfume\s+with\s+notes|with\s+notes\s+of\s+bergamot|subtle\s+grass\s+note|office\s+wear|polished\s+office)\b/.test(
       n,
@@ -319,7 +348,7 @@ export const confirmNoteLayersAgainstSource = (
 
   const filterLayer = (arr: string[]) =>
     arr.filter(n => {
-      if (looksLikeProseNotePhrase(n)) return false
+      if (looksLikeProseNotePhrase(n) || isObviousNonMaterialNote(n)) return false
       const lc = n.trim().toLowerCase()
       if (trusted?.has(lc)) return substantiate(n)
       const words = n.trim().split(/\s+/).filter(Boolean).length

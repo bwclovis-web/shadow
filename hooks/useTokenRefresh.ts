@@ -9,7 +9,7 @@ const REFRESH_ON_MOUNT_DELAY_MS = 1_000 // 1s after mount so tokens refresh soon
 const REFRESH_API = "/api/auth/refresh"
 
 /** Periodically refreshes auth tokens and revalidates server-rendered data. */
-export const useTokenRefresh = () => {
+export const useTokenRefresh = (enabled: boolean) => {
   const router = useRouter()
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -28,6 +28,8 @@ export const useTokenRefresh = () => {
   }, [router])
 
   useEffect(() => {
+    if (!enabled) return
+
     const onMount = setTimeout(() => {
       void doRefresh()
     }, REFRESH_ON_MOUNT_DELAY_MS)
@@ -40,5 +42,5 @@ export const useTokenRefresh = () => {
       clearTimeout(onMount)
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
-  }, [doRefresh])
+  }, [doRefresh, enabled])
 }

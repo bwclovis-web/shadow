@@ -81,6 +81,30 @@ describe("explodeSpaceSeparatedNoteBlob", () => {
       "vetiver",
     ])
   })
+
+  it("explodeSpaceSeparatedNoteBlob splits Andromeda Moon comma-less merchant blobs", () => {
+    expect(explodeSpaceSeparatedNoteBlob("orange blossom candied almond")).toEqual([
+      "orange blossom",
+      "candied almond",
+    ])
+    expect(explodeSpaceSeparatedNoteBlob("musk ambroxan tonka bean")).toEqual([
+      "musk",
+      "ambroxan",
+      "tonka bean",
+    ])
+    expect(explodeSpaceSeparatedNoteBlob("cotton candy marshmallow")).toEqual([
+      "cotton candy",
+      "marshmallow",
+    ])
+    expect(explodeSpaceSeparatedNoteBlob("marshmallow natural musk")).toEqual([
+      "marshmallow",
+      "natural musk",
+    ])
+    expect(explodeSpaceSeparatedNoteBlob("mahogany tonka bean")).toEqual([
+      "mahogany",
+      "tonka bean",
+    ])
+  })
 })
 
 describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
@@ -1587,6 +1611,107 @@ Base: white musk`
     expect(fetchMock).toHaveBeenCalled()
     vi.unstubAllGlobals()
     vi.unstubAllEnvs()
+  })
+
+  it("Andromedas Powder Love: splits comma-less heart/base blobs and drops prose junk", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const powderDesc =
+      "Inspired by Powder Love Eau De Parfum Notes Top: Cotton Candy • Marshmallow Heart: Orange Blossom • Candied Almond Base: Musk • Ambroxan • Tonka Bean Available Sizes 5ml"
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run for labeled Scent Notes pyramid")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Powder Love Juliette Has A Gun",
+        description: powderDesc,
+        image: "",
+        detailURL: "https://www.andromedasmoon.com/products/andromedas-inspired-by-powder-love-eau-de-parfum-juliette-has-a-gun",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    expect(open).toEqual(expect.arrayContaining(["cotton candy", "marshmallow"]))
+    expect(heart).toEqual(expect.arrayContaining(["orange blossom", "candied almond"]))
+    expect(base).toEqual(expect.arrayContaining(["musk", "ambroxan", "tonka bean"]))
+    expect([...open, ...heart, ...base]).not.toEqual(
+      expect.arrayContaining(["orange blossom candied almond", "musk ambroxan tonka bean"]),
+    )
+  })
+
+  it("drops CSS bleed and noir prose fragments from note layers", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    invokeMock.mockImplementation(async (input: { messages?: { role?: string; content?: string }[] }) => {
+      const sys = String(input?.messages?.find(m => m.role === "system")?.content ?? "")
+      if (sys.includes("master perfumer")) {
+        return {
+          content: JSON.stringify({
+            openNotes: [],
+            heartNotes: [],
+            baseNotes: ["touch", "rum-like warmth f note"],
+          }),
+        }
+      }
+      if (sys.includes("rebalance a perfume note list")) {
+        return {
+          content: JSON.stringify({
+            openNotes: [],
+            heartNotes: [],
+            baseNotes: ["rgba", "linear-gradient", "h2", "margin", "sandalwood"],
+          }),
+        }
+      }
+      return { content: '{"openNotes":[],"heartNotes":[],"baseNotes":[]}' }
+    })
+
+    const cssDesc =
+      "/* .am-wrapper { max-width: 1200px; margin: 0 auto; background: linear-gradient(rgba(0,0,0,.5), rgba(0,0,0,.5)); } h2 { margin: 0; } */ Top: sandalwood Base: warm skin"
+
+    const noirDesc =
+      "Rain-soaked curbs glisten under flickering streetlights as whispers of bourbon vanilla fill the air. A warm, rum-like embrace wraps around you, promising secrets best kept in the shadows."
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Santal De Paris",
+        description: cssDesc,
+        image: "",
+        detailURL: "https://www.andromedasmoon.com/products/inspired-by-santal-de-paris",
+        perfumeHouse: "Andromeda's Moon",
+      },
+      {
+        name: "Libre Vanille",
+        description: noirDesc,
+        image: "",
+        detailURL: "https://www.andromedasmoon.com/products/libre-vanille",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const cssBase = JSON.parse(records[0].baseNotes) as string[]
+    expect(cssBase).not.toEqual(expect.arrayContaining(["rgba", "linear-gradient", "h2", "margin"]))
+
+    const libreAll = [
+      ...JSON.parse(records[1].openNotes),
+      ...JSON.parse(records[1].heartNotes),
+      ...JSON.parse(records[1].baseNotes),
+    ] as string[]
+    expect(libreAll).not.toEqual(expect.arrayContaining(["touch", "rum-like warmth f note"]))
   })
 
   it("stripPolicyBoilerplate truncates Processing/Packing/Shipping trail", async () => {

@@ -4,6 +4,7 @@ import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { getSeasonalTrendingPerfumes } from "@/models/seasonal-trending.server"
 import { getAllFeatures } from '@/models/feature.server'
+import { getTranslations } from "next-intl/server"
 import HomeClient from "./home-client"
 import type { Metadata } from "next"
 
@@ -21,6 +22,8 @@ const HomePage = async () => {
   const session = await getSessionFromCookieHeader(cookieHeader, { includeUser: true })
   const viewerId = session?.user?.id ?? null
 
+  const t = await getTranslations("home")
+
   const [features, communityStats, recentListings, followedActivity, seasonalTrending] =
     await Promise.all([
       getAllFeatures(),
@@ -34,6 +37,8 @@ const HomePage = async () => {
     <HomeClient
       features={features}
       communityStats={communityStats}
+      heading={t("heading")}
+      subheading={t("subheading")}
       recentListings={recentListings}
       followedActivity={followedActivity}
       seasonalTrending={seasonalTrending}

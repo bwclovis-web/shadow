@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Limelight } from 'next/font/google'
+import { cookies } from 'next/headers'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 import './globals.css'
@@ -54,6 +55,8 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   const cookieHeader = await getCookieHeader()
+  const cookieStore = await cookies()
+  const hasRefreshToken = Boolean(cookieStore.get("refreshToken")?.value)
   const session = await getSessionFromCookieHeader(cookieHeader, {
     includeUser: true,
   })
@@ -116,7 +119,7 @@ export default async function RootLayout({
                 <MobileNavigation user={user} />
                 <MobileBottomNavigation user={user} />
                 <ActivityPing userId={user?.id} />
-                <Providers>
+                <Providers enableTokenRefresh={hasRefreshToken}>
                   {user?.id ? <OnboardingBannerSlot userId={user.id} /> : null}
                   {children}
                   <SiteFooter />

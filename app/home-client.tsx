@@ -1,13 +1,12 @@
 "use client"
 
 import { type ChangeEvent, useEffect, useRef, useState } from "react"
+import dynamic from "next/dynamic"
 import Image from "next/image"
 import { useTranslations } from "next-intl"
 
 import Select from "@/components/Atoms/Select"
-import ActivityFeedSection from "@/components/Containers/Exchange/ActivityFeedSection"
 import CommunityStatsStrip from "@/components/Containers/Home/CommunityStatsStrip"
-import SeasonalTrendingSection from "@/components/Containers/Exchange/SeasonalTrendingSection"
 import SearchBar from "@/components/Organisms/SearchBar"
 import { useMounted } from "@/hooks/useMounted"
 import type {
@@ -17,6 +16,16 @@ import type {
 import type { CommunityStats } from "@/models/community-stats.server"
 import type { SeasonalTrendingResult } from "@/models/seasonal-trending.server"
 
+const ActivityFeedSection = dynamic(
+  () => import("@/components/Containers/Exchange/ActivityFeedSection"),
+  { ssr: true }
+)
+
+const SeasonalTrendingSection = dynamic(
+  () => import("@/components/Containers/Exchange/SeasonalTrendingSection"),
+  { ssr: true }
+)
+
 const LANDING_HERO = "/images/landing-new.png"
 
 type Feature = Awaited<ReturnType<typeof import("@/models/feature.server").getAllFeatures>>[number]
@@ -24,14 +33,26 @@ type Feature = Awaited<ReturnType<typeof import("@/models/feature.server").getAl
 interface HomeClientProps {
   features: Feature[]
   communityStats: CommunityStats
+  heading: string
+  subheading: string
   recentListings?: ActivityFeedListingRow[]
   followedActivity?: FollowedActivityItem[]
   seasonalTrending?: SeasonalTrendingResult
 }
 
+const scheduleIdleWork = (work: () => void) => {
+  if (typeof requestIdleCallback !== "undefined") {
+    requestIdleCallback(work, { timeout: 2000 })
+  } else {
+    setTimeout(work, 0)
+  }
+}
+
 export default function HomeClient({
   features: _features,
   communityStats,
+  heading,
+  subheading,
   recentListings = [],
   followedActivity = [],
   seasonalTrending = { season: "spring", perfumes: [] },
@@ -42,7 +63,6 @@ export default function HomeClient({
   const tComponents = useTranslations("components.search")
   const mounted = useMounted()
 
-  // Lazy load GSAP animations after component mounts (skip when user prefers reduced motion)
   useEffect(() => {
     const showHeroWithoutAnimation = () => {
       if (!container.current) return
@@ -53,7 +73,6 @@ export default function HomeClient({
         heroTitle.style.transform = "none"
       }
       if (subtitle) {
-        subtitle.style.opacity = "1"
         subtitle.style.filter = "none"
         subtitle.style.transform = "none"
       }
@@ -71,30 +90,21 @@ export default function HomeClient({
 
       gsap.from(".hero-title", {
         opacity: 0,
-        y: 50,
-        duration: 1.2,
+        y: 24,
+        duration: 0.6,
         ease: "power2.out",
       })
-      gsap.fromTo(
-        ".subtitle",
-        {
-          opacity: 0,
-          filter: "blur(6px)",
-          y: 20,
-        },
-        {
-          opacity: 1,
-          filter: "blur(0px)",
-          y: 0,
-          duration: 2,
-          delay: 1.2,
-          ease: "power3.out",
-        }
-      )
+      gsap.from(".subtitle", {
+        y: 16,
+        filter: "blur(4px)",
+        duration: 0.5,
+        delay: 0.35,
+        ease: "power2.out",
+      })
     }
 
-    requestAnimationFrame(() => {
-      loadAnimations()
+    scheduleIdleWork(() => {
+      void loadAnimations()
     })
   }, [])
 
@@ -131,12 +141,8 @@ export default function HomeClient({
       <div className="absolute inset-0 bg-noir-black/85 mask-radial-from-10% mask-radial-to-74% md:mask-radial-from-25% md:mask-radial-to-44%" />
       <section className="text-noir-gold relative z-10 flex flex-col items-center gap-4 pt-50 md:pt-40">
         <div className="text-shadow-lg/90 text-shadow-noir-black text-center">
-          <h1 className="hero-title">
-            {mounted ? tHome("heading") : "home.heading"}
-          </h1>
-          <p className="subtitle opacity-0">
-            {mounted ? tHome("subheading") : "home.subheading"}
-          </p>
+          <h1 className="hero-title">{heading}</h1>
+          <p className="subtitle">{subheading}</p>
         </div>
         <CommunityStatsStrip stats={communityStats} className="mt-4 mb-6 max-w-2xl" />
         <div className="flex flex-col-reverse md:flex-row items-baseline justify-start w-full max-w-4xl mt-6 gap-4 md:gap-0">

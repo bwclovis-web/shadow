@@ -325,7 +325,34 @@ const EXTRA_SINGLE_WORD_MATERIALS = [
   "blossom",
   "coconut",
   "almond",
+  "ambroxan",
+  "hedione",
+  "mahogany",
+  "cotton",
+  "anise",
+  "leather",
+  "tihota",
+  "vetiver",
+  "ginger",
+  "sugar",
+  "cane",
 ]
+
+/** Filler words between materials in bad space-joined merchant blobs (skip during greedy split). */
+const NOTE_BLOB_FILLER_WORDS = new Set([
+  "natural",
+  "and",
+  "or",
+  "the",
+  "a",
+  "an",
+  "of",
+  "with",
+  "then",
+  "accord",
+  "notes",
+  "note",
+])
 
 /** Common indie-house multi-word note phrases (Andromeda's Moon, etc.). */
 const MERCHANT_MULTI_WORD_PHRASES: string[] = [
@@ -348,6 +375,24 @@ const MERCHANT_MULTI_WORD_PHRASES: string[] = [
   "peach nectar",
   "vanilla bean",
   "fig milk",
+  "candied almond",
+  "cotton candy",
+  "natural musk",
+  "marshmallow accord",
+  "orange blossom",
+  "tonka bean",
+  "sugar cane",
+  "brown sugar",
+  "coffee-cream",
+  "coffee cream",
+  "australian sandalwood",
+  "creamy rice",
+  "steamed milk",
+  "soft incense",
+  "forest fruits",
+  "powdery notes",
+  "woody notes",
+  "floral notes",
 ]
 
 const getExplodePhrases = (): string[] => {
@@ -386,6 +431,10 @@ const greedyPhraseSplit = (raw: string): string[] | null => {
     }
     if (matched) continue
     const w = words[i].toLowerCase()
+    if (NOTE_BLOB_FILLER_WORDS.has(w) && out.length > 0) {
+      i += 1
+      continue
+    }
     const m = NOTE_CANONICAL_TOKENS[w] ?? w
     if (materials.has(m)) {
       out.push(canonicalizeNote(m))
