@@ -20,7 +20,7 @@ import { ExchangeNewListingsBadgeProvider } from '@/components/Molecules/Exchang
 import { TradeAlertUnreadProvider } from '@/components/Molecules/TradeAlertUnread/TradeAlertUnreadProvider'
 import { UserAlertsProvider } from '@/components/Molecules/UserAlertsProvider/UserAlertsProvider'
 import SiteFooter from '@/components/Organisms/SiteFooter/SiteFooter'
-import OnboardingBannerSlot from '@/components/Onboarding/OnboardingBannerSlot'
+import OnboardingBannerSlot from '@/components/Containers/Onboarding/OnboardingBannerSlot'
 import { getSiteUrl } from '@/lib/seo/site-url'
 
 const inter = Inter({

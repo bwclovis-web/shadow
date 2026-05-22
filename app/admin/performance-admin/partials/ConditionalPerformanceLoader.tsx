@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react"
 
 const LazyPerformanceComponents = lazy(
-  () => import("@/components/Performance/LazyPerformanceComponents")
+  () => import("./LazyPerformanceComponents")
 )
 
 export interface ConditionalPerformanceLoaderProps {
@@ -21,7 +21,6 @@ export const ConditionalPerformanceLoader = ({
   }, [])
 
   useEffect(() => {
-    // Only load performance components for admins or when explicitly enabled
     if (
       isClient &&
       enabled &&

@@ -8,12 +8,8 @@ const REFRESH_ON_MOUNT_DELAY_MS = 1_000 // 1s after mount so tokens refresh soon
 
 const REFRESH_API = "/api/auth/refresh"
 
-/**
- * Calls the refresh endpoint on mount (after a short delay) and every 50 minutes
- * so the access token is renewed before it expires (1h). Keeps users logged in
- * without re-prompting every hour.
- */
-export function TokenRefresh() {
+/** Periodically refreshes auth tokens and revalidates server-rendered data. */
+export const useTokenRefresh = () => {
   const router = useRouter()
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -45,6 +41,4 @@ export function TokenRefresh() {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
   }, [doRefresh])
-
-  return null
 }

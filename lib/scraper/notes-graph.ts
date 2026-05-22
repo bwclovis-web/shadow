@@ -39,6 +39,7 @@ import {
   confirmNoteLayersAgainstSource,
   extractUnlabeledFragranceNotesBlock,
   isNoteSubstantiatedInSource,
+  looksLikeProseNotePhrase,
 } from "@/lib/scraper/note-source-confirmation"
 import { isDisplayableScentNote } from "@/utils/validation/note-validation.server"
 
@@ -405,6 +406,17 @@ const PATTERN_ETSY_NOTE_BLOCK_STOP = String.raw`(?=\s+Series\s*:|\s+Perfume\s+Fa
  * listing title ("with notes of Bergamot, Orange, …"). Pull those into labeled lines the structured
  * parser already understands.
  */
+/** "A touch of Liatrix adds a subtle grass note" → Liatrix; "with a bit of Amber" → Amber. */
+const extractProseMaterialCue = (capture: string): string => {
+  const t = capture.trim()
+  if (!t) return t
+  const head = t.match(
+    /^([A-Za-z][\p{L}'-]{1,24}(?:\s+[A-Za-z][\p{L}'-]{1,24}){0,2})(?:\s+(?:adds?|with|and|that|which|a|an|the|give)\b|\s*[,;])/iu,
+  )
+  const raw = head?.[1] ? head[1].trim() : (t.split(/\s+(?:adds?|with|that|which|give)\b/i)[0] ?? t).trim()
+  return raw.replace(/\s+adds?\b.*$/i, "").trim()
+}
+
 const extractPatternEtsyNoteSegmentsFromPlain = (plain: string): string[] => {
   const collapsed = (plain ?? "").replace(/\r/g, "\n").replace(/\s+/g, " ").trim()
   if (!collapsed) return []
@@ -426,6 +438,7 @@ const extractPatternEtsyNoteSegmentsFromPlain = (plain: string): string[] => {
     list = list.replace(/\s+give\s+the\s+scent\b[\s\S]*$/i, "").trim()
     /** Skip noir prose ("Notes of lush jungle greenery…") — merchant lists start with a material name. */
     if (!/^[A-Z]/.test(list)) continue
+    if (/\b(?:perfume|inspired|animalic|giraffe)\b/i.test(list)) continue
     if (list && (/,/.test(list) || /\band\b/i.test(list)) && /[a-z]{3,}/i.test(list)) {
       segments.push(`top notes: ${list}`)
     }
@@ -434,15 +447,21 @@ const extractPatternEtsyNoteSegmentsFromPlain = (plain: string): string[] => {
   const follow = collapsed.match(/\b(?:florals?|notes?)\s+follow(?:s|ed)?\s*:\s*([^.;!?]{8,160})/i)
   if (follow?.[1]) segments.push(`heart notes: ${follow[1].trim()}`)
 
+  const bitOfAmber = collapsed.match(/\bwith\s+a\s+bit\s+of\s+([A-Za-z][\w-]+)\b/i)
+  if (bitOfAmber?.[1]) segments.push(`base notes: ${bitOfAmber[1].trim()}`)
+
   const completes = collapsed.match(
     /\b(?:completes?|finishes?|closes?)\s+(?:the\s+composition\s+)?with\s+(?:a\s+)?(?:bit\s+of\s+)?(?:lavish\s+)?([^.!?]{6,100})/i,
   )
-  if (completes?.[1]) segments.push(`base notes: ${completes[1].trim()}`)
+  if (completes?.[1]) {
+    const material = extractProseMaterialCue(completes[1])
+    if (material) segments.push(`base notes: ${material}`)
+  }
 
   for (const m of collapsed.matchAll(
     /\b(?:a\s+touch\s+of|with\s+a\s+bit\s+of)\s+([A-Za-z][^.!?]{4,60})/gi,
   )) {
-    const material = (m[1] ?? "").trim()
+    const material = extractProseMaterialCue((m[1] ?? "").trim())
     if (material) segments.push(`base notes: ${material}`)
   }
 
@@ -1521,6 +1540,7 @@ const MERCHANT_LABELED_HARD_JUNK_PATTERNS: RegExp[] = [
   /\bexperiment\s+(?:for|with)\s+yourself\b/i,
   /\bfor\s+yourself\b/i,
   /^(?:a|an|the)\s+(?:sweet|night|center)\b/i,
+  /\badds\b/i,
 ]
 
 const isMerchantLabeledNote = (note: string): boolean => {
@@ -1550,7 +1570,7 @@ const collectMerchantTrustedNotes = (
   const trusted = new Set<string>()
   for (const n of [...layers.openNotes, ...layers.heartNotes, ...layers.baseNotes]) {
     const lc = n.trim().toLowerCase()
-    if (!lc || !isMerchantLabeledNote(n)) continue
+    if (!lc || !isMerchantLabeledNote(n) || looksLikeProseNotePhrase(n)) continue
     if (isNoteSubstantiatedInSource(n, corpus, source)) trusted.add(lc)
   }
   return trusted
@@ -1627,11 +1647,22 @@ const filterStructuredNoteParts = (parts: string[]): string[] => {
   const out: string[] = []
   for (const raw of expandParentheticalNoteParts(parts)) {
     const cleaned = stripNoteListProsePrefix(raw.trim())
-    if (!cleaned) continue
+    if (!cleaned || looksLikeProseNotePhrase(cleaned)) continue
+    const wordCount = cleaned.split(/\s+/).filter(Boolean).length
+    if (wordCount > 4) {
+      if (/\baccord\b/i.test(cleaned) && isMerchantLabeledNote(cleaned)) {
+        out.push(cleaned)
+        continue
+      }
+      const rescued = rescueNotePrefixFromProseToken(cleaned, isMerchantLabeledNote)
+      if (rescued) {
+        out.push(rescued)
+        continue
+      }
+    }
     if (isMerchantLabeledNote(cleaned)) {
       out.push(cleaned)
     } else {
-      // Rescue a valid note prefix from an over-long token that was merged with prose
       const rescued = rescueNotePrefixFromProseToken(cleaned, isMerchantLabeledNote)
       if (rescued) out.push(rescued)
     }
@@ -3093,7 +3124,9 @@ const processSingleProductPhase1 = async (
       })
     }
 
-    notes = confirmNoteLayersAgainstSource(notes, notesSource)
+    notes = confirmNoteLayersAgainstSource(notes, notesSource, {
+      merchantTrusted: merchantTrustedNotes,
+    })
     merchantTrustedNotes = collectMerchantTrustedNotes(notes, notesSource)
     notes = {
       openNotes: filterNotesByTrust(notes.openNotes, merchantTrustedNotes),
@@ -3123,7 +3156,9 @@ const processSingleProductPhase1 = async (
           baseNotes: filterNotesByTrust(rescued.baseNotes, merchantTrustedNotes),
         }
         rescued = dedupeNotesAcrossLayers(rescued)
-        rescued = confirmNoteLayersAgainstSource(rescued, rescueSource)
+        rescued = confirmNoteLayersAgainstSource(rescued, rescueSource, {
+          merchantTrusted: merchantTrustedNotes,
+        })
         if (shouldPreferRescuedOverCurrent(notes, rescued, rescueSource, rescuedFlat.length, minFlat)) {
           notes = rescued
           merchantTrustedNotes = collectMerchantTrustedNotes(notes, notesSource)

@@ -4,7 +4,7 @@ import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 
 import { VooDooLink } from "@/components/Atoms/Button"
-import { CopyShareLinkButton } from "@/components/Atoms/CopyShareLinkButton"
+import { CopyShareLinkButton } from "@/components/Molecules/CopyShareLinkButton"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import WishlistItemCard from "@/components/Organisms/WishlistItemCard/WishlistItemCard"

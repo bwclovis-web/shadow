@@ -1,6 +1,6 @@
 "use client"
 
-import { CountryFlagBadge } from "@/components/Atoms/CountryFlagBadge"
+import { CountryFlagBadge } from "@/components/Molecules/CountryFlagBadge"
 import type { TraderResponse } from "@/lib/queries/user"
 import { resolveTraderCountry } from "@/utils/country-list"
 

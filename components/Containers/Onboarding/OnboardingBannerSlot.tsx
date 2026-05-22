@@ -1,4 +1,4 @@
-import OnboardingBanner from "@/components/Onboarding/OnboardingBanner"
+import OnboardingBanner from "@/components/Containers/Onboarding/OnboardingBanner"
 import { getOnboardingState } from "@/models/onboarding.server"
 
 type OnboardingBannerSlotProps = {

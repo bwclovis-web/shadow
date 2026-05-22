@@ -15,6 +15,7 @@ import { ExchangePerfumeCard } from "@/components/Molecules/ExchangePerfumeCard"
 import { ExchangeOpenSplitChip } from "@/components/Molecules/ExchangeOpenSplitChip/ExchangeOpenSplitChip"
 import Modal from "@/components/Organisms/Modal"
 import TitleBanner from "@/components/Organisms/TitleBanner"
+import { DESKTOP_MEDIA } from "@/constants/breakpoints"
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
 import { useGsapStagger } from "@/hooks/useGsapStagger"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
@@ -44,7 +45,6 @@ export type { ExchangePageData } from "./exchange-types"
 
 const ROUTE_PATH = "/the-exchange"
 const BANNER_IMAGE = "/images/exchange.webp"
-const DESKTOP_MEDIA = "(min-width: 1024px)"
 const TheExchangeClient = ({
   availablePerfumes,
   pagination,

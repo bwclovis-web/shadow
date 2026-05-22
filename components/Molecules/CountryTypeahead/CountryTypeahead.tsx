@@ -3,7 +3,7 @@
 import { useEffect, useId, useState } from "react"
 import { useTranslations } from "next-intl"
 
-import { CountryFlagBadge } from "@/components/Atoms/CountryFlagBadge"
+import { CountryFlagBadge } from "@/components/Molecules/CountryFlagBadge"
 import SearchTypeahead from "@/components/Molecules/SearchTypeahead"
 import { searchbarVariants } from "@/components/Molecules/SearchTypeahead/searchbar-variants"
 import {

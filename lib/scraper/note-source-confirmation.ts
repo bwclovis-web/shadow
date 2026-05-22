@@ -225,6 +225,35 @@ const PROSE_FRAGMENT_TOKENS = new Set([
   "testing",
 ])
 
+/** Sentence tails from Pattern/Etsy prose cues — not pyramid materials even when they appear in source text. */
+export const looksLikeProseNotePhrase = (note: string): boolean => {
+  const n = note.trim().toLowerCase()
+  if (!n) return true
+  if (
+    /\b(?:adds?\s+a|\badds\b|give\s+the\s+scent|giraffe-inspired|animalic-foral|perfume\s+with\s+notes|with\s+notes\s+of\s+bergamot|subtle\s+grass\s+note|office\s+wear|polished\s+office)\b/.test(
+      n,
+    )
+  ) {
+    return true
+  }
+  const words = n.split(/\s+/).filter(Boolean)
+  if (words.length > 6) return true
+  if (words.length > 4 && /\b(?:adds?|inspired|composed|glow|mimics|follow|completes)\b/.test(n)) {
+    return true
+  }
+  return false
+}
+
+const corpusIncludesNote = (normalized: string, haystack: string): boolean => {
+  if (!normalized || !haystack) return false
+  if (haystack.includes(normalized)) return true
+  const woodsAlt = normalized.replace(/\bwood\b/g, "woods")
+  if (woodsAlt !== normalized && haystack.includes(woodsAlt)) return true
+  const woodAlt = normalized.replace(/\bwoods\b/g, "wood")
+  if (woodAlt !== normalized && haystack.includes(woodAlt)) return true
+  return false
+}
+
 /** True when the note (or its core material tokens) appears in the note-region corpus. */
 export const isNoteSubstantiatedInSource = (note: string, corpus: string, fullSource?: string): boolean => {
   const normalized = canonicalizeNote(note)
@@ -233,7 +262,7 @@ export const isNoteSubstantiatedInSource = (note: string, corpus: string, fullSo
   const fullHaystack = fullSource ? normalizeCorpusText(fullSource) : haystack
   if (!haystack && !fullHaystack) return false
 
-  if (haystack.includes(normalized)) return true
+  if (corpusIncludesNote(normalized, haystack)) return true
 
   const words = normalized.split(/\s+/).filter(Boolean)
   if (words.length === 1) {
@@ -258,7 +287,7 @@ export const isNoteSubstantiatedInSource = (note: string, corpus: string, fullSo
 
   if (fullSource && hasLabeledNoteListSignal(fullSource)) {
     const regionNorm = normalizeCorpusText(sourceTextNoteRegion(fullSource))
-    if (regionNorm.includes(normalized)) return true
+    if (corpusIncludesNote(normalized, regionNorm)) return true
     if (words.every(w => new RegExp(`\\b${escapeRegExp(w)}\\b`, "i").test(regionNorm))) {
       const spanRe = new RegExp(
         `\\b${escapeRegExp(words[0])}\\b[\\s\\S]{0,48}\\b${escapeRegExp(words[words.length - 1])}\\b`,
@@ -281,13 +310,22 @@ export type NoteLayers = {
 export const confirmNoteLayersAgainstSource = (
   layers: NoteLayers,
   source: string,
-  _options?: { minKept?: number },
+  options?: { minKept?: number; merchantTrusted?: Set<string> },
 ): NoteLayers => {
   const corpus = buildNoteConfirmationCorpus(source)
   const substantiate = (n: string) =>
     isNoteSubstantiatedInSource(n, corpus, source)
+  const trusted = options?.merchantTrusted
 
-  const filterLayer = (arr: string[]) => arr.filter(substantiate)
+  const filterLayer = (arr: string[]) =>
+    arr.filter(n => {
+      if (looksLikeProseNotePhrase(n)) return false
+      const lc = n.trim().toLowerCase()
+      if (trusted?.has(lc)) return substantiate(n)
+      const words = n.trim().split(/\s+/).filter(Boolean).length
+      if (words <= 4 && !/\baccord\b/i.test(n)) return true
+      return substantiate(n)
+    })
 
   const openNotes = filterLayer(layers.openNotes)
   const heartNotes = filterLayer(layers.heartNotes)

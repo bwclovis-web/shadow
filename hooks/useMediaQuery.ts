@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react"
 
+import { DESKTOP_MEDIA, TABLET_MEDIA } from "@/constants/breakpoints"
+
 /**
  * Custom hook for matching media queries
  *
@@ -21,9 +23,6 @@ export const useMediaQuery = (query: string): boolean => {
   return matches
 }
 
-const TABLET = "(min-width: 768px)"
-const DESKTOP = "(min-width: 1024px)"
-
 const getPageSize = (isTablet: boolean, isDesktop: boolean): number =>
   isDesktop ? 16 : isTablet ? 8 : 6
 
@@ -43,8 +42,8 @@ export const useResponsivePageSize = (): number => {
   const [pageSize, setPageSize] = useState(8)
 
   useEffect(() => {
-    const mqTablet = window.matchMedia(TABLET)
-    const mqDesktop = window.matchMedia(DESKTOP)
+    const mqTablet = window.matchMedia(TABLET_MEDIA)
+    const mqDesktop = window.matchMedia(DESKTOP_MEDIA)
 
     const update = () =>
       setPageSize(getPageSize(mqTablet.matches, mqDesktop.matches))

@@ -42,7 +42,7 @@ const CopyShareLinkButton = ({
         type="button"
         variant={variant}
         size={size}
-        onClick={() => void handleCopy()}
+        onClick={() => handleCopy()}
       >
         {copyState === "copied"
           ? t("linkCopied")

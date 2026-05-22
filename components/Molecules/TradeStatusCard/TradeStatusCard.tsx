@@ -6,7 +6,7 @@ import { useState } from "react"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button/Button"
-import { CopyShareLinkButton } from "@/components/Atoms/CopyShareLinkButton"
+import { CopyShareLinkButton } from "@/components/Molecules/CopyShareLinkButton"
 import FormField from "@/components/Atoms/FormField/FormField"
 import OpenDisputeButton from "@/components/Containers/TraderProfile/OpenDisputeButton"
 import TradeListingPreview from "@/components/Molecules/TradeListingPreview/TradeListingPreview"

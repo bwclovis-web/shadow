@@ -7,14 +7,13 @@ import { FaClockRotateLeft, FaUserGroup } from "react-icons/fa6"
 import VooDooDetails from "@/components/Atoms/VooDooDetails"
 import ActivityFeedItem from "@/components/Containers/Exchange/ActivityFeedItem"
 import FollowedActivityFeedItem from "@/components/Containers/Exchange/FollowedActivityFeedItem"
+import { DESKTOP_MEDIA } from "@/constants/breakpoints"
 import { useGsapStagger } from "@/hooks/useGsapStagger"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
 import type {
   ActivityFeedListingRow,
   FollowedActivityItem,
 } from "@/models/activity-feed.server"
-
-const DESKTOP_MEDIA = "(min-width: 1024px)"
 
 type ActivityFeedSectionProps = {
   listings: ActivityFeedListingRow[]
@@ -140,7 +139,7 @@ const ActivityFeedSection = ({
   const followedSection = hasFollowed ? (
     isCompact ? (
       <section className="mb-8" aria-labelledby="home-followed-activity-heading">
-        <div className="flex items-start gap-3">
+        <div className="flex items-center gap-3">
           <FaUserGroup className="mt-0.5 h-5 w-5 shrink-0 text-noir-gold" aria-hidden />
           <h2
             id="home-followed-activity-heading"
@@ -183,7 +182,7 @@ const ActivityFeedSection = ({
   const globalSection = hasGlobal ? (
     isCompact ? (
       <section aria-labelledby="home-activity-feed-heading">
-        <div className="flex items-start gap-3">
+        <div className="flex items-center gap-3">
           <FaClockRotateLeft className="mt-0.5 h-5 w-5 shrink-0 text-noir-gold" aria-hidden />
           <h2 id="home-activity-feed-heading" className="text-lg font-semibold text-noir-gold">
             {tGlobal("title")}

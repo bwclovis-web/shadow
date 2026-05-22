@@ -3,7 +3,7 @@
 import { useState } from "react"
 
 import VooDooCheck from "@/components/Atoms/VooDooCheck/VooDooCheck"
-import { ConditionalPerformanceLoader } from "@/components/Performance"
+import { ConditionalPerformanceLoader } from "./partials/ConditionalPerformanceLoader"
 
 interface PerformanceSettings {
   monitoring: {

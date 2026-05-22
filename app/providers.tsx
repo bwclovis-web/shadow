@@ -6,7 +6,7 @@ import { useState } from 'react'
 
 import { CompareTray } from '@/components/Molecules/CompareTray/CompareTray'
 import ModalRouteCleanup from '@/components/Molecules/ModalRouteCleanup/ModalRouteCleanup'
-import { TokenRefresh } from '@/components/TokenRefresh'
+import { useTokenRefresh } from '@/hooks/useTokenRefresh'
 
 const ReactQueryDevtools = dynamic(
   () =>
@@ -16,10 +16,10 @@ const ReactQueryDevtools = dynamic(
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient())
+  useTokenRefresh()
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TokenRefresh />
       <ModalRouteCleanup />
       {children}
       <CompareTray />

@@ -3,7 +3,7 @@
 import { Link } from "next-view-transitions"
 import { useTranslations } from "next-intl"
 
-import { CopyShareLinkButton } from "@/components/Atoms/CopyShareLinkButton"
+import { CopyShareLinkButton } from "@/components/Molecules/CopyShareLinkButton"
 import { ItemsSearchingFor } from "@/components/Containers/TraderProfile"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import type { PublicWishlistItem } from "@/models/wishlist.server"

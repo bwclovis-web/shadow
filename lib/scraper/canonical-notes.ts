@@ -14,6 +14,7 @@ const NOTE_CANONICAL_PHRASES: [string, string][] = [
   ["lily of the valley", "lily of the valley"],
   ["ylang ylang", "ylang ylang"],
   ["tree moss", "tree moss"],
+  ["salt water", "salt water"],
   ["white musk", "white musk"],
   ["black musk", "black musk"],
   ["soft musk", "soft musk"],

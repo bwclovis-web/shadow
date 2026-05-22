@@ -14,9 +14,7 @@ export interface ButtonProps
   leftIcon?: ReactNode
   rightIcon?: ReactNode
   style?: ButtonHTMLAttributes<HTMLButtonElement>["style"]
-  /** Renders a mapped icon (not a DOM `icon` attribute). */
   icon?: IconName
-  /** HTML Popover API — not always present on older `@types/react`. */
   popoverTarget?: string
   command?: string
 }

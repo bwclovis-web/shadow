@@ -1,6 +1,5 @@
 import { lazy, Suspense } from "react"
 
-// Lazy load performance components
 const PerformanceDashboard = lazy(
   () => import("@/components/Organisms/PerformanceDashboard")
 )
@@ -14,7 +13,6 @@ const PerformanceTracer = lazy(
   () => import("@/components/Organisms/PerformanceTracer")
 )
 
-// Loading fallback
 const PerformanceLoading = () => (
   <div className="p-4 text-center text-gray-500">
     <div className="animate-pulse">
@@ -25,7 +23,6 @@ const PerformanceLoading = () => (
   </div>
 )
 
-// Lazy performance components wrapper
 const LazyPerformanceComponents = () => (
   <Suspense fallback={<PerformanceLoading />}>
     <div className="space-y-6">
