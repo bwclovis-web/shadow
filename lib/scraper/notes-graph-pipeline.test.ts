@@ -2072,6 +2072,54 @@ Base: white musk`
     expect(invokeMock).not.toHaveBeenCalled()
   })
 
+  it("Andromedas Dolce Di Luna: Wear Guide prose does not bleed into pyramid notes", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const dolcePdp =
+      "Dolce di Luna is a celestial gourmand fantasy. Fragrance Notes Top Notes: Marshmallow, Sugar, Yeast, Almond, Milk, Saffron Heart Notes: Vanilla, Toffee Base Notes: Musk, Sandalwood, Cedar Wear Guide Perfect for cozy nights, starry date evenings, or whenever you want to feel wrapped in a soft, celestial hug. Good to Know: Hand-poured, cruelty-free, and made with a special blend of gourmand ingredients."
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when Top/Heart/Base notes are present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Dolce Di Luna",
+        description: dolcePdp,
+        image: "",
+        detailURL: "https://www.andromedasmoon.com/products/andromedas-dolce-di-luna-eau-de-parfum",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(open).toEqual(
+      expect.arrayContaining(["marshmallow", "sugar", "yeast", "almond", "milk", "saffron"]),
+    )
+    expect(heart).toEqual(expect.arrayContaining(["vanilla", "toffee"]))
+    expect(base).toEqual(expect.arrayContaining(["musk", "sandalwood", "cedar"]))
+    expect(all).not.toEqual(
+      expect.arrayContaining([
+        "starry date evenings",
+        "celestial hug",
+        "celestial",
+        "cedar wear guide",
+        "wear guide",
+      ]),
+    )
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
   it("Andromedas Wavechild: emoji Top/Middle/Base notes of layers parse without LLM", async () => {
     vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
     vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")

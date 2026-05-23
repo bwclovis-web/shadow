@@ -69,7 +69,7 @@ describe("MobileBottomNavigation", () => {
     )
     expect(screen.getByRole("link", { name: /messages/i })).toHaveAttribute(
       "href",
-      "/messages"
+      "/exchanges"
     )
     expect(screen.getByRole("link", { name: /alerts/i })).toHaveAttribute(
       "href",

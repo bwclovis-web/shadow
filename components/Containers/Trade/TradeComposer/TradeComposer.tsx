@@ -158,7 +158,7 @@ const TradeComposer = ({
       dispatchUserAlertsRefresh()
       onSuccess?.()
       if (!stayOnPage) {
-        router.push(`/messages/${activeInit.seed.counterpartyId}`)
+        router.push(`/exchanges/${activeInit.seed.counterpartyId}`)
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : t("error"))
@@ -186,7 +186,7 @@ const TradeComposer = ({
   return (
     <div className="space-y-4">
       <div>
-        <p className="mb-2 text-sm font-medium text-noir-gold">{t("targetListing")}</p>
+        {/* <p className="mb-2 text-sm font-medium text-noir-gold">{t("targetListing")}</p> */}
         <TradeListingPreview
           seed={activeInit.seed}
           traderName={activeInit.counterpartyDisplayName}
@@ -234,7 +234,7 @@ const TradeComposer = ({
 
       <FormField
         label={t("notesLabel")}
-        helpText={cashOnly ? t("notesHelpCash") : t("notesHelp")}
+        helpText={t("notesHelpCash")}
       >
         <textarea
           value={notes}
@@ -242,7 +242,7 @@ const TradeComposer = ({
           rows={3}
           maxLength={2000}
           className="block w-full rounded border border-noir-gold/40 bg-noir-dark px-3 py-2 text-sm text-noir-gold-100"
-          placeholder={cashOnly ? t("notesPlaceholderCash") : t("notesPlaceholder")}
+          placeholder={t("notesPlaceholderCash")}
         />
       </FormField>
 
@@ -258,7 +258,7 @@ const TradeComposer = ({
       <div className="flex flex-wrap justify-end gap-2">
         {!stayOnPage && success ? (
           <Link
-            href={`/messages/${activeInit.seed.counterpartyId}`}
+            href={`/exchanges/${activeInit.seed.counterpartyId}`}
             className="text-sm text-noir-blue underline"
           >
             {t("openMessages")}

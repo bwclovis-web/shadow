@@ -7,6 +7,8 @@ import { Button } from "@/components/Atoms/Button/Button"
 
 type CopyShareLinkButtonProps = {
   sharePath: string
+  /** next-intl key under `shareLinks`; defaults to `copyLink` */
+  labelKey?: string
   className?: string
   size?: "sm" | "md" | "lg"
   variant?: "primary" | "secondary" | "danger"
@@ -14,6 +16,7 @@ type CopyShareLinkButtonProps = {
 
 const CopyShareLinkButton = ({
   sharePath,
+  labelKey = "copyLink",
   className = "",
   size = "sm",
   variant = "secondary",
@@ -48,7 +51,7 @@ const CopyShareLinkButton = ({
           ? t("linkCopied")
           : copyState === "error"
             ? t("copyLinkError")
-            : t("copyLink")}
+            : t(labelKey)}
       </Button>
     </div>
   )

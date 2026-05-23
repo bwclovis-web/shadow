@@ -128,6 +128,7 @@ const TagSearch = ({
         />
       </div>
       <TagList
+        type="exchange"
         selectedTags={selectedTags}
         label={label}
         onRemoveTag={handleRemoveTag}

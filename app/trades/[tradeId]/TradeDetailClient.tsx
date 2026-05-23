@@ -35,7 +35,7 @@ const TradeDetailClient = ({
         <div className="flex flex-col items-center gap-3">
           <CopyShareLinkButton sharePath={`/trades/${trade.id}`} />
           <Link
-            href={`/messages/${trade.initiatorId === viewerId ? trade.counterpartyId : trade.initiatorId}`}
+            href={`/exchanges/${trade.initiatorId === viewerId ? trade.counterpartyId : trade.initiatorId}`}
             className="text-sm text-noir-gold-100 underline hover:text-noir-gold"
           >
             {t("openMessages")}

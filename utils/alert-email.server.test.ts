@@ -165,7 +165,7 @@ describe("sendTradeEventEmail", () => {
       expect.objectContaining({
         to: "trader@example.com",
         subject: "Jane accepted your trade",
-        text: expect.stringContaining("https://example.com/messages/actor-2"),
+        text: expect.stringContaining("https://example.com/exchanges/actor-2"),
       })
     )
   })

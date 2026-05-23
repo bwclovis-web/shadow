@@ -92,9 +92,6 @@ export const TradeMatchReasonLine = ({
 
   return (
     <span className={styleMerge("inline-flex items-center gap-1.5", className)}>
-      {showTriggerLabel ? (
-        <span className="text-xs text-noir-gold-100/90">{t("triggerLabel")}</span>
-      ) : null}
       <IconPopover
         ariaLabel={t("whyAriaLabel")}
         icon={<MdInfoOutline size={18} className="text-current shrink-0" />}

@@ -36,6 +36,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "validate": "npm run typecheck && npm run test && npm run knip",
+    "i18n:diff": "node scripts/sync-translations-diff.js",
+    "i18n:sync": "node scripts/sync-translations-apply.js",
     "pwa:icons": "node scripts/generate-pwa-icons.mjs",
     "sanity:check": "node scripts/check-sanity-env.mjs",
     "sanity:login": "sanity login",

@@ -81,7 +81,7 @@ export default function TraderProfileClient({
       <TitleBanner
         image={BANNER_IMAGE}
         heading={t("heading", { traderName })}
-        subheading={t("subheading", { traderName })}
+        subheading={t("subheading")}
       >
         <TraderAvatar
           displayName={traderName}
@@ -100,6 +100,7 @@ export default function TraderProfileClient({
         />
         <CopyShareLinkButton
           sharePath={`/trader-profile/${trader.id}`}
+          labelKey="shareProfile"
           className="mt-4 justify-center"
         />
       </TitleBanner>

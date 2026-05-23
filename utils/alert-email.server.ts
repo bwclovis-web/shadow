@@ -171,7 +171,7 @@ export const sendDecantInterestAlertEmail = async (params: {
 }
 
 const buildTradeThreadUrl = (actorUserId: string): string =>
-  `${getAppBaseUrl()}/messages/${actorUserId}`
+  `${getAppBaseUrl()}/exchanges/${actorUserId}`
 
 export const sendSplitEventEmail = async (params: {
   user: RecipientUser

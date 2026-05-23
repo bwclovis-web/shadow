@@ -65,7 +65,7 @@ const TradeListingPreview = ({
     >
       {traderName ? (
         <p className={styleMerge("font-semibold text-noir-gold", compact ? "text-sm" : "text-base")}>
-          {traderName}
+          {tComposer("contactAboutHeading", { traderName })}
           {reputationScore != null ? (
             <span className="ml-2 text-xs font-normal text-noir-gold-500">
               ({tRep("exchangeTrust", { score: reputationScore })})
@@ -73,18 +73,7 @@ const TradeListingPreview = ({
           ) : null}
         </p>
       ) : null}
-      {seed.counterpartyId && traderName && !compact ? (
-        <p className="mt-1">
-          <PrefetchLink
-            href={`/trader-profile/${seed.counterpartyId}`}
-            prefetch={false}
-            className="text-xs text-noir-blue underline decoration-noir-gold/40 hover:text-noir-gold-100"
-            onClick={() => onViewProfileClick?.()}
-          >
-            {tComposer("viewTraderProfile")}
-          </PrefetchLink>
-        </p>
-      ) : null}
+      
       <p className={styleMerge("font-semibold text-noir-gold", compact ? "text-sm mt-1" : "text-lg mt-2")}>
         {seed.perfumeName}
       </p>
@@ -123,6 +112,19 @@ const TradeListingPreview = ({
           <span className="text-noir-gold-500">{t("price")}: </span>
           <span>${seed.price}/ml</span>
         </p>
+      ) : null}
+      {seed.counterpartyId && traderName && !compact ? (
+        <div className="flex items-center gap-1 mt-1">
+          <span className="text-noir-gold-500">{traderName}: </span>
+            <PrefetchLink
+              href={`/trader-profile/${seed.counterpartyId}`}
+              prefetch={false}
+              className="text-sm text-noir-blue underline decoration-noir-gold/40 hover:text-noir-gold-100"
+              onClick={() => onViewProfileClick?.()}
+            >
+              {tComposer("viewTraderProfile")}
+            </PrefetchLink>
+        </div>
       ) : null}
     </div>
   )

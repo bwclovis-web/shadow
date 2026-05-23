@@ -41,10 +41,10 @@ const TitleBanner = ({
         } mb-2 filter brightness-[1.2] sepia-[0.2] mix-blend-screen mt-16 md:mt-12 rounded-lg absolute top-0 left-0 right-0 z-0`}
         sizes="100vw"
       />
-      <div className="relative z-10 w-full max-w-max p-2 top-2 md:top-0 md:px-8 rounded-lg md:py-4 text-noir-gold text-center text-shadow-lg text-shadow-noir-black">
+      <div className="relative z-10 w-full max-w-max p-2 top-2 md:top-0 md:px-8 rounded-lg md:py-4 text-noir-gold text-center text-shadow-lg text-shadow-noir-black bg-noir-black/80 backdrop-blur-sm">
         <h1>{heading}</h1>
-        {subheading && <p className="subtitle-sm">{subheading}</p>}
-        {children && <div className="p-2 mt-4 md:mt-6">{children}</div>}
+        {subheading && <p className="subtitle-sm mt-2">{subheading}</p>}
+        {children && <div className="p-2 mt-4 md:mt-4">{children}</div>}
       </div>
     </header>
   )

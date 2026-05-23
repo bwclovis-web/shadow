@@ -438,7 +438,7 @@
     },
     "eyebrow": "Journal",
     "heading": "Journal",
-    "subheading": "Long-form stories on perfume houses, iconic bottles, and the culture around scent.",
+    "subheading": "Notes from the Hollow.",
     "browseHouses": "Browse all perfume houses →",
     "empty": "No articles published yet. Check back soon.",
     "notConfigured": "The editorial blog is not connected yet. Add Sanity environment variables to enable articles.",
@@ -455,7 +455,7 @@
       "description": "Explore all the perfume houses available in our database."
     },
     "heading": "Behind the Bottle",
-    "subheading": "They don't just make perfume, they leave a mark.",
+    "subheading": "The houses, creators, and identities shaping the world of fragrance.",
     "readStories": "Read editorial stories →",
     "filters": {
       "houseType": "Filter by Type:",
@@ -470,11 +470,11 @@
       "drugstore": "Drugstore"
     },
     "sortOptions": {
-      "created-desc": "Newest First",
-      "created-asc": "Oldest First",
-      "name-asc": "Name A-Z",
-      "name-desc": "Name Z-A",
-      "type-asc": "Type"
+      "created-desc": "Recently Added",
+      "created-asc": "Oldest Entries",
+      "name-asc": "Alphabetical A-Z",
+      "name-desc": "Alphabetical Z-A",
+      "type-asc": "By Fragrance Type"
     }
   },
   "allPerfumes": {
@@ -483,12 +483,13 @@
       "description": "Discover all the perfumes available in our database."
     },
     "heading": "The Archive",
-    "subheading": "Every bottle tells a story. Some whisper. Some scream."
+    "subheading": "Every fragrance carries something worth remembering."
   },
   "auth": {
-    "heading": "Welcome Back",
-    "subheading": "Log in to your account here. If you do not have one,",
-    "createAccount": "Click here to create",
+    "heading": "Enter the Hollow",
+    "subheading": "Continue exploring the Archive, managing your collection, and connecting with fellow collectors.",
+    "newHere": "New to the Hollow?",
+    "createAccount": "Begin Collecting",
     "passwordRequirements": "Password Requirements:",
     "termsAndConditions": "I accept the: ",
     "termsAndConditionsLink": "terms and conditions",
@@ -519,7 +520,11 @@
     },
     "signUp": {
       "title": "Sign Up - perfumer's hollow",
-      "description": "Create an account to access your profile and manage your collection."
+      "description": "Create an account to access your profile and manage your collection.",
+      "heading": "Begin Your Collection",
+      "subheading": "Create an account to track discoveries, build your collection, and connect with fellow fragrance collectors.",
+      "alreadyHere": "Already in the Hollow?",
+      "signIn": "Return to Sign In"
     }
   },
   "directMessages": {
@@ -555,8 +560,14 @@
   },
   "components": {
     "dataDisplaySection": {
-      "heading": "Select a letter to browse {itemName}",
-      "subheading": "Click on any letter above to see {itemName} starting with that letter"
+      "headingArchive": "Browse the Archive",
+      "subheadingArchive": "Explore fragrances one letter at a time.",
+      "headingHouses": "Browse the Houses",
+      "subheadingHouses": "Discover the names behind the fragrances in the Archive."
+    },
+    "tagList": {
+      "emptyExchange": "Select notes to refine the Exchange",
+      "emptyWishlist": "No fragrances on your wishlist yet"
     },
     "modal": {
       "close": "Close Modal"
@@ -582,14 +593,14 @@
     }
   },
   "contactTrader": {
-    "title": "Contact Trader",
+    "title": "Contact Collector",
     "itemTitle": "Inquire About Item",
-    "heading": "Contact Trader",
+    "heading": "Contact Collector",
     "subheading": "Contact {traderName} to inquire about trading.",
     "itemSubheading": "Contact the trader about {perfumeName}{perfumeHouse}.",
     "itemSubject": "Inquiry about {perfumeName}{perfumeHouse}",
     "itemMessageTemplate": "I'm interested in {perfumeName}{perfumeHouse} ({amount}ml).",
-    "button": "Contact Trader",
+    "button": "Contact Collector",
     "inquireButton": "Inquire About This Item",
     "subjectLabel": "Subject (optional)",
     "subjectPlaceholder": "Enter subject...",
@@ -685,11 +696,11 @@
     }
   },
   "sortOptions": {
-    "created-desc": "Newest First",
-    "created-asc": "Oldest First",
-    "name-asc": "Name A-Z",
-    "name-desc": "Name Z-A",
-    "type-asc": "Type"
+    "created-desc": "Recently Added",
+    "created-asc": "Oldest Entries",
+    "name-asc": "Alphabetical A-Z",
+    "name-desc": "Alphabetical Z-A",
+    "type-asc": "By Fragrance Type"
   },
   "createHouse": {
     "meta": {
@@ -742,15 +753,15 @@
       "description": "Explore a comprehensive database of perfumes and their houses."
     },
     "radio": {
-      "houses": "Perfume Houses",
-      "perfumes": "Perfumes"
+      "houses": "Fragrance Houses",
+      "perfumes": "the Archive…"
     },
     "heading": "Perfumer's Hollow",
     "description": "A comprehensive database of perfumes and their houses.",
     "subheading": "Where Fragrance Leaves a Shadow.",
     "searchType": {
-      "perfume-house": "Perfume Houses",
-      "perfume": "Perfumes"
+      "perfume-house": "fragrance houses…",
+      "perfume": "the Archive…"
     },
     "stats": {
       "users": "Users",
@@ -1261,7 +1272,7 @@
     }
   },
   "traderActivity": {
-    "recentlyActive": "Active recently"
+    "recentlyActive": "Recently Active"
   },
   "password": {
     "excellentPasswordStrength": "Excellent password strength!",
@@ -1341,7 +1352,7 @@
     },
     "navigation": {
       "profile": "Profile",
-      "messages": "Messages",
+      "exchanges": "Exchanges",
       "wishlist": "My Wishlist",
       "myReports": "My Reports",
       "myDisputes": "My Disputes",
@@ -1732,28 +1743,28 @@
       "description": "Browse perfumes available for trade from our community members."
     },
     "heading": "The Exchange",
-    "subheading": "Every bottle has a past. Every trade leaves a trace.",
-    "count": "perfumes available",
-    "empty": "No perfumes are currently available for trade.",
+    "subheading": "Rare fragrances find new homes here.",
+    "count": "fragrances currently available",
+    "empty": "No fragrances are currently available for trade.",
     "availableFrom": "Available from",
     "search": {
-      "placeholder": "Search available perfumes...",
-      "noResults": "No perfumes found",
+      "placeholder": "Search available fragrances...",
+      "noResults": "No fragrances found",
       "tryDifferent": "Try a different search term",
       "keyboardHint": "Press / to focus search · Esc to clear filters"
     },
     "filters": {
       "toggle": "Filters",
       "notesTitle": "Notes",
-      "notesDescription": "Match perfumes that include any selected note.",
+      "notesDescription": "Find fragrances by their notes.",
       "notesSearchLabel": "Notes",
       "seasonTitle": "Season",
-      "seasonDescription": "Match perfumes where the community voted for any selected season.",
+      "seasonDescription": "Explore fragrances by season and atmosphere.",
       "houseTitle": "House",
       "houseSearchLabel": "Search house name",
       "houseClear": "Clear",
       "priceTitle": "Listing price",
-      "priceDescription": "Filter by seller listing price (numeric part only).",
+      "priceDescription": "Filter listings by price range.",
       "minLabel": "Min",
       "maxLabel": "Max",
       "clearAll": "Reset all filters",
@@ -1765,18 +1776,18 @@
       "priceChipMin": "Min {min}",
       "priceChipMax": "Max {max}",
       "priceChipRange": "{min}–{max}",
-      "tradePrefTitle": "Trade preference",
-      "tradePrefDescription": "Show listings from traders open to cash, trade, or both.",
-      "tradePrefAria": "Trade preference filters",
+      "tradePrefTitle": "Exchange preference",
+      "tradePrefDescription": "Filter listings by preferred exchange type.",
+      "tradePrefAria": "Exchange preference filters",
       "bottleTitle": "Bottle type",
-      "bottleDescription": "Match listings by how much fragrance is offered.",
+      "bottleDescription": "Filter listings by fragrance format.",
       "bottleAria": "Bottle type filters",
       "bottleDecant": "Decant",
       "conditionTitle": "Condition",
-      "conditionDescription": "Match listings with the selected bottle condition.",
+      "conditionDescription": "Filter listings by bottle condition.",
       "conditionAria": "Condition filters",
-      "regionTitle": "Trader region",
-      "regionDescription": "Filter by where the trader is based.",
+      "regionTitle": "Collector region",
+      "regionDescription": "Filter listings by collector location.",
       "regionLabel": "Region",
       "regionAll": "Any region",
       "regionUS": "United States",
@@ -1785,13 +1796,13 @@
       "regionEU": "Europe",
       "regionOther": "Other",
       "hasPhotosLabel": "Listing photos",
-      "hasPhotosDescription": "Only show listings that include at least one photo.",
+      "hasPhotosDescription": "Show only listings with photos.",
       "hasPhotosChip": "Has photos",
-      "hasPhotosToggle": "Only listings with photos"
+      "hasPhotosToggle": "Listings with photos only"
     },
     "wishlistMatches": {
       "title": "Matches for you",
-      "description": "Wishlist perfumes that traders are listing right now."
+      "description": "Fragrances aligned with your tastes, collection, and recent discoveries."
     },
     "matchReason": {
       "triggerLabel": "Why this swap fits",
@@ -1808,8 +1819,8 @@
       "similarTradeHistory": "Swapped this bottle before"
     },
     "activityFeed": {
-      "title": "Just listed",
-      "description": "Fresh bottles recently added to the exchange.",
+      "title": "Newly Surfaced",
+      "description": "Recent listings from collectors across the Hollow.",
       "viewPerfume": "View {name}",
       "viewTrader": "View {name}'s profile"
     },
@@ -1831,30 +1842,31 @@
       "viewPerfume": "View {name}"
     },
     "listings": {
-      "openButton": "View traders & listings",
+      "openButton": "View collectors & listings",
       "title": "Listings for {name}",
-      "traderCount": "{count, plural, one {# trader} other {# traders}}",
-      "summary": "{count, plural, one {# trader has this available} other {# traders have this available}}",
+      "traderCount": "{count, plural, one {# collector} other {# collectors}}",
+      "summary": "{count, plural, one {# collector has this available} other {# collectors have this available}}",
       "unknownType": "Unknown type",
       "filterPreferenceLabel": "Preference",
       "filterPreferenceAll": "All",
       "sortLabel": "Sort",
       "sortDefault": "Default order",
       "sortPriceHighLow": "Price (high to low)",
-      "sortScoreHighLow": "Trader score (high to low)",
+      "sortScoreHighLow": "Collector score (high to low)",
       "noTradersMatchFilter": "No listings match this preference. Try the All option above.",
       "makeOffer": "Propose swap",
       "photosFromListings": "{count, plural, one {Photo from # listing} other {Photos from # listings}}",
-      "openListingPhoto": "Open photo from {trader}, image {index}",
+      "openListingPhoto": "Open photo from {collector}, image {index}",
       "multiLightboxTitle": "Listing photos",
       "photoIndex": "Photo {current} of {total}"
     }
   },
   "tradeComposer": {
-    "proposeSwap": "Propose swap",
-    "connectAboutBottle": "Connect about this bottle",
-    "subheading": "With {traderName}",
-    "viewTraderProfile": "View trader profile",
+    "proposeSwap": "Propose exchange",
+    "connectAboutBottle": "Contact Collector",
+    "subheading": "Contact {traderName}",
+    "contactAboutHeading": "Contact {traderName} About:",
+    "viewTraderProfile": "View Collector Ledger",
     "pickTitle": "Choose a listing — {name}",
     "pickSubheading": "Select which bottle you want to make an offer on.",
     "pickListing": "Each trader may list different amounts and prices.",
@@ -1862,12 +1874,12 @@
     "yourOffer": "Your offer (optional)",
     "loadingListings": "Loading your listings…",
     "noOfferableListings": "You have no bottles listed for trade. Add a listing from My Scents first.",
-    "offerOptional": "You can send an offer without listing something of your own.",
-    "notesLabel": "Notes",
+    "offerOptional": "You may propose an exchange even without offering a fragrance.",
+    "notesLabel": "Message",
     "notesHelp": "Optional message about cash, shipping preferences, or swap ideas.",
-    "notesHelpCash": "Optional message about cash or shipping preferences.",
+    "notesHelpCash": "Optional message for the collector.",
     "notesPlaceholder": "e.g. Happy to add cash on my side, or prefer USPS Ground Advantage…",
-    "notesPlaceholderCash": "e.g. Happy to pay asking price, or prefer USPS Ground Advantage…",
+    "notesPlaceholderCash": "Ask about availability, shipping preferences, or exchange details…",
     "submitOffer": "Send offer",
     "submitConnect": "Send message",
     "chooseListing": "Choose a listing",
@@ -1878,6 +1890,7 @@
   },
   "shareLinks": {
     "copyLink": "Copy link",
+    "shareProfile": "Share Profile",
     "linkCopied": "Link copied",
     "copyLinkError": "Could not copy link"
   },
@@ -1918,15 +1931,15 @@
   },
   "traderProfile": {
     "meta": {
-      "title": "Trader Profile - perfumer's hollow",
-      "description": "Trader Profile of {traderName}"
+      "title": "Collector Profile - perfumer's hollow",
+      "description": "Collector Profile of {traderName}"
     },
-    "heading": "Trader {traderName}",
-    "subheading": "Trader Profile of {traderName}",
+    "heading": "Collector {traderName}",
+    "subheading": "Collector Ledger",
     "headerStats": {
-      "ariaLabel": "Trader membership and trade history",
-      "memberSince": "Member since",
-      "completedTrades": "Completed trades",
+      "ariaLabel": "Collector membership and trade history",
+      "memberSince": "Joined the Hollow",
+      "completedTrades": "Completed Exchanges",
       "followers": "Followers"
     },
     "scentDna": {
@@ -1936,10 +1949,10 @@
       },
       "ariaLabel": "Scent DNA for {traderName}",
       "title": "Scent DNA",
-      "subtitle": "Computed taste profile for {traderName}",
+      "subtitle": "A fragrance profile shaped by collections, reviews, and discoveries.",
       "sharePageHeading": "{traderName}'s Scent DNA",
       "sharePageSubheading": "A shareable snapshot of note families, seasons, and house taste.",
-      "shareCta": "Share my Scent DNA",
+      "shareCta": "Share Scent DNA",
       "shareCopied": "Link copied",
       "shareError": "Could not copy link",
       "empty": "Not enough data yet — take the scent quiz, vote on seasons, or add bottles to your collection.",
@@ -1947,7 +1960,7 @@
       "noteFamiliesHeading": "Top note families",
       "favoriteNotesHeading": "Favorite notes",
       "seasonHeading": "Season affinity",
-      "houseHeading": "House taste",
+      "houseHeading": "Preferred Houses",
       "families": {
         "florals": "Florals",
         "woods": "Woods",
@@ -1968,8 +1981,8 @@
         "designer": "Designer"
       }
     },
-    "aboutHeading": "About",
-    "regionChip": "{region}",
+    "aboutHeading": "About the Collector",
+    "regionChip": "Collector Region: {region}",
     "social": {
       "instagram": "Instagram profile for {handle}",
       "reddit": "Reddit profile for {username}",
@@ -1991,17 +2004,17 @@
     "price": "Price",
     "tradePrice": "Trade Price",
     "preference": "Preference",
-    "tradeOnly": "Trade Only Item",
+    "tradeOnly": "Exchange Only Item",
     "comments": "Traders Comments",
     "noPublicComments": "No public comments available for this item.",
     "preferences": {
       "cash": "Cash Only",
-      "trade": "Trade Only",
-      "both": "Cash or Trade"
+      "trade": "Exchange Only",
+      "both": "Cash or Exchange"
     },
     "trades": {
-      "activeSummary": "Active trades ({count})",
-      "historySummary": "Trade history ({count})"
+      "activeSummary": "Active exchanges ({count})",
+      "historySummary": "Exchange history ({count})"
     },
     "scentJourney": {
       "meta": {
@@ -2034,51 +2047,50 @@
       "viewArticle": "Read article"
     },
     "reputation": {
-      "ariaLabel": "Trader trust and reputation",
+      "ariaLabel": "Collector trust and reputation",
       "title": "Trust summary",
-      "subtitle": "Explainable v1 score from peer feedback and typical reply speed.",
+      "subtitle": "Based on collector feedback, exchange history, and response activity.",
       "scoreLabel": "Reputation",
       "scoreOutOf": "{score}/100",
-      "insufficientNoReviews": "New trader — no reviews yet.",
+      "insufficientNoReviews": "New collector — no reviews yet.",
       "insufficientTooFew": "Not enough reviews for a reputation score yet (need at least {min}).",
       "reviewCountOnly": "{count, plural, one {# review} other {# reviews}}",
-      "noReviewsDetail": "No peer reviews yet.",
+      "noReviewsDetail": "No collector reviews yet.",
       "badgesAria": "Reputation badges",
       "badges": {
         "topReviewed": "Top reviewed",
-        "reliableTrader": "Reliable trader",
+        "reliableTrader": "Reliable collector",
         "fastResponder": "Fast responder"
       },
       "explainTitle": "What this means",
-      "explainIntro": "This score is rule-based and visible to everyone. It summarizes how other members rate this trader and how quickly they usually answer contact messages.",
-      "explainScore": "We show a number only after at least {minReviews} peer reviews. When enough reply-timing data exists, peer ratings count for 75% of the score and typical first-reply speed for 25%; otherwise the score reflects ratings only.",
-      "explainBadges": "Badges are independent: Top reviewed means at least 5 reviews with a 4.5+ average. Reliable trader means at least 10 reviews with a 4.6+ average. Fast responder means a median first-reply under 24 hours across your last 10 conversation partners (minimum 3 measured replies). Contributor badges (Trusted swapper, Community pillar, Rare collector) reward trades, follows, and niche-house collections.",
-      "explainBadgesInHeader": "Reputation and contributor badges appear under the profile header.",
-      "explainTradeReliability": "Trade reliability is completed trades divided by completed plus trades this member cancelled. Declined offers are not counted.",
-      "explainMessaging": "Reply times use contact messages grouped by conversation partner (no formal thread id), considering only the 10 most recent partners.",
-      "tradeReliabilityLabel": "Trade reliability",
+      "explainIntro": "Trust summaries are designed to give collectors a clearer picture of community reputation and responsiveness across the Hollow.",
+      "explainScore": "Scores are based on collector reviews, completed exchanges, and typical response times. Review scores become visible after at least 3 collector reviews.",
+      "explainBadgesInHeader": "Badges reflect different types of participation within the community, including trusted exchanges, thoughtful reviews, active collecting, and contributions to the Archive.",
+      "explainTradeReliability": "Exchange Reliability reflects completed exchanges compared with cancelled arrangements. Declined offers are not included.",
+      "explainMessaging": "Response activity is based on recent conversation history and average reply timing across collector interactions.",
+      "tradeReliabilityLabel": "Exchange reliability",
       "tradeReliabilityValue": "{percent}%",
-      "tradeReliabilityInsufficient": "Not enough trade history for a reliability score yet.",
+      "tradeReliabilityInsufficient": "Not enough exchange history for a reliability score yet.",
       "exchangeTrust": "{score}/100"
     },
     "contributorBadges": {
-      "trustedSwapper": "Trusted swapper",
+      "trustedSwapper": "Trusted collector",
       "communityPillar": "Community pillar",
       "rareCollector": "Rare collector",
       "helpfulReviewer": "Helpful reviewer",
       "decantHost": "Decant host"
     },
     "feedback": {
-      "title": "Trader Feedback",
-      "subtitle": "Build trust with ratings and comments from the community.",
+      "title": "Collector Observations",
+      "subtitle": "Feedback shared by collectors across the Hollow.",
       "reviewCount": "{count, plural, one {# review} other {# reviews}}",
-      "badgeLabel": "Trusted Trader",
+      "badgeLabel": "Trusted Collector",
       "noRatings": "No ratings yet",
-      "loading": "Loading feedback...",
-      "error": "We couldn't load trader feedback right now.",
-      "noComments": "No feedback comments yet.",
+      "loading": "Loading observations...",
+      "error": "We couldn't load collector observations right now.",
+      "noComments": "No collector observations yet.",
       "anonymousReviewer": "Anonymous reviewer",
-      "selfReviewNotice": "You cannot leave feedback on your own profile.",
+      "selfReviewNotice": "Collectors cannot leave feedback on their own ledger.",
       "ratingLabel": "Your rating",
       "ratingHint": "Score trades from 1 (needs improvement) to 5 (excellent).",
       "selectRating": "Select rating",
@@ -2089,7 +2101,7 @@
       "updateButton": "Update feedback",
       "deleteButton": "Remove feedback",
       "loginPrompt": "Sign in to leave feedback and help build community trust.",
-      "requiresCompletedTrade": "Complete a trade with this member before leaving feedback.",
+      "requiresCompletedTrade": "Feedback becomes available after a completed exchange.",
       "verifiedSwap": "Verified swap",
       "helpful": "Helpful",
       "unhelpful": "Unhelpful",

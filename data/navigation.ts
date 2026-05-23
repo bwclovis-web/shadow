@@ -22,7 +22,7 @@ export const adminNavigation = [
 
 export const profileNavigation = [
   { id: "0", label: "Profile", key: "profile", path: "/profile" } as const,
-  { id: "messages", label: "Messages", key: "messages", path: "/messages" } as const,
+  { id: "exchanges", label: "Exchanges", key: "exchanges", path: "/exchanges" } as const,
   { id: "1", label: "My Wishlist", key: "wishlist", path: "/profile/wishlist" } as const,
   { id: "4", label: "My Reports", key: "myReports", path: "/profile/reports" } as const,
   { id: "6", label: "My Disputes", key: "myDisputes", path: "/profile/disputes" } as const,

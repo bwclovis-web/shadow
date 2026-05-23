@@ -1,0 +1,2378 @@
+{
+  "es": {
+    "missing": [
+      {
+        "path": "common.adding",
+        "en": "Adding..."
+      },
+      {
+        "path": "admin.navigation.disputes",
+        "en": "Disputes"
+      },
+      {
+        "path": "userReport.button",
+        "en": "Report"
+      },
+      {
+        "path": "userReport.heading",
+        "en": "Report trader"
+      },
+      {
+        "path": "userReport.subheading",
+        "en": "Tell us what happened with {traderName}. Reports are reviewed by our team."
+      },
+      {
+        "path": "userReport.categoryLabel",
+        "en": "Category"
+      },
+      {
+        "path": "userReport.categoryPlaceholder",
+        "en": "Select a category…"
+      },
+      {
+        "path": "userReport.descriptionLabel",
+        "en": "Details (optional)"
+      },
+      {
+        "path": "userReport.descriptionPlaceholder",
+        "en": "Describe what happened…"
+      },
+      {
+        "path": "userReport.photosLabel",
+        "en": "Evidence photos (optional)"
+      },
+      {
+        "path": "userReport.photosHint",
+        "en": "Up to 3 images to help our team review your report."
+      },
+      {
+        "path": "userReport.submit",
+        "en": "Submit report"
+      },
+      {
+        "path": "userReport.submitting",
+        "en": "Submitting…"
+      },
+      {
+        "path": "userReport.categories.scam",
+        "en": "Scam or fraud"
+      },
+      {
+        "path": "userReport.categories.fakeItem",
+        "en": "Fake or misrepresented item"
+      },
+      {
+        "path": "userReport.categories.harassment",
+        "en": "Harassment"
+      },
+      {
+        "path": "userReport.categories.noShip",
+        "en": "Did not ship"
+      },
+      {
+        "path": "userReport.categories.other",
+        "en": "Other"
+      },
+      {
+        "path": "dispute.button",
+        "en": "Open dispute"
+      },
+      {
+        "path": "dispute.heading",
+        "en": "Open trade dispute"
+      },
+      {
+        "path": "dispute.subheading",
+        "en": "Describe the issue with this trade. Our team will review both sides."
+      },
+      {
+        "path": "dispute.policyLink",
+        "en": "Read shipping, disputes & community rules"
+      },
+      {
+        "path": "dispute.categoryLabel",
+        "en": "Category"
+      },
+      {
+        "path": "dispute.categoryPlaceholder",
+        "en": "Select a category…"
+      },
+      {
+        "path": "dispute.descriptionLabel",
+        "en": "Details"
+      },
+      {
+        "path": "dispute.descriptionPlaceholder",
+        "en": "Describe what happened…"
+      },
+      {
+        "path": "dispute.photosLabel",
+        "en": "Evidence photos (optional)"
+      },
+      {
+        "path": "dispute.photosHint",
+        "en": "Up to 3 images to help our team review your dispute."
+      },
+      {
+        "path": "dispute.submit",
+        "en": "Submit dispute"
+      },
+      {
+        "path": "dispute.submitting",
+        "en": "Submitting…"
+      },
+      {
+        "path": "dispute.existingDispute",
+        "en": "A dispute is already open for this trade."
+      },
+      {
+        "path": "dispute.viewMyDisputes",
+        "en": "View my disputes"
+      },
+      {
+        "path": "dispute.categories.noShip",
+        "en": "Did not ship"
+      },
+      {
+        "path": "dispute.categories.fakeItem",
+        "en": "Fake or misrepresented item"
+      },
+      {
+        "path": "dispute.categories.notAsDescribed",
+        "en": "Not as described"
+      },
+      {
+        "path": "dispute.categories.scam",
+        "en": "Scam or fraud"
+      },
+      {
+        "path": "dispute.categories.other",
+        "en": "Other"
+      },
+      {
+        "path": "myDisputes.meta.title",
+        "en": "My Disputes - perfumer's hollow"
+      },
+      {
+        "path": "myDisputes.meta.description",
+        "en": "Track trade disputes you have opened or are party to."
+      },
+      {
+        "path": "myDisputes.heading",
+        "en": "My Disputes"
+      },
+      {
+        "path": "myDisputes.subheading",
+        "en": "Trade disputes you opened or are involved in"
+      },
+      {
+        "path": "myDisputes.backToProfile",
+        "en": "Back to profile"
+      },
+      {
+        "path": "myDisputes.empty",
+        "en": "You have no trade disputes."
+      },
+      {
+        "path": "myDisputes.withdraw",
+        "en": "Withdraw dispute"
+      },
+      {
+        "path": "myDisputes.withdrawing",
+        "en": "Withdrawing…"
+      },
+      {
+        "path": "myDisputes.otherParty",
+        "en": "Other trader"
+      },
+      {
+        "path": "myDisputes.tradeStatus",
+        "en": "Trade status"
+      },
+      {
+        "path": "myDisputes.categories.noShip",
+        "en": "Did not ship"
+      },
+      {
+        "path": "myDisputes.categories.fakeItem",
+        "en": "Fake or misrepresented item"
+      },
+      {
+        "path": "myDisputes.categories.notAsDescribed",
+        "en": "Not as described"
+      },
+      {
+        "path": "myDisputes.categories.scam",
+        "en": "Scam or fraud"
+      },
+      {
+        "path": "myDisputes.categories.other",
+        "en": "Other"
+      },
+      {
+        "path": "myDisputes.status.open",
+        "en": "Open"
+      },
+      {
+        "path": "myDisputes.status.underReview",
+        "en": "Under review"
+      },
+      {
+        "path": "myDisputes.status.resolved",
+        "en": "Resolved"
+      },
+      {
+        "path": "myDisputes.status.closed",
+        "en": "Closed"
+      },
+      {
+        "path": "myDisputes.outcomes.noAction",
+        "en": "No action"
+      },
+      {
+        "path": "myDisputes.outcomes.warningIssued",
+        "en": "Warning issued"
+      },
+      {
+        "path": "myDisputes.outcomes.strikeIssued",
+        "en": "Strike issued"
+      },
+      {
+        "path": "myDisputes.outcomes.tradeVoided",
+        "en": "Trade voided"
+      },
+      {
+        "path": "adminDisputes.meta.title",
+        "en": "Disputes - Admin - perfumer's hollow"
+      },
+      {
+        "path": "adminDisputes.meta.description",
+        "en": "Review trade disputes and profile reports."
+      },
+      {
+        "path": "adminDisputes.heading",
+        "en": "Disputes & Reports"
+      },
+      {
+        "path": "adminDisputes.subheading",
+        "en": "Trade disputes and profile moderation"
+      },
+      {
+        "path": "adminDisputes.tabs.ariaLabel",
+        "en": "Dispute queues"
+      },
+      {
+        "path": "adminDisputes.tabs.tradeDisputes",
+        "en": "Trade disputes"
+      },
+      {
+        "path": "adminDisputes.tabs.profileReports",
+        "en": "Profile reports"
+      },
+      {
+        "path": "adminDisputes.empty",
+        "en": "No disputes in this queue"
+      },
+      {
+        "path": "adminDisputes.filters.open",
+        "en": "Open"
+      },
+      {
+        "path": "adminDisputes.filters.underReview",
+        "en": "Under review"
+      },
+      {
+        "path": "adminDisputes.filters.resolved",
+        "en": "Resolved"
+      },
+      {
+        "path": "adminDisputes.filters.all",
+        "en": "All"
+      },
+      {
+        "path": "adminDisputes.status.open",
+        "en": "Open"
+      },
+      {
+        "path": "adminDisputes.status.underReview",
+        "en": "Under review"
+      },
+      {
+        "path": "adminDisputes.status.resolved",
+        "en": "Resolved"
+      },
+      {
+        "path": "adminDisputes.status.closed",
+        "en": "Closed"
+      },
+      {
+        "path": "adminDisputes.categories.noShip",
+        "en": "Did not ship"
+      },
+      {
+        "path": "adminDisputes.categories.fakeItem",
+        "en": "Fake or misrepresented item"
+      },
+      {
+        "path": "adminDisputes.categories.notAsDescribed",
+        "en": "Not as described"
+      },
+      {
+        "path": "adminDisputes.categories.scam",
+        "en": "Scam or fraud"
+      },
+      {
+        "path": "adminDisputes.categories.other",
+        "en": "Other"
+      },
+      {
+        "path": "adminDisputes.outcomes.noAction",
+        "en": "No action"
+      },
+      {
+        "path": "adminDisputes.outcomes.warningIssued",
+        "en": "Warning issued"
+      },
+      {
+        "path": "adminDisputes.outcomes.strikeIssued",
+        "en": "Strike issued"
+      },
+      {
+        "path": "adminDisputes.outcomes.tradeVoided",
+        "en": "Trade voided"
+      },
+      {
+        "path": "adminDisputes.trade",
+        "en": "Trade"
+      },
+      {
+        "path": "adminDisputes.initiator",
+        "en": "Initiator"
+      },
+      {
+        "path": "adminDisputes.otherParty",
+        "en": "Other party"
+      },
+      {
+        "path": "adminDisputes.resolutionOutcome",
+        "en": "Outcome"
+      },
+      {
+        "path": "adminDisputes.markUnderReview",
+        "en": "Mark under review"
+      },
+      {
+        "path": "adminDisputes.showDetails",
+        "en": "Show details"
+      },
+      {
+        "path": "adminDisputes.hideDetails",
+        "en": "Hide details"
+      },
+      {
+        "path": "adminDisputes.noDescription",
+        "en": "No additional details provided."
+      },
+      {
+        "path": "adminDisputes.adminNotesLabel",
+        "en": "Admin notes (internal)"
+      },
+      {
+        "path": "adminDisputes.saveNotes",
+        "en": "Save notes"
+      },
+      {
+        "path": "adminDisputes.resolveHeading",
+        "en": "Resolution"
+      },
+      {
+        "path": "adminDisputes.publicSummaryLabel",
+        "en": "Public summary (sent to both parties)"
+      },
+      {
+        "path": "adminDisputes.resolveDispute",
+        "en": "Resolve dispute"
+      },
+      {
+        "path": "adminReports.meta.title",
+        "en": "User Reports - Admin - perfumer's hollow"
+      },
+      {
+        "path": "adminReports.meta.description",
+        "en": "Review community reports against traders."
+      },
+      {
+        "path": "adminReports.heading",
+        "en": "User Reports"
+      },
+      {
+        "path": "adminReports.subheading",
+        "en": "Review reports filed by members"
+      },
+      {
+        "path": "adminReports.empty",
+        "en": "No reports in this queue"
+      },
+      {
+        "path": "adminReports.filters.inProgress",
+        "en": "In progress"
+      },
+      {
+        "path": "adminReports.filters.settled",
+        "en": "Settled"
+      },
+      {
+        "path": "adminReports.filters.passed",
+        "en": "Passed"
+      },
+      {
+        "path": "adminReports.filters.all",
+        "en": "All"
+      },
+      {
+        "path": "adminReports.status.inProgress",
+        "en": "In progress"
+      },
+      {
+        "path": "adminReports.status.settled",
+        "en": "Settled"
+      },
+      {
+        "path": "adminReports.status.passed",
+        "en": "Passed"
+      },
+      {
+        "path": "adminReports.statusLabel",
+        "en": "Dispute status"
+      },
+      {
+        "path": "adminReports.updateStatus",
+        "en": "Update"
+      },
+      {
+        "path": "adminReports.reporter",
+        "en": "Reporter"
+      },
+      {
+        "path": "adminReports.reportedUser",
+        "en": "Reported"
+      },
+      {
+        "path": "adminReports.reporterEmail",
+        "en": "Reporter email"
+      },
+      {
+        "path": "adminReports.reportedEmail",
+        "en": "Reported user email"
+      },
+      {
+        "path": "adminReports.showDetails",
+        "en": "Show details"
+      },
+      {
+        "path": "adminReports.hideDetails",
+        "en": "Hide details"
+      },
+      {
+        "path": "adminReports.noDescription",
+        "en": "No additional details provided."
+      },
+      {
+        "path": "adminReports.tradeLink",
+        "en": "Trade"
+      },
+      {
+        "path": "adminReports.issueStrike",
+        "en": "Issue Strike"
+      },
+      {
+        "path": "adminReports.deleteReport",
+        "en": "Delete report"
+      },
+      {
+        "path": "adminReports.deleteConfirmHeading",
+        "en": "Delete this report?"
+      },
+      {
+        "path": "adminReports.deleteConfirmDescription",
+        "en": "This permanently removes the report and its evidence photos. This cannot be undone."
+      },
+      {
+        "path": "adminReports.categories.scam",
+        "en": "Scam or fraud"
+      },
+      {
+        "path": "adminReports.categories.fakeItem",
+        "en": "Fake or misrepresented item"
+      },
+      {
+        "path": "adminReports.categories.harassment",
+        "en": "Harassment"
+      },
+      {
+        "path": "adminReports.categories.noShip",
+        "en": "Did not ship"
+      },
+      {
+        "path": "adminReports.categories.other",
+        "en": "Other"
+      },
+      {
+        "path": "myReports.meta.title",
+        "en": "My Reports - perfumer's hollow"
+      },
+      {
+        "path": "myReports.meta.description",
+        "en": "Reports you have filed against other traders."
+      },
+      {
+        "path": "myReports.heading",
+        "en": "My Reports"
+      },
+      {
+        "path": "myReports.subheading",
+        "en": "Track reports you have submitted"
+      },
+      {
+        "path": "myReports.backToProfile",
+        "en": "Back to profile"
+      },
+      {
+        "path": "myReports.empty",
+        "en": "You have not filed any reports."
+      },
+      {
+        "path": "myReports.reported",
+        "en": "Reported"
+      },
+      {
+        "path": "myReports.withdraw",
+        "en": "Withdraw report"
+      },
+      {
+        "path": "myReports.withdrawing",
+        "en": "Withdrawing…"
+      },
+      {
+        "path": "myReports.status.inProgress",
+        "en": "In progress"
+      },
+      {
+        "path": "myReports.status.settled",
+        "en": "Settled"
+      },
+      {
+        "path": "myReports.status.passed",
+        "en": "Passed"
+      },
+      {
+        "path": "myReports.categories.scam",
+        "en": "Scam or fraud"
+      },
+      {
+        "path": "myReports.categories.fakeItem",
+        "en": "Fake or misrepresented item"
+      },
+      {
+        "path": "myReports.categories.harassment",
+        "en": "Harassment"
+      },
+      {
+        "path": "myReports.categories.noShip",
+        "en": "Did not ship"
+      },
+      {
+        "path": "myReports.categories.other",
+        "en": "Other"
+      },
+      {
+        "path": "pendingSubmissions.csvImportBadge",
+        "en": "CSV import"
+      },
+      {
+        "path": "pendingSubmissions.inventoryIntent",
+        "en": "Collection intent (after approval)"
+      },
+      {
+        "path": "pendingSubmissions.inventoryAmount",
+        "en": "Amount"
+      },
+      {
+        "path": "pendingSubmissions.inventoryCondition",
+        "en": "Condition"
+      },
+      {
+        "path": "pendingSubmissions.inventoryTradePreference",
+        "en": "Trade preference"
+      },
+      {
+        "path": "pendingSubmissions.linkedHousePending",
+        "en": "Linked house submission must be approved first (ID: {id})"
+      },
+      {
+        "path": "pendingSubmissions.linkedHouseRejected",
+        "en": "Linked house submission was rejected — reject this perfume too"
+      },
+      {
+        "path": "contactUs.modal.submissionSuccess",
+        "en": "Your submission has been received and will be reviewed by an admin."
+      },
+      {
+        "path": "navigation.tradeAlertsUnread",
+        "en": "{count, plural, one {# unread trade update} other {# unread trade updates}}"
+      },
+      {
+        "path": "profile.navigation.myReports",
+        "en": "My Reports"
+      },
+      {
+        "path": "profile.navigation.myDisputes",
+        "en": "My Disputes"
+      },
+      {
+        "path": "singlePerfume.review.failedToLoadReviews",
+        "en": "Failed to load reviews"
+      },
+      {
+        "path": "communityPolicy.meta.title",
+        "en": "Community Policy - perfumer's hollow"
+      },
+      {
+        "path": "communityPolicy.meta.description",
+        "en": "Shipping expectations, dispute process, and community rules for traders."
+      },
+      {
+        "path": "communityPolicy.heading",
+        "en": "Community policy"
+      },
+      {
+        "path": "communityPolicy.subheading",
+        "en": "Trading expectations on perfumer's hollow"
+      },
+      {
+        "path": "communityPolicy.shipping.heading",
+        "en": "Shipping expectations"
+      },
+      {
+        "path": "communityPolicy.shipping.contentOne",
+        "en": "All payment and shipping are arranged off-platform between traders. Agree on carriers, packaging, and timelines in your messages before anyone ships."
+      },
+      {
+        "path": "communityPolicy.shipping.contentTwo",
+        "en": "Ship within a reasonable window after both sides confirm the trade (typically within one week unless you agree otherwise). Share tracking when available."
+      },
+      {
+        "path": "communityPolicy.shipping.contentThree",
+        "en": "Package bottles securely: use padding, seal decants, and disclose any known flaws before shipping."
+      },
+      {
+        "path": "communityPolicy.disputes.heading",
+        "en": "Dispute process"
+      },
+      {
+        "path": "communityPolicy.disputes.contentOne",
+        "en": "If something goes wrong, message the other trader first and try to resolve it directly."
+      },
+      {
+        "path": "communityPolicy.disputes.contentTwo",
+        "en": "If you cannot resolve the issue, use Open dispute on the active trade card, or Report on their trader profile for off-trade issues. Include photos and a clear description."
+      },
+      {
+        "path": "communityPolicy.disputes.contentThree",
+        "en": "Our team reviews reports and may issue strikes or account actions. We do not hold funds or guarantee refunds — we help document disputes and enforce community rules."
+      },
+      {
+        "path": "communityPolicy.community.heading",
+        "en": "Community rules"
+      },
+      {
+        "path": "communityPolicy.community.contentOne",
+        "en": "Be honest about bottle condition, volume remaining, and authenticity. Listings should include accurate photos."
+      },
+      {
+        "path": "communityPolicy.community.contentTwo",
+        "en": "Harassment, scams, and no-ship behavior are not tolerated. Repeated issues affect reputation and may lead to suspension."
+      },
+      {
+        "path": "communityPolicy.community.contentThree",
+        "en": "Leave feedback only after a completed trade so reviews reflect real exchanges."
+      },
+      {
+        "path": "communityPolicy.offPlatform.heading",
+        "en": "Off-platform payments"
+      },
+      {
+        "path": "communityPolicy.offPlatform.contentOne",
+        "en": "perfumer's hollow connects traders; we never process payments or shipping labels."
+      },
+      {
+        "path": "communityPolicy.offPlatform.contentTwo",
+        "en": "Use payment methods you trust, keep message records on-platform when possible, and never share passwords or unrelated financial details."
+      },
+      {
+        "path": "tradeStatus.communityPolicyLink",
+        "en": "Shipping, disputes & community rules"
+      },
+      {
+        "path": "traderProfile.traderProfileAside",
+        "en": "Trader {traderName} profile"
+      },
+      {
+        "path": "traderProfile.reputation.explainTradeReliability",
+        "en": "Trade reliability is completed trades divided by completed plus trades this member cancelled. Declined offers are not counted."
+      },
+      {
+        "path": "traderProfile.reputation.tradeReliabilityLabel",
+        "en": "Trade reliability"
+      },
+      {
+        "path": "traderProfile.reputation.tradeReliabilityValue",
+        "en": "{percent}%"
+      },
+      {
+        "path": "traderProfile.reputation.tradeReliabilityInsufficient",
+        "en": "Not enough trade history for a reliability score yet."
+      },
+      {
+        "path": "validation.descriptionRequired",
+        "en": "Description is required and must be at least 10 characters."
+      },
+      {
+        "path": "validation.descriptionMin",
+        "en": "Description must be at least 10 characters."
+      },
+      {
+        "path": "validation.descriptionMax",
+        "en": "Description must be less than 1000 characters."
+      },
+      {
+        "path": "validation.nameRequired",
+        "en": "Name is required."
+      },
+      {
+        "path": "validation.nameMin",
+        "en": "Name must be at least 1 character."
+      },
+      {
+        "path": "validation.nameMax",
+        "en": "Name must be less than 100 characters."
+      },
+      {
+        "path": "validation.urlInvalid",
+        "en": "Please enter a valid URL."
+      },
+      {
+        "path": "validation.perfumeHouseRequired",
+        "en": "Please select a perfume house."
+      },
+      {
+        "path": "validation.usernameMin",
+        "en": "Username must be at least 3 characters."
+      },
+      {
+        "path": "validation.usernameMax",
+        "en": "Username must be 30 characters or less."
+      },
+      {
+        "path": "validation.usernameFormat",
+        "en": "Use only letters, numbers, spaces and underscores."
+      }
+    ],
+    "extra": [],
+    "placeholderIssues": []
+  },
+  "fr": {
+    "missing": [
+      {
+        "path": "common.adding",
+        "en": "Adding..."
+      },
+      {
+        "path": "admin.navigation.disputes",
+        "en": "Disputes"
+      },
+      {
+        "path": "userReport.button",
+        "en": "Report"
+      },
+      {
+        "path": "userReport.heading",
+        "en": "Report trader"
+      },
+      {
+        "path": "userReport.subheading",
+        "en": "Tell us what happened with {traderName}. Reports are reviewed by our team."
+      },
+      {
+        "path": "userReport.categoryLabel",
+        "en": "Category"
+      },
+      {
+        "path": "userReport.categoryPlaceholder",
+        "en": "Select a category…"
+      },
+      {
+        "path": "userReport.descriptionLabel",
+        "en": "Details (optional)"
+      },
+      {
+        "path": "userReport.descriptionPlaceholder",
+        "en": "Describe what happened…"
+      },
+      {
+        "path": "userReport.photosLabel",
+        "en": "Evidence photos (optional)"
+      },
+      {
+        "path": "userReport.photosHint",
+        "en": "Up to 3 images to help our team review your report."
+      },
+      {
+        "path": "userReport.submit",
+        "en": "Submit report"
+      },
+      {
+        "path": "userReport.submitting",
+        "en": "Submitting…"
+      },
+      {
+        "path": "userReport.categories.scam",
+        "en": "Scam or fraud"
+      },
+      {
+        "path": "userReport.categories.fakeItem",
+        "en": "Fake or misrepresented item"
+      },
+      {
+        "path": "userReport.categories.harassment",
+        "en": "Harassment"
+      },
+      {
+        "path": "userReport.categories.noShip",
+        "en": "Did not ship"
+      },
+      {
+        "path": "userReport.categories.other",
+        "en": "Other"
+      },
+      {
+        "path": "dispute.button",
+        "en": "Open dispute"
+      },
+      {
+        "path": "dispute.heading",
+        "en": "Open trade dispute"
+      },
+      {
+        "path": "dispute.subheading",
+        "en": "Describe the issue with this trade. Our team will review both sides."
+      },
+      {
+        "path": "dispute.policyLink",
+        "en": "Read shipping, disputes & community rules"
+      },
+      {
+        "path": "dispute.categoryLabel",
+        "en": "Category"
+      },
+      {
+        "path": "dispute.categoryPlaceholder",
+        "en": "Select a category…"
+      },
+      {
+        "path": "dispute.descriptionLabel",
+        "en": "Details"
+      },
+      {
+        "path": "dispute.descriptionPlaceholder",
+        "en": "Describe what happened…"
+      },
+      {
+        "path": "dispute.photosLabel",
+        "en": "Evidence photos (optional)"
+      },
+      {
+        "path": "dispute.photosHint",
+        "en": "Up to 3 images to help our team review your dispute."
+      },
+      {
+        "path": "dispute.submit",
+        "en": "Submit dispute"
+      },
+      {
+        "path": "dispute.submitting",
+        "en": "Submitting…"
+      },
+      {
+        "path": "dispute.existingDispute",
+        "en": "A dispute is already open for this trade."
+      },
+      {
+        "path": "dispute.viewMyDisputes",
+        "en": "View my disputes"
+      },
+      {
+        "path": "dispute.categories.noShip",
+        "en": "Did not ship"
+      },
+      {
+        "path": "dispute.categories.fakeItem",
+        "en": "Fake or misrepresented item"
+      },
+      {
+        "path": "dispute.categories.notAsDescribed",
+        "en": "Not as described"
+      },
+      {
+        "path": "dispute.categories.scam",
+        "en": "Scam or fraud"
+      },
+      {
+        "path": "dispute.categories.other",
+        "en": "Other"
+      },
+      {
+        "path": "myDisputes.meta.title",
+        "en": "My Disputes - perfumer's hollow"
+      },
+      {
+        "path": "myDisputes.meta.description",
+        "en": "Track trade disputes you have opened or are party to."
+      },
+      {
+        "path": "myDisputes.heading",
+        "en": "My Disputes"
+      },
+      {
+        "path": "myDisputes.subheading",
+        "en": "Trade disputes you opened or are involved in"
+      },
+      {
+        "path": "myDisputes.backToProfile",
+        "en": "Back to profile"
+      },
+      {
+        "path": "myDisputes.empty",
+        "en": "You have no trade disputes."
+      },
+      {
+        "path": "myDisputes.withdraw",
+        "en": "Withdraw dispute"
+      },
+      {
+        "path": "myDisputes.withdrawing",
+        "en": "Withdrawing…"
+      },
+      {
+        "path": "myDisputes.otherParty",
+        "en": "Other trader"
+      },
+      {
+        "path": "myDisputes.tradeStatus",
+        "en": "Trade status"
+      },
+      {
+        "path": "myDisputes.categories.noShip",
+        "en": "Did not ship"
+      },
+      {
+        "path": "myDisputes.categories.fakeItem",
+        "en": "Fake or misrepresented item"
+      },
+      {
+        "path": "myDisputes.categories.notAsDescribed",
+        "en": "Not as described"
+      },
+      {
+        "path": "myDisputes.categories.scam",
+        "en": "Scam or fraud"
+      },
+      {
+        "path": "myDisputes.categories.other",
+        "en": "Other"
+      },
+      {
+        "path": "myDisputes.status.open",
+        "en": "Open"
+      },
+      {
+        "path": "myDisputes.status.underReview",
+        "en": "Under review"
+      },
+      {
+        "path": "myDisputes.status.resolved",
+        "en": "Resolved"
+      },
+      {
+        "path": "myDisputes.status.closed",
+        "en": "Closed"
+      },
+      {
+        "path": "myDisputes.outcomes.noAction",
+        "en": "No action"
+      },
+      {
+        "path": "myDisputes.outcomes.warningIssued",
+        "en": "Warning issued"
+      },
+      {
+        "path": "myDisputes.outcomes.strikeIssued",
+        "en": "Strike issued"
+      },
+      {
+        "path": "myDisputes.outcomes.tradeVoided",
+        "en": "Trade voided"
+      },
+      {
+        "path": "adminDisputes.meta.title",
+        "en": "Disputes - Admin - perfumer's hollow"
+      },
+      {
+        "path": "adminDisputes.meta.description",
+        "en": "Review trade disputes and profile reports."
+      },
+      {
+        "path": "adminDisputes.heading",
+        "en": "Disputes & Reports"
+      },
+      {
+        "path": "adminDisputes.subheading",
+        "en": "Trade disputes and profile moderation"
+      },
+      {
+        "path": "adminDisputes.tabs.ariaLabel",
+        "en": "Dispute queues"
+      },
+      {
+        "path": "adminDisputes.tabs.tradeDisputes",
+        "en": "Trade disputes"
+      },
+      {
+        "path": "adminDisputes.tabs.profileReports",
+        "en": "Profile reports"
+      },
+      {
+        "path": "adminDisputes.empty",
+        "en": "No disputes in this queue"
+      },
+      {
+        "path": "adminDisputes.filters.open",
+        "en": "Open"
+      },
+      {
+        "path": "adminDisputes.filters.underReview",
+        "en": "Under review"
+      },
+      {
+        "path": "adminDisputes.filters.resolved",
+        "en": "Resolved"
+      },
+      {
+        "path": "adminDisputes.filters.all",
+        "en": "All"
+      },
+      {
+        "path": "adminDisputes.status.open",
+        "en": "Open"
+      },
+      {
+        "path": "adminDisputes.status.underReview",
+        "en": "Under review"
+      },
+      {
+        "path": "adminDisputes.status.resolved",
+        "en": "Resolved"
+      },
+      {
+        "path": "adminDisputes.status.closed",
+        "en": "Closed"
+      },
+      {
+        "path": "adminDisputes.categories.noShip",
+        "en": "Did not ship"
+      },
+      {
+        "path": "adminDisputes.categories.fakeItem",
+        "en": "Fake or misrepresented item"
+      },
+      {
+        "path": "adminDisputes.categories.notAsDescribed",
+        "en": "Not as described"
+      },
+      {
+        "path": "adminDisputes.categories.scam",
+        "en": "Scam or fraud"
+      },
+      {
+        "path": "adminDisputes.categories.other",
+        "en": "Other"
+      },
+      {
+        "path": "adminDisputes.outcomes.noAction",
+        "en": "No action"
+      },
+      {
+        "path": "adminDisputes.outcomes.warningIssued",
+        "en": "Warning issued"
+      },
+      {
+        "path": "adminDisputes.outcomes.strikeIssued",
+        "en": "Strike issued"
+      },
+      {
+        "path": "adminDisputes.outcomes.tradeVoided",
+        "en": "Trade voided"
+      },
+      {
+        "path": "adminDisputes.trade",
+        "en": "Trade"
+      },
+      {
+        "path": "adminDisputes.initiator",
+        "en": "Initiator"
+      },
+      {
+        "path": "adminDisputes.otherParty",
+        "en": "Other party"
+      },
+      {
+        "path": "adminDisputes.resolutionOutcome",
+        "en": "Outcome"
+      },
+      {
+        "path": "adminDisputes.markUnderReview",
+        "en": "Mark under review"
+      },
+      {
+        "path": "adminDisputes.showDetails",
+        "en": "Show details"
+      },
+      {
+        "path": "adminDisputes.hideDetails",
+        "en": "Hide details"
+      },
+      {
+        "path": "adminDisputes.noDescription",
+        "en": "No additional details provided."
+      },
+      {
+        "path": "adminDisputes.adminNotesLabel",
+        "en": "Admin notes (internal)"
+      },
+      {
+        "path": "adminDisputes.saveNotes",
+        "en": "Save notes"
+      },
+      {
+        "path": "adminDisputes.resolveHeading",
+        "en": "Resolution"
+      },
+      {
+        "path": "adminDisputes.publicSummaryLabel",
+        "en": "Public summary (sent to both parties)"
+      },
+      {
+        "path": "adminDisputes.resolveDispute",
+        "en": "Resolve dispute"
+      },
+      {
+        "path": "adminReports.meta.title",
+        "en": "User Reports - Admin - perfumer's hollow"
+      },
+      {
+        "path": "adminReports.meta.description",
+        "en": "Review community reports against traders."
+      },
+      {
+        "path": "adminReports.heading",
+        "en": "User Reports"
+      },
+      {
+        "path": "adminReports.subheading",
+        "en": "Review reports filed by members"
+      },
+      {
+        "path": "adminReports.empty",
+        "en": "No reports in this queue"
+      },
+      {
+        "path": "adminReports.filters.inProgress",
+        "en": "In progress"
+      },
+      {
+        "path": "adminReports.filters.settled",
+        "en": "Settled"
+      },
+      {
+        "path": "adminReports.filters.passed",
+        "en": "Passed"
+      },
+      {
+        "path": "adminReports.filters.all",
+        "en": "All"
+      },
+      {
+        "path": "adminReports.status.inProgress",
+        "en": "In progress"
+      },
+      {
+        "path": "adminReports.status.settled",
+        "en": "Settled"
+      },
+      {
+        "path": "adminReports.status.passed",
+        "en": "Passed"
+      },
+      {
+        "path": "adminReports.statusLabel",
+        "en": "Dispute status"
+      },
+      {
+        "path": "adminReports.updateStatus",
+        "en": "Update"
+      },
+      {
+        "path": "adminReports.reporter",
+        "en": "Reporter"
+      },
+      {
+        "path": "adminReports.reportedUser",
+        "en": "Reported"
+      },
+      {
+        "path": "adminReports.reporterEmail",
+        "en": "Reporter email"
+      },
+      {
+        "path": "adminReports.reportedEmail",
+        "en": "Reported user email"
+      },
+      {
+        "path": "adminReports.showDetails",
+        "en": "Show details"
+      },
+      {
+        "path": "adminReports.hideDetails",
+        "en": "Hide details"
+      },
+      {
+        "path": "adminReports.noDescription",
+        "en": "No additional details provided."
+      },
+      {
+        "path": "adminReports.tradeLink",
+        "en": "Trade"
+      },
+      {
+        "path": "adminReports.issueStrike",
+        "en": "Issue Strike"
+      },
+      {
+        "path": "adminReports.deleteReport",
+        "en": "Delete report"
+      },
+      {
+        "path": "adminReports.deleteConfirmHeading",
+        "en": "Delete this report?"
+      },
+      {
+        "path": "adminReports.deleteConfirmDescription",
+        "en": "This permanently removes the report and its evidence photos. This cannot be undone."
+      },
+      {
+        "path": "adminReports.categories.scam",
+        "en": "Scam or fraud"
+      },
+      {
+        "path": "adminReports.categories.fakeItem",
+        "en": "Fake or misrepresented item"
+      },
+      {
+        "path": "adminReports.categories.harassment",
+        "en": "Harassment"
+      },
+      {
+        "path": "adminReports.categories.noShip",
+        "en": "Did not ship"
+      },
+      {
+        "path": "adminReports.categories.other",
+        "en": "Other"
+      },
+      {
+        "path": "myReports.meta.title",
+        "en": "My Reports - perfumer's hollow"
+      },
+      {
+        "path": "myReports.meta.description",
+        "en": "Reports you have filed against other traders."
+      },
+      {
+        "path": "myReports.heading",
+        "en": "My Reports"
+      },
+      {
+        "path": "myReports.subheading",
+        "en": "Track reports you have submitted"
+      },
+      {
+        "path": "myReports.backToProfile",
+        "en": "Back to profile"
+      },
+      {
+        "path": "myReports.empty",
+        "en": "You have not filed any reports."
+      },
+      {
+        "path": "myReports.reported",
+        "en": "Reported"
+      },
+      {
+        "path": "myReports.withdraw",
+        "en": "Withdraw report"
+      },
+      {
+        "path": "myReports.withdrawing",
+        "en": "Withdrawing…"
+      },
+      {
+        "path": "myReports.status.inProgress",
+        "en": "In progress"
+      },
+      {
+        "path": "myReports.status.settled",
+        "en": "Settled"
+      },
+      {
+        "path": "myReports.status.passed",
+        "en": "Passed"
+      },
+      {
+        "path": "myReports.categories.scam",
+        "en": "Scam or fraud"
+      },
+      {
+        "path": "myReports.categories.fakeItem",
+        "en": "Fake or misrepresented item"
+      },
+      {
+        "path": "myReports.categories.harassment",
+        "en": "Harassment"
+      },
+      {
+        "path": "myReports.categories.noShip",
+        "en": "Did not ship"
+      },
+      {
+        "path": "myReports.categories.other",
+        "en": "Other"
+      },
+      {
+        "path": "pendingSubmissions.csvImportBadge",
+        "en": "CSV import"
+      },
+      {
+        "path": "pendingSubmissions.inventoryIntent",
+        "en": "Collection intent (after approval)"
+      },
+      {
+        "path": "pendingSubmissions.inventoryAmount",
+        "en": "Amount"
+      },
+      {
+        "path": "pendingSubmissions.inventoryCondition",
+        "en": "Condition"
+      },
+      {
+        "path": "pendingSubmissions.inventoryTradePreference",
+        "en": "Trade preference"
+      },
+      {
+        "path": "pendingSubmissions.linkedHousePending",
+        "en": "Linked house submission must be approved first (ID: {id})"
+      },
+      {
+        "path": "pendingSubmissions.linkedHouseRejected",
+        "en": "Linked house submission was rejected — reject this perfume too"
+      },
+      {
+        "path": "contactUs.modal.submissionSuccess",
+        "en": "Your submission has been received and will be reviewed by an admin."
+      },
+      {
+        "path": "navigation.tradeAlertsUnread",
+        "en": "{count, plural, one {# unread trade update} other {# unread trade updates}}"
+      },
+      {
+        "path": "profile.navigation.myReports",
+        "en": "My Reports"
+      },
+      {
+        "path": "profile.navigation.myDisputes",
+        "en": "My Disputes"
+      },
+      {
+        "path": "singlePerfume.similarPerfumes",
+        "en": "Similar perfumes"
+      },
+      {
+        "path": "singlePerfume.review.failedToLoadReviews",
+        "en": "Failed to load reviews"
+      },
+      {
+        "path": "communityPolicy.meta.title",
+        "en": "Community Policy - perfumer's hollow"
+      },
+      {
+        "path": "communityPolicy.meta.description",
+        "en": "Shipping expectations, dispute process, and community rules for traders."
+      },
+      {
+        "path": "communityPolicy.heading",
+        "en": "Community policy"
+      },
+      {
+        "path": "communityPolicy.subheading",
+        "en": "Trading expectations on perfumer's hollow"
+      },
+      {
+        "path": "communityPolicy.shipping.heading",
+        "en": "Shipping expectations"
+      },
+      {
+        "path": "communityPolicy.shipping.contentOne",
+        "en": "All payment and shipping are arranged off-platform between traders. Agree on carriers, packaging, and timelines in your messages before anyone ships."
+      },
+      {
+        "path": "communityPolicy.shipping.contentTwo",
+        "en": "Ship within a reasonable window after both sides confirm the trade (typically within one week unless you agree otherwise). Share tracking when available."
+      },
+      {
+        "path": "communityPolicy.shipping.contentThree",
+        "en": "Package bottles securely: use padding, seal decants, and disclose any known flaws before shipping."
+      },
+      {
+        "path": "communityPolicy.disputes.heading",
+        "en": "Dispute process"
+      },
+      {
+        "path": "communityPolicy.disputes.contentOne",
+        "en": "If something goes wrong, message the other trader first and try to resolve it directly."
+      },
+      {
+        "path": "communityPolicy.disputes.contentTwo",
+        "en": "If you cannot resolve the issue, use Open dispute on the active trade card, or Report on their trader profile for off-trade issues. Include photos and a clear description."
+      },
+      {
+        "path": "communityPolicy.disputes.contentThree",
+        "en": "Our team reviews reports and may issue strikes or account actions. We do not hold funds or guarantee refunds — we help document disputes and enforce community rules."
+      },
+      {
+        "path": "communityPolicy.community.heading",
+        "en": "Community rules"
+      },
+      {
+        "path": "communityPolicy.community.contentOne",
+        "en": "Be honest about bottle condition, volume remaining, and authenticity. Listings should include accurate photos."
+      },
+      {
+        "path": "communityPolicy.community.contentTwo",
+        "en": "Harassment, scams, and no-ship behavior are not tolerated. Repeated issues affect reputation and may lead to suspension."
+      },
+      {
+        "path": "communityPolicy.community.contentThree",
+        "en": "Leave feedback only after a completed trade so reviews reflect real exchanges."
+      },
+      {
+        "path": "communityPolicy.offPlatform.heading",
+        "en": "Off-platform payments"
+      },
+      {
+        "path": "communityPolicy.offPlatform.contentOne",
+        "en": "perfumer's hollow connects traders; we never process payments or shipping labels."
+      },
+      {
+        "path": "communityPolicy.offPlatform.contentTwo",
+        "en": "Use payment methods you trust, keep message records on-platform when possible, and never share passwords or unrelated financial details."
+      },
+      {
+        "path": "tradeStatus.communityPolicyLink",
+        "en": "Shipping, disputes & community rules"
+      },
+      {
+        "path": "traderProfile.traderProfileAside",
+        "en": "Trader {traderName} profile"
+      },
+      {
+        "path": "traderProfile.reputation.explainTradeReliability",
+        "en": "Trade reliability is completed trades divided by completed plus trades this member cancelled. Declined offers are not counted."
+      },
+      {
+        "path": "traderProfile.reputation.tradeReliabilityLabel",
+        "en": "Trade reliability"
+      },
+      {
+        "path": "traderProfile.reputation.tradeReliabilityValue",
+        "en": "{percent}%"
+      },
+      {
+        "path": "traderProfile.reputation.tradeReliabilityInsufficient",
+        "en": "Not enough trade history for a reliability score yet."
+      },
+      {
+        "path": "validation.descriptionRequired",
+        "en": "Description is required and must be at least 10 characters."
+      },
+      {
+        "path": "validation.descriptionMin",
+        "en": "Description must be at least 10 characters."
+      },
+      {
+        "path": "validation.descriptionMax",
+        "en": "Description must be less than 1000 characters."
+      },
+      {
+        "path": "validation.nameRequired",
+        "en": "Name is required."
+      },
+      {
+        "path": "validation.nameMin",
+        "en": "Name must be at least 1 character."
+      },
+      {
+        "path": "validation.nameMax",
+        "en": "Name must be less than 100 characters."
+      },
+      {
+        "path": "validation.urlInvalid",
+        "en": "Please enter a valid URL."
+      },
+      {
+        "path": "validation.perfumeHouseRequired",
+        "en": "Please select a perfume house."
+      },
+      {
+        "path": "validation.usernameMin",
+        "en": "Username must be at least 3 characters."
+      },
+      {
+        "path": "validation.usernameMax",
+        "en": "Username must be 30 characters or less."
+      },
+      {
+        "path": "validation.usernameFormat",
+        "en": "Use only letters, numbers, spaces and underscores."
+      }
+    ],
+    "extra": [],
+    "placeholderIssues": [
+      {
+        "path": "contactTrader.itemSubject",
+        "en": "Inquiry about {perfumeName}{perfumeHouse}",
+        "value": "Demande concernant {{perfumeName}}{{perfumeHouse}}",
+        "missing": [],
+        "extra": [
+          "{{perfumeHouse}}",
+          "{{perfumeName}}"
+        ]
+      }
+    ]
+  },
+  "it": {
+    "missing": [
+      {
+        "path": "common.adding",
+        "en": "Adding..."
+      },
+      {
+        "path": "admin.navigation.disputes",
+        "en": "Disputes"
+      },
+      {
+        "path": "userReport.button",
+        "en": "Report"
+      },
+      {
+        "path": "userReport.heading",
+        "en": "Report trader"
+      },
+      {
+        "path": "userReport.subheading",
+        "en": "Tell us what happened with {traderName}. Reports are reviewed by our team."
+      },
+      {
+        "path": "userReport.categoryLabel",
+        "en": "Category"
+      },
+      {
+        "path": "userReport.categoryPlaceholder",
+        "en": "Select a category…"
+      },
+      {
+        "path": "userReport.descriptionLabel",
+        "en": "Details (optional)"
+      },
+      {
+        "path": "userReport.descriptionPlaceholder",
+        "en": "Describe what happened…"
+      },
+      {
+        "path": "userReport.photosLabel",
+        "en": "Evidence photos (optional)"
+      },
+      {
+        "path": "userReport.photosHint",
+        "en": "Up to 3 images to help our team review your report."
+      },
+      {
+        "path": "userReport.submit",
+        "en": "Submit report"
+      },
+      {
+        "path": "userReport.submitting",
+        "en": "Submitting…"
+      },
+      {
+        "path": "userReport.categories.scam",
+        "en": "Scam or fraud"
+      },
+      {
+        "path": "userReport.categories.fakeItem",
+        "en": "Fake or misrepresented item"
+      },
+      {
+        "path": "userReport.categories.harassment",
+        "en": "Harassment"
+      },
+      {
+        "path": "userReport.categories.noShip",
+        "en": "Did not ship"
+      },
+      {
+        "path": "userReport.categories.other",
+        "en": "Other"
+      },
+      {
+        "path": "dispute.button",
+        "en": "Open dispute"
+      },
+      {
+        "path": "dispute.heading",
+        "en": "Open trade dispute"
+      },
+      {
+        "path": "dispute.subheading",
+        "en": "Describe the issue with this trade. Our team will review both sides."
+      },
+      {
+        "path": "dispute.policyLink",
+        "en": "Read shipping, disputes & community rules"
+      },
+      {
+        "path": "dispute.categoryLabel",
+        "en": "Category"
+      },
+      {
+        "path": "dispute.categoryPlaceholder",
+        "en": "Select a category…"
+      },
+      {
+        "path": "dispute.descriptionLabel",
+        "en": "Details"
+      },
+      {
+        "path": "dispute.descriptionPlaceholder",
+        "en": "Describe what happened…"
+      },
+      {
+        "path": "dispute.photosLabel",
+        "en": "Evidence photos (optional)"
+      },
+      {
+        "path": "dispute.photosHint",
+        "en": "Up to 3 images to help our team review your dispute."
+      },
+      {
+        "path": "dispute.submit",
+        "en": "Submit dispute"
+      },
+      {
+        "path": "dispute.submitting",
+        "en": "Submitting…"
+      },
+      {
+        "path": "dispute.existingDispute",
+        "en": "A dispute is already open for this trade."
+      },
+      {
+        "path": "dispute.viewMyDisputes",
+        "en": "View my disputes"
+      },
+      {
+        "path": "dispute.categories.noShip",
+        "en": "Did not ship"
+      },
+      {
+        "path": "dispute.categories.fakeItem",
+        "en": "Fake or misrepresented item"
+      },
+      {
+        "path": "dispute.categories.notAsDescribed",
+        "en": "Not as described"
+      },
+      {
+        "path": "dispute.categories.scam",
+        "en": "Scam or fraud"
+      },
+      {
+        "path": "dispute.categories.other",
+        "en": "Other"
+      },
+      {
+        "path": "myDisputes.meta.title",
+        "en": "My Disputes - perfumer's hollow"
+      },
+      {
+        "path": "myDisputes.meta.description",
+        "en": "Track trade disputes you have opened or are party to."
+      },
+      {
+        "path": "myDisputes.heading",
+        "en": "My Disputes"
+      },
+      {
+        "path": "myDisputes.subheading",
+        "en": "Trade disputes you opened or are involved in"
+      },
+      {
+        "path": "myDisputes.backToProfile",
+        "en": "Back to profile"
+      },
+      {
+        "path": "myDisputes.empty",
+        "en": "You have no trade disputes."
+      },
+      {
+        "path": "myDisputes.withdraw",
+        "en": "Withdraw dispute"
+      },
+      {
+        "path": "myDisputes.withdrawing",
+        "en": "Withdrawing…"
+      },
+      {
+        "path": "myDisputes.otherParty",
+        "en": "Other trader"
+      },
+      {
+        "path": "myDisputes.tradeStatus",
+        "en": "Trade status"
+      },
+      {
+        "path": "myDisputes.categories.noShip",
+        "en": "Did not ship"
+      },
+      {
+        "path": "myDisputes.categories.fakeItem",
+        "en": "Fake or misrepresented item"
+      },
+      {
+        "path": "myDisputes.categories.notAsDescribed",
+        "en": "Not as described"
+      },
+      {
+        "path": "myDisputes.categories.scam",
+        "en": "Scam or fraud"
+      },
+      {
+        "path": "myDisputes.categories.other",
+        "en": "Other"
+      },
+      {
+        "path": "myDisputes.status.open",
+        "en": "Open"
+      },
+      {
+        "path": "myDisputes.status.underReview",
+        "en": "Under review"
+      },
+      {
+        "path": "myDisputes.status.resolved",
+        "en": "Resolved"
+      },
+      {
+        "path": "myDisputes.status.closed",
+        "en": "Closed"
+      },
+      {
+        "path": "myDisputes.outcomes.noAction",
+        "en": "No action"
+      },
+      {
+        "path": "myDisputes.outcomes.warningIssued",
+        "en": "Warning issued"
+      },
+      {
+        "path": "myDisputes.outcomes.strikeIssued",
+        "en": "Strike issued"
+      },
+      {
+        "path": "myDisputes.outcomes.tradeVoided",
+        "en": "Trade voided"
+      },
+      {
+        "path": "adminDisputes.meta.title",
+        "en": "Disputes - Admin - perfumer's hollow"
+      },
+      {
+        "path": "adminDisputes.meta.description",
+        "en": "Review trade disputes and profile reports."
+      },
+      {
+        "path": "adminDisputes.heading",
+        "en": "Disputes & Reports"
+      },
+      {
+        "path": "adminDisputes.subheading",
+        "en": "Trade disputes and profile moderation"
+      },
+      {
+        "path": "adminDisputes.tabs.ariaLabel",
+        "en": "Dispute queues"
+      },
+      {
+        "path": "adminDisputes.tabs.tradeDisputes",
+        "en": "Trade disputes"
+      },
+      {
+        "path": "adminDisputes.tabs.profileReports",
+        "en": "Profile reports"
+      },
+      {
+        "path": "adminDisputes.empty",
+        "en": "No disputes in this queue"
+      },
+      {
+        "path": "adminDisputes.filters.open",
+        "en": "Open"
+      },
+      {
+        "path": "adminDisputes.filters.underReview",
+        "en": "Under review"
+      },
+      {
+        "path": "adminDisputes.filters.resolved",
+        "en": "Resolved"
+      },
+      {
+        "path": "adminDisputes.filters.all",
+        "en": "All"
+      },
+      {
+        "path": "adminDisputes.status.open",
+        "en": "Open"
+      },
+      {
+        "path": "adminDisputes.status.underReview",
+        "en": "Under review"
+      },
+      {
+        "path": "adminDisputes.status.resolved",
+        "en": "Resolved"
+      },
+      {
+        "path": "adminDisputes.status.closed",
+        "en": "Closed"
+      },
+      {
+        "path": "adminDisputes.categories.noShip",
+        "en": "Did not ship"
+      },
+      {
+        "path": "adminDisputes.categories.fakeItem",
+        "en": "Fake or misrepresented item"
+      },
+      {
+        "path": "adminDisputes.categories.notAsDescribed",
+        "en": "Not as described"
+      },
+      {
+        "path": "adminDisputes.categories.scam",
+        "en": "Scam or fraud"
+      },
+      {
+        "path": "adminDisputes.categories.other",
+        "en": "Other"
+      },
+      {
+        "path": "adminDisputes.outcomes.noAction",
+        "en": "No action"
+      },
+      {
+        "path": "adminDisputes.outcomes.warningIssued",
+        "en": "Warning issued"
+      },
+      {
+        "path": "adminDisputes.outcomes.strikeIssued",
+        "en": "Strike issued"
+      },
+      {
+        "path": "adminDisputes.outcomes.tradeVoided",
+        "en": "Trade voided"
+      },
+      {
+        "path": "adminDisputes.trade",
+        "en": "Trade"
+      },
+      {
+        "path": "adminDisputes.initiator",
+        "en": "Initiator"
+      },
+      {
+        "path": "adminDisputes.otherParty",
+        "en": "Other party"
+      },
+      {
+        "path": "adminDisputes.resolutionOutcome",
+        "en": "Outcome"
+      },
+      {
+        "path": "adminDisputes.markUnderReview",
+        "en": "Mark under review"
+      },
+      {
+        "path": "adminDisputes.showDetails",
+        "en": "Show details"
+      },
+      {
+        "path": "adminDisputes.hideDetails",
+        "en": "Hide details"
+      },
+      {
+        "path": "adminDisputes.noDescription",
+        "en": "No additional details provided."
+      },
+      {
+        "path": "adminDisputes.adminNotesLabel",
+        "en": "Admin notes (internal)"
+      },
+      {
+        "path": "adminDisputes.saveNotes",
+        "en": "Save notes"
+      },
+      {
+        "path": "adminDisputes.resolveHeading",
+        "en": "Resolution"
+      },
+      {
+        "path": "adminDisputes.publicSummaryLabel",
+        "en": "Public summary (sent to both parties)"
+      },
+      {
+        "path": "adminDisputes.resolveDispute",
+        "en": "Resolve dispute"
+      },
+      {
+        "path": "adminReports.meta.title",
+        "en": "User Reports - Admin - perfumer's hollow"
+      },
+      {
+        "path": "adminReports.meta.description",
+        "en": "Review community reports against traders."
+      },
+      {
+        "path": "adminReports.heading",
+        "en": "User Reports"
+      },
+      {
+        "path": "adminReports.subheading",
+        "en": "Review reports filed by members"
+      },
+      {
+        "path": "adminReports.empty",
+        "en": "No reports in this queue"
+      },
+      {
+        "path": "adminReports.filters.inProgress",
+        "en": "In progress"
+      },
+      {
+        "path": "adminReports.filters.settled",
+        "en": "Settled"
+      },
+      {
+        "path": "adminReports.filters.passed",
+        "en": "Passed"
+      },
+      {
+        "path": "adminReports.filters.all",
+        "en": "All"
+      },
+      {
+        "path": "adminReports.status.inProgress",
+        "en": "In progress"
+      },
+      {
+        "path": "adminReports.status.settled",
+        "en": "Settled"
+      },
+      {
+        "path": "adminReports.status.passed",
+        "en": "Passed"
+      },
+      {
+        "path": "adminReports.statusLabel",
+        "en": "Dispute status"
+      },
+      {
+        "path": "adminReports.updateStatus",
+        "en": "Update"
+      },
+      {
+        "path": "adminReports.reporter",
+        "en": "Reporter"
+      },
+      {
+        "path": "adminReports.reportedUser",
+        "en": "Reported"
+      },
+      {
+        "path": "adminReports.reporterEmail",
+        "en": "Reporter email"
+      },
+      {
+        "path": "adminReports.reportedEmail",
+        "en": "Reported user email"
+      },
+      {
+        "path": "adminReports.showDetails",
+        "en": "Show details"
+      },
+      {
+        "path": "adminReports.hideDetails",
+        "en": "Hide details"
+      },
+      {
+        "path": "adminReports.noDescription",
+        "en": "No additional details provided."
+      },
+      {
+        "path": "adminReports.tradeLink",
+        "en": "Trade"
+      },
+      {
+        "path": "adminReports.issueStrike",
+        "en": "Issue Strike"
+      },
+      {
+        "path": "adminReports.deleteReport",
+        "en": "Delete report"
+      },
+      {
+        "path": "adminReports.deleteConfirmHeading",
+        "en": "Delete this report?"
+      },
+      {
+        "path": "adminReports.deleteConfirmDescription",
+        "en": "This permanently removes the report and its evidence photos. This cannot be undone."
+      },
+      {
+        "path": "adminReports.categories.scam",
+        "en": "Scam or fraud"
+      },
+      {
+        "path": "adminReports.categories.fakeItem",
+        "en": "Fake or misrepresented item"
+      },
+      {
+        "path": "adminReports.categories.harassment",
+        "en": "Harassment"
+      },
+      {
+        "path": "adminReports.categories.noShip",
+        "en": "Did not ship"
+      },
+      {
+        "path": "adminReports.categories.other",
+        "en": "Other"
+      },
+      {
+        "path": "myReports.meta.title",
+        "en": "My Reports - perfumer's hollow"
+      },
+      {
+        "path": "myReports.meta.description",
+        "en": "Reports you have filed against other traders."
+      },
+      {
+        "path": "myReports.heading",
+        "en": "My Reports"
+      },
+      {
+        "path": "myReports.subheading",
+        "en": "Track reports you have submitted"
+      },
+      {
+        "path": "myReports.backToProfile",
+        "en": "Back to profile"
+      },
+      {
+        "path": "myReports.empty",
+        "en": "You have not filed any reports."
+      },
+      {
+        "path": "myReports.reported",
+        "en": "Reported"
+      },
+      {
+        "path": "myReports.withdraw",
+        "en": "Withdraw report"
+      },
+      {
+        "path": "myReports.withdrawing",
+        "en": "Withdrawing…"
+      },
+      {
+        "path": "myReports.status.inProgress",
+        "en": "In progress"
+      },
+      {
+        "path": "myReports.status.settled",
+        "en": "Settled"
+      },
+      {
+        "path": "myReports.status.passed",
+        "en": "Passed"
+      },
+      {
+        "path": "myReports.categories.scam",
+        "en": "Scam or fraud"
+      },
+      {
+        "path": "myReports.categories.fakeItem",
+        "en": "Fake or misrepresented item"
+      },
+      {
+        "path": "myReports.categories.harassment",
+        "en": "Harassment"
+      },
+      {
+        "path": "myReports.categories.noShip",
+        "en": "Did not ship"
+      },
+      {
+        "path": "myReports.categories.other",
+        "en": "Other"
+      },
+      {
+        "path": "pendingSubmissions.csvImportBadge",
+        "en": "CSV import"
+      },
+      {
+        "path": "pendingSubmissions.inventoryIntent",
+        "en": "Collection intent (after approval)"
+      },
+      {
+        "path": "pendingSubmissions.inventoryAmount",
+        "en": "Amount"
+      },
+      {
+        "path": "pendingSubmissions.inventoryCondition",
+        "en": "Condition"
+      },
+      {
+        "path": "pendingSubmissions.inventoryTradePreference",
+        "en": "Trade preference"
+      },
+      {
+        "path": "pendingSubmissions.linkedHousePending",
+        "en": "Linked house submission must be approved first (ID: {id})"
+      },
+      {
+        "path": "pendingSubmissions.linkedHouseRejected",
+        "en": "Linked house submission was rejected — reject this perfume too"
+      },
+      {
+        "path": "contactUs.modal.submissionSuccess",
+        "en": "Your submission has been received and will be reviewed by an admin."
+      },
+      {
+        "path": "navigation.tradeAlertsUnread",
+        "en": "{count, plural, one {# unread trade update} other {# unread trade updates}}"
+      },
+      {
+        "path": "profile.navigation.myReports",
+        "en": "My Reports"
+      },
+      {
+        "path": "profile.navigation.myDisputes",
+        "en": "My Disputes"
+      },
+      {
+        "path": "singlePerfume.similarPerfumes",
+        "en": "Similar perfumes"
+      },
+      {
+        "path": "singlePerfume.review.failedToLoadReviews",
+        "en": "Failed to load reviews"
+      },
+      {
+        "path": "communityPolicy.meta.title",
+        "en": "Community Policy - perfumer's hollow"
+      },
+      {
+        "path": "communityPolicy.meta.description",
+        "en": "Shipping expectations, dispute process, and community rules for traders."
+      },
+      {
+        "path": "communityPolicy.heading",
+        "en": "Community policy"
+      },
+      {
+        "path": "communityPolicy.subheading",
+        "en": "Trading expectations on perfumer's hollow"
+      },
+      {
+        "path": "communityPolicy.shipping.heading",
+        "en": "Shipping expectations"
+      },
+      {
+        "path": "communityPolicy.shipping.contentOne",
+        "en": "All payment and shipping are arranged off-platform between traders. Agree on carriers, packaging, and timelines in your messages before anyone ships."
+      },
+      {
+        "path": "communityPolicy.shipping.contentTwo",
+        "en": "Ship within a reasonable window after both sides confirm the trade (typically within one week unless you agree otherwise). Share tracking when available."
+      },
+      {
+        "path": "communityPolicy.shipping.contentThree",
+        "en": "Package bottles securely: use padding, seal decants, and disclose any known flaws before shipping."
+      },
+      {
+        "path": "communityPolicy.disputes.heading",
+        "en": "Dispute process"
+      },
+      {
+        "path": "communityPolicy.disputes.contentOne",
+        "en": "If something goes wrong, message the other trader first and try to resolve it directly."
+      },
+      {
+        "path": "communityPolicy.disputes.contentTwo",
+        "en": "If you cannot resolve the issue, use Open dispute on the active trade card, or Report on their trader profile for off-trade issues. Include photos and a clear description."
+      },
+      {
+        "path": "communityPolicy.disputes.contentThree",
+        "en": "Our team reviews reports and may issue strikes or account actions. We do not hold funds or guarantee refunds — we help document disputes and enforce community rules."
+      },
+      {
+        "path": "communityPolicy.community.heading",
+        "en": "Community rules"
+      },
+      {
+        "path": "communityPolicy.community.contentOne",
+        "en": "Be honest about bottle condition, volume remaining, and authenticity. Listings should include accurate photos."
+      },
+      {
+        "path": "communityPolicy.community.contentTwo",
+        "en": "Harassment, scams, and no-ship behavior are not tolerated. Repeated issues affect reputation and may lead to suspension."
+      },
+      {
+        "path": "communityPolicy.community.contentThree",
+        "en": "Leave feedback only after a completed trade so reviews reflect real exchanges."
+      },
+      {
+        "path": "communityPolicy.offPlatform.heading",
+        "en": "Off-platform payments"
+      },
+      {
+        "path": "communityPolicy.offPlatform.contentOne",
+        "en": "perfumer's hollow connects traders; we never process payments or shipping labels."
+      },
+      {
+        "path": "communityPolicy.offPlatform.contentTwo",
+        "en": "Use payment methods you trust, keep message records on-platform when possible, and never share passwords or unrelated financial details."
+      },
+      {
+        "path": "tradeStatus.communityPolicyLink",
+        "en": "Shipping, disputes & community rules"
+      },
+      {
+        "path": "traderProfile.traderProfileAside",
+        "en": "Trader {traderName} profile"
+      },
+      {
+        "path": "traderProfile.reputation.explainTradeReliability",
+        "en": "Trade reliability is completed trades divided by completed plus trades this member cancelled. Declined offers are not counted."
+      },
+      {
+        "path": "traderProfile.reputation.tradeReliabilityLabel",
+        "en": "Trade reliability"
+      },
+      {
+        "path": "traderProfile.reputation.tradeReliabilityValue",
+        "en": "{percent}%"
+      },
+      {
+        "path": "traderProfile.reputation.tradeReliabilityInsufficient",
+        "en": "Not enough trade history for a reliability score yet."
+      },
+      {
+        "path": "validation.descriptionRequired",
+        "en": "Description is required and must be at least 10 characters."
+      },
+      {
+        "path": "validation.descriptionMin",
+        "en": "Description must be at least 10 characters."
+      },
+      {
+        "path": "validation.descriptionMax",
+        "en": "Description must be less than 1000 characters."
+      },
+      {
+        "path": "validation.nameRequired",
+        "en": "Name is required."
+      },
+      {
+        "path": "validation.nameMin",
+        "en": "Name must be at least 1 character."
+      },
+      {
+        "path": "validation.nameMax",
+        "en": "Name must be less than 100 characters."
+      },
+      {
+        "path": "validation.urlInvalid",
+        "en": "Please enter a valid URL."
+      },
+      {
+        "path": "validation.perfumeHouseRequired",
+        "en": "Please select a perfume house."
+      },
+      {
+        "path": "validation.usernameMin",
+        "en": "Username must be at least 3 characters."
+      },
+      {
+        "path": "validation.usernameMax",
+        "en": "Username must be 30 characters or less."
+      },
+      {
+        "path": "validation.usernameFormat",
+        "en": "Use only letters, numbers, spaces and underscores."
+      }
+    ],
+    "extra": [],
+    "placeholderIssues": [
+      {
+        "path": "contactTrader.itemSubheading",
+        "en": "Contact the trader about {perfumeName}{perfumeHouse}.",
+        "value": "Contatta il venditore riguardo {{perfumeName}}{{perfumeHouse}}.",
+        "missing": [],
+        "extra": [
+          "{{perfumeHouse}}",
+          "{{perfumeName}}"
+        ]
+      }
+    ]
+  }
+}

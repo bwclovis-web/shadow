@@ -10,7 +10,7 @@ describe("buildPushAlertPayload", () => {
       "Regarding Rose",
       { tradeId: "trade-1", senderId: "user-actor" }
     )
-    expect(payload.url).toContain("/messages/user-actor")
+    expect(payload.url).toContain("/exchanges/user-actor")
     expect(payload.tag).toContain("trade_accepted")
   })
 
@@ -21,6 +21,6 @@ describe("buildPushAlertPayload", () => {
       "Hello",
       { senderId: "user-sender", messageId: "msg-1" }
     )
-    expect(payload.url).toContain("/messages/user-sender")
+    expect(payload.url).toContain("/exchanges/user-sender")
   })
 })

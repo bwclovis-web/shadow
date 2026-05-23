@@ -48,12 +48,12 @@ const buildNotificationUrl = (
         : null
 
   if (alertType.startsWith("trade_") && typeof metadata?.tradeId === "string") {
-    if (senderId) return `${base}/messages/${senderId}`
+    if (senderId) return `${base}/exchanges/${senderId}`
     return `${base}/profile/trades`
   }
 
   if (alertType === "new_trader_message" && senderId) {
-    return `${base}/messages/${senderId}`
+    return `${base}/exchanges/${senderId}`
   }
 
   if (alertType === "followed_activity" && typeof metadata?.targetUrl === "string") {

@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
 import SignUpClient from "./SignUpClient"
+import SignUpIntro from "./SignUpIntro"
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("auth.signUp")
@@ -21,7 +22,12 @@ const SignUpPage = async ({ searchParams }: PageProps) => {
   const email = params.email ?? null
 
   return (
-    <SignUpClient sessionId={sessionId} prefillEmail={email} />
+    <>
+      <SignUpIntro />
+      <div className="w-full lg:w-1/2 form">
+        <SignUpClient sessionId={sessionId} prefillEmail={email} />
+      </div>
+    </>
   )
 }
 

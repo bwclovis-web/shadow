@@ -87,7 +87,7 @@ const ScentJourneyTimelineItem = ({
     const viewerIsCounterparty = viewerId === item.counterpartyId
     const viewerInTrade = viewerIsProfileOwner || viewerIsCounterparty
     const messagesOtherPartyId = viewerIsCounterparty ? traderId : item.counterpartyId
-    const messagesHref = `/messages/${messagesOtherPartyId}`
+    const messagesHref = `/exchanges/${messagesOtherPartyId}`
     const partnerHref = `/trader-profile/${item.counterpartyId}`
 
     return (

@@ -1,3 +1,7 @@
+"use client"
+
+import { useTranslations } from "next-intl"
+
 import { RemovableChip } from "@/components/Molecules/RemovableChip"
 import { styleMerge } from "@/utils/styleUtils"
 
@@ -7,21 +11,23 @@ export type TagListLayout = "footer" | "flow"
 export type TagListSurface = "light" | "dark"
 
 interface TagListProps {
+  type: "exchange" | "wishlist"
   selectedTags: TagItem[]
   label?: string
   onRemoveTag?: (tagId: string) => void
-  /** footer: absolute strip at bottom (admin forms). flow: stacks under the search input. */
   layout?: TagListLayout
   surface?: TagListSurface
 }
 
 export const TagList = ({
+  type,
   selectedTags,
   label,
   onRemoveTag,
   layout = "footer",
   surface = "light",
 }: TagListProps) => {
+  const t = useTranslations("components.tagList")
   const isFlow = layout === "flow"
   const isDark = surface === "dark"
   const heading =
@@ -78,7 +84,7 @@ export const TagList = ({
               isDark ? "text-stone-500" : "text-stone-400"
             )}
           >
-            No tags selected yet
+            {type === "exchange" ? t("emptyExchange") : t("emptyWishlist")}
           </li>
         )}
         {selectedTags.map(item =>

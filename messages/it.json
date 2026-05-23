@@ -26,7 +26,8 @@
     "pageOf": "Pagina {current} di {total}",
     "paginationNav": "Paginazione",
     "paginationFirst": "Prima",
-    "paginationLast": "Ultima"
+    "paginationLast": "Ultima",
+    "adding": "Aggiunta…"
   },
   "compare": {
     "meta": {
@@ -76,7 +77,8 @@
       "errorAnalytics": "Analisi errori",
       "pendingSubmissions": "Invii in sospeso",
       "userReports": "Segnalazioni",
-      "houseScraper": "Scraper case"
+      "houseScraper": "Scraper case",
+      "disputes": "Controversie"
     },
     "perfumeHouse": {
       "sectionHeading": "Amministrazione"
@@ -116,7 +118,14 @@
     "approve": "Approva",
     "approving": "Approvazione...",
     "reject": "Rifiuta",
-    "rejecting": "Rifiuto in corso..."
+    "rejecting": "Rifiuto in corso...",
+    "csvImportBadge": "Import CSV",
+    "inventoryIntent": "Intento collezione (dopo approvazione)",
+    "inventoryAmount": "Quantità",
+    "inventoryCondition": "Condizione",
+    "inventoryTradePreference": "Preferenza di scambio",
+    "linkedHousePending": "La casa collegata deve essere approvata prima (ID: {id})",
+    "linkedHouseRejected": "La casa collegata è stata rifiutata — rifiuta anche questo profumo"
   },
   "aboutUs": {
     "meta": {
@@ -240,7 +249,7 @@
     },
     "eyebrow": "Editoriale",
     "heading": "Dietro il flacone",
-    "subheading": "Articoli su case di profumeria, flaconi iconici e cultura del profumo.",
+    "subheading": "Note dalla Conca.",
     "browseHouses": "Sfoglia tutte le case di profumeria →",
     "empty": "Nessun articolo pubblicato. Torna presto.",
     "notConfigured": "Il blog editoriale non è ancora collegato. Aggiungi le variabili Sanity per abilitare gli articoli.",
@@ -257,7 +266,7 @@
       "description": "Esplora tutte le case di profumeria nel nostro database."
     },
     "heading": "Dietro il flacone",
-    "subheading": "Non fanno solo profumi, lasciano il segno.",
+    "subheading": "Le case, i creatori e le identità che danno forma al mondo della fragranza.",
     "readStories": "Leggi gli articoli editoriali →",
     "filters": {
       "houseType": "Filtra per tipo:",
@@ -272,11 +281,11 @@
       "drugstore": "Profumeria"
     },
     "sortOptions": {
-      "created-desc": "Prima i più recenti",
-      "created-asc": "Prima i più vecchi",
-      "name-asc": "Nome A-Z",
-      "name-desc": "Nome Z-A",
-      "type-asc": "Tipo"
+      "created-desc": "Aggiunti di recente",
+      "created-asc": "Voci più antiche",
+      "name-asc": "Alfabetico A-Z",
+      "name-desc": "Alfabetico Z-A",
+      "type-asc": "Per tipo di fragranza"
     }
   },
   "allPerfumes": {
@@ -285,7 +294,7 @@
       "description": "Scopri tutti i profumi nel nostro database."
     },
     "heading": "L'Archivio",
-    "subheading": "Ogni flacone racconta una storia. Alcuni sussurrano, altri urlano."
+    "subheading": "Ogni fragranza porta qualcosa che merita di essere ricordato."
   },
   "auth": {
     "heading": "Bentornato",
@@ -321,7 +330,11 @@
     },
     "signUp": {
       "title": "Registrati - perfumer's hollow",
-      "description": "Crea un account per gestire profilo e collezione."
+      "description": "Crea un account per gestire profilo e collezione.",
+      "heading": "Unisciti al Hollow",
+      "subheading": "Crea il tuo account per esplorare l'Archivio, catalogare la collezione e connetterti con altri collezionisti.",
+      "alreadyHere": "Sei già nel Hollow?",
+      "signIn": "Torna all'accesso"
     }
   },
   "directMessages": {
@@ -357,8 +370,14 @@
   },
   "components": {
     "dataDisplaySection": {
-      "heading": "Seleziona una lettera per sfogliare {itemName}",
-      "subheading": "Clicca su una lettera per vedere i {itemName} che iniziano con quella lettera"
+      "headingArchive": "Sfoglia l'Archivio",
+      "subheadingArchive": "Esplora le fragranze, una lettera alla volta.",
+      "headingHouses": "Sfoglia le Case",
+      "subheadingHouses": "Scopri i nomi dietro le fragranze nell'Archivio."
+    },
+    "tagList": {
+      "emptyExchange": "Seleziona note per affinare il mercato",
+      "emptyWishlist": "Nessuna fragranza nella tua wishlist per ora"
     },
     "modal": {
       "close": "Chiudi finestra"
@@ -388,7 +407,7 @@
     "itemTitle": "Richiedi informazioni",
     "heading": "Contatta il venditore",
     "subheading": "Contatta {traderName} per uno scambio.",
-    "itemSubheading": "Contatta il venditore riguardo {{perfumeName}}{{perfumeHouse}}.",
+    "itemSubheading": "Contatta il trader riguardo {perfumeName}{perfumeHouse}.",
     "itemSubject": "Richiesta su {perfumeName}{perfumeHouse}",
     "itemMessageTemplate": "Sono interessato a {perfumeName}{perfumeHouse} ({amount} ml).",
     "button": "Contatta il venditore",
@@ -487,11 +506,11 @@
     }
   },
   "sortOptions": {
-    "created-desc": "Prima i più recenti",
-    "created-asc": "Prima i più vecchi",
-    "name-asc": "Nome A-Z",
-    "name-desc": "Nome Z-A",
-    "type-asc": "Tipo"
+    "created-desc": "Aggiunti di recente",
+    "created-asc": "Voci più antiche",
+    "name-asc": "Alfabetico A-Z",
+    "name-desc": "Alfabetico Z-A",
+    "type-asc": "Per tipo di fragranza"
   },
   "createHouse": {
     "meta": {
@@ -544,15 +563,15 @@
       "description": "Esplora un database di profumi e case."
     },
     "radio": {
-      "houses": "Case di profumeria",
-      "perfumes": "Profumi"
+      "houses": "Case di fragranze",
+      "perfumes": "l'Archivio…"
     },
     "heading": "Perfumer's Hollow",
     "description": "Un database di profumi e case.",
     "subheading": "Dove la fragranza lascia un'ombra.",
     "searchType": {
-      "perfume-house": "Case di profumeria",
-      "perfume": "Profumi"
+      "perfume-house": "case di fragranze…",
+      "perfume": "l'Archivio…"
     },
     "stats": {
       "users": "Utenti",
@@ -676,7 +695,8 @@
         "foundedPlaceholder": "Anno di fondazione"
       },
       "submitButton": "Invia per revisione",
-      "cancelButton": "Annulla"
+      "cancelButton": "Annulla",
+      "submissionSuccess": "Il tuo invio è stato ricevuto e sarà esaminato da un amministratore."
     }
   },
   "messagesPage": {
@@ -974,7 +994,7 @@
         "done": "Importazione completata — {committed} righe aggiunte, {skipped} saltate.",
         "duplicateSkipped": "Le righe già nella tua collezione sono state saltate.",
         "draftMissing": "Risultati non trovati. Torna indietro e carica di nuovo il CSV.",
-        "noRowsSelected": "Seleziona almeno una riga da importare.",
+        "noRowsSelected": "Seleziona almeno una riga da importare o inviare al catalogo.",
         "matchedAs": "Corrisponde a",
         "includeRow": "Includi {name}",
         "pickMatch": "Scegli una corrispondenza dal catalogo",
@@ -986,8 +1006,7 @@
         "finalizeBoth": "Importa {importCount} · Invia {catalogCount} al catalogo",
         "catalogSubmitError": "Impossibile inviare le righe al catalogo. Riprova.",
         "catalogSubmitErrorCount": "{errors} invio/i al catalogo non riusciti.",
-        "doneCatalog": "{count} riga/e inviate per revisione catalogo ({houses} richiesta/e casa nuova).",
-        "noRowsSelected": "Seleziona almeno una riga da importare o inviare al catalogo."
+        "doneCatalog": "{count} riga/e inviate per revisione catalogo ({houses} richiesta/e casa nuova)."
       },
       "columns": {
         "perfumeName": "Profumo",
@@ -1059,7 +1078,8 @@
       "profile": "Profilo",
       "alerts": "Avvisi",
       "signIn": "Accedi"
-    }
+    },
+    "tradeAlertsUnread": "{count, plural, one {# aggiornamento scambio non letto} other {# aggiornamenti scambio non letti}}"
   },
   "traderActivity": {
     "recentlyActive": "Attivo di recente"
@@ -1142,10 +1162,13 @@
     },
     "navigation": {
       "profile": "Profilo",
+      "exchanges": "Scambi",
       "wishlist": "La mia wishlist",
       "myTrades": "I miei scambi",
       "myScents": "I miei profumi",
-      "accountSecurity": "Sicurezza account"
+      "accountSecurity": "Sicurezza account",
+      "myReports": "Le mie segnalazioni",
+      "myDisputes": "Le mie controversie"
     }
   },
   "twoFactor": {
@@ -1412,8 +1435,10 @@
       "dangerModal": {
         "heading": "Rimuovere questa recensione?",
         "description": "Non potrai recuperarla."
-      }
-    }
+      },
+      "failedToLoadReviews": "Impossibile caricare le recensioni"
+    },
+    "similarPerfumes": "Profumi simili"
   },
   "termsAndConditions": {
     "meta": {
@@ -1482,28 +1507,28 @@
       "description": "Sfoglia i profumi in scambio dai membri."
     },
     "heading": "Il mercato",
-    "subheading": "Ogni flacone ha un passato. Ogni scambio lascia una traccia.",
-    "count": "profumi disponibili",
-    "empty": "Nessun profumo in scambio al momento.",
+    "subheading": "Le fragranze rare trovano qui una nuova casa.",
+    "count": "fragranze attualmente disponibili",
+    "empty": "Al momento non ci sono fragranze disponibili per lo scambio.",
     "availableFrom": "Disponibile da",
     "search": {
-      "placeholder": "Cerca profumi disponibili...",
-      "noResults": "Nessun profumo trovato",
+      "placeholder": "Cerca fragranze disponibili...",
+      "noResults": "Nessuna fragranza trovata",
       "tryDifferent": "Prova un altro termine",
       "keyboardHint": "Premi / per cercare · Esc per cancellare i filtri"
     },
     "filters": {
       "toggle": "Filtri",
       "notesTitle": "Note",
-      "notesDescription": "Includi profumi che contengono almeno una nota selezionata.",
+      "notesDescription": "Trova fragranze in base alle loro note.",
       "notesSearchLabel": "Note",
       "seasonTitle": "Stagione",
-      "seasonDescription": "Includi profumi per cui la community ha votato una stagione selezionata.",
+      "seasonDescription": "Esplora le fragranze per stagione e atmosfera.",
       "houseTitle": "Casa",
       "houseSearchLabel": "Cerca nome casa",
       "houseClear": "Rimuovi",
       "priceTitle": "Prezzo inserzione",
-      "priceDescription": "Filtra per prezzo indicato dal venditore (solo parte numerica).",
+      "priceDescription": "Filtra gli annunci per fascia di prezzo.",
       "minLabel": "Min",
       "maxLabel": "Max",
       "clearAll": "Reimposta filtri",
@@ -1512,37 +1537,36 @@
       "unknownNote": "Nota",
       "unknownHouse": "Casa",
       "unknownPerfume": "Profumo",
-      "unknownPerfume": "Profumo",
       "priceChipMin": "Min {min}",
       "priceChipMax": "Max {max}",
       "priceChipRange": "{min}–{max}",
-      "tradePrefTitle": "Trade preference",
-      "tradePrefDescription": "Show listings from traders open to cash, trade, or both.",
-      "tradePrefAria": "Trade preference filters",
-      "bottleTitle": "Bottle type",
-      "bottleDescription": "Match listings by how much fragrance is offered.",
-      "bottleAria": "Bottle type filters",
+      "tradePrefTitle": "Preferenza di scambio",
+      "tradePrefDescription": "Filtra gli annunci per tipo di scambio preferito.",
+      "tradePrefAria": "Filtri preferenza di scambio",
+      "bottleTitle": "Tipo di flacone",
+      "bottleDescription": "Filtra gli annunci per formato di fragranza.",
+      "bottleAria": "Filtri per tipo di flacone",
       "bottleDecant": "Decant",
-      "conditionTitle": "Condition",
-      "conditionDescription": "Match listings with the selected bottle condition.",
-      "conditionAria": "Condition filters",
-      "regionTitle": "Trader region",
-      "regionDescription": "Filter by where the trader is based.",
-      "regionLabel": "Region",
-      "regionAll": "Any region",
-      "regionUS": "United States",
-      "regionUK": "United Kingdom",
+      "conditionTitle": "Condizione",
+      "conditionDescription": "Filtra gli annunci per condizione del flacone.",
+      "conditionAria": "Filtri per condizione",
+      "regionTitle": "Regione del collezionista",
+      "regionDescription": "Filtra gli annunci per località del collezionista.",
+      "regionLabel": "Regione",
+      "regionAll": "Qualsiasi regione",
+      "regionUS": "Stati Uniti",
+      "regionUK": "Regno Unito",
       "regionAU": "Australia",
-      "regionEU": "Europe",
-      "regionOther": "Other",
-      "hasPhotosLabel": "Listing photos",
-      "hasPhotosDescription": "Only show listings that include at least one photo.",
-      "hasPhotosChip": "Has photos",
-      "hasPhotosToggle": "Only listings with photos"
+      "regionEU": "Europa",
+      "regionOther": "Altro",
+      "hasPhotosLabel": "Foto dell'annuncio",
+      "hasPhotosDescription": "Mostra solo annunci con foto.",
+      "hasPhotosChip": "Con foto",
+      "hasPhotosToggle": "Solo annunci con foto"
     },
     "wishlistMatches": {
       "title": "Corrispondenze per te",
-      "description": "Profumi della tua wishlist attualmente in vendita sulla piattaforma."
+      "description": "Fragranze in linea con i tuoi gusti, la tua collezione e le scoperte recenti."
     },
     "matchReason": {
       "triggerLabel": "Perché questo scambio ha senso",
@@ -1559,8 +1583,8 @@
       "similarTradeHistory": "Ha già scambiato questo flacone"
     },
     "activityFeed": {
-      "title": "Appena inseriti",
-      "description": "Bottiglie aggiunte di recente allo scambio.",
+      "title": "Appena affiorati",
+      "description": "Annunci recenti da collezionisti in tutta la Conca.",
       "viewPerfume": "Vedi {name}",
       "viewTrader": "Vedi il profilo di {name}"
     },
@@ -1582,29 +1606,31 @@
       "viewPerfume": "Vedi {name}"
     },
     "listings": {
-      "openButton": "Vedi venditori e annunci",
+      "openButton": "Vedi collezionisti e annunci",
       "title": "Annunci per {name}",
-      "traderCount": "{count, plural, one {# venditore} other {# venditori}}",
-      "summary": "{count, plural, one {# venditore ha questo disponibile} other {# venditori hanno questo disponibile}}",
+      "traderCount": "{count, plural, one {# collezionista} other {# collezionisti}}",
+      "summary": "{count, plural, one {# collezionista ha questo disponibile} other {# collezionisti hanno questo disponibile}}",
       "unknownType": "Tipo sconosciuto",
       "filterPreferenceLabel": "Preferenza",
       "filterPreferenceAll": "Tutte",
       "sortLabel": "Ordina",
       "sortDefault": "Ordine predefinito",
       "sortPriceHighLow": "Prezzo (dal più alto al più basso)",
-      "sortScoreHighLow": "Punteggio venditore (dal più alto al più basso)",
-      "noTradersMatchFilter": "Nessun annuncio corrisponde a questa preferenza. Prova con « Tutte ».",
+      "sortScoreHighLow": "Punteggio collezionista (dal più alto al più basso)",
+      "noTradersMatchFilter": "Nessun annuncio corrisponde a questa preferenza. Prova l'opzione « Tutte » sopra.",
       "makeOffer": "Proponi scambio",
       "photosFromListings": "{count, plural, one {Foto da # annuncio} other {Foto da # annunci}}",
-      "openListingPhoto": "Apri foto di {trader}, immagine {index}",
+      "openListingPhoto": "Apri foto di {collector}, immagine {index}",
       "multiLightboxTitle": "Foto annunci",
       "photoIndex": "Foto {current} di {total}"
     }
   },
   "tradeComposer": {
     "proposeSwap": "Proponi scambio",
-    "connectAboutBottle": "Contatta su questo flacone",
-    "subheading": "Con {traderName}",
+    "connectAboutBottle": "Contatta il collezionista",
+    "subheading": "Contatta {traderName}",
+    "contactAboutHeading": "Contatta {traderName} riguardo a:",
+    "viewTraderProfile": "Vedi registro del collezionista",
     "pickTitle": "Scegli un annuncio — {name}",
     "pickSubheading": "Seleziona il flacone su cui vuoi offrire.",
     "pickListing": "Ogni venditore può elencare quantità e prezzi diversi.",
@@ -1612,14 +1638,14 @@
     "yourOffer": "La tua offerta (opzionale)",
     "loadingListings": "Caricamento annunci…",
     "noOfferableListings": "Non hai flaconi in scambio.",
-    "offerOptional": "Puoi inviare un'offerta senza elencare il tuo.",
-    "notesLabel": "Note",
+    "offerOptional": "Puoi proporre uno scambio anche senza offrire una fragranza.",
+    "notesLabel": "Messaggio",
     "notesHelp": "Messaggio opzionale su contanti, spedizione o scambio.",
-    "notesHelpCash": "Messaggio opzionale su contanti o spedizione.",
-    "notesPlaceholderCash": "es. Posso pagare il prezzo richiesto o preferisco spedizione standard…",
+    "notesHelpCash": "Messaggio opzionale per il collezionista.",
+    "notesPlaceholderCash": "Chiedi disponibilità, preferenze di spedizione o dettagli dello scambio…",
     "submitConnect": "Invia messaggio",
     "chooseListing": "Scegli un annuncio",
-    "notesPlaceholder": "es. Posso aggiungere contanti…",
+    "notesPlaceholder": "es. Posso aggiungere contanti, o preferisco USPS Ground Advantage…",
     "submitOffer": "Invia offerta",
     "submitting": "Invio…",
     "success": "Offerta inviata.",
@@ -1641,6 +1667,7 @@
   },
   "shareLinks": {
     "copyLink": "Copia link",
+    "shareProfile": "Condividi profilo",
     "linkCopied": "Link copiato",
     "copyLinkError": "Impossibile copiare il link"
   },
@@ -1676,15 +1703,22 @@
       "completed": "Completato",
       "declined": "Rifiutato",
       "cancelled": "Annullato"
-    }
+    },
+    "communityPolicyLink": "Spedizioni, controversie e regole della community"
   },
   "traderProfile": {
     "meta": {
-      "title": "Profilo venditore - perfumer's hollow",
-      "description": "Profilo di {traderName}"
+      "title": "Profilo collezionista - perfumer's hollow",
+      "description": "Profilo collezionista di {traderName}"
     },
-    "heading": "Venditore {traderName}",
-    "subheading": "Profilo di {traderName}",
+    "heading": "Collezionista {traderName}",
+    "subheading": "Registro del collezionista",
+    "headerStats": {
+      "ariaLabel": "Iscrizione del collezionista e cronologia scambi",
+      "memberSince": "Entrato nella Conca",
+      "completedTrades": "Scambi completati",
+      "followers": "Follower"
+    },
     "scentDna": {
       "meta": {
         "title": "DNA olfattivo di {traderName}",
@@ -1692,10 +1726,10 @@
       },
       "ariaLabel": "DNA olfattivo di {traderName}",
       "title": "DNA olfattivo",
-      "subtitle": "Profilo gustativo calcolato per {traderName}",
+      "subtitle": "Un profilo olfattivo plasmato da collezioni, recensioni e scoperte.",
       "sharePageHeading": "DNA olfattivo di {traderName}",
       "sharePageSubheading": "Un'istantanea condivisibile di famiglie di note, stagioni e case.",
-      "shareCta": "Condividi il mio DNA olfattivo",
+      "shareCta": "Condividi DNA olfattivo",
       "shareCopied": "Link copiato",
       "shareError": "Impossibile copiare il link",
       "empty": "Dati insufficienti — fai il quiz, vota le stagioni o aggiungi flaconi alla collezione.",
@@ -1703,7 +1737,7 @@
       "noteFamiliesHeading": "Famiglie di note principali",
       "favoriteNotesHeading": "Note preferite",
       "seasonHeading": "Affinità stagionale",
-      "houseHeading": "Gusto delle case",
+      "houseHeading": "Case preferite",
       "families": {
         "florals": "Floreali",
         "woods": "Legnosi",
@@ -1724,8 +1758,8 @@
         "designer": "Designer"
       }
     },
-    "aboutHeading": "Informazioni",
-    "regionChip": "{region}",
+    "aboutHeading": "Informazioni sul collezionista",
+    "regionChip": "Regione del collezionista: {region}",
     "social": {
       "instagram": "Profilo Instagram di {handle}",
       "reddit": "Profilo Reddit di {username}",
@@ -1746,7 +1780,7 @@
     "price": "Prezzo",
     "tradePrice": "Prezzo di scambio",
     "preference": "Preferenza",
-    "tradeOnly": "Solo scambio",
+    "tradeOnly": "Articolo solo per scambio",
     "comments": "Commenti del venditore",
     "noPublicComments": "Nessun commento pubblico.",
     "preferences": {
@@ -1756,7 +1790,7 @@
     },
     "trades": {
       "activeSummary": "Scambi attivi ({count})",
-      "historySummary": "Cronologia ({count})"
+      "historySummary": "Cronologia scambi ({count})"
     },
     "scentJourney": {
       "meta": {
@@ -1789,31 +1823,34 @@
       "viewArticle": "Leggi articolo"
     },
     "reputation": {
-      "ariaLabel": "Affidabilità e reputazione del trader",
+      "ariaLabel": "Affidabilità e reputazione del collezionista",
       "title": "Riepilogo fiducia",
-      "subtitle": "Punteggio v1 spiegabile da feedback e tempi di risposta tipici.",
+      "subtitle": "Basato su feedback dei collezionisti, cronologia degli scambi e attività di risposta.",
       "scoreLabel": "Reputazione",
       "scoreOutOf": "{score}/100",
-      "insufficientNoReviews": "Trader nuovo — ancora nessuna recensione.",
+      "insufficientNoReviews": "Nuovo collezionista — nessuna recensione ancora.",
       "insufficientTooFew": "Recensioni insufficienti per un punteggio (servono almeno {min}).",
       "reviewCountOnly": "{count, plural, one {# recensione} other {# recensioni}}",
-      "noReviewsDetail": "Ancora nessuna recensione tra pari.",
+      "noReviewsDetail": "Nessuna recensione di collezionisti ancora.",
       "badgesAria": "Badge di reputazione",
       "badges": {
         "topReviewed": "Molto recensito",
-        "reliableTrader": "Trader affidabile",
+        "reliableTrader": "Collezionista affidabile",
         "fastResponder": "Risponde in fretta"
       },
       "explainTitle": "Cosa significa",
-      "explainIntro": "Questo punteggio è chiaro e visibile a tutti. Riassume come altri membri valutano questo trader e quanto velocemente di solito risponde ai messaggi.",
-      "explainScore": "Mostriamo un numero solo dopo almeno {minReviews} recensioni. Con dati sufficienti sui tempi di risposta, le valutazioni pesano il 75% e la velocità di prima risposta il 25%; altrimenti solo le valutazioni.",
-      "explainBadges": "I badge sono indipendenti: Molto recensito = almeno 5 recensioni e media ≥ 4,5. Trader affidabile = almeno 10 recensioni e media ≥ 4,6. Risponde in fretta = mediana prima risposta sotto 24 h. I badge contributore (Scambiatore affidabile, Pilastro della community, Collezionista raro) premiano scambi, follow e case di nicchia.",
-      "explainBadgesInHeader": "I badge di reputazione e contributore compaiono sotto l'intestazione del profilo.",
-      "explainMessaging": "I tempi si deducono dai messaggi di contatto; senza thread formali è un segnale approssimativo.",
-      "exchangeTrust": "{score}/100"
+      "explainIntro": "I riepiloghi di fiducia offrono ai collezionisti un quadro più chiaro di reputazione e reattività nella Conca.",
+      "explainScore": "I punteggi si basano su recensioni dei collezionisti, scambi completati e tempi di risposta tipici. I punteggi da recensioni diventano visibili dopo almeno 3 recensioni di collezionisti.",
+      "explainBadgesInHeader": "I badge riflettono diversi tipi di partecipazione nella community, inclusi scambi affidabili, recensioni utili, collezione attiva e contributi all'Archivio.",
+      "explainMessaging": "L'attività di risposta si basa sulla cronologia recente delle conversazioni e sul tempo medio di risposta tra collezionisti.",
+      "exchangeTrust": "{score}/100",
+      "explainTradeReliability": "L'affidabilità di scambio riflette gli scambi completati rispetto agli accordi annullati. Le offerte rifiutate non sono incluse.",
+      "tradeReliabilityLabel": "Affidabilità di scambio",
+      "tradeReliabilityValue": "{percent}%",
+      "tradeReliabilityInsufficient": "Non c'è ancora abbastanza storico di scambi per un punteggio di affidabilità."
     },
     "contributorBadges": {
-      "trustedSwapper": "Scambiatore affidabile",
+      "trustedSwapper": "Collezionista affidabile",
       "communityPillar": "Pilastro della community",
       "rareCollector": "Collezionista raro",
       "helpfulReviewer": "Recensore utile",
@@ -1851,7 +1888,8 @@
       "validation": {
         "ratingRequired": "La valutazione è obbligatoria."
       }
-    }
+    },
+    "traderProfileAside": "Profilo del collezionista {traderName}"
   },
   "userAdmin": {
     "meta": {
@@ -1971,7 +2009,18 @@
   },
   "validation": {
     "profileAboutMax": "Informazioni sul venditore devono essere al massimo {max} caratteri.",
-    "wishlistBottlePreferenceRequired": "Seleziona un formato di flacone."
+    "wishlistBottlePreferenceRequired": "Seleziona un formato di flacone.",
+    "descriptionRequired": "La descrizione è obbligatoria e deve avere almeno 10 caratteri.",
+    "descriptionMin": "La descrizione deve avere almeno 10 caratteri.",
+    "descriptionMax": "La descrizione deve avere meno di 1000 caratteri.",
+    "nameRequired": "Il nome è obbligatorio.",
+    "nameMin": "Il nome deve avere almeno 1 carattere.",
+    "nameMax": "Il nome deve avere meno di 100 caratteri.",
+    "urlInvalid": "Inserisci un URL valido.",
+    "perfumeHouseRequired": "Seleziona una casa di profumi.",
+    "usernameMin": "Il nome utente deve avere almeno 3 caratteri.",
+    "usernameMax": "Il nome utente deve avere al massimo 30 caratteri.",
+    "usernameFormat": "Usa solo lettere, numeri, spazi e trattini bassi."
   },
   "listing": {
     "photosLabel": "Foto dell'annuncio",
@@ -2085,6 +2134,231 @@
       "cancelSplit": "Annulla divisione",
       "signInToClaim": "Accedi per prenotare un posto.",
       "actionFailed": "Azione non riuscita. Riprova."
+    }
+  },
+  "userReport": {
+    "button": "Segnala",
+    "heading": "Segnala trader",
+    "subheading": "Raccontaci cosa è successo con {traderName}. Il nostro team esaminerà la segnalazione.",
+    "categoryLabel": "Categoria",
+    "categoryPlaceholder": "Seleziona una categoria…",
+    "descriptionLabel": "Dettagli (facoltativo)",
+    "descriptionPlaceholder": "Descrivi cosa è successo…",
+    "photosLabel": "Foto di prova (facoltativo)",
+    "photosHint": "Fino a 3 immagini per aiutare il nostro team a esaminare la segnalazione.",
+    "submit": "Invia segnalazione",
+    "submitting": "Invio…",
+    "categories": {
+      "scam": "Truffa o frode",
+      "fakeItem": "Articolo falso o fuorviante",
+      "harassment": "Molestie",
+      "noShip": "Non ha spedito",
+      "other": "Altro"
+    }
+  },
+  "dispute": {
+    "button": "Apri controversia",
+    "heading": "Apri controversia di scambio",
+    "subheading": "Descrivi il problema con questo scambio. Il nostro team esaminerà entrambe le parti.",
+    "policyLink": "Leggi spedizioni, controversie e regole della community",
+    "categoryLabel": "Categoria",
+    "categoryPlaceholder": "Seleziona una categoria…",
+    "descriptionLabel": "Dettagli",
+    "descriptionPlaceholder": "Descrivi cosa è successo…",
+    "photosLabel": "Foto di prova (facoltativo)",
+    "photosHint": "Fino a 3 immagini per aiutare il nostro team a esaminare la controversia.",
+    "submit": "Invia controversia",
+    "submitting": "Invio…",
+    "existingDispute": "È già aperta una controversia per questo scambio.",
+    "viewMyDisputes": "Vedi le mie controversie",
+    "categories": {
+      "noShip": "Non ha spedito",
+      "fakeItem": "Articolo falso o fuorviante",
+      "notAsDescribed": "Non conforme alla descrizione",
+      "scam": "Truffa o frode",
+      "other": "Altro"
+    }
+  },
+  "myDisputes": {
+    "meta": {
+      "title": "Le mie controversie - perfumer's hollow",
+      "description": "Tieni traccia delle controversie di scambio che hai aperto o a cui partecipi."
+    },
+    "heading": "Le mie controversie",
+    "subheading": "Controversie di scambio che hai aperto o a cui partecipi",
+    "backToProfile": "Torna al profilo",
+    "empty": "Non hai controversie di scambio.",
+    "withdraw": "Ritira controversia",
+    "withdrawing": "Ritiro…",
+    "otherParty": "Altro trader",
+    "tradeStatus": "Stato dello scambio",
+    "categories": {
+      "noShip": "Non ha spedito",
+      "fakeItem": "Articolo falso o fuorviante",
+      "notAsDescribed": "Non conforme alla descrizione",
+      "scam": "Truffa o frode",
+      "other": "Altro"
+    },
+    "status": {
+      "open": "Aperta",
+      "underReview": "In revisione",
+      "resolved": "Risolta",
+      "closed": "Chiusa"
+    },
+    "outcomes": {
+      "noAction": "Nessuna azione",
+      "warningIssued": "Avviso emesso",
+      "strikeIssued": "Strike emesso",
+      "tradeVoided": "Scambio annullato"
+    }
+  },
+  "adminDisputes": {
+    "meta": {
+      "title": "Controversie - Admin - perfumer's hollow",
+      "description": "Esamina controversie di scambio e segnalazioni profilo."
+    },
+    "heading": "Controversie e segnalazioni",
+    "subheading": "Controversie di scambio e moderazione profili",
+    "tabs": {
+      "ariaLabel": "Code controversie",
+      "tradeDisputes": "Controversie di scambio",
+      "profileReports": "Segnalazioni profilo"
+    },
+    "empty": "Nessuna controversia in questa coda",
+    "filters": {
+      "open": "Aperta",
+      "underReview": "In revisione",
+      "resolved": "Risolta",
+      "all": "Tutti"
+    },
+    "status": {
+      "open": "Aperta",
+      "underReview": "In revisione",
+      "resolved": "Risolta",
+      "closed": "Chiusa"
+    },
+    "categories": {
+      "noShip": "Non ha spedito",
+      "fakeItem": "Articolo falso o fuorviante",
+      "notAsDescribed": "Non conforme alla descrizione",
+      "scam": "Truffa o frode",
+      "other": "Altro"
+    },
+    "outcomes": {
+      "noAction": "Nessuna azione",
+      "warningIssued": "Avviso emesso",
+      "strikeIssued": "Strike emesso",
+      "tradeVoided": "Scambio annullato"
+    },
+    "trade": "Scambio",
+    "initiator": "Iniziatore",
+    "otherParty": "Altra parte",
+    "resolutionOutcome": "Esito",
+    "markUnderReview": "Segna in revisione",
+    "showDetails": "Mostra dettagli",
+    "hideDetails": "Nascondi dettagli",
+    "noDescription": "Nessun dettaglio aggiuntivo fornito.",
+    "adminNotesLabel": "Note admin (interne)",
+    "saveNotes": "Salva note",
+    "resolveHeading": "Risoluzione",
+    "publicSummaryLabel": "Riepilogo pubblico (inviato a entrambe le parti)",
+    "resolveDispute": "Risolvi controversia"
+  },
+  "adminReports": {
+    "meta": {
+      "title": "Segnalazioni utenti - Admin - perfumer's hollow",
+      "description": "Esamina le segnalazioni della community contro i trader."
+    },
+    "heading": "Segnalazioni utenti",
+    "subheading": "Esamina le segnalazioni inviate dai membri",
+    "empty": "Nessuna segnalazione in questa coda",
+    "filters": {
+      "inProgress": "In corso",
+      "settled": "Risolto",
+      "passed": "Archiviato",
+      "all": "Tutti"
+    },
+    "status": {
+      "inProgress": "In corso",
+      "settled": "Risolto",
+      "passed": "Archiviato"
+    },
+    "statusLabel": "Stato controversia",
+    "updateStatus": "Aggiorna",
+    "reporter": "Segnalante",
+    "reportedUser": "Segnalato",
+    "reporterEmail": "Email del segnalante",
+    "reportedEmail": "Email dell’utente segnalato",
+    "showDetails": "Mostra dettagli",
+    "hideDetails": "Nascondi dettagli",
+    "noDescription": "Nessun dettaglio aggiuntivo fornito.",
+    "tradeLink": "Scambio",
+    "issueStrike": "Emetti strike",
+    "deleteReport": "Elimina segnalazione",
+    "deleteConfirmHeading": "Eliminare questa segnalazione?",
+    "deleteConfirmDescription": "Questo elimina definitivamente la segnalazione e le foto di prova. L’azione è irreversibile.",
+    "categories": {
+      "scam": "Truffa o frode",
+      "fakeItem": "Articolo falso o fuorviante",
+      "harassment": "Molestie",
+      "noShip": "Non ha spedito",
+      "other": "Altro"
+    }
+  },
+  "myReports": {
+    "meta": {
+      "title": "Le mie segnalazioni - perfumer's hollow",
+      "description": "Segnalazioni che hai inviato contro altri trader."
+    },
+    "heading": "Le mie segnalazioni",
+    "subheading": "Tieni traccia delle segnalazioni inviate",
+    "backToProfile": "Torna al profilo",
+    "empty": "Non hai inviato segnalazioni.",
+    "reported": "Segnalato",
+    "withdraw": "Ritira segnalazione",
+    "withdrawing": "Ritiro…",
+    "status": {
+      "inProgress": "In corso",
+      "settled": "Risolto",
+      "passed": "Archiviato"
+    },
+    "categories": {
+      "scam": "Truffa o frode",
+      "fakeItem": "Articolo falso o fuorviante",
+      "harassment": "Molestie",
+      "noShip": "Non ha spedito",
+      "other": "Altro"
+    }
+  },
+  "communityPolicy": {
+    "meta": {
+      "title": "Politica della community - perfumer's hollow",
+      "description": "Aspettative di spedizione, processo di controversia e regole della community per i trader."
+    },
+    "heading": "Politica della community",
+    "subheading": "Aspettative di scambio su perfumer's hollow",
+    "shipping": {
+      "heading": "Aspettative di spedizione",
+      "contentOne": "Pagamenti e spedizioni si concordano fuori piattaforma tra trader. Concordate corrieri, imballaggio e tempi nei messaggi prima di spedire.",
+      "contentTwo": "Spedite entro un termine ragionevole dopo la conferma di entrambe le parti (di solito entro una settana, salvo altro accordo). Condividete il tracking quando disponibile.",
+      "contentThree": "Imballate le bottiglie in modo sicuro: imbottitura, sigillate i decant e indicate eventuali difetti prima della spedizione."
+    },
+    "disputes": {
+      "heading": "Processo di controversia",
+      "contentOne": "Se qualcosa va storto, scrivi prima all’altro trader e prova a risolvere direttamente.",
+      "contentTwo": "Se non riuscite a risolvere, usa Apri controversia sulla scheda dello scambio attivo, o Segnala sul profilo trader per problemi fuori scambio. Includi foto e una descrizione chiara.",
+      "contentThree": "Il nostro team esamina le segnalazioni e può emettere strike o azioni sul account. Non tratteniamo fondi né garantiamo rimborsi — aiutiamo a documentare le controversie e far rispettare le regole."
+    },
+    "community": {
+      "heading": "Regole della community",
+      "contentOne": "Sii onesto su condizione della bottiglia, volume residuo e autenticità. Gli annunci devono includere foto accurate.",
+      "contentTwo": "Molestie, truffe e mancata spedizione non sono tollerate. Problemi ripetuti influenzano la reputazione e possono portare alla sospensione.",
+      "contentThree": "Lascia feedback solo dopo uno scambio completato così le recensioni riflettono scambi reali."
+    },
+    "offPlatform": {
+      "heading": "Pagamenti fuori piattaforma",
+      "contentOne": "perfumer's hollow collega i trader; non elaboriamo mai pagamenti né etichette di spedizione.",
+      "contentTwo": "Usa metodi di pagamento affidabili, conserva i messaggi sulla piattaforma quando possibile e non condividere password o dati finanziari estranei allo scambio."
     }
   }
 }

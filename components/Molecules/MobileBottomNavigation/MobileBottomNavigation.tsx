@@ -14,7 +14,7 @@ import { FaExchangeAlt, FaUser } from "react-icons/fa"
 import { MdMail } from "react-icons/md"
 
 const EXCHANGE_PATH = "/the-exchange"
-const MESSAGES_PATH = "/messages"
+const EXCHANGES_PATH = "/exchanges"
 
 interface MobileBottomNavigationProps extends HTMLProps<HTMLDivElement> {
   user?: {
@@ -86,9 +86,9 @@ const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
         </PrefetchLink>
 
         <PrefetchLink
-          href={user?.id ? MESSAGES_PATH : SIGN_IN}
-          className={navItemClass(user?.id ? isActive(MESSAGES_PATH) : isActive(SIGN_IN, true))}
-          aria-current={user?.id && isActive(MESSAGES_PATH) ? "page" : undefined}
+          href={user?.id ? EXCHANGES_PATH : SIGN_IN}
+          className={navItemClass(user?.id ? isActive(EXCHANGES_PATH) : isActive(SIGN_IN, true))}
+          aria-current={user?.id && isActive(EXCHANGES_PATH) ? "page" : undefined}
         >
           <MdMail size={24} aria-hidden focusable={false} />
           <Badge count={messageUnread} />

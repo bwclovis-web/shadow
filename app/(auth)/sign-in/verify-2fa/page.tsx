@@ -13,5 +13,9 @@ export const generateMetadata = async (): Promise<Metadata> => {
 }
 
 export default async function Verify2FAPage(): Promise<React.ReactElement> {
-  return <Verify2FAClient />
+  return (
+    <div className="w-full lg:w-1/2 form">
+      <Verify2FAClient />
+    </div>
+  )
 }

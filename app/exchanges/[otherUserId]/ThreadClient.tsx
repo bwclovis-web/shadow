@@ -122,7 +122,7 @@ const ThreadClient = ({
       )
       closeModal()
       if (response.ok) {
-        router.push("/messages")
+        router.push("/exchanges")
         router.refresh()
       } else {
         window.alert(tDm("deleteConversationFailed"))
@@ -156,7 +156,7 @@ const ThreadClient = ({
       <PageWrapper>
         <div className="flex flex-wrap items-center gap-4 mb-6">
           <Link
-            href="/messages"
+            href="/exchanges"
             className="text-noir-gold-100 hover:text-noir-gold-500 flex items-center gap-1 transition-colors"
           >
             <span aria-hidden>←</span> Back to messages

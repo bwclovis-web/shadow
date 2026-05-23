@@ -126,7 +126,7 @@ export default function MessagesClient({
                     className="flex flex-col lg:flex-row gap-2 rounded-lg border bg-noir-dark border-noir-gold hover:bg-noir-gold transition-colors group p-2 lg:px-4"
                   >
                     <Link
-                      href={`/messages/${conv.otherUserId}`}
+                      href={`/exchanges/${conv.otherUserId}`}
                       className="flex flex-1 min-w-0 items-center justify-between gap-4 p-2 lg:p-4 text-inherit no-underline"
                     >
                       <TraderAvatar

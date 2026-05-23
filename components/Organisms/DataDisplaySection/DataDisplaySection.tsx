@@ -44,9 +44,6 @@ type DataDisplaySectionProps = DataDisplaySectionBaseProps &
       }
   )
 
-const itemNameByType = (type: "house" | "perfume") =>
-  type === "house" ? "houses" : "perfumes"
-
 const DataDisplaySection = ({
   data,
   isLoading,
@@ -60,17 +57,20 @@ const DataDisplaySection = ({
 }: DataDisplaySectionProps) => {
   const tDataDisplay = useTranslations("components.dataDisplaySection")
   const tCommon = useTranslations("common")
-  const itemName = itemNameByType(type)
+  const isArchiveBrowse = type === "perfume"
 
   if (!selectedLetter && data.length === 0) {
+    const heading = isArchiveBrowse
+      ? tDataDisplay("headingArchive")
+      : tDataDisplay("headingHouses")
+    const subheading = isArchiveBrowse
+      ? tDataDisplay("subheadingArchive")
+      : tDataDisplay("subheadingHouses")
+
     return (
       <div className="inner-container text-center pb-6">
-        <h2 className="text-xl text-noir-gold mb-4">
-          {tDataDisplay("heading", { itemName })}
-        </h2>
-        <p className="text-noir-gold/80">
-          {tDataDisplay("subheading", { itemName })}
-        </p>
+        <h2 className="text-xl text-noir-gold mb-4">{heading}</h2>
+        <p className="text-noir-gold/80">{subheading}</p>
       </div>
     )
   }

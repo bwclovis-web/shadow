@@ -271,7 +271,7 @@ export const LAYER_LABEL_TOKENS = new Set([
 
 /** Main-accord / genre labels — not pyramid materials when standing alone. */
 export const STANDALONE_ACCORD_DESCRIPTOR_RE =
-  /^(?:powdery|woody|musky|mossy|fresh|sweet|floral|oriental|gourmand|citrus|spicy|aromatic|green|aquatic|fruity|smoky|balsamic|earthy|intense|light|dark|lactonic|white floral|second-skin|frosted-pastel|frosted|pastel|originally from byredo|originally from commodity|resort evenings|warm days|delicate|intimate|cozy)$/i
+  /^(?:powdery|woody|musky|mossy|fresh|sweet|floral|oriental|gourmand|citrus|spicy|aromatic|green|aquatic|fruity|smoky|balsamic|earthy|intense|light|dark|lactonic|white floral|second-skin|frosted-pastel|frosted|pastel|originally from byredo|originally from commodity|resort evenings|warm days|starry date evenings|date evenings|celestial hug|wear guide|delicate|intimate|cozy|celestial)$/i
 
 /** Strip trailing Shopify marketing copy glued to merchant note phrases. */
 export const peelMarketingDescriptorTail = (note: string): string => {
@@ -286,7 +286,7 @@ export const peelMarketingDescriptorTail = (note: string): string => {
         "",
       )
       .replace(
-        /\s+(?:hit\s+first|wrap\s+you\s+in(?:\s+a\s+haze)?|melt\s+into\s+skin|wrap\s+around\s+you|lingers?\s+on\s+your\s+skin)\b.*$/i,
+        /\s+(?:hit\s+first|wrap\s+you\s+in(?:\s+a\s+haze)?|melt\s+into\s+skin|wrap\s+around\s+you|lingers?\s+on\s+your\s+skin|wear\s+guide|good\s+to\s+know)\b.*$/i,
         "",
       )
       .replace(/(?<=\bvanilla)\s+cloud\s+cream\b.*$/i, "")
@@ -366,7 +366,7 @@ export const looksLikeProseNotePhrase = (note: string): boolean => {
   if (!n) return true
   if (isObviousNonMaterialNote(n)) return true
   if (
-    /\b(?:adds?\s+a|\badds\b|give\s+the\s+scent|giraffe-inspired|animalic-foral|perfume\s+with\s+notes|with\s+notes\s+of\s+bergamot|subtle\s+grass\s+note|office\s+wear|polished\s+office|originally\s+from|frosted-pastel|summer\s+warm\s+days|clean\s+halo|longer\s+on\s+fabric|cloud\s+cream|candy\s+air|a\s+mug|the\s+creamy|cacao\s+the|powdered\s+vanilla\s+style|then\s+deepens|deepens\s+into|fluffy\s+glow|as\s+the\s+night\s+deepens)\b/.test(
+    /\b(?:adds?\s+a|\badds\b|give\s+the\s+scent|giraffe-inspired|animalic-foral|perfume\s+with\s+notes|with\s+notes\s+of\s+bergamot|subtle\s+grass\s+note|office\s+wear|polished\s+office|originally\s+from|frosted-pastel|summer\s+warm\s+days|clean\s+halo|longer\s+on\s+fabric|cloud\s+cream|candy\s+air|a\s+mug|the\s+creamy|cacao\s+the|powdered\s+vanilla\s+style|then\s+deepens|deepens\s+into|fluffy\s+glow|as\s+the\s+night\s+deepens|starry\s+date\s+evenings|celestial\s+hug|wear\s+guide)\b/.test(
       n,
     )
   ) {

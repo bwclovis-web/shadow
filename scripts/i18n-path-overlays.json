@@ -1,0 +1,187 @@
+{
+  "traderActivity.recentlyActive": {
+    "es": "Recientemente activo",
+    "fr": "Récemment actif",
+    "it": "Attivo di recente"
+  },
+  "traderProfile.headerStats.memberSince": {
+    "es": "Se unió a la Hondonada",
+    "fr": "A rejoint le Creux",
+    "it": "Entrato nella Conca"
+  },
+  "traderProfile.headerStats.completedTrades": {
+    "es": "Intercambios completados",
+    "fr": "Échanges terminés",
+    "it": "Scambi completati"
+  },
+  "traderProfile.traderProfileAside": {
+    "es": "Perfil del coleccionista {traderName}",
+    "fr": "Profil du collectionneur {traderName}",
+    "it": "Profilo del collezionista {traderName}"
+  },
+  "traderProfile.contributorBadges.trustedSwapper": {
+    "es": "Coleccionista de confianza",
+    "fr": "Collectionneur de confiance",
+    "it": "Collezionista affidabile"
+  },
+  "tradeComposer.proposeSwap": {
+    "es": "Proponer intercambio",
+    "fr": "Proposer un échange",
+    "it": "Proponi scambio"
+  },
+  "tradeComposer.notesLabel": {
+    "es": "Mensaje",
+    "fr": "Message",
+    "it": "Messaggio"
+  },
+  "tradingPost.filters.bottleTitle": {
+    "es": "Tipo de frasco",
+    "fr": "Type de flacon",
+    "it": "Tipo di flacone"
+  },
+  "tradingPost.filters.bottleAria": {
+    "es": "Filtros por tipo de frasco",
+    "fr": "Filtres par type de flacon",
+    "it": "Filtri per tipo di flacone"
+  },
+  "tradingPost.filters.conditionTitle": {
+    "es": "Condición",
+    "fr": "État",
+    "it": "Condizione"
+  },
+  "tradingPost.filters.conditionAria": {
+    "es": "Filtros por condición",
+    "fr": "Filtres par état",
+    "it": "Filtri per condizione"
+  },
+  "tradingPost.filters.regionLabel": {
+    "es": "Región",
+    "fr": "Région",
+    "it": "Regione"
+  },
+  "tradingPost.filters.regionAll": {
+    "es": "Cualquier región",
+    "fr": "Toute région",
+    "it": "Qualsiasi regione"
+  },
+  "tradingPost.filters.regionUS": {
+    "es": "Estados Unidos",
+    "fr": "États-Unis",
+    "it": "Stati Uniti"
+  },
+  "tradingPost.filters.regionUK": {
+    "es": "Reino Unido",
+    "fr": "Royaume-Uni",
+    "it": "Regno Unito"
+  },
+  "tradingPost.filters.regionAU": {
+    "es": "Australia",
+    "fr": "Australie",
+    "it": "Australia"
+  },
+  "tradingPost.filters.regionEU": {
+    "es": "Europa",
+    "fr": "Europe",
+    "it": "Europa"
+  },
+  "tradingPost.filters.regionOther": {
+    "es": "Otro",
+    "fr": "Autre",
+    "it": "Altro"
+  },
+  "tradingPost.filters.hasPhotosLabel": {
+    "es": "Fotos del anuncio",
+    "fr": "Photos de l'annonce",
+    "it": "Foto dell'annuncio"
+  },
+  "tradingPost.filters.hasPhotosChip": {
+    "es": "Con fotos",
+    "fr": "Avec photos",
+    "it": "Con foto"
+  },
+  "traderProfile.scentDna.subtitle": {
+    "es": "Un perfil aromático moldeado por colecciones, reseñas y descubrimientos.",
+    "fr": "Un profil olfactif façonné par les collections, les avis et les découvertes.",
+    "it": "Un profilo olfattivo plasmato da collezioni, recensioni e scoperte."
+  },
+  "traderProfile.scentDna.houseHeading": {
+    "es": "Casas preferidas",
+    "fr": "Maisons préférées",
+    "it": "Case preferite"
+  },
+  "traderProfile.scentDna.shareCta": {
+    "es": "Compartir ADN olfativo",
+    "fr": "Partager l'ADN parfumé",
+    "it": "Condividi DNA olfattivo"
+  },
+  "traderProfile.aboutHeading": {
+    "es": "Sobre el coleccionista",
+    "fr": "À propos du collectionneur",
+    "it": "Informazioni sul collezionista"
+  },
+  "traderProfile.regionChip": {
+    "es": "Región del coleccionista: {region}",
+    "fr": "Région du collectionneur : {region}",
+    "it": "Regione del collezionista: {region}"
+  },
+  "traderProfile.reputation.ariaLabel": {
+    "es": "Confianza y reputación del coleccionista",
+    "fr": "Confiance et réputation du collectionneur",
+    "it": "Affidabilità e reputazione del collezionista"
+  },
+  "traderProfile.reputation.subtitle": {
+    "es": "Basado en comentarios de coleccionistas, historial de intercambios y actividad de respuesta.",
+    "fr": "Basé sur les retours des collectionneurs, l'historique d'échanges et l'activité de réponse.",
+    "it": "Basato su feedback dei collezionisti, cronologia degli scambi e attività di risposta."
+  },
+  "traderProfile.reputation.insufficientNoReviews": {
+    "es": "Coleccionista nuevo — aún sin reseñas.",
+    "fr": "Nouveau collectionneur — pas encore d'avis.",
+    "it": "Nuovo collezionista — nessuna recensione ancora."
+  },
+  "traderProfile.reputation.noReviewsDetail": {
+    "es": "Aún no hay reseñas de coleccionistas.",
+    "fr": "Pas encore d'avis de collectionneurs.",
+    "it": "Nessuna recensione di collezionisti ancora."
+  },
+  "traderProfile.reputation.badges.reliableTrader": {
+    "es": "Coleccionista fiable",
+    "fr": "Collectionneur fiable",
+    "it": "Collezionista affidabile"
+  },
+  "traderProfile.reputation.explainIntro": {
+    "es": "Los resúmenes de confianza están pensados para dar a los coleccionistas una imagen más clara de la reputación y la capacidad de respuesta en la Hondonada.",
+    "fr": "Les résumés de confiance permettent aux collectionneurs d'avoir une vision plus claire de la réputation et de la réactivité dans le Creux.",
+    "it": "I riepiloghi di fiducia offrono ai collezionisti un quadro più chiaro di reputazione e reattività nella Conca."
+  },
+  "traderProfile.reputation.explainScore": {
+    "es": "Las puntuaciones se basan en reseñas de coleccionistas, intercambios completados y tiempos de respuesta habituales. Las puntuaciones por reseñas son visibles tras al menos 3 reseñas de coleccionistas.",
+    "fr": "Les scores reposent sur les avis des collectionneurs, les échanges terminés et les délais de réponse habituels. Les scores d'avis deviennent visibles après au moins 3 avis de collectionneurs.",
+    "it": "I punteggi si basano su recensioni dei collezionisti, scambi completati e tempi di risposta tipici. I punteggi da recensioni diventano visibili dopo almeno 3 recensioni di collezionisti."
+  },
+  "traderProfile.reputation.explainBadgesInHeader": {
+    "es": "Las insignias reflejan distintos tipos de participación en la comunidad, incluidos intercambios de confianza, reseñas reflexivas, colección activa y contribuciones al Archivo.",
+    "fr": "Les badges reflètent différents types de participation dans la communauté, dont les échanges de confiance, les avis réfléchis, la collection active et les contributions à l'Archive.",
+    "it": "I badge riflettono diversi tipi di partecipazione nella community, inclusi scambi affidabili, recensioni utili, collezione attiva e contributi all'Archivio."
+  },
+  "traderProfile.reputation.explainTradeReliability": {
+    "es": "La fiabilidad de intercambio refleja los intercambios completados frente a los acuerdos cancelados. Las ofertas rechazadas no se incluyen.",
+    "fr": "La fiabilité d'échange reflète les échanges terminés par rapport aux accords annulés. Les offres refusées ne sont pas incluses.",
+    "it": "L'affidabilità di scambio riflette gli scambi completati rispetto agli accordi annullati. Le offerte rifiutate non sono incluse."
+  },
+  "traderProfile.reputation.explainMessaging": {
+    "es": "La actividad de respuesta se basa en el historial reciente de conversaciones y el tiempo medio de respuesta entre coleccionistas.",
+    "fr": "L'activité de réponse repose sur l'historique récent des conversations et le délai moyen de réponse entre collectionneurs.",
+    "it": "L'attività di risposta si basa sulla cronologia recente delle conversazioni e sul tempo medio di risposta tra collezionisti."
+  },
+  "traderProfile.reputation.tradeReliabilityLabel": {
+    "es": "Fiabilidad de intercambio",
+    "fr": "Fiabilité d'échange",
+    "it": "Affidabilità di scambio"
+  },
+  "traderProfile.reputation.tradeReliabilityInsufficient": {
+    "es": "Aún no hay suficiente historial de intercambios para una puntuación de fiabilidad.",
+    "fr": "Pas assez d'historique d'échange pour un score de fiabilité.",
+    "it": "Non c'è ancora abbastanza storico di scambi per un punteggio di affidabilità."
+  }
+}

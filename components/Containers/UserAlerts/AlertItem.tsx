@@ -54,7 +54,7 @@ const getAlertIconClassName = (alertType: UserAlert["alertType"]) => {
 }
 
 const perfumeLink = (slug: string) => `/perfume/${slug}`
-const messagesLink = (otherUserId: string) => `/messages/${otherUserId}`
+const exchangesLink = (otherUserId: string) => `/exchanges/${otherUserId}`
 const isTradeAlert = (alertType: string) => alertType.startsWith("trade_")
 
 const alertLink = (alert: UserAlert) => {
@@ -64,10 +64,10 @@ const alertLink = (alert: UserAlert) => {
   if ((alert.alertType as string) === "pending_submission_approval") return "/admin/pending-submission"
   const senderId = alert.metadata?.senderId as string | undefined
   if ((alert.alertType as string) === "new_trader_message" && senderId) {
-    return messagesLink(senderId)
+    return exchangesLink(senderId)
   }
   if (isTradeAlert(alert.alertType as string) && senderId) {
-    return messagesLink(senderId)
+    return exchangesLink(senderId)
   }
   if ((alert.alertType as string) === "followed_activity") {
     const targetUrl = alert.metadata?.targetUrl as string | undefined
@@ -79,7 +79,7 @@ const alertLink = (alert: UserAlert) => {
     if (splitId) return `/splits/${splitId}`
   }
   if (alert.Perfume) return perfumeLink(alert.Perfume.slug)
-  return "/messages"
+  return "/exchanges"
 }
 
 const AlertIcon = ({ alertType }: { alertType: UserAlert["alertType"] }) => {

@@ -130,12 +130,12 @@ const ProfileDropdown = ({
                 >
                   <span className="inline-flex items-center gap-2">
                     {tProfile("navigation." + item.key)}
-                    {item.key === "messages" && directMessageUnread > 0 ? (
+                    {item.key === "exchanges" && directMessageUnread > 0 ? (
                       <span className="shrink-0 rounded-full bg-blue-600 text-white text-xs font-medium px-2 py-0.5 min-w-[1.25rem] text-center tabular-nums">
                         {directMessageUnread > 9 ? "9+" : directMessageUnread}
                       </span>
                     ) : null}
-                    {item.key === "messages" && tradeAlertUnread > 0 ? (
+                    {item.key === "exchanges" && tradeAlertUnread > 0 ? (
                       <span
                         className="shrink-0 rounded-full bg-noir-gold text-noir-black text-xs font-semibold px-2 py-0.5 min-w-[1.25rem] text-center tabular-nums"
                         title={tNav("tradeAlertsUnread", {

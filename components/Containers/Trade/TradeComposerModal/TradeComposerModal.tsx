@@ -62,10 +62,7 @@ const TradeComposerModal = ({
 
   return (
     <div className="w-full p-6">
-      <h2>{t(ctaKey)}</h2>
-      <p className="mb-4 text-xl text-noir-gold-100">
-        {t("subheading", { traderName: data.init.counterpartyDisplayName })}
-      </p>
+      <h2 className="mb-4">{t(ctaKey)}</h2>
       <TradeComposer
         init={data.init}
         onSuccess={onClose}

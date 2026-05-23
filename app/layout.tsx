@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Limelight } from 'next/font/google'
+import { Inter, Cormorant_Garamond } from 'next/font/google'
 import { cookies } from 'next/headers'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
@@ -28,8 +28,7 @@ const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans-loaded',
 })
-const limelight = Limelight({
-  weight: '400',
+const cormorantGaramond = Cormorant_Garamond({
   subsets: ['latin'],
   variable: '--font-headline-loaded',
 })
@@ -95,7 +94,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang={locale} className={`${inter.variable} ${limelight.variable}`}>
+    <html lang={locale} className={`${inter.variable} ${cormorantGaramond.variable}`}>
       <body className={`${inter.className} bg-noir-black`}>
         <ViewTransitionsWrapper>
           <NextIntlClientProvider locale={locale} messages={messages}>

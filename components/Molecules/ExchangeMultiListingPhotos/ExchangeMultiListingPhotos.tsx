@@ -88,7 +88,7 @@ export const ExchangeMultiListingPhotos = ({
                   style={{ width: MOSAIC_THUMB_SIZE, height: MOSAIC_THUMB_SIZE }}
                   onClick={() => openLightboxAt(index)}
                   aria-label={t("openListingPhoto", {
-                    trader: thumb.traderName,
+                    collector: thumb.traderName,
                     index: index + 1,
                   })}
                 >

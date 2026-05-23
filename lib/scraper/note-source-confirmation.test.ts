@@ -211,6 +211,8 @@ Middle Notes: Verdant Earth Accord (Rich Soil, Green and Flowering Plants)`
     expect(peelMarketingDescriptorTail("musk melt into skin")).toBe("musk")
     expect(sanitizeExtractedNoteCandidate("resort evenings")).toBeNull()
     expect(sanitizeExtractedNoteCandidate("warm days")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("cedar wear guide")).toBe("cedar")
+    expect(sanitizeExtractedNoteCandidate("starry date evenings")).toBeNull()
   })
 
   it("isObviousNonMaterialNote rejects CSS bleed and truncated prose fragments", () => {
