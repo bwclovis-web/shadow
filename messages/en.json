@@ -101,8 +101,8 @@
   },
   "dispute": {
     "button": "Open dispute",
-    "heading": "Open trade dispute",
-    "subheading": "Describe the issue with this trade. Our team will review both sides.",
+    "heading": "Open exchange dispute",
+    "subheading": "Describe the issue with this exchange. Our team will review both sides.",
     "policyLink": "Read shipping, disputes & community rules",
     "categoryLabel": "Category",
     "categoryPlaceholder": "Select a category…",
@@ -112,7 +112,7 @@
     "photosHint": "Up to 3 images to help our team review your dispute.",
     "submit": "Submit dispute",
     "submitting": "Submitting…",
-    "existingDispute": "A dispute is already open for this trade.",
+    "existingDispute": "A dispute is already open for this exchange.",
     "viewMyDisputes": "View my disputes",
     "categories": {
       "noShip": "Did not ship",
@@ -124,17 +124,17 @@
   },
   "myDisputes": {
     "meta": {
-      "title": "My Disputes - perfumer's hollow",
-      "description": "Track trade disputes you have opened or are party to."
+      "title": "Exchange Disputes - perfumer's hollow",
+      "description": "Track exchange disputes you have opened or are party to."
     },
-    "heading": "My Disputes",
-    "subheading": "Trade disputes you opened or are involved in",
-    "backToProfile": "Back to profile",
-    "empty": "You have no trade disputes.",
+    "heading": "Exchange Disputes",
+    "subheading": "Review exchange disputes and moderation cases connected to your account.",
+    "backToProfile": "Back to Collector Ledger",
+    "empty": "No exchange disputes have been opened yet.",
     "withdraw": "Withdraw dispute",
     "withdrawing": "Withdrawing…",
-    "otherParty": "Other trader",
-    "tradeStatus": "Trade status",
+    "otherParty": "Other collector",
+    "tradeStatus": "Exchange status",
     "categories": {
       "noShip": "Did not ship",
       "fakeItem": "Fake or misrepresented item",
@@ -152,19 +152,19 @@
       "noAction": "No action",
       "warningIssued": "Warning issued",
       "strikeIssued": "Strike issued",
-      "tradeVoided": "Trade voided"
+      "tradeVoided": "Exchange voided"
     }
   },
   "adminDisputes": {
     "meta": {
       "title": "Disputes - Admin - perfumer's hollow",
-      "description": "Review trade disputes and profile reports."
+      "description": "Review exchange disputes and profile reports."
     },
     "heading": "Disputes & Reports",
-    "subheading": "Trade disputes and profile moderation",
+    "subheading": "Exchange disputes and profile moderation",
     "tabs": {
       "ariaLabel": "Dispute queues",
-      "tradeDisputes": "Trade disputes",
+      "tradeDisputes": "Exchange disputes",
       "profileReports": "Profile reports"
     },
     "empty": "No disputes in this queue",
@@ -191,9 +191,9 @@
       "noAction": "No action",
       "warningIssued": "Warning issued",
       "strikeIssued": "Strike issued",
-      "tradeVoided": "Trade voided"
+      "tradeVoided": "Exchange voided"
     },
-    "trade": "Trade",
+    "exchange": "Exchange",
     "initiator": "Initiator",
     "otherParty": "Other party",
     "resolutionOutcome": "Outcome",
@@ -235,7 +235,7 @@
     "showDetails": "Show details",
     "hideDetails": "Hide details",
     "noDescription": "No additional details provided.",
-    "tradeLink": "Trade",
+    "tradeLink": "Exchange",
     "issueStrike": "Issue Strike",
     "deleteReport": "Delete report",
     "deleteConfirmHeading": "Delete this report?",
@@ -250,13 +250,13 @@
   },
   "myReports": {
     "meta": {
-      "title": "My Reports - perfumer's hollow",
+      "title": "Submitted Reports - perfumer's hollow",
       "description": "Reports you have filed against other traders."
     },
-    "heading": "My Reports",
-    "subheading": "Track reports you have submitted",
-    "backToProfile": "Back to profile",
-    "empty": "You have not filed any reports.",
+    "heading": "Submitted Reports",
+    "subheading": "Review reports and moderation requests submitted to the Hollow.",
+    "backToProfile": "Back to Collector Ledger",
+    "empty": "No reports have been submitted yet.",
     "reported": "Reported",
     "withdraw": "Withdraw report",
     "withdrawing": "Withdrawing…",
@@ -275,15 +275,15 @@
   },
   "myTrades": {
     "meta": {
-      "title": "My Trades - perfumer's hollow",
-      "description": "Your active trades and trade history."
+      "title": "My Exchanges - Perfumer's Hollow",
+      "description": "Your active exchanges and exchange history."
     },
-    "heading": "My Trades",
-    "subheading": "Active offers and completed trade history",
-    "backToProfile": "Back to profile",
-    "empty": "You have no trades yet.",
-    "activeSummary": "Active trades ({count})",
-    "historySummary": "Trade history ({count})"
+    "heading": "My Exchanges",
+    "subheading": "Track active exchanges and completed collector arrangements.",
+    "backToProfile": "Back to Collector Ledger",
+    "empty": "You have no exchanges yet.",
+    "activeSummary": "Active exchanges ({count})",
+    "historySummary": "Exchange history ({count})"
   },
   "pendingSubmissions": {
     "meta": {
@@ -312,7 +312,7 @@
     "inventoryIntent": "Collection intent (after approval)",
     "inventoryAmount": "Amount",
     "inventoryCondition": "Condition",
-    "inventoryTradePreference": "Trade preference",
+    "inventoryTradePreference": "Exchange preference",
     "linkedHousePending": "Linked house submission must be approved first (ID: {id})",
     "linkedHouseRejected": "Linked house submission was rejected — reject this perfume too"
   },
@@ -336,7 +336,7 @@
     }
   },
   "alerts":{
-    "heading": "My Alerts",
+    "heading": "Alerts & Notifications",
     "subheading": "Manage your alerts and preferences",
     "filters": {
       "pending": "Pending",
@@ -349,26 +349,26 @@
     "unread": "unread",
     "dismissing": "Dismissing...",
     "dismissAll": "Dismiss All",
-    "viewTradingPost": "View Trading Post",
+    "viewTradingPost": "View Exchange",
     "noAlerts": "No alerts at the moment.",
     "noAlertsDescription": "You'll receive alerts when items from your wishlist become available or when someone shows interest in your decants.",
     "alertPreferences": "Alert Preferences",
-    "alertPreferencesDescription": "Configure how and when you receive alerts.",
+    "alertPreferencesDescription": "Choose how the Hollow keeps you informed.",
     "alertTypes": "Alert Types",
     "wishlistAlerts": "Wishlist Alerts",
-    "decantAlerts": "Decant Interest Alerts",
+    "decantAlerts": "Decant Alerts",
     "emailNotifications": "Email Notifications",
     "emailWishlistAlerts": "Email Wishlist Alerts",
     "emailDecantAlerts": "Email Decant Alerts",
-    "emailTradeAlerts": "Email Trade Updates",
-    "followAlerts": "Followed activity",
+    "emailTradeAlerts": "Email Exchange Updates",
+    "followAlerts": "Followed Activity",
     "emailFollowAlerts": "Email followed activity",
     "securityAlerts": "Security Alerts",
     "securityAlertsDescription": "Unusual sign-in activity on your account",
     "emailSecurityAlerts": "Email Security Alerts",
     "emailRequiresInApp": "Email alerts require the matching in-app alert to be enabled.",
     "alertLimits": "Alert Limits",
-    "maxAlerts": "Maximum Alerts to Keep",
+    "maxAlerts": "Alert History Limit",
     "maxAlertsDescription": "Older alerts will be automatically dismissed when this limit is reached",
     "maxAlertsOptions": {
       "5": "5 alerts",
@@ -379,12 +379,12 @@
     "savePreferences": "Save Preferences",
     "savingPreferences": "Saving...",
     "pushNotifications": "Push Notifications",
-    "pushEnabled": "Browser push",
-    "pushTradeAlerts": "Trade updates",
-    "pushMessageAlerts": "New messages",
-    "pushFollowAlerts": "Followed activity",
-    "pushDescription": "Get notified when trades move forward or someone messages you (when you're not in that conversation).",
-    "enablePush": "Enable push notifications",
+    "pushEnabled": "Browser Notifications",
+    "pushTradeAlerts": "Exchange Updates",
+    "pushMessageAlerts": "New Conversations",
+    "pushFollowAlerts": "Followed Activity",
+    "pushDescription": "Get notified when exchanges move forward or someone messages you (when you're not in that conversation).",
+    "enablePush": "Enable Notifications",
     "disablePush": "Disable push notifications",
     "pushWorking": "Working…",
     "pushDenied": "Notification permission was denied. Enable it in your browser settings to use push.",
@@ -396,23 +396,32 @@
       "decant_interest": "Interest",
       "pending_submission_approval": "Submission",
       "new_trader_message": "Message",
-      "trade_received": "Trade offer",
-      "trade_accepted": "Trade accepted",
-      "trade_shipped": "Trade shipped",
-      "trade_completed": "Trade completed",
-      "trade_cancelled": "Trade update",
+      "trade_received": "Exchange Proposal",
+      "trade_accepted": "Exchange accepted",
+      "trade_shipped": "Exchange shipped",
+      "trade_completed": "Exchange completed",
+      "trade_cancelled": "Exchange update",
       "suspicious_login": "Security",
       "followed_activity": "Following",
       "split_slot_claimed": "Split claim",
       "split_shipped": "Split shipped",
       "split_completed": "Split completed",
       "split_cancelled": "Split cancelled",
-      "default": "Alert"
+      "default": "alert"
+    },
+    "titles": {
+      "trade_received": "New exchange offer from {actorName}",
+      "trade_accepted": "{actorName} accepted your exchange proposal",
+      "trade_shipped": "{actorName} marked the exchange as shipped",
+      "trade_completed": "Exchange completed with {actorName}",
+      "trade_cancelled_declined": "{actorName} declined your exchange proposal",
+      "trade_cancelled_cancelled": "{actorName} cancelled the exchange",
+      "trade_update_fallback": "Exchange update from {actorName}"
     },
     "actions": {
       "reviewSubmission": "Review submission",
       "viewMessage": "View message",
-      "viewTrade": "View trade",
+      "viewTrade": "View exchange",
       "viewSecurity": "Security settings",
       "viewFollowedActivity": "View activity",
       "viewPerfume": "View perfume",
@@ -535,13 +544,16 @@
       "threadDescription": "Direct conversation with {name}.",
       "threadFallbackTitle": "Conversations — perfumer's hollow"
     },
-    "deleteConversationShort": "Delete",
-    "deleteConversationFull": "Delete conversation",
-    "deleteConversationAria": "Delete conversation with {name}",
-    "deleteConversationConfirm": "Delete this conversation with {name}?",
+    "threadBannerHeading": "Conversation · {name}",
+    "threadBannerSubheading": "Exchange details, fragrance discussions, and collector messages.",
+    "backToConversations": "Back to Conversations",
+    "deleteConversationShort": "Remove",
+    "deleteConversationFull": "Remove conversation",
+    "deleteConversationAria": "Remove conversation with {name}",
+    "deleteConversationConfirm": "Remove this conversation with {name}?",
     "deleteConversationDescription": "All conversations will be removed for both of you. This cannot be undone.",
-    "deleteConversationFailed": "Could not delete the conversation.",
-    "deleteConversationDeleting": "Deleting…"
+    "deleteConversationFailed": "Could not remove the conversation.",
+    "deleteConversationDeleting": "Removing…"
   },
   "subscribe": {
     "heading": "Subscribe",
@@ -566,8 +578,8 @@
       "subheadingHouses": "Discover the names behind the fragrances in the Archive."
     },
     "tagList": {
-      "emptyExchange": "Select notes to refine the Exchange",
-      "emptyWishlist": "No fragrances on your wishlist yet"
+      "emptyExchange": "Your selections help shape discoveries and recommendations across the Hollow.",
+      "emptyWishlist": "Some fragrances are still waiting to be discovered."
     },
     "modal": {
       "close": "Close Modal"
@@ -770,17 +782,17 @@
     },
     "communityStats": {
       "bottlesListed": "{count, number} bottles listed",
-      "tradesThisMonth": "{count, number} trades completed this month",
+      "exchangesThisMonth": "{count, number} exchanges completed this month",
       "members": "{count, number} members",
       "separator": "·",
-      "ariaLabel": "{bottlesListed, number} bottles listed, {tradesThisMonth, number} trades completed this month, {members, number} members"
+      "ariaLabel": "{bottlesListed, number} bottles listed, {exchangesThisMonth, number} exchanges completed this month, {members, number} members"
     },
     "activityFeed": {
       "title": "Latest on the exchange"
     },
     "followedActivityFeed": {
       "title": "From people you follow",
-      "description": "Listings, trades, reviews, and articles from traders, houses, and perfumes you follow."
+      "description": "Listings, exchanges, reviews, and articles from traders, houses, and perfumes you follow."
     },
     "seasonalTrending": {
       "title": "Trending this {season}"
@@ -795,7 +807,7 @@
     "subheading": "Your guide to the Archive and Exchange.",
     "section1": {
       "title": "Step One: Light Your Match — Create an Account",
-      "content": "Creating an account opens the door to Perfumer’s Hollow — a hidden network where collectors, archivists, and fragrance enthusiasts gather to explore, review, trade, and document the scents worth remembering.",
+      "content": "Creating an account opens the door to Perfumer’s Hollow — a hidden network where collectors, archivists, and fragrance enthusiasts gather to explore, review, exchange, and document the scents worth remembering.",
       "content2": "Visitors may still wander the Archive freely, but participation belongs to those who choose to step deeper into the Hollow.",
       "content3": "The first 100 memberships are complimentary — a quiet acknowledgment of the early collectors who discovered the Hollow before the lights came on.",
       "content4": "And your information remains yours. Never sold. Never traded. Never shared beyond the Hollow."
@@ -805,7 +817,7 @@
       "content": "Some fragrances are too good to remain undiscovered.",
       "content2": "Listing your decants allows other collectors to experience the bottles that shaped your journey — from rare finds and discontinued favorites to everyday signatures worth revisiting.",
       "content3": "Describe the fragrance, document its character, and share what made it memorable to you. Every listing adds something new to the Archive and helps fellow collectors uncover scents they may never have encountered otherwise.",
-      "content4": "Perfumer’s Hollow provides the space for these exchanges to happen openly and transparently. While we do not handle trades or payments directly, we help collectors connect through a trusted and community-driven platform."
+      "content4": "Perfumer’s Hollow provides the space for these exchanges to happen openly and transparently. While we do not handle exchanges or payments directly, we help collectors connect through a trusted and community-driven platform."
     },
     "section3": {
       "title": "Step Three: Build Your Wishlist — Chase the One That Got Away",
@@ -814,9 +826,9 @@
       "content3": "Save the fragrances you’ve been searching for and receive notifications when they appear within the Hollow. Over time, your wishlist becomes more than a collection of bottles — it becomes a record of personal taste, memories, and the scents still waiting to be rediscovered."
     },
     "section4": {
-      "title": "Step Four: Make the Trade — The Quiet Exchange",
+      "title": "Step Four: Make the Exchange — The Quiet Exchange",
       "content": "Every exchange begins with discovery.",
-      "content2": "When collectors connect through the Hollow, they arrange trades directly — discussing details, making offers, and building trust through a shared appreciation for fragrance.",
+      "content2": "When collectors connect through the Hollow, they arrange exchanges directly — discussing details, making offers, and building trust through a shared appreciation for fragrance.",
       "content3": "Perfumer’s Hollow does not process transactions or handle payments. We simply provide the platform where collectors can connect, communicate, and arrange exchanges transparently.",
       "content4": "What happens next belongs entirely to the collectors involved."
     },
@@ -849,9 +861,9 @@
       "submitPerfumeButton": "Submit Missing Perfume",
       "submitHouseButton": "Submit Missing Perfume House",
       "question2": "How does the trading system work?",
-      "answer2": "perfumer's hollow provides a platform for collectors to connect and trade. We don't handle transactions or payments directly — those are arranged between you and your trading partner. We simply provide the space and tools to make those connections happen safely and transparently.",
+      "answer2": "perfumer's hollow provides a platform for collectors to connect and exchange. We don't handle transactions or payments directly — those are arranged between you and your trading partner. We simply provide the space and tools to make those connections happen safely and transparently.",
       "question3": "Is my personal information safe?",
-      "answer3": "Absolutely. We take privacy seriously. We don't sell, trade, or share your personal information. Your data stays yours, and what happens in the shadows stays there.",
+      "answer3": "Absolutely. We take privacy seriously. We don't sell, exchange, or share your personal information. Your data stays yours, and what happens in the shadows stays there.",
       "question4": "How do I create an account?",
       "answer4": "Creating an account is free and easy. Simply click the 'Sign In' button in the navigation, then choose 'Sign Up' to create your account. Accounts are free for the first 100 members, and we keep it that way to honor our early supporters.",
       "question5": "Can I review perfumes without an account?",
@@ -890,9 +902,9 @@
     }
   },
   "messagesPage": {
-    "heading": "Messages",
-    "subheading": "Your conversations with other traders.",
-    "activeTradeBadge": "Active trade"
+    "heading": "Conversations",
+    "subheading": "Private correspondence between collectors across the Hollow.",
+    "activeTradeBadge": "Active Exchange"
   },
   "securityMonitor": {
     "heading": "Security Monitor",
@@ -900,11 +912,11 @@
   },
   "myScents": {
     "meta": {
-      "title": "My Scents - perfumer's hollow",
+      "title": "Collection Archive - Perfumer's Hollow",
       "description": "Manage your personal collection of perfumes."
     },
     "tabs": {
-      "ariaLabel": "My Scents views",
+      "ariaLabel": "Collection Archive views",
       "inventory": "My Inventory",
       "listings": "My Listings"
     },
@@ -923,7 +935,7 @@
       "tradedValue": "Traded listing value",
       "tradedValueAmount": "${amount}",
       "tradedValueEmpty": "—",
-      "tradedValueFootnote": "Sum of ask prices on bottles from completed trades (off-platform payment)."
+      "tradedValueFootnote": "Sum of ask prices on bottles from completed exchanges (off-platform payment)."
     },
     "listingStatus": {
       "notTrading": "Not trading",
@@ -1013,17 +1025,17 @@
       "setDestashed": "De-stash Perfume",
       "decantOptionsTitle": "Decant Options",
       "decantOptionsDescriptionOne": "Decanting allows you to share or transfer a portion of your fragrance to another bottle.",
-      "decantOptionsDescriptionTwo": "Set your amount, price, and trade preferences below.",
+      "decantOptionsDescriptionTwo": "Set your amount, price, and exchange preferences below.",
       "decantOptionsAmountLabel": "Amount to De-stash",
       "decantOptionsAmountPlaceholder": "Enter amount (0-{amount}ml)",
       "decantOptionsPriceLabel": "Price ($ per ml, optional)",
-      "decantOptionsTradePreferencesLabel": "Trade Preferences",
-      "decantOptionsTradePreferencesDescription": "Choose your trade preferences below.",
+      "decantOptionsTradePreferencesLabel": "Exchange Preferences",
+      "decantOptionsTradePreferencesDescription": "Choose your exchange preferences below.",
       "decantOptionsTradePreferencesCash": "Cash Only",
-      "decantOptionsTradePreferencesTrade": "Trade Only",
-      "decantOptionsTradePreferencesBoth": "Cash or Trade",
-      "decantOptionsTradePreferencesOnlyTrades": "Only accept trades (no cash offers)",
-      "decantOptionsTradePreferencesAcceptBoth": "Accept both cash and trade offers",
+      "decantOptionsTradePreferencesTrade": "Exchange Only",
+      "decantOptionsTradePreferencesBoth": "Cash or Exchange",
+      "decantOptionsTradePreferencesOnlyTrades": "Only accept exchanges (no cash offers)",
+      "decantOptionsTradePreferencesAcceptBoth": "Accept both cash and exchange offers",
       "removeFromTradingPost": "Remove from Trading Post",
       "confirmDeStash": "Confirm De-Stash",
       "decantOptionsPriceError": "Price must be a positive number",
@@ -1041,7 +1053,7 @@
     },
     "destashManager": {
       "title": "Destash Management",
-      "description": "Create, edit, and manage multiple destashes for this perfume. Each destash can have its own amount, price, and trade preferences.",
+      "description": "Create, edit, and manage multiple destashes for this perfume. Each destash can have its own amount, price, and exchange preferences.",
       "pauseAll": "Pause all listings",
       "pausedHeading": "Paused listings",
       "pausedLabel": "Paused",
@@ -1060,8 +1072,8 @@
       "delete": "Delete",
       "amount": "Amount",
       "price": "Price",
-      "tradePreference": "Trade Preference",
-      "tradeOnly": "Trade Only",
+      "tradePreference": "Exchange Preference",
+      "tradeOnly": "Exchange Only",
       "yes": "Yes",
       "noDestashes": "No destashes yet. Click 'Add New Destash' to create one.",
       "confirmDelete": "Are you sure you want to delete this destash? This action cannot be undone.",
@@ -1071,14 +1083,14 @@
       "standaloneDecant": "Standalone (no source bottle)",
       "bottleDestashHint": "Destashing from this bottle (up to {max} ml)"
     },
-    "heading": "My Scents",
+    "heading": "Collection Archive",
     "subheading": "Manage your personal collection of perfumes.",
     "itemsInCollection": "items in Collection",
     "addButton": "Add to Collection",
     "removeButton": "Remove from Collection",
     "modal": {
       "typeLabel": "Perfume Type",
-      "title": "My Scents",
+      "title": "Collection Archive",
       "selectedPerfume": "Selected Perfume",
       "description": "This is where you can manage your favorite scents.",
       "createButton": "Create New Perfume",
@@ -1148,7 +1160,7 @@
       "close": "Close CSV import",
       "title": "Import collection from CSV",
       "description": "Upload a spreadsheet with your bottles. We will match each row to the catalog before anything is saved.",
-      "inventoryNotice": "Imported rows are saved to your inventory only—not live listings. List them on the Exchange when you are ready to trade.",
+      "inventoryNotice": "Imported rows are saved to your inventory only—not live listings. List them on the Exchange when you are ready to exchange.",
       "downloadTemplate": "Download template",
       "chooseFile": "Choose CSV file",
       "parsing": "Parsing…",
@@ -1203,7 +1215,7 @@
         "house": "House",
         "amount": "Amount",
         "condition": "Condition",
-        "tradePreference": "Trade pref.",
+        "tradePreference": "Exchange pref.",
         "match": "Match",
         "warnings": "Warnings"
       },
@@ -1227,7 +1239,7 @@
       "errors": {
         "invalid_amount": "Invalid amount — defaulted to full bottle",
         "invalid_condition": "Unrecognized condition — left blank",
-        "invalid_trade_preference": "Unrecognized trade preference — defaulted to cash",
+        "invalid_trade_preference": "Unrecognized exchange preference — defaulted to cash",
         "duplicateRow": "Duplicate row (same name and house as row {row})"
       }
     }
@@ -1243,7 +1255,7 @@
     "exchangeNewThisWeek": "{count, plural, one {# new listing this week} other {# new listings this week}}",
     "available": "The Exchange",
     "messages": "Messages",
-    "tradeAlertsUnread": "{count, plural, one {# unread trade update} other {# unread trade updates}}",
+    "tradeAlertsUnread": "{count, plural, one {# unread exchange update} other {# unread exchange updates}}",
     "profile": "Collectors Ledger",
     "admin": "Admin",
     "logout": "Log Out",
@@ -1302,13 +1314,13 @@
       "changingPassword": "Changing Password..."
   },
   "profile": {
-    "heading": "The Profile",
-    "subheading": "What you keep. What you chase. What you leave behind.",
+    "heading": "Collector Ledger",
+    "subheading": "A personal archive shaped by scent, memory, and discovery.",
     "userInfo": "User Information",
     "firstName": "First name",
     "lastName": "Last name",
     "username": "Username",
-    "usernameHint": "Required. Must be unique.",
+    "usernameHint": "Required · must be unique within the Hollow.",
     "email": "Email",
     "emailPlaceholder": "Enter your email",
     "password": "Password",
@@ -1316,28 +1328,28 @@
     "role": "Role",
     "name": "Name",
     "notFound": "User profile not found",
-    "updateProfile": "Update Profile",
+    "updateProfile": "Profile Settings",
     "profileUpdatedSuccessfully": "Profile updated successfully!",
-    "traderAbout": "Trader about",
-    "traderAboutPlaceholder": "A short bio shown on your trader profile",
-    "traderAboutHint": "Shown on your trader profile. Max {max} characters.",
-    "scentPreferencesHint": "Personalize perfume recommendations",
-    "scentQuizLink": "Scent preferences quiz",
+    "traderAbout": "About the Collector",
+    "traderAboutPlaceholder": "A short bio shown on your collector profile",
+    "traderAboutHint": "Displayed on your collector ledger. Maximum {max} characters.",
+    "scentPreferencesHint": "Shape fragrance recommendations around your tastes and discoveries.",
+    "scentQuizLink": "Discover Your Scent DNA",
     "avatarLabel": "Profile photo",
-    "avatarHint": "Shown on your trader profile and in messages. One photo.",
+    "avatarHint": "Displayed on your collector ledger and in conversations.",
     "region": "Region",
     "regionPlaceholder": "Search for your country…",
     "regionHint": "Same country list as perfume houses. Shown with a flag on your trader profile.",
     "countrySearchLoading": "Searching…",
     "countrySearchEmpty": "No countries found",
     "countrySearchError": "Search error: {error}",
-    "countrySelected": "{country} selected",
+    "countrySelected": "Current region: {country}",
     "instagramHandle": "Instagram",
-    "instagramHint": "Handle only, without @.",
+    "instagramHint": "Enter your handle without @.",
     "redditUsername": "Reddit",
-    "redditHint": "Username only, without u/.",
+    "redditHint": "Enter your username without u/.",
     "fragranticaUrl": "Fragrantica profile URL",
-    "fragranticaHint": "Link to your Fragrantica collection or profile.",
+    "fragranticaHint": "Link to your Fragrantica profile or collection.",
     "avatar": {
       "dropzoneHint": "Drag and drop an image, or choose a file",
       "chooseFiles": "Choose file",
@@ -1352,12 +1364,12 @@
     },
     "navigation": {
       "profile": "Profile",
-      "exchanges": "Exchanges",
-      "wishlist": "My Wishlist",
+      "exchanges": "Conversations",
+      "wishlist": "Seeking",
       "myReports": "My Reports",
-      "myDisputes": "My Disputes",
-      "myTrades": "My Trades",
-      "myScents": "My Scents",
+      "myDisputes": "Exchange Disputes",
+      "myTrades": "My Exchanges",
+      "myScents": "Collection",
       "accountSecurity": "Account Security"
     }
   },
@@ -1392,85 +1404,87 @@
       "description": "Tell us your scent preferences so we can recommend perfumes you'll love."
     },
     "banner": {
-      "heading": "Scent quiz",
-      "subheading": "Help us personalize your experience (optional)"
+      "heading": "Discover Your Scent DNA",
+      "subheading": "Help the Hollow understand the fragrances, notes, and atmospheres you return to most. (optional)"
     },
     "welcome": {
-      "body": "Answer a few quick questions about the notes and styles you like. You can skip this and we'll learn from your ratings and collection instead.",
-      "start": "Start quiz",
+      "body": "Explore the notes, houses, and fragrance styles that define your tastes.",
+      "start": "Begin Discovery",
       "skip": "Skip for now"
     },
     "notes": {
-      "prompt": "Pick {min}–{max} note families you like (e.g. floral, woody, citrus).",
+      "prompt": "Choose {min}–{max} note families that define your tastes.",
       "selected": "Selected: {count} / {max}",
-      "likedLabel": "Notes you like",
+      "likedLabel": "Selected Notes",
       "searchLabel": "Search notes",
       "maxReached": "Maximum {max} notes selected. Remove one to add another."
     },
     "avoid": {
-      "prompt": "Any notes you'd rather avoid? (optional)",
-      "fieldLabel": "Notes to avoid",
+      "prompt": "Are there any notes you tend to avoid? (Optional)",
+      "fieldLabel": "Avoided Notes",
       "searchLabel": "Search notes to avoid"
     },
     "season": {
-      "prompt": "When do you wear fragrance most? (optional, select all that apply)",
-      "toggleHint": "Tap a season to include it. “All seasons” selects all four — same as on perfume pages."
+      "prompt": "Which seasons feel most connected to your tastes? (Optional)",
+      "toggleHint": "Select one or more seasons that reflect your fragrance preferences."
     },
     "budget": {
-      "prompt": "What's your typical budget for a new bottle? (optional)",
+      "prompt": "What price range feels most comfortable for your collection? (Optional)",
       "under50": "Under $50",
       "50to100": "$50 – $100",
       "100to200": "$100 – $200",
       "200plus": "$200+",
-      "noPreference": "No preference"
+      "noPreference": "Open to Anything"
     },
     "concentration": {
-      "prompt": "Which concentration do you prefer? (optional)",
+      "prompt": "What fragrance strengths do you tend to gravitate toward? (optional)",
       "edt": "Eau de Toilette (EDT)",
       "edp": "Eau de Parfum (EDP)",
       "parfum": "Parfum / Extrait",
-      "noPreference": "No preference"
+      "noPreference": "No preference",
+      "hint": "Concentration preferences help shape recommendations and exchange matches."
     },
     "houseTier": {
-      "prompt": "Which house tier excites you most? (optional)",
+      "prompt": "Which fragrance worlds feel closest to your tastes? (Optional)",
       "designer": "Designer",
       "niche": "Niche",
       "indie": "Indie",
-      "all": "All of them"
+      "all": "No Boundaries",
+      "hint": "Your selections help shape discoveries across the Archive."
     },
     "browse": {
-      "prompt": "How do you like to browse? (optional)",
-      "explorer": "Explorer – I like to discover new scents",
-      "focused": "Focused – I know what I like",
-      "trader": "Trader – I swap and trade often"
+      "prompt": "How do you usually move through the Archive? (Optional)",
+      "explorer": "Explorer – I enjoy discovering unfamiliar fragrances and hidden gems.",
+      "focused": "Focused – I know the styles, notes, and houses I return to most.",
+      "trader": "Collector – I actively exchange, share, and explore fragrances with others."
     },
     "nav": {
       "back": "Back",
       "next": "Next",
-      "save": "Save preferences"
+      "save": "Save Scent DNA"
     },
     "errors": {
-      "mustSignIn": "You must be signed in to save scent preferences.",
-      "minNotes": "Please select at least {min} notes you like.",
-      "maxNotes": "Please select at most {max} notes."
+      "mustSignIn": "Sign in to save your Scent DNA preferences.",
+      "minNotes": "Please select at least {min} fragrance notes you like.",
+      "maxNotes": "Please select at most {max} fragrance notes."
     },
     "success": {
-      "heading": "You're all set!",
-      "subheading": "We'll use your preferences to recommend perfumes you'll love.",
-      "cta": "Go to home"
+      "heading": "Your Scent DNA Has Taken Shape.",
+      "subheading": "The Hollow now has a clearer sense of the fragrances, notes, and atmospheres that define your tastes..",
+      "cta": "Explore the Archive"
     }
   },
   "recommendations": {
-    "recommendedForYou": "Recommended for you",
-    "whyThesePicksAriaLabel": "Learn why these perfumes are listed",
+    "recommendedForYou": "Suggested for You",
+    "whyThesePicksAriaLabel": "Learn Why This Was Suggested",
     "reason": {
-      "similarNotes": "Shown because it shares {notes} with this fragrance.",
-      "similarNotesFallback": "Shown because it shares note accords with this fragrance.",
-      "profileMatch": "Shown because it includes {notes} you marked as liked in your profile.",
-      "profileMatchFallback": "Shown because it fits your scent profile.",
-      "popular": "Shown because these picks are popular with the community.",
-      "recent": "Shown because these were recently added to the catalog.",
-      "sameHouse": "Shown because they are from the same perfume house as this fragrance."
+      "similarNotes": "Shares notes of {notes} with this fragrance.",
+      "similarNotesFallback": "Shares similar note accords with this fragrance.",
+      "profileMatch": "Includes notes like {notes} that appear in your scent preferences.",
+      "profileMatchFallback": "Aligned with your Scent DNA.",
+      "popular": "Frequently explored by collectors across the Hollow.",
+      "recent": "Recently surfaced in the Archive.",
+      "sameHouse": "From the same fragrance house as this discovery."
     }
   },
   "singleHouse": {
@@ -1600,7 +1614,7 @@
         "winter": "Winter",
         "spring": "Spring",
         "summer": "Summer",
-        "fall": "Fall"
+        "fall": "Autumn"
       }
     },
     "review": {
@@ -1655,20 +1669,20 @@
     "shipping": {
       "heading": "Shipping expectations",
       "contentOne": "All payment and shipping are arranged off-platform between traders. Agree on carriers, packaging, and timelines in your messages before anyone ships.",
-      "contentTwo": "Ship within a reasonable window after both sides confirm the trade (typically within one week unless you agree otherwise). Share tracking when available.",
+      "contentTwo": "Ship within a reasonable window after both sides confirm the exchange (typically within one week unless you agree otherwise). Share tracking when available.",
       "contentThree": "Package bottles securely: use padding, seal decants, and disclose any known flaws before shipping."
     },
     "disputes": {
       "heading": "Dispute process",
       "contentOne": "If something goes wrong, message the other trader first and try to resolve it directly.",
-      "contentTwo": "If you cannot resolve the issue, use Open dispute on the active trade card, or Report on their trader profile for off-trade issues. Include photos and a clear description.",
+      "contentTwo": "If you cannot resolve the issue, use Open dispute on the active exchange card, or Report on their trader profile for off-exchange issues. Include photos and a clear description.",
       "contentThree": "Our team reviews reports and may issue strikes or account actions. We do not hold funds or guarantee refunds — we help document disputes and enforce community rules."
     },
     "community": {
       "heading": "Community rules",
       "contentOne": "Be honest about bottle condition, volume remaining, and authenticity. Listings should include accurate photos.",
       "contentTwo": "Harassment, scams, and no-ship behavior are not tolerated. Repeated issues affect reputation and may lead to suspension.",
-      "contentThree": "Leave feedback only after a completed trade so reviews reflect real exchanges."
+      "contentThree": "Leave feedback only after a completed exchange so reviews reflect real exchanges."
     },
     "offPlatform": {
       "heading": "Off-platform payments",
@@ -1685,12 +1699,12 @@
     "subheading": "perfumer's hollow",
     "gist": {
       "heading": "THE GIST",
-      "contentOne": "perfumer's hollow is an independent platform devoted to perfume lovers — a place to share reviews, learn, and connect with other collectors. Users may list perfumes and samples for trade, but the dealings themselves are strictly between private individuals.",
+      "contentOne": "perfumer's hollow is an independent platform devoted to perfume lovers — a place to share reviews, learn, and connect with other collectors. Users may list perfumes and samples for exchange, but the dealings themselves are strictly between private individuals.",
       "contentTwo": "We do not handle payments, do not verify authenticity, and will not mediate disputes. Think of us as the smoke-filled bar where introductions are made, not the broker of the deal."
     },
     "tradingAndListing": {
       "heading": "TRADING AND LISTING",
-      "contentOne": "Trades and exchanges are entirely at your own risk.",
+      "contentOne": "Exchanges and exchanges are entirely at your own risk.",
       "contentTwo": "Counterfeit perfumes are strictly prohibited.",
       "contentThree": "Split (decanted) perfumes are permitted, provided they are genuine and accurately described.",
       "contentFour": "Any attempt to defraud, misrepresent, or sell stolen goods will result in permanent account removal and possible reporting to relevant authorities.",
@@ -1698,7 +1712,7 @@
     },
     "accountsAndConduct": {
       "heading": "ACCOUNTS AND USER CONDUCT",
-      "contentOne": "You’ll need an account to post reviews, notes, or trades. Browsing and searching are open to everyone.",
+      "contentOne": "You’ll need an account to post reviews, notes, or exchanges. Browsing and searching are open to everyone.",
       "contentTwo": "Keep it civil: no harassment, spam, political or religious debates, or illegal content.",
       "contentThree": "This is a perfume community, not a soapbox or battleground. Treat others with the respect you’d show in a high-end fragrance boutique."
     },
@@ -1714,7 +1728,7 @@
     },
     "liability": {
       "heading": "LIMITATION OF LIABILITY",
-      "contentOne": "perfumer's hollow and its operators are not responsible for any loss, damage, or dispute arising from user trades, communications, or listings.",
+      "contentOne": "perfumer's hollow and its operators are not responsible for any loss, damage, or dispute arising from user exchanges, communications, or listings.",
       "contentTwo": "If a deal goes sour, it’s between the parties involved. The platform merely sets the stage — the drama belongs to you."
     },
     "privacy": {
@@ -1734,18 +1748,18 @@
     },
     "closing": {
       "heading": "CLOSING WORDS",
-      "contentOne": "perfumer's hollow exists to celebrate the art, science, and stories behind scent. Use it wisely, trade fairly, and remember — trust your nose, not a stranger’s promises."
+      "contentOne": "perfumer's hollow exists to celebrate the art, science, and stories behind scent. Use it wisely, exchange fairly, and remember — trust your nose, not a stranger’s promises."
     }
   },
   "tradingPost": {
     "meta": {
       "title": "The Exchange - perfumer's hollow",
-      "description": "Browse perfumes available for trade from our community members."
+      "description": "Browse perfumes available for exchange from our community members."
     },
     "heading": "The Exchange",
     "subheading": "Rare fragrances find new homes here.",
     "count": "fragrances currently available",
-    "empty": "No fragrances are currently available for trade.",
+    "empty": "No fragrances are currently available for exchange.",
     "availableFrom": "Available from",
     "search": {
       "placeholder": "Search available fragrances...",
@@ -1829,7 +1843,7 @@
       "description": "Recent activity from traders, houses, and perfumes you follow."
     },
     "followedActivity": {
-      "completedTrade": "completed a trade",
+      "completedTrade": "completed a exchange",
       "tradeFallbackPerfume": "a swap",
       "leftReview": "reviewed",
       "rating": "{count, plural, one {# star} other {# stars}}",
@@ -1873,7 +1887,7 @@
     "targetListing": "Their listing",
     "yourOffer": "Your offer (optional)",
     "loadingListings": "Loading your listings…",
-    "noOfferableListings": "You have no bottles listed for trade. Add a listing from My Scents first.",
+    "noOfferableListings": "You have no bottles listed for exchange. Add a listing from Collection Archive first.",
     "offerOptional": "You may propose an exchange even without offering a fragrance.",
     "notesLabel": "Message",
     "notesHelp": "Optional message about cash, shipping preferences, or swap ideas.",
@@ -1896,28 +1910,28 @@
   },
   "tradeDetail": {
     "meta": {
-      "title": "Trade details - perfumer's hollow",
+      "title": "Exchange details - perfumer's hollow",
       "description": "View and manage a swap proposal between traders."
     },
-    "heading": "Trade details",
+    "heading": "Exchange details",
     "subheading": "Share this link in Discord or Reddit to refer to this swap.",
     "openMessages": "Open conversation"
   },
   "tradeStatus": {
-    "tradeWith": "Trade with {name}",
+    "tradeWith": "Exchange with {name}",
     "theyOffer": "Their listing",
     "youOffer": "Your side",
-    "notes": "Notes",
+    "notes": "Message",
     "accept": "Accept",
     "decline": "Decline",
     "markShipped": "Mark shipped",
     "confirmReceived": "Confirm received",
-    "complete": "Complete trade",
-    "cancel": "Cancel trade",
+    "complete": "Complete exchange",
+    "cancel": "Cancel exchange",
     "trackingOptional": "Tracking (optional)",
     "error": "Something went wrong.",
     "communityPolicyLink": "Shipping, disputes & community rules",
-    "timelineAria": "Trade progress",
+    "timelineAria": "Exchange progress",
     "status": {
       "draft": "Draft",
       "pending": "Offer pending",
@@ -1937,7 +1951,7 @@
     "heading": "Collector {traderName}",
     "subheading": "Collector Ledger",
     "headerStats": {
-      "ariaLabel": "Collector membership and trade history",
+      "ariaLabel": "Collector membership and exchange history",
       "memberSince": "Joined the Hollow",
       "completedTrades": "Completed Exchanges",
       "followers": "Followers"
@@ -1988,8 +2002,8 @@
       "reddit": "Reddit profile for {username}",
       "fragrantica": "Fragrantica profile"
     },
-    "itemsAvailable": "Items To  Trade",
-    "itemsAvailableSummary": "{traderName} has the following items to trade:",
+    "itemsAvailable": "Items To  Exchange",
+    "itemsAvailableSummary": "{traderName} has the following items to exchange:",
     "traderProfileAside": "Trader {traderName} profile",
     "itemsSearchingFor": "Is Seeking Out",
     "itemsSummary": "{traderName} is looking for the following perfumes:",
@@ -2002,33 +2016,33 @@
     },
     "amount": "Amount Available",
     "price": "Price",
-    "tradePrice": "Trade Price",
+    "tradePrice": "Exchange Price",
     "preference": "Preference",
     "tradeOnly": "Exchange Only Item",
     "comments": "Traders Comments",
     "noPublicComments": "No public comments available for this item.",
     "preferences": {
       "cash": "Cash Only",
-      "trade": "Exchange Only",
+      "exchange": "Exchange Only",
       "both": "Cash or Exchange"
     },
-    "trades": {
+    "exchanges": {
       "activeSummary": "Active exchanges ({count})",
       "historySummary": "Exchange history ({count})"
     },
     "scentJourney": {
       "meta": {
         "title": "{traderName}'s Scent journey",
-        "description": "Chronological activity from {traderName}'s collection, trades, reviews, and Scent DNA on perfumer's hollow."
+        "description": "Chronological activity from {traderName}'s collection, exchanges, reviews, and Scent DNA on perfumer's hollow."
       },
       "pageHeading": "{traderName}'s Scent journey",
       "pageSubheading": "Collection additions, completed swaps, reviews, Scent DNA updates, and blog mentions.",
       "viewFull": "View full journey",
       "backToProfile": "Back to {traderName}'s profile",
       "title": "Scent journey",
-      "summary": "Recent activity from {traderName}'s collection, trades, and reviews",
+      "summary": "Recent activity from {traderName}'s collection, exchanges, and reviews",
       "ariaLabel": "Scent journey timeline",
-      "empty": "No public activity yet — listings, trades, and reviews will appear here.",
+      "empty": "No public activity yet — listings, exchanges, and reviews will appear here.",
       "bottleAdded": "Added to collection",
       "tradeCompleted": "Completed a swap",
       "tradeWith": "With {name} — {perfumes}",
@@ -2092,7 +2106,7 @@
       "anonymousReviewer": "Anonymous reviewer",
       "selfReviewNotice": "Collectors cannot leave feedback on their own ledger.",
       "ratingLabel": "Your rating",
-      "ratingHint": "Score trades from 1 (needs improvement) to 5 (excellent).",
+      "ratingHint": "Score exchanges from 1 (needs improvement) to 5 (excellent).",
       "selectRating": "Select rating",
       "commentLabel": "Your comment",
       "commentPlaceholder": "Share details about your experience trading with this member.",
@@ -2183,16 +2197,16 @@
   },
   "wishlist": {
     "meta": {
-      "title": "Wishlist - perfumer's hollow",
-      "description": "Manage your wishlist of perfumes."
+      "title": "Seeking - Perfumer's Hollow",
+      "description": "Some fragrances are still waiting to be discovered."
     },
     "empty": {
-      "heading": "Your wishlist is empty.",
+      "heading": "Nothing is being sought yet.",
       "subheading": "Start adding perfumes to your wishlist!"
     },
-    "heading": "My Wishlist",
-    "subheading": "Manage your wishlist of perfumes.",
-    "itemsInWishlist": "items in Wishlist",
+    "heading": "Seeking",
+    "subheading": "Fragrances still waiting to be discovered.",
+    "itemsInWishlist": "fragrances being tracked",
     "addButton": "Add to Wishlist",
     "removeButton": "Remove from Wishlist",
     "bottlePreference": {
@@ -2208,19 +2222,25 @@
       "public": "Public",
       "private": "Private",
       "available": "🎉 AVAILABLE IN TRADING POST! 🎉",
-      "addedOn": "Added on",
-      "availableMessage": "This item will appear on your trader profile and shared wishlist",
-      "unavailableMessage": "This item is private and will not appear on your trader profile or shared wishlist",
-      "bottlePreference": "Bottle preference"
+      "addedOn": "Added",
+      "availableMessage": "This fragrance will appear on your collector ledger and shared Seeking list.",
+      "unavailableMessage": "This fragrance is private and will not appear on your collector ledger or shared Seeking list.",
+      "bottlePreference": "Preferred Format",
+      "availableFromCollectors": "Available from {count, plural, one {# collector} other {# collectors}}:",
+      "mlAvailable": "({amount} ml available)",
+      "contact": "Contact Collector",
+      "totalAvailable": "{amount} ml currently available",
+      "emailSubject": "Interest in {perfumeName}",
+      "emailBody": "Hi! I saw that you have {perfumeName} available for decanting in the exchange. I'm interested in purchasing some. Please let me know the details!"
     },
     "share": {
-      "stripTitle": "Share your wishlist",
-      "stripHint": "Only items marked public appear on your shared page. Toggle visibility on each card below.",
+      "stripTitle": "Share Your Seeking List",
+      "stripHint": "Only fragrances marked public will appear on your shared page.",
       "previewPublicPage": "Preview shared page"
     },
     "public": {
       "meta": {
-        "title": "{traderName}'s wishlist - perfumer's hollow",
+        "title": "{traderName}'s Seeking - Perfumer's Hollow",
         "description": "Perfumes {traderName} is looking for on perfumer's hollow."
       },
       "heading": "{traderName} is looking for",

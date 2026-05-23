@@ -220,6 +220,15 @@
       "split_cancelled": "Reparto cancelado",
       "default": "Alerta"
     },
+    "titles": {
+      "trade_received": "Nueva oferta de intercambio de {actorName}",
+      "trade_accepted": "{actorName} aceptó tu propuesta de intercambio",
+      "trade_shipped": "{actorName} marcó el intercambio como enviado",
+      "trade_completed": "Intercambio completado con {actorName}",
+      "trade_cancelled_declined": "{actorName} rechazó tu propuesta de intercambio",
+      "trade_cancelled_cancelled": "{actorName} canceló el intercambio",
+      "trade_update_fallback": "Actualización de intercambio de {actorName}"
+    },
     "actions": {
       "reviewSubmission": "Revisar envío",
       "viewMessage": "Ver mensaje",
@@ -299,6 +308,7 @@
   "auth": {
     "heading": "Bienvenido de Nuevo",
     "subheading": "Inicia sesión en tu cuenta aquí. Si no tienes una,",
+    "newHere": "¿Nuevo en el Hollow?",
     "createAccount": "Haz clic aquí para crear",
     "passwordRequirements": "Requisitos de Contraseña:",
     "termsAndConditions": "Acepto los: ",
@@ -345,6 +355,9 @@
       "threadDescription": "Conversación directa con {name}.",
       "threadFallbackTitle": "Conversaciones — perfumer's hollow"
     },
+    "threadBannerHeading": "Conversación · {name}",
+    "threadBannerSubheading": "Detalles del intercambio, conversaciones sobre fragancias y mensajes entre coleccionistas.",
+    "backToConversations": "Volver a conversaciones",
     "deleteConversationShort": "Eliminar",
     "deleteConversationFull": "Eliminar conversación",
     "deleteConversationAria": "Eliminar la conversación con {name}",
@@ -580,10 +593,10 @@
     },
     "communityStats": {
       "bottlesListed": "{count, number} botellas publicadas",
-      "tradesThisMonth": "{count, number} intercambios completados este mes",
+      "exchangesThisMonth": "{count, number} intercambios completados este mes",
       "members": "{count, number} miembros",
       "separator": "·",
-      "ariaLabel": "{bottlesListed, number} botellas publicadas, {tradesThisMonth, number} intercambios completados este mes, {members, number} miembros"
+      "ariaLabel": "{bottlesListed, number} botellas publicadas, {exchangesThisMonth, number} intercambios completados este mes, {members, number} miembros"
     },
     "activityFeed": {
       "title": "Lo último en el intercambio"
@@ -1162,7 +1175,7 @@
     },
     "navigation": {
       "profile": "Perfil",
-      "exchanges": "Intercambios",
+      "exchanges": "Conversaciones",
       "wishlist": "Mi Lista de Deseos",
       "myTrades": "Mis intercambios",
       "myScents": "Mis Aromas",
@@ -1239,14 +1252,16 @@
       "edt": "Eau de Toilette (EDT)",
       "edp": "Eau de Parfum (EDP)",
       "parfum": "Parfum / Extrait",
-      "noPreference": "Sin preferencia"
+      "noPreference": "Sin preferencia",
+      "hint": "Las preferencias de concentración orientan las recomendaciones y los intercambios."
     },
     "houseTier": {
       "prompt": "¿Qué tipo de casa te atrae más? (opcional)",
       "designer": "Diseñador",
       "niche": "Nicho",
       "indie": "Indie",
-      "all": "Todas"
+      "all": "Todas",
+      "hint": "Tus selecciones orientan los descubrimientos en el Archivo."
     },
     "browse": {
       "prompt": "¿Cómo te gusta explorar? (opcional)",
@@ -1785,10 +1800,10 @@
     "noPublicComments": "No hay comentarios públicos disponibles para este artículo.",
     "preferences": {
       "cash": "Solo Efectivo",
-      "trade": "Solo intercambio",
+      "exchange": "Solo intercambio",
       "both": "Efectivo o intercambio"
     },
-    "trades": {
+    "exchanges": {
       "activeSummary": "Intercambios activos ({count})",
       "historySummary": "Historial de intercambios ({count})"
     },
@@ -1988,7 +2003,13 @@
       "addedOn": "Agregado el",
       "availableMessage": "Este artículo aparecerá en tu perfil y en la lista compartida",
       "unavailableMessage": "Este artículo es privado y no aparecerá en tu perfil ni en la lista compartida",
-      "bottlePreference": "Formato del frasco"
+      "bottlePreference": "Formato del frasco",
+      "availableFromCollectors": "Disponible de {count, plural, one {# coleccionista} other {# coleccionistas}}:",
+      "mlAvailable": "({amount} ml disponibles)",
+      "contact": "Contactar",
+      "totalAvailable": "Total: {amount} ml disponibles",
+      "emailSubject": "Interés en {perfumeName}",
+      "emailBody": "¡Hola! Vi que tienes {perfumeName} disponible para decantar en el mercado. Me interesa comprar. Cuéntame los detalles."
     },
     "share": {
       "stripTitle": "Comparte tu lista de deseos",
@@ -2250,7 +2271,7 @@
       "strikeIssued": "Strike emitido",
       "tradeVoided": "Intercambio anulado"
     },
-    "trade": "Intercambio",
+    "exchange": "Intercambio",
     "initiator": "Iniciador",
     "otherParty": "Otra parte",
     "resolutionOutcome": "Resultado",

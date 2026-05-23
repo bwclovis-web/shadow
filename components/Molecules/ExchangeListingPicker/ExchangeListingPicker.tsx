@@ -137,7 +137,7 @@ export const ExchangeListingPicker = ({
               {tProfile("preferences.cash")}
             </option>
             <option value="trade" className="bg-noir-dark">
-              {tProfile("preferences.trade")}
+              {tProfile("preferences.exchange")}
             </option>
             <option value="both" className="bg-noir-dark">
               {tProfile("preferences.both")}

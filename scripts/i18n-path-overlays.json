@@ -183,5 +183,10 @@
     "es": "Aún no hay suficiente historial de intercambios para una puntuación de fiabilidad.",
     "fr": "Pas assez d'historique d'échange pour un score de fiabilité.",
     "it": "Non c'è ancora abbastanza storico di scambi per un punteggio di affidabilità."
+  },
+  "profile.navigation.exchanges": {
+    "es": "Conversaciones",
+    "fr": "Conversations",
+    "it": "Conversazioni"
   }
 }

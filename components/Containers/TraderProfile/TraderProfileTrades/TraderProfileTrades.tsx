@@ -15,7 +15,7 @@ const TraderProfileTrades = ({
   activeTrades,
   viewerId,
 }: TraderProfileTradesProps) => {
-  const t = useTranslations("traderProfile.trades")
+  const t = useTranslations("traderProfile.exchanges")
 
   if (activeTrades.length === 0) return null
 

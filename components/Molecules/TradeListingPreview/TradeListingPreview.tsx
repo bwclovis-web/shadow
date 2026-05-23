@@ -44,7 +44,7 @@ const TradeListingPreview = ({
       case "cash":
         return t("preferences.cash")
       case "trade":
-        return t("preferences.trade")
+        return t("preferences.exchange")
       case "both":
         return t("preferences.both")
       default:

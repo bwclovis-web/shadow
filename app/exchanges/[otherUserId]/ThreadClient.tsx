@@ -149,8 +149,8 @@ const ThreadClient = ({
     <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
-        heading={`Conversation with ${otherUserName}`}
-        subheading="Message thread"
+        heading={tDm("threadBannerHeading", { name: otherUserName })}
+        subheading={tDm("threadBannerSubheading")}
       />
 
       <PageWrapper>
@@ -159,7 +159,7 @@ const ThreadClient = ({
             href="/exchanges"
             className="text-noir-gold-100 hover:text-noir-gold-500 flex items-center gap-1 transition-colors"
           >
-            <span aria-hidden>←</span> Back to messages
+            <span aria-hidden>←</span> {tDm("backToConversations")}
           </Link>
           <Button
             type="button"

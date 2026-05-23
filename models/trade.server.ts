@@ -16,6 +16,7 @@ import {
 import { sendTradeEventEmail } from "@/utils/alert-email.server"
 import type { TradeForClient, TradeLineItemInput } from "@/types/trade"
 import type { AlertType } from "@/types/database"
+import { getAlertsTranslator } from "@/lib/i18n/alerts-translator.server"
 import { getUserDisplayName } from "@/utils/user"
 
 const ACTIVE_TRADE_STATUSES: TradeStatus[] = [
@@ -167,19 +168,20 @@ const sendTradeAlert = async (
   const actorName = getUserDisplayName(actor)
   const requested = trade.lineItems.find(li => li.role === TradeLineItemRole.requested)
   const perfumeLabel = requested?.perfumeName ?? "a listing"
+  const t = await getAlertsTranslator()
 
   const titles: Partial<Record<AlertType, string>> = {
-    trade_received: `New trade offer from ${actorName}`,
-    trade_accepted: `${actorName} accepted your trade`,
-    trade_shipped: `${actorName} marked your trade as shipped`,
-    trade_completed: `Trade completed with ${actorName}`,
+    trade_received: t("titles.trade_received", { actorName }),
+    trade_accepted: t("titles.trade_accepted", { actorName }),
+    trade_shipped: t("titles.trade_shipped", { actorName }),
+    trade_completed: t("titles.trade_completed", { actorName }),
     trade_cancelled:
       action === "decline"
-        ? `${actorName} declined your trade`
-        : `${actorName} cancelled the trade`,
+        ? t("titles.trade_cancelled_declined", { actorName })
+        : t("titles.trade_cancelled_cancelled", { actorName }),
   }
 
-  const title = titles[rule.alertType] ?? `Trade update from ${actorName}`
+  const title = titles[rule.alertType] ?? t("titles.trade_update_fallback", { actorName })
   const message = `Regarding ${perfumeLabel}`
 
   const metadata = { tradeId: trade.id, action, actorUserId, senderId: actorUserId }
@@ -366,7 +368,7 @@ export const createTrade = async (input: CreateTradeInput): Promise<TradeForClie
   const { initiatorId, counterpartyId, notes, lineItems, submit } = input
 
   if (initiatorId === counterpartyId) {
-    throw new Error("Cannot create a trade with yourself")
+    throw new Error("Cannot create a exchange with yourself")
   }
 
   const [initiator, counterparty] = await Promise.all([
@@ -378,7 +380,7 @@ export const createTrade = async (input: CreateTradeInput): Promise<TradeForClie
     throw new Error("Trader not found")
   }
   if (initiator.isBanned || counterparty.isBanned) {
-    throw new Error("Cannot trade with a suspended account")
+    throw new Error("Cannot exchange with a suspended account")
   }
 
   const { byId, requested } = await validateLineItems(initiatorId, counterpartyId, lineItems)

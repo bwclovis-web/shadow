@@ -408,6 +408,7 @@ export default function ScentQuizClient({
                 </label>
               ))}
             </div>
+            <p className="mt-2 text-sm text-noir-gold-100">{t("concentration.hint")}</p>
             <div className="mt-6 flex gap-4">
               <VooDooLink url={buildStepUrl("budget")} variant="secondary">
                 {t("nav.back")}
@@ -440,6 +441,7 @@ export default function ScentQuizClient({
                 </label>
               ))}
             </div>
+            <p className="mt-2 text-sm text-noir-gold-100">{t("houseTier.hint")}</p>
             <div className="mt-6 flex gap-4">
               <VooDooLink url={buildStepUrl("concentration")} variant="secondary">
                 {t("nav.back")}

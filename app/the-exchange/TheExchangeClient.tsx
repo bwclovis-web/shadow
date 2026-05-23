@@ -305,7 +305,7 @@ const TheExchangeClient = ({
     tradePrefDescription: tf("tradePrefDescription"),
     tradePrefAria: tf("tradePrefAria"),
     tradePrefCash: tTraderPrefs("cash"),
-    tradePrefTrade: tTraderPrefs("trade"),
+    tradePrefTrade: tTraderPrefs("exchange"),
     tradePrefBoth: tTraderPrefs("both"),
     bottleTitle: tf("bottleTitle"),
     bottleDescription: tf("bottleDescription"),

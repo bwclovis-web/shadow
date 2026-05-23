@@ -256,7 +256,7 @@ export const AlertItem = ({
                 {alert.title}
               </h4>
 
-              <p className="text-sm text-gray-600 mt-1 mb-3">{alert.message}</p>
+              <p className="text-sm text-noir-gold-500 mt-1 mb-3">{alert.message}</p>
 
               {alert.alertType !== "pending_submission_approval" && alert.Perfume && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">

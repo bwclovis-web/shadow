@@ -12,6 +12,7 @@ import ErrorDisplay from "@/components/Containers/ErrorDisplay/ErrorDisplay"
 import { CSRFToken } from "@/components/Molecules/CSRFToken/CSRFToken"
 import { UserLogInSchema } from "@/utils/validation/formValidationSchemas"
 import { signInAction, type SignInActionState } from "@/app/(auth)/sign-in/actions"
+
 const SignInClient = () => {
   const emailInputRef = useRef<HTMLInputElement | null>(null)
   const searchParams = useSearchParams()

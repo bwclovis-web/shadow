@@ -15,7 +15,7 @@ const CommunityStatsStrip = ({ stats, className }: CommunityStatsStripProps) => 
 
   const items = [
     t("bottlesListed", { count: stats.bottlesListed }),
-    t("tradesThisMonth", { count: stats.tradesCompletedThisMonth }),
+    t("exchangesThisMonth", { count: stats.tradesCompletedThisMonth }),
     t("members", { count: stats.members }),
   ]
 
@@ -27,7 +27,7 @@ const CommunityStatsStrip = ({ stats, className }: CommunityStatsStripProps) => 
       )}
       aria-label={t("ariaLabel", {
         bottlesListed: stats.bottlesListed,
-        tradesThisMonth: stats.tradesCompletedThisMonth,
+        exchangesThisMonth: stats.tradesCompletedThisMonth,
         members: stats.members,
       })}
     >

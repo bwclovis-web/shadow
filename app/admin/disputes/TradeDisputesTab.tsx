@@ -138,7 +138,7 @@ const TradeDisputesTab = ({ disputes }: TradeDisputesTabProps) => {
                       {formatDateTime(dispute.createdAt)}
                     </p>
                     <p className="mt-1 text-sm text-noir-gold-100/90">
-                      {t("trade")}:{" "}
+                      {t("exchange")}:{" "}
                       <span className="font-mono text-noir-gold">{dispute.tradeId}</span>
                       <span className="ml-2 text-noir-gold-100/70">
                         ({dispute.trade.status})

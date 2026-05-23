@@ -167,7 +167,7 @@ const resolveFeedbackTradeId = async (
 
   if (!resolved) {
     throw new Error(
-      "You can leave feedback after completing a trade with this member."
+      "You can leave feedback after completing a exchange with this member."
     )
   }
 

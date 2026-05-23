@@ -53,7 +53,7 @@ const ExchangeListingRow = ({
       case "cash":
         return tProfile("preferences.cash")
       case "trade":
-        return tProfile("preferences.trade")
+        return tProfile("preferences.exchange")
       case "both":
         return tProfile("preferences.both")
       default:
