@@ -12,8 +12,6 @@ import ErrorDisplay from "@/components/Containers/ErrorDisplay/ErrorDisplay"
 import { CSRFToken } from "@/components/Molecules/CSRFToken/CSRFToken"
 import { UserLogInSchema } from "@/utils/validation/formValidationSchemas"
 import { signInAction, type SignInActionState } from "@/app/(auth)/sign-in/actions"
-import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
-
 const SignInClient = () => {
   const emailInputRef = useRef<HTMLInputElement | null>(null)
   const searchParams = useSearchParams()
@@ -30,8 +28,7 @@ const SignInClient = () => {
   })
 
   return (
-    <main id="main-content">
-      <PageWrapper>
+    <main id="main-content" className="w-full">
       <form
         {...getFormProps(signInForm)}
         action={formAction}
@@ -71,7 +68,6 @@ const SignInClient = () => {
           {t("submit")}
         </Button>
       </form>
-    </PageWrapper>
     </main>
   )
 }
