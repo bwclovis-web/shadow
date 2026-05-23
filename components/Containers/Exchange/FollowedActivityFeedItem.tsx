@@ -83,7 +83,7 @@ const FollowedActivityFeedItem = ({ item, compact = false }: FollowedActivityFee
   }
 
   const coverUrl = getArticleCoverUrl(item.article.coverImage, 112, 112)
-  const blogHref = `/behind-the-bottle/${item.article.slug}`
+  const blogHref = `/journal/${item.article.slug}`
 
   return (
     <article className={cardClass(compact)}>

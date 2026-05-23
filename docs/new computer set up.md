@@ -156,7 +156,7 @@ Or use the embedded studio at `http://localhost:3000/studio` while `npm run dev`
 
 5. Optional — on publish, call `POST /api/sanity/revalidate` with header `Authorization: Bearer <SANITY_REVALIDATE_SECRET>` to refresh cached pages (set `SANITY_REVALIDATE_SECRET` in `.env`).
 
-Public blog: `/behind-the-bottle` (only when env vars are set). Perfume houses stay at `/houses`.
+Public blog: `/journal` (only when env vars are set). Perfume houses stay at `/houses`.
 
 ## 10) Common issues and fixes
 

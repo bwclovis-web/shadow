@@ -209,6 +209,8 @@ Middle Notes: Verdant Earth Accord (Rich Soil, Green and Flowering Plants)`
     expect(peelMarketingDescriptorTail("fresh watermelon hit first")).toBe("fresh watermelon")
     expect(peelMarketingDescriptorTail("sea breeze wrap you in a haze")).toBe("sea breeze")
     expect(peelMarketingDescriptorTail("musk melt into skin")).toBe("musk")
+    expect(sanitizeExtractedNoteCandidate("resort evenings")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("warm days")).toBeNull()
   })
 
   it("isObviousNonMaterialNote rejects CSS bleed and truncated prose fragments", () => {

@@ -8,14 +8,14 @@ export const revalidate = 86400
 
 const STATIC_PATHS = [
   "/",
-  "/about-us",
-  "/behind-the-bottle",
-  "/contact-us",
-  "/how-we-work",
+  "/the-keepers",
+  "/journal",
+  "/correspondence",
+  "/the-collectors-guide",
   "/terms-and-conditions",
   "/community-policy",
   "/the-exchange",
-  "/the-vault",
+  "/the-archive",
   "/houses",
 ] as const
 
@@ -28,8 +28,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: now,
   }))
 
-  const vaultLetterEntries: MetadataRoute.Sitemap = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((letter) => ({
-    url: `${baseUrl}/the-vault/${letter}`,
+  const archiveLetterEntries: MetadataRoute.Sitemap = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((letter) => ({
+    url: `${baseUrl}/the-archive/${letter}`,
     lastModified: now,
   }))
 
@@ -55,7 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }))
 
     articleEntries = articles.map((article) => ({
-      url: `${baseUrl}/behind-the-bottle/${article.slug}`,
+      url: `${baseUrl}/journal/${article.slug}`,
       lastModified: article.publishedAt,
     }))
   } catch {
@@ -64,7 +64,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticEntries,
-    ...vaultLetterEntries,
+    ...archiveLetterEntries,
     ...houseEntries,
     ...perfumeEntries,
     ...articleEntries,

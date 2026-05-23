@@ -1,9 +1,10 @@
 import { getProfilePathForUser } from "@/utils/user"
 
 export const mainNavigation = [
-  { id: "houses", path: "/houses", key: "houses", label: "Behind the Bottle" },
-  { id: "perfumes", path: "/the-vault", key: "perfumes", label: "The Vault" },
-  { id: "about", path: "/the-exchange", key: "theExchange", label: "The Exchange" },
+  { id: "archive", path: "/the-archive", key: "perfumes", label: "The Archive" },
+  { id: "houses", path: "/houses", key: "houses", label: "Houses" },
+  { id: "journal", path: "/journal", key: "journal", label: "Journal" },
+  { id: "exchange", path: "/the-exchange", key: "theExchange", label: "The Exchange" },
 ] as const
 
 export const adminNavigation = [
@@ -21,6 +22,7 @@ export const adminNavigation = [
 
 export const profileNavigation = [
   { id: "0", label: "Profile", key: "profile", path: "/profile" } as const,
+  { id: "messages", label: "Messages", key: "messages", path: "/messages" } as const,
   { id: "1", label: "My Wishlist", key: "wishlist", path: "/profile/wishlist" } as const,
   { id: "4", label: "My Reports", key: "myReports", path: "/profile/reports" } as const,
   { id: "6", label: "My Disputes", key: "myDisputes", path: "/profile/disputes" } as const,
@@ -34,6 +36,8 @@ export const getProfileNavigation = (user: { id: string; username?: string | nul
   const basePath = getProfilePathForUser(user)
   return profileNavigation.map((item) => ({
     ...item,
-    path: basePath + item.path.replace(/^\/profile/, "") || basePath,
+    path: item.path.startsWith("/profile")
+      ? basePath + item.path.replace(/^\/profile/, "") || basePath
+      : item.path,
   }))
 }

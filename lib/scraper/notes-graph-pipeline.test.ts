@@ -1990,6 +1990,88 @@ Base: white musk`
     expect(invokeMock).not.toHaveBeenCalled()
   })
 
+  it("Andromedas Portofino: Wear & Performance season copy does not bleed into base notes", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const portofinoPdp =
+      "Top Notes Bergamot, Mandarin Orange, Lemon, Bitter Orange, Lavender, Rosemary, Myrtle Heart Notes African Orange Flower, Neroli, Jasmine, Pitosporum Base Notes Amber, Ambrette (Musk Mallow), Angelica Citrus Aromatic White Floral Amber-Musky Drydown Seaside Breeze Wear & Performance Season: Spring / Summer • warm days, resort evenings Projection: Airy to moderate Longevity: ~6–8 hrs on skin"
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when layered Top/Heart/Base notes are present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Portofino",
+        description: portofinoPdp,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromedas-portofino-98-neroli-portofino-x-portofino-97-eau-de-parfum",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(open).toEqual(
+      expect.arrayContaining(["bergamot", "mandarin orange", "lemon", "bitter orange", "lavender"]),
+    )
+    expect(heart).toEqual(
+      expect.arrayContaining(["african orange flower", "neroli", "jasmine", "pitosporum"]),
+    )
+    expect(base).toEqual(expect.arrayContaining(["amber", "ambrette", "musk mallow", "angelica"]))
+    expect(all).not.toEqual(expect.arrayContaining(["resort evenings", "warm days"]))
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas Ginger Biscuit: blending/base-melts prose extracts pyramid without LLM", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const gingerBiscuitPdp =
+      "Inspired by Ginger Biscuit Eau de Parfum Originally from Jo Malone Andromedas Moon Inspired by Ginger Biscuit is warm, cozy, and sweetly spiced blending ginger, cinnamon, and nutmeg with the comforting richness of caramel and toasted hazelnut. The base melts into soft vanilla and smooth tonka bean, creating an edible-sweet hug in a bottle. Please note: This fragrance is a true skin scent very light, delicate, and intimate, just like the original Jo Malone. Perfect for those who enjoy subtle perfumes that sit close to the skin rather than projecting strongly."
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when blending/base-melts prose lists materials")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Ginger Biscuit Jo Malone",
+        description: gingerBiscuitPdp,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromeda-s-inspired-by-ginger-biscuit-eau-de-parfum-jo-malone",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(open).toEqual(expect.arrayContaining(["ginger", "cinnamon", "nutmeg"]))
+    expect(heart).toEqual(expect.arrayContaining(["caramel", "toasted hazelnut"]))
+    expect(base).toEqual(expect.arrayContaining(["vanilla", "tonka bean"]))
+    expect(all).not.toEqual(expect.arrayContaining(["delicate", "intimate", "cozy"]))
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
   it("Andromedas Wavechild: emoji Top/Middle/Base notes of layers parse without LLM", async () => {
     vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
     vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")

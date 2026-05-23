@@ -24,7 +24,7 @@ export interface UseAlphabeticalBrowserStateOptions {
   letter: string | null
   /** Page number from URL (pg search param). Caller parses and passes for data fetching; hook uses for URL sync. */
   pageFromUrl: number
-  /** Base path for URL sync (e.g. "/the-vault" or "/the-vault/a" when letter in path; "/houses" when letter in query). */
+  /** Base path for URL sync (e.g. "/the-archive" or "/the-archive/a" when letter in path; "/houses" when letter in query). */
   basePathForSync: string
   /** Build URL for a given page (used by pagination next/prev). */
   buildPath: (page: number) => string
@@ -44,7 +44,7 @@ export interface UseAlphabeticalBrowserStateResult {
 
 /**
  * Shared hook for alphabetical browser + pagination URL state, scroll sync, and navigation.
- * Use in TheVaultClient and AllHousesClient to avoid duplicating pagination setup.
+ * Use in TheArchiveClient and AllHousesClient to avoid duplicating pagination setup.
  */
 export function useAlphabeticalBrowserState({
   letter,

@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server"
 
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { PortableTextContent } from "@/components/Containers/Blog/PortableTextContent"
+import { JOURNAL_PATH } from "@/constants/routes"
 import { getArticleBySlug, getPublishedArticles } from "@/lib/sanity/articles.server"
 import { getArticleCoverUrl } from "@/lib/sanity/image"
 import { buildArticleJsonLd } from "@/lib/sanity/json-ld"
@@ -32,7 +33,7 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
 
   const ogImage = getArticleCoverUrl(article.coverImage)
   return {
-    title: `${article.title} — Behind the Bottle`,
+    title: `${article.title} — Journal`,
     description: article.excerpt ?? undefined,
     openGraph: {
       title: article.title,
@@ -76,7 +77,7 @@ const ArticleDetailPage = async ({ params }: Props) => {
       />
 
       <PrefetchLink
-        href="/behind-the-bottle"
+        href={JOURNAL_PATH}
         className="inline-flex text-blue-200 underline hover:text-noir-gold mb-8"
       >
         {t("backToIndex")}

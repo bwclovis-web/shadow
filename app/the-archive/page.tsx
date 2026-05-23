@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
-import TheVaultClient from "./TheVaultClient"
+import TheArchiveClient from "@/app/the-archive/TheArchiveClient"
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("allPerfumes.meta")
@@ -11,12 +11,12 @@ export const generateMetadata = async (): Promise<Metadata> => {
   }
 }
 
-const TheVaultPage = () => (
-  <TheVaultClient
+const TheArchivePage = () => (
+  <TheArchiveClient
     initialLetter={null}
     initialPerfumes={[]}
     initialPerfumeTotal={0}
   />
 )
 
-export default TheVaultPage
+export default TheArchivePage

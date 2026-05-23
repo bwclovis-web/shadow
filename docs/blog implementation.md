@@ -72,7 +72,7 @@ Implementation checklist for adding a Prisma-backed blog to perfumer's hollow.
 - [ ] Verify desktop nav in `components/Molecules/GlobalNavigation/GlobalNavigation.tsx`
 - [ ] Verify mobile nav behavior in `components/Molecules/MobileBottomNavigation/MobileBottomNavigation.tsx`
 - [ ] Optionally include blog link in `AboutDropdown` if desired
-- [ ] Add contextual post CTAs to `/the-vault` and `/the-exchange`
+- [ ] Add contextual post CTAs to `/the-archive` and `/the-exchange`
 
 ## 7) i18n
 

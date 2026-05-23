@@ -1,9 +1,8 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
+import TheArchiveClient from "@/app/the-archive/TheArchiveClient"
 import { getPerfumesByLetterPaginated } from "@/models/perfume.server"
-
-import TheVaultClient from "../TheVaultClient"
 
 /** Matches `useResponsivePageSize` initial state (8) until `matchMedia` runs. */
 const DEFAULT_PAGE_SIZE = 8
@@ -20,7 +19,7 @@ type Props = {
   params: Promise<{ letter: string }>
 }
 
-const TheVaultLetterPage = async ({ params }: Props) => {
+const TheArchiveLetterPage = async ({ params }: Props) => {
   const { letter } = await params
   const normalizedLetter = letter?.toUpperCase()
   const isValidLetter = /^[A-Za-z]$/.test(normalizedLetter)
@@ -43,7 +42,7 @@ const TheVaultLetterPage = async ({ params }: Props) => {
   }))
 
   return (
-    <TheVaultClient
+    <TheArchiveClient
       initialLetter={isValidLetter ? normalizedLetter : null}
       initialPerfumes={perfumesForClient}
       initialPerfumeTotal={initialTotal}
@@ -51,4 +50,4 @@ const TheVaultLetterPage = async ({ params }: Props) => {
   )
 }
 
-export default TheVaultLetterPage
+export default TheArchiveLetterPage

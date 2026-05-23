@@ -290,7 +290,7 @@ const AllHousesClient = ({
       {/* {showBlogLink ? (
         <p className="inner-container -mt-6 mb-8 text-center">
           <PrefetchLink
-            href={BEHIND_THE_BOTTLE_PATH}
+            href={JOURNAL_PATH}
             className="text-blue-200 underline hover:text-noir-gold font-medium"
           >
             {t("readStories")}

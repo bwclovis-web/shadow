@@ -35,6 +35,6 @@ import GlobalNavigation from "./GlobalNavigation"
 describe("GlobalNavigation", () => {
   it("renders a globalnavigation", () => {
     renderWithProviders(<GlobalNavigation />)
-    expect(screen.getByText("Behind the Bottle")).toBeInTheDocument()
+    expect(screen.getByText("Journal")).toBeInTheDocument()
   })
 })

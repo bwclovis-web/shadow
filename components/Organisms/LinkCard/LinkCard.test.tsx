@@ -121,7 +121,7 @@ describe("LinkCard", () => {
     })
 
     it("passes sourcePage in state when provided", () => {
-      renderLinkCard(<LinkCard data={mockPerfumeData} type="perfume" sourcePage="vault" />)
+      renderLinkCard(<LinkCard data={mockPerfumeData} type="perfume" sourcePage="archive" />)
       const link = screen.getByRole("link")
       expect(link).toBeInTheDocument()
     })

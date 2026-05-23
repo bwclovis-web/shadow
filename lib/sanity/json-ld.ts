@@ -8,7 +8,7 @@ const getSiteUrl = () =>
 
 export const buildArticleJsonLd = (article: ArticleDetail) => {
   const siteUrl = getSiteUrl()
-  const url = `${siteUrl}/behind-the-bottle/${article.slug}`
+  const url = `${siteUrl}/journal/${article.slug}`
   const imageUrl = getArticleCoverUrl(article.coverImage)
 
   return {

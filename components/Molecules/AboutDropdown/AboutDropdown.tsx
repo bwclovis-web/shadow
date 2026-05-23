@@ -47,24 +47,19 @@ const AboutDropdown = ({
 
   const aboutItems = [
     {
-      id: "behind-the-bottle",
-      label: t("editorial"),
-      path: "/behind-the-bottle",
-    },
-    {
-      id: "how-we-work",
-      label: t("howWeWork"),
-      path: "/how-we-work",
-    },
-    {
-      id: "about-us",
+      id: "the-keepers",
       label: t("aboutUs"),
-      path: "/about-us",
+      path: "/the-keepers",
     },
     {
-      id: "contact-us",
+      id: "the-collectors-guide",
+      label: t("howWeWork"),
+      path: "/the-collectors-guide",
+    },
+    {
+      id: "correspondence",
       label: t("contactUs"),
-      path: "/contact-us",
+      path: "/correspondence",
     },
   ]
 

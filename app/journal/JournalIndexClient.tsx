@@ -7,15 +7,15 @@ import { ArticleCard } from "@/components/Containers/Blog/ArticleCard"
 import type { ArticleListItem } from "@/lib/sanity/types"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
-type BehindTheBottleIndexClientProps = {
+type JournalIndexClientProps = {
   articles: ArticleListItem[]
   sanityConfigured: boolean
 }
 
-const BehindTheBottleIndexClient = ({
+const JournalIndexClient = ({
   articles,
   sanityConfigured,
-}: BehindTheBottleIndexClientProps) => {
+}: JournalIndexClientProps) => {
   const t = useTranslations("behindTheBottle")
 
   return (
@@ -49,4 +49,4 @@ const BehindTheBottleIndexClient = ({
   )
 }
 
-export default BehindTheBottleIndexClient
+export default JournalIndexClient

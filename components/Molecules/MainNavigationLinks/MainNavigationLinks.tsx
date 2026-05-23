@@ -7,9 +7,7 @@ import { useTranslations } from "next-intl"
 import AboutDropdown from "@/components/Molecules/AboutDropdown/AboutDropdown"
 import AdminDropdown from "@/components/Molecules/AdminDropdown/AdminDropdown"
 import ProfileDropdown from "@/components/Molecules/ProfileDropdown/ProfileDropdown"
-import { useDirectMessageUnreadCount } from "@/components/Molecules/DirectMessageUnread/DirectMessageUnreadProvider"
 import { useExchangeNewListingsBadgeCount } from "@/components/Molecules/ExchangeNewListingsBadge/ExchangeNewListingsBadgeProvider"
-import { useTradeAlertUnreadCount } from "@/components/Molecules/TradeAlertUnread/TradeAlertUnreadProvider"
 import { mainNavigation } from "@/data/navigation"
 import { styleMerge } from "@/utils/styleUtils"
 
@@ -53,8 +51,6 @@ export const MainNavigationLinks = ({
 }: MainNavigationLinksProps) => {
   const t = useTranslations("navigation")
   const pathname = usePathname()
-  const directMessageUnread = useDirectMessageUnreadCount()
-  const tradeAlertUnread = useTradeAlertUnreadCount()
   const exchangeNewListingsCount = useExchangeNewListingsBadgeCount()
 
   const isActive = (path: string) =>
@@ -64,9 +60,6 @@ export const MainNavigationLinks = ({
 
   return (
     <>
-      <li>
-        <AboutDropdown variant={aboutVariant} onNavClick={onNavClick} />
-      </li>
       {mainNavigation.map((item) => {
         const showNewBadge =
           item.key === "theExchange" && exchangeNewListingsCount > 0
@@ -98,47 +91,24 @@ export const MainNavigationLinks = ({
       })}
       {user && (
         <li>
-          <PrefetchLink
-            href="/messages"
-            onClick={onNavClick}
-            className={getMainNavItemClassName(variant, isActive("/messages"))}
-          >
-            <span className="inline-flex items-center justify-center gap-2">
-              {t("messages")}
-              {directMessageUnread > 0 && (
-                <span className="shrink-0 rounded-full bg-blue-600 text-white text-xs font-medium px-2 py-0.5 min-w-[1.25rem] text-center tabular-nums">
-                  {directMessageUnread > 9 ? "9+" : directMessageUnread}
-                </span>
-              )}
-              {tradeAlertUnread > 0 && (
-                <span
-                  className="shrink-0 rounded-full bg-noir-gold text-noir-black text-xs font-semibold px-2 py-0.5 min-w-[1.25rem] text-center tabular-nums"
-                  title={t("tradeAlertsUnread", { count: tradeAlertUnread })}
-                >
-                  {tradeAlertUnread > 9 ? "9+" : tradeAlertUnread}
-                </span>
-              )}
-            </span>
-          </PrefetchLink>
+          <ProfileDropdown
+            user={user}
+            variant={aboutVariant}
+            onNavClick={onNavClick}
+          />
         </li>
       )}
+      <li>
+        <AboutDropdown variant={aboutVariant} onNavClick={onNavClick} />
+      </li>
       {user && (
-        <>
-          <li>
-            <ProfileDropdown
-              user={user}
-              variant={aboutVariant}
-              onNavClick={onNavClick}
-            />
-          </li>
-          <li>
-            <AdminDropdown
-              user={user}
-              variant={aboutVariant}
-              onNavClick={onNavClick}
-            />
-          </li>
-        </>
+        <li>
+          <AdminDropdown
+            user={user}
+            variant={aboutVariant}
+            onNavClick={onNavClick}
+          />
+        </li>
       )}
     </>
   )

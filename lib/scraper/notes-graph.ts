@@ -282,6 +282,8 @@ const hasExplicitNoteListSignal = (text: string): boolean => {
   if (/\bnotas\s+de\s+(?:salida|coraz[oó]n|fondo)\s*:/i.test(t)) return true
   if (/\bnotes?\s+of\s+[a-z]/i.test(t) && /,/.test(t)) return true
   if (/\bwith\s+notes?\s+of\s+/i.test(t)) return true
+  if (/\b(?:sweetly\s+spiced\s+)?blending\s+[a-z][^.!?]{6,}/i.test(t) && /,/.test(t)) return true
+  if (/\b(?:the\s+)?base\s+melts?\s+into\b/i.test(t)) return true
   return false
 }
 
@@ -798,6 +800,56 @@ const extractAndromedaScentProfileFromPlain = (plain: string): string[] => {
 }
 
 /**
+ * Andromeda prose PDPs without a pyramid block (e.g. Ginger Biscuit Jo Malone):
+ * "…sweetly spiced blending ginger, cinnamon, and nutmeg with the comforting richness of
+ * caramel and toasted hazelnut. The base melts into soft vanilla and smooth tonka bean…"
+ */
+const extractAndromedaBlendingProseNotesFromPlain = (plain: string): string[] => {
+  const collapsed = (plain ?? "").replace(/\s+/g, " ").trim()
+  if (!/\bblending\b/i.test(collapsed) && !/\b(?:the\s+)?base\s+melts?\s+into\b/i.test(collapsed)) {
+    return []
+  }
+
+  const segments: string[] = []
+
+  const blendingMatch = collapsed.match(
+    /\b(?:sweetly\s+spiced\s+)?blending\s+([^.!?]{8,220}?)(?:\.\s*(?:The\s+(?:base|heart|drydown|dry\s+down)|Please|✨|Andromeda)|\.|$)/i,
+  )
+  if (blendingMatch?.[1]) {
+    const blendBody = blendingMatch[1].trim()
+    const withSplit = blendBody.match(
+      /^(.+?)\s+with\s+(?:the\s+)?(?:comforting\s+richness|warmth|hint|touch|notes?|heart|depth)\s+of\s+(.+)$/i,
+    )
+    if (withSplit?.[1] && withSplit[2]) {
+      segments.push(`open notes: ${withSplit[1].trim()}`)
+      segments.push(`heart notes: ${withSplit[2].trim()}`)
+    } else {
+      const simpleWith = blendBody.match(/^(.+?)\s+with\s+(.+)$/i)
+      if (simpleWith?.[1] && simpleWith[2] && /,/.test(simpleWith[1])) {
+        segments.push(`open notes: ${simpleWith[1].trim()}`)
+        segments.push(`heart notes: ${simpleWith[2].trim()}`)
+      } else {
+        segments.push(`open notes: ${blendBody}`)
+      }
+    }
+  }
+
+  const baseMatch = collapsed.match(
+    /\b(?:the\s+)?base\s+(?:melts?|settles?|lingers?|dries?|opens?|evolves?)\s+(?:into|on|with|in|to)\s+([^.!?]{6,140})/i,
+  )
+  if (baseMatch?.[1]) {
+    const baseList = baseMatch[1]
+      .trim()
+      .replace(/,?\s*creating\b.*$/i, "")
+      .replace(/,?\s*leaving\b.*$/i, "")
+      .trim()
+    if (baseList) segments.push(`base notes: ${baseList}`)
+  }
+
+  return segments
+}
+
+/**
  * Indie Shopify PDPs (Andromeda's Moon, etc.): inline "Notes: A • B • C", "Note Breakdown"
  * Top/Middle/Base, or "Scent Notes" with Top:/Heart:/Base: bullets.
  */
@@ -809,6 +861,10 @@ const extractShopifyIndieNoteSegmentsFromPlain = (plain: string): string[] => {
   const bulletToComma = (s: string) => s.replace(/[•·]/g, ",").replace(/\s+/g, " ").trim()
 
   for (const segment of extractAndromedaNotesOfLayeredFromPlain(collapsed)) {
+    segments.push(segment)
+  }
+
+  for (const segment of extractAndromedaBlendingProseNotesFromPlain(collapsed)) {
     segments.push(segment)
   }
 
@@ -1532,7 +1588,7 @@ const normalizeImplicitLayerColons = (text: string): string => {
 /** Stop last layer chunk before Pattern/Etsy listing meta (avoids ':' in tokens → junk filter drops all base notes). */
 const truncateAtShopMetaLabels = (s: string): string => {
   const m = s.match(
-    /\s+(?:series|perfume\s+family|unisex|contains\s+true\s+animalics|scent\s+strength|extra info|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|original\s+manufacturers)\b/i,
+    /\s+(?:series|perfume\s+family|unisex|contains\s+true\s+animalics|scent\s+strength|extra info|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|original\s+manufacturers|wear\s*&\s*performance|season\s*:|projection\s*:|longevity\s*:|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b)\b/i,
   )
   if (m?.index != null) return s.slice(0, m.index).trim()
   return s.trim()
@@ -1558,7 +1614,7 @@ const truncateAtShopMetaLabels = (s: string): string => {
 const truncateChunkAtProseStart = (chunk: string): string => {
   // Marketing paragraph starters that signal the end of the note list and begin prose
   const PROSE_STARTS =
-    /(?:\b(?:perfect|ideal|great|wonderful|excellent)\s+(?:for|choice|option)\b|\ba\s+(?:great|perfect|beautiful|wonderful|stunning|luxurious|gorgeous|rich|dark|warm|sensual|cozy)\s+choice\b|\b(?:this\s+(?:fragrance|scent|perfume|inspired|is)|the\s+(?:opening|drydown|dry\s+down|base\s+(?:lingers|settles|brings))|inspired\s+by|perfect\s+for\s+anyone|opens?\s+with\s+(?:a|the)|think\s+(?:crisp|fresh|warm|cool|dark|soft)|vibe\b|scent\s+story\b|how\s+it\s+wears|available\s+sizes?|important\s+(?:information|shop|order)|all\s+perfumes?\s+are\s+hand|this\s+is\s+(?:a|an|the)\s+kind|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection)\b)/i
+    /(?:\b(?:perfect|ideal|great|wonderful|excellent)\s+(?:for|choice|option)\b|\ba\s+(?:great|perfect|beautiful|wonderful|stunning|luxurious|gorgeous|rich|dark|warm|sensual|cozy)\s+choice\b|\b(?:this\s+(?:fragrance|scent|perfume|inspired|is)|the\s+(?:opening|drydown|dry\s+down|base\s+(?:lingers|settles|brings))|inspired\s+by|perfect\s+for\s+anyone|opens?\s+with\s+(?:a|the)|think\s+(?:crisp|fresh|warm|cool|dark|soft)|vibe\b|scent\s+story\b|how\s+it\s+wears|wear\s*&\s*performance\b|season\s*:|projection\s*:|longevity\s*:|available\s+sizes?|important\s+(?:information|shop|order)|all\s+perfumes?\s+are\s+hand|this\s+is\s+(?:a|an|the)\s+kind|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b)\b)/i
 
   const sentenceBoundary = /[.!]\s+[A-Z]/
 
@@ -2065,7 +2121,7 @@ const FLAT_NOTE_PROSE_BOUNDARY_RES: RegExp[] = [
   /\s+#{1,6}\s*(?:Ingredients|How to use|Shipping|Returns?|FAQ|Details|Directions|Warnings?|Disclaimer|Specifications|Size [Gg]uide|Care [Ii]nstructions)\b/i,
   /\s+(?:Ingredients|Cruelty[- ]free|Vegan |Dermatologist|Clinically tested|Prop(?:osition|\.)?\s*65|FDA disclaimer)\b/i,
   // Common post-notes sections on indie Shopify PDP
-  /\s+(?:When to Wear|Vibe|How It Wears|How (?:It\s+)?Smells|Available Sizes?|Important Information|Important Shop Info|Final Sale|Sampling Size Policy|Fragrance Description(?!\s+:)|For\s+milk\s+lovers|pastel\s+girls|Hand-blended\s+with\s+care|Extrait\s+de\s+Parfum\s+strength)\b/i,
+  /\s+(?:When to Wear|Vibe|How It Wears|Wear\s*&\s*Performance|Season\s*:|Projection\s*:|Longevity\s*:|How (?:It\s+)?Smells|Available Sizes?|Important Information|Important Shop Info|Final Sale|Sampling Size Policy|Fragrance Description(?!\s+:)|For\s+milk\s+lovers|pastel\s+girls|Hand-blended\s+with\s+care|Extrait\s+de\s+Parfum\s+strength|Citrus\s+Aromatic\b|Amber-Musky\b|Seaside\s+Breeze\b)\b/i,
   /\s+(?:I was told|Making a dupe|Please text if you)\b/i,
   // Note set followed immediately by marketing paragraph openers (whitespace-collapsed)
   /\s+(?:Think\s+(?:crisp|fresh|warm|cool|dark|soft|juicy|lush)|Opens?\s+(?:with|on)|A\s+(?:crisp|juicy|dark|warm|rich|soft|bright|clean|bold|lush|fresh)\s+(?:and|,)|\bSparkling\b|\bThis\s+inspired\b)/i,

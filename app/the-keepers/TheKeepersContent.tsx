@@ -5,7 +5,7 @@ import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/new/about-one.webp"
 
-const AboutUsContent = async () => {
+const TheKeepersContent = async () => {
   const t = await getTranslations("aboutUs")
 
   return (
@@ -21,12 +21,18 @@ const AboutUsContent = async () => {
             <h2 className="text-noir-gold text-2xl font-bold mb-6">
               {t("content.subheading")}
             </h2>
-            <div className="flex flex-col gap-6 text-noir-light leading-relaxed text-lg">
+            <div className="flex flex-col gap-3 text-noir-light leading-relaxed text-lg">
               <p>{t("content.one")}</p>
               <p>{t("content.two")}</p>
               <p>{t("content.three")}</p>
               <p>{t("content.four")}</p>
               <p>{t("content.five")}</p>
+              <p>{t("content.six")}</p>
+              <p>{t("content.seven")}</p>
+              <p>{t("content.eight")}</p>
+              <p>{t("content.six")}</p>
+              <p>{t("content.seven")}</p>
+              <p>{t("content.eight")}</p>
             </div>
           </div>
         </div>
@@ -35,4 +41,4 @@ const AboutUsContent = async () => {
   )
 }
 
-export default AboutUsContent
+export default TheKeepersContent

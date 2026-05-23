@@ -18,7 +18,7 @@ const SECTION_IMG_CLASS =
 const IMAGE_SIZES =
   "(min-width: 1440px) 55vw, (min-width: 1024px) 65vw, 80vw"
 
-const HowWeWorkContent = async () => {
+const TheCollectorsGuideContent = async () => {
   const t = await getTranslations("howItWorks")
 
   return (
@@ -42,13 +42,19 @@ const HowWeWorkContent = async () => {
                 sizes={IMAGE_SIZES}
                 objectFit="cover"
               />
-              <div className="flex flex-col gap-6 lg:w-1/2">
-                <h2 className="md:mb-1">{t("section1.title")}</h2>
-                <p className="text-noir-light text-lg mb-2 leading-relaxed">
+              <div className="flex flex-col gap-3 lg:w-1/2">
+                <h2>{t("section1.title")}</h2>
+                <p className="text-noir-light text-lg leading-relaxed mb-2">
                   {t("section1.content")}
                 </p>
-                <p className="text-noir-light text-lg mb-4 leading-relaxed">
+                <p className="text-noir-light text-lg leading-relaxed">
                   {t("section1.content2")}
+                </p>
+                <p className="text-noir-light text-lg leading-relaxed">
+                  {t("section1.content3")}
+                </p>
+                <p className="text-noir-light text-lg leading-relaxed">
+                  {t("section1.content4")}
                 </p>
               </div>
             </section>
@@ -63,13 +69,19 @@ const HowWeWorkContent = async () => {
                 sizes="(min-width: 1440px) 55vw, (min-width: 1024px) 65vw, 90vw"
                 objectFit="cover"
               />
-              <div className="flex flex-col gap-6 lg:w-1/2">
+              <div className="flex flex-col gap-3 lg:w-1/2">
                 <h2 className="md:mb-1">{t("section2.title")}</h2>
-                <p className="text-noir-light text-lg leading-relaxed mb-2">
+                <p className="text-noir-light text-lg leading-relaxed">
                   {t("section2.content")}
                 </p>
-                <p className="text-noir-light text-lg leading-relaxed mb-4">
+                <p className="text-noir-light text-lg leading-relaxed">
                   {t("section2.content2")}
+                </p>
+                <p className="text-noir-light text-lg leading-relaxed">
+                  {t("section2.content3")}
+                </p>
+                <p className="text-noir-light text-lg leading-relaxed mb-4">
+                  {t("section2.content4")}
                 </p>
               </div>
             </section>
@@ -84,13 +96,16 @@ const HowWeWorkContent = async () => {
                 sizes="(min-width: 1440px) 55vw, (min-width: 1024px) 65vw, 90vw"
                 objectFit="cover"
               />
-              <div className="flex flex-col gap-6 lg:w-1/2">
+              <div className="flex flex-col gap-3 lg:w-1/2">
                 <h2 className="md:mb-1">{t("section3.title")}</h2>
-                <p className="text-noir-light text-lg leading-relaxed mb-2">
+                <p className="text-noir-light text-lg leading-relaxed">
                   {t("section3.content")}
                 </p>
-                <p className="text-noir-light text-lg leading-relaxed mb-4">
+                <p className="text-noir-light text-lg leading-relaxed">
                   {t("section3.content2")}
+                </p>
+                <p className="text-noir-light text-lg leading-relaxed">
+                  {t("section3.content3")}
                 </p>
               </div>
             </section>
@@ -105,13 +120,19 @@ const HowWeWorkContent = async () => {
                 sizes="(min-width: 1440px) 55vw, (min-width: 1024px) 65vw, 90vw"
                 objectFit="cover"
               />
-              <div className="flex flex-col gap-6 lg:w-1/2">
+              <div className="flex flex-col gap-3 lg:w-1/2">
                 <h2 className="md:mb-1">{t("section4.title")}</h2>
-                <p className="text-noir-light text-lg leading-relaxed mb-2">
+                <p className="text-noir-light text-lg leading-relaxed">
                   {t("section4.content")}
                 </p>
-                <p className="text-noir-light text-lg leading-relaxed mb-4">
+                <p className="text-noir-light text-lg leading-relaxed">
                   {t("section4.content2")}
+                </p>
+                <p className="text-noir-light text-lg leading-relaxed">
+                  {t("section4.content3")}
+                </p>
+                <p className="text-noir-light text-lg leading-relaxed">
+                  {t("section4.content4")}
                 </p>
               </div>
             </section>
@@ -126,10 +147,22 @@ const HowWeWorkContent = async () => {
                 sizes="(min-width: 1440px) 55vw, (min-width: 1024px) 65vw, 90vw"
                 objectFit="cover"
               />
-              <div className="flex flex-col gap-6 lg:w-1/2">
+              <div className="flex flex-col gap-3 lg:w-1/2">
                 <h2 className="md:mb-1">{t("section5.title")}</h2>
-                  <p className="text-noir-light text-lg leading-relaxed mb-4">
+                  <p className="text-noir-light text-lg leading-relaxed">
                   {t("section5.content")}
+                </p>
+                <p className="text-noir-light text-lg leading-relaxed">
+                  {t("section5.content2")}
+                </p>
+                <p className="text-noir-light text-lg leading-relaxed">
+                  {t("section5.content3")}
+                </p>
+                <p className="text-noir-light text-lg leading-relaxed">
+                  {t("section5.content4")}
+                </p>
+                <p className="text-noir-light text-lg leading-relaxed">
+                  {t("section5.content5")}
                 </p>
               </div>
             </section>
@@ -140,4 +173,4 @@ const HowWeWorkContent = async () => {
   )
 }
 
-export default HowWeWorkContent
+export default TheCollectorsGuideContent

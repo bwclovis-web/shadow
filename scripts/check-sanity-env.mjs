@@ -46,4 +46,4 @@ if (process.env.SANITY_REVALIDATE_SECRET) {
 }
 
 console.log("\nStudio: npm run sanity:dev  or  http://localhost:3000/studio")
-console.log("Blog:   http://localhost:3000/behind-the-bottle")
+console.log("Blog:   http://localhost:3000/journal")

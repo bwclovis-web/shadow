@@ -19,7 +19,7 @@ import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import PerfumeNotes from "@/components/Containers/Perfume/PerfumeNotes"
 import { PerfumeAggregateRatingsSummary } from "@/components/Molecules/PerfumeAggregateRatingsSummary/PerfumeAggregateRatingsSummary"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
-import { HOUSE_DETAIL_PATH } from "@/constants/routes"
+import { HOUSE_DETAIL_PATH, THE_ARCHIVE_PATH } from "@/constants/routes"
 import { useComparePayload } from "@/hooks/useComparePayload"
 import { useCompareStore, type CompareItem } from "@/hooks/compareStore"
 import {
@@ -36,7 +36,6 @@ import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/compare.png"
 const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
-const VAULT_PATH = "/the-vault"
 const EXCHANGE_PATH = "/the-exchange"
 
 function dtoToCompareItem(dto: ComparePerfumeDto): CompareItem {
@@ -364,7 +363,7 @@ function ComparePageInner({ userId }: { userId: string | null }) {
             <h2 className="text-xl text-noir-gold mb-4">{t("emptyTitle")}</h2>
             <p className="text-noir-gold/80 mb-6">{t("emptyBody")}</p>
             <PrefetchLink
-              href={VAULT_PATH}
+              href={THE_ARCHIVE_PATH}
               className="inline-flex rounded-sm border border-noir-gold bg-noir-gold/10 px-4 py-2 text-noir-gold font-semibold hover:bg-noir-gold/20 transition-colors"
             >
               {t("emptyCta")}

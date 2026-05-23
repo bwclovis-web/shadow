@@ -5,7 +5,9 @@ import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { getArticleCoverUrl } from "@/lib/sanity/image"
 import type { ArticleListItem } from "@/lib/sanity/types"
 
-const BLOG_BASE_PATH = "/behind-the-bottle"
+import { JOURNAL_PATH } from "@/constants/routes"
+
+const BLOG_BASE_PATH = JOURNAL_PATH
 
 type ArticleCardProps = {
   article: ArticleListItem

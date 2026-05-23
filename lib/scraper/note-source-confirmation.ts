@@ -271,7 +271,7 @@ export const LAYER_LABEL_TOKENS = new Set([
 
 /** Main-accord / genre labels — not pyramid materials when standing alone. */
 export const STANDALONE_ACCORD_DESCRIPTOR_RE =
-  /^(?:powdery|woody|musky|mossy|fresh|sweet|floral|oriental|gourmand|citrus|spicy|aromatic|green|aquatic|fruity|smoky|balsamic|earthy|intense|light|dark|lactonic|white floral|second-skin|frosted-pastel|frosted|pastel|originally from byredo|originally from commodity)$/i
+  /^(?:powdery|woody|musky|mossy|fresh|sweet|floral|oriental|gourmand|citrus|spicy|aromatic|green|aquatic|fruity|smoky|balsamic|earthy|intense|light|dark|lactonic|white floral|second-skin|frosted-pastel|frosted|pastel|originally from byredo|originally from commodity|resort evenings|warm days|delicate|intimate|cozy)$/i
 
 /** Strip trailing Shopify marketing copy glued to merchant note phrases. */
 export const peelMarketingDescriptorTail = (note: string): string => {
@@ -293,6 +293,7 @@ export const peelMarketingDescriptorTail = (note: string): string => {
       .replace(/(?<=\bcandy)\s+air\b.*$/i, "")
       .replace(/\s+(?:originally\s+from)(?:\s+[a-z][\w'-]*){1,4}\b.*$/i, "")
       .replace(/\s+(?:on\s+fabric|warm\s+days)\b.*$/i, "")
+      .replace(/^\s*(?:soft|smooth)\s+(?=vanilla|tonka\b)/i, "")
       .trim()
   }
   return s

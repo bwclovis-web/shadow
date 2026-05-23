@@ -29,11 +29,11 @@ export const POST = async (request: NextRequest) => {
   }
 
   revalidateTag("articles", REVALIDATE_PROFILE)
-  revalidatePath("/behind-the-bottle")
+  revalidatePath("/journal")
 
   if (body.slug) {
     revalidateTag(`article:${body.slug}`, REVALIDATE_PROFILE)
-    revalidatePath(`/behind-the-bottle/${body.slug}`)
+    revalidatePath(`/journal/${body.slug}`)
   }
 
   return NextResponse.json({ ok: true, revalidated: true })

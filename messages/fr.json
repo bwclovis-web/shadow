@@ -44,15 +44,15 @@
     "pageHeading": "Comparer",
     "pageSubheading": "Notes, avis, disponibilité et maison",
     "emptyTitle": "Aucun parfum à comparer",
-    "emptyBody": "Ajoutez jusqu’à trois parfums depuis Le Coffre via le bouton comparer sur chaque carte.",
-    "emptyCta": "Parcourir Le Coffre",
+    "emptyBody": "Ajoutez jusqu’à trois parfums depuis L’Archive via le bouton comparer sur chaque carte.",
+    "emptyCta": "Parcourir L’Archive",
     "loadError": "Impossible de charger ce parfum.",
     "retry": "Réessayer",
     "byHouse": "Par :",
     "houseUnknown": "Maison non renseignée",
-    "availability": "Sur l’échange",
+    "availability": "Sur la bourse d'échange",
     "listingCount": "{count, plural, =0 {Aucune annonce active} one {# annonce} other {# annonces}}",
-    "viewOnExchange": "Rechercher sur The Exchange",
+    "viewOnExchange": "Rechercher sur la bourse d'échange",
     "findTradersOnExchange": "Trouver des traders qui l'ont",
     "copyShareLink": "Copier le lien de comparaison",
     "linkCopied": "Lien copié",
@@ -120,18 +120,21 @@
   },
   "aboutUs": {
     "meta": {
-      "title": "À propos - perfumer's hollow",
-      "description": "Découvrez l'histoire de perfumer's hollow."
+      "title": "Les Gardiens - Perfumer's Hollow",
+      "description": "Découvrez les collectionneurs, designers et technologues derrière Perfumer's Hollow."
     },
-    "heading": "À propos de nous",
-    "subheading": "À propos des fondateurs de perfumer's hollow",
+    "heading": "Les Gardiens",
+    "subheading": "Les collectionneurs, designers et technologues derrière Perfumer's Hollow.",
     "content": {
       "subheading": "Deux collectionneurs à la poursuite d'un parfum rare",
-      "one": "La ville dort, mais dans l'ombre, un couple veille sous la lueur d'une lampe. Les flacons alignés comme des suspects — verre ambré, étiquettes fanées, murmures d'autres vies. Nous sommes Brian et Amanda, le couple à l'origine de perfumer's hollow.",
-      "two": "Tout a commencé simplement — trop de parfums à retenir, trop d'histoires à ne pas perdre. Nous avons pris des notes, sur des bouts de papier, puis dans un registre, enfin dans cette archive. Ce qui servait à suivre notre collection est devenu un lieu de rassemblement pour ceux qui poursuivent les souvenirs à travers le parfum.",
-      "three": "Ce petit speakeasy du parfum vit de curiosité. Chaque nouvelle annonce est une piste, chaque critique un indice. La base grandit en silence, maison par maison, parfum par parfum. Vous appellerez ça obsession ; nous, dévotion.",
-      "four": "Nous avons bâti ce lieu pour les romantiques et les détectives du parfum — ceux qui trouvent la mémoire dans une note de fond ou la joie dans une étincelle d'aldéhyde. Si une bouteille manque à nos étagères, signalez-la via les formulaires du site. Nous suivrons la piste et l'ajouterons au dossier.",
-      "five": "La porte est toujours ouverte. Entrez de la pluie, accrochez votre manteau, restez un moment. Dans perfumer's hollow, chaque parfum a une histoire, et chaque histoire mérite d'être trouvée."
+      "one": "Tard dans la nuit, longtemps après que la ville s'apaise, vous nous trouverez souvent entourés de flacons, de notes éparpillées et de conversations sur des parfums qui continuent de nous hanter.",
+      "two": "Nous sommes Brian et Amanda — le couple à l'origine de Perfumer's Hollow.",
+      "three": "Ce qui a commencé comme un moyen personnel de suivre notre collection grandissante est devenu quelque chose de plus vaste. Un flacon en a entraîné un autre, les notes sont devenues des archives, et avec le temps ces archives sont devenues le fondement de L'Archive que vous voyez aujourd'hui.",
+      "four": "Perfumer's Hollow est né d'une conviction partagée : le parfum est plus qu'un luxe. Chaque senteur porte atmosphère, mémoire, émotion et histoire — et ceux qui collectionnent le comprennent mieux que quiconque.",
+      "five": "La plateforme continue de grandir, un parfum, une maison et un collectionneur à la fois. Chaque avis apporte une perspective. Chaque liste de souhaits suscite une découverte. Chaque échange aide à maintenir vivante la culture du parfum.",
+      "six": "Nous avons créé cet espace pour les curieux — collectionneurs, romantiques, archivistes et explorateurs nocturnes qui savent qu'une seule note peut vous accompagner pendant des années.",
+      "seven": "Et s'il manque quelque chose à L'Archive, dites-le nous. Nous cherchons toujours la prochaine grande découverte.",
+      "eight": "Alors entrez de la pluie, restez un moment et explorez le Creux avec nous."
     }
   },
   "alerts": {
@@ -278,10 +281,10 @@
   },
   "allPerfumes": {
     "meta": {
-      "title": "La cave - perfumer's hollow",
+      "title": "L'Archive - perfumer's hollow",
       "description": "Découvrez tous les parfums disponibles dans notre base."
     },
-    "heading": "La cave",
+    "heading": "L'Archive",
     "subheading": "Chaque flacon raconte une histoire. Certains chuchotent, d'autres crient."
   },
   "auth": {
@@ -323,11 +326,11 @@
   },
   "directMessages": {
     "meta": {
-      "title": "Messages - perfumer's hollow",
-      "description": "Consultez et envoyez des messages directs aux autres membres.",
-      "threadTitle": "{name} — Messages — perfumer's hollow",
+      "title": "Conversations - perfumer's hollow",
+      "description": "Consultez et envoyez des conversations directes avec les autres membres.",
+      "threadTitle": "{name} — Conversations — perfumer's hollow",
       "threadDescription": "Conversation directe avec {name}.",
-      "threadFallbackTitle": "Messages — perfumer's hollow"
+      "threadFallbackTitle": "Conversations — perfumer's hollow"
     },
     "deleteConversationShort": "Supprimer",
     "deleteConversationFull": "Supprimer la conversation",
@@ -546,7 +549,7 @@
     },
     "heading": "Perfumer's Hollow",
     "description": "Une base de parfums et de maisons.",
-    "subheading": "Pour les collectionneurs de parfums et de secrets.",
+    "subheading": "Là où le parfum laisse une ombre.",
     "searchType": {
       "perfume-house": "Maisons de parfum",
       "perfume": "Parfums"
@@ -580,39 +583,50 @@
       "description": "Découvrez comment fonctionne perfumer's hollow."
     },
     "heading": "Le jeu des flacons et de la confiance",
-    "subheading": "Vous listez, vous découvrez, vous échangez — le tout dans la pénombre de la discrétion.",
+    "subheading": "Votre guide de L'Archive et de la bourse d'échange.",
     "section1": {
       "title": "Étape un : allumez la mèche — Créez un compte",
-      "content": "L'histoire commence quand vous sortez du brouillard. Créer un compte ouvre la porte à tout ce que perfumer's hollow propose — un lieu où collectionneurs et rêveurs se croisent. Avec un compte, vous pouvez noter et critiquer les parfums, partager vos impressions, lister vos décants et sauvegarder vos favoris. Ceux qui préfèrent rester dans l'ombre peuvent parcourir le site, mais l'expérience complète est pour ceux qui rejoignent le cercle.",
-      "content2": "Les comptes sont gratuits pour les 100 premiers membres. Vos informations restent les vôtres. Nous ne les vendons, échangeons ni ne partageons. Ce qui se passe dans l'ombre y reste."
+      "content": "Créer un compte ouvre la porte de Perfumer's Hollow — un réseau discret où collectionneurs, archivistes et passionnés de parfum se réunissent pour explorer, critiquer, échanger et documenter les senteurs qui méritent d'être retenues.",
+      "content2": "Les visiteurs peuvent encore parcourir L'Archive en libre accès, mais la participation appartient à ceux qui choisissent de s'enfoncer plus profondément dans le Creux.",
+      "content3": "Les 100 premières adhésions sont offertes — une discrète reconnaissance aux premiers collectionneurs qui ont découvert le Creux avant que les lumières ne s'allument.",
+      "content4": "Et vos informations restent les vôtres. Jamais vendues. Jamais échangées. Jamais partagées au-delà du Creux."
     },
     "section2": {
       "title": "Étape deux : listez vos décants — partagez le parfum",
-      "content": "Chaque flacon raconte une histoire, certains sont faits pour être partagés. En listant vos décants, vous offrez plus que quelques millilitres — vous invitez un autre collectionneur dans votre récit. Décrivez votre parfum, notez son caractère. Le partage vous relie à une communauté qui connaît le langage du parfum.",
-      "content2": "Chaque annonce est traitée avec soin — nous ne gérons pas les échanges ni les paiements, mais nous vous donnons la scène pour qu'ils se fassent en toute sécurité et transparence."
+      "content": "Certains parfums sont trop précieux pour rester inconnus.",
+      "content2": "Lister vos décants permet à d'autres collectionneurs de découvrir les flacons qui ont marqué votre parcours — des trouvailles rares et favoris discontinués aux signatures du quotidien qui méritent d'être revisitées.",
+      "content3": "Décrivez le parfum, documentez son caractère et partagez ce qui vous a marqué. Chaque annonce enrichit L'Archive et aide d'autres collectionneurs à découvrir des senteurs qu'ils n'auraient peut-être jamais rencontrées.",
+      "content4": "Perfumer's Hollow offre l'espace pour que ces échanges se fassent ouvertement et en toute transparence. Nous ne gérons pas les échanges ni les paiements directement, mais nous aidons les collectionneurs à se connecter via une plateforme de confiance portée par la communauté."
     },
     "section3": {
       "title": "Étape trois : construisez votre liste — poursuivez celui qui vous a échappé",
-      "content": "Chacun a ce parfum — la note insaisissable qui reste en mémoire. Votre liste de souhaits donne forme au désir. Ajoutez vos favoris, ceux que vous avez aimés, perdus ou désirés. Quand quelqu'un liste ce que vous cherchez, vous serez le premier informé.",
-      "content2": "Pensez-y comme à votre journal olfactif — une carte du désir et de la découverte. Avec le temps, il devient le portrait de vos goûts, humeurs et moments qui vous hantent."
+      "content": "Chaque collectionneur se souvient de certains parfums — le favori discontinué, le flacon introuvable, la senteur qui n'a jamais tout à fait quitté la mémoire.",
+      "content2": "Votre liste de souhaits garde ces découvertes à portée de main.",
+      "content3": "Enregistrez les parfums que vous recherchez et recevez une notification lorsqu'ils apparaissent dans le Creux. Avec le temps, votre liste de souhaits devient plus qu'une collection de flacons — elle devient le témoignage de vos goûts, de vos souvenirs et des senteurs qui attendent encore d'être redécouvertes."
     },
     "section4": {
       "title": "Étape quatre : faites l'échange — l'échange discret",
-      "content": "Quand deux collectionneurs se rencontrent sous la lumière de la curiosité, un échange commence. Vous prenez contact, faites votre offre. Nous restons en dehors — pas d'intermédiaires, pas de commission. Ce qui se passe entre vous et votre partenaire vous appartient.",
-      "content2": "Nous fournissons le lieu de rencontre, le silence et la confiance. Chaque accord repose sur le respect de l'art du parfum et des gens qui le font vivre. Le reste — frisson, risque, satisfaction — vous appartient."
+      "content": "Chaque échange commence par la découverte.",
+      "content2": "Lorsque les collectionneurs se connectent par le Creux, ils organisent leurs échanges directement — en discutant des détails, en faisant des offres et en bâtissant la confiance autour d'une passion commune pour le parfum.",
+      "content3": "Perfumer's Hollow ne traite pas les transactions ni les paiements. Nous fournissons simplement la plateforme où les collectionneurs peuvent se connecter, communiquer et organiser des échanges en toute transparence.",
+      "content4": "La suite appartient entièrement aux collectionneurs concernés."
     },
     "section5": {
       "title": "Le sillage que nous laissons",
-      "content": "perfumer's hollow n'est pas qu'une plateforme — c'est une communauté de collectionneurs, romantiques et détectives du parfum pour qui le parfum est la mémoire en forme liquide. Chaque note, liste et échange ajoute un fil à la tapisserie. Nous ne suivons pas les tendances, nous ne vendons pas de secrets. Nous construisons un espace où passion et confidentialité vont de pair. Ce qui reste, ce n'est pas que la fragrance — c'est le lien qu'elle crée."
+      "content": "Perfumer's Hollow existe pour les collectionneurs qui comprennent que le parfum n'est jamais qu'un parfum.",
+      "content2": "C'est un souvenir. Une atmosphère. Une découverte. Un instant fugace qui vous accompagne encore longtemps après avoir disparu.",
+      "content3": "Chaque avis, échange et flacon sauvegardé ajoute une couche à L'Archive grandissante et à la communauté qui la façonne.",
+      "content4": "Nous privilégions la curiosité aux tendances, la confidentialité au bruit, et la passion sincère à la performance.",
+      "content5": "À la fin, le parfum s'évanouit. Ce qui demeure, c'est le lien qu'il a créé."
     }
   },
   "contactUs": {
     "meta": {
-      "title": "Contact et FAQ - perfumer's hollow",
+      "title": "Correspondance et FAQ - Perfumer's Hollow",
       "description": "Contactez perfumer's hollow ou consultez la FAQ."
     },
-    "heading": "Contact",
-    "subheading": "Questions, suggestions ou envie de dire bonjour ? Nous sommes là.",
+    "heading": "Correspondance",
+    "subheading": "Questions, demandes, assistance et réponses depuis L'Archive.",
     "contact": {
       "title": "Nous contacter",
       "description": "Une question sur un parfum, une bouteille à suggérer ou envie de nous écrire ? Écrivez-nous à l'adresse ci-dessous, nous vous répondrons au plus vite.",
@@ -1015,20 +1029,20 @@
     "login": "Connexion",
     "loggingIn": "Connexion...",
     "houses": "Derrière le flacon",
-    "perfumes": "La cave",
+    "perfumes": "L'Archive",
     "theExchange": "La bourse d'échange",
     "exchangeNewThisWeek": "{count, plural, one {# nouvelle annonce cette semaine} other {# nouvelles annonces cette semaine}}",
     "available": "La bourse d'échange",
     "messages": "Messages",
-    "profile": "Profil",
+    "profile": "Registre du collectionneur",
     "admin": "Admin",
     "logout": "Déconnexion",
     "signIn": "Connexion",
-    "about": "À propos",
-    "aboutUs": "À propos de nous",
-    "editorial": "Éditorial",
-    "howWeWork": "Comment ça marche",
-    "contactUs": "Contact",
+    "about": "Le Creux",
+    "aboutUs": "Les Gardiens",
+    "journal": "Journal",
+    "howWeWork": "Le guide du collectionneur",
+    "contactUs": "Correspondance",
     "home": "Accueil",
     "search": "Rechercher",
     "aria": {
@@ -1128,6 +1142,7 @@
     },
     "navigation": {
       "profile": "Profil",
+      "messages": "Messages",
       "wishlist": "Ma liste de souhaits",
       "myTrades": "Mes échanges",
       "myScents": "Mes parfums",

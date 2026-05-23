@@ -9,7 +9,7 @@ import {
   submitPendingPerfumeFromContactAction,
   type ContactPendingActionState,
   type ContactPendingFatal,
-} from "@/app/contact-us/actions"
+} from "@/app/correspondence/actions"
 import PerfumeForm from "@/components/Containers/Forms/PerfumeForm"
 import PerfumeHouseForm from "@/components/Containers/Forms/PerfumeHouseForm"
 import { Button } from "@/components/Atoms/Button/Button"

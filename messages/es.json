@@ -44,15 +44,15 @@
     "pageHeading": "Comparar",
     "pageSubheading": "Notas, valoraciones, disponibilidad y casa",
     "emptyTitle": "No hay perfumes para comparar",
-    "emptyBody": "Añade hasta tres perfumes desde La Bóveda con el control de comparar en cada tarjeta.",
-    "emptyCta": "Ir a La Bóveda",
+    "emptyBody": "Añade hasta tres perfumes desde El Archivo con el control de comparar en cada tarjeta.",
+    "emptyCta": "Explorar El Archivo",
     "loadError": "No pudimos cargar este perfume.",
     "retry": "Reintentar",
     "byHouse": "Por:",
     "houseUnknown": "Casa no indicada",
-    "availability": "En el exchange",
+    "availability": "En El Intercambio",
     "listingCount": "{count, plural, =0 {Sin anuncios activos} one {# anuncio} other {# anuncios}}",
-    "viewOnExchange": "Buscar en The Exchange",
+    "viewOnExchange": "Buscar en El Intercambio",
     "findTradersOnExchange": "Encontrar traders que lo tengan",
     "copyShareLink": "Copiar enlace de comparación",
     "linkCopied": "Enlace copiado",
@@ -120,18 +120,21 @@
   },
   "aboutUs": {
     "meta": {
-      "title": "Sobre Nosotros - perfumer's hollow",
-      "description": "Conoce la historia detrás de perfumer's hollow."
+      "title": "Los Guardianes - Perfumer's Hollow",
+      "description": "Conoce a los coleccionistas, diseñadores y tecnólogos detrás de Perfumer's Hollow."
     },
-    "heading": "Sobre Nosotros",
-    "subheading": "Sobre los fundadores de perfumer's hollow",
+    "heading": "Los Guardianes",
+    "subheading": "Los coleccionistas, diseñadores y tecnólogos detrás de Perfumer's Hollow.",
     "content": {
       "subheading": "Dos coleccionistas persiguiendo el aroma de algo raro",
-      "one": "La ciudad duerme, pero en algún lugar en la oscuridad, una pareja se sienta bajo el zumbido cálido de una lámpara de escritorio. Las botellas se alinean en los estantes como sospechosos esperando ser interrogados — vidrio ámbar, etiquetas desvanecidas, susurros de otras vidas. Ahí es donde nos encontrarás: Brian y Amanda, el equipo de esposos detrás de perfumer's hollow.",
-      "two": "Comenzó de manera bastante simple: un perfume de más para recordar, una historia demasiado buena para perderla. Comenzamos a tomar notas, primero en trozos de papel, luego en un libro de registro, y finalmente en este archivo en crecimiento. Lo que comenzó como una forma de rastrear nuestra colección se convirtió en algo más grande: un lugar de encuentro para otros que persiguen recuerdos a través del aroma.",
-      "three": "Este pequeño speakeasy de fragancia funciona con curiosidad. Cada nuevo listado es una pista, cada reseña una clave. La base de datos crece silenciosamente en segundo plano, una casa y un aroma a la vez, mientras armamos el rompecabezas extraño y hermoso del perfume. Podrías llamarlo obsesión; nosotros lo llamamos devoción.",
-      "four": "Construimos este lugar para los románticos y los detectives del aroma — aquellos que pueden encontrar memoria en una nota base o alegría en una sola chispa de aldehído. Si notas que falta una botella de nuestros estantes, puedes enviar un mensaje a través de los formularios dispersos por el sitio. Tomaremos la pista, seguiremos el rastro y lo agregaremos al archivo del caso.",
-      "five": "La puerta siempre está abierta. Entra desde la lluvia, cuelga tu abrigo y quédate un rato. En perfumer's hollow, cada aroma tiene una historia, y cada historia merece ser encontrada."
+      "one": "Tarde en la noche, mucho después de que la ciudad se calma, suele encontrarnos rodeados de botellas de perfume, notas dispersas y conversaciones sobre fragancias de las que aún no podemos dejar de pensar.",
+      "two": "Somos Brian y Amanda: el equipo de esposos detrás de Perfumer's Hollow.",
+      "three": "Lo que empezó como una forma personal de seguir nuestra colección en crecimiento se convirtió poco a poco en algo más grande. Una botella llevó a otra, las notas se volvieron registros y, con el tiempo, esos registros se convirtieron en la base de El Archivo que ves hoy.",
+      "four": "Perfumer's Hollow nació de una convicción compartida: la fragancia es más que lujo. Cada aroma lleva atmósfera, memoria, emoción e historia, y quienes coleccionan perfume lo entienden mejor que nadie.",
+      "five": "La plataforma sigue creciendo, una fragancia, una casa y un coleccionista a la vez. Cada reseña aporta perspectiva. Cada lista de deseos enciende un descubrimiento. Cada intercambio ayuda a mantener viva la cultura del perfume.",
+      "six": "Creamos este espacio para los curiosos: coleccionistas, románticos, archivistas y exploradores nocturnos que saben que a veces una sola nota puede acompañarte durante años.",
+      "seven": "Y si falta algo en El Archivo, avísanos. Siempre estamos buscando el próximo gran descubrimiento.",
+      "eight": "Así que entra desde la lluvia, quédate un rato y explora la Hondonada con nosotros."
     }
   },
   "alerts": {
@@ -278,10 +281,10 @@
   },
   "allPerfumes": {
     "meta": {
-      "title": "La Bóveda - perfumer's hollow",
+      "title": "El Archivo - perfumer's hollow",
       "description": "Descubre todos los perfumes disponibles en nuestra base de datos."
     },
-    "heading": "La Bóveda",
+    "heading": "El Archivo",
     "subheading": "Cada botella cuenta una historia. Algunas susurran. Algunas gritan."
   },
   "auth": {
@@ -323,16 +326,16 @@
   },
   "directMessages": {
     "meta": {
-      "title": "Mensajes - perfumer's hollow",
-      "description": "Ver y enviar mensajes directos con otros miembros.",
-      "threadTitle": "{name} — Mensajes — perfumer's hollow",
+      "title": "Conversaciones - perfumer's hollow",
+      "description": "Ver y enviar conversaciones directas con otros miembros.",
+      "threadTitle": "{name} — Conversaciones — perfumer's hollow",
       "threadDescription": "Conversación directa con {name}.",
-      "threadFallbackTitle": "Mensajes — perfumer's hollow"
+      "threadFallbackTitle": "Conversaciones — perfumer's hollow"
     },
     "deleteConversationShort": "Eliminar",
     "deleteConversationFull": "Eliminar conversación",
-    "deleteConversationAria": "Eliminar conversación con {name}",
-    "deleteConversationConfirm": "¿Eliminar esta conversación con {name}?",
+    "deleteConversationAria": "Eliminar la conversación con {name}",
+    "deleteConversationConfirm": "¿Eliminar la conversación con {name}?",
     "deleteConversationDescription": "Se borrarán todos los mensajes para ambos. Esta acción no se puede deshacer.",
     "deleteConversationFailed": "No se pudo eliminar la conversación.",
     "deleteConversationDeleting": "Eliminando…"
@@ -546,7 +549,7 @@
     },
     "heading": "Perfumer's Hollow",
     "description": "Una base de datos completa de perfumes y sus casas.",
-    "subheading": "Para Coleccionistas de Perfumes y Secretos.",
+    "subheading": "Donde la fragancia deja una sombra.",
     "searchType": {
       "perfume-house": "Casas de Perfumes",
       "perfume": "Perfumes"
@@ -580,39 +583,50 @@
       "description": "Aprende cómo funciona perfumer's hollow."
     },
     "heading": "El Juego de Botellas y Confianza",
-    "subheading": "Listas, descubres, intercambias — todo en el resplandor silencioso de la discreción.",
+    "subheading": "Tu guía de El Archivo y El Intercambio.",
     "section1": {
       "title": "Paso Uno: Enciende tu Cerilla — Crea una Cuenta",
-      "content": "La historia comienza cuando decides salir de la niebla. Crear una cuenta abre la puerta a todo lo que perfumer's hollow tiene para ofrecer — un lugar donde coleccionistas y soñadores se cruzan. Con una cuenta, puedes calificar y reseñar perfumes, compartir tus impresiones, listar tus propios decants y guardar favoritos para volver más tarde. Aquellos que prefieren permanecer en las sombras aún pueden deambular y buscar en el sitio, pero la experiencia completa pertenece a aquellos que se unen al círculo íntimo.",
-      "content2": "Las cuentas son gratuitas para los primeros 100 miembros, un guiño a los primeros que vieron el potencial en el aroma del misterio. Y ten la seguridad — tu información permanece tuya. No la vendemos, no la intercambiamos ni la pasamos. Lo que sucede en las sombras permanece allí."
+      "content": "Crear una cuenta abre la puerta a Perfumer's Hollow: una red oculta donde coleccionistas, archivistas y entusiastas de la fragancia se reúnen para explorar, reseñar, intercambiar y documentar los aromas que merecen ser recordados.",
+      "content2": "Los visitantes aún pueden recorrer El Archivo con libertad, pero la participación pertenece a quienes eligen adentrarse más en la Hondonada.",
+      "content3": "Las primeras 100 membresías son gratuitas: un discreto reconocimiento a los primeros coleccionistas que descubrieron la Hondonada antes de que se encendieran las luces.",
+      "content4": "Y tu información sigue siendo tuya. Nunca vendida. Nunca intercambiada. Nunca compartida fuera de la Hondonada."
     },
     "section2": {
       "title": "Paso Dos: Lista tus Decants — Comparte el Aroma",
-      "content": "Cada botella cuenta una historia, pero algunas están destinadas a ser compartidas. Cuando listas tus decants, estás ofreciendo más que unos pocos mililitros — estás invitando a otro coleccionista a tu narrativa. Describe tu perfume, nota su carácter y deja que otros descubran su encanto. Tal vez es algo raro, tal vez es algo familiar. De cualquier manera, el acto de compartir te conecta con una comunidad que conoce el lenguaje del aroma mejor de lo que las palabras jamás podrían.",
-      "content2": "Cada listado se maneja con cuidado — no tocamos los intercambios ni los pagos, pero te damos el escenario para que sucedan de manera segura y transparente."
+      "content": "Hay fragancias demasiado buenas para permanecer sin descubrir.",
+      "content2": "Listar tus decants permite que otros coleccionistas conozcan las botellas que marcaron tu camino: desde hallazgos raros y favoritos descatalogados hasta firmas cotidianas que merecen una segunda visita.",
+      "content3": "Describe la fragancia, documenta su carácter y comparte qué la hizo memorable para ti. Cada listado añade algo nuevo a El Archivo y ayuda a otros coleccionistas a descubrir aromas que quizá nunca habrían encontrado.",
+      "content4": "Perfumer's Hollow ofrece el espacio para que estos intercambios ocurran de forma abierta y transparente. Aunque no gestionamos intercambios ni pagos directamente, ayudamos a los coleccionistas a conectar mediante una plataforma de confianza impulsada por la comunidad."
     },
     "section3": {
       "title": "Paso Tres: Construye tu Lista de Deseos — Persigue el que se Escapó",
-      "content": "Todos tienen ese perfume — la nota esquiva que permanece en la memoria mucho después de que se haya ido. Tu lista de deseos es donde el anhelo toma forma. Agrega tus favoritos, los que has amado, perdido o anhelado, y mantenlos cerca. Cuando alguien liste lo que buscas, serás el primero en enterarte.",
-      "content2": "Piénsalo como tu diario personal de aromas — un mapa de deseo y descubrimiento. Con el tiempo, se convierte en un retrato de gusto, estado de ánimo y momentos que aún te persiguen."
+      "content": "Todo coleccionista recuerda ciertas fragancias: el favorito descatalogado, la botella imposible de encontrar, el aroma que nunca abandonó del todo la memoria.",
+      "content2": "Tu lista de deseos mantiene cerca esos descubrimientos.",
+      "content3": "Guarda las fragancias que has estado buscando y recibe notificaciones cuando aparezcan en la Hondonada. Con el tiempo, tu lista de deseos se convierte en algo más que una colección de botellas: es un registro de gusto personal, recuerdos y aromas que aún esperan ser redescubiertos."
     },
     "section4": {
       "title": "Paso Cuatro: Haz el Intercambio — El Intercambio Silencioso",
-      "content": "Cuando dos coleccionistas se encuentran bajo la tenue luz de la curiosidad, comienza un intercambio. Te acercas, haces tu oferta y cierras tu trato. Nos mantenemos fuera de la transacción — sin intermediarios, sin comisión, sin interferencia. Lo que pasa entre tú y tu pareja de intercambio permanece solo tuyo.",
-      "content2": "Proporcionamos el lugar de encuentro, el silencio y la confianza. Cada trato hecho aquí se construye sobre el respeto por el arte del perfume y las personas que mantienen ese arte vivo. El resto — la emoción, el riesgo, la satisfacción — depende completamente de ti."
+      "content": "Todo intercambio comienza con el descubrimiento.",
+      "content2": "Cuando los coleccionistas se conectan a través de la Hondonada, acuerdan los intercambios directamente: comentan detalles, hacen ofertas y construyen confianza gracias a un aprecio compartido por la fragancia.",
+      "content3": "Perfumer's Hollow no procesa transacciones ni gestiona pagos. Simplemente ofrecemos la plataforma donde los coleccionistas pueden conectar, comunicarse y organizar intercambios con transparencia.",
+      "content4": "Lo que suceda después pertenece por completo a los coleccionistas involucrados."
     },
     "section5": {
       "title": "La Estela que Dejamos Atrás",
-      "content": "perfumer's hollow no es solo una plataforma — es una reunión de coleccionistas, románticos y detectives del aroma que creen que el perfume es memoria en forma líquida. Cada calificación, lista de deseos e intercambio agrega otro hilo al tapiz de esta comunidad. No perseguimos tendencias y no vendemos secretos. Construimos un espacio donde la pasión y la privacidad comparten el mismo aliento. Al final, lo que permanece no es solo la fragancia — es la conexión que crea."
+      "content": "Perfumer's Hollow existe para coleccionistas que entienden que la fragancia nunca es solo fragancia.",
+      "content2": "Es memoria. Atmósfera. Descubrimiento. Un instante fugaz que, de algún modo, permanece contigo mucho después de desaparecer.",
+      "content3": "Cada reseña, intercambio y botella guardada añade otra capa a El Archivo en crecimiento y a la comunidad que lo forma.",
+      "content4": "Valoramos la curiosidad por encima de las tendencias, la privacidad por encima del ruido y la pasión genuina por encima del espectáculo.",
+      "content5": "Al final, la fragancia se desvanece. Lo que permanece es la conexión que creó."
     }
   },
   "contactUs": {
     "meta": {
-      "title": "Contáctanos y Preguntas Frecuentes - perfumer's hollow",
+      "title": "Correspondencia y preguntas frecuentes - Perfumer's Hollow",
       "description": "Ponte en contacto con perfumer's hollow o encuentra respuestas a preguntas frecuentes."
     },
-    "heading": "Contáctanos",
-    "subheading": "¿Preguntas, sugerencias o solo quieres saludar? Estamos aquí.",
+    "heading": "Correspondencia",
+    "subheading": "Preguntas, consultas, soporte y respuestas desde El Archivo.",
     "contact": {
       "title": "Ponte en Contacto",
       "description": "¿Tienes una pregunta sobre un perfume, quieres sugerir una botella faltante o solo quieres conectarte? Nos encantaría saber de ti. Contáctanos por correo electrónico y te responderemos lo antes posible.",
@@ -1015,20 +1029,20 @@
     "login": "Iniciar Sesión",
     "loggingIn": "Iniciando sesión...",
     "houses": "Detrás de la Botella",
-    "perfumes": "La Bóveda",
+    "perfumes": "El Archivo",
     "theExchange": "El Intercambio",
     "exchangeNewThisWeek": "{count, plural, one {# anuncio nuevo esta semana} other {# anuncios nuevos esta semana}}",
     "available": "El Intercambio",
     "messages": "Mensajes",
-    "profile": "Perfil",
+    "profile": "Registro del Coleccionista",
     "admin": "Admin",
     "logout": "Cerrar Sesión",
     "signIn": "Iniciar Sesión",
-    "about": "Acerca de",
-    "aboutUs": "Sobre Nosotros",
-    "editorial": "Editorial",
-    "howWeWork": "Cómo Funcionamos",
-    "contactUs": "Contáctanos",
+    "about": "La Hondonada",
+    "aboutUs": "Los Guardianes",
+    "journal": "Diario",
+    "howWeWork": "La guía del coleccionista",
+    "contactUs": "Correspondencia",
     "home": "Inicio",
     "search": "Buscar",
     "aria": {

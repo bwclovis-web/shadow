@@ -6,11 +6,13 @@ import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { FaChevronDown } from "react-icons/fa"
 
-import { getProfileNavigation } from "@/data/navigation"
+import { useDirectMessageUnreadCount } from "@/components/Molecules/DirectMessageUnread/DirectMessageUnreadProvider"
+import { useTradeAlertUnreadCount } from "@/components/Molecules/TradeAlertUnread/TradeAlertUnreadProvider"
 import {
   getNavigationDropdownStyles,
   type NavigationDropdownVariant,
 } from "@/components/Molecules/NavigationDropdown/navigation-dropdown-styles"
+import { getProfileNavigation } from "@/data/navigation"
 import { styleMerge } from "@/utils/styleUtils"
 
 interface ProfileDropdownProps {
@@ -35,6 +37,8 @@ const ProfileDropdown = ({
   const pathname = usePathname()
   const tNav = useTranslations("navigation")
   const tProfile = useTranslations("profile")
+  const directMessageUnread = useDirectMessageUnreadCount()
+  const tradeAlertUnread = useTradeAlertUnreadCount()
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -124,7 +128,24 @@ const ProfileDropdown = ({
                     isActive(item.path) && activeLinkClasses
                   )}
                 >
-                  {tProfile("navigation." + item.key)}
+                  <span className="inline-flex items-center gap-2">
+                    {tProfile("navigation." + item.key)}
+                    {item.key === "messages" && directMessageUnread > 0 ? (
+                      <span className="shrink-0 rounded-full bg-blue-600 text-white text-xs font-medium px-2 py-0.5 min-w-[1.25rem] text-center tabular-nums">
+                        {directMessageUnread > 9 ? "9+" : directMessageUnread}
+                      </span>
+                    ) : null}
+                    {item.key === "messages" && tradeAlertUnread > 0 ? (
+                      <span
+                        className="shrink-0 rounded-full bg-noir-gold text-noir-black text-xs font-semibold px-2 py-0.5 min-w-[1.25rem] text-center tabular-nums"
+                        title={tNav("tradeAlertsUnread", {
+                          count: tradeAlertUnread,
+                        })}
+                      >
+                        {tradeAlertUnread > 9 ? "9+" : tradeAlertUnread}
+                      </span>
+                    ) : null}
+                  </span>
                 </Link>
               </li>
             ))}

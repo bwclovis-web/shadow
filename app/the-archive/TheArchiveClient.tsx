@@ -8,6 +8,7 @@ import AlphabeticalNav from "@/components/Organisms/AlphabeticalNav"
 import DataDisplaySection from "@/components/Organisms/DataDisplaySection"
 import DataFilters from "@/components/Organisms/DataFilters"
 import TitleBanner from "@/components/Organisms/TitleBanner"
+import { THE_ARCHIVE_PATH } from "@/constants/routes"
 import { useAlphabeticalBrowserState } from "@/hooks/useAlphabeticalBrowserState"
 import { useInfinitePagination } from "@/hooks/useInfinitePagination"
 import { useInfinitePerfumesByLetter } from "@/hooks/useInfinitePerfumes"
@@ -19,11 +20,10 @@ import {
 } from "@/utils/sortUtils"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
-const ROUTE_PATH = "/the-vault"
 const BANNER_IMAGE = "/images/new/vault.webp"
 const SINGLE_LETTER_REGEX = /^[A-Za-z]$/
 
-export type TheVaultClientProps = {
+export type TheArchiveClientProps = {
   initialLetter?: string | null
   initialPerfumes?: PerfumeFromApi[]
   initialPerfumeTotal?: number
@@ -45,11 +45,11 @@ const parseLetterFromParam = (param: unknown): string | null => {
   return param.toUpperCase()
 }
 
-const TheVaultClient = ({
+const TheArchiveClient = ({
   initialLetter = null,
   initialPerfumes = [],
   initialPerfumeTotal = 0,
-}: TheVaultClientProps = {}) => {
+}: TheArchiveClientProps = {}) => {
   const t = useTranslations("allPerfumes")
   const tSort = useTranslations("sortOptions")
   const params = useParams()
@@ -112,14 +112,14 @@ const TheVaultClient = ({
         ? `/${letterFromUrl.toLowerCase()}`
         : ""
       const pageSuffix = page > 1 ? `?pg=${page}` : ""
-      return `${ROUTE_PATH}${letterSegment}${pageSuffix}`
+      return `${THE_ARCHIVE_PATH}${letterSegment}${pageSuffix}`
     },
     [letterFromUrl]
   )
 
   const buildPathForLetter = useMemo(
     () => (letter: string | null) =>
-      letter ? `${ROUTE_PATH}/${letter.toLowerCase()}` : ROUTE_PATH,
+      letter ? `${THE_ARCHIVE_PATH}/${letter.toLowerCase()}` : THE_ARCHIVE_PATH,
     []
   )
 
@@ -127,8 +127,8 @@ const TheVaultClient = ({
       letter: letterFromUrl,
       pageFromUrl,
       basePathForSync: letterFromUrl
-        ? `${ROUTE_PATH}/${letterFromUrl.toLowerCase()}`
-        : ROUTE_PATH,
+        ? `${THE_ARCHIVE_PATH}/${letterFromUrl.toLowerCase()}`
+        : THE_ARCHIVE_PATH,
       buildPath,
       buildPathForLetter,
       pagination,
@@ -192,7 +192,7 @@ const TheVaultClient = ({
         isLoading={loading}
         type="perfume"
         selectedLetter={letterFromUrl}
-        sourcePage="vault"
+        sourcePage="archive"
         pagination={pagination}
         onPageChange={goToPage}
         onPrefetchNext={onPrefetchNext}
@@ -203,4 +203,4 @@ const TheVaultClient = ({
   )
 }
 
-export default TheVaultClient
+export default TheArchiveClient

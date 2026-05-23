@@ -18,7 +18,7 @@ import type {
 } from "@/components/Containers/Perfume/perfume-detail-types"
 import { HeroHeader } from "@/components/Molecules/HeroHeader"
 import ReviewSection from "@/components/Organisms/ReviewSection"
-import { HOUSE_DETAIL_PATH } from "@/constants/routes"
+import { HOUSE_DETAIL_PATH, THE_ARCHIVE_PATH } from "@/constants/routes"
 import { usePerfume } from "@/hooks/usePerfume"
 import { useSessionStore } from "@/hooks/sessionStore"
 import { useDeletePerfume } from "@/lib/mutations/perfumes"
@@ -30,8 +30,6 @@ import FollowButton from "@/components/Containers/Follow/FollowButton"
 import SimilarPerfumesCarousel from "@/components/Containers/Recommendations/SimilarPerfumesCarousel"
 import type { ArticleListItem } from "@/lib/sanity/types"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
-
-const VAULT_PATH = "/the-vault"
 
 type PerfumeDetailClientProps = {
   initialPerfume: Awaited<ReturnType<typeof import("@/models/perfume.server").getPerfumeBySlug>> & { id: string }
@@ -74,14 +72,16 @@ const PerfumeDetailClient = ({
 
   const handleDelete = () => {
     if (!perfume) return
-    const vaultPath = selectedLetter ? `${VAULT_PATH}/${selectedLetter.toLowerCase()}` : VAULT_PATH
+    const archivePath = selectedLetter
+      ? `${THE_ARCHIVE_PATH}/${selectedLetter.toLowerCase()}`
+      : THE_ARCHIVE_PATH
 
     // Optimistic redirect: navigate immediately instead of waiting for API response.
     closeModal()
     if (typeof window !== "undefined" && window.history.length > 1) {
       router.back()
     } else {
-      router.push(vaultPath)
+      router.push(archivePath)
     }
 
     deletePerfume.mutate(
@@ -97,9 +97,9 @@ const PerfumeDetailClient = ({
 
   const handleBack = () => {
     if (selectedLetter) {
-      router.push(`${VAULT_PATH}/${selectedLetter.toLowerCase()}`)
+      router.push(`${THE_ARCHIVE_PATH}/${selectedLetter.toLowerCase()}`)
     } else {
-      router.push(VAULT_PATH)
+      router.push(THE_ARCHIVE_PATH)
     }
   }
 

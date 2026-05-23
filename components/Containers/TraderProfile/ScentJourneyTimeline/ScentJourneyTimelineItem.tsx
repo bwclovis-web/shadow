@@ -152,7 +152,7 @@ const ScentJourneyTimelineItem = ({
   }
 
   const coverUrl = getArticleCoverUrl(item.article.coverImage, 96, 96)
-  const blogHref = `/behind-the-bottle/${item.article.slug}`
+  const blogHref = `/journal/${item.article.slug}`
 
   return (
     <article className={cardClass}>

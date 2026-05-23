@@ -11,7 +11,7 @@ import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/new/contact.webp"
 
-const ContactUsClient = () => {
+const CorrespondenceClient = () => {
   const t = useTranslations("contactUs")
   const { toggleModal } = useSessionStore()
   const perfumeButtonRef = useRef<HTMLButtonElement>(null)
@@ -41,7 +41,6 @@ const ContactUsClient = () => {
         <div className="max-w-4xl mx-auto md:px-4 md:max-w-full">
           <div className="max-w-none">
             <div className="flex flex-col lg:flex-row gap-6">
-              {/* Contact Section */}
               <section className="flex flex-col gap-6 border-b-4 lg:border-r-4 border-double border-noir-gold lg:px-6 pb-6 lg:pb-0 lg:border-b-0">
                 <h2>
                   {t("contact.title")}
@@ -62,7 +61,6 @@ const ContactUsClient = () => {
                 </div>
               </section>
 
-              {/* FAQ Section */}
               <section className="flex flex-col gap-6">
                 <h2>
                   {t("faq.title")}
@@ -110,4 +108,4 @@ const ContactUsClient = () => {
   )
 }
 
-export default ContactUsClient
+export default CorrespondenceClient

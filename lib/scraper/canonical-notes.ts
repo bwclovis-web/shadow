@@ -425,6 +425,7 @@ const MERCHANT_MULTI_WORD_PHRASES: string[] = [
   "sea breeze",
   "amberwood",
   "mandarin orange",
+  "toasted hazelnut",
 ]
 
 const getExplodePhrases = (): string[] => {
