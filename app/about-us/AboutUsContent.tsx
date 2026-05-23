@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
-const BANNER_IMAGE = "/images/about.webp"
+const BANNER_IMAGE = "/images/new/about-one.webp"
 
 const AboutUsContent = async () => {
   const t = await getTranslations("aboutUs")

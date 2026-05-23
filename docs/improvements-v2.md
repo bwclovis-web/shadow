@@ -1,4 +1,4 @@
-# Shadow and Sillage — Improvements v2
+# perfumer's hollow — Improvements v2
 
 Building on the completed Waves 1, 2, and 3A–3E + 3H, this document defines what needs to happen next to make Shadows the world-class, community-first fragrance trading platform.
 

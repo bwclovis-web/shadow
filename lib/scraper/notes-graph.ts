@@ -42,6 +42,8 @@ import {
   isNoteSubstantiatedInSource,
   looksLikeProseNotePhrase,
   isObviousNonMaterialNote,
+  peelMarketingDescriptorTail,
+  sanitizeExtractedNoteCandidate,
 } from "@/lib/scraper/note-source-confirmation"
 import { isDisplayableScentNote } from "@/utils/validation/note-validation.server"
 
@@ -259,7 +261,12 @@ const resolveNotesSource = (item: ScrapedItem): string => {
 const hasExplicitNoteListSignal = (text: string): boolean => {
   const t = text
   if (/\b(?:featured|key|main|primary|signature|dominant)\s+notes?\s*:/i.test(t)) return true
+  if (/\b(?:top|heart|base)\s*[—–—-]\s*[A-Za-z]/i.test(t)) return true
   if (/\b(?:fragrance\s+profile\s+)?main\s+notes?\s+(?![:\-\u2013\u2014–—])[A-Za-z]/i.test(t)) return true
+  if (/\bscent\s+profile\s+(?!(?:top|heart|base|middle)\s*:)[A-Za-z]/i.test(t)) return true
+  if (/\b(?:top|middle|base)\s+notes?\s+(?:of|are|is)\s+[a-z]/i.test(t)) return true
+  if (/\bnotes?\s+(?!(?:top|heart|base|middle)\s*:|[:-\u2013\u2014–—])[A-Z]/i.test(t) && /\bwear\s*(?:&|and)\s*layer\b/i.test(t))
+    return true
   if (/\bscent\s+notes?\s+include\b/i.test(t)) return true
   if (/\bscent\s+notes?\s+(?:top|heart|base)\s*:/i.test(t)) return true
   if (/\bnote\s+breakdown\b/i.test(t)) return true
@@ -308,7 +315,7 @@ const isLikelyNoirClicheOnlyNotes = (notes: {
  * merchant almost certainly has more notes available on the PDP.
  */
 const JUNK_NOTE_RESCUE_RE =
-  /\b(?:scent\s+description|pastel\s+girls|gentle\s+projection|hand-blended|for\s+milk\s+lovers|tihota\s+on\s+fire|a\s+soft\s+golden|the\s+caramelized\s+warmth|(?:f|of)\s+note|linear-gradient|rgba\s*\()\b/i
+  /\b(?:scent\s+description|pastel\s+girls|gentle\s+projection|hand-blended|for\s+milk\s+lovers|tihota\s+on\s+fire|a\s+soft\s+golden|the\s+caramelized\s+warmth|(?:f|of)\s+note|linear-gradient|radial-gradient|rgba\s*\(|font-family|blinkmacsystemfont|system-ui)\b/i
 
 const hasObviousJunkExtractedNotes = (notes: {
   openNotes: string[]
@@ -320,7 +327,7 @@ const hasObviousJunkExtractedNotes = (notes: {
     n =>
       JUNK_NOTE_RESCUE_RE.test(n) ||
       isObviousNonMaterialNote(n) ||
-      /^(?:with|fans|soft|cozy|roller|airy|whipped|glowing|kissed|fluffy|fabric|touch|then|rgba|margin|h[1-6])$/i.test(
+      /^(?:with|fans|soft|cozy|roller|airy|whipped|glowing|kissed|fluffy|fabric|touch|then|rgba|margin|h[1-6]|body|html|sans-serif|serif|monospace|system-ui|blinkmacsystemfont|roboto|inter|helvetica|arial|radial-gradient|linear-gradient)$/i.test(
         n.trim(),
       ),
   )
@@ -487,6 +494,123 @@ const unescapeHtmlAttr = (s: string): string =>
     .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
     .replace(/\u00a0/g, " ")
 
+/** Andromeda's Moon PDPs: "Top — Sapodilla, Ambrette Heart — Magnolia … Base — Musk …" */
+const extractAndromedaEmDashLayeredNotesFromPlain = (plain: string): string[] => {
+  const collapsed = (plain ?? "").replace(/\s+/g, " ").trim()
+  if (!/\bTop\s*[—–—-]\s*.+\bHeart\s*[—–—-]\s*.+\bBase\s*[—–—-]\s*/i.test(collapsed)) {
+    return []
+  }
+  const segments: string[] = []
+  for (const layer of ["top", "heart", "base"] as const) {
+    const m = collapsed.match(
+      new RegExp(
+        `\\b${layer}\\s*[—–—-]\\s*([\\s\\S]+?)(?=\\s+(?:Top|Heart|Base)\\s*[—–—-]|\\s+Scent\\s+Story|\\s+Available\\s+Sizes?|\\s+Wear\\s*(?:&|and)\\s*Layer|\\s+Sizes?\\b|\\s+Processing\\b|\\s+ANDROMEDA|$)`,
+        "i",
+      ),
+    )
+    if (m?.[1]?.trim()) segments.push(`${layer} notes: ${m[1].trim()}`)
+  }
+  return segments
+}
+
+/**
+ * Andromeda emoji PDPs: "🍉 Top notes of mandarin orange, lemon … 🥥 Middle notes of coconut …"
+ * Whitespace-collapsed prose uses "Top/Middle/Base notes of|are|is …" without colons.
+ */
+const extractAndromedaNotesOfLayeredFromPlain = (plain: string): string[] => {
+  const collapsed = (plain ?? "")
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+  if (!/\b(?:top|middle|base)\s+notes?\s+(?:of|are|is)\s+/i.test(collapsed)) return []
+
+  const segments: string[] = []
+  const re = /\b(top|middle|base)\s+notes?\s+(?:of|are|is)\s+/gi
+  const matches = [...collapsed.matchAll(re)]
+  if (matches.length < 2) return []
+
+  const stopRe =
+    /\s+(?:Why\s+You(?:'|'|&#39;)ll|ORIGINAL|As with any|Processing|Important|Ingredients|Share\s+Share|\#{1,6}\s)/i
+
+  for (let i = 0; i < matches.length; i++) {
+    const m = matches[i]
+    const label = (m[1] ?? "").toLowerCase()
+    const layer = label === "middle" ? "heart" : label === "base" ? "base" : "open"
+    const start = (m.index ?? 0) + m[0].length
+    const end = i + 1 < matches.length ? matches[i + 1].index! : collapsed.length
+    let chunk = collapsed.slice(start, end).trim()
+    const stop = chunk.match(stopRe)
+    if (stop?.index != null) chunk = chunk.slice(0, stop.index).trim()
+    chunk = chunk.replace(/[.!?]+\s*$/, "").trim()
+    if (chunk) segments.push(`${layer} notes: ${chunk}`)
+  }
+  return segments
+}
+
+const LAYER_MARKER_ONLY_RE = /^(?:top|middle|base)\s+notes?$/i
+const LAYER_MARKER_LEADING_RE = /^(?:top|middle|base)\s+notes?\s+(?:are|is|of)\s+(.+)$/i
+
+const hasEmbeddedLayerMarkers = (layers: {
+  openNotes: string[]
+  heartNotes: string[]
+  baseNotes: string[]
+}): boolean => {
+  const all = [...layers.openNotes, ...layers.heartNotes, ...layers.baseNotes]
+  return all.some(n => {
+    const p = n.trim()
+    return LAYER_MARKER_ONLY_RE.test(p) || LAYER_MARKER_LEADING_RE.test(p)
+  })
+}
+
+/** Flat comma lists that glued layer headers ("middle notes", "base notes are ebony") into openNotes. */
+const relayerNotesWithEmbeddedLayerMarkers = (layers: {
+  openNotes: string[]
+  heartNotes: string[]
+  baseNotes: string[]
+}): { openNotes: string[]; heartNotes: string[]; baseNotes: string[] } => {
+  const ordered = [...layers.openNotes, ...layers.heartNotes, ...layers.baseNotes]
+  if (!hasEmbeddedLayerMarkers(layers)) return layers
+
+  const open: string[] = []
+  const heart: string[] = []
+  const base: string[] = []
+  let current: "open" | "heart" | "base" = "open"
+
+  const pushSanitized = (note: string, layer: "open" | "heart" | "base") => {
+    const sanitized = sanitizeExtractedNoteCandidate(note)
+    if (!sanitized) return
+    if (layer === "open") open.push(sanitized)
+    else if (layer === "heart") heart.push(sanitized)
+    else base.push(sanitized)
+  }
+
+  for (const raw of ordered) {
+    const p = raw.trim()
+    if (!p) continue
+    if (LAYER_MARKER_ONLY_RE.test(p)) {
+      if (/^middle/i.test(p)) current = "heart"
+      else if (/^base/i.test(p)) current = "base"
+      else if (/^top/i.test(p)) current = "open"
+      continue
+    }
+    const glued = p.match(LAYER_MARKER_LEADING_RE)
+    if (glued) {
+      if (/^middle/i.test(p)) current = "heart"
+      else if (/^base/i.test(p)) current = "base"
+      else current = "open"
+      for (const part of splitNoteList(glued[1] ?? "")) pushSanitized(part, current)
+      continue
+    }
+    pushSanitized(p, current)
+  }
+
+  return {
+    openNotes: uniqueNotes(open),
+    heartNotes: uniqueNotes(heart),
+    baseNotes: uniqueNotes(base),
+  }
+}
+
 /**
  * Extract "Featured notes: …" / key notes from already-plain text (meta description, stripped body).
  */
@@ -607,6 +731,16 @@ const extractFeaturedBlockFromPlain = (t: string): string | null => {
   const shopifyIndie = extractShopifyIndieNoteSegmentsFromPlain(plain)
   if (shopifyIndie.length > 0) return shopifyIndie.join("\n").slice(0, 4000)
 
+  const unlabeled = extractUnlabeledFragranceNotesBlock(plain)
+  if (unlabeled.length >= 2) {
+    return `fragrance notes: ${unlabeled.join(", ")}`.slice(0, 4000)
+  }
+
+  const emDashLayers = extractAndromedaEmDashLayeredNotesFromPlain(plain)
+  if (emDashLayers.length >= 2) {
+    return emDashLayers.join("\n").slice(0, 4000)
+  }
+
   const mainNotesGlued = plain.match(
     /\b(?:fragrance\s+profile\s+)?main\s+notes?\s+(?![:\-\u2013\u2014–—])([A-Za-z][^.!?]{8,220}?)(?=\s+Overall\s+Vibe|\s+Main\s+Accords?|\s+When\s+to\s+Wear|\s+Available\s+Sizes?|\s+How\s+(?:It\s+)?Wears|$)/i,
   )
@@ -621,6 +755,49 @@ const extractFeaturedBlockFromPlain = (t: string): string | null => {
 }
 
 /**
+ * Andromeda's Moon PDPs: bare "Notes" header then stacked materials (no colon, no bullets).
+ * Example: Notes Almond Amaretto Liqueur Accord Wear & Layer …
+ */
+const extractAndromedaStackedNotesFromPlain = (plain: string): string[] => {
+  const stacked = plain.match(
+    /\bnotes?\s+(?!(?:top|heart|base|middle)\s*:|[:-\u2013\u2014–—])([A-Z][A-Za-z\s&'’-]{3,280}?)(?=\s+Wear\s*(?:&|and)\s*Layer|\s+Available\s+Sizes?|\s+What\s+You(?:'|'|&#39;)ll\s+Smell|\s+Important\b|\s+\*?\s*Processing\b|\s+Scent\s+Vibe|\s+How\s+(?:It\s+)?Wears|\s+Main\s+Accords?|\s+Overall\s+Vibe|$)/i,
+  )
+  if (!stacked?.[1]) return []
+  const body = stacked[1].trim()
+  if (!body || /^(?:top|heart|base|middle)\b/i.test(body)) return []
+  return splitGluedMerchantNoteRun(body)
+}
+
+/** Thin scrape fallback when Orgasmo-style copy mentions amaretto but omits the Notes block. */
+const inferAndromedaAmarettoNotesFromProse = (text: string): string[] => {
+  const t = text ?? ""
+  if (!/\bamaretto\b/i.test(t)) return []
+  const hasAlmondSignal =
+    /\balmond\b/i.test(t) ||
+    /\bamaretto\s*[-–—]\s*(?:\s*almond|\s*gourmand)\b/i.test(t) ||
+    /\bamaretto\s+on\s+the\s+rocks\b/i.test(t) ||
+    /\bamaretto(?:\s+|-)almond\b/i.test(t)
+  if (!hasAlmondSignal) return []
+  return ["almond", "amaretto liqueur accord"]
+}
+
+/**
+ * Andromeda's Moon PDPs: "Scent Profile" block (no colon) — space-glued merchant materials
+ * before Vibe / Wear It When / Strength sections.
+ * Example: Scent Profile Tahitian Vanilla Tonka Bean Sugar Cane Almond Milk White Musk Amber
+ */
+const extractAndromedaScentProfileFromPlain = (plain: string): string[] => {
+  const collapsed = (plain ?? "").replace(/\s+/g, " ").trim()
+  if (!collapsed) return []
+  const m = collapsed.match(
+    /\bscent\s+profile\s+(?!(?:top|heart|base|middle)\s*:)([A-Za-z][A-Za-z\s&'’-]{3,220}?)(?=\s+(?:Vibe\b|Wear\s+It\s+When\b|Strength\b|Available\s+Sizes?|Andromeda(?:'|'|&#39;)s\s+Moon\s+is|Processing\b|Important\b)|$)/i,
+  )
+  if (!m?.[1]) return []
+  const parsed = splitGluedMerchantNoteRun(m[1].trim())
+  return parsed.length >= 2 ? parsed : []
+}
+
+/**
  * Indie Shopify PDPs (Andromeda's Moon, etc.): inline "Notes: A • B • C", "Note Breakdown"
  * Top/Middle/Base, or "Scent Notes" with Top:/Heart:/Base: bullets.
  */
@@ -630,6 +807,24 @@ const extractShopifyIndieNoteSegmentsFromPlain = (plain: string): string[] => {
 
   const segments: string[] = []
   const bulletToComma = (s: string) => s.replace(/[•·]/g, ",").replace(/\s+/g, " ").trim()
+
+  for (const segment of extractAndromedaNotesOfLayeredFromPlain(collapsed)) {
+    segments.push(segment)
+  }
+
+  const scentProfile = extractAndromedaScentProfileFromPlain(collapsed)
+  if (scentProfile.length >= 2) {
+    segments.push(`top notes: ${scentProfile.join(", ")}`)
+  }
+
+  const stackedNotes = extractAndromedaStackedNotesFromPlain(collapsed)
+  if (stackedNotes.length >= 1) {
+    segments.push(`top notes: ${stackedNotes.join(", ")}`)
+  }
+
+  for (const segment of extractAndromedaEmDashLayeredNotesFromPlain(collapsed)) {
+    segments.push(segment)
+  }
 
   const notesLine = collapsed.match(
     /\bnotes?\s*:\s*([^.!?]{8,280}?)(?=\s+(?:A\s+dreamy|Note\s+Breakdown|Available\s+Sizes?|Important\s+Disclaimer|Store\s+Policy)|$)/i,
@@ -812,7 +1007,10 @@ const augmentNotesSourceWithLabeledLists = (raw: string): string => {
   const collapsed = (raw ?? "").replace(/\r/g, "\n").replace(/\s+/g, " ").trim()
   if (!collapsed) return raw ?? ""
 
-  const segments: string[] = [...extractPatternEtsyNoteSegmentsFromPlain(collapsed)]
+  const segments: string[] = [
+    ...extractPatternEtsyNoteSegmentsFromPlain(collapsed),
+    ...extractShopifyIndieNoteSegmentsFromPlain(collapsed),
+  ]
 
   const re = new RegExp(
     String.raw`\b((?:featured|key|main|primary|signature|dominant)\s+notes?)\s*:\s*(.+?)${FEATURED_LIST_SECTION_STOP}`,
@@ -1021,7 +1219,7 @@ const unmaskParenGroups = (s: string, groups: string[]): string =>
 
 const splitParentheticalInnerNotes = (inner: string): string[] =>
   inner
-    .split(/\s*(?:,|&|\+|\band\b)\s*/i)
+    .split(/\s*(?:,|&|\+)\s*/i)
     .map(s => s.trim())
     .filter(Boolean)
 
@@ -1132,6 +1330,7 @@ function splitNoteList(text: string): string[] {
       .map(part => unmaskParenGroups(part.trim(), groups))
       .map(part => part.replace(/^[&\-\u2022*:\s]+/, "").replace(/[.:\-\s*]+$/, ""))
       .map(stripTrailingEcommerceLabels)
+      .map(peelMarketingDescriptorTail)
       .filter(part => !/^amp$/i.test(part))
       .filter(Boolean),
   )
@@ -1157,6 +1356,7 @@ function stripTrailingNonNoteSections(text: string): string {
 /** Indie Shopify PDP template sections — strip from stored descriptions only (not pre-extraction). */
 const PDP_SECTION_BOILERPLATE_START_PATTERNS: RegExp[] = [
   /\bfragrance\s+profile\b/i,
+  /\bscent\s+profile\b/i,
   /\boverall\s+vibe\b/i,
   /\bscent\s+vibe\b/i,
   /\bnotes\s+top\s*:/i,
@@ -1259,6 +1459,9 @@ export const sanitizeCopyForNotePipeline = (text: string): string => {
     const trimmed = line.trim()
     if (!trimmed) continue
     if (/^[\s\-=*_|/\\·•]+$/u.test(trimmed) && trimmed.length >= 3) continue
+    if (/^(?:body|html|\.color-|@media\b)/i.test(trimmed)) continue
+    if (/\{[^}]*(?:font-family|radial-gradient|linear-gradient)/i.test(trimmed)) continue
+    if (/\b(?:BlinkMacSystemFont|radial-gradient|font-family)\b/i.test(trimmed)) continue
     const decoChars = (trimmed.match(/[|*\-=_/\\·•─═│┼├┤]/gu) ?? []).length
     if (trimmed.length >= 8 && decoChars / trimmed.length > 0.55) continue
     const normalized = line.replace(/[ \t]+/g, " ").trimEnd()
@@ -1291,7 +1494,7 @@ const isPolicyOnlyMerchantDescription = (raw: string | null | undefined): boolea
 const splitGluedLayerLabels = (text: string): string =>
   text
     .replace(
-      /(?<=[A-Za-z0-9)])(?=(?:top|open(?:ing)?|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry[\s-]*down|drydown|end)(?:\s+notes?)?\s*:)/gi,
+      /(?<=[A-Za-z0-9)])(?=(?:top|open(?:ing)?|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry[\s-]*down|drydown|end)(?:\s+notes?)?\s*[:\-\u2013\u2014–—])/gi,
       " ",
     )
     .replace(
@@ -1355,7 +1558,7 @@ const truncateAtShopMetaLabels = (s: string): string => {
 const truncateChunkAtProseStart = (chunk: string): string => {
   // Marketing paragraph starters that signal the end of the note list and begin prose
   const PROSE_STARTS =
-    /(?:\b(?:perfect|ideal|great|wonderful|excellent)\s+(?:for|choice|option)\b|\ba\s+(?:great|perfect|beautiful|wonderful|stunning|luxurious|gorgeous|rich|dark|warm|sensual|cozy)\s+choice\b|\b(?:this\s+(?:fragrance|scent|perfume|inspired|is)|the\s+(?:opening|drydown|dry\s+down|base\s+(?:lingers|settles|brings))|inspired\s+by|perfect\s+for\s+anyone|opens?\s+with\s+(?:a|the)|think\s+(?:crisp|fresh|warm|cool|dark|soft)|vibe\b|how\s+it\s+wears|available\s+sizes?|important\s+(?:information|shop|order)|all\s+perfumes?\s+are\s+hand|this\s+is\s+(?:a|an|the)\s+kind|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection)\b)/i
+    /(?:\b(?:perfect|ideal|great|wonderful|excellent)\s+(?:for|choice|option)\b|\ba\s+(?:great|perfect|beautiful|wonderful|stunning|luxurious|gorgeous|rich|dark|warm|sensual|cozy)\s+choice\b|\b(?:this\s+(?:fragrance|scent|perfume|inspired|is)|the\s+(?:opening|drydown|dry\s+down|base\s+(?:lingers|settles|brings))|inspired\s+by|perfect\s+for\s+anyone|opens?\s+with\s+(?:a|the)|think\s+(?:crisp|fresh|warm|cool|dark|soft)|vibe\b|scent\s+story\b|how\s+it\s+wears|available\s+sizes?|important\s+(?:information|shop|order)|all\s+perfumes?\s+are\s+hand|this\s+is\s+(?:a|an|the)\s+kind|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection)\b)/i
 
   const sentenceBoundary = /[.!]\s+[A-Z]/
 
@@ -1412,7 +1615,8 @@ const JUNK_NOTE_PATTERNS: RegExp[] = [
   /\d+(?:rem|em|ch|vw|vh|px|pt)\b/i, // CSS / layout tokens (e.g. 1rem, 12px)
   /\b(?:linear-gradient|rgba\s*\(|rgb\s*\(|hsl\s*\()\b/i,
   /^\b(?:rgba|margin|padding|border|display|flex|grid|position|z-index|font-size|background|opacity|transform|transition)(?:-\w+)?\b$/i,
-  /^\b(?:touch|then|fabric|h[1-6])\b$/i,
+  /^\b(?:touch|then|fabric|h[1-6]|body|html|sans-serif|serif|monospace|system-ui|blinkmacsystemfont|roboto|inter|helvetica|arial|radial-gradient|linear-gradient)\b$/i,
+  /\b(?:font-family|webkit-font-smoothing)\b/i,
   /\b(?:f|of)\s+note\b/i,
   /\b(?:rum|whisky|whiskey)-like\b/i,
   /\b(?:warmth|embrace)\s+f\b/i,
@@ -1586,7 +1790,10 @@ const MERCHANT_LABELED_HARD_JUNK_PATTERNS: RegExp[] = [
   /\bavailable\s+sizes\b/i,
   /\bexperiment\s+(?:for|with)\s+yourself\b/i,
   /\bfor\s+yourself\b/i,
-  /^(?:a|an|the)\s+(?:sweet|night|center)\b/i,
+  /^(?:a|an|the)\s+(?:sweet|night|center|mug|creamy)\b/i,
+  /^(?:top|heart|base|middle|style|projection|facets|strength|concentration|margi|trail|halo|fabric|nuances|enveloping|sparkle|frosted|pastel|lactonic|originally|byredo|commodity)$/i,
+  /\b(?:originally\s+from|frosted-pastel|summer\s+warm\s+days|clean\s+halo|longer\s+on\s+fabric|cloud\s+cream|candy\s+air|powdered\s+vanilla\s+style|the\s+creamy|cacao\s+the|a\s+mug|then\s+deepens|deepens\s+into|fluffy\s+glow)\b/i,
+  /\b(?:projection|facets|trail|style|concentration|strength|nuances|enveloping|sparkle|halos?)\b/i,
   /\badds\b/i,
 ]
 
@@ -1639,16 +1846,37 @@ const filterNotesByTrust = (arr: string[], trusted: Set<string>): string[] =>
     return trusted.has(lc) ? isMerchantLabeledNote(n) : isScraperKeptNote(n)
   })
 
-/** Expand space-joined blobs, re-filter junk, and dedupe before CSV export. */
+/** Expand space-joined blobs, sanitize marketing junk, and dedupe before CSV export. */
 const finalizeNoteLayersForExport = (
   notes: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] },
   merchantTrustedNotes: Set<string>,
-): { openNotes: string[]; heartNotes: string[]; baseNotes: string[] } =>
-  dedupeNotesAcrossLayers({
-    openNotes: filterNotesByTrust(uniqueNotes(notes.openNotes), merchantTrustedNotes),
-    heartNotes: filterNotesByTrust(uniqueNotes(notes.heartNotes), merchantTrustedNotes),
-    baseNotes: filterNotesByTrust(uniqueNotes(notes.baseNotes), merchantTrustedNotes),
+): { openNotes: string[]; heartNotes: string[]; baseNotes: string[] } => {
+  /** Drop lone `tonka` when `tonka bean` is already present in the same layer. */
+  const dropSubsumedShorterNotes = (arr: string[]): string[] => {
+    const normalized = arr.map(n => n.trim().toLowerCase())
+    const hasTonkaBean = normalized.some(n => n === "tonka bean" || n === "tonka bean absolute")
+    if (!hasTonkaBean) return arr
+    return arr.filter(n => n.trim().toLowerCase() !== "tonka")
+  }
+
+  const sanitizeLayer = (arr: string[]) =>
+    filterNotesByTrust(
+      uniqueNotes(
+        dropSubsumedShorterNotes(
+          expandLayerNoteBlobs(arr)
+            .map(n => sanitizeExtractedNoteCandidate(n))
+            .filter((n): n is string => Boolean(n)),
+        ),
+      ),
+      merchantTrustedNotes,
+    )
+
+  return dedupeNotesAcrossLayers({
+    openNotes: sanitizeLayer(notes.openNotes),
+    heartNotes: sanitizeLayer(notes.heartNotes),
+    baseNotes: sanitizeLayer(notes.baseNotes),
   })
+}
 
 const looksLikeJunkNote = (note: string): boolean => {
   if (!note?.trim()) return true
@@ -1692,6 +1920,7 @@ const isScraperKeptNote = (note: string): boolean => {
 /** Strip leading prose wrappers before note tokens (e.g. "Notes of cinnamon" → "cinnamon"). */
 const stripNoteListProsePrefix = (p: string): string =>
   p
+    .replace(/^\s*(?:top|middle|base)\s+notes?\s+(?:are|is|of)\s+/i, "")
     .replace(/^\s*notes\s+of\s+/i, "")
     .replace(/^\s*note\s+of\s+/i, "")
     .replace(/^\s*a\s+hint\s+of\s+/i, "")
@@ -1710,20 +1939,30 @@ const filterStructuredNoteParts = (parts: string[]): string[] => {
     const wordCount = cleaned.split(/\s+/).filter(Boolean).length
     if (wordCount > 4) {
       if (/\baccord\b/i.test(cleaned) && isMerchantLabeledNote(cleaned)) {
-        out.push(cleaned)
-        continue
+        const sanitized = sanitizeExtractedNoteCandidate(cleaned)
+        if (sanitized) {
+          out.push(sanitized)
+          continue
+        }
       }
       const rescued = rescueNotePrefixFromProseToken(cleaned, isMerchantLabeledNote)
       if (rescued) {
-        out.push(rescued)
-        continue
+        const sanitized = sanitizeExtractedNoteCandidate(rescued)
+        if (sanitized) {
+          out.push(sanitized)
+          continue
+        }
       }
     }
     if (isMerchantLabeledNote(cleaned)) {
-      out.push(cleaned)
+      const sanitized = sanitizeExtractedNoteCandidate(cleaned)
+      if (sanitized) out.push(sanitized)
     } else {
       const rescued = rescueNotePrefixFromProseToken(cleaned, isMerchantLabeledNote)
-      if (rescued) out.push(rescued)
+      if (rescued) {
+        const sanitized = sanitizeExtractedNoteCandidate(rescued)
+        if (sanitized) out.push(sanitized)
+      }
     }
   }
   return out
@@ -1771,7 +2010,7 @@ function extractInlineLayeredNotes(text: string): {
   if (!source) return empty
 
   const sectionRe =
-    /\b(top(?:\s+notes?)?|open(?:ing)?(?:\s+notes?)?|head(?:\s+notes?)?|heart(?:\s+notes?)?|middle(?:\s+notes?)?|mid(?:\s+notes?)?|core(?:\s+notes?)?|body(?:\s+notes?)?|cent(?:er|re)(?:\s+notes?)?|base(?:\s+notes?)?|bottom(?:\s+notes?)?|background(?:\s+notes?)?|foundation(?:\s+notes?)?|dry\s*down(?:\s+notes?)?|drydown(?:\s+notes?)?|end(?:\s+notes?)?|notes?\s+de\s+(?:tête|tete)|notes?\s+de\s+(?:cœur|coeur)|notes?\s+de\s+fond|note\s+di\s+(?:testa|cuore|fondo|olfattive)|notas\s+de\s+(?:salida|coraz[oó]n|corazon|fondo)|kopfnoten?|herznoten?|basisnoten?|duftnoten?|topnoten?|hartnoten?)\s*:/gi
+    /\b(top(?:\s+notes?)?|open(?:ing)?(?:\s+notes?)?|head(?:\s+notes?)?|heart(?:\s+notes?)?|middle(?:\s+notes?)?|mid(?:\s+notes?)?|core(?:\s+notes?)?|body(?:\s+notes?)?|cent(?:er|re)(?:\s+notes?)?|base(?:\s+notes?)?|bottom(?:\s+notes?)?|background(?:\s+notes?)?|foundation(?:\s+notes?)?|dry\s*down(?:\s+notes?)?|drydown(?:\s+notes?)?|end(?:\s+notes?)?|notes?\s+de\s+(?:tête|tete)|notes?\s+de\s+(?:cœur|coeur)|notes?\s+de\s+fond|note\s+di\s+(?:testa|cuore|fondo|olfattive)|notas\s+de\s+(?:salida|coraz[oó]n|corazon|fondo)|kopfnoten?|herznoten?|basisnoten?|duftnoten?|topnoten?|hartnoten?)\s*[:\-\u2013\u2014–—]\s*/gi
   const matches = [...source.matchAll(sectionRe)]
   if (matches.length === 0) return empty
 
@@ -1963,6 +2202,15 @@ function extractFlatNotes(text: string): string[] {
   )
   if (mainNotesGlued?.[1]) {
     found.push(...splitGluedMerchantNoteRun(mainNotesGlued[1].trim()))
+  }
+
+  found.push(...extractAndromedaStackedNotesFromPlain(collapsed))
+
+  const scentProfile = extractAndromedaScentProfileFromPlain(collapsed)
+  if (scentProfile.length >= 2) found.push(...scentProfile)
+
+  for (const note of inferAndromedaAmarettoNotesFromProse(collapsed)) {
+    if (!found.some(f => f.trim().toLowerCase() === note.toLowerCase())) found.push(note)
   }
 
   for (const re of FLAT_NOTE_LIST_PATTERNS) {
@@ -3195,6 +3443,10 @@ const processSingleProductPhase1 = async (
         heartNotes: uniqueNotes([...existingFromPython.heartNotes, ...notes.heartNotes]),
         baseNotes: uniqueNotes([...existingFromPython.baseNotes, ...notes.baseNotes]),
       })
+    }
+
+    if (hasEmbeddedLayerMarkers(notes)) {
+      notes = relayerNotesWithEmbeddedLayerMarkers(notes)
     }
 
     notes = confirmNoteLayersAgainstSource(notes, notesSource, {

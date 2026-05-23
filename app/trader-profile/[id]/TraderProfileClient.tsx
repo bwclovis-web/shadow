@@ -29,7 +29,7 @@ import { TraderProfileAside } from "./aside/aside"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
-const BANNER_IMAGE = "/images/trade.webp"
+const BANNER_IMAGE = "/images/new/trader-profile.webp"
 
 type TraderProfileClientProps = {
   initialTrader: TraderResponse

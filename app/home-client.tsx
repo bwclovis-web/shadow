@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl"
 
 import Select from "@/components/Atoms/Select"
 import CommunityStatsStrip from "@/components/Containers/Home/CommunityStatsStrip"
+import { DeferredBelowFold } from "@/components/Molecules/DeferredBelowFold/DeferredBelowFold"
 import SearchBar from "@/components/Organisms/SearchBar"
 import { useMounted } from "@/hooks/useMounted"
 import type {
@@ -18,20 +19,18 @@ import type { SeasonalTrendingResult } from "@/models/seasonal-trending.server"
 
 const ActivityFeedSection = dynamic(
   () => import("@/components/Containers/Exchange/ActivityFeedSection"),
-  { ssr: true }
+  { ssr: false }
 )
 
 const SeasonalTrendingSection = dynamic(
   () => import("@/components/Containers/Exchange/SeasonalTrendingSection"),
-  { ssr: true }
+  { ssr: false }
 )
 
-const LANDING_HERO = "/images/landing-new.png"
-
-type Feature = Awaited<ReturnType<typeof import("@/models/feature.server").getAllFeatures>>[number]
+const LANDING_HERO = "/images/new/home.webp"
+const HERO_SIZES = "(max-width: 768px) 100vw, 1600px"
 
 interface HomeClientProps {
-  features: Feature[]
   communityStats: CommunityStats
   heading: string
   subheading: string
@@ -49,7 +48,6 @@ const scheduleIdleWork = (work: () => void) => {
 }
 
 export default function HomeClient({
-  features: _features,
   communityStats,
   heading,
   subheading,
@@ -125,6 +123,9 @@ export default function HomeClient({
     },
   ]
 
+  const showFeedSection =
+    recentListings.length > 0 || seasonalTrending.perfumes.length > 0
+
   return (
     <div
       className="relative z-10 flex flex-col gap-8 items-center md:justify-center px-4 bg-noir-gold-500/30 min-h-dvh pb-20 md:pb-0"
@@ -135,10 +136,11 @@ export default function HomeClient({
         alt=""
         priority
         fill
-        sizes="100vw"
+        quality={62}
+        sizes={HERO_SIZES}
         className="object-cover filter grayscale-100% sepia-[0.5] mix-blend-multiply hero-image"
       />
-      <div className="absolute inset-0 bg-noir-black/85 mask-radial-from-10% mask-radial-to-74% md:mask-radial-from-25% md:mask-radial-to-44%" />
+      <div className="absolute inset-0 bg-noir-black/45 mask-radial-from-10% mask-radial-to-74% md:mask-radial-from-25% md:mask-radial-to-44%" />
       <section className="text-noir-gold relative z-10 flex flex-col items-center gap-4 pt-50 md:pt-40">
         <div className="text-shadow-lg/90 text-shadow-noir-black text-center">
           <h1 className="hero-title">{heading}</h1>
@@ -165,8 +167,11 @@ export default function HomeClient({
         </div>
       </section>
 
-      {recentListings.length > 0 || seasonalTrending.perfumes.length > 0 ? (
-        <section className="relative z-10 flex w-full max-w-4xl flex-col gap-6 px-4 pb-8">
+      {showFeedSection ? (
+        <DeferredBelowFold
+          className="relative z-10 flex w-full max-w-4xl flex-col gap-6 px-4 pb-8"
+          minHeight="16rem"
+        >
           {seasonalTrending.perfumes.length > 0 ? (
             <SeasonalTrendingSection
               season={seasonalTrending.season}
@@ -183,7 +188,7 @@ export default function HomeClient({
               className="rounded-md border border-noir-gold/40 bg-noir-black/70 p-4 backdrop-blur-sm"
             />
           ) : null}
-        </section>
+        </DeferredBelowFold>
       ) : null}
     </div>
   )

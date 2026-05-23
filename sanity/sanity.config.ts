@@ -8,7 +8,7 @@ import { structure } from "./structure"
 
 export default defineConfig({
   name: "shadow-and-sillage",
-  title: "Shadow and Sillage — Behind the Bottle",
+  title: "perfumer's hollow — Behind the Bottle",
   projectId,
   dataset,
   apiVersion,

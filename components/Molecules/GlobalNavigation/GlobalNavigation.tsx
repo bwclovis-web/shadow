@@ -83,7 +83,7 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
             alt={logoText}
             width={384}
             height={256}
-            priority={true}
+            priority={pathname !== "/"}
             quality={90}
             className="h-15 w-auto"
           />

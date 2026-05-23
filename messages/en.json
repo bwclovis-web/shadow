@@ -26,7 +26,7 @@
   },
   "compare": {
     "meta": {
-      "title": "Compare perfumes - Shadow and Sillage",
+      "title": "Compare perfumes - perfumer's hollow",
       "description": "Compare notes, community ratings, exchange availability, and perfume houses side by side."
     },
     "trayAriaLabel": "Perfumes selected for comparison",
@@ -124,7 +124,7 @@
   },
   "myDisputes": {
     "meta": {
-      "title": "My Disputes - Shadow and Sillage",
+      "title": "My Disputes - perfumer's hollow",
       "description": "Track trade disputes you have opened or are party to."
     },
     "heading": "My Disputes",
@@ -157,7 +157,7 @@
   },
   "adminDisputes": {
     "meta": {
-      "title": "Disputes - Admin - Shadow and Sillage",
+      "title": "Disputes - Admin - perfumer's hollow",
       "description": "Review trade disputes and profile reports."
     },
     "heading": "Disputes & Reports",
@@ -209,7 +209,7 @@
   },
   "adminReports": {
     "meta": {
-      "title": "User Reports - Admin - Shadow and Sillage",
+      "title": "User Reports - Admin - perfumer's hollow",
       "description": "Review community reports against traders."
     },
     "heading": "User Reports",
@@ -250,7 +250,7 @@
   },
   "myReports": {
     "meta": {
-      "title": "My Reports - Shadow and Sillage",
+      "title": "My Reports - perfumer's hollow",
       "description": "Reports you have filed against other traders."
     },
     "heading": "My Reports",
@@ -275,7 +275,7 @@
   },
   "myTrades": {
     "meta": {
-      "title": "My Trades - Shadow and Sillage",
+      "title": "My Trades - perfumer's hollow",
       "description": "Your active trades and trade history."
     },
     "heading": "My Trades",
@@ -287,7 +287,7 @@
   },
   "pendingSubmissions": {
     "meta": {
-      "title": "Pending Submissions - Admin - Shadow and Sillage",
+      "title": "Pending Submissions - Admin - perfumer's hollow",
       "description": "Review and approve pending perfume and perfume house submissions."
     },
     "heading": "Pending Submissions",
@@ -318,18 +318,18 @@
   },
   "aboutUs": {
     "meta": {
-      "title": "About Us - Shadow and Sillage",
-      "description": "Learn about the story behind Shadow and Sillage."
+      "title": "About Us - perfumer's hollow",
+      "description": "Learn about the story behind perfumer's hollow."
     },
     "heading": "About Us",
-    "subheading": "About the founders of Shadow And Sillage",
+    "subheading": "About the founders of perfumer's hollow",
     "content": {
       "subheading": "Two collectors chasing the scent of something rare",
-      "one": "The city sleeps, but somewhere in the dark, a couple sits beneath the warm hum of a desk lamp. Bottles line the shelves like suspects waiting to be questioned — amber glass, faded labels, whispers of other lives. That’s where you’ll find us: Brian and Amanda, the husband-and-wife team behind Shadow and Sillage.",
+      "one": "The city sleeps, but somewhere in the dark, a couple sits beneath the warm hum of a desk lamp. Bottles line the shelves like suspects waiting to be questioned — amber glass, faded labels, whispers of other lives. That’s where you’ll find us: Brian and Amanda, the husband-and-wife team behind perfumer's hollow.",
       "two": "It started simply enough - one perfume too many to remember, one story too good to lose. We began keeping notes, first on scraps of paper, then in a ledger, and finally in this growing archive. What began as a way to track our collection became something larger: a gathering place for others who chase memories through scent.",
       "three": "This little speakeasy of fragrance runs on curiosity. Every new listing is a lead, every review a clue. The database grows quietly in the background, one house and one scent at a time, as we piece together the strange and beautiful puzzle of perfume. You might call it obsession; we call it devotion.",
       "four": "We built this place for the romantics and the detectives of scent — the ones who can find memory in a base note or joy in a single spark of aldehyde. If you notice a bottle missing from our shelves, you can send word through the forms scattered around the site. We’ll take the tip, follow the trail, and add it to the case file.",
-      "five": "The door’s always open. Step in from the rain, hang your coat, and stay awhile. In Shadow and Sillage, every scent has a story, and every story deserves to be found."
+      "five": "The door’s always open. Step in from the rain, hang your coat, and stay awhile. In perfumer's hollow, every scent has a story, and every story deserves to be found."
     }
   },
   "alerts":{
@@ -430,7 +430,7 @@
   },
   "behindTheBottle": {
     "meta": {
-      "title": "Behind the Bottle - Shadow and Sillage",
+      "title": "Behind the Bottle - perfumer's hollow",
       "description": "Stories from the world of perfume — houses, bottles, and the people who make them."
     },
     "eyebrow": "Editorial",
@@ -448,7 +448,7 @@
   },
   "allHouses": {
     "meta": {
-      "title": "Behind the Bottle - Shadow and Sillage",
+      "title": "Behind the Bottle - perfumer's hollow",
       "description": "Explore all the perfume houses available in our database."
     },
     "heading": "Behind the Bottle",
@@ -476,7 +476,7 @@
   },
   "allPerfumes": {
     "meta": {
-      "title": "The Vault - Shadow and Sillage",
+      "title": "The Vault - perfumer's hollow",
       "description": "Discover all the perfumes available in our database."
     },
     "heading": "The Vault",
@@ -498,12 +498,12 @@
       "different": "Different from your current password"
     },
     "signIn": {
-      "title": "Sign In - Shadow and Sillage",
+      "title": "Sign In - perfumer's hollow",
       "description": "Sign in to your account to access your profile and manage your collection.",
       "suspended": "Your account has been suspended. Contact support if you believe this is an error."
     },
     "verify2fa": {
-      "title": "Two-factor verification - Shadow and Sillage",
+      "title": "Two-factor verification - perfumer's hollow",
       "description": "Enter the code from your authenticator app to complete sign-in.",
       "heading": "Two-factor authentication",
       "subheading": "Enter the 6-digit code from your authenticator app, or use a backup code.",
@@ -515,17 +515,17 @@
       "errorTitle": "Verification error"
     },
     "signUp": {
-      "title": "Sign Up - Shadow and Sillage",
+      "title": "Sign Up - perfumer's hollow",
       "description": "Create an account to access your profile and manage your collection."
     }
   },
   "directMessages": {
     "meta": {
-      "title": "Messages - Shadow and Sillage",
+      "title": "Messages - perfumer's hollow",
       "description": "View and send direct messages with other members.",
-      "threadTitle": "{name} — Messages — Shadow and Sillage",
+      "threadTitle": "{name} — Messages — perfumer's hollow",
       "threadDescription": "Direct conversation with {name}.",
-      "threadFallbackTitle": "Messages — Shadow and Sillage"
+      "threadFallbackTitle": "Messages — perfumer's hollow"
     },
     "deleteConversationShort": "Delete",
     "deleteConversationFull": "Delete conversation",
@@ -537,7 +537,7 @@
   },
   "subscribe": {
     "heading": "Subscribe",
-    "subheading": "Join Shadow and Sillage with a paid subscription",
+    "subheading": "Join perfumer's hollow with a paid subscription",
     "limitTitle": "100-user early adopter limit",
     "limitCopy": "We offer free signups to our first 100 members as early adopters. That limit has been reached.",
     "paymentRequired": "To create an account now, a paid subscription is required. Complete checkout below and you’ll be able to sign up right after.",
@@ -690,7 +690,7 @@
   },
   "createHouse": {
     "meta": {
-      "title": "Create Perfume House - Shadow and Sillage",
+      "title": "Create Perfume House - perfumer's hollow",
       "description": "Create a new perfume house in our database."
     },
     "heading": "Create Perfume House",
@@ -705,7 +705,7 @@
   },
   "createPerfume": {
     "meta": {
-      "title": "Create Perfume - Shadow and Sillage",
+      "title": "Create Perfume - perfumer's hollow",
       "description": "Create a new perfume in our database."
     },
     "heading": "Create Perfume",
@@ -735,14 +735,14 @@
   },
   "home": {
     "meta": {
-      "title": "Shadow and Sillage - Perfume Database",
+      "title": "perfumer's hollow - Perfume Database",
       "description": "Explore a comprehensive database of perfumes and their houses."
     },
     "radio": {
       "houses": "Perfume Houses",
       "perfumes": "Perfumes"
     },
-    "heading": "Shadow & Sillage",
+    "heading": "Perfumer's Hollow",
     "description": "A comprehensive database of perfumes and their houses.",
     "subheading": "For Collectors of Perfume and Secrets.",
     "searchType": {
@@ -774,14 +774,14 @@
   },
   "howItWorks":{
     "meta": {
-      "title": "How It Works - Shadow and Sillage",
-      "description": "Learn how Shadow and Sillage works."
+      "title": "How It Works - perfumer's hollow",
+      "description": "Learn how perfumer's hollow works."
     },
     "heading": "The Game of Bottles and Trust",
     "subheading": "You list, you discover, you trade — all in the quiet glow of discretion.",
     "section1": {
       "title": "Step One: Light Your Match — Create an Account",
-      "content": "The story begins when you decide to step out of the fog. Creating an account opens the door to everything Shadow and Sillage has to offer — a place where collectors and dreamers cross paths. With an account, you can rate and review perfumes, share your impressions, list your own decants, and save favorites to return to later. Those who prefer to stay in the shadows may still wander and search the site, but the full experience belongs to those who join the inner circle.",
+      "content": "The story begins when you decide to step out of the fog. Creating an account opens the door to everything perfumer's hollow has to offer — a place where collectors and dreamers cross paths. With an account, you can rate and review perfumes, share your impressions, list your own decants, and save favorites to return to later. Those who prefer to stay in the shadows may still wander and search the site, but the full experience belongs to those who join the inner circle.",
       "content2": "Accounts are free for the first 100 members, a nod to the early few who saw the potential in the scent of mystery. And rest assured — your information stays yours. We don’t sell it, trade it, or pass it along. What happens in the shadows stays there."
     },
     "section2": {
@@ -801,13 +801,13 @@
     },
     "section5": {
       "title": "The Sillage We Leave Behind",
-      "content": "Shadow and Sillage isn't just a platform — it's a gathering of collectors, romantics, and scent detectives who believe perfume is memory in liquid form. Every rating, wishlist, and trade adds another thread to the tapestry of this community. We don't chase trends, and we don't sell secrets. We build a space where passion and privacy share the same breath. In the end, what lingers isn't just the fragrance — it's the connection it creates."
+      "content": "perfumer's hollow isn't just a platform — it's a gathering of collectors, romantics, and scent detectives who believe perfume is memory in liquid form. Every rating, wishlist, and trade adds another thread to the tapestry of this community. We don't chase trends, and we don't sell secrets. We build a space where passion and privacy share the same breath. In the end, what lingers isn't just the fragrance — it's the connection it creates."
     }
   },
   "contactUs": {
     "meta": {
-      "title": "Contact Us & FAQ - Shadow and Sillage",
-      "description": "Get in touch with Shadow and Sillage or find answers to frequently asked questions."
+      "title": "Contact Us & FAQ - perfumer's hollow",
+      "description": "Get in touch with perfumer's hollow or find answers to frequently asked questions."
     },
     "heading": "Contact Us",
     "subheading": "Questions, suggestions, or just want to say hello? We're here.",
@@ -820,17 +820,17 @@
     "faq": {
       "title": "Frequently Asked Questions",
       "question1": "How do I add a missing perfume or perfume house?",
-      "answer1": "If you notice a perfume or perfume house missing from our database, you can submit it using the buttons below. Your submission will be reviewed by an admin before being added to the database. We're always looking to expand our collection and appreciate your help in making Shadow and Sillage more complete.",
+      "answer1": "If you notice a perfume or perfume house missing from our database, you can submit it using the buttons below. Your submission will be reviewed by an admin before being added to the database. We're always looking to expand our collection and appreciate your help in making perfumer's hollow more complete.",
       "submitPerfumeButton": "Submit Missing Perfume",
       "submitHouseButton": "Submit Missing Perfume House",
       "question2": "How does the trading system work?",
-      "answer2": "Shadow and Sillage provides a platform for collectors to connect and trade. We don't handle transactions or payments directly — those are arranged between you and your trading partner. We simply provide the space and tools to make those connections happen safely and transparently.",
+      "answer2": "perfumer's hollow provides a platform for collectors to connect and trade. We don't handle transactions or payments directly — those are arranged between you and your trading partner. We simply provide the space and tools to make those connections happen safely and transparently.",
       "question3": "Is my personal information safe?",
       "answer3": "Absolutely. We take privacy seriously. We don't sell, trade, or share your personal information. Your data stays yours, and what happens in the shadows stays there.",
       "question4": "How do I create an account?",
       "answer4": "Creating an account is free and easy. Simply click the 'Sign In' button in the navigation, then choose 'Sign Up' to create your account. Accounts are free for the first 100 members, and we keep it that way to honor our early supporters.",
       "question5": "Can I review perfumes without an account?",
-      "answer5": "You can browse and search the site without an account, but to rate, review, list decants, or build your wishlist, you'll need to create an account. It's free and gives you access to the full Shadow and Sillage experience.",
+      "answer5": "You can browse and search the site without an account, but to rate, review, list decants, or build your wishlist, you'll need to create an account. It's free and gives you access to the full perfumer's hollow experience.",
       "question6": "What if I find an error in the database?",
       "answer6": "We appreciate your attention to detail! If you spot an error — whether it's a misspelling, incorrect information, or a duplicate entry — please let us know via email. We'll review it and make corrections as needed."
     },
@@ -875,7 +875,7 @@
   },
   "myScents": {
     "meta": {
-      "title": "My Scents - Shadow and Sillage",
+      "title": "My Scents - perfumer's hollow",
       "description": "Manage your personal collection of perfumes."
     },
     "tabs": {
@@ -1209,7 +1209,7 @@
   },
   "navigation": {
     "menu": "Menu",
-    "logo": " Shadow and Sillage",
+    "logo": " perfumer's hollow",
     "login": "Log In",
     "loggingIn": "Logging in...",
     "houses": "Behind the Bottle",
@@ -1362,7 +1362,7 @@
   },
   "quiz": {
     "meta": {
-      "title": "Scent Quiz - Shadow and Sillage",
+      "title": "Scent Quiz - perfumer's hollow",
       "description": "Tell us your scent preferences so we can recommend perfumes you'll love."
     },
     "banner": {
@@ -1449,7 +1449,7 @@
   },
   "singleHouse": {
     "meta": {
-      "title": "Perfume House Details - Shadow and Sillage",
+      "title": "Perfume House Details - perfumer's hollow",
       "description": "Explore the details of a specific perfume house."
     },
     "loadingPerfumes": "Loading perfumes...",
@@ -1474,18 +1474,18 @@
   },
   "houseDetail": {
     "meta": {
-      "title": "{name} | Shadow and Sillage",
-      "descriptionFallback": "Explore {name}: perfume catalog, house profile, and editorial stories on Shadow and Sillage."
+      "title": "{name} | perfumer's hollow",
+      "descriptionFallback": "Explore {name}: perfume catalog, house profile, and editorial stories on perfumer's hollow."
     }
   },
   "singlePerfume": {
     "meta": {
-      "title": "Perfume Details - Shadow and Sillage",
+      "title": "Perfume Details - perfumer's hollow",
       "description": "Discover the details of a specific perfume.",
-      "titleWithHouse": "{name} — {house} | Shadow and Sillage",
-      "titleStandalone": "{name} | Shadow and Sillage",
-      "descriptionWithHouse": "Explore {name} by {house}: notes, ratings, and community listings on Shadow and Sillage.",
-      "descriptionStandalone": "Explore {name}: notes, ratings, and community listings on Shadow and Sillage."
+      "titleWithHouse": "{name} — {house} | perfumer's hollow",
+      "titleStandalone": "{name} | perfumer's hollow",
+      "descriptionWithHouse": "Explore {name} by {house}: notes, ratings, and community listings on perfumer's hollow.",
+      "descriptionStandalone": "Explore {name}: notes, ratings, and community listings on perfumer's hollow."
     },
     "similarPerfumes": "Similar perfumes",
     "subheading": "By: ",
@@ -1607,7 +1607,7 @@
     
   },
   "siteFooter": {
-    "copyright": "© {year} Shadow and Sillage",
+    "copyright": "© {year} perfumer's hollow",
     "navAria": "Site links",
     "communityPolicy": "Community policy",
     "terms": "Terms and conditions",
@@ -1621,11 +1621,11 @@
   },
   "communityPolicy": {
     "meta": {
-      "title": "Community Policy - Shadow and Sillage",
+      "title": "Community Policy - perfumer's hollow",
       "description": "Shipping expectations, dispute process, and community rules for traders."
     },
     "heading": "Community policy",
-    "subheading": "Trading expectations on Shadow and Sillage",
+    "subheading": "Trading expectations on perfumer's hollow",
     "shipping": {
       "heading": "Shipping expectations",
       "contentOne": "All payment and shipping are arranged off-platform between traders. Agree on carriers, packaging, and timelines in your messages before anyone ships.",
@@ -1646,20 +1646,20 @@
     },
     "offPlatform": {
       "heading": "Off-platform payments",
-      "contentOne": "Shadow and Sillage connects traders; we never process payments or shipping labels.",
+      "contentOne": "perfumer's hollow connects traders; we never process payments or shipping labels.",
       "contentTwo": "Use payment methods you trust, keep message records on-platform when possible, and never share passwords or unrelated financial details."
     }
   },
   "termsAndConditions": {
     "meta": {
-      "title": "Terms and Conditions - Shadow and Sillage",
-      "description": "Terms of use, trading rules, and privacy policy for Shadow and Sillage."
+      "title": "Terms and Conditions - perfumer's hollow",
+      "description": "Terms of use, trading rules, and privacy policy for perfumer's hollow."
     },
     "heading": "Terms and Conditions",
-    "subheading": "Shadow and Sillage",
+    "subheading": "perfumer's hollow",
     "gist": {
       "heading": "THE GIST",
-      "contentOne": "Shadow and Sillage is an independent platform devoted to perfume lovers — a place to share reviews, learn, and connect with other collectors. Users may list perfumes and samples for trade, but the dealings themselves are strictly between private individuals.",
+      "contentOne": "perfumer's hollow is an independent platform devoted to perfume lovers — a place to share reviews, learn, and connect with other collectors. Users may list perfumes and samples for trade, but the dealings themselves are strictly between private individuals.",
       "contentTwo": "We do not handle payments, do not verify authenticity, and will not mediate disputes. Think of us as the smoke-filled bar where introductions are made, not the broker of the deal."
     },
     "tradingAndListing": {
@@ -1680,7 +1680,7 @@
       "heading": "REVIEWS AND NOTES",
       "contentOne": "Users may submit perfume reviews or leave notes on discussions to help others navigate their scent journeys.",
       "contentTwo": "All content goes through a moderation process to ensure it’s relevant, fair, and on-topic. We reserve the right to remove or edit submissions that break these rules or drift into unrelated territory.",
-      "contentThree": "By posting, you grant Shadow and Sillage the non-exclusive right to display your words and images on the site and in related features (such as listings or community highlights). You retain full ownership of your work."
+      "contentThree": "By posting, you grant perfumer's hollow the non-exclusive right to display your words and images on the site and in related features (such as listings or community highlights). You retain full ownership of your work."
     },
     "noGuarantee": {
       "heading": "NO GUARANTEES",
@@ -1688,7 +1688,7 @@
     },
     "liability": {
       "heading": "LIMITATION OF LIABILITY",
-      "contentOne": "Shadow and Sillage and its operators are not responsible for any loss, damage, or dispute arising from user trades, communications, or listings.",
+      "contentOne": "perfumer's hollow and its operators are not responsible for any loss, damage, or dispute arising from user trades, communications, or listings.",
       "contentTwo": "If a deal goes sour, it’s between the parties involved. The platform merely sets the stage — the drama belongs to you."
     },
     "privacy": {
@@ -1708,12 +1708,12 @@
     },
     "closing": {
       "heading": "CLOSING WORDS",
-      "contentOne": "Shadow and Sillage exists to celebrate the art, science, and stories behind scent. Use it wisely, trade fairly, and remember — trust your nose, not a stranger’s promises."
+      "contentOne": "perfumer's hollow exists to celebrate the art, science, and stories behind scent. Use it wisely, trade fairly, and remember — trust your nose, not a stranger’s promises."
     }
   },
   "tradingPost": {
     "meta": {
-      "title": "The Exchange - Shadow and Sillage",
+      "title": "The Exchange - perfumer's hollow",
       "description": "Browse perfumes available for trade from our community members."
     },
     "heading": "The Exchange",
@@ -1868,7 +1868,7 @@
   },
   "tradeDetail": {
     "meta": {
-      "title": "Trade details - Shadow and Sillage",
+      "title": "Trade details - perfumer's hollow",
       "description": "View and manage a swap proposal between traders."
     },
     "heading": "Trade details",
@@ -1903,7 +1903,7 @@
   },
   "traderProfile": {
     "meta": {
-      "title": "Trader Profile - Shadow and Sillage",
+      "title": "Trader Profile - perfumer's hollow",
       "description": "Trader Profile of {traderName}"
     },
     "heading": "Trader {traderName}",
@@ -1917,7 +1917,7 @@
     "scentDna": {
       "meta": {
         "title": "{traderName}'s Scent DNA",
-        "description": "Note families, season affinity, and house taste for {traderName} on Shadow and Sillage."
+        "description": "Note families, season affinity, and house taste for {traderName} on perfumer's hollow."
       },
       "ariaLabel": "Scent DNA for {traderName}",
       "title": "Scent DNA",
@@ -1991,7 +1991,7 @@
     "scentJourney": {
       "meta": {
         "title": "{traderName}'s Scent journey",
-        "description": "Chronological activity from {traderName}'s collection, trades, reviews, and Scent DNA on Shadow and Sillage."
+        "description": "Chronological activity from {traderName}'s collection, trades, reviews, and Scent DNA on perfumer's hollow."
       },
       "pageHeading": "{traderName}'s Scent journey",
       "pageSubheading": "Collection additions, completed swaps, reviews, Scent DNA updates, and blog mentions.",
@@ -2089,7 +2089,7 @@
   },
   "userAdmin": {
     "meta": {
-      "title": "User Admin - Shadow and Sillage",
+      "title": "User Admin - perfumer's hollow",
       "description": "Manage user accounts and view their data usage"
     },
     "heading": "User Management",
@@ -2156,7 +2156,7 @@
   },
   "wishlist": {
     "meta": {
-      "title": "Wishlist - Shadow and Sillage",
+      "title": "Wishlist - perfumer's hollow",
       "description": "Manage your wishlist of perfumes."
     },
     "empty": {
@@ -2193,11 +2193,11 @@
     },
     "public": {
       "meta": {
-        "title": "{traderName}'s wishlist - Shadow and Sillage",
-        "description": "Perfumes {traderName} is looking for on Shadow and Sillage."
+        "title": "{traderName}'s wishlist - perfumer's hollow",
+        "description": "Perfumes {traderName} is looking for on perfumer's hollow."
       },
       "heading": "{traderName} is looking for",
-      "subheading": "Public wishlist on Shadow and Sillage",
+      "subheading": "Public wishlist on perfumer's hollow",
       "itemCount": "{count, plural, one {# perfume} other {# perfumes}}",
       "empty": "No public wishlist items yet.",
       "viewProfile": "View trader profile"
@@ -2282,7 +2282,7 @@
   "decantSplits": {
     "meta": {
       "title": "{perfume} group split",
-      "description": "Join a group decant split for {perfume} on Shadow and Sillage.",
+      "description": "Join a group decant split for {perfume} on perfumer's hollow.",
       "notFoundTitle": "Split not found",
       "notFoundDescription": "This decant split may have ended or been removed."
     },
@@ -2299,7 +2299,7 @@
       "slotSum": "Slots total {sum} ml (pour target {total} ml)",
       "priceHintLabel": "Price hint (optional, off-platform)",
       "notesLabel": "Notes for claimants",
-      "disclaimer": "I understand Shadow and Sillage does not process payments or shipping. I will coordinate payment and postage with claimants off-platform.",
+      "disclaimer": "I understand perfumer's hollow does not process payments or shipping. I will coordinate payment and postage with claimants off-platform.",
       "disclaimerRequired": "Please accept the payment disclaimer.",
       "cancel": "Cancel",
       "back": "Back",
@@ -2314,7 +2314,7 @@
       "participating": "Slots you claimed"
     },
     "detail": {
-      "disclaimer": "Payments and shipping are arranged directly between traders. Shadow and Sillage tracks status only and does not hold funds.",
+      "disclaimer": "Payments and shipping are arranged directly between traders. perfumer's hollow tracks status only and does not hold funds.",
       "hostedBy": "Hosted by",
       "status": "Status: {status}",
       "openSlots": "{count, plural, one {# slot open} other {# slots open}}",

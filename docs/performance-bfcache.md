@@ -1,5 +1,7 @@
 # Back/forward cache (bfcache) — current limits
 
+See also: [performance-lighthouse-remediation.md](./performance-lighthouse-remediation.md) for LCP, image, and main-thread remediations.
+
 Lighthouse may report that `/` cannot use the back/forward cache. As of the homepage performance work, some causes are mitigated; others require a larger architecture change.
 
 ## Mitigated in code

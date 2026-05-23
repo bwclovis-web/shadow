@@ -1,4 +1,4 @@
-# Shadow and Sillage — Improvements Backlog
+# perfumer's hollow — Improvements Backlog
 
 Granular, incremental tasks broken into three waves. Each item is small enough to ship independently. Complete Wave 1 before moving to Wave 2; Wave 3 items can run in parallel once Wave 2 is stable.
 

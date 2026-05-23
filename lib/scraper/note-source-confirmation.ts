@@ -30,20 +30,28 @@ const isMaterialLineChunk = (chunk: string): boolean => {
   return /^(?:tree\s+moss|[A-Z][\p{L}'-]+)/iu.test(t)
 }
 
+const stripLeadingEmojiDecorators = (s: string): string =>
+  s.replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\s]+/u, "").trim()
+
 const splitFragranceNotesBlockLines = (block: string): string[] => {
   const trimmed = block.trim()
   if (!trimmed) return []
   if (/\n/.test(trimmed)) {
     return trimmed
       .split(/\n+/)
-      .map(l => l.trim())
+      .map(l => stripLeadingEmojiDecorators(l.trim()))
       .filter(Boolean)
   }
+  const emojiParts = trimmed
+    .split(/(?=[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}])/u)
+    .map(p => stripLeadingEmojiDecorators(p.trim()))
+    .filter(Boolean)
+  if (emojiParts.length >= 2) return emojiParts
   const parts = trimmed
     .split(GLUED_MATERIAL_LINE_SPLIT_RE)
-    .map(p => p.trim())
+    .map(p => stripLeadingEmojiDecorators(p.trim()))
     .filter(p => p && isMaterialLineChunk(p))
-  return parts.length > 0 ? parts : isMaterialLineChunk(trimmed) ? [trimmed] : []
+  return parts.length > 0 ? parts : isMaterialLineChunk(trimmed) ? [stripLeadingEmojiDecorators(trimmed)] : []
 }
 
 const MATERIAL_LINE_DESCRIPTOR_START =
@@ -77,7 +85,7 @@ const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, "\\
 
 /** Pull material name(s) from one line in an unlabeled "Fragrance Notes" block (Andromeda's Moon style). */
 export const parseMaterialFromFragranceNoteLine = (line: string): string[] => {
-  const trimmed = line.trim()
+  const trimmed = stripLeadingEmojiDecorators(line.trim())
   if (!trimmed || trimmed.length > 140) return []
   if (/^(?:main\s+accords?|when\s+to\s+wear|available\s+sizes?)/i.test(trimmed)) return []
 
@@ -234,14 +242,103 @@ const PROSE_FRAGMENT_TOKENS = new Set([
   "h4",
   "h5",
   "h6",
+  "top",
+  "heart",
+  "base",
+  "middle",
+  "style",
+  "projection",
+  "facets",
+  "strength",
+  "concentration",
+  "margi",
 ])
+
+export const LAYER_LABEL_TOKENS = new Set([
+  "top",
+  "heart",
+  "base",
+  "middle",
+  "mid",
+  "opening",
+  "head",
+  "drydown",
+  "dry down",
+  "end",
+  "notes",
+  "note",
+])
+
+/** Main-accord / genre labels — not pyramid materials when standing alone. */
+export const STANDALONE_ACCORD_DESCRIPTOR_RE =
+  /^(?:powdery|woody|musky|mossy|fresh|sweet|floral|oriental|gourmand|citrus|spicy|aromatic|green|aquatic|fruity|smoky|balsamic|earthy|intense|light|dark|lactonic|white floral|second-skin|frosted-pastel|frosted|pastel|originally from byredo|originally from commodity)$/i
+
+/** Strip trailing Shopify marketing copy glued to merchant note phrases. */
+export const peelMarketingDescriptorTail = (note: string): string => {
+  let s = note.trim()
+  if (!s) return s
+  let prev = ""
+  while (s !== prev) {
+    prev = s
+    s = s
+      .replace(
+        /\s+(?:projection|projections|facets|trail|trails|style|strength|concentration|nuances|enveloping|sparkle|halos?|longer\s+on\s+fabric|clean\s+halo|summer\s+warm\s+days|sugar\s+sparkle|soft\s+sweetness)\b.*$/i,
+        "",
+      )
+      .replace(
+        /\s+(?:hit\s+first|wrap\s+you\s+in(?:\s+a\s+haze)?|melt\s+into\s+skin|wrap\s+around\s+you|lingers?\s+on\s+your\s+skin)\b.*$/i,
+        "",
+      )
+      .replace(/(?<=\bvanilla)\s+cloud\s+cream\b.*$/i, "")
+      .replace(/(?<=\bcandy)\s+air\b.*$/i, "")
+      .replace(/\s+(?:originally\s+from)(?:\s+[a-z][\w'-]*){1,4}\b.*$/i, "")
+      .replace(/\s+(?:on\s+fabric|warm\s+days)\b.*$/i, "")
+      .trim()
+  }
+  return s
+}
+
+/** Normalize one extracted note candidate; return null when it is marketing/prose junk. */
+export const sanitizeExtractedNoteCandidate = (note: string): string | null => {
+  const raw = note.trim().replace(/\)+$/g, "").replace(/^\(+/g, "").trim()
+  if (!raw) return null
+  if (/^(?:a|an|the)\s+[a-z]/i.test(raw)) return null
+  if (/^then\s+/i.test(raw)) return null
+  if (/^(?:top|middle|base)\s+notes?$/i.test(raw)) return null
+  const layerLeading = raw.match(/^(?:top|middle|base)\s+notes?\s+(?:are|is|of)\s+(.+)$/i)
+  if (layerLeading?.[1]) return sanitizeExtractedNoteCandidate(layerLeading[1])
+  if (/\s+(?:the|from)\s*$/i.test(raw)) return null
+
+  const peeled = peelMarketingDescriptorTail(raw)
+  if (!peeled) return null
+  const lc = peeled.toLowerCase()
+  if (LAYER_LABEL_TOKENS.has(lc)) return null
+  if (STANDALONE_ACCORD_DESCRIPTOR_RE.test(lc)) return null
+  if (isObviousNonMaterialNote(peeled) || looksLikeProseNotePhrase(peeled)) return null
+
+  const canonical = canonicalizeNote(peeled)
+  return canonical || null
+}
 
 /** CSS / HTML / truncated prose tokens that must never become pyramid notes. */
 export const isObviousNonMaterialNote = (note: string): boolean => {
   const n = note.trim().toLowerCase()
   if (!n) return true
-  if (/^(?:touch|then|fabric|rgba|margin|h[1-6])$/i.test(n)) return true
-  if (/\b(?:linear-gradient|rgba\s*\(|rgb\s*\(|hsl\s*\()\b/i.test(n)) return true
+  if (LAYER_LABEL_TOKENS.has(n)) return true
+  if (STANDALONE_ACCORD_DESCRIPTOR_RE.test(n)) return true
+  if (/^(?:a|an|the)\s+[a-z]/i.test(n)) return true
+  if (/\s+(?:the|from)\s*$/i.test(n)) return true
+  if (/^(?:top|heart|base|middle|style|projection|facets|strength|concentration|margi|trail|halo|fabric|nuances|enveloping|sparkle|originally|byredo|commodity|frosted|pastel|lactonic|clean|longer|summer|days|mug|reading|couch|bedtime|layering|addictive|intimate|quietly|drinkable|aura|hug)$/i.test(n))
+    return true
+  if (/^(?:top|middle|base)\s+notes?$/i.test(n)) return true
+  if (/^(?:top|middle|base)\s+notes?\s+(?:are|is|of)\b/i.test(n)) return true
+  if (/\b(?:originally\s+from|frosted-pastel|summer\s+warm\s+days|clean\s+halo|longer\s+on\s+fabric|cloud\s+cream|candy\s+air|powdered\s+vanilla\s+style|the\s+creamy|cacao\s+the|a\s+mug|then\s+deepens|deepens\s+into|fluffy\s+glow)\b/i.test(n))
+    return true
+  if (/^(?:touch|then|fabric|rgba|margin|h[1-6]|body|html|div|span|sans-serif|serif|monospace|system-ui|-apple-system|blinkmacsystemfont|roboto|inter|helvetica|arial|ui-sans-serif|ui-serif|ui-monospace|segoe ui|noto sans)$/i.test(n))
+    return true
+  if (/^(?:radial-gradient|linear-gradient|repeating-linear-gradient)$/i.test(n)) return true
+  if (/\b(?:linear-gradient|radial-gradient|rgba\s*\(|rgb\s*\(|hsl\s*\()\b/i.test(n)) return true
+  if (/\b(?:font-family|font-size|font-weight|background-color|webkit-font-smoothing)\b/i.test(n)) return true
   if (/\b(?:max-width|font-size|z-index|display|position|opacity|transform|transition)\b/i.test(n)) {
     return true
   }
@@ -249,6 +346,7 @@ export const isObviousNonMaterialNote = (note: string): boolean => {
   if (/\b(?:warmth|like)\b.*\b(?:f|of)\s+note\b/i.test(n)) return true
   if (/\bscent\s+description\b/i.test(n)) return true
   if (/\btihota\s+on\s+fire\b/i.test(n)) return true
+  if (/^tihota$/i.test(n)) return true
   if (/\ba\s+soft\s+golden\s+sweetness\b/i.test(n)) return true
   if (/\b(?:rum|whisky|whiskey)-like\b/i.test(n)) return true
   if (/\b(?:warmth|embrace|finish)\s+f\b/i.test(n)) return true
@@ -267,12 +365,16 @@ export const looksLikeProseNotePhrase = (note: string): boolean => {
   if (!n) return true
   if (isObviousNonMaterialNote(n)) return true
   if (
-    /\b(?:adds?\s+a|\badds\b|give\s+the\s+scent|giraffe-inspired|animalic-foral|perfume\s+with\s+notes|with\s+notes\s+of\s+bergamot|subtle\s+grass\s+note|office\s+wear|polished\s+office)\b/.test(
+    /\b(?:adds?\s+a|\badds\b|give\s+the\s+scent|giraffe-inspired|animalic-foral|perfume\s+with\s+notes|with\s+notes\s+of\s+bergamot|subtle\s+grass\s+note|office\s+wear|polished\s+office|originally\s+from|frosted-pastel|summer\s+warm\s+days|clean\s+halo|longer\s+on\s+fabric|cloud\s+cream|candy\s+air|a\s+mug|the\s+creamy|cacao\s+the|powdered\s+vanilla\s+style|then\s+deepens|deepens\s+into|fluffy\s+glow|as\s+the\s+night\s+deepens)\b/.test(
       n,
     )
   ) {
     return true
   }
+  if (/\b(?:projection|facets|trail|style|concentration|strength|nuances|enveloping|sparkle|halos?)\b/.test(n)) {
+    return true
+  }
+  if (/\bcompletes\b/.test(n)) return true
   const words = n.split(/\s+/).filter(Boolean)
   if (words.length > 6) return true
   if (words.length > 4 && /\b(?:adds?|inspired|composed|glow|mimics|follow|completes)\b/.test(n)) {
@@ -334,6 +436,15 @@ export const isNoteSubstantiatedInSource = (note: string, corpus: string, fullSo
     }
   }
 
+  /** Indie PDPs: prose says "amaretto" while the note list uses "Amaretto Liqueur Accord". */
+  if (/\baccord\b/i.test(normalized) && words.length >= 2) {
+    const head = words[0]
+    if (head && head.length >= 4 && !/^(?:and|the|a|an)$/i.test(head)) {
+      const headRe = new RegExp(`\\b${escapeRegExp(head)}\\b`, "i")
+      if (headRe.test(haystack) || headRe.test(fullHaystack)) return true
+    }
+  }
+
   return false
 }
 
@@ -355,14 +466,16 @@ export const confirmNoteLayersAgainstSource = (
   const trusted = options?.merchantTrusted
 
   const filterLayer = (arr: string[]) =>
-    arr.filter(n => {
-      if (looksLikeProseNotePhrase(n) || isObviousNonMaterialNote(n)) return false
-      const lc = n.trim().toLowerCase()
-      if (trusted?.has(lc)) return substantiate(n)
-      const words = n.trim().split(/\s+/).filter(Boolean).length
-      if (words <= 4 && !/\baccord\b/i.test(n)) return true
-      return substantiate(n)
-    })
+    arr
+      .map(n => sanitizeExtractedNoteCandidate(n))
+      .filter((n): n is string => Boolean(n))
+      .filter(n => {
+        const lc = n.trim().toLowerCase()
+        if (trusted?.has(lc)) return substantiate(n)
+        const words = n.trim().split(/\s+/).filter(Boolean).length
+        if (words <= 4 && !/\baccord\b/i.test(n)) return true
+        return substantiate(n)
+      })
 
   const openNotes = filterLayer(layers.openNotes)
   const heartNotes = filterLayer(layers.heartNotes)

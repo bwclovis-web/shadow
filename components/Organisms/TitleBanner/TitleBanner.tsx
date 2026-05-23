@@ -32,13 +32,13 @@ const TitleBanner = ({
         src={bannerSrc}
         alt=""
         width={1200}
-        height={600}
+        height={500}
         priority={true}
         quality={90}
         unoptimized={isPublicStaticAsset}
         className={`w-full h-full object-cover ${imagePos} ${
           flipImage ? "scale-x-[-1]" : ""
-        } mb-2 filter brightness-[1.2] sepia-[0.2] mix-blend-screen mt-14 md:mt-0 rounded-lg absolute top-0 left-0 right-0 z-0`}
+        } mb-2 filter brightness-[1.2] sepia-[0.2] mix-blend-screen mt-16 md:mt-12 rounded-lg absolute top-0 left-0 right-0 z-0`}
         sizes="100vw"
       />
       <div className="relative z-10 w-full max-w-max p-2 top-2 md:top-0 md:px-8 rounded-lg md:py-4 text-noir-gold text-center text-shadow-lg text-shadow-noir-black">

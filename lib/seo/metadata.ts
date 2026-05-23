@@ -52,7 +52,7 @@ export const buildPageMetadata = ({
       description: desc,
       url: canonical,
       type: ogType,
-      siteName: "Shadow and Sillage",
+      siteName: "perfumer's hollow",
       ...(images ? { images } : {}),
     },
     twitter: {

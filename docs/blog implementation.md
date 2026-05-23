@@ -1,6 +1,6 @@
 # Blog Implementation Checklist
 
-Implementation checklist for adding a Prisma-backed blog to Shadow and Sillage.
+Implementation checklist for adding a Prisma-backed blog to perfumer's hollow.
 
 ## 1) Foundation: Data Model + Schema
 

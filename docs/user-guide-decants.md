@@ -1,4 +1,4 @@
-# Decants on Shadow and Sillage — User Guide
+# Decants on perfumer's hollow — User Guide
 
 This guide explains how decants work on the platform: inventory, listings, one-to-one buys, and **group splits**. Copy sections into Help, How It Works, or FAQ as needed.
 
@@ -6,7 +6,7 @@ This guide explains how decants work on the platform: inventory, listings, one-t
 
 ## 1. What is a decant here?
 
-A **decant** is a portion of authentic fragrance poured from a bottle you own into a smaller container (atomizer, vial, etc.). Shadow and Sillage helps collectors **find each other** and **track** offers and group pours. We do **not** sell fragrance, process payments, or ship bottles.
+A **decant** is a portion of authentic fragrance poured from a bottle you own into a smaller container (atomizer, vial, etc.). perfumer's hollow helps collectors **find each other** and **track** offers and group pours. We do **not** sell fragrance, process payments, or ship bottles.
 
 ---
 
@@ -40,7 +40,7 @@ You can have **several listing rows** for the same perfume — for example 10 ml
 3. Agree on **price and shipping off-platform** (PayPal, Venmo, etc.). When you list ml on the exchange, you must accept the off-platform payment disclaimer (same acknowledgment as group splits).
 4. Optionally use a **trade** to track a swap if bottles are exchanged.
 
-Shadow and Sillage does not hold money or guarantee delivery.
+perfumer's hollow does not hold money or guarantee delivery.
 
 ---
 

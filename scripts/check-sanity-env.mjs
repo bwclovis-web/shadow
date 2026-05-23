@@ -23,7 +23,7 @@ if (!projectId) {
   console.log("✗ NEXT_PUBLIC_SANITY_PROJECT_ID is missing\n")
   console.log("Next steps:")
   console.log("  1. npx sanity login")
-  console.log("  2. npx sanity projects create \"Shadow and Sillage\" --dataset production")
+  console.log("  2. npx sanity projects create \"perfumer's hollow\" --dataset production")
   console.log("     (or create a project at https://sanity.io/manage)")
   console.log("  3. Add to .env:")
   console.log('     NEXT_PUBLIC_SANITY_PROJECT_ID="<your-project-id>"')

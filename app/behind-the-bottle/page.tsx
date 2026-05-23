@@ -9,7 +9,7 @@ import { isSanityConfigured } from "@/sanity/env"
 
 export const revalidate = 3600
 
-const BANNER_IMAGE = "/images/behind-bottle.webp"
+const BANNER_IMAGE = "/images/new/blog.webp"
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("behindTheBottle.meta")

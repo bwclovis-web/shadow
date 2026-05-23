@@ -11,7 +11,7 @@ const NotFound = () => {
   return (
     <section>
       <TitleBanner
-        image="/images/404.png"
+        image="/images/new/404.webp"
         heading={t("heading")}
         subheading={t("subheading")}
       />

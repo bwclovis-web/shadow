@@ -17,7 +17,7 @@ const warnInvalidEmailFrom = (from: string): void => {
   invalidFromWarned = true
   console.warn(
     `[email] EMAIL_FROM is invalid for Resend (${JSON.stringify(from)}). ` +
-      'Use `alerts@yourdomain.com` or `Shadow and Sillage <alerts@yourdomain.com>`.'
+      "Use `alerts@yourdomain.com` or `perfumer's hollow <alerts@yourdomain.com>`."
   )
 }
 

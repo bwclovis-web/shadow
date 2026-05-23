@@ -8,6 +8,8 @@ import {
   extractUnlabeledFragranceNotesBlock,
   isNoteSubstantiatedInSource,
   isObviousNonMaterialNote,
+  peelMarketingDescriptorTail,
+  sanitizeExtractedNoteCandidate,
 } from "./note-source-confirmation"
 
 const invokeMock = vi.hoisted(() => vi.fn())
@@ -106,6 +108,20 @@ Middle Notes: Verdant Earth Accord (Rich Soil, Green and Flowering Plants)`
     expect(confirmed.openNotes).toEqual(expect.arrayContaining(["ozone", "salt water"]))
   })
 
+  it("substantiates accord notes when the head material appears in thin merchant prose", () => {
+    const thinOrgasmo =
+      "Andromedas Moon Inspired by Orgasmo Eau De Parfum A dreamy amaretto- gourmand with a silky, sweet glow cozy, addictive, and cloud-soft."
+    const corpus = buildNoteConfirmationCorpus(thinOrgasmo)
+    expect(isNoteSubstantiatedInSource("amaretto liqueur accord", corpus, thinOrgasmo)).toBe(true)
+    const confirmed = confirmNoteLayersAgainstSource(
+      { openNotes: ["almond", "amaretto liqueur accord"], heartNotes: [], baseNotes: [] },
+      thinOrgasmo,
+    )
+    expect(confirmed.openNotes).toEqual(
+      expect.arrayContaining(["almond", "amaretto liqueur accord"]),
+    )
+  })
+
   it("confirms Ink Mark labeled pyramid notes", () => {
     const layers = {
       openNotes: ["inky violet air", "aromatic lift"],
@@ -149,12 +165,62 @@ Middle Notes: Verdant Earth Accord (Rich Soil, Green and Flowering Plants)`
     vi.unstubAllEnvs()
   })
 
+  it("extractUnlabeledFragranceNotesBlock parses emoji-glued Impadia Fragrance Notes", () => {
+    const impadia = `Inspired by Impadia Eau De Parfum Fragrance Description A radiant fusion of pear and bergamot unfolds into blooming roses. Fragrance Notes 🍐 Pear 🍋 Bergamot 🍊 Mandarin 🌹 Bulgarian Rose 🌷 Turkish Rose 🤍 Orange Blossom 🪵 Akigalawood 🌿 Vanilla Absolute 🪵 Sandalwood Available Sizes 5 mL`
+    expect(extractUnlabeledFragranceNotesBlock(impadia)).toEqual(
+      expect.arrayContaining([
+        "pear",
+        "bergamot",
+        "mandarin",
+        "bulgarian rose",
+        "turkish rose",
+        "orange blossom",
+        "akigalawood",
+        "vanilla absolute",
+        "sandalwood",
+      ]),
+    )
+  })
+
+  it("sanitizeExtractedNoteCandidate rejects marketing junk from Andromeda CSV bleed", () => {
+    expect(sanitizeExtractedNoteCandidate("top")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("a mug")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("the creamy")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("cacao the")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("powdered vanilla style")).toBe("powdered vanilla")
+    expect(sanitizeExtractedNoteCandidate("cozy spices projection")).toBe("cozy spices")
+    expect(sanitizeExtractedNoteCandidate("creamy almond facets")).toBe("creamy almond")
+    expect(sanitizeExtractedNoteCandidate("summer warm days")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("originally from byredo")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("frosted-pastel")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("powdery")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("sandalwood")).toBe("sandalwood")
+    expect(sanitizeExtractedNoteCandidate("brown sugar")).toBe("brown sugar")
+    expect(sanitizeExtractedNoteCandidate("then deepens into warm brown sugar")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("fluffy glow")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("middle notes")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("base notes are ebony")).toBe("ebony")
+  })
+
+  it("peelMarketingDescriptorTail strips trailing Shopify copy", () => {
+    expect(peelMarketingDescriptorTail("cotton candy air")).toBe("cotton candy")
+    expect(peelMarketingDescriptorTail("vanilla cloud cream")).toBe("vanilla")
+    expect(peelMarketingDescriptorTail("sugar sparkle")).toBe("sugar")
+    expect(peelMarketingDescriptorTail("fresh watermelon hit first")).toBe("fresh watermelon")
+    expect(peelMarketingDescriptorTail("sea breeze wrap you in a haze")).toBe("sea breeze")
+    expect(peelMarketingDescriptorTail("musk melt into skin")).toBe("musk")
+  })
+
   it("isObviousNonMaterialNote rejects CSS bleed and truncated prose fragments", () => {
     expect(isObviousNonMaterialNote("touch")).toBe(true)
     expect(isObviousNonMaterialNote("then")).toBe(true)
     expect(isObviousNonMaterialNote("fabric")).toBe(true)
     expect(isObviousNonMaterialNote("rgba")).toBe(true)
     expect(isObviousNonMaterialNote("linear-gradient")).toBe(true)
+    expect(isObviousNonMaterialNote("body")).toBe(true)
+    expect(isObviousNonMaterialNote("roboto")).toBe(true)
+    expect(isObviousNonMaterialNote("blinkmacsystemfont")).toBe(true)
+    expect(isObviousNonMaterialNote("radial-gradient")).toBe(true)
     expect(isObviousNonMaterialNote("rum-like warmth f note")).toBe(true)
     expect(isObviousNonMaterialNote("rum-like warmth f")).toBe(true)
     expect(isObviousNonMaterialNote("a soft golden sweetness")).toBe(true)

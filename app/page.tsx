@@ -3,7 +3,6 @@ import { getCommunityStats } from "@/models/community-stats.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { getSeasonalTrendingPerfumes } from "@/models/seasonal-trending.server"
-import { getAllFeatures } from '@/models/feature.server'
 import { getTranslations } from "next-intl/server"
 import HomeClient from "./home-client"
 import type { Metadata } from "next"
@@ -12,7 +11,7 @@ export const revalidate = 3600
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "New Smell",
+    title: "perfumer's hollow",
     description: "Discover and trade perfumes.",
   }
 }
@@ -24,9 +23,8 @@ const HomePage = async () => {
 
   const t = await getTranslations("home")
 
-  const [features, communityStats, recentListings, followedActivity, seasonalTrending] =
+  const [communityStats, recentListings, followedActivity, seasonalTrending] =
     await Promise.all([
-      getAllFeatures(),
       getCommunityStats(),
       getRecentlyListedActivity(6),
       viewerId ? getFollowedActivity(viewerId, 6) : Promise.resolve([]),
@@ -35,7 +33,6 @@ const HomePage = async () => {
 
   return (
     <HomeClient
-      features={features}
       communityStats={communityStats}
       heading={t("heading")}
       subheading={t("subheading")}

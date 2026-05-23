@@ -61,14 +61,11 @@ describe("explodeSpaceSeparatedNoteBlob", () => {
   it("explodeSpaceSeparatedNoteBlob splits Milk Orchid space-joined materials", () => {
     expect(explodeSpaceSeparatedNoteBlob("coconut fig milk almond blossom")).toEqual([
       "coconut",
-      "fig",
-      "milk",
-      "almond",
-      "blossom",
+      "fig milk",
+      "almond blossom",
     ])
     expect(explodeSpaceSeparatedNoteBlob("vanilla orchid magnolia")).toEqual([
-      "vanilla",
-      "orchid",
+      "vanilla orchid",
       "magnolia",
     ])
   })
@@ -118,6 +115,10 @@ describe("explodeSpaceSeparatedNoteBlob", () => {
     expect(
       splitGluedMerchantNoteRun("Bourbon Vanilla Orange Blossom Vanilla Caviar Lavender Rum"),
     ).toEqual(["bourbon vanilla", "orange blossom", "vanilla caviar", "lavender", "rum"])
+    expect(splitGluedMerchantNoteRun("Almond Amaretto Liqueur Accord")).toEqual([
+      "almond",
+      "amaretto liqueur accord",
+    ])
   })
 })
 
@@ -1770,6 +1771,318 @@ Base: white musk`
     expect(records[0].description).not.toMatch(/touch\s+of\s+or\s+a/i)
   })
 
+  it("Andromedas Orgasmo: stacked Notes block and amaretto prose fallback extract both materials", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const fullPdpDesc =
+      "Inspired by Orgasmo Eau De Parfum A dreamy amaretto-almond gourmand with a silky, sweet glow. Scent Vibe Think amaretto on the rocks and sweet almond warmth. Notes Almond Amaretto Liqueur Accord Wear & Layer Gorgeous solo for an almond-gourmand moment. Available Sizes 5ml 15ml"
+
+    const thinScrapeDesc =
+      "Andromedas Moon Inspired by Orgasmo Eau De Parfum A dreamy amaretto- gourmand with a silky, sweet glow cozy, addictive, and cloud-soft."
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when merchant Notes block or amaretto prose is present")
+    })
+
+    for (const [label, description] of [
+      ["full PDP", fullPdpDesc],
+      ["thin scrape", thinScrapeDesc],
+    ] as const) {
+      const items: ScrapedItem[] = [
+        {
+          name: "Andromeda's Inspired By Orgasmo Hildi Soliani",
+          description,
+          image: "",
+          detailURL:
+            "https://www.andromedasmoon.com/products/andromedas-inspired-by-orgasmo-eau-de-parfum-hildi-soliani",
+          perfumeHouse: "Andromeda's Moon",
+        },
+      ]
+
+      const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+        generateNoirDescriptions: false,
+        fetchPdpNoteBootstrap: false,
+      })
+
+      const open = JSON.parse(records[0].openNotes) as string[]
+      expect(open, label).toEqual(
+        expect.arrayContaining(["almond", "amaretto liqueur accord"]),
+      )
+    }
+
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas Impadia: emoji Fragrance Notes block extracts all merchant materials", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const impadiaPdp =
+      "Inspired by Impadia Eau De Parfum Fragrance Description A radiant fusion of pear and bergamot unfolds into blooming roses and orange blossom, anchored by creamy vanilla absolute and smooth sandalwood. Fragrance Notes 🍐 Pear 🍋 Bergamot 🍊 Mandarin 🌹 Bulgarian Rose 🌷 Turkish Rose 🤍 Orange Blossom 🪵 Akigalawood 🌿 Vanilla Absolute 🪵 Sandalwood Available Sizes 5 mL 15 mL"
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when emoji Fragrance Notes block is present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Impadia Bdk",
+        description: impadiaPdp,
+        image: "",
+        detailURL: "https://www.andromedasmoon.com/products/andromeda-s-inspired-by-impadia-eau-de-parfum-bdk",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    expect(open).toEqual(
+      expect.arrayContaining([
+        "pear",
+        "bergamot",
+        "mandarin",
+        "bulgarian rose",
+        "turkish rose",
+        "orange blossom",
+        "akigalawood",
+        "vanilla absolute",
+        "sandalwood",
+      ]),
+    )
+    expect(open).not.toContain("body")
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas Mojave Ghost Absolu: em-dash Top/Heart/Base pyramid and no CSS font junk", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const mojavePdp =
+      "Inspired by Mojave Ghost Absolu Eau De Parfum Andromedas Moon Originally from Byredo Unisex Top — Sapodilla, Ambrette Heart — Magnolia, Violet, Sandalwood Base — Musk, Amber, Cedarwood Scent Story Radiant yet grounded creamy woods airy florals"
+
+    const cssBleed =
+      "body, .color-background-1 { font-family: -apple-system, BlinkMacSystemFont, Roboto, Inter, system-ui, Helvetica, Arial, sans-serif; background: radial-gradient(circle, #fff, #000); }"
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when em-dash pyramid is present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Mojave Ghost Absolu Byredo",
+        description: `${mojavePdp}\n\n${cssBleed}`,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromeda-s-inspired-by-mojave-ghost-absolu-eau-de-parfum-byredo",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+
+    expect(open).toEqual(expect.arrayContaining(["sapodilla", "ambrette"]))
+    expect(heart).toEqual(expect.arrayContaining(["magnolia", "violet", "sandalwood"]))
+    expect(base).toEqual(expect.arrayContaining(["musk", "amber", "cedarwood"]))
+    expect([...open, ...heart, ...base]).not.toEqual(
+      expect.arrayContaining(["body", "roboto", "radial-gradient", "blinkmacsystemfont"]),
+    )
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas Milk Orchid: layered Top/Heart/Base notes without prose junk", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const milkOrchidPdp =
+      "Inspired by Milk Orchid Eau De Parfum Originally from Commodity Top Notes: Coconut, Fig Milk, Almond Blossom Heart Notes: Vanilla Orchid, Magnolia Base Notes: Milk, Sandalwood, Macadamia Imagine a soft white sweater, a mug of warm coconut milk and petals of vanilla orchid drifting over the surface."
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when layered Top/Heart/Base notes are present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Milk Orchid Commodity",
+        description: milkOrchidPdp,
+        image: "",
+        detailURL: "https://www.andromedasmoon.com/products/andromedas-inspired-by-milk-orchid-eau-de-parfum-commodity",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+
+    expect(open).toEqual(expect.arrayContaining(["coconut", "fig milk", "almond blossom"]))
+    expect(heart).toEqual(expect.arrayContaining(["vanilla orchid", "magnolia"]))
+    expect(base).toEqual(expect.arrayContaining(["milk", "sandalwood", "macadamia"]))
+    expect([...open, ...heart, ...base]).not.toEqual(expect.arrayContaining(["a mug", "top", "blossom"]))
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas Tihota: Scent Profile block and no prose junk in notes", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const tihotaPdp =
+      "Inspired by Tihota Eau de Parfum Andromeda's Moon Originally from Indult A luminous creamy vanilla that feels like skin kissed by starlight. Tahitian vanilla is wrapped in soft sugar cane and almond milk. Scent Profile Tahitian Vanilla Tonka Bean Sugar Cane Almond Milk White Musk Amber Vibe Clean vanilla aura creamy comfort warm amber glow Wear It When Everyday signature Strength Eau de Parfum concentration Available Sizes 5 ml 15 ml"
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when Scent Profile merchant list is present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Tihota Indult",
+        description: tihotaPdp,
+        image: "",
+        detailURL: "https://www.andromedasmoon.com/products/inspired-by-tihota-eau-de-parfum",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(all).toEqual(
+      expect.arrayContaining([
+        "tahitian vanilla",
+        "tonka bean",
+        "sugar cane",
+        "almond milk",
+        "white musk",
+        "amber",
+      ]),
+    )
+    expect(all).not.toEqual(
+      expect.arrayContaining([
+        "tihota",
+        "fluffy glow",
+        "then deepens into warm brown sugar",
+        "tonka",
+      ]),
+    )
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas Wavechild: emoji Top/Middle/Base notes of layers parse without LLM", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const wavechildPdp =
+      "Inspired by Wavechild Eau De Parfum Andromeda's Moon Originally by Room 1015 Dive into a neon splash. Top notes of mandarin orange, lemon, and fresh watermelon hit first. Middle notes of coconut and sea breeze wrap you in a haze. Base notes of amber, amberwood, cacao, and musk melt into skin. Why You'll Love It Bright. Tropical. Addictive."
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when Top/Middle/Base notes of layers are present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Wavechild Room",
+        description: wavechildPdp,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromedas-inspired-by-wavechild-eau-de-parfum-room-1015",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(open).toEqual(expect.arrayContaining(["mandarin orange", "lemon", "fresh watermelon"]))
+    expect(heart).toEqual(expect.arrayContaining(["coconut", "sea breeze"]))
+    expect(base).toEqual(expect.arrayContaining(["amber", "amberwood", "cacao", "musk"]))
+    expect(all).not.toEqual(expect.arrayContaining(["middle notes", "base notes are ebony"]))
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("relayers flat openNotes when layer markers were comma-glued (Wavechild CSV bleed)", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when enrichOnly relayers embedded markers")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Wavechild Room",
+        description: "Marketing prose only.",
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromedas-inspired-by-wavechild-eau-de-parfum-room-1015",
+        perfumeHouse: "Andromeda's Moon",
+        openNotes: [
+          "bright citrus",
+          "beach nights",
+          "caramel",
+          "hawthorn",
+          "middle notes",
+          "madagascar vanilla",
+          "night blooming cereus",
+          "base notes are ebony",
+          "benzoin",
+          "musk",
+          "ambergris",
+          "madagascar vetiver",
+        ],
+        heartNotes: [],
+        baseNotes: [],
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      enrichOnly: true,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(open).toEqual(expect.arrayContaining(["bright citrus", "caramel", "hawthorn"]))
+    expect(heart).toEqual(expect.arrayContaining(["madagascar vanilla", "night blooming cereus"]))
+    expect(base).toEqual(
+      expect.arrayContaining(["ebony", "benzoin", "musk", "ambergris", "madagascar vetiver"]),
+    )
+    expect(all).not.toEqual(expect.arrayContaining(["middle notes", "base notes are ebony"]))
+  })
+
   it("stripPolicyBoilerplate truncates Processing/Packing/Shipping trail", async () => {
     vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
     /**
@@ -1901,7 +2214,7 @@ Middle Notes: Verdant Earth Accord (Rich Soil, Green and Flowering Plants)`,
     const open = JSON.parse(records[0].openNotes) as string[]
     const heart = JSON.parse(records[0].heartNotes) as string[]
     expect(open).toEqual(expect.arrayContaining(["ozone", "salt water"]))
-    expect(heart).toEqual(expect.arrayContaining(["rich soil", "green", "flowering plants"]))
+    expect(heart).toEqual(expect.arrayContaining(["rich soil", "green and flowering plants"]))
     expect([...open, ...heart].some(n => n.includes("("))).toBe(false)
     expect(records[0].description).toBe("")
   })

@@ -82,7 +82,7 @@ export default async function ProfilePage({ params }: Props): Promise<React.Reac
       preferences={preferences}
       unreadCount={unreadCount}
       recommendedPerfumes={recommendedPerfumes}
-      bannerImage={publicAssetUrl("/images/profile.png")}
+      bannerImage={publicAssetUrl("/images/new/profile.webp")}
     />
   )
 }

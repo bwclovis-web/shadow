@@ -85,7 +85,7 @@ const buildAlertEmailBody = (params: {
     "",
     `Manage alert preferences: ${params.preferencesUrl}`,
     "",
-    "— Shadow and Sillage",
+    "— perfumer's hollow",
   ].join("\n")
 
 export const sendWishlistAlertEmail = async (params: {
@@ -113,7 +113,7 @@ export const sendWishlistAlertEmail = async (params: {
 
   const result = await sendTransactionalEmail({
     to: params.user.email,
-    subject: `${params.perfumeName} is now available on Shadow and Sillage`,
+    subject: `${params.perfumeName} is now available on perfumer's hollow`,
     text: buildAlertEmailBody({
       displayName,
       message: params.message,
@@ -312,7 +312,7 @@ export const sendDisputeResolutionEmail = async (params: {
 
   const result = await sendTransactionalEmail({
     to: params.user.email,
-    subject: "Trade dispute resolution — Shadow and Sillage",
+    subject: "Trade dispute resolution — perfumer's hollow",
     text: buildAlertEmailBody({
       displayName,
       message,

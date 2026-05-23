@@ -69,7 +69,7 @@ Optional service variables (only if you use those features):
 
 - `OPENAI_API_KEY` (AI note refresh scripts)
 - Stripe variables (`STRIPE_*`) for payments
-- Email (Resend): `RESEND_API_KEY`, `EMAIL_FROM` — must include a verified address, e.g. `Shadow and Sillage <alerts@shadowandsillage.com>` (not display name alone); verify sending domain in Resend dashboard
+- Email (Resend): `RESEND_API_KEY`, `EMAIL_FROM` — must include a verified address, e.g. `perfumer's hollow <alerts@shadowandsillage.com>` (not display name alone); verify sending domain in Resend dashboard
 - Web Push (optional): `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` — generate keys with `node scripts/generate-vapid-keys.mjs` (testing guide: `docs/testing-web-push.md`)
 - R2/Cloudflare storage variables (for image/storage scripts)
 - Sanity (Behind the Bottle blog): see **Sanity setup** below. Run `npm run sanity:check` to verify env vars.
@@ -128,7 +128,7 @@ If both pass and the app opens at `localhost:3000`, your machine setup is comple
 
 ```bash
 npm run sanity:login
-npx sanity projects create "Shadow and Sillage" --dataset production
+npx sanity projects create "perfumer's hollow" --dataset production
 ```
 
 Copy the **project ID** into `.env`:

@@ -17,7 +17,7 @@ import { Button } from "@/components/Atoms/Button"
 import { MdDeleteForever } from "react-icons/md"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
-const BANNER_IMAGE = "/images/messages.png"
+const BANNER_IMAGE = "/images/new/messages.webp"
 const DELETE_MODAL_ID = "delete-conversation"
 
 export interface ConversationSummary {

@@ -40,12 +40,12 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
-  title: 'Shadow and Sillage',
+  title: "perfumer's hollow",
   description: 'Perfume trading platform',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Shadow and Sillage',
+    title: "perfumer's hollow",
   },
 }
 

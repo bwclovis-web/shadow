@@ -4,9 +4,6 @@ import { useCallback, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
-import { BEHIND_THE_BOTTLE_PATH } from "@/constants/routes"
-
-import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import AlphabeticalNav from "@/components/Organisms/AlphabeticalNav"
 import DataDisplaySection from "@/components/Organisms/DataDisplaySection"
 import DataFilters from "@/components/Organisms/DataFilters"
@@ -24,7 +21,7 @@ import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const ROUTE_PATH = "/houses"
 
-const BANNER_IMAGE = "/images/behind-bottle.webp"
+const BANNER_IMAGE = "/images/new/behind.webp"
 
 interface AllHousesClientProps {
   heading: string
@@ -164,7 +161,7 @@ const buildHousesPath = (
 const AllHousesClient = ({
   heading,
   subheading,
-  showBlogLink = false,
+  showBlogLink: _showBlogLink = false,
   initialLetter = null,
   initialHouses = [],
   initialHousesTotal = 0,

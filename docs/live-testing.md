@@ -1,12 +1,12 @@
 # Live testing — transactional email
 
-Manual steps to verify Resend and all email alert paths in Shadow and Sillage. Automated unit tests live in `utils/alert-email.server.test.ts` and `utils/email.server.test.ts`.
+Manual steps to verify Resend and all email alert paths in perfumer's hollow. Automated unit tests live in `utils/alert-email.server.test.ts` and `utils/email.server.test.ts`.
 
 ## Prerequisites
 
 1. **Environment** (`.env` or hosting env vars):
    - `RESEND_API_KEY` — API key from [Resend](https://resend.com)
-   - `EMAIL_FROM` — verified sender, e.g. `Shadow and Sillage <alerts@yourdomain.com>` or `alerts@yourdomain.com`
+   - `EMAIL_FROM` — verified sender, e.g. `perfumer's hollow <alerts@yourdomain.com>` or `alerts@yourdomain.com`
    - `NEXT_PUBLIC_APP_URL` — base URL for links in emails (e.g. `http://localhost:3000` locally)
 
 2. **Database migration** (after pulling trade-email changes):
@@ -28,7 +28,7 @@ Confirms API key and `EMAIL_FROM` without going through alerts or trades.
 npx tsx scripts/test-resend-email.ts your@email.com
 ```
 
-**Expected:** Console shows `Result: { sent: true, id: '...' }` and the inbox receives “Shadow and Sillage — Resend smoke test”.
+**Expected:** Console shows `Result: { sent: true, id: '...' }` and the inbox receives “perfumer's hollow — Resend smoke test”.
 
 **If it fails:**
 - `RESEND_API_KEY` or `EMAIL_FROM` missing → set both and restart the dev server

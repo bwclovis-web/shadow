@@ -1,6 +1,6 @@
 # Database schema changes (migrations only)
 
-Shadow and Sillage uses **Prisma Migrate** with checked-in SQL under `prisma/migrations/`. We **do not** use `prisma db push` for schema changes.
+perfumer's hollow uses **Prisma Migrate** with checked-in SQL under `prisma/migrations/`. We **do not** use `prisma db push` for schema changes.
 
 ## Why migrations
 

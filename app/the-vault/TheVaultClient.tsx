@@ -20,7 +20,7 @@ import {
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const ROUTE_PATH = "/the-vault"
-const BANNER_IMAGE = "/images/vault.webp"
+const BANNER_IMAGE = "/images/new/vault.webp"
 const SINGLE_LETTER_REGEX = /^[A-Za-z]$/
 
 export type TheVaultClientProps = {

@@ -271,7 +271,7 @@ const classifyVolatilityToken = (token: string): "open" | "heart" | "base" => {
  * Words that signal a multi-token merchant phrase (e.g. "inky violet air"), not a run of
  * single-word materials jammed together by a bad scrape or LLM merge.
  */
-const SPACE_LIST_PROSE_MODIFIERS = new Set([
+const _SPACE_LIST_PROSE_MODIFIERS = new Set([
   "soft",
   "powdery",
   "inky",
@@ -331,7 +331,6 @@ const EXTRA_SINGLE_WORD_MATERIALS = [
   "cotton",
   "anise",
   "leather",
-  "tihota",
   "vetiver",
   "ginger",
   "sugar",
@@ -342,7 +341,6 @@ const EXTRA_SINGLE_WORD_MATERIALS = [
 
 /** Filler words between materials in bad space-joined merchant blobs (skip during greedy split). */
 const NOTE_BLOB_FILLER_WORDS = new Set([
-  "natural",
   "and",
   "or",
   "the",
@@ -367,7 +365,7 @@ const MERCHANT_MULTI_WORD_PHRASES: string[] = [
   "soft powdery wood",
   "powdery woods",
   "almond blossom",
-  "vanilla orchid magnolia",
+  "vanilla orchid",
   "honeyed sweetness",
   "lavender mist",
   "steaming black tea",
@@ -398,6 +396,35 @@ const MERCHANT_MULTI_WORD_PHRASES: string[] = [
   "bourbon vanilla",
   "vanilla caviar",
   "glowing orange blossom",
+  "amaretto liqueur accord",
+  "bulgarian rose",
+  "turkish rose",
+  "vanilla absolute",
+  "akigalawood",
+  "brown sugar",
+  "fig milk",
+  "almond blossom",
+  "macadamia",
+  "matcha gelato",
+  "marshmallow cloud",
+  "waffle cone",
+  "cotton candy air",
+  "whipped marshmallow",
+  "powdered vanilla",
+  "vanilla cloud cream",
+  "tonka bean absolute",
+  "creamy almond",
+  "soft wood",
+  "cozy spices",
+  "sapodilla",
+  "ambrette",
+  "green and flowering plants",
+  "almond milk",
+  "night blooming cereus",
+  "fresh watermelon",
+  "sea breeze",
+  "amberwood",
+  "mandarin orange",
 ]
 
 const getExplodePhrases = (): string[] => {
@@ -451,20 +478,27 @@ const greedyPhraseSplit = (raw: string): string[] | null => {
   return out.length >= 2 ? out : null
 }
 
+const TAIL_SINGLE_MATERIALS = new Set(["rum", "musk", "oud", "amber", "benzoin", "vetiver"])
+
+/** Split paired tail notes like "lavender rum" when the merchant list ends with a solo material. */
+const splitKnownTailMaterial = (notes: string[]): string[] => {
+  if (notes.length === 0) return notes
+  const last = notes[notes.length - 1]?.trim().toLowerCase() ?? ""
+  if (!last || matchesKnownMultiWordPhrase(last)) return notes
+  const parts = last.split(/\s+/).filter(Boolean)
+  if (parts.length === 2 && TAIL_SINGLE_MATERIALS.has(parts[1])) {
+    return [...notes.slice(0, -1), parts[0], parts[1]].map(n => canonicalizeNote(n)).filter(Boolean)
+  }
+  return notes
+}
+
 /**
- * Andromeda's Moon / Shopify PDPs: "Main Notes Bourbon Vanilla Orange Blossom … Rum" (no colon, no commas).
- * Greedy phrase split first; falls back to comma/decorator split or a single canonical note.
+ * Greedy left-to-right walk preferring longest known merchant phrases/materials.
+ * Used by both glued Main Notes runs and space-joined CSV blobs.
  */
-export const splitGluedMerchantNoteRun = (raw: string): string[] => {
+const walkKnownMaterialChunks = (raw: string): string[] => {
   const s = raw.trim().replace(/\s+/g, " ")
   if (!s) return []
-  if (/[,;•·|✧✦]/.test(s)) {
-    return s
-      .split(/[,;•·|✧✦]+/)
-      .map(part => canonicalizeNote(part))
-      .filter(Boolean)
-  }
-
   const words = s.split(/\s+/).filter(Boolean)
   const materials = getSingleWordNoteMaterials()
   const phrases = new Set(getExplodePhrases())
@@ -477,27 +511,93 @@ export const splitGluedMerchantNoteRun = (raw: string): string[] => {
     return !lc.includes(" ") && materials.has(token)
   }
 
-  const longestKnownWalk = (): string[] => {
-    const out: string[] = []
-    let i = 0
-    while (i < words.length) {
-      let matched = false
-      for (let len = Math.min(4, words.length - i); len >= 1; len--) {
-        const chunk = words.slice(i, i + len).join(" ")
-        if (!isKnownChunk(chunk)) continue
-        const c = canonicalizeNote(chunk)
-        if (!c) continue
-        out.push(c)
-        i += len
-        matched = true
-        break
-      }
-      if (!matched) return []
+  const out: string[] = []
+  let i = 0
+  while (i < words.length) {
+    let matched = false
+    for (let len = Math.min(4, words.length - i); len >= 1; len--) {
+      const chunk = words.slice(i, i + len).join(" ")
+      if (!isKnownChunk(chunk)) continue
+      const c = canonicalizeNote(chunk)
+      if (!c) continue
+      out.push(c)
+      i += len
+      matched = true
+      break
     }
-    return out
+    if (!matched) return []
+  }
+  return out
+}
+
+const explodeSpaceSeparatedNoteBlobInner = (s: string): string[] => {
+  const words = s.split(/\s+/).filter(Boolean)
+  const materials = getSingleWordNoteMaterials()
+  const mapped =
+    words.length >= 2
+      ? words.map(w => {
+          const lc = w.toLowerCase()
+          return NOTE_CANONICAL_TOKENS[lc] ?? lc
+        })
+      : []
+
+  const greedy = greedyPhraseSplit(s)
+  if (greedy) return splitKnownTailMaterial(greedy)
+
+  if (words.length >= 3 && mapped.length === words.length && mapped.every(w => materials.has(w))) {
+    return mapped.map(w => canonicalizeNote(w)).filter(Boolean)
   }
 
-  const walked = longestKnownWalk()
+  if (words.length < 3) {
+    const c = canonicalizeNote(s)
+    return c ? [c] : []
+  }
+
+  if (!mapped.every(w => materials.has(w))) {
+    const c = canonicalizeNote(s)
+    return c ? [c] : []
+  }
+
+  return mapped.map(w => canonicalizeNote(w)).filter(Boolean)
+}
+
+/** Mask parenthetical groups so comma/decorator splits stay outside `(…)`. */
+const maskParenGroupsForSplit = (s: string): { masked: string; groups: string[] } => {
+  const groups: string[] = []
+  const masked = s.replace(/\([^()]*\)/g, m => {
+    groups.push(m)
+    return `«p${groups.length - 1}»`
+  })
+  return { masked, groups }
+}
+
+const unmaskParenGroupsForSplit = (s: string, groups: string[]): string =>
+  s.replace(/«p(\d+)»/g, (_, i) => groups[Number(i)] ?? "")
+
+const splitOnDecoratorsOutsideParens = (s: string): string[] => {
+  const { masked, groups } = maskParenGroupsForSplit(s)
+  return masked
+    .split(/[,;•·|✧✦\u2726-\u2728]+/)
+    .map(part => unmaskParenGroupsForSplit(part.trim(), groups))
+    .filter(Boolean)
+}
+
+/**
+ * Andromeda's Moon / Shopify PDPs: "Main Notes Bourbon Vanilla Orange Blossom … Rum" (no colon, no commas).
+ * Greedy phrase split first; falls back to comma/decorator split or a single canonical note.
+ */
+export const splitGluedMerchantNoteRun = (raw: string): string[] => {
+  const s = raw.trim().replace(/\s+/g, " ")
+  if (!s) return []
+  if (/[,;•·|✧✦]/.test(s)) {
+    return splitOnDecoratorsOutsideParens(s)
+      .map(part => canonicalizeNote(part))
+      .filter(Boolean)
+  }
+
+  const words = s.split(/\s+/).filter(Boolean)
+
+  const walked = walkKnownMaterialChunks(s)
   if (walked.length >= 2) return splitKnownTailMaterial(walked)
 
   /** Andromeda "Main Notes Bourbon Vanilla Orange Blossom … Rum" — Title Case pairs + optional tail. */
@@ -518,23 +618,10 @@ export const splitGluedMerchantNoteRun = (raw: string): string[] => {
 
   const greedy = greedyPhraseSplit(s.toLowerCase())
   if (greedy && greedy.length >= 2) return splitKnownTailMaterial(greedy)
-  const exploded = explodeSpaceSeparatedNoteBlob(s)
+  const exploded = explodeSpaceSeparatedNoteBlobInner(s)
   if (exploded.length >= 2) return splitKnownTailMaterial(exploded)
   const c = canonicalizeNote(s)
   return c ? [c] : []
-}
-
-const TAIL_SINGLE_MATERIALS = new Set(["rum", "musk", "oud", "amber", "benzoin", "vetiver"])
-
-/** Split paired tail notes like "lavender rum" when the merchant list ends with a solo material. */
-const splitKnownTailMaterial = (notes: string[]): string[] => {
-  if (notes.length === 0) return notes
-  const last = notes[notes.length - 1]?.trim().toLowerCase() ?? ""
-  const parts = last.split(/\s+/).filter(Boolean)
-  if (parts.length === 2 && TAIL_SINGLE_MATERIALS.has(parts[1])) {
-    return [...notes.slice(0, -1), parts[0], parts[1]].map(n => canonicalizeNote(n)).filter(Boolean)
-  }
-  return notes
 }
 
 /**
@@ -546,8 +633,7 @@ export const explodeSpaceSeparatedNoteBlob = (raw: string): string[] => {
   if (!s) return []
 
   if (/[,;•·|✧✦\u2726-\u2728]/.test(s)) {
-    return s
-      .split(/[,;•·|✧✦\u2726-\u2728]+/)
+    return splitOnDecoratorsOutsideParens(s)
       .map(part => canonicalizeNote(part))
       .filter(Boolean)
   }
@@ -557,34 +643,10 @@ export const explodeSpaceSeparatedNoteBlob = (raw: string): string[] => {
     return c ? [c] : []
   }
 
-  const words = s.split(/\s+/).filter(Boolean)
-  const materials = getSingleWordNoteMaterials()
-  const mapped =
-    words.length >= 2
-      ? words.map(w => {
-          const lc = w.toLowerCase()
-          return NOTE_CANONICAL_TOKENS[lc] ?? lc
-        })
-      : []
+  const walked = walkKnownMaterialChunks(s)
+  if (walked.length >= 2) return splitKnownTailMaterial(walked)
 
-  if (words.length >= 3 && mapped.length === words.length && mapped.every(w => materials.has(w))) {
-    return mapped.map(w => canonicalizeNote(w)).filter(Boolean)
-  }
-
-  const greedy = greedyPhraseSplit(s)
-  if (greedy) return greedy
-
-  if (words.length < 3) {
-    const c = canonicalizeNote(s)
-    return c ? [c] : []
-  }
-
-  if (!mapped.every(w => materials.has(w))) {
-    const c = canonicalizeNote(s)
-    return c ? [c] : []
-  }
-
-  return mapped.map(w => canonicalizeNote(w)).filter(Boolean)
+  return explodeSpaceSeparatedNoteBlobInner(s)
 }
 
 const getSingleWordNoteMaterials = (): Set<string> => {

@@ -21,7 +21,7 @@ const main = async (): Promise<void> => {
   try {
     const result = await sendTransactionalEmail({
       to,
-      subject: "Shadow and Sillage — Resend smoke test",
+      subject: "perfumer's hollow — Resend smoke test",
       text: "If you received this, Resend is configured correctly.",
     })
     console.log("Result:", result)

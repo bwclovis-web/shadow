@@ -5,16 +5,16 @@ import TitleBanner from "@/components/Organisms/TitleBanner"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const IMAGES = {
-  banner: "/images/work.webp",
-  match: "/images/match.webp",
-  decant: "/images/decant.webp",
-  wishlist: "/images/workWish.webp",
-  trade: "/images/workTrade.webp",
-  leftBehind: "/images/left.webp",
+  banner: "/images/new/work.webp",
+  match: "/images/new/match.webp",
+  decant: "/images/new/decant.webp",
+  wishlist: "/images/new/catalogue.webp",
+  trade: "/images/new/work-trade.webp",
+  leftBehind: "/images/new/end.webp",
 } as const
 
 const SECTION_IMG_CLASS =
-  "w-full mb-5 md:mb-10 lg:w-3/4 xl:w-1/2 max-w-4xl aspect-[5/4] rounded-xl bg-transparent border-2 lg:border-8 border-noir-light shadow-lg shadow-black filter grayscale-[10%] contrast-[1] brightness-[0.9] sepia-[0.5] mix-blend-overlay"
+  "w-full mb-5 md:mb-10 lg:w-3/4 xl:w-1/2 max-w-4xl aspect-wide rounded-xl bg-transparent border-2 lg:border-8 border-noir-light shadow-lg shadow-black filter grayscale-[10%] contrast-[1] brightness-[0.9] sepia-[0.5] mix-blend-overlay"
 const IMAGE_SIZES =
   "(min-width: 1440px) 55vw, (min-width: 1024px) 65vw, 80vw"
 

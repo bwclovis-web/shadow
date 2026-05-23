@@ -25,7 +25,7 @@ describe("sendTransactionalEmail", () => {
   })
 
   it("returns sent:false when EMAIL_FROM format is invalid", async () => {
-    process.env.EMAIL_FROM = "Shadow and Sillage"
+    process.env.EMAIL_FROM = "perfumer's hollow"
     resetEmailClientForTests()
 
     const result = await sendTransactionalEmail({

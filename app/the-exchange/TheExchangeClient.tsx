@@ -44,7 +44,7 @@ import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 export type { ExchangePageData } from "./exchange-types"
 
 const ROUTE_PATH = "/the-exchange"
-const BANNER_IMAGE = "/images/exchange.webp"
+const BANNER_IMAGE = "/images/new/exchange.webp"
 const TheExchangeClient = ({
   availablePerfumes,
   pagination,

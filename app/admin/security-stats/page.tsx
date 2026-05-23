@@ -6,7 +6,7 @@ import { StatsJsonPage } from "../components/StatsJsonPage"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "Security stats - Admin - Shadow and Sillage",
+    title: "Security stats - Admin - perfumer's hollow",
     description: "JSON snapshot of security monitor statistics for administrators.",
   }
 }

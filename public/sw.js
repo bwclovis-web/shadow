@@ -25,7 +25,7 @@ self.addEventListener("activate", (event) => {
 })
 
 self.addEventListener("push", (event) => {
-  let payload = { title: "Shadow and Sillage", body: "", url: "/", tag: "default" }
+  let payload = { title: "perfumer's hollow", body: "", url: "/", tag: "default" }
   try {
     if (event.data) {
       payload = { ...payload, ...event.data.json() }

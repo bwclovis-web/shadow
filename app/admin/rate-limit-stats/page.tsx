@@ -7,7 +7,7 @@ import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: "Rate limit stats - Admin - Shadow and Sillage",
+    title: "Rate limit stats - Admin - perfumer's hollow",
     description: "JSON snapshot of rate limiting statistics for administrators.",
   }
 }

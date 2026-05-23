@@ -16,7 +16,7 @@ export default async function AuthLayout({
       className="flex flex-col gap-8 items-center justify-center min-h-screen px-4 bg-noir-gold-500/30"
     >
       <Image
-        src="/images/password.png"
+        src="/images/new/sign-in.webp"
         alt=""
         width={1200}
         height={800}
