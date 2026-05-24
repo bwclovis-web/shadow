@@ -68,8 +68,8 @@ const DataDisplaySection = ({
       : tDataDisplay("subheadingHouses")
 
     return (
-      <div className="inner-container text-center pb-6">
-        <h2 className="text-xl text-noir-gold mb-4">{heading}</h2>
+      <div className="text-center pb-6">
+        <h2>{heading}</h2>
         <p className="text-noir-gold/80">{subheading}</p>
       </div>
     )

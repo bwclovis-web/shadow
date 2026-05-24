@@ -13,6 +13,11 @@ vi.mock("@langchain/openai", () => ({
 import { scrapedItemsNeedPatternEtsyEnrichment } from "./map-scraped-items"
 import { canonicalizeNote, explodeSpaceSeparatedNoteBlob, splitGluedMerchantNoteRun } from "./canonical-notes"
 import {
+  extractInlineLayeredNotesForTests,
+  extractNotesFromStructuredTextForTests,
+  sanitizeCopyForNotePipeline,
+} from "./notes-graph"
+import {
   computeBatchNoteUniformityWarnings,
   extractNotesForItems,
   mergeFlatMaterialsIntoLayeredPyramid,
@@ -119,6 +124,7 @@ describe("explodeSpaceSeparatedNoteBlob", () => {
       "almond",
       "amaretto liqueur accord",
     ])
+    expect(splitGluedMerchantNoteRun("Amber Vanilla Moss")).toEqual(["amber", "vanilla", "moss"])
   })
 })
 
@@ -2116,6 +2122,347 @@ Base: white musk`
         "cedar wear guide",
         "wear guide",
       ]),
+    )
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas Dallachai: Notes Top/Heart/Base bullet pyramid parses without LLM", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const dallachaiPdp =
+      "DALLACHAI honors the golden ritual. Notes Top Passionfruit • Cardamom • Saffron • Clove Heart Arabian Blonde Coffee • Milk Base Amber • Fluffy Musk Scent Story DALLACHAI honors Middle Eastern warmth with a touch of European elegance. Delicate blonde coffee with a touch of milk — smooth, creamy, aromatic. Golden amber and airy musk wrap the skin. Wear Guide Sillage Moderate Longevity 6-10 hrs"
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when Notes Top/Heart/Base bullet pyramid is present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Dallachai Montale",
+        description: dallachaiPdp,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromedas-inspired-by-dallachai-eau-de-parfum-montale",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(open).toEqual(
+      expect.arrayContaining(["passionfruit", "cardamom", "saffron", "clove"]),
+    )
+    expect(heart).toEqual(expect.arrayContaining(["arabian blonde coffee", "milk"]))
+    expect(base).toEqual(expect.arrayContaining(["amber", "fluffy musk"]))
+    expect(all).not.toEqual(
+      expect.arrayContaining([
+        "milk — smooth",
+        "creamy",
+        "european elegance",
+        "smooth",
+      ]),
+    )
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas Gioiosa: Notes Pyramid Top/Heart/Base parses without prose bleed", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const gioiosaPdp =
+      "INSPIRED BY Gioiosa Eau De Parfum Profumum Roma. Notes Pyramid Top Orange Bergamot Golden Mist Heart Jasmine Coconut Cream Vanilla Orchid Base Amber Vanilla Moss Vibe & Wear Projection radiant arm's-length. Scent Story Think sun-kissed coconut through jasmine petals, joyfully luminous and candy-drip sparkle. Layering Ideas Sugar-Vanilla mists."
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when Notes Pyramid Top/Heart/Base is present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Gioiosa Profumum Roma",
+        description: gioiosaPdp,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromedas-inspired-by-gioiosa-eau-de-parfum-profumum-roma",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(open).toEqual(expect.arrayContaining(["orange", "bergamot"]))
+    expect(heart).toEqual(
+      expect.arrayContaining(["jasmine", "coconut cream", "vanilla orchid"]),
+    )
+    expect(base).toEqual(expect.arrayContaining(["amber", "vanilla", "moss"]))
+    expect(all).not.toEqual(
+      expect.arrayContaining(["joyfully", "golden mist", "luminous", "candy-drip"]),
+    )
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("extractInlineLayeredNotes keeps moss when noir follows labeled base line", () => {
+    const text = `open notes: orange, bergamot
+heart notes: jasmine, coconut cream, vanilla orchid
+base notes: amber, vanilla, moss
+
+A flickering neon sign casts a ghostly glow on wet asphalt, mirroring the electric pulse of the night.`
+    const layers = extractInlineLayeredNotesForTests(text)
+    expect(layers.baseNotes).toEqual(expect.arrayContaining(["amber", "vanilla", "moss"]))
+  })
+
+  it("paragraph sentinel splits base notes from following noir paragraph", () => {
+    const SENTINEL = "\uE007"
+    const text = `open notes: orange, bergamot
+heart notes: jasmine, coconut cream, vanilla orchid
+base notes: amber, vanilla, moss
+
+A flickering neon sign casts a ghostly glow`
+    const source = text
+      .replace(/\r/g, "\n")
+      .replace(/\n{2,}/g, SENTINEL)
+      .replace(/[ \t\n]+/g, " ")
+      .trim()
+    expect(source).toContain(SENTINEL)
+    const baseIdx = source.search(/\bbase\s+notes?\s*:\s*/i)
+    expect(baseIdx).toBeGreaterThan(-1)
+    const afterLabel = source.slice(baseIdx).replace(/^base\s+notes?\s*:\s*/i, "")
+    const paraIdx = afterLabel.indexOf(SENTINEL)
+    expect(paraIdx).toBeGreaterThan(-1)
+    expect(afterLabel.slice(0, paraIdx).trim()).toBe("amber, vanilla, moss")
+  })
+
+  it("collapsed source keeps moss in inline layered extraction", () => {
+    const labeledBoot = `open notes: orange, bergamot
+heart notes: jasmine, coconut cream, vanilla orchid
+base notes: amber, vanilla, moss`
+
+    const noirOnly =
+      "A flickering neon sign casts a ghostly glow on wet asphalt, mirroring the electric pulse of the night."
+
+    const merged = sanitizeCopyForNotePipeline(`${labeledBoot}\n\n${noirOnly}`)
+    const SENTINEL = "\uE007"
+    const collapsed = merged
+      .replace(/\r/g, "\n")
+      .replace(/\n{2,}/g, SENTINEL)
+      .replace(/[ \t\n]+/g, " ")
+      .trim()
+    const layers = extractInlineLayeredNotesForTests(collapsed)
+    expect(layers.baseNotes).toEqual(expect.arrayContaining(["amber", "vanilla", "moss"]))
+  })
+
+  it("extractNotesFromStructuredText keeps moss for labeled lines before noir", () => {
+    const labeledBoot = `open notes: orange, bergamot
+heart notes: jasmine, coconut cream, vanilla orchid
+base notes: amber, vanilla, moss`
+
+    const noirOnly =
+      "A flickering neon sign casts a ghostly glow on wet asphalt, mirroring the electric pulse of the night. Subtle notes of bergamot dance with the allure of jasmine and peony, while an undercurrent of amber and musk wraps the atmosphere in an intoxicating haze."
+
+    const merged = sanitizeCopyForNotePipeline(`${labeledBoot}\n\n${noirOnly}`)
+    const layers = extractNotesFromStructuredTextForTests(merged, 2)
+    expect(layers.baseNotes).toEqual(expect.arrayContaining(["amber", "vanilla", "moss"]))
+  })
+
+  it("Andromedas Gioiosa: labeled bootstrap lines before noir keep base moss", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const labeledBoot = `open notes: orange, bergamot
+heart notes: jasmine, coconut cream, vanilla orchid
+base notes: amber, vanilla, moss`
+
+    const noirOnly =
+      "A flickering neon sign casts a ghostly glow on wet asphalt, mirroring the electric pulse of the night. Subtle notes of bergamot dance with the allure of jasmine and peony, while an undercurrent of amber and musk wraps the atmosphere in an intoxicating haze."
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when labeled pyramid lines precede noir")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Gioiosa Profumum Roma",
+        description: `${labeledBoot}\n\n${noirOnly}`,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromedas-inspired-by-gioiosa-eau-de-parfum-profumum-roma",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    expect(base).toEqual(expect.arrayContaining(["amber", "vanilla", "moss"]))
+    vi.unstubAllEnvs()
+  })
+
+  it("Andromedas Gioiosa: noir-only description rescues notes from PDP fetch", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const noirOnly =
+      "A flickering neon sign casts a ghostly glow on wet asphalt, mirroring the electric pulse of the night. Subtle notes of bergamot dance with the allure of jasmine and peony, while an undercurrent of amber and musk wraps the atmosphere in an intoxicating haze."
+
+    const gioiosaHtml = `<html><body><p>INSPIRED BY Gioiosa Eau De Parfum Profumum Roma. Notes Pyramid Top Orange Bergamot Golden Mist Heart Jasmine Coconut Cream Vanilla Orchid Base Amber Vanilla Moss Vibe &amp; Wear Projection radiant. Scent Story Think sun-kissed coconut through jasmine petals, joyfully luminous.</p></body></html>`
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => gioiosaHtml,
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when PDP bootstrap supplies Notes Pyramid")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Gioiosa Profumum Roma",
+        description: noirOnly,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromedas-inspired-by-gioiosa-eau-de-parfum-profumum-roma",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: true,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(open).toEqual(expect.arrayContaining(["orange", "bergamot"]))
+    expect(open).not.toEqual(expect.arrayContaining(["moss"]))
+    expect(heart).toEqual(
+      expect.arrayContaining(["jasmine", "coconut cream", "vanilla orchid"]),
+    )
+    expect(base).toEqual(expect.arrayContaining(["amber", "vanilla", "moss"]))
+    expect(all).not.toEqual(
+      expect.arrayContaining(["green tea", "peony", "joyfully", "golden mist"]),
+    )
+    expect(fetchMock).toHaveBeenCalled()
+    vi.unstubAllGlobals()
+    vi.unstubAllEnvs()
+  })
+
+  it("Andromedas Marshmallow Cloud Candy: Scent Profile middot list parses without LLM", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const marshmallowPdp =
+      "Andromeda's Marshmallow Cloud Candy Eau De Parfum Original Fragrance. Scent Profile Spun Sugar · Whipped Marshmallow · Creamy Vanilla · Warm Sweetness Vibe Soft, cozy, addictive. Fragrance Description A fluffy cloud of spun sugar and marshmallow. Wear It When You want a sweeter, smoother trail. Important Information Hand-poured."
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when Scent Profile bullet list is present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Marshmallow Cloud Candy",
+        description: marshmallowPdp,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromeda-s-marshmallow-cloud-candy-eau-de-parfum-original-fragrance",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(open).toEqual(
+      expect.arrayContaining([
+        "spun sugar",
+        "whipped marshmallow",
+        "creamy vanilla",
+      ]),
+    )
+    expect(all).not.toEqual(
+      expect.arrayContaining([
+        "sugary marshmallow clouds",
+        "smoother",
+        "warm sweetness",
+        "sugary",
+      ]),
+    )
+    expect(heart).toHaveLength(0)
+    expect(base).toHaveLength(0)
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas Ruby Kajal: marketing adjectives after base notes do not bleed in", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const rubyPdp =
+      "Inspired by Ruby Eau De Parfum Kajal. Top Notes: Cherry, Red Berries, Pineapple, Coconut, Almond Heart Notes: Whipped Cream, Brown Sugar, Ice Cream Base Notes: Vanilla, Tonka Bean, Amber, Musk, Benzoin Whether you're lounging in a pastel candy diner, Ruby surrounds you in a delicious, flirtatious cloud that lasts all day. Sweet, Glamorous & Addictive Inspired by Ruby by Kajal ORIGINAL MANUFACTURERS"
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when Top/Heart/Base notes are present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Ruby Kajal",
+        description: rubyPdp,
+        image: "",
+        detailURL: "https://www.andromedasmoon.com/products/andromedas-inspired-by-ruby-eau-de-parfum-kajal",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(open).toEqual(
+      expect.arrayContaining(["cherry", "red berries", "pineapple", "coconut", "almond"]),
+    )
+    expect(heart).toEqual(expect.arrayContaining(["whipped cream", "brown sugar", "ice cream"]))
+    expect(base).toEqual(
+      expect.arrayContaining(["vanilla", "tonka bean", "amber", "musk", "benzoin"]),
+    )
+    expect(all).not.toEqual(
+      expect.arrayContaining(["flirtatious", "glamorous", "ruby", "addictive"]),
     )
     expect(invokeMock).not.toHaveBeenCalled()
   })

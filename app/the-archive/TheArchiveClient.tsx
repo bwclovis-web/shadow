@@ -167,7 +167,7 @@ const TheArchiveClient = ({
         subheading={t("subheading")}
       />
 
-      <PageWrapper>
+      <PageWrapper className="bg-noir-black/70">
       <DataFilters
         searchType="perfume"
         sortOptions={sortOptions}

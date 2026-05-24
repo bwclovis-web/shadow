@@ -56,6 +56,7 @@ const MySingleScentClient = ({
 }: MySingleScentClientProps) => {
   const router = useRouter()
   const t = useTranslations("myScents.listItem")
+  const tSingle = useTranslations("myScents.singleScent")
   const tListing = useTranslations("myScents.listingSummary")
   const { modalOpen, modalId, closeModal } = useSessionStore()
   const { addToFormData } = useCSRF()
@@ -197,7 +198,7 @@ const MySingleScentClient = ({
       .catch(() => {})
   }
 
-  const { uniqueModalId, addComment } = usePerfumeComments({
+  const { uniqueModalId, addComment, comments, deleteComment } = usePerfumeComments({
     userPerfume: finalPerfume,
     onCommentSuccess: refreshComments,
   })
@@ -274,15 +275,15 @@ const MySingleScentClient = ({
       {modalOpen && modalId === "delete-item" && (
         <Modal innerType="dark" animateStart="top">
           <DangerModal
-            heading="Are you sure you want to remove this perfume?"
-            description="Once removed, you will lose all history, notes and entries in the exchange."
+            heading={tSingle("confirmRemoveHeading")}
+            description={tSingle("confirmRemoveDescription")}
             action={() => handleRemovePerfume(finalPerfume.id)}
           />
         </Modal>
       )}
       {modalOpen && modalId === uniqueModalId && (
         <Modal innerType="dark" animateStart="top">
-          <CommentsModal perfume={finalPerfume} addComment={addComment} />
+          <CommentsModal perfume={finalPerfume} addComment={addComment} isPublic={false} />
         </Modal>
       )}
       <TitleBanner
@@ -294,6 +295,7 @@ const MySingleScentClient = ({
           <AddToCollectionModal
             type="icon"
             perfume={finalPerfume.perfume as PerfumeI}
+            addAnotherBottle
             onAddedToCollection={() => router.refresh()}
           />
         </div>
@@ -340,7 +342,12 @@ const MySingleScentClient = ({
           className="text-start text-noir-dark py-3 mt-3 bg-noir-gold noir-border-dk px-2 relative open:bg-noir-gold-100"
           name="inner-details"
         >
-          <PerfumeComments userPerfume={finalPerfume} onCommentSuccess={refreshComments} />
+          <PerfumeComments
+            userPerfume={finalPerfume}
+            comments={comments}
+            uniqueModalId={uniqueModalId}
+            deleteComment={deleteComment}
+          />
         </VooDooDetails>
         <VooDooDetails
           summary={t("manageDestashes")}

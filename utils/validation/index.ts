@@ -8,6 +8,7 @@ import { z } from "zod"
 
 // Re-export all schemas for convenience
 export * from "./schemas"
+export { getTranslatedError, validationKeys } from "./validationKeys"
 
 // Validation result types
 export interface ValidationResult<T = unknown> {

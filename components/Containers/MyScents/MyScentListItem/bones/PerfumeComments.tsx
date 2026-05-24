@@ -2,19 +2,25 @@ import { useTranslations } from "next-intl"
 import { MdDeleteForever } from "react-icons/md"
 
 import { Button } from "@/components/Atoms/Button"
-import { usePerfumeComments } from "@/hooks/usePerfumeComments"
 import { useSessionStore } from "@/hooks/sessionStore"
+import type { Comment } from "@/types/comments"
 import type { UserPerfumeI } from "@/types"
 
 interface PerfumeCommentsProps {
   userPerfume: UserPerfumeI
-  onCommentSuccess?: () => void
+  comments: Comment[]
+  uniqueModalId: string
+  deleteComment: (commentId: string) => Promise<{ success: boolean; error?: string }>
 }
-const PerfumeComments = ({ userPerfume, onCommentSuccess }: PerfumeCommentsProps) => {
+
+const PerfumeComments = ({
+  userPerfume,
+  comments,
+  uniqueModalId,
+  deleteComment,
+}: PerfumeCommentsProps) => {
   const t = useTranslations("myScents.comments")
   const { toggleModal } = useSessionStore()
-  const { comments, uniqueModalId, deleteComment } =
-    usePerfumeComments({ userPerfume, onCommentSuccess })
 
   const handleDeleteComment = async (commentId: string) => {
     await deleteComment(commentId)
@@ -23,13 +29,15 @@ const PerfumeComments = ({ userPerfume, onCommentSuccess }: PerfumeCommentsProps
   return (
     <div className="mt1 p-4 rounded-b-md bg-noir-dark/80">
       <h3 className="text-lg font-semibold">{t("heading")}</h3>
+      <p className="text-base mb-2 text-noir-gold-100">{t("subheading2")}</p>
       <p className="text-sm mb-2 text-noir-gold-500">
         {t("subheading", {
           perfumeName: userPerfume.perfume.name,
         })}
       </p>
+      
       {comments.length > 0 ? (
-        <ul className="list-decimal">
+        <ul>
           {comments.map(comment => (
             <li
               key={comment.id}

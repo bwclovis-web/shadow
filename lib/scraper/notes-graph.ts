@@ -32,6 +32,7 @@ import {
   canonicalizeNote,
   canonicalizeNoteLayers,
   expandLayerNoteBlobs,
+  explodeSpaceSeparatedNoteBlob,
   HYPHEN_PROTECTED_NOTE_FRAGMENTS,
   splitGluedMerchantNoteRun,
 } from "@/lib/scraper/canonical-notes"
@@ -284,15 +285,28 @@ const hasExplicitNoteListSignal = (text: string): boolean => {
   if (/\bwith\s+notes?\s+of\s+/i.test(t)) return true
   if (/\b(?:sweetly\s+spiced\s+)?blending\s+[a-z][^.!?]{6,}/i.test(t) && /,/.test(t)) return true
   if (/\b(?:the\s+)?base\s+melts?\s+into\b/i.test(t)) return true
+  if (/\bnotes?\b\s+top\b\s+.+?\s+heart\b\s+.+?\s+base\b/i.test(t)) return true
+  if (/\bnotes?\s+pyramid\b/i.test(t)) return true
+  if (/\bscent\s+profile\s+[A-Za-z0-9]/i.test(t) && /[•·]/.test(t)) return true
   return false
 }
 
 export const isPatternByEtsyProductUrl = (detailURL: string): boolean =>
   /patternbyetsy|etsy\.com\/listing/i.test(detailURL ?? "")
 
+export const isAndromedaMoonProductUrl = (detailURL: string): boolean =>
+  /andromedasmoon\.com/i.test(detailURL ?? "")
+
 /** Pattern-by-Etsy PDPs almost always have Note Structure; fetch when the scrape missed it. */
 const shouldAutoFetchPatternEtsyNotes = (detailURL: string, mergedBase: string): boolean =>
   isPatternByEtsyProductUrl(detailURL) && !hasExplicitNoteListSignal(mergedBase)
+
+/**
+ * Andromeda's Moon Shopify PDPs use "Notes Pyramid Top … Heart … Base …" (often no colons).
+ * Selenium frequently captures Scent Story prose only; HTTP bootstrap recovers the pyramid.
+ */
+const shouldAutoFetchAndromedaMoonNotes = (detailURL: string, mergedBase: string): boolean =>
+  isAndromedaMoonProductUrl(detailURL) && !hasExplicitNoteListSignal(mergedBase)
 
 /** Same four "ingredients" the noir generator hammers — if that's all we extracted, PDP bootstrap likely failed first pass. */
 const NOIR_NOTE_CLICHE = new Set(["plum", "rose", "brown sugar", "golden honey"])
@@ -792,11 +806,34 @@ const extractAndromedaScentProfileFromPlain = (plain: string): string[] => {
   const collapsed = (plain ?? "").replace(/\s+/g, " ").trim()
   if (!collapsed) return []
   const m = collapsed.match(
-    /\bscent\s+profile\s+(?!(?:top|heart|base|middle)\s*:)([A-Za-z][A-Za-z\s&'’-]{3,220}?)(?=\s+(?:Vibe\b|Wear\s+It\s+When\b|Strength\b|Available\s+Sizes?|Andromeda(?:'|'|&#39;)s\s+Moon\s+is|Processing\b|Important\b)|$)/i,
+    /\bscent\s+profile\s+(?!(?:top|heart|base|middle)\s*:)([A-Za-z0-9][A-Za-z0-9\s&'’·•.\-]{2,220}?)(?=\s+(?:Vibe\b|Wear\s+It\s+When\b|Strength\b|Available\s+Sizes?|Fragrance\s+Description\b|Important\s+Information\b|Store\s+Policy\b|Andromeda(?:'|'|&#39;)s\s+Moon\s+is|Processing\b|Important\b)|$)/i,
   )
   if (!m?.[1]) return []
-  const parsed = splitGluedMerchantNoteRun(m[1].trim())
+  const blob = m[1]
+    .trim()
+    .replace(/[•·]/g, ",")
+    .replace(/\s+/g, " ")
+    .trim()
+  const parsed = splitNoteList(blob)
   return parsed.length >= 2 ? parsed : []
+}
+
+/** Turn a Top/Heart/Base layer chunk (bullets or space-glued) into a comma list for splitNoteList. */
+const andromedaLayerChunkToList = (raw: string): string => {
+  const cleaned = raw
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}✨]/gu, " ")
+    .replace(/[•·]/g, ",")
+    .replace(/\s+/g, " ")
+    .trim()
+  if (!cleaned) return ""
+  if (/[,;]/.test(cleaned)) return cleaned
+  const split = splitGluedMerchantNoteRun(cleaned)
+  if (split.length >= 2) return split.join(", ")
+  if (cleaned.split(/\s+/).filter(Boolean).length >= 3) {
+    const exploded = explodeSpaceSeparatedNoteBlob(cleaned)
+    if (exploded.length >= 2) return exploded.join(", ")
+  }
+  return cleaned
 }
 
 /**
@@ -850,7 +887,28 @@ const extractAndromedaBlendingProseNotesFromPlain = (plain: string): string[] =>
 }
 
 /**
- * Indie Shopify PDPs (Andromeda's Moon, etc.): inline "Notes: A • B • C", "Note Breakdown"
+ * Andromeda PDPs: ## Notes / Notes Pyramid with stacked Top / Heart / Base (• bullets or space-glued).
+ * Collapsed: "Notes Top Passionfruit • … Heart … Base …" or "Notes Pyramid Top Orange Bergamot … Heart … Base … Vibe"
+ */
+const extractAndromedaBulletPyramidFromPlain = (plain: string): string[] => {
+  const collapsed = (plain ?? "").replace(/\s+/g, " ").trim()
+
+  const block = collapsed.match(
+    /\b(?:notes?\s+pyramid|notes?)\b\s+top\b\s+(.+?)\s+heart\b\s+(.+?)\s+base\b\s+(.+?)(?=\s+(?:scent\s+story|opening\b|wear\s+guide|vibe\s*&\s*wear|vibe\b|good\s+to\s+know|layering\s+ideas|drydown\b|fragrance\s+description|important\s+information|original\s+manufacturers)|$)/i,
+  )
+  if (!block?.[1] || !block[2] || !block[3]) return []
+
+  const segments: string[] = []
+  const open = truncateAtShopMetaLabels(andromedaLayerChunkToList(block[1]))
+  const heart = truncateAtShopMetaLabels(andromedaLayerChunkToList(block[2]))
+  const base = truncateAtShopMetaLabels(andromedaLayerChunkToList(block[3]))
+  if (open && /[a-z]{3,}/i.test(open)) segments.push(`open notes: ${open}`)
+  if (heart && /[a-z]{3,}/i.test(heart)) segments.push(`heart notes: ${heart}`)
+  if (base && /[a-z]{3,}/i.test(base)) segments.push(`base notes: ${base}`)
+  return segments
+}
+
+/**
  * Top/Middle/Base, or "Scent Notes" with Top:/Heart:/Base: bullets.
  */
 const extractShopifyIndieNoteSegmentsFromPlain = (plain: string): string[] => {
@@ -859,6 +917,10 @@ const extractShopifyIndieNoteSegmentsFromPlain = (plain: string): string[] => {
 
   const segments: string[] = []
   const bulletToComma = (s: string) => s.replace(/[•·]/g, ",").replace(/\s+/g, " ").trim()
+
+  for (const segment of extractAndromedaBulletPyramidFromPlain(collapsed)) {
+    segments.push(segment)
+  }
 
   for (const segment of extractAndromedaNotesOfLayeredFromPlain(collapsed)) {
     segments.push(segment)
@@ -1241,8 +1303,9 @@ function dedupeNotesAcrossLayers(notes: {
   heartNotes: string[]
   baseNotes: string[]
 } {
-  const seen = new Set<string>()
-  const keepFirstSeen = (arr: string[]): string[] => {
+  /** Dedupe within each layer only — vanilla/moss often repeat across Top/Heart/Base on merchant pyramids. */
+  const dedupeLayer = (arr: string[]): string[] => {
+    const seen = new Set<string>()
     const out: string[] = []
     for (const note of arr) {
       const normalized = note.trim().toLowerCase()
@@ -1254,9 +1317,9 @@ function dedupeNotesAcrossLayers(notes: {
   }
 
   return {
-    openNotes: keepFirstSeen(notes.openNotes),
-    heartNotes: keepFirstSeen(notes.heartNotes),
-    baseNotes: keepFirstSeen(notes.baseNotes),
+    openNotes: dedupeLayer(notes.openNotes),
+    heartNotes: dedupeLayer(notes.heartNotes),
+    baseNotes: dedupeLayer(notes.baseNotes),
   }
 }
 
@@ -1381,6 +1444,10 @@ function splitNoteList(text: string): string[] {
       .replace(/\s+wear\s+guide\b.*$/i, "")
       .replace(/\s+wear\s*&\s*performance\b.*$/i, "")
       .replace(/\s+good\s+to\s+know\b.*$/i, "")
+      .replace(/\s+whether\s+you(?:'|'|&#39;)re\b.*$/i, "")
+      .replace(/\s+surrounds\s+you\s+in\b.*$/i, "")
+      .replace(/\s+flirtatious\b.*$/i, "")
+      .replace(/\s+glamorous\b.*$/i, "")
       .trim()
 
   return uniqueNotes(
@@ -1399,7 +1466,7 @@ function splitNoteList(text: string): string[] {
 function stripTrailingNonNoteSections(text: string): string {
   return text
     .replace(
-      /\s+(?:additional information|ingredients|how to use|directions(?:\s+for\s+use)?|customer reviews?|reviews?|specifications|size [Gg]uide|care [Ii]nstructions|warnings?|disclaimer|how it wears|how (?:it\s+)?smells|wear(?:ability|ing)\s+notes?|wear\s+guide\b|good\s+to\s+know\b|important information|important\s+(?:shop|order)\s+info|available\s+sizes?|size\s+options?|available\s+in|shipping|processing|packing|please\s+note|please\s+read|about\s+this\s+fragrance|about\s+(?:our|the)\s+brand|(?:scent\s+)?profile\s+(?:guide|overview)|pairing\s+suggestions?|frequently\s+asked)\b[\s\S]*$/i,
+      /\s+(?:additional information|ingredients|how to use|directions(?:\s+for\s+use)?|customer reviews?|reviews?|specifications|size [Gg]uide|care [Ii]nstructions|warnings?|disclaimer|how it wears|how (?:it\s+)?smells|wear(?:ability|ing)\s+notes?|wear\s+guide\b|good\s+to\s+know\b|whether\s+you(?:'|'|&#39;)re\b|original\s+manufacturers\b|important information|important\s+(?:shop|order)\s+info|available\s+sizes?|size\s+options?|available\s+in|shipping|processing|packing|please\s+note|please\s+read|about\s+this\s+fragrance|about\s+(?:our|the)\s+brand|(?:scent\s+)?profile\s+(?:guide|overview)|pairing\s+suggestions?|frequently\s+asked)\b[\s\S]*$/i,
       "",
     )
     .replace(/\s+extra info\b[\s\S]*$/i, "")
@@ -1591,7 +1658,7 @@ const normalizeImplicitLayerColons = (text: string): string => {
 /** Stop last layer chunk before Pattern/Etsy listing meta (avoids ':' in tokens → junk filter drops all base notes). */
 const truncateAtShopMetaLabels = (s: string): string => {
   const m = s.match(
-    /\s+(?:series|perfume\s+family|unisex|contains\s+true\s+animalics|scent\s+strength|extra info|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|original\s+manufacturers|wear\s*&\s*performance|wear\s+guide\b|good\s+to\s+know\b|season\s*:|projection\s*:|longevity\s*:|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b)\b/i,
+    /\s+(?:series|perfume\s+family|unisex|contains\s+true\s+animalics|scent\s+strength|extra info|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|original\s+manufacturers|vibe\s*&\s*wear|vibe\b|wear\s*&\s*performance|wear\s+guide\b|good\s+to\s+know\b|season\s*:|projection\s*:|longevity\s*:|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b)\b/i,
   )
   if (m?.index != null) return s.slice(0, m.index).trim()
   return s.trim()
@@ -1614,15 +1681,43 @@ const truncateAtShopMetaLabels = (s: string): string => {
  * The function is conservative: it only truncates when the prose marker appears AFTER at
  * least one comma-separated token (i.e., the chunk is not entirely prose).
  */
+/** Preserved across whitespace collapse — marks a blank line between merchant note lines and noir/marketing copy. */
+const NOTE_LAYER_PARAGRAPH_SENTINEL = "\uE007"
+
 const truncateChunkAtProseStart = (chunk: string): string => {
+  const paraIdx = chunk.indexOf(NOTE_LAYER_PARAGRAPH_SENTINEL)
+  if (paraIdx > 0) {
+    const cut = chunk
+      .slice(0, paraIdx)
+      .trimEnd()
+      .replace(/,\s*$/, "")
+      .trimEnd()
+    if (cut.length > 0) return cut
+  }
+
   // Marketing paragraph starters that signal the end of the note list and begin prose
   const PROSE_STARTS =
-    /(?:\b(?:perfect|ideal|great|wonderful|excellent)\s+(?:for|choice|option)\b|\ba\s+(?:great|perfect|beautiful|wonderful|stunning|luxurious|gorgeous|rich|dark|warm|sensual|cozy)\s+choice\b|\b(?:this\s+(?:fragrance|scent|perfume|inspired|is)|the\s+(?:opening|drydown|dry\s+down|base\s+(?:lingers|settles|brings))|inspired\s+by|perfect\s+for\s+anyone|opens?\s+with\s+(?:a|the)|think\s+(?:crisp|fresh|warm|cool|dark|soft)|vibe\b|scent\s+story\b|how\s+it\s+wears|wear\s*&\s*performance\b|wear\s+guide\b|good\s+to\s+know\b|season\s*:|projection\s*:|longevity\s*:|available\s+sizes?|important\s+(?:information|shop|order)|all\s+perfumes?\s+are\s+hand|this\s+is\s+(?:a|an|the)\s+kind|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b)\b)/i
+    /(?:\b(?:perfect|ideal|great|wonderful|excellent)\s+(?:for|choice|option)\b|\ba\s+(?:great|perfect|beautiful|wonderful|stunning|luxurious|gorgeous|rich|dark|warm|sensual|cozy)\s+choice\b|\b(?:this\s+(?:fragrance|scent|perfume|inspired|is)|the\s+(?:opening|drydown|dry\s+down|base\s+(?:lingers|settles|brings))|inspired\s+by|perfect\s+for\s+anyone|opens?\s+with\s+(?:a|the)|think\s+(?:crisp|fresh|warm|cool|dark|soft)|vibe\b|scent\s+story\b|how\s+it\s+wears|wear\s*&\s*performance\b|wear\s+guide\b|good\s+to\s+know\b|whether\s+you(?:'|'|&#39;)re\b|surrounds\s+you\s+in\b|sweet,\s*glamorous\b|glamorous\s*&\s*addictive\b|season\s*:|projection\s*:|longevity\s*:|available\s+sizes?|important\s+(?:information|shop|order)|all\s+perfumes?\s+are\s+hand|this\s+is\s+(?:a|an|the)\s+kind|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b|original\s+manufacturers\b)\b)/i
 
   const sentenceBoundary = /[.!]\s+[A-Z]/
 
   // Only truncate if we have at least one real note already (comma in the string)
   const hasComma = chunk.indexOf(",") !== -1
+
+  // "amber, vanilla, moss A flickering neon…" after bootstrap + noir collapse onto one line
+  if (hasComma) {
+    const gluedNoir = chunk.search(
+      /\s+[A-Z][a-z]+\s+(?:flickering|neon|ghostly|electric|subtle|intoxicating)\b/,
+    )
+    if (gluedNoir > 0) {
+      const cut = chunk
+        .slice(0, gluedNoir)
+        .trimEnd()
+        .replace(/,\s*$/, "")
+        .trimEnd()
+      if (cut.length > 0) return cut
+    }
+  }
 
   const proseMatch = PROSE_STARTS.exec(chunk)
   if (proseMatch?.index != null) {
@@ -2051,6 +2146,13 @@ function classifyNoteLayer(label: string): "open" | "heart" | "base" | null {
   return null
 }
 
+/** @internal Vitest-only — inline Top/Heart/Base colon parsing. */
+export const extractInlineLayeredNotesForTests = (text: string): {
+  openNotes: string[]
+  heartNotes: string[]
+  baseNotes: string[]
+} => extractInlineLayeredNotes(text)
+
 function extractInlineLayeredNotes(text: string): {
   openNotes: string[]
   heartNotes: string[]
@@ -2062,7 +2164,8 @@ function extractInlineLayeredNotes(text: string): {
       text
         .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, " ")
         .replace(/\r/g, "\n")
-        .replace(/\s+/g, " ")
+        .replace(/\n{2,}/g, NOTE_LAYER_PARAGRAPH_SENTINEL)
+        .replace(/[ \t\n]+/g, " ")
         .trim(),
     ),
   )
@@ -2124,7 +2227,7 @@ const FLAT_NOTE_PROSE_BOUNDARY_RES: RegExp[] = [
   /\s+#{1,6}\s*(?:Ingredients|How to use|Shipping|Returns?|FAQ|Details|Directions|Warnings?|Disclaimer|Specifications|Size [Gg]uide|Care [Ii]nstructions)\b/i,
   /\s+(?:Ingredients|Cruelty[- ]free|Vegan |Dermatologist|Clinically tested|Prop(?:osition|\.)?\s*65|FDA disclaimer)\b/i,
   // Common post-notes sections on indie Shopify PDP
-  /\s+(?:When to Wear|Vibe|How It Wears|Wear\s*&\s*Performance|Wear\s+Guide\b|Good\s+to\s+Know\b|Season\s*:|Projection\s*:|Longevity\s*:|How (?:It\s+)?Smells|Available Sizes?|Important Information|Important Shop Info|Final Sale|Sampling Size Policy|Fragrance Description(?!\s+:)|For\s+milk\s+lovers|pastel\s+girls|Hand-blended\s+with\s+care|Extrait\s+de\s+Parfum\s+strength|Citrus\s+Aromatic\b|Amber-Musky\b|Seaside\s+Breeze\b)\b/i,
+  /\s+(?:When to Wear|Vibe|How It Wears|Wear\s*&\s*Performance|Wear\s+Guide\b|Good\s+to\s+Know\b|Whether\s+You(?:'|'|&#39;)re\b|Original\s+Manufacturers\b|Season\s*:|Projection\s*:|Longevity\s*:|How (?:It\s+)?Smells|Available Sizes?|Important Information|Important Shop Info|Final Sale|Sampling Size Policy|Fragrance Description(?!\s+:)|For\s+milk\s+lovers|pastel\s+girls|Hand-blended\s+with\s+care|Extrait\s+de\s+Parfum\s+strength|Citrus\s+Aromatic\b|Amber-Musky\b|Seaside\s+Breeze\b|Sweet,\s*Glamorous\b)\b/i,
   /\s+(?:I was told|Making a dupe|Please text if you)\b/i,
   // Note set followed immediately by marketing paragraph openers (whitespace-collapsed)
   /\s+(?:Think\s+(?:crisp|fresh|warm|cool|dark|soft|juicy|lush)|Opens?\s+(?:with|on)|A\s+(?:crisp|juicy|dark|warm|rich|soft|bright|clean|bold|lush|fresh)\s+(?:and|,)|\bSparkling\b|\bThis\s+inspired\b)/i,
@@ -2284,6 +2387,9 @@ function extractFlatNotes(text: string): string[] {
   return uniqueNotes(found)
 }
 
+/** @internal Vitest-only — structured Top/Heart/Base + flat list extraction. */
+export const extractNotesFromStructuredTextForTests = extractNotesFromStructuredText
+
 function extractNotesFromStructuredText(
   text: string,
   minConfidentFlatNotes = 2,
@@ -2299,7 +2405,11 @@ function extractNotesFromStructuredText(
   // of the next, contaminating the note chunk boundary — "Magnolia Petals 🌙" becomes a token
   // that the LLM validator cannot cleanly identify.
   const stripped = (text ?? "").replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, " ")
-  const collapsed = stripped.replace(/\r/g, "\n").replace(/\s+/g, " ").trim()
+  const collapsed = stripped
+    .replace(/\r/g, "\n")
+    .replace(/\n{2,}/g, NOTE_LAYER_PARAGRAPH_SENTINEL)
+    .replace(/[ \t\n]+/g, " ")
+    .trim()
   const source = splitGluedLayerLabels(normalizeImplicitLayerColons(collapsed))
   if (!source) return empty
 
@@ -3216,6 +3326,14 @@ const stripProductNameBleedFromNotes = (notes: NotesLayers, productName: string)
 /** Add flat-list materials missing from an existing Top/Heart/Base pyramid (accord + materials). */
 export const mergeFlatMaterialsIntoLayeredPyramid = (notes: NotesLayers, flatAuth: string[]): NotesLayers => {
   if (!hasLayeredMerchantPyramid(notes) || flatAuth.length < 2) return notes
+  /** Full merchant pyramid already parsed — skip prose flat-list bleed into openNotes. */
+  if (
+    notes.openNotes.length >= 2 &&
+    notes.heartNotes.length >= 2 &&
+    notes.baseNotes.length >= 2
+  ) {
+    return notes
+  }
   const currentLc = new Set(
     [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes].map(n => n.trim().toLowerCase()),
   )
@@ -3362,7 +3480,9 @@ const processSingleProductPhase1 = async (
   const detailUrl = item.detailURL?.trim() ?? ""
   const autoPatternEtsyFetch = shouldAutoFetchPatternEtsyNotes(detailUrl, mergedBase)
   if (
-    (opts.fetchPdpNoteBootstrap === true || autoPatternEtsyFetch) &&
+    (opts.fetchPdpNoteBootstrap === true ||
+      autoPatternEtsyFetch ||
+      shouldAutoFetchAndromedaMoonNotes(detailUrl, mergedBase)) &&
     !hasExplicitNoteListSignal(mergedBase) &&
     detailUrl.startsWith("http")
   ) {
@@ -3519,10 +3639,12 @@ const processSingleProductPhase1 = async (
     }
     notes = dedupeNotesAcrossLayers(notes)
 
+    const needsAndromedaMerchantRescue =
+      isAndromedaMoonProductUrl(detailUrl) && !hasExplicitNoteListSignal(notesSource)
     if (
       opts.fetchPdpNoteBootstrap === true &&
       item.detailURL?.trim().startsWith("http") &&
-      shouldAttemptPdpRescue(notes, notesSource)
+      (shouldAttemptPdpRescue(notes, notesSource) || needsAndromedaMerchantRescue)
     ) {
       throwIfAborted(sig)
       pdpNoteBootstrapCache.delete(item.detailURL.trim())

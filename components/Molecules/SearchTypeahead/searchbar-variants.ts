@@ -22,7 +22,7 @@ export const searchbarVariants = cva(
       },
       size: {
         /** Home / listing hero search (large touch target on `md+`). */
-        hero: "py-2 md:py-5 md:text-xl",
+        hero: "py-2 md:py-3 md:text-xl",
         /** Forms, filters, admin — same look, smaller vertical rhythm. */
         standard: "py-2 text-sm md:text-base",
       },

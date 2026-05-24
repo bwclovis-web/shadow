@@ -141,20 +141,20 @@ export default function HomeClient({
         className="object-cover filter grayscale-100% sepia-[0.5] mix-blend-multiply hero-image"
       />
       <div className="absolute inset-0 bg-noir-black/45 mask-radial-from-10% mask-radial-to-74% md:mask-radial-from-25% md:mask-radial-to-44%" />
-      <section className="text-noir-gold relative z-10 flex flex-col items-center gap-4 pt-50 md:pt-40">
+      <section className="text-noir-gold relative z-10 flex flex-col items-center gap-4 pt-50 md:pt-40 w-full">
         <div className="text-shadow-lg/90 text-shadow-noir-black text-center">
           <h1 className="hero-title">{heading}</h1>
           <p className="subtitle">{subheading}</p>
         </div>
-        <CommunityStatsStrip stats={communityStats} className="mt-4 mb-6 max-w-2xl" />
-        <div className="flex flex-col-reverse md:flex-row items-baseline justify-start w-full max-w-4xl mt-6 gap-4 md:gap-0">
+        <CommunityStatsStrip stats={communityStats} className="lg:my-2 max-w-2xl" />
+        <div className="flex flex-col-reverse md:flex-row items-baseline justify-start w-full lg:mt-2 mt-0 gap-4 md:gap-0 max-w-4xl">
           <Select
             size="expanded"
             value={searchType}
             action={handleSelectType}
             selectId="search-type"
             selectData={data}
-            className="md:mt-0.5"
+            className="md:mt-0.5 w-full backdrop-blur-sm bg-noir-black/10"
             ariaLabel={
               mounted ? tComponents("ariaLabel") : "components.search.ariaLabel"
             }
@@ -162,14 +162,14 @@ export default function HomeClient({
           <SearchBar
             searchType={searchType}
             variant="home"
-            className="mt-2 md:mt-2 w-full"
+            className="mt-2 md:mt-2 w-full backdrop-blur-sm bg-noir-black/10"
           />
         </div>
       </section>
 
       {showFeedSection ? (
         <DeferredBelowFold
-          className="relative z-10 flex w-full max-w-4xl flex-col gap-6 px-4 pb-8"
+          className="relative z-10 flex w-full max-w-4xl flex-col gap-6 lg:py-8"
           minHeight="16rem"
         >
           {seasonalTrending.perfumes.length > 0 ? (
@@ -185,7 +185,7 @@ export default function HomeClient({
               listings={recentListings}
               followedItems={followedActivity}
               variant="compact"
-              className="rounded-md border border-noir-gold/40 bg-noir-black/70 p-4 backdrop-blur-sm"
+              className="rounded-md border border-noir-gold/40 bg-noir-black/70 lg:p-4 p-2 backdrop-blur-sm"
             />
           ) : null}
         </DeferredBelowFold>

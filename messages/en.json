@@ -30,15 +30,15 @@
       "description": "Compare notes, community ratings, exchange availability, and perfume houses side by side."
     },
     "trayAriaLabel": "Perfumes selected for comparison",
-    "trayTitle": "Compare ({count} of {max})",
+    "trayTitle": "Compare Fragrances ({count} of {max})",
     "clearAll": "Clear all",
-    "openCompare": "Open compare",
+    "openCompare": "Open Comparison",
     "removeItem": "Remove {name} from compare",
     "toggleAdd": "Add to compare",
     "toggleRemove": "Remove from compare",
     "maxReached": "Compare tray is full (maximum {max} perfumes)",
-    "pageHeading": "Compare",
-    "pageSubheading": "Notes, ratings, exchange availability, and house",
+    "pageHeading": "Compare Fragrances",
+    "pageSubheading": "Explore notes, ratings, house details, and Exchange availability side by side.",
     "emptyTitle": "No perfumes to compare",
     "emptyBody": "Add up to three perfumes from The Archive using the compare control on each card.",
     "emptyCta": "Browse The Archive",
@@ -350,8 +350,8 @@
     "dismissing": "Dismissing...",
     "dismissAll": "Dismiss All",
     "viewTradingPost": "View Exchange",
-    "noAlerts": "No alerts at the moment.",
-    "noAlertsDescription": "You'll receive alerts when items from your wishlist become available or when someone shows interest in your decants.",
+    "noAlerts": "The Hollow is quiet for now.",
+    "noAlertsDescription": "You’ll receive updates when fragrances from your Seeking list surface or when collectors show interest in your Exchange listings.",
     "alertPreferences": "Alert Preferences",
     "alertPreferencesDescription": "Choose how the Hollow keeps you informed.",
     "alertTypes": "Alert Types",
@@ -501,7 +501,7 @@
     "createAccount": "Begin Collecting",
     "passwordRequirements": "Password Requirements:",
     "termsAndConditions": "I accept the: ",
-    "termsAndConditionsLink": "terms and conditions",
+    "termsAndConditionsLink": "Terms of Use",
     "passwordRequirementsList": {
       "8characters": "At least 8 characters long",
       "uppercase": "Contains uppercase and lowercase letters",
@@ -766,7 +766,7 @@
     },
     "radio": {
       "houses": "Fragrance Houses",
-      "perfumes": "the Archive…"
+      "perfumes": "The Archive…"
     },
     "heading": "Perfumer's Hollow",
     "description": "A comprehensive database of perfumes and their houses.",
@@ -917,25 +917,25 @@
     },
     "tabs": {
       "ariaLabel": "Collection Archive views",
-      "inventory": "My Inventory",
-      "listings": "My Listings"
+      "inventory": "Collection",
+      "listings": "Exchange Listings"
     },
     "inventory": {
-      "heading": "My Inventory",
-      "atAGlance": "Inventory at a glance"
+      "heading": "Collection Overview",
+      "atAGlance": "Collection at a glance"
     },
     "stats": {
       "bottles": "Bottles",
-      "bottlesHint": "Unique perfumes in your collection",
+      "bottlesHint": "Unique fragrances in your collection",
       "houses": "Houses",
-      "housesHint": "Distinct perfume houses represented",
+      "housesHint": "Fragrance houses represented in your collection",
       "families": "Top families",
-      "familiesHint": "Note families across your collection",
-      "familiesEmpty": "Add bottles to see families",
-      "tradedValue": "Traded listing value",
+      "familiesHint": "Dominant note families across your collection",
+      "familiesEmpty": "Add fragrances to begin shaping your collection profile.",
+      "tradedValue": "Collection Exchange Value",
       "tradedValueAmount": "${amount}",
       "tradedValueEmpty": "—",
-      "tradedValueFootnote": "Sum of ask prices on bottles from completed exchanges (off-platform payment)."
+      "tradedValueFootnote": "Estimated value of fragrances involved in completed exchanges."
     },
     "listingStatus": {
       "notTrading": "Not trading",
@@ -969,8 +969,8 @@
     },
     "listingSummary": {
       "listed": "{ml} ml listed on the exchange.",
-      "viewListings": "View My Listings",
-      "notTrading": "Not trading — nothing listed on the exchange."
+      "viewListings": "View Exchange Listings",
+      "notTrading": "Not currently listed in the Exchange."
     },
     "collection": {
       "heading": "My Perfume Collection",
@@ -1001,19 +1001,19 @@
     "listItem": {
       "destashed": "DeStashed",
       "name": "Name",
-      "pointOfPurchase": "Point of Purchase",
-      "price": "Price",
-      "removeButton": "Remove from Collection",
-      "removing": "Removing from Collection...",
+      "pointOfPurchase": "Acquired From",
+      "price": "Acquisition Price",
+      "removeButton": "Remove from Archive",
+      "removing": "Removing from Archive...",
       "total": "Total",
-      "totalAmount": "Total amount",
-      "remainingAmount": "In collection (after destashes)",
-      "byType": "By type",
-      "type": "Type",
-      "thisBottle": "This bottle",
+      "totalAmount": "Total Volume",
+      "remainingAmount": "Remaining in collection (after destashes)",
+      "byType": "By Format",
+      "type": "Format",
+      "thisBottle": "Bottle Details",
       "editBottle": "Edit bottle details",
       "editAmount": "Edit bottle details",
-      "amountLabel": "Amount (ml)",
+      "amountLabel": "Volume (ml)",
       "placeOfPurchasePlaceholder": "e.g. Luckyscent, eBay...",
       "save": "Save",
       "saving": "Saving...",
@@ -1021,14 +1021,14 @@
       "editAmountError": "Please enter a valid amount",
       "editAmountSaveError": "Failed to save changes",
       "viewDetails": "View / Edit details",
-      "viewComments": "View My Comments",
-      "setDestashed": "De-stash Perfume",
+      "viewComments": "Scent Journal",
+      "setDestashed": "Destash Perfume",
       "decantOptionsTitle": "Decant Options",
       "decantOptionsDescriptionOne": "Decanting allows you to share or transfer a portion of your fragrance to another bottle.",
       "decantOptionsDescriptionTwo": "Set your amount, price, and exchange preferences below.",
-      "decantOptionsAmountLabel": "Amount to De-stash",
+      "decantOptionsAmountLabel": "Destash Volume",
       "decantOptionsAmountPlaceholder": "Enter amount (0-{amount}ml)",
-      "decantOptionsPriceLabel": "Price ($ per ml, optional)",
+      "decantOptionsPriceLabel": "Asking Value ($ per ml, optional)",
       "decantOptionsTradePreferencesLabel": "Exchange Preferences",
       "decantOptionsTradePreferencesDescription": "Choose your exchange preferences below.",
       "decantOptionsTradePreferencesCash": "Cash Only",
@@ -1037,7 +1037,7 @@
       "decantOptionsTradePreferencesOnlyTrades": "Only accept exchanges (no cash offers)",
       "decantOptionsTradePreferencesAcceptBoth": "Accept both cash and exchange offers",
       "removeFromTradingPost": "Remove from Trading Post",
-      "confirmDeStash": "Confirm De-Stash",
+      "confirmDeStash": "Confirm Destash",
       "decantOptionsPriceError": "Price must be a positive number",
       "decantOptionsAmountError": "Amount must be a positive number",
       "decantOptionsAmountErrorExceedsAvailableAmount": "Amount cannot exceed available amount",
@@ -1045,15 +1045,15 @@
       "createNewDecant": "Create as new decant entry",
       "updateExistingDecant": "Update existing decant",
       "createNewDecantDescription": "This will create a separate new decant entry instead of updating the current one.",
-      "manageDestashes": "Manage Destashes",
+      "manageDestashes": "Destash Management",
       "destashManager": {
         "saveChanges": "Save Changes",
         "createDestash": "Create Destash"
       }
     },
     "destashManager": {
-      "title": "Destash Management",
-      "description": "Create, edit, and manage multiple destashes for this perfume. Each destash can have its own amount, price, and exchange preferences.",
+      "title": "Exchange Destashes",
+      "description": "Manage active destashes, exchange preferences, and collector notes for this fragrance bottle.",
       "pauseAll": "Pause all listings",
       "pausedHeading": "Paused listings",
       "pausedLabel": "Paused",
@@ -1062,7 +1062,7 @@
       "resuming": "Resuming…",
       "removePaused": "Remove listing",
       "removing": "Removing…",
-      "addNew": "Add New Destash",
+      "addNew": "Create Destash",
       "createNew": "Create New Destash",
       "editDestash": "Edit Destash",
       "cancel": "Cancel",
@@ -1076,53 +1076,61 @@
       "tradeOnly": "Exchange Only",
       "yes": "Yes",
       "noDestashes": "No destashes yet. Click 'Add New Destash' to create one.",
-      "confirmDelete": "Are you sure you want to delete this destash? This action cannot be undone.",
+      "confirmDelete": "Delete this destash?",
+      "confirmDeleteDescription": "Once removed, it will no longer appear in the Exchange or on your collector ledger.",
       "sourceBottleLabel": "Decant from which bottle?",
       "sourceBottlePlaceholder": "Select a bottle...",
       "sourceBottleRemaining": "{amount} ml remaining",
       "standaloneDecant": "Standalone (no source bottle)",
-      "bottleDestashHint": "Destashing from this bottle (up to {max} ml)"
+      "bottleDestashHint": "Available from this bottle: up to {max} ml"
+    },
+    "singleScent": {
+      "confirmRemoveHeading": "Remove this fragrance from your collection?",
+      "confirmRemoveDescription": "Removing this fragrance will also remove its notes, history, and Exchange activity from your archive."
     },
     "heading": "Collection Archive",
     "subheading": "Manage your personal collection of perfumes.",
     "itemsInCollection": "items in Collection",
     "addButton": "Add to Collection",
+    "addAnotherBottleButton": "Add another bottle",
     "removeButton": "Remove from Collection",
     "modal": {
-      "typeLabel": "Perfume Type",
+      "typeLabel": "Fragrance Concentration",
       "title": "Collection Archive",
-      "selectedPerfume": "Selected Perfume",
-      "description": "This is where you can manage your favorite scents.",
+      "selectedPerfume": "Archive Entry",
+      "description": "Search the Archive and add fragrances to your personal collection.",
       "createButton": "Create New Perfume",
-      "amountLabel": "Amount",
+      "amountLabel": "Amount Available",
       "amountPlaceholder": "Enter the amount of perfume",
       "submitButton": "Add to Collection",
-      "placeOfPurchasePlaceholder": "Enter the place of purchase",
-      "placeOfPurchase": "Place of Purchase",
-      "priceLabel": "Purchase Price",
-      "pricePlaceholder": "Enter the price of the perfume"
+      "placeOfPurchasePlaceholder": "Boutique, collector, retailer, or exchange source",
+      "placeOfPurchase": "Acquired From",
+      "priceLabel": "Acquisition Price",
+      "pricePlaceholder": "Enter the original purchase price"
     },
     "comments": {
-      "heading": "Comments",
+      "heading": "Private Notes",
       "subheading": "Share your thoughts about {perfumeName}.",
-      "addCommentPlaceholder": "Add a comment...",
-      "addCommentButton": "Add Comment",
-      "deleteComment": "Delete Comment",
+      "subheading2": "Personal reflections and impressions visible only to you.",
+      "addCommentPlaceholder": "Add a note...",
+      "addCommentButton": "Add Journal Entry",
+      "addCollectorNoteButton": "Add Collector Note",
+      "deleteComment": "Delete Journal Entry",
       "makePublic": "Make public",
       "makePrivate": "Make private",
-      "noComments": "These comments are only visible to you and are for personal use only.",
-      "error": "Error submitting comment. Please try again.",
-      "failed": "Failed to add comment",
-      "deleteError": "Error deleting comment",
-      "deleteFailed": "Failed to delete comment",
-      "title": "Comments",
-      "description": "This is where you can add your personal comments about the scents.",
-      "addLabel": "Add a comment:",
+      "noComments": "Some fragrances take time to understand.",
+      "error": "Error submitting journal entry. Please try again.",
+      "failed": "Failed to add journal entry",
+      "deleteError": "Error deleting journal entry",
+      "deleteFailed": "Failed to delete journal entry",
+      "title": "Scent Journal",
+      "description": "What does this fragrance remind you of?",
+      "addLabel": "Private Notes",
       "submitting": "Submitting...",
-      "submit": "Submit"
+      "submit": "Save Notes"
     },
     "search": {
-      "placeholder": "Search your perfumes...",
+      "placeholder": "Search your collection...",
       "noResults": "No perfumes found",
       "tryDifferent": "Try a different search term"
     },
@@ -1135,9 +1143,9 @@
       "clearAll": "Clear Filters"
     },
     "bulk": {
-      "open": "Bulk add",
-      "close": "Close bulk add",
-      "title": "Bulk add to collection",
+      "open": "Add Multiple",
+      "close": "Close Add Multiple",
+      "title": "Add Multiple to Collection",
       "description": "Add multiple perfumes in one session. Each row is saved as its own bottle.",
       "perfumeLabel": "Perfume",
       "perfumePlaceholder": "Search perfume name…",
@@ -1301,7 +1309,7 @@
     "error": "Error",
     "success": "Success",
     "passwordRequirements": "Password Requirements",
-    "updatePasswordToKeepAccountSecure": "Update your password to keep your account secure",
+    "updatePasswordToKeepAccountSecure": "Update your password to help protect your account.",
     "requirements": {
       "8characters": "At least 8 characters long",
       "uppercase": "Contains uppercase and lowercase letters",
@@ -1374,12 +1382,12 @@
     }
   },
   "twoFactor": {
-    "title": "Account security",
-    "subheading": "Update your password and manage optional two-factor authentication.",
+    "title": "Account Security",
+    "subheading": "Manage your password and optional two-factor authentication.",
     "twoFactorSectionTitle": "Two-factor authentication",
     "adminRecommendation": "Two-factor authentication is recommended for admin and editor accounts.",
-    "disabledDescription": "Protect your account with an authenticator app. Enrollment is optional.",
-    "enableButton": "Enable two-factor authentication",
+    "disabledDescription": "Add an extra layer of security to your account with an authenticator app.",
+    "enableButton": "Enable Two-Factor Authentication",
     "scanQr": "Scan this QR code with your authenticator app, then enter the 6-digit code and your password to confirm.",
     "qrAlt": "Authenticator QR code",
     "manualKey": "Manual entry key",
@@ -1391,8 +1399,8 @@
     "enabledStatus": "Two-factor authentication is enabled on your account.",
     "regenerateTitle": "Regenerate backup codes",
     "regenerateButton": "Generate new backup codes",
-    "disableTitle": "Disable two-factor authentication",
-    "disableButton": "Disable 2FA",
+    "disableTitle": "Disable Two-Factor Authentication",
+    "disableButton": "Disable Two-Factor Authentication",
     "backupCodeLabel": "Backup code",
     "useBackupCode": "Use a backup code instead",
     "useAuthenticator": "Use authenticator app instead",
@@ -1649,8 +1657,8 @@
   "siteFooter": {
     "copyright": "© {year} perfumer's hollow",
     "navAria": "Site links",
-    "communityPolicy": "Community policy",
-    "terms": "Terms and conditions",
+    "communityPolicy": "Collector Standards",
+    "terms": "Terms of Use",
     "catalogStats": {
       "users": "{count, number} users",
       "houses": "{count, number} houses",
@@ -1661,79 +1669,114 @@
   },
   "communityPolicy": {
     "meta": {
-      "title": "Community Policy - perfumer's hollow",
+      "title": "Collector Standards - Perfumer's Hollow",
       "description": "Shipping expectations, dispute process, and community rules for traders."
     },
-    "heading": "Community policy",
-    "subheading": "Trading expectations on perfumer's hollow",
+    "heading": "Collector Standards",
+    "subheading": "Shared expectations for Echanges, reviews, and community participation.",
+    "intro": {
+      "heading": "A Thoughtful Community",
+      "subheading": "Perfumer’s Hollow exists to support collectors, discovery, and respectful Exchanges. These standards help keep the Hollow fair, trustworthy, and welcoming for everyone."
+    },
     "shipping": {
-      "heading": "Shipping expectations",
-      "contentOne": "All payment and shipping are arranged off-platform between traders. Agree on carriers, packaging, and timelines in your messages before anyone ships.",
-      "contentTwo": "Ship within a reasonable window after both sides confirm the exchange (typically within one week unless you agree otherwise). Share tracking when available.",
-      "contentThree": "Package bottles securely: use padding, seal decants, and disclose any known flaws before shipping."
+      "heading": "Shipping & Packaging",
+      "contentOne": "All payments and shipping arrangements are handled directly between collectors. Confirm carriers, packaging expectations, and shipping timelines before sending a fragrance.",
+      "contentTwo": "Ship within a reasonable timeframe after both collectors confirm the Exchange — typically within one week unless otherwise agreed. Share tracking information whenever possible.",
+      "contentThree": "Package fragrances securely using proper padding and sealed decants, and disclose any known flaws or damage before shipping.",
+      "practicesHeader": "Recommended Practices",
+      "practicesContent": {
+        "one": "Confirm shipping timelines before sending fragrances.",
+        "two": "Share tracking information whenever possible.",
+        "three": "Package bottles and decants securely.",
+        "four": "Disclose flaws, leaks, or missing presentation honestly."
+      }
     },
     "disputes": {
-      "heading": "Dispute process",
-      "contentOne": "If something goes wrong, message the other trader first and try to resolve it directly.",
-      "contentTwo": "If you cannot resolve the issue, use Open dispute on the active exchange card, or Report on their trader profile for off-exchange issues. Include photos and a clear description.",
-      "contentThree": "Our team reviews reports and may issue strikes or account actions. We do not hold funds or guarantee refunds — we help document disputes and enforce community rules."
+      "heading": "Exchange Disputes",
+      "contentOne": "If an issue arises during an Exchange, contact the other collector first and attempt to resolve it directly.",
+      "contentTwo": "If the issue cannot be resolved, use Open Dispute from the active Exchange entry, or Report from a collector’s ledger for concerns unrelated to an Exchange. Include clear descriptions and supporting photos whenever possible.",
+      "contentThree": "Perfumer’s Hollow reviews reported concerns and may take moderation or account action when necessary. While we do not process payments or guarantee refunds, we do enforce Collector Standards and community policies across the platform.",
+      "practicesHeader": "Before Opening a Dispute",
+      "practicesContent": {
+        "one": "Contact the other collector first.",
+        "two": "Keep communication respectful and clear.",
+        "three": "Include photos and supporting details when reporting issues.",
+        "four": "Use Exchange-linked dispute tools whenever possible."
+      }
     },
     "community": {
-      "heading": "Community rules",
-      "contentOne": "Be honest about bottle condition, volume remaining, and authenticity. Listings should include accurate photos.",
-      "contentTwo": "Harassment, scams, and no-ship behavior are not tolerated. Repeated issues affect reputation and may lead to suspension.",
-      "contentThree": "Leave feedback only after a completed exchange so reviews reflect real exchanges."
+      "heading": "Community Expectations",
+      "contentOne": "Accurately represent bottle condition, remaining volume, authenticity, and presentation. Listings should include clear and current photos whenever possible.",
+      "contentTwo": "Harassment, fraudulent activity, and repeated shipping failures are prohibited. Ongoing issues may result in moderation action, account restrictions, or suspension.",
+      "contentThree": "Leave feedback only after a completed Exchange so collector reviews remain accurate and meaningful.",
+      "practicesHeader": "Prohibited Activity",
+      "practicesContent": {
+        "one": "Counterfeit or knowingly misrepresented fragrances.",
+        "two": "Fraudulent listings or payment scams.",
+        "three": "Harassment, threats, or abusive conduct.",
+        "four": "Spam or unrelated promotional content.",
+        "five": "Attempts to exchange stolen goods."
+      }
     },
     "offPlatform": {
-      "heading": "Off-platform payments",
-      "contentOne": "perfumer's hollow connects traders; we never process payments or shipping labels.",
-      "contentTwo": "Use payment methods you trust, keep message records on-platform when possible, and never share passwords or unrelated financial details."
+      "heading": "Off-Platform Payments",
+      "contentOne": "Perfumer’s Hollow connects collectors, but all payments and shipping arrangements are handled independently between members.",
+      "contentTwo": "Use payment methods you trust, keep important Exchange communication within the Hollow whenever possible, and never share passwords or unrelated financial information.",
+      "practicesHeader": "Account & Payment Safety",
+      "practicesContent": {
+        "one": "Use payment methods you personally trust.",
+        "two": "Never share passwords or verification codes.",
+        "three": "Keep important Exchange communication within the Hollow when possible.",
+        "four": "Be cautious with collectors requesting rushed or unusual payment arrangements."
+      }
     }
   },
   "termsAndConditions": {
     "meta": {
-      "title": "Terms and Conditions - perfumer's hollow",
+      "title": "Terms of Use - Perfumer's Hollow",
       "description": "Terms of use, trading rules, and privacy policy for perfumer's hollow."
     },
-    "heading": "Terms and Conditions",
-    "subheading": "perfumer's hollow",
+    "heading": "Terms of Use",
+    "subheading": "Guidelines for using the Hollow, participating in Exchanges, and interacting with the collector community.",
     "gist": {
-      "heading": "THE GIST",
-      "contentOne": "perfumer's hollow is an independent platform devoted to perfume lovers — a place to share reviews, learn, and connect with other collectors. Users may list perfumes and samples for exchange, but the dealings themselves are strictly between private individuals.",
-      "contentTwo": "We do not handle payments, do not verify authenticity, and will not mediate disputes. Think of us as the smoke-filled bar where introductions are made, not the broker of the deal."
+      "heading": "The Hollow at a Glance",
+      "contentOne": "Perfumer’s Hollow is an independent platform for fragrance collectors, reviewers, and enthusiasts — a place to discover scents, share impressions, and connect with other members of the community.",
+      "contentTwo": "Collectors may list fragrances, decants, and samples through the Exchange, but all arrangements are handled directly between users.",
+      "contentThree": "Perfumer’s Hollow does not process payments, verify authenticity, or mediate disputes. We provide the meeting place — the exchange itself belongs to the collectors involved."
     },
     "tradingAndListing": {
-      "heading": "TRADING AND LISTING",
-      "contentOne": "Exchanges and exchanges are entirely at your own risk.",
-      "contentTwo": "Counterfeit perfumes are strictly prohibited.",
-      "contentThree": "Split (decanted) perfumes are permitted, provided they are genuine and accurately described.",
-      "contentFour": "Any attempt to defraud, misrepresent, or sell stolen goods will result in permanent account removal and possible reporting to relevant authorities.",
-      "contentFive": "Users must describe items truthfully — if you’re listing a vintage bottle, say so; if the label’s half gone, that’s part of its story."
+      "heading": "Exchange and Listings",
+      "contentOne": "All Exchanges are conducted at the participating collectors’ own discretion and risk.",
+      "contentTwo": "Counterfeit fragrances are strictly prohibited.",
+      "contentThree": "Decants and split fragrances are permitted when accurately described and represented as authentic.",
+      "contentFour": "Fraudulent activity, misrepresentation, or attempts to exchange stolen goods may result in permanent account removal and possible reporting to relevant authorities.",
+      "contentFive": "Listings should accurately reflect bottle condition, fill level, vintage status, and presentation."
     },
     "accountsAndConduct": {
-      "heading": "ACCOUNTS AND USER CONDUCT",
-      "contentOne": "You’ll need an account to post reviews, notes, or exchanges. Browsing and searching are open to everyone.",
-      "contentTwo": "Keep it civil: no harassment, spam, political or religious debates, or illegal content.",
-      "contentThree": "This is a perfume community, not a soapbox or battleground. Treat others with the respect you’d show in a high-end fragrance boutique."
+      "heading": "ACCOUNTS AND COMMUNITY CONDUCT",
+      "contentOne": "An account is required to participate in Exchanges, reviews, discussions, and collector features. Browsing the Archive and Houses remains publicly accessible.",
+      "contentTwo": "Members are expected to interact respectfully and responsibly. Harassment, spam, illegal activity, and unrelated political or religious debates are prohibited.",
+      "contentThree": "Perfumer’s Hollow exists to support fragrance discussion and collector discovery. Treat fellow collectors with the same respect you would expect in a trusted boutique or private fragrance gathering."
     },
     "reviewsAndNotes": {
       "heading": "REVIEWS AND NOTES",
-      "contentOne": "Users may submit perfume reviews or leave notes on discussions to help others navigate their scent journeys.",
-      "contentTwo": "All content goes through a moderation process to ensure it’s relevant, fair, and on-topic. We reserve the right to remove or edit submissions that break these rules or drift into unrelated territory.",
-      "contentThree": "By posting, you grant perfumer's hollow the non-exclusive right to display your words and images on the site and in related features (such as listings or community highlights). You retain full ownership of your work."
+      "contentOne": "Members may submit reviews, notes, and fragrance impressions to support discovery across the Hollow.",
+      "contentTwo": "Contributions may be moderated to ensure relevance, fairness, and community quality standards. Perfumer’s Hollow reserves the right to remove content that violates these guidelines.",
+      "contentThree": "By submitting content, you grant Perfumer’s Hollow a non-exclusive license to display your contributions within the platform and related community features. Ownership of your content remains yours."
     },
     "noGuarantee": {
       "heading": "NO GUARANTEES",
-      "contentOne": "We strive to keep the site polished and running, but we make no promises of uninterrupted service. We may suspend, modify, or remove features without warning — sometimes even good things must fade to make room for the new."
+      "contentOne": "Perfumer’s Hollow is provided “as is” without guarantees of uninterrupted availability or feature permanence.",
+      "contentTwo": "Features, tools, and services may change, be suspended, or be removed at any time."
     },
     "liability": {
       "heading": "LIMITATION OF LIABILITY",
-      "contentOne": "perfumer's hollow and its operators are not responsible for any loss, damage, or dispute arising from user exchanges, communications, or listings.",
-      "contentTwo": "If a deal goes sour, it’s between the parties involved. The platform merely sets the stage — the drama belongs to you."
+      "contentOne": "Perfumer’s Hollow and its operators are not responsible for disputes, losses, damages, or outcomes related to user Exchanges, listings, or communications.",
+      "contentTwo": "All Exchange arrangements are made directly between collectors."
     },
     "privacy": {
       "heading": "PRIVACY POLICY",
-      "contentOne": "We respect your privacy as much as a perfumer guards a secret formula. Here’s how we handle your data:",
+      "contentOne": "Perfumer’s Hollow respects your privacy and handles account information responsibly.",
       "contentList": {
         "one": "Information Collected: We may collect basic account information (such as username, email, and preferences) to help personalize your experience and improve the site.",
         "two": "Use of Data: Data is used internally only — for recommendations, feature improvements, and fraud prevention. It is never sold, never shared with advertisers, and never used for resale or marketing beyond this site.",
@@ -1743,12 +1786,13 @@
       }
     },
     "changes": {
-      "heading": "CHANGES TO THIS POLICY",
-      "contentOne": "We may revise these Terms and this Privacy Policy from time to time. Updates will be posted on this page with a new “last updated” date. Continuing to use the site after changes means you accept them — the way one accepts that the night always carries a hint of mystery."
+      "heading": "CHANGES TO THESE TERMS",
+      "contentOne": "These Terms and related policies may be updated periodically. Continued use of the platform after updates indicates acceptance of the revised terms."
     },
     "closing": {
       "heading": "CLOSING WORDS",
-      "contentOne": "perfumer's hollow exists to celebrate the art, science, and stories behind scent. Use it wisely, exchange fairly, and remember — trust your nose, not a stranger’s promises."
+      "contentOne": "Perfumer’s Hollow exists to celebrate the artistry, memory, and discovery behind fragrance.",
+      "contentTwo": "Exchange fairly, contribute thoughtfully, and trust your instincts as much as your nose."
     }
   },
   "tradingPost": {
@@ -2256,23 +2300,90 @@
     "homeLink": "Head back home"
   },
   "validation": {
-    "descriptionRequired": "Description is required and must be at least 10 characters.",
-    "descriptionMin": "Description must be at least 10 characters.",
-    "descriptionMax": "Description must be less than 1000 characters.",
-    "nameRequired": "Name is required.",
-    "nameMin": "Name must be at least 1 character.",
-    "nameMax": "Name must be less than 100 characters.",
-    "urlInvalid": "Please enter a valid URL.",
-    "perfumeHouseRequired": "Please select a perfume house.",
-    "usernameMin": "Username must be at least 3 characters.",
-    "usernameMax": "Username must be 30 characters or less.",
-    "usernameFormat": "Use only letters, numbers, spaces and underscores.",
-    "profileAboutMax": "Trader about must be {max} characters or less.",
-    "wishlistBottlePreferenceRequired": "Please select a bottle preference."
+    "idRequired": "ID is required",
+    "idInvalid": "ID contains invalid characters",
+    "emailInvalid": "Please enter a valid email address",
+    "urlInvalid": "Please enter a valid URL",
+    "websiteRequired": "Please enter a valid URL",
+    "websiteRequiredShort": "Website is required",
+    "phoneInvalid": "Please enter a valid phone number",
+    "yearInvalid": "Please enter a valid year (1900-2099)",
+    "passwordMinLength": "Password must be at least 8 characters long",
+    "passwordMaxLength": "Password must be less than 128 characters",
+    "passwordLowercase": "Password must contain at least one lowercase letter",
+    "passwordUppercase": "Password must contain at least one uppercase letter",
+    "passwordNumber": "Password must contain at least one number",
+    "passwordSpecial": "Password must contain at least one special character",
+    "passwordNoSpaces": "Password cannot contain spaces",
+    "passwordRequired": "Password is required",
+    "ratingMin": "Rating must be at least 1",
+    "ratingMax": "Rating must be at most 5",
+    "ratingInt": "Rating must be a whole number",
+    "amountFormat": "Amount must be a positive number with up to 2 decimal places",
+    "priceFormat": "Price must be a positive number with up to 2 decimal places",
+    "nameRequired": "Name is required",
+    "nameMin": "Name must be at least 1 character",
+    "nameMinTwo": "Name must be at least 2 characters",
+    "nameMax": "Name must be less than 100 characters",
+    "descriptionRequired": "Description is required and must be at least 10 characters",
+    "descriptionMin": "Description must be at least 10 characters",
+    "descriptionMax": "Description must be less than 1000 characters",
+    "countryMin": "Country must be at least 2 characters",
+    "countryMax": "Country must be less than 50 characters",
+    "addressMin": "Address must be at least 5 characters",
+    "addressMax": "Address must be less than 200 characters",
+    "perfumeHouseRequired": "Perfume house is required",
+    "perfumeIdRequired": "Perfume ID is required",
+    "placeOfPurchaseMax": "Place of purchase must be less than 200 characters",
+    "tradePreference": "Trade preference must be cash, trade, or both",
+    "perfumeTypeRequired": "Perfume type is required",
+    "atLeastOneRating": "At least one rating is required",
+    "ratingIdRequired": "Rating ID is required",
+    "userPerfumeIdRequired": "User perfume ID is required",
+    "commentRequired": "Comment is required",
+    "commentMax": "Comment must be less than 1000 characters",
+    "commentIdRequired": "Comment ID is required",
+    "wishlistAction": "Action must be add, remove, or updateVisibility",
+    "wishlistBottlePreferenceRequired": "Please select a bottle preference",
+    "invalidIdFormat": "Invalid ID format",
+    "confirmPasswordRequired": "Confirm password is required",
+    "firstNameRequired": "First name is required",
+    "firstNameMax": "First name must be less than 50 characters",
+    "lastNameRequired": "Last name is required",
+    "lastNameMax": "Last name must be less than 50 characters",
+    "usernameMin": "Username must be at least 3 characters",
+    "usernameMax": "Username must be less than 30 characters",
+    "usernameFormat": "Use only letters, numbers, spaces and underscores",
+    "usernameFormatUnderscoreOnly": "Username can only contain letters, numbers, and underscores",
+    "acceptTerms": "You must accept the terms and conditions",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "currentPasswordRequired": "Enter your current password to continue",
+    "confirmNewPasswordRequired": "Confirm new password is required",
+    "newPasswordsDoNotMatch": "New passwords do not match",
+    "newPasswordDifferent": "New password must be different from current password",
+    "resetTokenRequired": "Reset token is required",
+    "searchQueryMax": "Search query must be less than 100 characters",
+    "houseNameMax": "House name must be less than 50 characters",
+    "priceMinZero": "Minimum price must be 0 or greater",
+    "priceMaxZero": "Maximum price must be 0 or greater",
+    "ratingRangeMin": "Minimum rating must be 1 or greater",
+    "ratingRangeMax": "Maximum rating must be 5 or less",
+    "pageMin": "Page must be 1 or greater",
+    "limitMin": "Limit must be at least 1",
+    "limitMax": "Limit must be at most 100",
+    "roleInvalid": "Role must be USER, ADMIN, or MODERATOR",
+    "timeframeInvalid": "Timeframe must be 7d, 30d, 90d, 1y, or all",
+    "exportFormatInvalid": "Export format must be csv, json, or xlsx",
+    "apiUserAction": "Action must be add, remove, or update",
+    "recipientIdRequired": "Recipient is required",
+    "subjectMax": "Subject must be less than 200 characters",
+    "messageMin": "Message must be at least 10 characters",
+    "messageMax": "Message must be less than 5000 characters",
+    "profileAboutMax": "Trader about must be {max} characters or less"
   },
   "listing": {
-    "photosLabel": "Listing photos",
-    "photosHint": "Add at least one photo before publishing to the exchange.",
+    "photosLabel": "Listing Photos",
+    "photosHint": "Add at least one photo before making this destash visible in the Exchange.",
     "dropzoneHint": "Drag and drop images here, or choose files",
     "chooseFiles": "Choose files",
     "useCamera": "Use camera",
@@ -2292,7 +2403,7 @@
       "heavilyUsed": "Heavily used",
       "damaged": "Damaged"
     },
-    "decantFormatLabel": "Decant format",
+    "decantFormatLabel": "Format",
     "decantFormatPlaceholder": "Select format (optional)",
     "decantFormat": {
       "atomizer": "Atomizer",
@@ -2337,16 +2448,16 @@
       "openSplitChip": "Group split · {count} slots open"
     },
     "wizard": {
-      "title": "Start a group split",
-      "startGroupSplit": "Start group split",
-      "budget": "{remaining} ml available to pour ({owned} owned − {listed} listed − {reserved} in active splits).",
-      "totalMlLabel": "Total ml to pour",
+      "title": "Start a Group Split",
+      "startGroupSplit": "Create Group Split",
+      "budget": "{remaining} ml currently available for this split. ({owned} owned − {listed} listed − {reserved} in active splits).",
+      "totalMlLabel": "Total Split Volume",
       "slotCountLabel": "Number of slots",
       "slotMlLabel": "Ml per slot",
       "slotSum": "Slots total {sum} ml (pour target {total} ml)",
       "priceHintLabel": "Price hint (optional, off-platform)",
       "notesLabel": "Notes for claimants",
-      "disclaimer": "I understand perfumer's hollow does not process payments or shipping. I will coordinate payment and postage with claimants off-platform.",
+      "disclaimer": "I understand Perfumer’s Hollow does not process payments or shipping. Payment and delivery arrangements are handled directly between collectors.",
       "disclaimerRequired": "Please accept the payment disclaimer.",
       "cancel": "Cancel",
       "back": "Back",

@@ -49,7 +49,22 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
       className="fixed z-30 w-full h-auto bg-noir-dark/60 backdrop-blur-md top-0 hidden lg:block"
       data-sticky-header="global-navigation"
     >
-      <div className="flex justify-end items-center px-30 bg-noir-black/60 backdrop-blur-md w-full gap-4">
+      <PrefetchLink
+        href="/"
+        className="absolute left-30 top-1/2 z-20 -translate-y-1/2 block px-2"
+        aria-label={logoText}
+      >
+        <Image
+          src="/images/new/logo-one.webp"
+          alt=""
+          width={356}
+          height={356}
+          priority={pathname !== "/"}
+          quality={90}
+          className="h-[var(--spacing-site-header-desktop)] w-auto max-h-42 drop-shadow-[0_4px_24px_rgba(0,0,0,0.55)]"
+        />
+      </PrefetchLink>
+      <div className="relative z-10 flex justify-end items-center px-30 bg-noir-black/60 backdrop-blur-md w-full gap-4">
         <LanguageSwitcher />
         <div className="flex items-center gap-2">
           {!user ? (
@@ -73,22 +88,15 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
         </div>
       </div>
       <nav
-        className="relative z-10 hidden lg:flex justify-between px-30 items-center justify-around"
+        className="relative z-10 hidden lg:flex justify-between items-center px-30 py-2 min-h-14"
         aria-label={t("aria.primary")}
         data-cy="GlobalNavigation"
       >
-        <PrefetchLink href="/" className="px-2 block">
-          <Image
-            src="/images/navlogo.webp"
-            alt={logoText}
-            width={384}
-            height={256}
-            priority={pathname !== "/"}
-            quality={90}
-            className="h-15 w-auto"
-          />
-        </PrefetchLink>
-        <ul className="flex gap-4 items-center tracking-wide max-w-max">
+        <div
+          className="shrink-0 w-[calc(var(--spacing-site-header-desktop)+1rem)]"
+          aria-hidden
+        />
+        <ul className="flex flex-wrap gap-4 items-center justify-end tracking-wide max-w-max">
           <MainNavigationLinks variant="desktop" user={user} />
         </ul>
       </nav>

@@ -50,15 +50,15 @@ const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
       {modalOpen && modalId === "delete-destash-item" && (
         <Modal innerType="dark" animateStart="top">
           <DangerModal
-            heading="Are you sure you want to delete this destash?"
-            description="Once deleted, it will be removed from the exchange and your trader profile."
+            heading={tDestash("confirmDelete")}
+            description={tDestash("confirmDeleteDescription")}
             action={onDelete}
           />
         </Modal>
       )}
       {modalOpen && modalId === uniqueModalId && (
         <Modal innerType="dark" animateStart="top">
-          <CommentsModal perfume={destash} addComment={addComment} />
+          <CommentsModal perfume={destash} addComment={addComment} isPublic />
         </Modal>
       )}
       <div className="noir-border bg-noir-dark/90">
@@ -111,7 +111,7 @@ const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
               size="sm"
               className="w-full md:w-auto"
             >
-              {tComments("addCommentButton")}
+              {tComments("addCollectorNoteButton")}
             </Button>
             <Button
               onClick={onEdit}

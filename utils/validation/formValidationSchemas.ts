@@ -158,7 +158,7 @@ export const WishlistActionSchema = z
       .string()
       .trim()
       .min(1, { message: V.perfumeIdRequired })
-      .refine(isValidPrismaRecordId, { message: "Invalid ID format" }),
+      .refine(isValidPrismaRecordId, { message: V.invalidIdFormat }),
     action: z.enum(
       ["add", "remove", "updateVisibility", "updateBottlePreference"],
       {

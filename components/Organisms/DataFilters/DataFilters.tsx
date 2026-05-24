@@ -41,7 +41,7 @@ const DataFilters = ({
   return (
     <div
       className={styleMerge(
-        "lg:p-4 flex flex-col gap-6 lg:flex-row md:justify-between md:items-center noir-border",
+        "lg:p-4 flex flex-col gap-6 lg:flex-row md:justify-between md:items-center noir-border p-4",
         className
       )}
     >
@@ -54,7 +54,7 @@ const DataFilters = ({
           <Select
             selectData={typeOptions}
             action={onTypeChange}
-            className="flex-wrap w:1/2"
+            className="flex-wrap w-full md:w:1/2"
             selectId={`${searchType}-type`}
             defaultId={selectedType}
             label={t("filter.heading")}

@@ -22,6 +22,8 @@ interface AddToCollectionModalProps {
   /** Called when optimistic add should be rolled back. */
   onOptimisticAddRollback?: (tempId: string) => void
   autoFocusSearch?: boolean
+  /** On a single-scent page, label the trigger as adding another bottle of the same fragrance. */
+  addAnotherBottle?: boolean
 }
 
 const AddToCollectionModal = ({
@@ -32,11 +34,13 @@ const AddToCollectionModal = ({
   onOptimisticAddToCollection,
   onOptimisticAddRollback,
   autoFocusSearch = false,
+  addAnotherBottle = false,
 }: AddToCollectionModalProps) => {
   const { modalOpen, toggleModal, modalId } = useSessionStore()
   const modalTrigger = useRef<HTMLButtonElement>(null)
   const t = useTranslations("myScents")
   const isIcon = type === "icon"
+  const buttonLabel = addAnotherBottle ? t("addAnotherBottleButton") : t("addButton")
 
   return (
     <>
@@ -49,11 +53,11 @@ const AddToCollectionModal = ({
       >
         {isIcon ? (
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm">{t("addButton")}</span>
+            <span className="text-sm">{buttonLabel}</span>
             <MdLibraryAdd size={20} />
           </div>
         ) : (
-          <p>{t("addButton")}</p>
+          <span>{buttonLabel}</span>
         )}
       </Button>
 

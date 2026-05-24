@@ -104,7 +104,7 @@ const GeneralDetails = ({
   }
 
   return (
-    <div className="flex flex-col gap-4 mt-6 px-2">
+    <div className="flex flex-col gap-4 mt-6">
       {/* Totals row */}
       <div className="flex flex-col md:flex-row gap-2 md:gap-10 justify-between md:items-start">
         <div className="flex flex-col md:flex-row items-start justify-start gap-2 lg:gap-6 md:gap-4">

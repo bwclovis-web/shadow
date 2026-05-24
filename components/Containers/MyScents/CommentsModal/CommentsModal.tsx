@@ -3,22 +3,24 @@ import { useState } from "react"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button/Button"
-import VooDooCheck from "@/components/Atoms/VooDooCheck/VooDooCheck"
 import { useSessionStore } from "@/hooks/sessionStore"
 import type { CommentsModalProps } from "@/types/comments"
 import { sanitizeString } from "@/utils/validation"
 
-const CommentsModal = ({ perfume: _perfume, onCommentAdded, addComment }: CommentsModalProps) => {
+const CommentsModal = ({
+  perfume: _perfume,
+  onCommentAdded,
+  addComment,
+  isPublic = false,
+}: CommentsModalProps) => {
   const t = useTranslations("myScents.comments")
   const { closeModal: closeModalStore } = useSessionStore()
-  const [isPublic, setIsPublic] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [comment, setComment] = useState("")
 
   const closeModal = () => {
     closeModalStore()
     setIsSubmitting(false)
-    setIsPublic(false)
     setComment("")
   }
 
@@ -74,16 +76,6 @@ const CommentsModal = ({ perfume: _perfume, onCommentAdded, addComment }: Commen
           focus:bg-noir-gold/40 focus:ring-noir-gold focus:border-noir-gold"
           required
         />
-
-        <div className="flex items-center gap-2">
-          <VooDooCheck
-            id="isPublic"
-            checked={isPublic}
-            onChange={() => setIsPublic(!isPublic)}
-            labelChecked={t("makePublic")}
-            labelUnchecked={t("makePrivate")}
-          />
-        </div>
 
         <Button type="submit" className="btn" disabled={isSubmitting}>
           {isSubmitting

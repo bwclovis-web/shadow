@@ -135,6 +135,21 @@ Middle Notes: Verdant Earth Accord (Rich Soil, Green and Flowering Plants)`
     )
   })
 
+  it("confirmNoteLayersAgainstSource keeps moss from Andromeda base notes line", () => {
+    const source =
+      "open notes: orange, bergamot\nheart notes: jasmine, coconut cream, vanilla orchid\nbase notes: amber, vanilla, moss\nScent Story whisper of moss in prose."
+    const layers = {
+      openNotes: ["orange", "bergamot"],
+      heartNotes: ["jasmine", "coconut cream", "vanilla orchid"],
+      baseNotes: ["amber", "vanilla", "moss"],
+    }
+    const confirmed = confirmNoteLayersAgainstSource(layers, source)
+    expect(confirmed.baseNotes).toEqual(
+      expect.arrayContaining(["amber", "vanilla", "moss"]),
+    )
+    expect(confirmed.openNotes).not.toEqual(expect.arrayContaining(["moss"]))
+  })
+
   it("pipeline drops Black Tie When to Wear prose while keeping Fragrance Notes materials", async () => {
     vi.stubEnv("OPENAI_API_KEY", "test-key")
     vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
@@ -213,6 +228,9 @@ Middle Notes: Verdant Earth Accord (Rich Soil, Green and Flowering Plants)`
     expect(sanitizeExtractedNoteCandidate("warm days")).toBeNull()
     expect(sanitizeExtractedNoteCandidate("cedar wear guide")).toBe("cedar")
     expect(sanitizeExtractedNoteCandidate("starry date evenings")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("flirtatious")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("glamorous")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("ruby")).toBeNull()
   })
 
   it("isObviousNonMaterialNote rejects CSS bleed and truncated prose fragments", () => {

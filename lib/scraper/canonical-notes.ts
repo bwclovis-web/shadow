@@ -337,6 +337,7 @@ const EXTRA_SINGLE_WORD_MATERIALS = [
   "cane",
   "rum",
   "caviar",
+  "moss",
 ]
 
 /** Filler words between materials in bad space-joined merchant blobs (skip during greedy split). */
@@ -426,6 +427,14 @@ const MERCHANT_MULTI_WORD_PHRASES: string[] = [
   "amberwood",
   "mandarin orange",
   "toasted hazelnut",
+  "arabian blonde coffee",
+  "blonde coffee",
+  "fluffy musk",
+  "coconut cream",
+  "vanilla orchid",
+  "spun sugar",
+  "creamy vanilla",
+  "whipped marshmallow",
 ]
 
 const getExplodePhrases = (): string[] => {

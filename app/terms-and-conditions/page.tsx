@@ -24,14 +24,15 @@ const TermsAndConditionsPage = async () => {
       />
       <PageWrapper isArticle={true}>
       <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
-        <h2 className="mb-4">1. {t("gist.heading")}</h2>
+        <h2 className="mb-4 uppercase">1. {t("gist.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("gist.contentOne")}</p>
           <p>{t("gist.contentTwo")}</p>
+          <p>{t("gist.contentThree")}</p>
         </div>
       </section>
       <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
-        <h2 className="mb-4">2. {t("tradingAndListing.heading")}</h2>
+        <h2 className="mb-4 uppercase">2. {t("tradingAndListing.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("tradingAndListing.contentOne")}</p>
           <p>{t("tradingAndListing.contentTwo")}</p>
@@ -41,7 +42,7 @@ const TermsAndConditionsPage = async () => {
         </div>
       </section>
       <section className=" mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
-        <h2 className="mb-4">3. {t("accountsAndConduct.heading")}</h2>
+        <h2 className="mb-4 uppercase">3. {t("accountsAndConduct.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("accountsAndConduct.contentOne")}</p>
           <p>{t("accountsAndConduct.contentTwo")}</p>
@@ -49,7 +50,7 @@ const TermsAndConditionsPage = async () => {
         </div>
       </section>
       <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
-        <h2 className="mb-4">4. {t("reviewsAndNotes.heading")}</h2>
+        <h2 className="mb-4 uppercase">4. {t("reviewsAndNotes.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("reviewsAndNotes.contentOne")}</p>
           <p>{t("reviewsAndNotes.contentTwo")}</p>
@@ -57,20 +58,21 @@ const TermsAndConditionsPage = async () => {
         </div>
       </section>
       <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
-        <h2 className="mb-4">5. {t("noGuarantee.heading")}</h2>
+        <h2 className="mb-4 uppercase">5. {t("noGuarantee.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("noGuarantee.contentOne")}</p>
+          <p>{t("noGuarantee.contentTwo")}</p>
         </div>
       </section>
       <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
-        <h2 className="mb-4">6. {t("liability.heading")}</h2>
+        <h2 className="mb-4 uppercase">6. {t("liability.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("liability.contentOne")}</p>
           <p>{t("liability.contentTwo")}</p>
         </div>
       </section>
       <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
-        <h2 className="mb-4">7. {t("privacy.heading")}</h2>
+        <h2 className="mb-4 uppercase">7. {t("privacy.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("privacy.contentOne")}</p>
         </div>
@@ -83,13 +85,13 @@ const TermsAndConditionsPage = async () => {
         </ul>
       </section>
       <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
-        <h2 className="mb-4">8. {t("changes.heading")}</h2>
+        <h2 className="mb-4 uppercase">8. {t("changes.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("changes.contentOne")}</p>
         </div>
       </section>
       <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold mb-20">
-        <h2 className="mb-4">9. {t("closing.heading")}</h2>
+        <h2 className="mb-4 uppercase">9. {t("closing.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("closing.contentOne")}</p>
         </div>

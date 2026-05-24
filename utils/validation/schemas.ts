@@ -1,11 +1,14 @@
 /**
  * Centralized Validation Schemas
- * Single source of truth for all Zod validation schemas used across the application
+ * Single source of truth for all Zod validation schemas used across the application.
+ * Messages are translation keys (validation.*) — pass errors through getTranslatedError(t).
  */
 
 import { z } from "zod"
 
 import { isValidPrismaRecordId } from "@/utils/prisma-record-id"
+
+import { validationKeys as V } from "./validationKeys"
 
 // ============================================================================
 // COMMON/PRIMITIVE SCHEMAS
@@ -19,153 +22,126 @@ export const commonSchemas = {
   // Identity
   id: z
     .string()
-    .min(1, { message: "ID is required" })
-    .regex(/^[a-zA-Z0-9-_]+$/, { message: "ID contains invalid characters" }),
+    .min(1, { message: V.idRequired })
+    .regex(/^[a-zA-Z0-9-_]+$/, { message: V.idInvalid }),
 
   // Contact Information
-  email: z
-    .string()
-    .email({ message: "Please enter a valid email address" })
-    .toLowerCase()
-    .trim(),
+  email: z.string().email({ message: V.emailInvalid }).toLowerCase().trim(),
 
   phone: z
     .string()
-    .regex(/^[+]?[1-9][\d]{0,15}$/, {
-      message: "Please enter a valid phone number",
-    })
+    .regex(/^[+]?[1-9][\d]{0,15}$/, { message: V.phoneInvalid })
     .optional(),
 
   // URLs
-  url: z.string().url({ message: "Please enter a valid URL" }).optional(),
+  url: z.string().url({ message: V.urlInvalid }).optional(),
 
-  urlRequired: z.string().url({ message: "Please enter a valid URL" }),
+  urlRequired: z.string().url({ message: V.urlInvalid }),
 
   // Authentication
   password: z
     .string()
-    .min(8, { message: "Password must be at least 8 characters long" })
-    .max(128, { message: "Password must be less than 128 characters" })
-    .regex(/[a-z]/, {
-      message: "Password must contain at least one lowercase letter",
-    })
-    .regex(/[A-Z]/, {
-      message: "Password must contain at least one uppercase letter",
-    })
-    .regex(/[0-9]/, { message: "Password must contain at least one number" })
-    .regex(/[^a-zA-Z0-9]/, {
-      message: "Password must contain at least one special character",
-    })
-    .refine(pwd => !pwd.includes(" "), {
-      message: "Password cannot contain spaces",
-    }),
+    .min(8, { message: V.passwordMinLength })
+    .max(128, { message: V.passwordMaxLength })
+    .regex(/[a-z]/, { message: V.passwordLowercase })
+    .regex(/[A-Z]/, { message: V.passwordUppercase })
+    .regex(/[0-9]/, { message: V.passwordNumber })
+    .regex(/[^a-zA-Z0-9]/, { message: V.passwordSpecial })
+    .refine(pwd => !pwd.includes(" "), { message: V.passwordNoSpaces }),
 
-  passwordSimple: z.string().min(1, { message: "Password is required" }),
+  passwordSimple: z.string().min(1, { message: V.passwordRequired }),
 
   username: z
     .string()
-    .min(3, { message: "Username must be at least 3 characters" })
-    .max(30, { message: "Username must be less than 30 characters" })
-    .regex(/^[a-zA-Z0-9_]+$/, {
-      message: "Username can only contain letters, numbers, and underscores",
-    })
+    .min(3, { message: V.usernameMin })
+    .max(30, { message: V.usernameMax })
+    .regex(/^[a-zA-Z0-9_]+$/, { message: V.usernameFormatUnderscoreOnly })
     .trim(),
 
   // Text Content
   name: z
     .string()
-    .min(2, { message: "Name must be at least 2 characters" })
-    .max(100, { message: "Name must be less than 100 characters" })
+    .min(2, { message: V.nameMinTwo })
+    .max(100, { message: V.nameMax })
     .trim(),
 
   firstName: z
     .string()
-    .min(1, { message: "First name is required" })
-    .max(50, { message: "First name must be less than 50 characters" })
+    .min(1, { message: V.firstNameRequired })
+    .max(50, { message: V.firstNameMax })
     .trim(),
 
   lastName: z
     .string()
-    .min(1, { message: "Last name is required" })
-    .max(50, { message: "Last name must be less than 50 characters" })
+    .min(1, { message: V.lastNameRequired })
+    .max(50, { message: V.lastNameMax })
     .trim(),
 
   description: z
     .string()
-    .min(10, { message: "Description must be at least 10 characters" })
-    .max(1000, { message: "Description must be less than 1000 characters" })
+    .min(10, { message: V.descriptionMin })
+    .max(1000, { message: V.descriptionMax })
     .trim()
     .optional(),
 
   descriptionRequired: z
     .string()
-    .min(10, { message: "Description must be at least 10 characters" })
-    .max(1000, { message: "Description must be less than 1000 characters" })
+    .min(10, { message: V.descriptionRequired })
+    .max(1000, { message: V.descriptionMax })
     .trim(),
 
   comment: z
     .string()
-    .min(1, { message: "Comment is required" })
-    .max(1000, { message: "Comment must be less than 1000 characters" })
+    .min(1, { message: V.commentRequired })
+    .max(1000, { message: V.commentMax })
     .trim(),
 
   address: z
     .string()
-    .min(5, { message: "Address must be at least 5 characters" })
-    .max(200, { message: "Address must be less than 200 characters" })
+    .min(5, { message: V.addressMin })
+    .max(200, { message: V.addressMax })
     .optional(),
 
   country: z
     .string()
-    .min(2, { message: "Country must be at least 2 characters" })
-    .max(50, { message: "Country must be less than 50 characters" })
+    .min(2, { message: V.countryMin })
+    .max(50, { message: V.countryMax })
     .optional(),
 
   // Numbers and Ratings
   rating: z
     .number()
-    .min(1, { message: "Rating must be at least 1" })
-    .max(5, { message: "Rating must be at most 5" })
-    .int({ message: "Rating must be a whole number" }),
+    .min(1, { message: V.ratingMin })
+    .max(5, { message: V.ratingMax })
+    .int({ message: V.ratingInt }),
 
   ratingOptional: z
     .number()
-    .min(1, { message: "Rating must be at least 1" })
-    .max(5, { message: "Rating must be at most 5" })
-    .int({ message: "Rating must be a whole number" })
+    .min(1, { message: V.ratingMin })
+    .max(5, { message: V.ratingMax })
+    .int({ message: V.ratingInt })
     .optional(),
 
   // Financial
-  amount: z.string().regex(/^\d+(\.\d{1,2})?$/, {
-    message: "Amount must be a positive number with up to 2 decimal places",
-  }),
+  amount: z.string().regex(/^\d+(\.\d{1,2})?$/, { message: V.amountFormat }),
 
-  price: z
-    .string()
-    .regex(/^\d+(\.\d{1,2})?$/, {
-      message: "Price must be a positive number with up to 2 decimal places",
-    })
-    .optional(),
+  price: z.string().regex(/^\d+(\.\d{1,2})?$/, { message: V.priceFormat }).optional(),
 
   // Temporal
   year: z
     .string()
-    .regex(/^(19|20)\d{2}$/, {
-      message: "Please enter a valid year (1900-2099)",
-    })
+    .regex(/^(19|20)\d{2}$/, { message: V.yearInvalid })
     .optional(),
 
-  yearRequired: z.string().regex(/^(19|20)\d{2}$/, {
-    message: "Please enter a valid year (1900-2099)",
-  }),
+  yearRequired: z.string().regex(/^(19|20)\d{2}$/, { message: V.yearInvalid }),
 
   // Pagination
-  page: z.number().min(1, { message: "Page must be 1 or greater" }).int(),
+  page: z.number().min(1, { message: V.pageMin }).int(),
 
   limit: z
     .number()
-    .min(1, { message: "Limit must be at least 1" })
-    .max(100, { message: "Limit must be at most 100" })
+    .min(1, { message: V.limitMin })
+    .max(100, { message: V.limitMax })
     .int(),
 
   // Booleans
@@ -192,9 +168,7 @@ export const perfumeHouseSchemas = {
     country: commonSchemas.country,
     founded: commonSchemas.year,
     type: z
-      .enum([
-"niche", "designer", "indie", "celebrity", "drugstore"
-])
+      .enum(["niche", "designer", "indie", "celebrity", "drugstore"])
       .optional(),
     email: commonSchemas.email.optional(),
     phone: commonSchemas.phone,
@@ -209,9 +183,7 @@ export const perfumeHouseSchemas = {
     country: commonSchemas.country,
     founded: commonSchemas.year,
     type: z
-      .enum([
-"niche", "designer", "indie", "celebrity", "drugstore"
-])
+      .enum(["niche", "designer", "indie", "celebrity", "drugstore"])
       .optional(),
     email: commonSchemas.email.optional(),
     phone: commonSchemas.phone,
@@ -227,7 +199,7 @@ export const perfumeSchemas = {
   create: z.object({
     name: commonSchemas.name,
     description: commonSchemas.descriptionRequired,
-    house: z.string().min(1, { message: "Perfume house is required" }),
+    house: z.string().min(1, { message: V.perfumeHouseRequired }),
     image: commonSchemas.url,
     perfumeId: z.string().optional(),
     notesTop: commonSchemas.stringArrayOptional,
@@ -236,65 +208,50 @@ export const perfumeSchemas = {
   }),
 
   update: z.object({
-    perfumeId: z.string().min(1, { message: "Perfume ID is required" }),
+    perfumeId: z.string().min(1, { message: V.perfumeIdRequired }),
     name: commonSchemas.name.optional(),
     description: commonSchemas.description,
     image: commonSchemas.url,
-    house: z.string().min(1, { message: "Perfume house is required" }).optional(),
+    house: z.string().min(1, { message: V.perfumeHouseRequired }).optional(),
     notesTop: commonSchemas.stringArrayOptional,
     notesHeart: commonSchemas.stringArrayOptional,
     notesBase: commonSchemas.stringArrayOptional,
   }),
 
   updateUserPerfume: z.object({
-    perfumeId: z.string().min(1, { message: "Perfume ID is required" }),
+    perfumeId: z.string().min(1, { message: V.perfumeIdRequired }),
     amount: commonSchemas.amount,
     available: commonSchemas.amount,
     price: commonSchemas.price,
-    placeOfPurchase: z
-      .string()
-      .max(200, {
-        message: "Place of purchase must be less than 200 characters",
-      })
-      .optional(),
+    placeOfPurchase: z.string().max(200, { message: V.placeOfPurchaseMax }).optional(),
     tradePrice: commonSchemas.price,
     tradePreference: z
       .enum(["cash", "trade", "both"], {
-        errorMap: () => ({
-          message: "Trade preference must be cash, trade, or both",
-        }),
+        errorMap: () => ({ message: V.tradePreference }),
       })
       .optional(),
     tradeOnly: commonSchemas.booleanOptional,
-    type: z.string().min(1, { message: "Perfume type is required" }).optional(),
+    type: z.string().min(1, { message: V.perfumeTypeRequired }).optional(),
   }),
 
   search: z.object({
-    query: z
-      .string()
-      .max(100, { message: "Search query must be less than 100 characters" })
-      .optional(),
-    houseName: z
-      .string()
-      .max(50, { message: "House name must be less than 50 characters" })
-      .optional(),
+    query: z.string().max(100, { message: V.searchQueryMax }).optional(),
+    houseName: z.string().max(50, { message: V.houseNameMax }).optional(),
     type: z.string().optional(),
     priceRange: z
       .object({
-        min: z.number().min(0, { message: "Minimum price must be 0 or greater" }),
-        max: z.number().min(0, { message: "Maximum price must be 0 or greater" }),
+        min: z.number().min(0, { message: V.priceMinZero }),
+        max: z.number().min(0, { message: V.priceMaxZero }),
       })
       .optional(),
     ratingRange: z
       .object({
-        min: z.number().min(1, { message: "Minimum rating must be 1 or greater" }),
-        max: z.number().max(5, { message: "Maximum rating must be 5 or less" }),
+        min: z.number().min(1, { message: V.ratingRangeMin }),
+        max: z.number().max(5, { message: V.ratingRangeMax }),
       })
       .optional(),
     notes: commonSchemas.stringArrayOptional,
-    sortBy: z.enum([
-"name", "price", "rating", "createdAt"
-]).optional(),
+    sortBy: z.enum(["name", "price", "rating", "createdAt"]).optional(),
     sortOrder: z.enum(["asc", "desc"]).optional(),
   }),
 } as const
@@ -306,7 +263,7 @@ export const perfumeSchemas = {
 export const ratingSchemas = {
   create: z
     .object({
-      perfumeId: z.string().min(1, { message: "Perfume ID is required" }),
+      perfumeId: z.string().min(1, { message: V.perfumeIdRequired }),
       longevity: commonSchemas.ratingOptional,
       sillage: commonSchemas.ratingOptional,
       gender: commonSchemas.ratingOptional,
@@ -324,14 +281,11 @@ export const ratingSchemas = {
         ]
         return ratings.some(rating => rating !== undefined)
       },
-      {
-        message: "At least one rating is required",
-        path: ["overall"],
-      }
+      { message: V.atLeastOneRating, path: ["overall"] }
     ),
 
   update: z.object({
-    id: z.string().min(1, { message: "Rating ID is required" }),
+    id: z.string().min(1, { message: V.ratingIdRequired }),
     longevity: commonSchemas.ratingOptional,
     sillage: commonSchemas.ratingOptional,
     gender: commonSchemas.ratingOptional,
@@ -346,14 +300,14 @@ export const ratingSchemas = {
 
 export const commentSchemas = {
   create: z.object({
-    perfumeId: z.string().min(1, { message: "Perfume ID is required" }),
-    userPerfumeId: z.string().min(1, { message: "User perfume ID is required" }),
+    perfumeId: z.string().min(1, { message: V.perfumeIdRequired }),
+    userPerfumeId: z.string().min(1, { message: V.userPerfumeIdRequired }),
     comment: commonSchemas.comment,
     isPublic: commonSchemas.booleanOptional,
   }),
 
   update: z.object({
-    id: z.string().min(1, { message: "Comment ID is required" }),
+    id: z.string().min(1, { message: V.commentIdRequired }),
     comment: commonSchemas.comment,
     isPublic: commonSchemas.booleanOptional,
   }),
@@ -368,12 +322,10 @@ export const wishlistSchemas = {
     perfumeId: z
       .string()
       .trim()
-      .min(1, { message: "Perfume ID is required" })
-      .refine(isValidPrismaRecordId, { message: "Invalid ID format" }),
+      .min(1, { message: V.perfumeIdRequired })
+      .refine(isValidPrismaRecordId, { message: V.invalidIdFormat }),
     action: z.enum(["add", "remove", "updateVisibility"], {
-      errorMap: () => ({
-        message: "Action must be add, remove, or updateVisibility",
-      }),
+      errorMap: () => ({ message: V.wishlistAction }),
     }),
     isPublic: z
       .string()
@@ -392,9 +344,7 @@ export const authSchemas = {
     .object({
       email: commonSchemas.email,
       password: commonSchemas.password,
-      confirmPassword: z
-        .string()
-        .min(1, { message: "Confirm Password is required" }),
+      confirmPassword: z.string().min(1, { message: V.confirmPasswordRequired }),
       firstName: commonSchemas.firstName.optional(),
       lastName: commonSchemas.lastName.optional(),
       username: commonSchemas.username.optional(),
@@ -402,12 +352,12 @@ export const authSchemas = {
         .string()
         .optional()
         .transform(val => val === "on" || val === "true")
-        .pipe(z.boolean().refine(val => val === true, {
-            message: "You must accept the terms and conditions",
-          })),
+        .pipe(
+          z.boolean().refine(val => val === true, { message: V.acceptTerms })
+        ),
     })
     .refine(data => data.password === data.confirmPassword, {
-      message: "Passwords do not match",
+      message: V.passwordsDoNotMatch,
       path: ["confirmPassword"],
     }),
 
@@ -419,20 +369,16 @@ export const authSchemas = {
 
   changePassword: z
     .object({
-      currentPassword: z
-        .string()
-        .min(1, { message: "Current password is required" }),
+      currentPassword: z.string().min(1, { message: V.currentPasswordRequired }),
       newPassword: commonSchemas.password,
-      confirmNewPassword: z
-        .string()
-        .min(1, { message: "Confirm new password is required" }),
+      confirmNewPassword: z.string().min(1, { message: V.confirmNewPasswordRequired }),
     })
     .refine(data => data.newPassword === data.confirmNewPassword, {
-      message: "New passwords do not match",
+      message: V.newPasswordsDoNotMatch,
       path: ["confirmNewPassword"],
     })
     .refine(data => data.currentPassword !== data.newPassword, {
-      message: "New password must be different from current password",
+      message: V.newPasswordDifferent,
       path: ["newPassword"],
     }),
 
@@ -442,14 +388,12 @@ export const authSchemas = {
 
   resetPassword: z
     .object({
-      token: z.string().min(1, { message: "Reset token is required" }),
+      token: z.string().min(1, { message: V.resetTokenRequired }),
       newPassword: commonSchemas.password,
-      confirmNewPassword: z
-        .string()
-        .min(1, { message: "Confirm new password is required" }),
+      confirmNewPassword: z.string().min(1, { message: V.confirmNewPasswordRequired }),
     })
     .refine(data => data.newPassword === data.confirmNewPassword, {
-      message: "New passwords do not match",
+      message: V.newPasswordsDoNotMatch,
       path: ["confirmNewPassword"],
     }),
 
@@ -482,24 +426,22 @@ export const apiSchemas = {
   }),
 
   search: z.object({
-    q: z.string().max(100, "Search query too long").optional(),
+    q: z.string().max(100, { message: V.searchQueryMax }).optional(),
     page: z.string().regex(/^\d+$/).transform(Number).optional(),
     limit: z.string().regex(/^\d+$/).transform(Number).optional(),
-    sortBy: z.enum([
-"name", "price", "rating", "createdAt"
-]).optional(),
+    sortBy: z.enum(["name", "price", "rating", "createdAt"]).optional(),
     sortOrder: z.enum(["asc", "desc"]).optional(),
   }),
 
   perfumeId: z.object({
-    id: z.string().min(1, "Perfume ID is required"),
+    id: z.string().min(1, { message: V.perfumeIdRequired }),
   }),
 
   userAction: z.object({
     action: z.enum(["add", "remove", "update"], {
-      errorMap: () => ({ message: "Action must be add, remove, or update" }),
+      errorMap: () => ({ message: V.apiUserAction }),
     }),
-    perfumeId: z.string().min(1, "Perfume ID is required"),
+    perfumeId: z.string().min(1, { message: V.perfumeIdRequired }),
   }),
 } as const
 
@@ -514,22 +456,18 @@ export const adminSchemas = {
     lastName: commonSchemas.lastName.optional(),
     username: commonSchemas.username.optional(),
     role: z.enum(["USER", "ADMIN", "MODERATOR"], {
-      errorMap: () => ({ message: "Role must be USER, ADMIN, or MODERATOR" }),
+      errorMap: () => ({ message: V.roleInvalid }),
     }),
     isActive: commonSchemas.boolean,
   }),
 
   dataQualityReport: z.object({
-    timeframe: z.enum([
-"7d", "30d", "90d", "1y", "all"
-], {
-      errorMap: () => ({
-        message: "Timeframe must be 7d, 30d, 90d, 1y, or all",
-      }),
+    timeframe: z.enum(["7d", "30d", "90d", "1y", "all"], {
+      errorMap: () => ({ message: V.timeframeInvalid }),
     }),
     includeHistory: commonSchemas.boolean,
     exportFormat: z.enum(["csv", "json", "xlsx"], {
-      errorMap: () => ({ message: "Export format must be csv, json, or xlsx" }),
+      errorMap: () => ({ message: V.exportFormatInvalid }),
     }),
   }),
 } as const

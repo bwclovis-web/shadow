@@ -138,12 +138,11 @@ const ActivityFeedSection = ({
 
   const followedSection = hasFollowed ? (
     isCompact ? (
-      <section className="mb-8" aria-labelledby="home-followed-activity-heading">
+      <section className="lg:mb-8 mb-4" aria-labelledby="home-followed-activity-heading">
         <div className="flex items-center gap-3">
           <FaUserGroup className="mt-0.5 h-5 w-5 shrink-0 text-noir-gold" aria-hidden />
           <h2
             id="home-followed-activity-heading"
-            className="text-lg font-semibold text-noir-gold"
           >
             {tFollowed("title")}
           </h2>
@@ -184,11 +183,11 @@ const ActivityFeedSection = ({
       <section aria-labelledby="home-activity-feed-heading">
         <div className="flex items-center gap-3">
           <FaClockRotateLeft className="mt-0.5 h-5 w-5 shrink-0 text-noir-gold" aria-hidden />
-          <h2 id="home-activity-feed-heading" className="text-lg font-semibold text-noir-gold">
+          <h2 id="home-activity-feed-heading">
             {tGlobal("title")}
           </h2>
         </div>
-        <div className="mt-4">
+        <div className="lg:mt-4 mt-2">
           <ActivityFeedList listings={listings} compact listRef={globalListRef} />
         </div>
       </section>

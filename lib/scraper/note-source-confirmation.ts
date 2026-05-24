@@ -185,6 +185,11 @@ export const buildNoteConfirmationCorpus = (source: string): string => {
   const endIdx = trimmedSource.search(NOTE_REGION_END_RE)
   if (endIdx > 0) parts.push(trimmedSource.slice(0, endIdx))
 
+  const andromedaPyramid = raw.match(
+    /\b(?:notes?\s+pyramid|notes?)\s+top\b[\s\S]{8,320}?\bbase\b\s+[\s\S]{2,120}?(?=\s+(?:scent\s+story|vibe\b|layering|original\s+manufacturers)|$)/i,
+  )
+  if (andromedaPyramid?.[0]?.trim()) parts.push(andromedaPyramid[0])
+
   return normalizeCorpusText(parts.join(" "))
 }
 
@@ -196,6 +201,8 @@ const sourceTextNoteRegion = (fullSource: string): string => {
 const hasLabeledNoteListSignal = (text: string): boolean =>
   /\b(?:featured|key|main|primary|signature|dominant)\s+notes?\s*:/i.test(text) ||
   /\b(?:top|heart|middle|mid|base|opening|dry[\s-]*down)\s*(?:notes?)?\s*:/i.test(text) ||
+  /\bnotes?\s+pyramid\b/i.test(text) ||
+  /\bnotes?\s+top\b.+?\bheart\b.+?\bbase\b/i.test(text) ||
   /\bfragrance\s+notes?\b/i.test(text) ||
   /\bnote\s+structure\b/i.test(text) ||
   /\b(?:scent|fragrance|perfume)\s+notes?\s+(?:include|are|is)\b/i.test(text) ||
@@ -271,7 +278,7 @@ export const LAYER_LABEL_TOKENS = new Set([
 
 /** Main-accord / genre labels — not pyramid materials when standing alone. */
 export const STANDALONE_ACCORD_DESCRIPTOR_RE =
-  /^(?:powdery|woody|musky|mossy|fresh|sweet|floral|oriental|gourmand|citrus|spicy|aromatic|green|aquatic|fruity|smoky|balsamic|earthy|intense|light|dark|lactonic|white floral|second-skin|frosted-pastel|frosted|pastel|originally from byredo|originally from commodity|resort evenings|warm days|starry date evenings|date evenings|celestial hug|wear guide|delicate|intimate|cozy|celestial)$/i
+  /^(?:powdery|woody|musky|mossy|fresh|sweet|floral|oriental|gourmand|citrus|spicy|aromatic|green|aquatic|fruity|smoky|balsamic|earthy|intense|light|dark|lactonic|white floral|second-skin|frosted-pastel|frosted|pastel|originally from byredo|originally from commodity|resort evenings|warm days|starry date evenings|date evenings|celestial hug|wear guide|delicate|intimate|cozy|celestial|flirtatious|glamorous|addictive|ruby|sexy|pretty|playful|warm|airy|joyfully|joyfully luminous|luminous|addictive|comforting|candy-drip|creamy|smooth|smoother|sugary|golden mist|warm sweetness|european elegance|elegant|opulent|refined|radiant|silky)$/i
 
 /** Strip trailing Shopify marketing copy glued to merchant note phrases. */
 export const peelMarketingDescriptorTail = (note: string): string => {
@@ -291,9 +298,14 @@ export const peelMarketingDescriptorTail = (note: string): string => {
       )
       .replace(/(?<=\bvanilla)\s+cloud\s+cream\b.*$/i, "")
       .replace(/(?<=\bcandy)\s+air\b.*$/i, "")
+      .replace(/^\s*sugary\s+(?=marshmallow)/i, "")
+      .replace(/(?<=marshmallow)\s+clouds?\b.*$/i, "")
+      .replace(/^\s*creamy\s+(?=santal)/i, "")
       .replace(/\s+(?:originally\s+from)(?:\s+[a-z][\w'-]*){1,4}\b.*$/i, "")
       .replace(/\s+(?:on\s+fabric|warm\s+days)\b.*$/i, "")
       .replace(/^\s*(?:soft|smooth)\s+(?=vanilla|tonka\b)/i, "")
+      .replace(/\s*[—–—-]\s*(?:smooth|creamy|aromatic|refined|delicate|opulent|radiant|silky)\b.*$/i, "")
+      .replace(/\s+european\s+elegance\b.*$/i, "")
       .trim()
   }
   return s
@@ -366,7 +378,7 @@ export const looksLikeProseNotePhrase = (note: string): boolean => {
   if (!n) return true
   if (isObviousNonMaterialNote(n)) return true
   if (
-    /\b(?:adds?\s+a|\badds\b|give\s+the\s+scent|giraffe-inspired|animalic-foral|perfume\s+with\s+notes|with\s+notes\s+of\s+bergamot|subtle\s+grass\s+note|office\s+wear|polished\s+office|originally\s+from|frosted-pastel|summer\s+warm\s+days|clean\s+halo|longer\s+on\s+fabric|cloud\s+cream|candy\s+air|a\s+mug|the\s+creamy|cacao\s+the|powdered\s+vanilla\s+style|then\s+deepens|deepens\s+into|fluffy\s+glow|as\s+the\s+night\s+deepens|starry\s+date\s+evenings|celestial\s+hug|wear\s+guide)\b/.test(
+    /\b(?:adds?\s+a|\badds\b|give\s+the\s+scent|giraffe-inspired|animalic-foral|perfume\s+with\s+notes|with\s+notes\s+of\s+bergamot|subtle\s+grass\s+note|office\s+wear|polished\s+office|originally\s+from|frosted-pastel|summer\s+warm\s+days|clean\s+halo|longer\s+on\s+fabric|cloud\s+cream|candy\s+air|a\s+mug|the\s+creamy|cacao\s+the|powdered\s+vanilla\s+style|then\s+deepens|deepens\s+into|fluffy\s+glow|as\s+the\s+night\s+deepens|starry\s+date\s+evenings|celestial\s+hug|wear\s+guide|flirtatious|glamorous|surrounds\s+you\s+in|european\s+elegance|touch\s+of\s+european)\b/.test(
       n,
     )
   ) {

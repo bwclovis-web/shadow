@@ -26,7 +26,7 @@ export const selectVariants = cva(
         default: "px-2.5 py-2.5 ",
         compact: "px-1.5 py-1.5 rounded-tl-sm rounded-bl-sm",
         expanded:
-          "md:px-3 py-2 md:py-5 px-2.5 border-r-0 font-semibold md:text-xl border-0 w-full pr-4 focus:outline-none focus:ring-0 focus:border-0",
+          "md:px-3 py-2 md:py-3 px-2.5 border-r-0 font-semibold md:text-xl border-0 w-full pr-4 focus:outline-none focus:ring-0 focus:border-0",
       },
     },
   }

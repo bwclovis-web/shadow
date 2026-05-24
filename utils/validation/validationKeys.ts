@@ -4,6 +4,8 @@
  *   error={getTranslatedError(field?.errors, t)}
  */
 export const validationKeys = {
+  idRequired: "validation.idRequired",
+  idInvalid: "validation.idInvalid",
   emailInvalid: "validation.emailInvalid",
   urlInvalid: "validation.urlInvalid",
   websiteRequired: "validation.websiteRequired",
@@ -19,6 +21,14 @@ export const validationKeys = {
   passwordNoSpaces: "validation.passwordNoSpaces",
   ratingMin: "validation.ratingMin",
   ratingMax: "validation.ratingMax",
+  ratingInt: "validation.ratingInt",
+  pageMin: "validation.pageMin",
+  limitMin: "validation.limitMin",
+  limitMax: "validation.limitMax",
+  invalidIdFormat: "validation.invalidIdFormat",
+  apiUserAction: "validation.apiUserAction",
+  nameMinTwo: "validation.nameMinTwo",
+  usernameFormatUnderscoreOnly: "validation.usernameFormatUnderscoreOnly",
   amountFormat: "validation.amountFormat",
   priceFormat: "validation.priceFormat",
   nameRequired: "validation.nameRequired",
