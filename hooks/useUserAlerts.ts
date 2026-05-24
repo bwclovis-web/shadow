@@ -27,7 +27,10 @@ export const useUserAlerts = ({
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount)
   const { addToHeaders } = useCSRF()
   const addToHeadersRef = useRef(addToHeaders)
-  addToHeadersRef.current = addToHeaders
+
+  useEffect(() => {
+    addToHeadersRef.current = addToHeaders
+  }, [addToHeaders])
 
   useEffect(() => {
     setAlerts(initialAlerts)

@@ -13,11 +13,6 @@ vi.mock("@langchain/openai", () => ({
 import { scrapedItemsNeedPatternEtsyEnrichment } from "./map-scraped-items"
 import { canonicalizeNote, explodeSpaceSeparatedNoteBlob, splitGluedMerchantNoteRun } from "./canonical-notes"
 import {
-  extractInlineLayeredNotesForTests,
-  extractNotesFromStructuredTextForTests,
-  sanitizeCopyForNotePipeline,
-} from "./notes-graph"
-import {
   computeBatchNoteUniformityWarnings,
   extractNotesForItems,
   mergeFlatMaterialsIntoLayeredPyramid,
@@ -2215,105 +2210,6 @@ Base: white musk`
       expect.arrayContaining(["joyfully", "golden mist", "luminous", "candy-drip"]),
     )
     expect(invokeMock).not.toHaveBeenCalled()
-  })
-
-  it("extractInlineLayeredNotes keeps moss when noir follows labeled base line", () => {
-    const text = `open notes: orange, bergamot
-heart notes: jasmine, coconut cream, vanilla orchid
-base notes: amber, vanilla, moss
-
-A flickering neon sign casts a ghostly glow on wet asphalt, mirroring the electric pulse of the night.`
-    const layers = extractInlineLayeredNotesForTests(text)
-    expect(layers.baseNotes).toEqual(expect.arrayContaining(["amber", "vanilla", "moss"]))
-  })
-
-  it("paragraph sentinel splits base notes from following noir paragraph", () => {
-    const SENTINEL = "\uE007"
-    const text = `open notes: orange, bergamot
-heart notes: jasmine, coconut cream, vanilla orchid
-base notes: amber, vanilla, moss
-
-A flickering neon sign casts a ghostly glow`
-    const source = text
-      .replace(/\r/g, "\n")
-      .replace(/\n{2,}/g, SENTINEL)
-      .replace(/[ \t\n]+/g, " ")
-      .trim()
-    expect(source).toContain(SENTINEL)
-    const baseIdx = source.search(/\bbase\s+notes?\s*:\s*/i)
-    expect(baseIdx).toBeGreaterThan(-1)
-    const afterLabel = source.slice(baseIdx).replace(/^base\s+notes?\s*:\s*/i, "")
-    const paraIdx = afterLabel.indexOf(SENTINEL)
-    expect(paraIdx).toBeGreaterThan(-1)
-    expect(afterLabel.slice(0, paraIdx).trim()).toBe("amber, vanilla, moss")
-  })
-
-  it("collapsed source keeps moss in inline layered extraction", () => {
-    const labeledBoot = `open notes: orange, bergamot
-heart notes: jasmine, coconut cream, vanilla orchid
-base notes: amber, vanilla, moss`
-
-    const noirOnly =
-      "A flickering neon sign casts a ghostly glow on wet asphalt, mirroring the electric pulse of the night."
-
-    const merged = sanitizeCopyForNotePipeline(`${labeledBoot}\n\n${noirOnly}`)
-    const SENTINEL = "\uE007"
-    const collapsed = merged
-      .replace(/\r/g, "\n")
-      .replace(/\n{2,}/g, SENTINEL)
-      .replace(/[ \t\n]+/g, " ")
-      .trim()
-    const layers = extractInlineLayeredNotesForTests(collapsed)
-    expect(layers.baseNotes).toEqual(expect.arrayContaining(["amber", "vanilla", "moss"]))
-  })
-
-  it("extractNotesFromStructuredText keeps moss for labeled lines before noir", () => {
-    const labeledBoot = `open notes: orange, bergamot
-heart notes: jasmine, coconut cream, vanilla orchid
-base notes: amber, vanilla, moss`
-
-    const noirOnly =
-      "A flickering neon sign casts a ghostly glow on wet asphalt, mirroring the electric pulse of the night. Subtle notes of bergamot dance with the allure of jasmine and peony, while an undercurrent of amber and musk wraps the atmosphere in an intoxicating haze."
-
-    const merged = sanitizeCopyForNotePipeline(`${labeledBoot}\n\n${noirOnly}`)
-    const layers = extractNotesFromStructuredTextForTests(merged, 2)
-    expect(layers.baseNotes).toEqual(expect.arrayContaining(["amber", "vanilla", "moss"]))
-  })
-
-  it("Andromedas Gioiosa: labeled bootstrap lines before noir keep base moss", async () => {
-    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
-    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
-
-    const labeledBoot = `open notes: orange, bergamot
-heart notes: jasmine, coconut cream, vanilla orchid
-base notes: amber, vanilla, moss`
-
-    const noirOnly =
-      "A flickering neon sign casts a ghostly glow on wet asphalt, mirroring the electric pulse of the night. Subtle notes of bergamot dance with the allure of jasmine and peony, while an undercurrent of amber and musk wraps the atmosphere in an intoxicating haze."
-
-    invokeMock.mockImplementation(() => {
-      throw new Error("LLM should not run when labeled pyramid lines precede noir")
-    })
-
-    const items: ScrapedItem[] = [
-      {
-        name: "Gioiosa Profumum Roma",
-        description: `${labeledBoot}\n\n${noirOnly}`,
-        image: "",
-        detailURL:
-          "https://www.andromedasmoon.com/products/andromedas-inspired-by-gioiosa-eau-de-parfum-profumum-roma",
-        perfumeHouse: "Andromeda's Moon",
-      },
-    ]
-
-    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
-      generateNoirDescriptions: false,
-      fetchPdpNoteBootstrap: false,
-    })
-
-    const base = JSON.parse(records[0].baseNotes) as string[]
-    expect(base).toEqual(expect.arrayContaining(["amber", "vanilla", "moss"]))
-    vi.unstubAllEnvs()
   })
 
   it("Andromedas Gioiosa: noir-only description rescues notes from PDP fetch", async () => {

@@ -1681,11 +1681,8 @@ const truncateAtShopMetaLabels = (s: string): string => {
  * The function is conservative: it only truncates when the prose marker appears AFTER at
  * least one comma-separated token (i.e., the chunk is not entirely prose).
  */
-/** Preserved across whitespace collapse — marks a blank line between merchant note lines and noir/marketing copy. */
-const NOTE_LAYER_PARAGRAPH_SENTINEL = "\uE007"
-
 const truncateChunkAtProseStart = (chunk: string): string => {
-  const paraIdx = chunk.indexOf(NOTE_LAYER_PARAGRAPH_SENTINEL)
+  const paraIdx = chunk.search(/\n{2,}/)
   if (paraIdx > 0) {
     const cut = chunk
       .slice(0, paraIdx)
@@ -1707,7 +1704,7 @@ const truncateChunkAtProseStart = (chunk: string): string => {
   // "amber, vanilla, moss A flickering neon…" after bootstrap + noir collapse onto one line
   if (hasComma) {
     const gluedNoir = chunk.search(
-      /\s+[A-Z][a-z]+\s+(?:flickering|neon|ghostly|electric|subtle|intoxicating)\b/,
+      /\s+(?:A|An|The)\s+(?:flickering|neon|ghostly|electric|subtle|intoxicating)\b/i,
     )
     if (gluedNoir > 0) {
       const cut = chunk
@@ -2146,13 +2143,6 @@ function classifyNoteLayer(label: string): "open" | "heart" | "base" | null {
   return null
 }
 
-/** @internal Vitest-only — inline Top/Heart/Base colon parsing. */
-export const extractInlineLayeredNotesForTests = (text: string): {
-  openNotes: string[]
-  heartNotes: string[]
-  baseNotes: string[]
-} => extractInlineLayeredNotes(text)
-
 function extractInlineLayeredNotes(text: string): {
   openNotes: string[]
   heartNotes: string[]
@@ -2164,8 +2154,8 @@ function extractInlineLayeredNotes(text: string): {
       text
         .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, " ")
         .replace(/\r/g, "\n")
-        .replace(/\n{2,}/g, NOTE_LAYER_PARAGRAPH_SENTINEL)
-        .replace(/[ \t\n]+/g, " ")
+        .replace(/(?<!\n)\n(?!\n)/g, " ")
+        .replace(/[ \t]+/g, " ")
         .trim(),
     ),
   )
@@ -2387,9 +2377,6 @@ function extractFlatNotes(text: string): string[] {
   return uniqueNotes(found)
 }
 
-/** @internal Vitest-only — structured Top/Heart/Base + flat list extraction. */
-export const extractNotesFromStructuredTextForTests = extractNotesFromStructuredText
-
 function extractNotesFromStructuredText(
   text: string,
   minConfidentFlatNotes = 2,
@@ -2407,8 +2394,8 @@ function extractNotesFromStructuredText(
   const stripped = (text ?? "").replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, " ")
   const collapsed = stripped
     .replace(/\r/g, "\n")
-    .replace(/\n{2,}/g, NOTE_LAYER_PARAGRAPH_SENTINEL)
-    .replace(/[ \t\n]+/g, " ")
+    .replace(/(?<!\n)\n(?!\n)/g, " ")
+    .replace(/[ \t]+/g, " ")
     .trim()
   const source = splitGluedLayerLabels(normalizeImplicitLayerColons(collapsed))
   if (!source) return empty

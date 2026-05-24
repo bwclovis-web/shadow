@@ -46,7 +46,10 @@ const UserAlerts = ({
   const [isLoading, setIsLoading] = useState(false)
   const { addToHeaders } = useCSRF()
   const addToHeadersRef = useRef(addToHeaders)
-  addToHeadersRef.current = addToHeaders
+
+  useEffect(() => {
+    addToHeadersRef.current = addToHeaders
+  }, [addToHeaders])
 
   // Load preferences on mount if not provided
   useEffect(() => {
