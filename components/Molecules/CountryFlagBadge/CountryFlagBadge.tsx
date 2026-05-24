@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useState } from "react"
 
 import { getCountryFlagImageUrl } from "@/utils/country-list"
@@ -44,7 +45,7 @@ const CountryFlagBadge = ({
       {iso ? (
         <span className="inline-flex items-center gap-1 shrink-0">
           {showImg ? (
-            <img
+            <Image
               src={getCountryFlagImageUrl(iso, flagWidth)}
               alt=""
               width={flagWidth}
@@ -53,8 +54,6 @@ const CountryFlagBadge = ({
                 "rounded-sm object-cover border border-noir-gold/20 bg-noir-dark/50",
                 sizeClasses[size].img
               )}
-              loading="lazy"
-              decoding="async"
               onError={() => setImgFailed(true)}
             />
           ) : null}

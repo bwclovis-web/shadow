@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 import { generateSecret, generateSync } from "otplib"
 
 vi.mock("@/lib/db", () => ({
@@ -42,7 +42,6 @@ vi.mock("@/utils/security/password-security.server", () => ({
   verifyPassword: vi.fn(),
 }))
 
-import { prisma } from "@/lib/db"
 import {
   isTwoFactorEnabled,
   normalizeBackupCode,

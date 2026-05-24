@@ -278,7 +278,7 @@ const MyListingsPanel = ({
         setResumingId(null)
       }
     },
-    [addToFormData, applyListingFromApi, onListingChange, t, tListingErrors]
+    [addToFormData, onListingChange, t, tListingErrors]
   )
 
   if (activeListings.length === 0 && pausedListings.length === 0) {

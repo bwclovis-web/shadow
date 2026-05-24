@@ -5,7 +5,6 @@ import { getTranslations } from "next-intl/server"
 import { notFound } from "next/navigation"
 
 import type { TraderResponse } from "@/lib/queries/user"
-import type { TraderFeedbackResponse } from "@/lib/queries/traderFeedback"
 import type { SafeUser } from "@/types"
 import { getTraderFeedbackForProfile } from "@/models/traderFeedback.server"
 import { getTradesForUserProfile } from "@/models/trade.server"

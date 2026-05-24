@@ -130,6 +130,7 @@ export const PopOver = ({
 
 
   const panelHeadingId = `popover-panel-title-${String(menuId)}`
+  const hasHeading = Boolean(header.heading?.trim())
 
   return (
     <>
@@ -149,6 +150,8 @@ export const PopOver = ({
         popover="auto"
         role="dialog"
         aria-modal={false}
+        aria-labelledby={hasHeading ? panelHeadingId : undefined}
+        aria-label={!hasHeading && panelAriaLabel ? panelAriaLabel : undefined}
         className={styleMerge(popOverVariants({ placement, size }))}
         style={{ positionAnchor: anchorName }}
         {...menuProps}

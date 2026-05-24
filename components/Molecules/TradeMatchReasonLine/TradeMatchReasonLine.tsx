@@ -36,7 +36,6 @@ export const TradeMatchReasonLine = ({
   panelClassName,
   buttonClassName,
   contentClassName,
-  showTriggerLabel = true,
 }: TradeMatchReasonLineProps) => {
   const t = useTranslations(translationNamespace)
   const tFamilies = useTranslations("traderProfile.scentDna.families")

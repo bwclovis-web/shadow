@@ -72,7 +72,7 @@ const useTypeaheadPosition = (
       left: rect.left,
       width: rect.width,
     })
-  }, [open])
+  }, [open, inputRef])
 
   useEffect(() => {
     if (!open) return
@@ -91,7 +91,7 @@ const useTypeaheadPosition = (
       window.removeEventListener("scroll", onResize, true)
       window.removeEventListener("resize", onResize)
     }
-  }, [open])
+  }, [open, inputRef])
 
   return coords
 }

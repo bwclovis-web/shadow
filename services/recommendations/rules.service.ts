@@ -17,7 +17,6 @@ import {
   cosineSimilarityFromIdf,
   COSINE_TIE_EPSILON,
   isPreferredPriceRangeUsable,
-  parsePreferredPriceRange,
   parseSeasonHint,
   type SeasonVoteKey,
 } from "./note-similarity"

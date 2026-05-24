@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { useCSRF } from "~/hooks/useCSRF"
-import { queryKeys } from "~/lib/queries/traderFeedback"
 
 export interface SubmitTraderFeedbackParams {
   traderId: string

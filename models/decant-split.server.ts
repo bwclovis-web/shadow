@@ -1,9 +1,4 @@
-import {
-  type DecantFormat,
-  type DecantSplitStatus,
-  type ListingCondition,
-  type Prisma,
-} from "@prisma/client"
+import { type DecantSplitStatus, type Prisma } from "@prisma/client"
 
 import { prisma } from "@/lib/db"
 import {
@@ -401,7 +396,6 @@ export const claimDecantSplitSlot = async (
     })
   })
 
-  const hostName = getUserDisplayName(split.host)
   void notifySplitParticipants({
     split,
     alertType: "split_slot_claimed",
@@ -553,9 +547,6 @@ export const confirmDecantSplitSlotReceived = async (
   })
 
   if (notifyHost) {
-    const claimantName = getUserDisplayName(
-      split.slots.find(s => s.id === slotId)?.claimant ?? split.host
-    )
     void notifySplitParticipants({
       split,
       alertType: "split_completed",

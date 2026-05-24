@@ -5,7 +5,6 @@ import type {
   Prisma,
 } from "@prisma/client"
 
-import { deleteFromR2, getR2KeyFromPublicUrl } from "@/lib/r2"
 import { prisma } from "@/lib/db"
 import { issueStrike } from "@/models/admin.server"
 import { adminVoidTrade } from "@/models/trade.server"

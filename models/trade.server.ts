@@ -1,9 +1,4 @@
-import {
-  type ListingCondition,
-  type Prisma,
-  type TradeStatus,
-  TradeLineItemRole,
-} from "@prisma/client"
+import { type Prisma, type TradeStatus, TradeLineItemRole } from "@prisma/client"
 
 import { prisma } from "@/lib/db"
 import { createContactMessage } from "@/models/contactMessage.server"

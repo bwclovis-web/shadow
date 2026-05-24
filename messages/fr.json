@@ -937,7 +937,8 @@
       "description": "Ajoutez ici vos notes personnelles sur ce parfum.",
       "addLabel": "Ajouter un commentaire :",
       "submitting": "Envoi en cours…",
-      "submit": "Envoyer"
+      "submit": "Envoyer",
+      "subheading2": "Réflexions et impressions personnelles visibles uniquement par vous."
     },
     "search": {
       "placeholder": "Rechercher vos parfums...",
@@ -1472,7 +1473,8 @@
     "gist": {
       "heading": "L'ESSENTIEL",
       "contentOne": "perfumer's hollow est une plateforme indépendante dédiée aux amoureux du parfum — un lieu pour partager des avis, apprendre et rencontrer d'autres collectionneurs. Les utilisateurs peuvent lister parfums et échantillons à l'échange ; les transactions restent strictement entre particuliers.",
-      "contentTwo": "Nous ne gérons pas les paiements, ne vérifions pas l'authenticité et ne médions pas les litiges. Considérez-nous comme le bar enfumé où les présentations se font, pas comme l'intermédiaire du marché."
+      "contentTwo": "Nous ne gérons pas les paiements, ne vérifions pas l'authenticité et ne médions pas les litiges. Considérez-nous comme le bar enfumé où les présentations se font, pas comme l'intermédiaire du marché.",
+      "contentThree": "perfumer's hollow ne traite pas les paiements, ne vérifie pas l'authenticité et ne médie pas les litiges. Nous offrons le lieu de rencontre — l'échange lui-même appartient aux collectionneurs concernés."
     },
     "tradingAndListing": {
       "heading": "ÉCHANGES ET ANNONCES",
@@ -1496,7 +1498,8 @@
     },
     "noGuarantee": {
       "heading": "SANS GARANTIE",
-      "contentOne": "Nous nous efforçons de maintenir le site en bon état, mais nous ne garantissons pas un service ininterrompu. Nous pouvons suspendre, modifier ou retirer des fonctionnalités sans préavis."
+      "contentOne": "Nous nous efforçons de maintenir le site en bon état, mais nous ne garantissons pas un service ininterrompu. Nous pouvons suspendre, modifier ou retirer des fonctionnalités sans préavis.",
+      "contentTwo": "Les fonctionnalités, outils et services peuvent changer, être suspendus ou retirés à tout moment."
     },
     "liability": {
       "heading": "LIMITATION DE RESPONSABILITÉ",
@@ -1520,7 +1523,8 @@
     },
     "closing": {
       "heading": "MOT DE LA FIN",
-      "contentOne": "perfumer's hollow existe pour célébrer l'art, la science et les histoires du parfum. Utilisez-le avec sagesse, échangez équitablement — fiez-vous à votre nez, pas aux promesses d'un inconnu."
+      "contentOne": "perfumer's hollow existe pour célébrer l'art, la science et les histoires du parfum. Utilisez-le avec sagesse, échangez équitablement — fiez-vous à votre nez, pas aux promesses d'un inconnu.",
+      "contentTwo": "Échangez loyalement, contribuez avec réflexion et faites autant confiance à votre instinct qu'à votre nez."
     }
   },
   "tradingPost": {
@@ -2436,24 +2440,57 @@
       "heading": "Attentes d’expédition",
       "contentOne": "Tous les paiements et expéditions sont organisés hors plateforme entre traders. Convenez des transporteurs, de l’emballage et des délais dans vos messages avant d’expédier.",
       "contentTwo": "Expédiez dans un délai raisonnable après confirmation des deux parties (généralement sous une semaine, sauf accord contraire). Partagez le suivi lorsqu’il est disponible.",
-      "contentThree": "Emballez les flacons solidement : rembourrage, scellez les décants et signalez tout défaut connu avant l’expédition."
+      "contentThree": "Emballez les flacons solidement : rembourrage, scellez les décants et signalez tout défaut connu avant l’expédition.",
+      "practicesHeader": "Bonnes pratiques recommandées",
+      "practicesContent": {
+        "one": "Confirmez les délais d'expédition avant d'envoyer des fragrances.",
+        "two": "Partagez les informations de suivi dès que possible.",
+        "three": "Emballez bouteilles et décants en toute sécurité.",
+        "four": "Signalez honnêtement les défauts, fuites ou présentation manquante."
+      }
     },
     "disputes": {
       "heading": "Processus de litige",
       "contentOne": "Si quelque chose ne va pas, contactez d’abord l’autre trader et tentez de résoudre directement.",
       "contentTwo": "Si vous ne pouvez pas résoudre le problème, utilisez Ouvrir un litige sur la carte d’échange active, ou Signaler sur son profil trader pour les problèmes hors échange. Incluez des photos et une description claire.",
-      "contentThree": "Notre équipe examine les signalements et peut émettre des strikes ou des mesures sur le compte. Nous ne détenons pas de fonds ni ne garantissons de remboursements — nous aidons à documenter les litiges et à faire respecter les règles."
+      "contentThree": "Notre équipe examine les signalements et peut émettre des strikes ou des mesures sur le compte. Nous ne détenons pas de fonds ni ne garantissons de remboursements — nous aidons à documenter les litiges et à faire respecter les règles.",
+      "practicesHeader": "Avant d'ouvrir un litige",
+      "practicesContent": {
+        "one": "Contactez d'abord l'autre collectionneur.",
+        "two": "Gardez une communication respectueuse et claire.",
+        "three": "Incluez des photos et des détails à l'appui lors du signalement.",
+        "four": "Utilisez les outils de litige liés à l'Échange lorsque c'est possible."
+      }
     },
     "community": {
       "heading": "Règles communautaires",
       "contentOne": "Soyez honnête sur l’état du flacon, le volume restant et l’authenticité. Les annonces doivent inclure des photos exactes.",
       "contentTwo": "Le harcèlement, les arnaques et le non-envoi ne sont pas tolérés. Les problèmes répétés affectent la réputation et peuvent mener à une suspension.",
-      "contentThree": "Laissez un avis uniquement après un échange terminé pour que les évaluations reflètent de vrais échanges."
+      "contentThree": "Laissez un avis uniquement après un échange terminé pour que les évaluations reflètent de vrais échanges.",
+      "practicesHeader": "Activité interdite",
+      "practicesContent": {
+        "one": "Parfums contrefaits ou sciemment mal représentés.",
+        "two": "Annonces frauduleuses ou arnaques au paiement.",
+        "three": "Harcèlement, menaces ou comportement abusif.",
+        "four": "Spam ou contenu promotionnel sans lien.",
+        "five": "Tentatives d'échanger des biens volés."
+      }
     },
     "offPlatform": {
       "heading": "Paiements hors plateforme",
       "contentOne": "perfumer's hollow met en relation les traders ; nous ne traitons jamais les paiements ni les étiquettes d’expédition.",
-      "contentTwo": "Utilisez des moyens de paiement de confiance, conservez les messages sur la plateforme quand c’est possible, et ne partagez jamais de mots de passe ni de données financières sans lien avec l’échange."
+      "contentTwo": "Utilisez des moyens de paiement de confiance, conservez les messages sur la plateforme quand c’est possible, et ne partagez jamais de mots de passe ni de données financières sans lien avec l’échange.",
+      "practicesHeader": "Sécurité du compte et des paiements",
+      "practicesContent": {
+        "one": "Utilisez des méthodes de paiement auxquelles vous faites personnellement confiance.",
+        "two": "Ne partagez jamais mots de passe ni codes de vérification.",
+        "three": "Gardez les échanges importants de l'Échange dans le Hollow lorsque c'est possible.",
+        "four": "Soyez prudent avec les collectionneurs qui demandent des arrangements de paiement précipités ou inhabituels."
+      }
+    },
+    "intro": {
+      "heading": "Une communauté attentionnée",
+      "subheading": "perfumer's hollow existe pour soutenir les collectionneurs, la découverte et des échanges respectueux. Ces normes contribuent à garder le Hollow équitable, digne de confiance et accueillant pour tous."
     }
   }
 }

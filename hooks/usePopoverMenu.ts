@@ -8,7 +8,7 @@ type UsePopoverMenuArgs = {
   triggerRef: RefObject<HTMLButtonElement | null>
 }
 
-export const usePopoverMenu = ({ menuRef, onClose }: UsePopoverMenuArgs) => {
+export const usePopoverMenu = ({ menuRef: _menuRef, onClose }: UsePopoverMenuArgs) => {
   const onKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
       if (e.key === "Escape") {
