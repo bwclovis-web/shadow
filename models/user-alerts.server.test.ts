@@ -78,12 +78,12 @@ describe("createUserAlert", () => {
     expect(mockCreate).toHaveBeenCalledTimes(1)
     const createData = mockCreate.mock.calls[0]?.[0]?.data
     expect(createData).toBeDefined()
-    expect(createData).toHaveProperty("perfumeId", "perfume-123")
     expect(createData).toMatchObject({
-      userId: "user-1",
       alertType: "wishlist_available",
       title: "Title",
       message: "Message",
+      User: { connect: { id: "user-1" } },
+      Perfume: { connect: { id: "perfume-123" } },
     })
   })
 
@@ -101,13 +101,13 @@ describe("createUserAlert", () => {
     expect(mockCreate).toHaveBeenCalledTimes(1)
     const createData = mockCreate.mock.calls[0]?.[0]?.data
     expect(createData).toBeDefined()
-    expect(createData).not.toHaveProperty("perfumeId")
     expect(createData).toMatchObject({
-      userId: "user-1",
       alertType: "new_trader_message",
       title: "Title",
       message: "Message",
+      User: { connect: { id: "user-1" } },
     })
+    expect(createData).not.toHaveProperty("Perfume")
   })
 
   it("respects preference flags and returns null when wishlist alerts disabled", async () => {

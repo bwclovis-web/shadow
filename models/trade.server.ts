@@ -205,16 +205,18 @@ const sendTradeAlert = async (
   ])
 
   if (recipient) {
-    void sendTradeEventEmail({
-      user: recipient,
-      preferences,
-      alertType: rule.alertType,
-      title,
-      message,
-      actorUserId,
-    }).catch(err => {
+    try {
+      await sendTradeEventEmail({
+        user: recipient,
+        preferences,
+        alertType: rule.alertType,
+        title,
+        message,
+        actorUserId,
+      })
+    } catch (err) {
       console.error("[email] Failed to send trade event email:", err)
-    })
+    }
   }
 
   if (rule.alertType === "trade_completed") {

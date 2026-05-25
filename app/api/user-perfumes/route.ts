@@ -100,13 +100,6 @@ export async function POST(request: NextRequest) {
           placeOfPurchase,
           type: perfumeType,
         })
-        if (amount && parseFloat(amount) > 0) {
-          try {
-            await processWishlistAvailabilityAlerts(perfumeId, user.id)
-          } catch (alertError) {
-            console.error("[user-perfumes] Wishlist availability alerts failed:", alertError)
-          }
-        }
         break
       }
       case "remove":

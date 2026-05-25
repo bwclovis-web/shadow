@@ -240,13 +240,17 @@ const notifySplitParticipants = async (params: {
     ])
 
     if (user) {
-      void sendSplitEventEmail({
-        user,
-        preferences,
-        alertType: params.alertType,
-        title: params.title,
-        message: params.message,
-      }).catch(err => console.error("[email] split event email failed:", err))
+      try {
+        await sendSplitEventEmail({
+          user,
+          preferences,
+          alertType: params.alertType,
+          title: params.title,
+          message: params.message,
+        })
+      } catch (err) {
+        console.error("[email] split event email failed:", err)
+      }
     }
   }
 }

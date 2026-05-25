@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server"
 import { parseCsvCommitRequestRows } from "@/lib/csv-import-commit"
 import { prisma } from "@/lib/db"
 import { addUserPerfume } from "@/models/user.server"
-import { processWishlistAvailabilityAlerts } from "@/utils/alert-processors"
 import { validateRateLimit } from "@/utils/api-validation.server"
 import { isValidPrismaRecordId } from "@/utils/prisma-record-id"
 import { authenticateUser } from "@/utils/server/auth.server"
@@ -89,15 +88,6 @@ export const POST = async (request: NextRequest) => {
 
       existingPerfumeIds.add(row.perfumeId)
       committed++
-
-      const amountNum = parseFloat(row.amount)
-      if (!Number.isNaN(amountNum) && amountNum > 0) {
-        try {
-          await processWishlistAvailabilityAlerts(row.perfumeId, user.id)
-        } catch (alertError) {
-          console.error("[api/csv-import/commit] Wishlist alerts failed:", alertError)
-        }
-      }
     }
 
     return NextResponse.json({

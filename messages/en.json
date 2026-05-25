@@ -1544,8 +1544,8 @@
       "general": "General Notes"
     },
     "icons": {
-      "addButton": "Add to Wishlist",
-      "inWishlist": "In your wishlist",
+      "addButton": "Add to Seeking",
+      "inWishlist": "In seeking",
       "cancelButton": "Cancel",
       "editButton": "Edit Perfume",
       "deleteButton": "Delete Perfume",
@@ -2251,11 +2251,11 @@
     "heading": "Seeking",
     "subheading": "Fragrances still waiting to be discovered.",
     "itemsInWishlist": "fragrances being tracked",
-    "addButton": "Add to Wishlist",
-    "removeButton": "Remove from Wishlist",
+    "addButton": "Add to Seeking",
+    "removeButton": "Remove from Seeking",
     "bottlePreference": {
       "label": "Bottle preference",
-      "hint": "What size are you hoping to find?",
+      "hint": "What format or size are you hoping to discover?",
       "sample": "Sample",
       "partial": "Partial bottle",
       "full": "Full bottle",
@@ -2421,14 +2421,14 @@
   },
   "onboarding": {
     "bannerLabel": "Getting started",
-    "title": "Welcome — finish setting up your profile",
-    "subtitle": "Three quick steps to get the most from the exchange.",
+    "title": "Begin Your Collector Journey",
+    "subtitle": "A few quick steps to personalize your collector experience.",
     "skip": "Skip for now",
     "done": "Done",
     "steps": {
       "quiz": "Take the scent quiz",
-      "bottle": "Add your first bottle",
-      "matches": "Find your first match"
+      "bottle": "Start Your Collection",
+      "matches": "Explore the Exchange"
     },
     "matches": {
       "empty": "No exchange listings match your profile yet. Check back after more traders list bottles, or browse the exchange."

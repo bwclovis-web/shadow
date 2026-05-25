@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/db"
+import { parseMl } from "@/lib/user-inventory"
 import type { AlertType, UserAlertPreferences } from "@/types/database"
 import {
   sendDecantInterestAlertEmail,
@@ -302,7 +303,7 @@ export const checkWishlistAvailabilityAlerts = async (
     },
   })
 
-  const availableTraders = await prisma.userPerfume.findMany({
+  const availableTraderRows = await prisma.userPerfume.findMany({
     where: {
       perfumeId,
       available: { not: "0" },
@@ -319,6 +320,27 @@ export const checkWishlistAvailabilityAlerts = async (
       },
     },
   })
+
+  const availableTraders = Array.from(
+    new Map(
+      availableTraderRows
+        .filter(
+          (trader: {
+            available?: string | null
+            user: {
+              id: string
+              firstName: string | null
+              lastName: string | null
+              username: string | null
+              email: string
+            }
+          }) => parseMl(trader.available) > 0
+        )
+        .map((trader) => [trader.user.id, trader] as const)
+    ).values()
+  )
+
+  if (availableTraders.length === 0) return []
 
   const since = new Date(Date.now() - ALERT_DEDUPE_WINDOW_MS)
   const existingAlertUserIds = new Set(
@@ -358,7 +380,7 @@ export const checkWishlistAvailabilityAlerts = async (
     existingAlertUserIds.add(wishlistItem.userId)
 
     const title = `${wishlistItem.perfume.name} is now available!`
-    const message = `${wishlistItem.perfume.name} by ${wishlistItem.perfume.perfumeHouse?.name} is now available on the trading post from ${availableTraders.length} trader(s).`
+    const message = `${wishlistItem.perfume.name} by ${wishlistItem.perfume.perfumeHouse?.name} has surfaced in the Exchange from ${availableTraders.length} collector(s).`
     alertsToCreate.push({
       userId: wishlistItem.userId,
       perfumeId,
@@ -386,6 +408,7 @@ export const checkWishlistAvailabilityAlerts = async (
   }
 
   const createdAlerts = []
+  const emailJobs: Promise<void>[] = []
   for (const alertData of alertsToCreate) {
     const alert = await createUserAlert(
       alertData.userId,
@@ -400,18 +423,21 @@ export const checkWishlistAvailabilityAlerts = async (
       createdAlerts.push(alert)
       const emailPreferences =
         alertData.preferences ?? (await getUserAlertPreferences(alertData.userId))
-      void sendWishlistAlertEmail({
-        user: alertData.recipient,
-        preferences: emailPreferences,
-        perfumeName: alertData.perfumeName,
-        perfumeSlug: alertData.perfumeSlug,
-        message: alertData.message,
-      }).catch(err => {
-        console.error("[email] Failed to send wishlist alert email:", err)
-      })
+      emailJobs.push(
+        sendWishlistAlertEmail({
+          user: alertData.recipient,
+          preferences: emailPreferences,
+          perfumeName: alertData.perfumeName,
+          perfumeSlug: alertData.perfumeSlug,
+          message: alertData.message,
+        }).catch(err => {
+          console.error("[email] Failed to send wishlist alert email:", err)
+        })
+      )
     }
   }
 
+  await Promise.all(emailJobs)
   return createdAlerts
 }
 
@@ -543,6 +569,7 @@ export const checkDecantInterestAlerts = async (
   }
 
   const createdAlerts = []
+  const emailJobs: Promise<void>[] = []
   for (const alertData of alertsToCreate) {
     const alert = await createUserAlert(
       alertData.userId,
@@ -557,17 +584,20 @@ export const checkDecantInterestAlerts = async (
       createdAlerts.push(alert)
       const emailPreferences =
         alertData.preferences ?? (await getUserAlertPreferences(alertData.userId))
-      void sendDecantInterestAlertEmail({
-        user: alertData.recipient,
-        preferences: emailPreferences,
-        perfumeName: alertData.perfumeName,
-        perfumeSlug: alertData.perfumeSlug,
-        message: alertData.message,
-      }).catch(err => {
-        console.error("[email] Failed to send decant interest alert email:", err)
-      })
+      emailJobs.push(
+        sendDecantInterestAlertEmail({
+          user: alertData.recipient,
+          preferences: emailPreferences,
+          perfumeName: alertData.perfumeName,
+          perfumeSlug: alertData.perfumeSlug,
+          message: alertData.message,
+        }).catch(err => {
+          console.error("[email] Failed to send decant interest alert email:", err)
+        })
+      )
     }
   }
 
+  await Promise.all(emailJobs)
   return createdAlerts
 }

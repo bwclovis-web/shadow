@@ -23,6 +23,12 @@ interface AlertItemProps {
   compact?: boolean
 }
 
+type AvailableTrader = {
+  userId: string
+  displayName?: string
+  email?: string
+}
+
 const getAlertIconClassName = (alertType: UserAlert["alertType"]) => {
   switch (alertType as string) {
     case "wishlist_available":
@@ -56,6 +62,22 @@ const getAlertIconClassName = (alertType: UserAlert["alertType"]) => {
 const perfumeLink = (slug: string) => `/perfume/${slug}`
 const exchangesLink = (otherUserId: string) => `/exchanges/${otherUserId}`
 const isTradeAlert = (alertType: string) => alertType.startsWith("trade_")
+
+const getWishlistAlertMessage = (
+  alert: UserAlert,
+  traders: AvailableTrader[]
+) => {
+  const perfumeName =
+    alert.Perfume?.name ?? alert.title.replace(/ is now available!?$/, "")
+  const houseName = alert.Perfume?.perfumeHouse?.name
+  const perfumeLabel = houseName ? `${perfumeName} by ${houseName}` : perfumeName
+
+  if (traders.length > 0) {
+    return `${perfumeLabel} has surfaced in the Exchange from ${traders.length} collector(s).`
+  }
+
+  return `${perfumeLabel} has surfaced in the Exchange.`
+}
 
 const alertLink = (alert: UserAlert) => {
   if ((alert.alertType as string) === "suspicious_login") {
@@ -138,6 +160,15 @@ export const AlertItem = ({
   }
 
   const typeLabel = t(`types.${typeKey}` as "types.wishlist_available")
+  const wishlistTraders =
+    alert.alertType === "wishlist_available"
+      ? ((alert.metadata as { availableTraders?: AvailableTrader[] } | null)
+          ?.availableTraders ?? [])
+      : []
+  const alertMessage =
+    alert.alertType === "wishlist_available"
+      ? getWishlistAlertMessage(alert, wishlistTraders)
+      : alert.message
 
   const actionLabel = (() => {
     if (alert.alertType === "pending_submission_approval") {
@@ -174,7 +205,7 @@ export const AlertItem = ({
                 {alert.title}
               </p>
               <p className="text-xs isRead ? text-noir-gold : text-gray-600 mt-1 line-clamp-2">
-                {alert.message}
+                {alertMessage}
               </p>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-xs isRead ? text-noir-gold-500 : text-gray-500" suppressHydrationWarning>
@@ -256,7 +287,7 @@ export const AlertItem = ({
                 {alert.title}
               </h4>
 
-              <p className="text-sm text-noir-gold-500 mt-1 mb-3">{alert.message}</p>
+              <p className="text-sm text-noir-gold-500 mt-1 mb-3">{alertMessage}</p>
 
               {alert.alertType !== "pending_submission_approval" && alert.Perfume && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -280,22 +311,16 @@ export const AlertItem = ({
               {alert.metadata && (
                 <div className="mt-3 text-sm">
                   {alert.alertType === "wishlist_available" && (() => {
-                    const traders = (alert.metadata as { availableTraders?: Array<{ userId: string; displayName?: string; email?: string }> })
-                      .availableTraders
-                    if (!traders?.length) return null
+                    if (!wishlistTraders.length) return null
                     return (
                       <div>
                         <span className="font-medium text-gray-700">
                           {t("actions.availableFrom")}
                         </span>
                         <div className="mt-1 space-y-1">
-                          {traders.map(
+                          {wishlistTraders.map(
                             (
-                              trader: {
-                                userId: string
-                                displayName?: string
-                                email?: string
-                              },
+                              trader: AvailableTrader,
                               index: number
                             ) => (
                               <PrefetchLink
