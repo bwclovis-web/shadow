@@ -117,7 +117,7 @@ export const AlertBell = ({
             ) : (
               <div className="divide-y divide-noir-gold-500">
                 {recentAlerts.map(alert => (
-                  <div key={alert.id} className="p-3">
+                  <div key={alert.id}>
                     <AlertItem
                       alert={alert}
                       onMarkAsRead={() => {

@@ -16,6 +16,7 @@
     "reject": "Reject",
     "remove": "Remove",
     "add": "Add",
+    "all": "All",
     "adding": "Adding...",
     "previous": "Previous",
     "next": "Next",
@@ -432,6 +433,10 @@
       "perfumeLabel": "Perfume:",
       "unknownTrader": "Unknown trader",
       "unknownUser": "Unknown user"
+    },
+    "messages": {
+      "wishlistAvailable": "{perfumeLabel} has surfaced in the Exchange.",
+      "wishlistAvailableWithCollectors": "{perfumeLabel} has surfaced in the Exchange from {count} collector(s)."
     },
     "timeAgo": {
       "justNow": "Just now",

@@ -21,6 +21,7 @@
     "reject": "Rifiuta",
     "remove": "Rimuovi",
     "add": "Aggiungi",
+    "all": "Tutti",
     "previous": "Precedente",
     "next": "Successivo",
     "pageOf": "Pagina {current} di {total}",
@@ -243,6 +244,10 @@
       "perfumeLabel": "Profumo:",
       "unknownTrader": "Trader sconosciuto",
       "unknownUser": "Utente sconosciuto"
+    },
+    "messages": {
+      "wishlistAvailable": "{perfumeLabel} è apparso in L'Exchange.",
+      "wishlistAvailableWithCollectors": "{perfumeLabel} è apparso in L'Exchange da {count} collezionista/i."
     },
     "timeAgo": {
       "justNow": "Proprio ora",

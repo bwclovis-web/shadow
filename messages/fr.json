@@ -21,6 +21,7 @@
     "reject": "Rejeter",
     "remove": "Retirer",
     "add": "Ajouter",
+    "all": "Tous",
     "previous": "Précédent",
     "next": "Suivant",
     "pageOf": "Page {current} sur {total}",
@@ -243,6 +244,10 @@
       "perfumeLabel": "Parfum :",
       "unknownTrader": "Vendeur inconnu",
       "unknownUser": "Utilisateur inconnu"
+    },
+    "messages": {
+      "wishlistAvailable": "{perfumeLabel} est apparu dans L'Échange.",
+      "wishlistAvailableWithCollectors": "{perfumeLabel} est apparu dans L'Échange chez {count} collectionneur(s)."
     },
     "timeAgo": {
       "justNow": "À l'instant",

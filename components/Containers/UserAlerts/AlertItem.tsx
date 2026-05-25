@@ -63,9 +63,12 @@ const perfumeLink = (slug: string) => `/perfume/${slug}`
 const exchangesLink = (otherUserId: string) => `/exchanges/${otherUserId}`
 const isTradeAlert = (alertType: string) => alertType.startsWith("trade_")
 
+type AlertTranslator = ReturnType<typeof useTranslations>
+
 const getWishlistAlertMessage = (
   alert: UserAlert,
-  traders: AvailableTrader[]
+  traders: AvailableTrader[],
+  t: AlertTranslator,
 ) => {
   const perfumeName =
     alert.Perfume?.name ?? alert.title.replace(/ is now available!?$/, "")
@@ -73,10 +76,13 @@ const getWishlistAlertMessage = (
   const perfumeLabel = houseName ? `${perfumeName} by ${houseName}` : perfumeName
 
   if (traders.length > 0) {
-    return `${perfumeLabel} has surfaced in the Exchange from ${traders.length} collector(s).`
+    return t("messages.wishlistAvailableWithCollectors", {
+      perfumeLabel,
+      count: traders.length,
+    })
   }
 
-  return `${perfumeLabel} has surfaced in the Exchange.`
+  return t("messages.wishlistAvailable", { perfumeLabel })
 }
 
 const alertLink = (alert: UserAlert) => {
@@ -107,7 +113,7 @@ const alertLink = (alert: UserAlert) => {
 const AlertIcon = ({ alertType }: { alertType: UserAlert["alertType"] }) => {
   const cn = `h-4 w-4 ${getAlertIconClassName(alertType)}`
   if (alertType === "wishlist_available")
-    return <BsHeartFill className={cn} />
+    return <BsHeartFill className={cn}  />
   if ((alertType as string) === "suspicious_login")
     return <BsShieldExclamation className={cn} />
   return <BsBell className={cn} />
@@ -167,7 +173,7 @@ export const AlertItem = ({
       : []
   const alertMessage =
     alert.alertType === "wishlist_available"
-      ? getWishlistAlertMessage(alert, wishlistTraders)
+      ? getWishlistAlertMessage(alert, wishlistTraders, t)
       : alert.message
 
   const actionLabel = (() => {
@@ -188,7 +194,7 @@ export const AlertItem = ({
   if (compact) {
     return (
       <div
-        className={`flex items-start gap-3 ${!alert.isRead ? "bg-noir-gold-500" : ""}`}
+        className={`flex items-start gap-3 p-3 ${!alert.isRead ? "bg-noir-gold-500/20" : ""}`}
       >
         <div className="shrink-0 mt-0.5">
           <AlertIcon alertType={alert.alertType} />
@@ -199,12 +205,12 @@ export const AlertItem = ({
             <div className="flex-1 min-w-0">
               <p
                 className={`text-sm font-medium ${
-                  !alert.isRead ? "text-gray-900" : "text-noir-gold-100"
+                  !alert.isRead ? "text-noir-gold-500" : "text-noir-gold-100"
                 }`}
               >
                 {alert.title}
               </p>
-              <p className="text-xs isRead ? text-noir-gold : text-gray-600 mt-1 line-clamp-2">
+              <p className={`text-xs ${!alert.isRead ? "text-noir-gold-100" : "text-noir-gold-500"} mt-1 line-clamp-2`}>
                 {alertMessage}
               </p>
               <div className="flex items-center gap-2 mt-1">
@@ -254,7 +260,7 @@ export const AlertItem = ({
     <div
       className={`group p-4 rounded-lg border transition-all duration-200 ${
         !alert.isRead
-          ? "border-blue-200 bg-noir-gold-500 shadow-sm"
+          ? "border-noir-blue bg-noir-gold/20 shadow-sm"
           : "border-gray-200 bg-noir-dark"
       } hover:shadow-md`}
     >
@@ -267,7 +273,7 @@ export const AlertItem = ({
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                <span className="text-xs font-medium text-noir-gold uppercase tracking-wide">
                   {typeLabel}
                 </span>
                 <span
@@ -281,7 +287,7 @@ export const AlertItem = ({
 
               <h4
                 className={`font-semibold ${
-                  !alert.isRead ? "text-gray-900" : "text-noir-gold-100"
+                  !alert.isRead ? "text-noir-gold" : "text-noir-gold-100"
                 }`}
               >
                 {alert.title}
@@ -290,20 +296,20 @@ export const AlertItem = ({
               <p className="text-sm text-noir-gold-500 mt-1 mb-3">{alertMessage}</p>
 
               {alert.alertType !== "pending_submission_approval" && alert.Perfume && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
+                <div className={`flex items-center gap-1 text-sm ${!alert.isRead ? "text-noir-gold-100" : "text-noir-gold-500"}`}>
                   <span>{t("actions.perfumeLabel")}</span>
                   <PrefetchLink
                     href={perfumeLink(alert.Perfume.slug)}
                     prefetch={false}
-                    className="font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                    className="font-medium text-noir-blue/80 hover:text-noir-blue flex items-center gap-1"
                   >
                     {alert.Perfume.name}
                     {alert.Perfume.perfumeHouse && (
-                      <span className="text-gray-500">
+                      <span className={`text-noir-gold-500 ${!alert.isRead ? "text-noir-gold-100" : "text-noir-gold-500"}`}>
                         by {alert.Perfume.perfumeHouse.name}
                       </span>
                     )}
-                    <BsBoxArrowUpRight className="h-3 w-3" />
+                    <BsBoxArrowUpRight className="h-3 w-3 ml-2" />
                   </PrefetchLink>
                 </div>
               )}
@@ -314,28 +320,29 @@ export const AlertItem = ({
                     if (!wishlistTraders.length) return null
                     return (
                       <div>
-                        <span className="font-medium text-gray-700">
+                        <span className={`font-medium ${!alert.isRead ? "text-noir-gold-100" : "text-noir-gold-500"}`}>
                           {t("actions.availableFrom")}
                         </span>
-                        <div className="mt-1 space-y-1">
+                      <ul className="flex gap-2 mt-2">
                           {wishlistTraders.map(
                             (
                               trader: AvailableTrader,
                               index: number
                             ) => (
+                              <li key={trader.userId ?? index} className="after:content-[''] flex after:border-r after:border-noir-gold-500/20 after:px-2 after:mr-2 last:after:hidden">
                               <PrefetchLink
-                                key={trader.userId ?? index}
                                 href={`/trader-profile/${trader.userId}`}
                                 prefetch={false}
-                                className="block text-blue-600 hover:text-blue-800"
+                                className="block text-noir-blue/80 hover:text-noir-blue"
                               >
                                 {trader.displayName ??
                                   trader.email ??
                                   t("actions.unknownTrader")}
                               </PrefetchLink>
+                              </li>
                             )
                           )}
-                        </div>
+                        </ul>
                       </div>
                     )
                   })()}

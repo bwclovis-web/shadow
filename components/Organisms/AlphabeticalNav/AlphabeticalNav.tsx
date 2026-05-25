@@ -1,4 +1,5 @@
 import { Button } from "@/components/Atoms/Button/Button"
+import { useTranslations } from "next-intl"
 import {
   prefetchHousesByLetter,
   prefetchPerfumesByLetter,
@@ -22,21 +23,20 @@ const AlphabeticalNav = ({
   houseType = "all",
   pageSize = 16,
 }: AlphabeticalNavProps) => {
+  const t = useTranslations("common")
   const letters = getAlphabetLetters()
+  const selectedButtonClassName = "bg-noir-gold text-noir-black hover:bg-noir-gold"
 
   const handleMouseEnter = (letter: string) => {
     if (selectedLetter === letter || !prefetchType) {
       return
     }
 
-    // Prefetch on hover for better UX
     if (prefetchType === "houses") {
       prefetchHousesByLetter(letter, houseType, pageSize).catch(() => {
-        // Silently fail - prefetch is just an optimization
       })
     } else if (prefetchType === "perfumes") {
       prefetchPerfumesByLetter(letter, houseType, pageSize).catch(() => {
-        // Silently fail - prefetch is just an optimization
       })
     }
   }
@@ -47,13 +47,11 @@ const AlphabeticalNav = ({
     >
       <Button
         onClick={() => onLetterSelect(null)}
-        className={`px-3 py-2 rounded-md font-medium transition-colors relative ${
-          selectedLetter === null
-            ? "bg-noir-gold text-noir-black"
-            : "bg-noir-dark text-noir-gold hover:bg-noir-gold/20 noir-outline"
-        }`}
+        size={null}
+        variant="alphabeticalNav"
+        className={selectedLetter === null ? selectedButtonClassName : undefined}
       >
-        All
+        {t("all")}
       </Button>
 
       {letters.map(letter => (
@@ -61,11 +59,9 @@ const AlphabeticalNav = ({
           key={letter}
           onClick={() => onLetterSelect(letter)}
           onMouseEnter={() => handleMouseEnter(letter)}
-          className={`px-3 py-2 rounded-md font-medium transition-colors flex items-center justify-center relative ${
-            selectedLetter === letter
-              ? "bg-noir-gold text-noir-black"
-              : "bg-noir-dark text-noir-gold hover:bg-noir-gold/20 noir-outline"
-          }`}
+          size={null}
+          variant="alphabeticalNav"
+          className={`${selectedLetter === letter ? selectedButtonClassName : ""} flex items-center justify-center`}
         >
           <span className="lg:text-2xl">{letter}</span>
         </Button>

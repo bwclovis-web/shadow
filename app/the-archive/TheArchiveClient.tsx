@@ -167,37 +167,37 @@ const TheArchiveClient = ({
         subheading={t("subheading")}
       />
 
-      <PageWrapper className="bg-noir-black/70">
-      <DataFilters
-        searchType="perfume"
-        sortOptions={sortOptions}
-        selectedSort={selectedSort}
-        onSortChange={(evt: { target: { value: string } }) =>
-          setSelectedSort(evt.target.value as SortOption)
-        }
-        className="mb-8"
-      />
-
-      <AlphabeticalNav
-        selectedLetter={letterFromUrl}
-        onLetterSelect={handleLetterClick}
-        prefetchType="perfumes"
-        houseType="all"
-        pageSize={pageSize}
-        className="mb-8"
-      />
-
-      <DataDisplaySection
-        data={sortedPerfumes}
-        isLoading={loading}
-        type="perfume"
-        selectedLetter={letterFromUrl}
-        sourcePage="archive"
-        pagination={pagination}
-        onPageChange={goToPage}
-        onPrefetchNext={onPrefetchNext}
-        onPrefetchPage={onPrefetchPage}
+      <PageWrapper>
+        <DataFilters
+          searchType="perfume"
+          sortOptions={sortOptions}
+          selectedSort={selectedSort}
+          onSortChange={(evt: { target: { value: string } }) =>
+            setSelectedSort(evt.target.value as SortOption)
+          }
+          className="mb-8"
         />
+
+        <AlphabeticalNav
+          selectedLetter={letterFromUrl}
+          onLetterSelect={handleLetterClick}
+          prefetchType="perfumes"
+          houseType="all"
+          pageSize={pageSize}
+          className="mb-8"
+        />
+
+        <DataDisplaySection
+          data={sortedPerfumes}
+          isLoading={loading}
+          type="perfume"
+          selectedLetter={letterFromUrl}
+          sourcePage="archive"
+          pagination={pagination}
+          onPageChange={goToPage}
+          onPrefetchNext={onPrefetchNext}
+          onPrefetchPage={onPrefetchPage}
+          />
       </PageWrapper>
     </main>
   )

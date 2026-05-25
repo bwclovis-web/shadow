@@ -120,6 +120,8 @@ describe("explodeSpaceSeparatedNoteBlob", () => {
       "amaretto liqueur accord",
     ])
     expect(splitGluedMerchantNoteRun("Amber Vanilla Moss")).toEqual(["amber", "vanilla", "moss"])
+    expect(splitGluedMerchantNoteRun("Orange Bergamot Golden Mist")).toEqual(["orange", "bergamot"])
+    expect(explodeSpaceSeparatedNoteBlob("orange bergamot golden mist")).toEqual(["orange", "bergamot"])
   })
 })
 
@@ -2210,6 +2212,106 @@ Base: white musk`
       expect.arrayContaining(["joyfully", "golden mist", "luminous", "candy-drip"]),
     )
     expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas Gioiosa: enrichOnly drops stale Python top blob when PDP bootstrap is stronger", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const noirOnly =
+      "Fog drapes the night like a sultry secret, wrapping the air in whispers of citrus and jasmine. Coconut cream and amber intertwine, casting a warm, inviting glow amidst the shadows of the alley."
+
+    const gioiosaHtml = `<html><body><p>INSPIRED BY Gioiosa Eau De Parfum Profumum Roma. Notes Pyramid Top Orange Bergamot Golden Mist Heart Jasmine Coconut Cream Vanilla Orchid Base Amber Vanilla Moss Vibe &amp; Wear Projection radiant. Scent Story Think sun-kissed coconut through jasmine petals, joyfully luminous.</p></body></html>`
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => gioiosaHtml,
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when enrichOnly gets stronger Andromeda PDP structure")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Gioiosa Profumum Roma",
+        description: noirOnly,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromedas-inspired-by-gioiosa-eau-de-parfum-profumum-roma",
+        perfumeHouse: "Andromeda's Moon",
+        openNotes: ["orange bergamot golden mist"],
+        heartNotes: ["jasmine", "coconut cream", "vanilla orchid"],
+        baseNotes: ["amber", "vanilla", "moss"],
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      enrichOnly: true,
+      fetchPdpNoteBootstrap: true,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(open).toEqual(expect.arrayContaining(["orange", "bergamot"]))
+    expect(all).not.toEqual(expect.arrayContaining(["orange bergamot golden mist", "golden mist"]))
+    expect(heart).toEqual(
+      expect.arrayContaining(["jasmine", "coconut cream", "vanilla orchid"]),
+    )
+    expect(base).toEqual(expect.arrayContaining(["amber", "vanilla", "moss"]))
+    expect(fetchMock).toHaveBeenCalled()
+    vi.unstubAllGlobals()
+    vi.unstubAllEnvs()
+  })
+
+  it("Andromedas Gioiosa: enrichOnly repairs bad Python notesText blob without PDP fetch", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when enrichOnly reparses Python notesText")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Gioiosa Profumum Roma",
+        description:
+          "Golden mist swirls through the heavy, humid air, mingling with the scent of orange bergamot as night falls. Jasmine seduces from the shadows, while the rich embrace of coconut cream and warm vanilla orchid wraps around you like a lover's whisper.",
+        notesText:
+          "open notes: orange bergamot golden mist\nheart notes: jasmine, coconut cream, vanilla orchid\nbase notes: amber, vanilla, moss",
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromedas-inspired-by-gioiosa-eau-de-parfum-profumum-roma",
+        perfumeHouse: "Andromeda's Moon",
+        openNotes: ["orange bergamot golden mist"],
+        heartNotes: ["jasmine", "coconut cream", "vanilla orchid"],
+        baseNotes: ["amber", "vanilla", "moss"],
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      enrichOnly: true,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(open).toEqual(expect.arrayContaining(["orange", "bergamot"]))
+    expect(all).not.toEqual(expect.arrayContaining(["orange bergamot golden mist", "golden mist"]))
+    expect(heart).toEqual(
+      expect.arrayContaining(["jasmine", "coconut cream", "vanilla orchid"]),
+    )
+    expect(base).toEqual(expect.arrayContaining(["amber", "vanilla", "moss"]))
   })
 
   it("Andromedas Gioiosa: noir-only description rescues notes from PDP fetch", async () => {

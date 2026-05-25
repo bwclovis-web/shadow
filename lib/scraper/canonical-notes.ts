@@ -535,7 +535,13 @@ const walkKnownMaterialChunks = (raw: string): string[] => {
       matched = true
       break
     }
-    if (!matched) return []
+    if (!matched) {
+      const remainder = words.slice(i).map(w => w.toLowerCase())
+      if (out.length > 0 && remainder.length > 0 && remainder.every(w => _SPACE_LIST_PROSE_MODIFIERS.has(w))) {
+        break
+      }
+      return []
+    }
   }
   return out
 }

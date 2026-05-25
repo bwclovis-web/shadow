@@ -22,6 +22,9 @@ export const buttonVariants = cva(
           "bg-noir-gold capitalize text-noir-black font-semibold hover:bg-noir-gold/80 transition-all",
         secondary:
           "bg-noir-dark hover:bg-noir-black focus:bg-noir-black disabled:bg-noir-black text-noir-gold-500 hover:text-noir-gold-100  border-noir-gold hover:border-noir-gold-500",
+        alphabeticalNav:
+          "rounded-md px-3 py-2 font-medium transition-all relative bg-noir-dark text-noir-gold hover:bg-noir-gold/20 noir-outline border-noir-gold " +
+          "shadow-md hover:shadow-lg shadow-noir-dark/60 hover:border-noir-gold-500 active:bg-noir-gold/20 active:text-noir-black",
         danger:
           "bg-btn-danger hover:bg-btn-danger-hover focus:bg-btn-danger-focus disabled:bg-btn-danger-disabled text-white",
         link: "bg-transparent text-blue-200 font-semibold hover:underline focus:bg-noir-gold/20 disabled:bg-transparent text-nowrap px-0",

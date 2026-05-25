@@ -2770,6 +2770,41 @@ Rules:
 const noteLayerCount = (n: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] }): number =>
   n.openNotes.length + n.heartNotes.length + n.baseNotes.length
 
+/**
+ * Python HTML extraction is useful, but when Node has already rebuilt a stronger merchant pyramid
+ * (e.g. via Andromeda PDP bootstrap), do not blindly re-add Python blobs like
+ * "orange bergamot golden mist". Only merge Python-only notes that are still explicitly
+ * substantiated in the current note source.
+ */
+const mergeExistingPythonNotes = (
+  current: NotesLayers,
+  existing: NotesLayers | null,
+  notesSource: string,
+): NotesLayers => {
+  if (!existing || noteLayerCount(existing) === 0) return current
+
+  const currentIsAuthoritative =
+    hasLayeredMerchantPyramid(current) || noteLayerCount(current) >= noteLayerCount(existing)
+
+  if (!currentIsAuthoritative) {
+    return dedupeNotesAcrossLayers({
+      openNotes: uniqueNotes([...existing.openNotes, ...current.openNotes]),
+      heartNotes: uniqueNotes([...existing.heartNotes, ...current.heartNotes]),
+      baseNotes: uniqueNotes([...existing.baseNotes, ...current.baseNotes]),
+    })
+  }
+
+  const corpus = buildNoteConfirmationCorpus(notesSource)
+  const keepIfSubstantiated = (arr: string[]): string[] =>
+    arr.filter(note => isNoteSubstantiatedInSource(note, corpus, notesSource))
+
+  return dedupeNotesAcrossLayers({
+    openNotes: uniqueNotes([...keepIfSubstantiated(existing.openNotes), ...current.openNotes]),
+    heartNotes: uniqueNotes([...keepIfSubstantiated(existing.heartNotes), ...current.heartNotes]),
+    baseNotes: uniqueNotes([...keepIfSubstantiated(existing.baseNotes), ...current.baseNotes]),
+  })
+}
+
 /** Regex + structured materials the merge step is allowed to keep; blocks LLM “invention” from marketing prose. */
 const buildLowercaseNoteUniverse = (
   structured: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] },
@@ -3603,13 +3638,7 @@ const processSingleProductPhase1 = async (
     }
     notes = dedupeNotesAcrossLayers(notes)
 
-    if (existingFromPython && noteLayerCount(existingFromPython) > 0) {
-      notes = dedupeNotesAcrossLayers({
-        openNotes: uniqueNotes([...existingFromPython.openNotes, ...notes.openNotes]),
-        heartNotes: uniqueNotes([...existingFromPython.heartNotes, ...notes.heartNotes]),
-        baseNotes: uniqueNotes([...existingFromPython.baseNotes, ...notes.baseNotes]),
-      })
-    }
+    notes = mergeExistingPythonNotes(notes, existingFromPython, notesSource)
 
     if (hasEmbeddedLayerMarkers(notes)) {
       notes = relayerNotesWithEmbeddedLayerMarkers(notes)

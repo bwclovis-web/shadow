@@ -9,7 +9,7 @@ import { buttonVariants } from "./button-variants"
 export interface ButtonProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "style">,
     Omit<VariantProps<typeof buttonVariants>, "leftIcon" | "rightIcon"> {
-  variant?: "primary" | "secondary" | "danger" | "icon" | "link" | null
+  variant?: "primary" | "secondary" | "alphabeticalNav" | "danger" | "icon" | "link" | null
   ref?: RefObject<HTMLButtonElement | null>
   leftIcon?: ReactNode
   rightIcon?: ReactNode
