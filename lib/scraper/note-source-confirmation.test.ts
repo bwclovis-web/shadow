@@ -215,6 +215,16 @@ Middle Notes: Verdant Earth Accord (Rich Soil, Green and Flowering Plants)`
     expect(sanitizeExtractedNoteCandidate("fluffy glow")).toBeNull()
     expect(sanitizeExtractedNoteCandidate("middle notes")).toBeNull()
     expect(sanitizeExtractedNoteCandidate("base notes are ebony")).toBe("ebony")
+    expect(sanitizeExtractedNoteCandidate("cozy woods wrap yourself in the soft sweetness")).toBe(
+      "cozy woods",
+    )
+    expect(sanitizeExtractedNoteCandidate("soft woods float into a world spun from sugar clouds")).toBe(
+      "soft woods",
+    )
+    expect(sanitizeExtractedNoteCandidate("creamy softness of")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("pastel dreams with")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("gourmands")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("nostalgic desserts")).toBeNull()
   })
 
   it("peelMarketingDescriptorTail strips trailing Shopify copy", () => {

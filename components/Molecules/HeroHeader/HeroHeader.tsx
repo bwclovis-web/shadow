@@ -9,6 +9,7 @@ interface HeroHeaderProps {
   imageAlt?: string
   transitionKey?: string | number
   viewTransitionName?: string
+  titleViewTransitionName?: string
   children?: ReactNode
   headerClassName?: string
   bodyClassName?: string
@@ -38,6 +39,7 @@ const HeroHeader = ({
   imageAlt,
   transitionKey,
   viewTransitionName,
+  titleViewTransitionName,
   children,
   headerClassName = "",
   bodyClassName = "",
@@ -80,7 +82,18 @@ const HeroHeader = ({
       />
 
       <div className={styleMerge(DEFAULT_BODY_CLASSES, bodyClassName)}>
-        {children ?? <h1 className={titleClassName}>{title}</h1>}
+        {children ?? (
+          <h1
+            className={titleClassName}
+            style={
+              titleViewTransitionName
+                ? ({ viewTransitionName: titleViewTransitionName } as React.CSSProperties)
+                : undefined
+            }
+          >
+            {title}
+          </h1>
+        )}
       </div>
     </header>
   )

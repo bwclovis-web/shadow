@@ -1,4 +1,8 @@
 import { HeroHeader } from "@/components/Molecules/HeroHeader"
+import {
+  houseImageTransitionName,
+  houseTitleTransitionName,
+} from "@/utils/view-transition-names"
 interface PerfumeHouseHeroProps {
   name: string
   image?: string | null
@@ -16,9 +20,10 @@ const PerfumeHouseHero = ({
   <HeroHeader
     title={name}
     type="house"
-    image={ image}
+    image={image}
     transitionKey={transitionKey}
-    viewTransitionName={`perfume-image-${transitionKey}`}
+    viewTransitionName={houseImageTransitionName(String(transitionKey))}
+    titleViewTransitionName={houseTitleTransitionName(String(transitionKey))}
     titleClassName="text-noir-gold"
     imageWidth={900}
     imageHeight={600}

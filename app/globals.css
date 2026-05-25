@@ -485,6 +485,93 @@ img {
   }
 }
 
+@keyframes pageRootOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.988);
+    filter: blur(10px);
+  }
+}
+
+@keyframes pageRootIn {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(1.01);
+    filter: blur(12px);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes pageRootOutToDetail {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-18px) scale(0.982);
+    filter: blur(12px);
+  }
+}
+
+@keyframes pageRootInFromList {
+  0% {
+    opacity: 0;
+    transform: translateY(28px) scale(1.014);
+    filter: blur(14px);
+  }
+  58% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes pageRootOutToList {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(14px) scale(1.006);
+    filter: blur(8px);
+  }
+}
+
+@keyframes pageRootInFromDetail {
+  0% {
+    opacity: 0;
+    transform: translateY(-18px) scale(0.992);
+    filter: blur(10px);
+  }
+  58% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
 /* Slightly longer root cross-fade so `next-view-transitions` + named transitions read clearly */
 @media (prefers-reduced-motion: no-preference) {
   .animate-bell-nudge {
@@ -513,9 +600,39 @@ img {
     animation: gridCueBackward 0.5s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
+  ::view-transition-group(root) {
+    animation-duration: 420ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
   ::view-transition-old(root),
   ::view-transition-new(root) {
-    animation-duration: 320ms;
+    animation-duration: 420ms;
     animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    transform-origin: center top;
+  }
+
+  ::view-transition-old(root) {
+    animation-name: pageRootOut;
+  }
+
+  ::view-transition-new(root) {
+    animation-name: pageRootIn;
+  }
+
+  html[data-route-transition="list-to-detail"]::view-transition-old(root) {
+    animation-name: pageRootOutToDetail;
+  }
+
+  html[data-route-transition="list-to-detail"]::view-transition-new(root) {
+    animation-name: pageRootInFromList;
+  }
+
+  html[data-route-transition="detail-to-list"]::view-transition-old(root) {
+    animation-name: pageRootOutToList;
+  }
+
+  html[data-route-transition="detail-to-list"]::view-transition-new(root) {
+    animation-name: pageRootInFromDetail;
   }
 }

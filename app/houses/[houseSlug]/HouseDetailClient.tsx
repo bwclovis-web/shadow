@@ -1,6 +1,13 @@
 "use client"
 
-import { type ChangeEvent, useCallback, useEffect, useMemo, useState } from "react"
+import {
+  type ChangeEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import dynamic from "next/dynamic"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -24,6 +31,7 @@ import FollowButton from "@/components/Containers/Follow/FollowButton"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import DangerModal from "@/components/Organisms/DangerModal"
 import Modal from "@/components/Organisms/Modal"
+import { useGsapStagger } from "@/hooks/useGsapStagger"
 import { useHouse } from "@/hooks/useHouse"
 import { useInfinitePagination } from "@/hooks/useInfinitePagination"
 import { useInfinitePerfumesByHouse } from "@/hooks/useInfinitePerfumes"
@@ -42,9 +50,14 @@ import {
 } from "@/utils/house-perfumes-url-params"
 import type { ArticleListItem } from "@/lib/sanity/types"
 import { getDefaultSortOptions, type SortOption } from "@/utils/sortUtils"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const HOUSES_BASE_PATH = "/houses"
 const HOUSE_SEARCH_DEBOUNCE_MS = 400
+type HousePerfumeRevealDirection = "forward" | "backward"
+const HOUSE_DETAIL_STAGGER = 0.048
+const HOUSE_DETAIL_HORIZONTAL_OFFSET = 14
+const HOUSE_DETAIL_VERTICAL_OFFSET = 12
 
 const getInitialPerfumeData = (house: {
   perfumes?: unknown[]
@@ -99,6 +112,10 @@ const HouseDetailClient = ({
   const tSort = useTranslations("sortOptions")
   const router = useRouter()
   const searchParams = useSearchParams()
+  const housePerfumeGridRef = useRef<HTMLDivElement>(null)
+  const [housePerfumeRevealDirection, setHousePerfumeRevealDirection] =
+    useState<HousePerfumeRevealDirection>("forward")
+  const [gridCueToken, setGridCueToken] = useState(0)
 
   const { data: perfumeHouse } = useHouse(
     initialPerfumeHouse?.slug ?? "",
@@ -154,6 +171,11 @@ const HouseDetailClient = ({
 
   const currentPage =
     Number.isNaN(pageFromUrl) || pageFromUrl < 1 ? 1 : pageFromUrl
+  const previousListStateRef = useRef({
+    page: currentPage,
+    sort: sortOption,
+    q: qNormalized,
+  })
 
   const initialPerfumeData = initialPerfumeHouse
     ? getInitialPerfumeData(initialPerfumeHouse)
@@ -232,6 +254,14 @@ const HouseDetailClient = ({
       page?.meta?.totalCount ?? page?._count?.perfumes ?? page?.count,
   })
 
+  const perfumeIds = useMemo(
+    () =>
+      (perfumes as Array<{ id?: string | number }>)
+        .map(perfume => String(perfume.id ?? ""))
+        .join(","),
+    [perfumes]
+  )
+
   const { goToPage } = usePaginatedNavigation({
     currentPage: pagination.currentPage,
     hasNextPage: pagination.hasNextPage,
@@ -294,6 +324,56 @@ const HouseDetailClient = ({
     qNormalized,
     sortOption,
   ])
+
+  useEffect(() => {
+    const previousState = previousListStateRef.current
+    const pageChanged = previousState.page !== currentPage
+    const sortChanged = previousState.sort !== sortOption
+    const queryChanged = previousState.q !== qNormalized
+
+    if (pageChanged) {
+      setHousePerfumeRevealDirection(
+        currentPage > previousState.page ? "forward" : "backward"
+      )
+    } else if (sortChanged || queryChanged) {
+      setHousePerfumeRevealDirection("forward")
+    }
+
+    if (pageChanged || sortChanged || queryChanged) {
+      setGridCueToken(current => current + 1)
+    }
+
+    previousListStateRef.current = {
+      page: currentPage,
+      sort: sortOption,
+      q: qNormalized,
+    }
+  }, [currentPage, qNormalized, sortOption])
+
+  useGsapStagger(housePerfumeGridRef, {
+    selector: "[data-display-card]",
+    deps: [currentPage, sortOption, qNormalized, perfumeIds, housePerfumeRevealDirection],
+    enabled: !loading && perfumes.length > 0,
+    stagger: HOUSE_DETAIL_STAGGER,
+    from: {
+      opacity: 0,
+      x:
+        housePerfumeRevealDirection === "forward"
+          ? HOUSE_DETAIL_HORIZONTAL_OFFSET
+          : -HOUSE_DETAIL_HORIZONTAL_OFFSET,
+      y: HOUSE_DETAIL_VERTICAL_OFFSET,
+      scale: 0.986,
+    },
+    to: {
+      opacity: 1,
+      x: 0,
+      y: 0,
+      scale: 1,
+      duration: 0.4,
+      ease: "power2.out",
+      clearProps: "transform,opacity",
+    },
+  })
 
   usePreserveScrollPosition(loading)
 
@@ -377,7 +457,7 @@ const HouseDetailClient = ({
           />
         </Modal>
       )}
-      <section className="relative z-10 my-4">
+      <main className="relative z-10 my-4">
         <PerfumeHouseHero
           name={house.name}
           image={house.image}
@@ -385,16 +465,17 @@ const HouseDetailClient = ({
           type="house"
         />
 
-        <div className="inner-container mt-4 flex justify-center">
-          <FollowButton
-            targetType="house"
-            targetId={house.id}
-            initialFollowing={initialFollowing}
-            viewerId={user?.id ?? null}
-          />
-        </div>
+        <PageWrapper>
+          <div className="flex justify-end">
+            <FollowButton
+              targetType="house"
+              targetId={house.id}
+              initialFollowing={initialFollowing}
+              viewerId={user?.id ?? null}
+            />
+          </div>
 
-        <div className="flex flex-col gap-10 mx-auto max-w-6xl inner-container">
+        <div className="flex flex-col gap-10">
           {user?.role === "admin" && (
             <PerfumeHouseAdminActions
               houseName={house.name}
@@ -429,6 +510,13 @@ const HouseDetailClient = ({
           </div>
 
           <PerfumeHousePerfumeList
+            containerRef={housePerfumeGridRef}
+            transitionCueKey={
+              gridCueToken > 0
+                ? `house-detail-${house.id}-${gridCueToken}`
+                : undefined
+            }
+            transitionCueDirection={housePerfumeRevealDirection}
             perfumes={perfumes}
             loading={loading}
             pagination={pagination}
@@ -441,7 +529,8 @@ const HouseDetailClient = ({
 
           <RelatedArticlesSection articles={relatedArticles} />
         </div>
-      </section>
+        </PageWrapper>
+      </main>
     </>
   )
 }

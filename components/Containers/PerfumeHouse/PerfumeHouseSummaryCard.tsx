@@ -51,6 +51,7 @@ const PerfumeHouseSummaryCard = ({
         variant="primary"
         background="gold"
         size="sm"
+        transitionVariant="detail-to-list"
         className="gap-2 max-w-max ml-2 mb-2 mt-2"
         aria-label={
           selectedLetter

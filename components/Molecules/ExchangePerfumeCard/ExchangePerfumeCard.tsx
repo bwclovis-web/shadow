@@ -14,6 +14,7 @@ type ExchangePerfumeCardProps = {
   viewerId?: string | null
   imagePriority?: boolean
   children?: React.ReactNode
+  enableSharedViewTransitions?: boolean
 }
 
 export const ExchangePerfumeCard = ({
@@ -21,6 +22,7 @@ export const ExchangePerfumeCard = ({
   viewerId = null,
   imagePriority = false,
   children,
+  enableSharedViewTransitions = true,
 }: ExchangePerfumeCardProps) => {
   const photoListings = getExchangeCardPhotoListings(perfume.userPerfume, viewerId)
   const heroImage = getExchangeCardHeroImage(perfume.image, photoListings)
@@ -39,6 +41,7 @@ export const ExchangePerfumeCard = ({
       }}
       type="perfume"
       imagePriority={imagePriority}
+      enableSharedViewTransitions={enableSharedViewTransitions}
       imageOverlay={
         singleListing ? (
           <ListingImageBadges

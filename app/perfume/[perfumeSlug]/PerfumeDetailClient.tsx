@@ -23,13 +23,17 @@ import { usePerfume } from "@/hooks/usePerfume"
 import { useSessionStore } from "@/hooks/sessionStore"
 import { useDeletePerfume } from "@/lib/mutations/perfumes"
 import type { RecommendationPerfume } from "@/services/recommendations"
-import { perfumeImageTransitionName } from "@/utils/view-transition-names"
+import {
+  perfumeImageTransitionName,
+  perfumeTitleTransitionName,
+} from "@/utils/view-transition-names"
 
 import { RelatedArticlesSection } from "@/components/Containers/Blog/RelatedArticlesSection"
 import FollowButton from "@/components/Containers/Follow/FollowButton"
 import SimilarPerfumesCarousel from "@/components/Containers/Recommendations/SimilarPerfumesCarousel"
 import type { ArticleListItem } from "@/lib/sanity/types"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
+import { setRouteTransitionVariant } from "@/utils/route-transitions"
 
 type PerfumeDetailClientProps = {
   initialPerfume: Awaited<ReturnType<typeof import("@/models/perfume.server").getPerfumeBySlug>> & { id: string }
@@ -79,8 +83,10 @@ const PerfumeDetailClient = ({
     // Optimistic redirect: navigate immediately instead of waiting for API response.
     closeModal()
     if (typeof window !== "undefined" && window.history.length > 1) {
+      setRouteTransitionVariant("detail-to-list")
       router.back()
     } else {
+      setRouteTransitionVariant("detail-to-list")
       router.push(archivePath)
     }
 
@@ -96,6 +102,7 @@ const PerfumeDetailClient = ({
   }
 
   const handleBack = () => {
+    setRouteTransitionVariant("detail-to-list")
     if (selectedLetter) {
       router.push(`${THE_ARCHIVE_PATH}/${selectedLetter.toLowerCase()}`)
     } else {
@@ -116,7 +123,16 @@ const PerfumeDetailClient = ({
         transitionKey={perfume.id}
         viewTransitionName={perfumeImageTransitionName(perfume.id)}
       >
-        <h1 className="capitalize">{perfume.name}</h1>
+        <h1
+          className="capitalize"
+          style={
+            {
+              viewTransitionName: perfumeTitleTransitionName(perfume.id),
+            } as React.CSSProperties
+          }
+        >
+          {perfume.name}
+        </h1>
         <p className="text-lg tracking-wide mt-2 text-noir-gold-500">
           {t("subheading")}
           <PrefetchLink

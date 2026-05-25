@@ -11,6 +11,10 @@ import {
 } from "react"
 
 import { styleMerge } from "@/utils/styleUtils"
+import {
+  type RouteTransitionVariant,
+  prepareRouteTransition,
+} from "@/utils/route-transitions"
 
 import { buttonVariants } from "./button-variants"
 import { Icon, IconName } from "../Icons/Icons"
@@ -26,6 +30,7 @@ export interface VooDooLinkProps
   leftIcon?: ReactNode
   rightIcon?: ReactNode
   icon?: IconName
+  transitionVariant?: RouteTransitionVariant
 }
 
 export const VooDooLink = ({
@@ -38,6 +43,7 @@ export const VooDooLink = ({
   leftIcon,
   rightIcon,
   icon,
+  transitionVariant,
   onClick,
   ...props
 }: VooDooLinkProps) => {
@@ -49,6 +55,7 @@ export const VooDooLink = ({
       event.stopPropagation()
       return
     }
+    prepareRouteTransition(url, transitionVariant)
     onClick?.(event)
   }
 

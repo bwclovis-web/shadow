@@ -122,7 +122,11 @@ const WishlistMatchesSection = ({
             key={perfume.id}
             className="min-w-[min(100%,280px)] max-w-[280px] shrink-0 snap-start"
           >
-            <ExchangePerfumeCard perfume={perfume} viewerId={viewerId}>
+            <ExchangePerfumeCard
+              perfume={perfume}
+              viewerId={viewerId}
+              enableSharedViewTransitions={false}
+            >
               <MatchCardFooter
                 countLabel={tListings("summary", {
                   count: perfume.userPerfume.length,

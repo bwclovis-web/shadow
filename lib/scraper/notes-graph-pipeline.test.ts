@@ -2553,6 +2553,123 @@ Base: white musk`
     expect(invokeMock).not.toHaveBeenCalled()
   })
 
+  it("Andromedas Latte e Biscotti: layered notes stop before wrap-yourself and gourmand prose", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const latteEBiscottiPdp =
+      "Top Note: Fresh Baked Biscotti Heart Notes: Steamed Milk, Sugar Crystals Base Notes: Vanilla Cream, Cozy Woods Wrap yourself in the soft sweetness of Inspired by Latte e Biscotti - a fragrance that feels like fresh pastries, golden hour light, and cozy cafe conversations. The scent opens with the buttery crunch of almond biscotti, dipped into warm, frothy milk. As it melts into sugar-dusted vanilla cream, a soft whisper of wood grounds the experience - like the scent of a rustic coffee shop in the morning air. This perfume is pure comfort - milky, sugary, and a little bit dreamy. If you love cozy gourmands, nostalgic desserts, or just want to smell like the world's sweetest hug... this is it."
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when Andromeda layered notes are present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Latte E Biscotti Cerchi Nellacqua",
+        description: latteEBiscottiPdp,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromedas-inspired-by-guava-granita-eau-de-parfum-ellis-brooklyn",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(open).toEqual(expect.arrayContaining(["fresh baked biscotti"]))
+    expect(heart).toEqual(expect.arrayContaining(["steamed milk", "sugar crystals"]))
+    expect(base).toEqual(expect.arrayContaining(["vanilla cream", "cozy woods"]))
+    expect(all).not.toEqual(
+      expect.arrayContaining(["cozy wood wrap yourself", "gourmands", "nostalgic desserts"]),
+    )
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas Zucchero Filato: base notes stop before pastel dreams prose", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const zuccheroFilatoPdp =
+      "Top Notes: Spun Sugar, Bergamot, Heliotrope Heart Notes: Cotton Flower, Caramel, Almond Milk Base Notes: Vanilla, Powdered Musk, Soft Woods Float into a world spun from sugar clouds and pastel dreams with Inspired by Zucchero Filato Eau de Parfum - our interpretation of the cult-favorite from Cerchi Nell'Acqua. This fragrance captures the nostalgic magic of freshly spun cotton candy, elevated by sophisticated gourmand touches and a soft, powdery finish."
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when Andromeda layered notes are present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Zucchero Filato Cerchi Nellacqua",
+        description: zuccheroFilatoPdp,
+        image: "",
+        detailURL: "https://www.andromedasmoon.com/products/andromeda-s-inspired-by-zucchero-filato-eau-de-parfum",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(open).toEqual(expect.arrayContaining(["spun sugar", "bergamot", "heliotrope"]))
+    expect(heart).toEqual(expect.arrayContaining(["cotton flower", "caramel", "almond milk"]))
+    expect(base).toEqual(expect.arrayContaining(["vanilla", "powdered musk", "soft woods"]))
+    expect(all).not.toEqual(expect.arrayContaining(["pastel dreams with"]))
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas Vanilla Skin: notes stop before creamy softness prose", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const vanillaSkinPdp =
+      "Notes: Top: Pink Pepper, Apple Heart: Jasmine, Lily Base: Vanilla, Sandalwood, Sugar Wrap your senses in the warm, creamy softness of Inspired by Vanilla Skin, our interpretation of the beloved fragrance from Phlur. This enchanting Eau de Parfum blends comforting sweetness with a delicate touch of sensuality - like skin kissed by sun and sugar."
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when Andromeda layered notes are present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Vanilla Skin Phlur",
+        description: vanillaSkinPdp,
+        image: "",
+        detailURL: "https://www.andromedasmoon.com/products/andromeda-s-inspired-by-vanilla-skin-eau-de-parfum-phlur",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(open).toEqual(expect.arrayContaining(["pink pepper", "apple"]))
+    expect(heart).toEqual(expect.arrayContaining(["jasmine", "lily"]))
+    expect(base).toEqual(expect.arrayContaining(["vanilla", "sandalwood", "sugar"]))
+    expect(all).not.toEqual(expect.arrayContaining(["creamy softness of"]))
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
   it("Andromedas Wavechild: emoji Top/Middle/Base notes of layers parse without LLM", async () => {
     vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
     vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")

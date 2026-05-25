@@ -2,7 +2,12 @@ import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { PerfumeCompareToggle } from "@/components/Molecules/PerfumeCompareToggle/PerfumeCompareToggle"
 import { HOUSE_DETAIL_PATH, PERFUME_PATH } from "@/constants/routes"
 import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
-import { perfumeImageTransitionName } from "@/utils/view-transition-names"
+import {
+  houseImageTransitionName,
+  houseTitleTransitionName,
+  perfumeImageTransitionName,
+  perfumeTitleTransitionName,
+} from "@/utils/view-transition-names"
 import Image from "next/image"
 
 interface LinkCardProps {
@@ -23,6 +28,7 @@ interface LinkCardProps {
   imagePriority?: boolean
   /** Badges or controls overlaid on the card image (e.g. listing condition). */
   imageOverlay?: React.ReactNode
+  enableSharedViewTransitions?: boolean
 }
 
 const LinkCard = ({
@@ -34,6 +40,7 @@ const LinkCard = ({
   imageAlt,
   imagePriority = false,
   imageOverlay,
+  enableSharedViewTransitions = true,
 }: LinkCardProps) => {
   const alt = imageAlt ?? data.name
   const basePath = type === "house" ? HOUSE_DETAIL_PATH : PERFUME_PATH
@@ -43,17 +50,37 @@ const LinkCard = ({
     : `${basePath}/${data.slug}`
 
   const imageTransitionName =
-    type === "perfume" ? perfumeImageTransitionName(data.id) : undefined
+    enableSharedViewTransitions
+      ? type === "perfume"
+        ? perfumeImageTransitionName(data.id)
+        : houseImageTransitionName(data.id)
+      : undefined
+  const titleTransitionName =
+    enableSharedViewTransitions
+      ? type === "perfume"
+        ? perfumeTitleTransitionName(data.id)
+        : houseTitleTransitionName(data.id)
+      : undefined
 
   return (
     <div className="relative aspect-square w-full h-full min-h-72 group noir-border overflow-hidden transition-all duration-300 ease-in-out bg-noir-dark/70 backdrop-blur-sm">
       <PrefetchLink
         href={href}
         prefetch={false}
+        transitionVariant="list-to-detail"
         className="flex flex-col overflow-hidden justify-between items-center group transition-all duration-300 ease-in-out"
       >
         <div className="text-center relative z-10 bg-noir-dark/50 backdrop-blur-sm w-full p-2">
-          <h2 className="text-wrap wrap-break-word card-title">{data.name}</h2>
+          <h2
+            className="text-wrap wrap-break-word card-title"
+            style={
+              titleTransitionName
+                ? ({ viewTransitionName: titleTransitionName } as React.CSSProperties)
+                : undefined
+            }
+          >
+            {data.name}
+          </h2>
           {data?.perfumeHouse?.name && (
             <p className="text-sm text-noir-gold-100 leading-tight">
               {data.perfumeHouse.name}

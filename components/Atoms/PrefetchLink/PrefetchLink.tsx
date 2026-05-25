@@ -5,7 +5,16 @@ import { Link } from "next-view-transitions"
 import { useTransitionRouter } from "next-view-transitions"
 import type { ComponentProps } from "react"
 
+import {
+  type RouteTransitionVariant,
+  prepareRouteTransition,
+} from "@/utils/route-transitions"
+
 type NextLinkProps = ComponentProps<typeof Link>
+
+type PrefetchLinkProps = NextLinkProps & {
+  transitionVariant?: RouteTransitionVariant
+}
 
 const getPrefetchPath = (href: NextLinkProps["href"]): string | null => {
   if (typeof href === "string") return href
@@ -17,10 +26,10 @@ const getPrefetchPath = (href: NextLinkProps["href"]): string | null => {
   return null
 }
 
-const PrefetchLink = (props: NextLinkProps) => {
+const PrefetchLink = (props: PrefetchLinkProps) => {
   const router = useTransitionRouter()
   const path = getPrefetchPath(props.href)
-  const { onMouseEnter, onTouchStart, ...rest } = props
+  const { onClick, onMouseEnter, onTouchStart, transitionVariant, ...rest } = props
 
   const prefetchFullRoute = () => {
     if (!path) return
@@ -30,6 +39,12 @@ const PrefetchLink = (props: NextLinkProps) => {
   return (
     <Link
       {...rest}
+      onClick={(e) => {
+        if (path) {
+          prepareRouteTransition(path, transitionVariant)
+        }
+        onClick?.(e)
+      }}
       onMouseEnter={(e) => {
         prefetchFullRoute()
         onMouseEnter?.(e)
