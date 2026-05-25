@@ -101,6 +101,13 @@ describe("explodeSpaceSeparatedNoteBlob", () => {
       "mahogany",
       "tonka bean",
     ])
+    expect(explodeSpaceSeparatedNoteBlob("Musk White Musk Sesame Mimosa Blonde Woods")).toEqual([
+      "musk",
+      "white musk",
+      "sesame",
+      "mimosa",
+      "blonde woods",
+    ])
   })
 
   it("splitGluedMerchantNoteRun parses Andromeda Main Notes runs without commas", () => {
@@ -2461,6 +2468,87 @@ Base: white musk`
     )
     expect(all).not.toEqual(
       expect.arrayContaining(["flirtatious", "glamorous", "ruby", "addictive"]),
+    )
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas L Eau Papier: Notes then Description parses comma-less merchant list", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const lEauPapierPdp =
+      "Inspired by LEau Papier Eau De Parfum By Andromedas Moon Scent Type: Clean Musk Paper Soft Skin-Close Floral-Woody Notes:Musk White Musk Sesame Mimosa Blonde Woods Description:Like ink soaking into handmade paper, Inspired by LEau Papier melts into your skin with quiet grace. This scent is a delicate, minimalist poem - a whisper of soft white musks, milky sesame, and powdery mimosa. Clean and abstract, yet deeply comforting, it evokes the warmth of a sunlit studio filled with sketchbooks, rice steam, and memory. As the scent unfolds, it reveals a barely-there sweetness, like mimosa pollen dusting a page. Blonde woods add a gentle texture, grounding the fragrance in something soft and woody - like holding a well-loved novel close to your chest. Perfect for: Those who adore clean skin scents with artistic nuance."
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when Andromeda merchant notes are present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "L Eau Papier Diptyque",
+        description: lEauPapierPdp,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromedas-inspired-by-leau-papier-eau-de-parfum-diptyque",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(all).toEqual(
+      expect.arrayContaining(["musk", "white musk", "sesame", "mimosa", "blonde woods"]),
+    )
+    expect(all).not.toEqual(expect.arrayContaining(["minimalist poem", "clean musk paper"]))
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas Yum Yum Dream: layered notes stop before sugar-dusted prose", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const yumYumDreamPdp =
+      "sprinkles - this dreamy, fruity gourmand is a carnival of flavor in perfume form! Top Notes: Banana, Apricot, Peach, Red Fruits Heart Notes: Strawberry, Coconut, Marshmallow, Vanilla Base Notes: Whipped Cream, Cookie Crust, Caramel, Toffee, Musk Like a sugar-dusted daydream, Yum Yum Dream melts juicy fruits into marshmallow swirls and creamy vanilla clouds."
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when Andromeda layered notes are present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Yum Yum Dream",
+        description: yumYumDreamPdp,
+        image: "",
+        detailURL: "https://www.andromedasmoon.com/products/andromedas-yum-yum-dream-eau-de-parfum",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(open).toEqual(expect.arrayContaining(["banana", "apricot", "peach", "red fruits"]))
+    expect(heart).toEqual(expect.arrayContaining(["strawberry", "coconut", "marshmallow", "vanilla"]))
+    expect(base).toEqual(
+      expect.arrayContaining(["whipped cream", "cookie crust", "caramel", "toffee", "musk"]),
+    )
+    expect(all).not.toEqual(
+      expect.arrayContaining(["sprinkles this dreamy", "creamy vanilla clouds", "sugar-dusted daydream"]),
     )
     expect(invokeMock).not.toHaveBeenCalled()
   })

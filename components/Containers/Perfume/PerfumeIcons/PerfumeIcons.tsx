@@ -17,6 +17,7 @@ import {
 import { useTranslations } from "next-intl"
 
 const DELETE_MODAL_ID = "delete-perfume-item"
+const ACTION_ANIMATION_MS = 560
 
 const wishlistModalIdForPerfume = (perfumeId: string) => `wishlist-${perfumeId}`
 
@@ -42,6 +43,7 @@ const PerfumeIcons = ({
   isInWishlist,
 }: PerfumeIconsProps) => {
   const [inWishlist, setInWishlist] = useState(isInWishlist)
+  const [animatedAction, setAnimatedAction] = useState<string | null>(null)
   const { modalOpen, toggleModal, modalId, closeModal } = useSessionStore()
   const [isPublic, setIsPublic] = useState(false)
   const [bottlePreference, setBottlePreference] =
@@ -59,6 +61,16 @@ const PerfumeIcons = ({
     setInWishlist(isInWishlist)
   }, [isInWishlist])
 
+  useEffect(() => {
+    if (!animatedAction) return
+
+    const timeoutId = window.setTimeout(() => {
+      setAnimatedAction(current => (current === animatedAction ? null : current))
+    }, ACTION_ANIMATION_MS)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [animatedAction])
+
   const handleWishlistToggle = () => {
     if (inWishlist) {
       toggleWishlist.mutate(
@@ -66,6 +78,7 @@ const PerfumeIcons = ({
         {
           onSuccess: () => {
             setInWishlist(false)
+            setAnimatedAction("wishlist")
             closeModal()
           },
           onError: error => console.error("Failed to remove from wishlist:", error),
@@ -89,6 +102,7 @@ const PerfumeIcons = ({
       {
         onSuccess: () => {
           setInWishlist(true)
+          setAnimatedAction("wishlist")
           closeModal()
         },
         onError: error => console.error("Failed to add to wishlist:", error),
@@ -98,6 +112,14 @@ const PerfumeIcons = ({
 
   const wishlistAriaLabel = `${inWishlist ? tCommon("remove") : tCommon("add")} ${perfume.name} ${inWishlist ? "from" : "to"} wishlist`
   const isAdmin = userRole === "admin"
+  const actionButtonClassName =
+    "group relative overflow-hidden min-w-full justify-between border-noir-gold-100 bg-noir-gold/10 " +
+    "transition-[transform,background-color,border-color,box-shadow] duration-300 ease-out " +
+    "motion-safe:hover:-translate-y-0.5 hover:bg-noir-gold/16 hover:border-noir-gold-500"
+  const activeActionButtonClassName =
+    "border-noir-gold-100 bg-noir-gold/18 -translate-y-0.5"
+  const iconLabelClassName =
+    "font-medium tracking-[0.08em] transition-[transform,color] duration-300 group-hover:translate-x-0.5"
 
   return (
     <>
@@ -175,23 +197,40 @@ const PerfumeIcons = ({
           </div>
         </Modal>
       )}
-      <div className="grid grid-cols-1 gap-2 noir-border relative p-4">
+      <div className="grid grid-cols-1 gap-2 noir-border relative rounded-lg bg-noir-black/20 p-4 shadow-[0_16px_34px_rgba(0,0,0,0.26)]">
         <Button
           ref={wishlistButtonRef}
           onClick={handleWishlistToggle}
           variant="icon"
           background="gold"
           size="sm"
+          className={`${actionButtonClassName} ${
+            inWishlist ? activeActionButtonClassName : ""
+          } ${animatedAction === "wishlist" ? "motion-safe:animate-vault-stamp" : ""}`}
           disabled={toggleWishlist.isPending}
           aria-label={wishlistAriaLabel}
         >
           {inWishlist ? (
-            <IconLabel label={tIcons("icons.inWishlist")} icon={BsHeartFill} size={22} />
+            <IconLabel
+              label={tIcons("icons.inWishlist")}
+              icon={BsHeartFill}
+              size={22}
+              className={iconLabelClassName}
+            />
           ) : (
-            <IconLabel label={tIcons("icons.addButton")} icon={BsHearts} size={22} />
+            <IconLabel
+              label={tIcons("icons.addButton")}
+              icon={BsHearts}
+              size={22}
+              className={iconLabelClassName}
+            />
           )}
         </Button>
-        <AddToCollectionModal type="icon" perfume={perfume} />
+        <AddToCollectionModal
+          type="icon"
+          perfume={perfume}
+          className={actionButtonClassName}
+        />
         {isAdmin && (
           <div>
             <h2 className="text-center mb-2">
@@ -203,7 +242,7 @@ const PerfumeIcons = ({
                 variant="icon"
                 background="gold"
                 size="sm"
-                className="flex items-center justify-between gap-2 min-w-full"
+                className={`${actionButtonClassName} flex items-center justify-between gap-2`}
                 rightIcon={<GrEdit size={22} />}
                 url={`/admin/perfume/${perfume.slug}/edit`}
               >
@@ -214,7 +253,7 @@ const PerfumeIcons = ({
                 onClick={() => toggleModal(deleteButtonRef, DELETE_MODAL_ID)}
                 aria-label={`delete ${perfume.name}`}
                 variant="icon"
-                className="flex items-center justify-between gap-2 min-w-full"
+                className={`${actionButtonClassName} flex items-center justify-between gap-2`}
                 rightIcon={<MdDeleteForever size={22} />}
                 background="gold"
                 size="sm"

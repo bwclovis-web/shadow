@@ -1,7 +1,10 @@
 import type { DisputeResolutionOutcome } from "@prisma/client"
+import fs from "fs"
+import path from "path"
 
 import { PERFUME_PATH } from "@/constants/routes"
 import type { AlertType, UserAlertPreferences } from "@/types/database"
+import { renderEditorialEmailTemplate } from "@/utils/email-templates.server"
 import {
   getAppBaseUrl,
   isSendableRecipientEmail,
@@ -20,6 +23,41 @@ type AlertPrefsSlice = Pick<
   | "emailSecurityAlerts"
 >
 
+type EditorialAlertVariant =
+  | "wishlist"
+  | "decant"
+  | "trade"
+  | "split"
+  | "security"
+  | "dispute"
+
+type EditorialAlertEmailInput = {
+  variant: EditorialAlertVariant
+  displayName: string
+  title: string
+  preheader?: string
+  lead: string
+  body?: string[]
+  ctaLabel: string
+  ctaUrl: string
+  secondaryLabel?: string
+  secondaryUrl?: string
+  spotlightLabel?: string
+  spotlightValue?: string
+}
+
+type BuiltEditorialAlertEmail = {
+  text: string
+  html: string
+  attachments?: Array<{
+    filename: string
+    path?: string
+    content?: string
+    contentType?: string
+    contentId?: string
+  }>
+}
+
 const TRADE_EMAIL_ALERT_TYPES = [
   "trade_received",
   "trade_accepted",
@@ -33,6 +71,78 @@ const SPLIT_EMAIL_ALERT_TYPES = [
   "split_completed",
   "split_cancelled",
 ] as const satisfies readonly AlertType[]
+
+const EDITORIAL_ALERT_COPY: Record<
+  EditorialAlertVariant,
+  {
+    templateVariant: "exchange" | "correspondence" | "security" | "resolution"
+    dispatchLabel: string
+    eyebrow: string
+    footerTagline: string
+    footerDetails: string[]
+  }
+> = {
+  wishlist: {
+    templateVariant: "exchange",
+    dispatchLabel: "From The Exchange",
+    eyebrow: "Wishlist alert",
+    footerTagline: "Rare fragrances find new homes here.",
+    footerDetails: [
+      "This message was sent to the email address on your perfumer's hollow account.",
+      "You can manage alert preferences from your profile whenever you like.",
+    ],
+  },
+  decant: {
+    templateVariant: "exchange",
+    dispatchLabel: "From The Exchange",
+    eyebrow: "Collector interest",
+    footerTagline: "Every exchange begins with discovery.",
+    footerDetails: [
+      "This message was sent to the email address on your perfumer's hollow account.",
+      "You can manage alert preferences from your profile whenever you like.",
+    ],
+  },
+  trade: {
+    templateVariant: "correspondence",
+    dispatchLabel: "Notes From The Exchange",
+    eyebrow: "Trade correspondence",
+    footerTagline: "Every exchange begins with discovery.",
+    footerDetails: [
+      "This message was sent to the email address on your perfumer's hollow account.",
+      "You can manage alert preferences from your profile whenever you like.",
+    ],
+  },
+  split: {
+    templateVariant: "correspondence",
+    dispatchLabel: "Notes From The Exchange",
+    eyebrow: "Split dispatch",
+    footerTagline: "Collectors keep the Hollow moving one pour at a time.",
+    footerDetails: [
+      "This message was sent to the email address on your perfumer's hollow account.",
+      "You can manage alert preferences from your profile whenever you like.",
+    ],
+  },
+  security: {
+    templateVariant: "security",
+    dispatchLabel: "Security Notice From The Hollow",
+    eyebrow: "Account security",
+    footerTagline: "What happens in the shadows should stay yours.",
+    footerDetails: [
+      "This message was sent to the email address on your perfumer's hollow account.",
+      "Security alerts are enabled by default to help protect your account.",
+    ],
+  },
+  dispute: {
+    templateVariant: "resolution",
+    dispatchLabel: "Resolution From The Exchange",
+    eyebrow: "Dispute resolution",
+    footerTagline: "Transparent exchanges keep the Hollow healthy.",
+    footerDetails: [
+      "This message was sent to the email address on your perfumer's hollow account.",
+      "perfumer's hollow connects collectors and moderates disputes, but never processes payments or shipping.",
+    ],
+  },
+}
 
 type RecipientUser = {
   id: string
@@ -70,23 +180,83 @@ const logEmailDebug = (message: string): void => {
   }
 }
 
-const buildAlertEmailBody = (params: {
-  displayName: string
-  message: string
-  actionUrl: string
-  preferencesUrl: string
-}): string =>
-  [
+const normalizeParagraphs = (...values: Array<string | null | undefined>): string[] =>
+  values
+    .flatMap(value => (value ?? "").split(/\n+/))
+    .map(value => value.trim())
+    .filter(Boolean)
+
+const extractRegardingValue = (message: string): string | null => {
+  const prefix = "Regarding "
+  return message.startsWith(prefix) ? message.slice(prefix.length).trim() : null
+}
+
+let inlineLogoContentBase64: string | null = null
+
+const getInlineLogoContentBase64 = (): string => {
+  if (inlineLogoContentBase64) return inlineLogoContentBase64
+
+  const logoPath = path.join(process.cwd(), "public", "images", "new", "logo-one-email.png")
+  inlineLogoContentBase64 = fs.readFileSync(logoPath).toString("base64")
+  return inlineLogoContentBase64
+}
+
+const getInlineLogoAttachment = (): NonNullable<BuiltEditorialAlertEmail["attachments"]>[number] => ({
+  filename: "logo-one-email.png",
+  content: getInlineLogoContentBase64(),
+  contentType: "image/png",
+  contentId: "ph-logo",
+})
+
+export const buildEditorialAlertEmail = (
+  params: EditorialAlertEmailInput
+): BuiltEditorialAlertEmail => {
+  const copy = EDITORIAL_ALERT_COPY[params.variant]
+  const bodyParagraphs = normalizeParagraphs(...(params.body ?? []))
+
+  const textLines = [
     `Hi ${params.displayName},`,
     "",
-    params.message,
+    params.title,
     "",
-    params.actionUrl,
+    params.lead,
     "",
-    `Manage alert preferences: ${params.preferencesUrl}`,
+    ...bodyParagraphs.flatMap(paragraph => [paragraph, ""]),
+    `${params.ctaLabel}: ${params.ctaUrl}`,
+    ...(params.secondaryLabel && params.secondaryUrl
+      ? ["", `${params.secondaryLabel}: ${params.secondaryUrl}`]
+      : []),
+    "",
+    copy.footerTagline,
+    ...copy.footerDetails,
     "",
     "— perfumer's hollow",
-  ].join("\n")
+  ]
+
+  return {
+    text: textLines.join("\n"),
+    html: renderEditorialEmailTemplate({
+      variant: copy.templateVariant,
+      logoSrc: "cid:ph-logo",
+      preheader: params.preheader ?? params.title,
+      dispatchLabel: copy.dispatchLabel,
+      eyebrow: copy.eyebrow,
+      title: params.title,
+      greeting: `Hi ${params.displayName},`,
+      lead: params.lead,
+      body: bodyParagraphs,
+      ctaLabel: params.ctaLabel,
+      ctaUrl: params.ctaUrl,
+      secondaryLabel: params.secondaryLabel,
+      secondaryUrl: params.secondaryUrl,
+      spotlightLabel: params.spotlightLabel,
+      spotlightValue: params.spotlightValue,
+      footerTagline: copy.footerTagline,
+      footerDetails: copy.footerDetails,
+    }),
+    attachments: [getInlineLogoAttachment()],
+  }
+}
 
 export const sendWishlistAlertEmail = async (params: {
   user: RecipientUser
@@ -110,16 +280,28 @@ export const sendWishlistAlertEmail = async (params: {
   const displayName = getUserDisplayName(params.user)
   const perfumeUrl = `${baseUrl}${PERFUME_PATH}/${params.perfumeSlug}`
   const preferencesUrl = `${baseUrl}${getProfilePathForUser(params.user)}`
+  const subject = `${params.perfumeName} is now available on perfumer's hollow`
+  const email = buildEditorialAlertEmail({
+    variant: "wishlist",
+    displayName,
+    title: `${params.perfumeName} has surfaced in The Exchange`,
+    preheader: subject,
+    lead: params.message,
+    body: ["A bottle from your wishlist is moving through the Hollow right now."],
+    ctaLabel: "View on the exchange",
+    ctaUrl: perfumeUrl,
+    secondaryLabel: "Manage alert preferences",
+    secondaryUrl: preferencesUrl,
+    spotlightLabel: "Perfume",
+    spotlightValue: params.perfumeName,
+  })
 
   const result = await sendTransactionalEmail({
     to: params.user.email,
-    subject: `${params.perfumeName} is now available on perfumer's hollow`,
-    text: buildAlertEmailBody({
-      displayName,
-      message: params.message,
-      actionUrl: `View on the exchange: ${perfumeUrl}`,
-      preferencesUrl,
-    }),
+    subject,
+    text: email.text,
+    html: email.html,
+    attachments: email.attachments,
   })
 
   if (result.sent) {
@@ -151,16 +333,28 @@ export const sendDecantInterestAlertEmail = async (params: {
   const displayName = getUserDisplayName(params.user)
   const perfumeUrl = `${baseUrl}${PERFUME_PATH}/${params.perfumeSlug}`
   const preferencesUrl = `${baseUrl}${getProfilePathForUser(params.user)}`
+  const subject = `Someone wants your ${params.perfumeName}!`
+  const email = buildEditorialAlertEmail({
+    variant: "decant",
+    displayName,
+    title: `Interest stirred around ${params.perfumeName}`,
+    preheader: subject,
+    lead: params.message,
+    body: ["A collector nearby the Hollow is looking for this bottle right now."],
+    ctaLabel: "View listing",
+    ctaUrl: perfumeUrl,
+    secondaryLabel: "Manage alert preferences",
+    secondaryUrl: preferencesUrl,
+    spotlightLabel: "Perfume",
+    spotlightValue: params.perfumeName,
+  })
 
   const result = await sendTransactionalEmail({
     to: params.user.email,
-    subject: `Someone wants your ${params.perfumeName}!`,
-    text: buildAlertEmailBody({
-      displayName,
-      message: params.message,
-      actionUrl: `View listing: ${perfumeUrl}`,
-      preferencesUrl,
-    }),
+    subject,
+    text: email.text,
+    html: email.html,
+    attachments: email.attachments,
   })
 
   if (result.sent) {
@@ -179,6 +373,7 @@ export const sendSplitEventEmail = async (params: {
   alertType: AlertType
   title: string
   message: string
+  splitId?: string
 }): Promise<void> => {
   if (
     !SPLIT_EMAIL_ALERT_TYPES.includes(
@@ -200,23 +395,30 @@ export const sendSplitEventEmail = async (params: {
 
   const displayName = getUserDisplayName(params.user)
   const preferencesUrl = `${getAppBaseUrl()}${getProfilePathForUser(params.user)}`
-  const splitId =
-    typeof (params as { splitId?: string }).splitId === "string"
-      ? (params as { splitId?: string }).splitId
-      : null
-  const actionUrl = splitId
-    ? `${getAppBaseUrl()}/splits/${splitId}`
+  const actionUrl = params.splitId
+    ? `${getAppBaseUrl()}/splits/${params.splitId}`
     : `${getAppBaseUrl()}/the-exchange`
+  const email = buildEditorialAlertEmail({
+    variant: "split",
+    displayName,
+    title: params.title,
+    preheader: params.title,
+    lead: params.message,
+    body: ["Review the split to keep every pour, claim, and shipment on track."],
+    ctaLabel: "View split",
+    ctaUrl: actionUrl,
+    secondaryLabel: "Manage alert preferences",
+    secondaryUrl: preferencesUrl,
+    spotlightLabel: params.splitId ? "Split reference" : undefined,
+    spotlightValue: params.splitId ? params.splitId.slice(-8).toUpperCase() : undefined,
+  })
 
   const result = await sendTransactionalEmail({
     to: params.user.email,
     subject: params.title,
-    text: buildAlertEmailBody({
-      displayName,
-      message: `${params.title}\n\n${params.message}`,
-      actionUrl: `View split: ${actionUrl}`,
-      preferencesUrl,
-    }),
+    text: email.text,
+    html: email.html,
+    attachments: email.attachments,
   })
 
   if (result.sent) {
@@ -251,16 +453,31 @@ export const sendTradeEventEmail = async (params: {
   const displayName = getUserDisplayName(params.user)
   const threadUrl = buildTradeThreadUrl(params.actorUserId)
   const preferencesUrl = `${getAppBaseUrl()}${getProfilePathForUser(params.user)}`
+  const perfumeReference = extractRegardingValue(params.message)
+  const lead = perfumeReference
+    ? `There is new movement in your exchange for ${perfumeReference}.`
+    : params.message
+  const email = buildEditorialAlertEmail({
+    variant: "trade",
+    displayName,
+    title: params.title,
+    preheader: params.title,
+    lead,
+    body: ["Open the conversation to keep the exchange moving."],
+    ctaLabel: "View trade conversation",
+    ctaUrl: threadUrl,
+    secondaryLabel: "Manage alert preferences",
+    secondaryUrl: preferencesUrl,
+    spotlightLabel: perfumeReference ? "Regarding" : undefined,
+    spotlightValue: perfumeReference ?? undefined,
+  })
 
   const result = await sendTransactionalEmail({
     to: params.user.email,
     subject: params.title,
-    text: buildAlertEmailBody({
-      displayName,
-      message: `${params.title}\n\n${params.message}`,
-      actionUrl: `View trade conversation: ${threadUrl}`,
-      preferencesUrl,
-    }),
+    text: email.text,
+    html: email.html,
+    attachments: email.attachments,
   })
 
   if (result.sent) {
@@ -294,31 +511,32 @@ export const sendDisputeResolutionEmail = async (params: {
   const policyUrl = `${baseUrl}/community-policy#disputes`
   const disputesUrl = `${baseUrl}${getProfilePathForUser(params.user)}/disputes`
   const outcomeLabel = DISPUTE_OUTCOME_LABELS[params.outcome]
-  const summaryBlock = params.publicSummary
-    ? `\n\nSummary: ${params.publicSummary}`
-    : ""
-
-  const message = [
-    "Your trade dispute has been reviewed and resolved.",
-    "",
-    `Outcome: ${outcomeLabel}`,
-    `Trade reference: ${params.tradeId.slice(-8)}`,
-    summaryBlock,
-    "",
-    "Community policy: " + policyUrl,
-  ]
-    .filter(Boolean)
-    .join("\n")
+  const tradeReference = params.tradeId.slice(-8).toUpperCase()
+  const email = buildEditorialAlertEmail({
+    variant: "dispute",
+    displayName,
+    title: "Your trade dispute has been resolved",
+    preheader: "Trade dispute resolution — perfumer's hollow",
+    lead: "Your trade dispute has been reviewed and resolved.",
+    body: [
+      `Outcome: ${outcomeLabel}`,
+      `Trade reference: ${tradeReference}`,
+      ...(params.publicSummary ? [`Summary: ${params.publicSummary}`] : []),
+    ],
+    ctaLabel: "View your disputes",
+    ctaUrl: disputesUrl,
+    secondaryLabel: "Review dispute policy",
+    secondaryUrl: policyUrl,
+    spotlightLabel: "Trade reference",
+    spotlightValue: tradeReference,
+  })
 
   const result = await sendTransactionalEmail({
     to: params.user.email,
     subject: "Trade dispute resolution — perfumer's hollow",
-    text: buildAlertEmailBody({
-      displayName,
-      message,
-      actionUrl: `View your disputes: ${disputesUrl}`,
-      preferencesUrl: `${baseUrl}${getProfilePathForUser(params.user)}`,
-    }),
+    text: email.text,
+    html: email.html,
+    attachments: email.attachments,
   })
 
   if (result.sent) {
@@ -353,16 +571,25 @@ export const sendSecurityAlertEmail = async (params: {
   const displayName = getUserDisplayName(params.user)
   const securityUrl = `${baseUrl}${getProfilePathForUser(params.user)}/security`
   const preferencesUrl = `${baseUrl}${getProfilePathForUser(params.user)}`
+  const email = buildEditorialAlertEmail({
+    variant: "security",
+    displayName,
+    title: params.title,
+    preheader: params.title,
+    lead: params.message,
+    body: ["Review your security settings if this activity was not yours."],
+    ctaLabel: "Review security settings",
+    ctaUrl: securityUrl,
+    secondaryLabel: "Manage alert preferences",
+    secondaryUrl: preferencesUrl,
+  })
 
   const result = await sendTransactionalEmail({
     to: params.user.email,
     subject: params.title,
-    text: buildAlertEmailBody({
-      displayName,
-      message: params.message,
-      actionUrl: `Review security settings: ${securityUrl}`,
-      preferencesUrl,
-    }),
+    text: email.text,
+    html: email.html,
+    attachments: email.attachments,
   })
 
   if (result.sent) {

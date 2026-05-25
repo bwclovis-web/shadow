@@ -114,18 +114,24 @@ const PerfumeSeasonVote = ({
   )
 
   return (
-    <div className="bg-noir-dark/20 rounded-lg p-6 mt-4">
-      <h2 className="text-xl font-bold text-noir-gold mb-1 text-center">
+    <div className="space-y-2">
+      <h3>
         {isInteractive ? t("titleVote") : t("titleCommunity")}
-      </h2>
+      </h3>
 
       {!isLoggedIn && (
-        <p className="text-sm text-noir-gold-500 mb-4 text-center">{t("loginToVote")}</p>
+        <p className="text-sm text-noir-gold-500 mb-4">{t("loginToVote")}</p>
       )}
 
-      <p className="text-xs text-noir-gold-100/90 text-center mb-4">{t("subtitle")}</p>
+      <p className="text-xs text-noir-gold-100/90 mb-4">{t("subtitle")}</p>
 
-      <div className="mb-6">
+      <div
+        className={`mb-6 rounded-lg border px-3 py-4 transition-[border-color,background-color,box-shadow] duration-300 ${
+          Object.values(selection).some(Boolean)
+            ? "border-noir-gold/40 bg-noir-gold/6 shadow-[0_10px_24px_rgba(212,175,55,0.08)]"
+            : "border-noir-gold/15 bg-noir-black/15"
+        }`}
+      >
         <SeasonSelectionToggleRow
           selection={selection}
           disabled={!isInteractive || saveVote.isPending}
@@ -136,14 +142,17 @@ const PerfumeSeasonVote = ({
         />
       </div>
 
-      <div className="border-t border-white/10 pt-4">
-        <h3 className="text-sm font-medium text-noir-gold mb-2 text-center">{t("rankingTitle")}</h3>
+      <div className="border-t border-noir-gold/20 pt-4">
+        <h3 className="mb-2">{t("rankingTitle")}</h3>
         {aggregates.totalVoters === 0 ? (
-          <p className="text-xs text-noir-gold-100 text-center">{t("noVotesYet")}</p>
+          <p className="text-xs text-noir-gold-100">{t("noVotesYet")}</p>
         ) : (
           <ol className="space-y-1.5 text-sm text-noir-gold-100">
             {aggregates.ranked.map((row, index) => (
-              <li key={row.season} className="flex justify-between gap-2 px-1">
+              <li
+                key={row.season}
+                className="flex justify-between gap-2 rounded px-2 py-1 transition-colors duration-300 hover:bg-noir-gold/6"
+              >
                 <span>
                   {index + 1}. {t(`season.${row.season}`)}
                 </span>
@@ -156,7 +165,7 @@ const PerfumeSeasonVote = ({
           </ol>
         )}
         {aggregates.totalVoters > 0 && (
-          <p className="text-xs text-noir-gold-500 mt-2 text-center">
+          <p className="text-xs text-noir-gold-500 mt-2">
             {t("totalVoters", { count: aggregates.totalVoters })}
             {isRefreshing ? " …" : ""}
           </p>

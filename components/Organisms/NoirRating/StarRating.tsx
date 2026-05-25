@@ -6,6 +6,7 @@ type StarRatingProps = {
   size: "sm" | "md" | "lg"
   isInteractive: boolean
   hoverValue: number | null
+  selectedPulseValue: number | null
   onChange?: (rating: number) => void
   onHover: (rating: number | null) => void
   onLeave: () => void
@@ -17,6 +18,7 @@ const StarRating = ({
   size,
   isInteractive,
   hoverValue,
+  selectedPulseValue,
   onChange,
   onHover,
   onLeave,
@@ -33,6 +35,7 @@ const StarRating = ({
         size={size}
         isInteractive={isInteractive}
         isAnimated={isInteractive && hoverValue === rating}
+        isSelectedPulse={selectedPulseValue === rating}
         onClick={() => onChange?.(rating)}
         onHover={() => onHover(rating)}
         onLeave={onLeave}

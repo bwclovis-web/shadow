@@ -1562,9 +1562,9 @@
       "description": "Once deleted, you will lose all history, notes and entries in the exchange."
     },
     "rating": {
-      "RateThisPerfume": "Rate This Perfume",
+      "RateThisPerfume": "Share Your Impression",
       "CommunityRatings": "Community Ratings",
-      "selectRating": "Select your rating",
+      "selectRating": "Select a rating",
       "loginToRate": "Please log in to rate this perfume",
       "communityAverage": "Community Average",
       "totalRatings": "{count, plural, one {# vote} other {# votes}}",
@@ -1572,15 +1572,15 @@
       "categories": {
         "longevity": "Longevity",
         "sillage": "Sillage",
-        "gender": "Gender Appeal",
-        "priceValue": "Price Value",
+        "gender": "Wearability",
+        "priceValue": "Value",
         "overall": "Overall Rating"
       },
       "labels": {
         "longevity": {
           "1": "Fleeting Shadow",
           "2": "Brief Encounter",
-          "3": "Steady Presence",
+          "3": "Lasting Impression",
           "4": "Lingering Mystery",
           "5": "Eternal Obsession"
         },
@@ -1589,7 +1589,7 @@
           "2": "Subtle Intrigue",
           "3": "Bold Statement",
           "4": "Commanding Aura",
-          "5": "Room Domination"
+          "5": "Impossible to Ignore"
         },
         "gender": {
           "1": "Distinctly Feminine",
@@ -1599,28 +1599,28 @@
           "5": "Distinctly Masculine"
         },
         "priceValue": {
-          "1": "Highway Robbery",
-          "2": "Steep Price",
-          "3": "Fair Deal",
-          "4": "Smart Investment",
-          "5": "Stolen Treasure"
+          "1": "Difficult to Justify",
+          "2": "Steep Investment",
+          "3": "Fair Value",
+          "4": "Worth Pursuing",
+          "5": "Hidden Treasure"
         },
         "overall": {
           "1": "Despise",
           "2": "Dismiss",
-          "3": "Tolerable",
+          "3": "Intrigued",
           "4": "Admire",
           "5": "Obsessed"
         }
       }
     },
     "seasonVote": {
-      "titleVote": "Best season for this perfume",
+      "titleVote": "When does this fragrance shine?",
       "titleCommunity": "Community season picks",
-      "subtitle": "Choose every season you think this scent shines. “All seasons” selects all four.",
+      "subtitle": "Select every season where you feel this fragrance performs best. “All seasons” includes all four.",
       "loginToVote": "Please log in to share your season picks",
-      "rankingTitle": "How the community ranked the seasons",
-      "noVotesYet": "No season votes yet.",
+      "rankingTitle": "How collectors wear this fragrance",
+      "noVotesYet": "No seasonal impressions yet.",
       "totalVoters": "{count, plural, one {# voter} other {# voters}}",
       "allSeasons": "All seasons",
       "season": {

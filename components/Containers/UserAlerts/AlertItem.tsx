@@ -21,6 +21,8 @@ interface AlertItemProps {
   onMarkAsRead: () => void
   onDismiss: () => void
   compact?: boolean
+  isLeaving?: boolean
+  isReadTransitioning?: boolean
 }
 
 type AvailableTrader = {
@@ -146,6 +148,8 @@ export const AlertItem = ({
   onMarkAsRead,
   onDismiss,
   compact = false,
+  isLeaving = false,
+  isReadTransitioning = false,
 }: AlertItemProps) => {
   const t = useTranslations("alerts")
   const typeKey = alertTypeKey(alert.alertType)
@@ -194,7 +198,15 @@ export const AlertItem = ({
   if (compact) {
     return (
       <div
-        className={`flex items-start gap-3 p-3 ${!alert.isRead ? "bg-noir-gold-500/20" : ""}`}
+        className={`flex items-start gap-3 overflow-hidden rounded-md px-3 transition-[opacity,transform,max-height,padding,background-color,box-shadow] duration-300 ease-out ${
+          !alert.isRead ? "bg-noir-gold-500/20 shadow-sm shadow-noir-gold/10" : ""
+        } ${
+          isReadTransitioning ? "bg-noir-gold-500/10 shadow-sm shadow-noir-gold/20" : ""
+        } ${
+          isLeaving
+            ? "max-h-0 py-0 opacity-0 -translate-y-2 scale-[0.98]"
+            : "max-h-40 py-3 opacity-100 translate-y-0 scale-100"
+        }`}
       >
         <div className="shrink-0 mt-0.5">
           <AlertIcon alertType={alert.alertType} />
@@ -206,15 +218,22 @@ export const AlertItem = ({
               <p
                 className={`text-sm font-medium ${
                   !alert.isRead ? "text-noir-gold-500" : "text-noir-gold-100"
-                }`}
+                } transition-colors duration-300`}
               >
                 {alert.title}
               </p>
-              <p className={`text-xs ${!alert.isRead ? "text-noir-gold-100" : "text-noir-gold-500"} mt-1 line-clamp-2`}>
+              <p
+                className={`text-xs ${
+                  !alert.isRead ? "text-noir-gold-100" : "text-noir-gold-500"
+                } mt-1 line-clamp-2 transition-colors duration-300`}
+              >
                 {alertMessage}
               </p>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs isRead ? text-noir-gold-500 : text-gray-500" suppressHydrationWarning>
+                <span
+                  className="text-xs text-noir-gold-500 transition-colors duration-300"
+                  suppressHydrationWarning
+                >
                   {formatTimeAgo(alert.createdAt)}
                 </span>
                 <PrefetchLink
@@ -258,10 +277,14 @@ export const AlertItem = ({
 
   return (
     <div
-      className={`group p-4 rounded-lg border transition-all duration-200 ${
+      className={`group overflow-hidden rounded-lg border transition-[background-color,border-color,box-shadow,opacity,transform,max-height,padding] duration-300 ease-out ${
         !alert.isRead
           ? "border-noir-blue bg-noir-gold/20 shadow-sm"
           : "border-gray-200 bg-noir-dark"
+      } ${isReadTransitioning ? "ring-1 ring-noir-gold/30" : ""} ${
+        isLeaving
+          ? "max-h-0 p-0 opacity-0 -translate-y-2 scale-[0.98] border-transparent"
+          : "max-h-[32rem] p-4 opacity-100 translate-y-0 scale-100"
       } hover:shadow-md`}
     >
       <div className="flex items-start gap-3">
@@ -288,12 +311,14 @@ export const AlertItem = ({
               <h4
                 className={`font-semibold ${
                   !alert.isRead ? "text-noir-gold" : "text-noir-gold-100"
-                }`}
+                } transition-colors duration-300`}
               >
                 {alert.title}
               </h4>
 
-              <p className="text-sm text-noir-gold-500 mt-1 mb-3">{alertMessage}</p>
+              <p className="text-sm text-noir-gold-500 mt-1 mb-3 transition-colors duration-300">
+                {alertMessage}
+              </p>
 
               {alert.alertType !== "pending_submission_approval" && alert.Perfume && (
                 <div className={`flex items-center gap-1 text-sm ${!alert.isRead ? "text-noir-gold-100" : "text-noir-gold-500"}`}>

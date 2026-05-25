@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
@@ -9,6 +9,7 @@ import DataDisplaySection from "@/components/Organisms/DataDisplaySection"
 import DataFilters from "@/components/Organisms/DataFilters"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { useAlphabeticalBrowserState } from "@/hooks/useAlphabeticalBrowserState"
+import { useGsapStagger } from "@/hooks/useGsapStagger"
 import { useInfiniteHouses } from "@/hooks/useInfiniteHouses"
 import { useInfinitePagination } from "@/hooks/useInfinitePagination"
 import { useResponsivePageSize } from "@/hooks/useMediaQuery"
@@ -22,6 +23,10 @@ import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 const ROUTE_PATH = "/houses"
 
 const BANNER_IMAGE = "/images/new/behind.webp"
+type HousesRevealDirection = "forward" | "backward"
+const HOUSES_STAGGER = 0.065
+const HOUSES_HORIZONTAL_OFFSET = 7
+const HOUSES_VERTICAL_OFFSET = 20
 
 interface AllHousesClientProps {
   heading: string
@@ -158,6 +163,12 @@ const buildHousesPath = (
   return query ? `${ROUTE_PATH}?${query}` : ROUTE_PATH
 }
 
+const getLetterRank = (letter: string | null): number =>
+  letter ? letter.charCodeAt(0) - 64 : 0
+
+const getHousesNavigationRank = (letter: string | null, page: number): number =>
+  getLetterRank(letter) * 1_000 + page
+
 const AllHousesClient = ({
   heading,
   subheading,
@@ -171,6 +182,14 @@ const AllHousesClient = ({
 
   const [selectedHouseType, setSelectedHouseType] = useState("all")
   const [selectedSort, setSelectedSort] = useState<SortOption>("created-desc")
+  const [housesRevealDirection, setHousesRevealDirection] =
+    useState<HousesRevealDirection>("forward")
+  const [gridCueToken, setGridCueToken] = useState(0)
+  const housesGridRef = useRef<HTMLDivElement>(null)
+  const previousHousesSelectionRef = useRef<{
+    letter: string | null
+    page: number
+  } | null>(null)
 
   const pageSize = useResponsivePageSize()
 
@@ -247,6 +266,71 @@ const AllHousesClient = ({
     () => sortItems(normalizedHouses as import("@/utils/sortUtils").SortableItem[], selectedSort),
     [normalizedHouses, selectedSort]
   )
+  const sortedHouseIds = useMemo(
+    () =>
+      sortedHouses
+        .map(house => String((house as { id?: string }).id ?? ""))
+        .join(","),
+    [sortedHouses]
+  )
+
+  useEffect(() => {
+    const nextSelection = { letter: letterFromUrl, page: pageFromUrl }
+    const previousSelection = previousHousesSelectionRef.current
+
+    if (previousSelection) {
+      const previousRank = getHousesNavigationRank(
+        previousSelection.letter,
+        previousSelection.page
+      )
+      const nextRank = getHousesNavigationRank(
+        nextSelection.letter,
+        nextSelection.page
+      )
+
+      if (previousRank !== nextRank) {
+        setHousesRevealDirection(nextRank > previousRank ? "forward" : "backward")
+      }
+
+      if (previousSelection.letter !== nextSelection.letter) {
+        setGridCueToken(current => current + 1)
+      }
+    }
+
+    previousHousesSelectionRef.current = nextSelection
+  }, [letterFromUrl, pageFromUrl])
+
+  useGsapStagger(housesGridRef, {
+    selector: "[data-display-card]",
+    deps: [
+      letterFromUrl ?? "all",
+      pageFromUrl,
+      selectedHouseType,
+      selectedSort,
+      sortedHouseIds,
+      housesRevealDirection,
+    ],
+    enabled: !loading && sortedHouses.length > 0,
+    stagger: HOUSES_STAGGER,
+    from: {
+      opacity: 0,
+      x:
+        housesRevealDirection === "forward"
+          ? HOUSES_HORIZONTAL_OFFSET
+          : -HOUSES_HORIZONTAL_OFFSET,
+      y: HOUSES_VERTICAL_OFFSET,
+      scale: 0.988,
+    },
+    to: {
+      opacity: 1,
+      x: 0,
+      y: 0,
+      scale: 1,
+      duration: 0.52,
+      ease: "power1.out",
+      clearProps: "transform,opacity",
+    },
+  })
 
   const buildPath = useMemo(
     () => (page: number) => buildHousesPath(letterFromUrl, page),
@@ -319,11 +403,19 @@ const AllHousesClient = ({
       />
 
       <DataDisplaySection
+        containerRef={housesGridRef}
         data={sortedHouses as unknown as { id: string; name: string; slug: string; image?: string; type?: string; perfumeHouse?: { name: string } }[]}
         isLoading={loading}
         type="house"
         selectedLetter={letterFromUrl}
         sourcePage="houses"
+        transitionCueKey={
+          gridCueToken > 0
+            ? `houses-${gridCueToken}-${letterFromUrl ?? "all"}`
+            : undefined
+        }
+        transitionCueDirection={housesRevealDirection}
+        transitionCueTone="houses"
         pagination={pagination}
         onPageChange={goToPage}
         onPrefetchNext={onPrefetchNext}

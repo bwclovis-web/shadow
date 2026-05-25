@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { BsBell, BsX } from "react-icons/bs"
 
@@ -11,6 +11,10 @@ import { AlertItem } from "./AlertItem"
 
 const RECENT_ALERTS_LIMIT = 5
 const DROPDOWN_WIDTH = 320
+const DROPDOWN_EXIT_MS = 180
+const ACTION_CLOSE_DELAY_MS = 720
+const ALERT_ROW_EXIT_MS = 220
+const UNREAD_FEEDBACK_MS = 700
 
 interface AlertBellProps {
   unreadCount: number
@@ -28,15 +32,78 @@ export const AlertBell = ({
   onDismissAlert,
 }: AlertBellProps) => {
   const [isOpen, setIsOpen] = useState(false)
+  const [renderDropdown, setRenderDropdown] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
+  const [bellIsAnimating, setBellIsAnimating] = useState(false)
+  const [badgeIsAnimating, setBadgeIsAnimating] = useState(false)
+  const [leavingAlertIds, setLeavingAlertIds] = useState<string[]>([])
+  const [recentlyReadAlertIds, setRecentlyReadAlertIds] = useState<string[]>([])
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const previousUnreadCountRef = useRef(unreadCount)
 
   const recentAlerts = alerts.slice(0, RECENT_ALERTS_LIMIT)
 
-  const close = () => setIsOpen(false)
+  const close = useCallback(() => {
+    setIsOpen(false)
+    setIsClosing(true)
+  }, [])
+
+  const open = useCallback(() => {
+    setRenderDropdown(true)
+    setIsClosing(false)
+
+    if (typeof window === "undefined") {
+      setIsOpen(true)
+      return
+    }
+
+    window.requestAnimationFrame(() => {
+      setIsOpen(true)
+    })
+  }, [])
+
+  const toggleDropdown = useCallback(() => {
+    if (isOpen && !isClosing) {
+      close()
+      return
+    }
+
+    open()
+  }, [close, isClosing, isOpen, open])
+
+  useEffect(() => {
+    if (!isClosing) return
+
+    const timeoutId = window.setTimeout(() => {
+      setRenderDropdown(false)
+      setIsClosing(false)
+    }, DROPDOWN_EXIT_MS)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [isClosing])
+
+  useEffect(() => {
+    const previousUnreadCount = previousUnreadCountRef.current
+
+    if (unreadCount > previousUnreadCount) {
+      setBellIsAnimating(true)
+      setBadgeIsAnimating(true)
+
+      const timeoutId = window.setTimeout(() => {
+        setBellIsAnimating(false)
+        setBadgeIsAnimating(false)
+      }, UNREAD_FEEDBACK_MS)
+
+      previousUnreadCountRef.current = unreadCount
+      return () => window.clearTimeout(timeoutId)
+    }
+
+    previousUnreadCountRef.current = unreadCount
+  }, [unreadCount])
 
   useLayoutEffect(() => {
-    if (!isOpen || !triggerRef.current) return
+    if (!renderDropdown || !triggerRef.current) return
     const updatePosition = () => {
       if (triggerRef.current) {
         const rect = triggerRef.current.getBoundingClientRect()
@@ -48,26 +115,82 @@ export const AlertBell = ({
     }
     updatePosition()
     const handleResize = () => updatePosition()
+    const handleScroll = () => updatePosition()
     window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [isOpen])
+    window.addEventListener("scroll", handleScroll, true)
+    return () => {
+      window.removeEventListener("resize", handleResize)
+      window.removeEventListener("scroll", handleScroll, true)
+    }
+  }, [renderDropdown])
 
   useEffect(() => {
-    if (!isOpen) return
+    if (!renderDropdown) return
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape") close()
     }
     window.addEventListener("keydown", handleEscape)
     return () => window.removeEventListener("keydown", handleEscape)
-  }, [isOpen])
+  }, [close, renderDropdown])
+
+  const handleMarkAlertAsRead = useCallback(
+    (alert: UserAlert) => {
+      if (alert.isRead) return
+
+      let addedHighlight = false
+      setRecentlyReadAlertIds(prev => {
+        if (prev.includes(alert.id)) return prev
+        addedHighlight = true
+        return [...prev, alert.id]
+      })
+
+      if (!addedHighlight) return
+
+      onMarkAsRead(alert.id)
+
+      window.setTimeout(() => {
+        setRecentlyReadAlertIds(prev => prev.filter(id => id !== alert.id))
+      }, UNREAD_FEEDBACK_MS)
+
+      window.setTimeout(() => {
+        close()
+      }, ACTION_CLOSE_DELAY_MS)
+    },
+    [close, onMarkAsRead]
+  )
+
+  const handleDismiss = useCallback(
+    (alert: UserAlert) => {
+      let isNewDismissal = false
+      setLeavingAlertIds(prev => {
+        if (prev.includes(alert.id)) return prev
+        isNewDismissal = true
+        return [...prev, alert.id]
+      })
+
+      if (!isNewDismissal) return
+
+      window.setTimeout(() => {
+        onDismissAlert(alert.id)
+        setLeavingAlertIds(prev => prev.filter(id => id !== alert.id))
+      }, ALERT_ROW_EXIT_MS)
+
+      window.setTimeout(() => {
+        close()
+      }, ALERT_ROW_EXIT_MS + 60)
+    },
+    [close, onDismissAlert]
+  )
 
   const dropdownContent =
     typeof document !== "undefined" &&
-    isOpen &&
+    renderDropdown &&
     createPortal(
       <>
         <div
-          className="fixed inset-0 z-40"
+          className={`fixed inset-0 z-40 transition-opacity duration-150 ${
+            isOpen ? "opacity-100" : "opacity-0"
+          }`}
           onClick={close}
           onKeyDown={evt => {
             if (evt.key === "Enter" || evt.key === " ") {
@@ -80,10 +203,15 @@ export const AlertBell = ({
           aria-label="Close notifications"
         />
         <div
-          className="fixed w-80 bg-noir-dark shadow-2xl shadow-noir-black rounded-lg border border-noir-gold z-50 max-h-96 overflow-y-auto"
+          className={`fixed w-80 bg-noir-dark shadow-2xl shadow-noir-black rounded-lg border border-noir-gold z-50 max-h-96 overflow-y-auto origin-top-right transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none ${
+            isOpen
+              ? "opacity-100 translate-y-0 scale-100"
+              : "pointer-events-none opacity-0 -translate-y-2 scale-95"
+          }`}
           style={{
             top: dropdownPosition.top,
             left: dropdownPosition.left,
+            transformOrigin: "top right",
           }}
           role="dialog"
           aria-label="Notifications"
@@ -120,17 +248,11 @@ export const AlertBell = ({
                   <div key={alert.id}>
                     <AlertItem
                       alert={alert}
-                      onMarkAsRead={() => {
-                        onMarkAsRead(alert.id)
-                        if (!alert.isRead) {
-                          setTimeout(close, 1000)
-                        }
-                      }}
-                      onDismiss={() => {
-                        onDismissAlert(alert.id)
-                        setTimeout(close, 500)
-                      }}
+                      onMarkAsRead={() => handleMarkAlertAsRead(alert)}
+                      onDismiss={() => handleDismiss(alert)}
                       compact={true}
+                      isLeaving={leavingAlertIds.includes(alert.id)}
+                      isReadTransitioning={recentlyReadAlertIds.includes(alert.id)}
                     />
                   </div>
                 ))}
@@ -156,15 +278,22 @@ export const AlertBell = ({
         ref={triggerRef}
         variant="icon"
         size="lg"
-        onClick={() => setIsOpen(prev => !prev)}
+        onClick={toggleDropdown}
         className="relative p-2 border-0"
         aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
       >
-        <BsBell size={34} />
+        <BsBell
+          size={34}
+          className={bellIsAnimating ? "motion-safe:animate-bell-nudge" : undefined}
+        />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+          <span
+            className={`absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center ${
+              badgeIsAnimating ? "motion-safe:animate-badge-pop" : ""
+            }`}
+          >
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}

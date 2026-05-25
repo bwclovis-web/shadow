@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
+  buildEditorialAlertEmail,
   sendDecantInterestAlertEmail,
+  sendDisputeResolutionEmail,
+  sendSecurityAlertEmail,
+  sendSplitEventEmail,
   sendTradeEventEmail,
   sendWishlistAlertEmail,
   shouldSendDecantEmail,
@@ -80,6 +84,13 @@ describe("sendWishlistAlertEmail", () => {
         to: "trader@example.com",
         subject: expect.stringContaining("Noir Epices"),
         text: expect.stringContaining("https://example.com/perfume/noir-epices"),
+        html: expect.stringContaining("From The Exchange"),
+        attachments: expect.arrayContaining([
+          expect.objectContaining({
+            filename: "logo-one-email.png",
+            contentId: "ph-logo",
+          }),
+        ]),
       })
     )
   })
@@ -166,6 +177,7 @@ describe("sendTradeEventEmail", () => {
         to: "trader@example.com",
         subject: "Jane accepted your trade",
         text: expect.stringContaining("https://example.com/exchanges/actor-2"),
+        html: expect.stringContaining("Noir Epices"),
       })
     )
   })
@@ -216,6 +228,7 @@ describe("sendDecantInterestAlertEmail", () => {
       expect.objectContaining({
         to: "trader@example.com",
         subject: expect.stringContaining("Rose Oud"),
+        html: expect.stringContaining("Collector interest"),
       })
     )
   })
@@ -230,5 +243,109 @@ describe("sendDecantInterestAlertEmail", () => {
     })
 
     expect(sendTransactionalEmail).not.toHaveBeenCalled()
+  })
+})
+
+describe("sendSplitEventEmail", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it("uses the split deep link when splitId is provided", async () => {
+    await sendSplitEventEmail({
+      user: recipient,
+      preferences: basePrefs,
+      alertType: "split_shipped",
+      title: "Your split is on the move",
+      message: "The host marked your split as shipped.",
+      splitId: "split-12345678",
+    })
+
+    expect(sendTransactionalEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: expect.stringContaining("https://example.com/splits/split-12345678"),
+        html: expect.stringContaining("12345678"),
+      })
+    )
+  })
+})
+
+describe("sendSecurityAlertEmail", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it("sends branded security html when enabled", async () => {
+    await sendSecurityAlertEmail({
+      user: recipient,
+      preferences: {
+        ...basePrefs,
+        securityAlertsEnabled: true,
+        emailSecurityAlerts: true,
+      },
+      title: "Sign-in from a new device",
+      message: "Your account was signed in from a device we have not seen before.",
+    })
+
+    expect(sendTransactionalEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        subject: "Sign-in from a new device",
+        html: expect.stringContaining("Security Notice From The Hollow"),
+      })
+    )
+  })
+})
+
+describe("sendDisputeResolutionEmail", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it("renders dispute resolution html with policy link", async () => {
+    await sendDisputeResolutionEmail({
+      user: recipient,
+      disputeId: "dispute-1",
+      tradeId: "trade-abcdefgh",
+      outcome: "warningIssued",
+      publicSummary: "The moderation team reviewed both sides and closed the case.",
+    })
+
+    expect(sendTransactionalEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        subject: "Trade dispute resolution — perfumer's hollow",
+        html: expect.stringContaining("community-policy#disputes"),
+      })
+    )
+  })
+})
+
+describe("buildEditorialAlertEmail", () => {
+  it("escapes unsafe content in html output", () => {
+    const result = buildEditorialAlertEmail({
+      variant: "wishlist",
+      displayName: "Jane <Doe>",
+      title: "Rare <Bottle>",
+      lead: "A <script>alert('xss')</script> note",
+      body: ["Body with <b>markup</b>"],
+      ctaLabel: "Open listing",
+      ctaUrl: "https://example.com/perfume/rare-bottle",
+      spotlightLabel: "Perfume",
+      spotlightValue: "Rare <Bottle>",
+    })
+
+    expect(result.html).toContain("Jane &lt;Doe&gt;")
+    expect(result.html).toContain("Rare &lt;Bottle&gt;")
+    expect(result.html).toContain("Perfumer&#39;s Hollow")
+    expect(result.html).toContain("cid:ph-logo")
+    expect(result.attachments).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          filename: "logo-one-email.png",
+          contentId: "ph-logo",
+        }),
+      ])
+    )
+    expect(result.html).not.toContain("<script>alert('xss')</script>")
+    expect(result.text).toContain("Rare <Bottle>")
   })
 })

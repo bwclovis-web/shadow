@@ -1,5 +1,7 @@
 import { type RefObject, useEffect } from "react"
 
+type MotionConfig = Record<string, string | number>
+
 type UseGsapStaggerOptions = {
   /** CSS selector for child elements to animate, relative to `containerRef`. */
   selector: string
@@ -8,12 +10,21 @@ type UseGsapStaggerOptions = {
   /** Stagger delay between items in seconds. */
   stagger?: number
   enabled?: boolean
+  from?: MotionConfig
+  to?: MotionConfig
 }
 
 /** Fade/slide-in children with GSAP stagger; no-ops when user prefers reduced motion. */
 export const useGsapStagger = (
   containerRef: RefObject<HTMLElement | null>,
-  { selector, deps = [], stagger = 0.06, enabled = true }: UseGsapStaggerOptions
+  {
+    selector,
+    deps = [],
+    stagger = 0.06,
+    enabled = true,
+    from,
+    to,
+  }: UseGsapStaggerOptions
 ) => {
   useEffect(() => {
     if (!enabled) return
@@ -45,17 +56,21 @@ export const useGsapStagger = (
       const targets = containerRef.current.querySelectorAll<HTMLElement>(selector)
       if (targets.length === 0) return
 
+      const fromConfig = from ?? { opacity: 0, y: 14 }
+      const toConfig = {
+        opacity: 1,
+        y: 0,
+        duration: 0.42,
+        stagger,
+        ease: "power2.out",
+        clearProps: "transform",
+        ...to,
+      }
+
       gsap.fromTo(
         targets,
-        { opacity: 0, y: 14 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.42,
-          stagger,
-          ease: "power2.out",
-          clearProps: "transform",
-        }
+        fromConfig,
+        toConfig
       )
     }
 

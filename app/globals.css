@@ -104,7 +104,7 @@ h2 {
 h3 {
   font-size: clamp(1.2rem, 1.5vw + 0.5rem, 1.7rem);
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1;
   contain: layout style;
 }
 
@@ -249,9 +249,7 @@ img {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
-    /* Additional performance optimizations */
     will-change: auto !important;
-    transform: none !important;
   }
 }
 
@@ -399,8 +397,122 @@ img {
   font-feature-settings: "liga" 0;
 }
 
+@keyframes bellNudge {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  20% {
+    transform: rotate(10deg) scale(1.04);
+  }
+  40% {
+    transform: rotate(-8deg) scale(1.02);
+  }
+  60% {
+    transform: rotate(5deg) scale(1.03);
+  }
+  80% {
+    transform: rotate(-3deg) scale(1);
+  }
+}
+
+@keyframes badgePop {
+  0% {
+    transform: scale(0.82);
+  }
+  55% {
+    transform: scale(1.14);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes vaultStamp {
+  0% {
+    transform: translateY(0) scale(0.9);
+  }
+  55% {
+    transform: translateY(-2px) scale(1.08);
+  }
+  100% {
+    transform: translateY(-2px) scale(1.04);
+  }
+}
+
+@keyframes vaultSweep {
+  0% {
+    transform: translateX(-180%) rotate(12deg);
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.15;
+  }
+  42% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateX(420%) rotate(12deg);
+    opacity: 0;
+  }
+}
+
+@keyframes gridCueForward {
+  0% {
+    transform: translateX(-140%);
+    opacity: 0;
+  }
+  22% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateX(265%);
+    opacity: 0;
+  }
+}
+
+@keyframes gridCueBackward {
+  0% {
+    transform: translateX(140%);
+    opacity: 0;
+  }
+  22% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateX(-265%);
+    opacity: 0;
+  }
+}
+
 /* Slightly longer root cross-fade so `next-view-transitions` + named transitions read clearly */
 @media (prefers-reduced-motion: no-preference) {
+  .animate-bell-nudge {
+    animation: bellNudge 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    transform-origin: top center;
+  }
+
+  .animate-badge-pop {
+    animation: badgePop 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .animate-vault-stamp {
+    animation: vaultStamp 0.56s cubic-bezier(0.22, 1, 0.36, 1);
+    transform-origin: center;
+  }
+
+  .animate-vault-sweep {
+    animation: vaultSweep 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .animate-grid-cue-forward {
+    animation: gridCueForward 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .animate-grid-cue-backward {
+    animation: gridCueBackward 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
   ::view-transition-old(root),
   ::view-transition-new(root) {
     animation-duration: 320ms;

@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useParams, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
@@ -10,6 +10,7 @@ import DataFilters from "@/components/Organisms/DataFilters"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { THE_ARCHIVE_PATH } from "@/constants/routes"
 import { useAlphabeticalBrowserState } from "@/hooks/useAlphabeticalBrowserState"
+import { useGsapStagger } from "@/hooks/useGsapStagger"
 import { useInfinitePagination } from "@/hooks/useInfinitePagination"
 import { useInfinitePerfumesByLetter } from "@/hooks/useInfinitePerfumes"
 import { useResponsivePageSize } from "@/hooks/useMediaQuery"
@@ -22,6 +23,10 @@ import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/new/vault.webp"
 const SINGLE_LETTER_REGEX = /^[A-Za-z]$/
+type ArchiveRevealDirection = "forward" | "backward"
+const ARCHIVE_STAGGER = 0.042
+const ARCHIVE_HORIZONTAL_OFFSET = 16
+const ARCHIVE_VERTICAL_OFFSET = 12
 
 export type TheArchiveClientProps = {
   initialLetter?: string | null
@@ -45,6 +50,12 @@ const parseLetterFromParam = (param: unknown): string | null => {
   return param.toUpperCase()
 }
 
+const getLetterRank = (letter: string | null): number =>
+  letter ? letter.charCodeAt(0) - 64 : 0
+
+const getArchiveNavigationRank = (letter: string | null, page: number): number =>
+  getLetterRank(letter) * 1_000 + page
+
 const TheArchiveClient = ({
   initialLetter = null,
   initialPerfumes = [],
@@ -56,6 +67,14 @@ const TheArchiveClient = ({
   const searchParams = useSearchParams()
 
   const [selectedSort, setSelectedSort] = useState<SortOption>("created-desc")
+  const [archiveRevealDirection, setArchiveRevealDirection] =
+    useState<ArchiveRevealDirection>("forward")
+  const [gridCueToken, setGridCueToken] = useState(0)
+  const archiveGridRef = useRef<HTMLDivElement>(null)
+  const previousArchiveSelectionRef = useRef<{
+    letter: string | null
+    page: number
+  } | null>(null)
 
   const pageSize = useResponsivePageSize()
   const letterFromUrl = parseLetterFromParam(params?.letter)
@@ -105,6 +124,67 @@ const TheArchiveClient = ({
   }))
 
   const sortedPerfumes = sortItems(normalizedPerfumes, selectedSort)
+  const sortedPerfumeIds = useMemo(
+    () => sortedPerfumes.map(perfume => perfume.id).join(","),
+    [sortedPerfumes]
+  )
+
+  useEffect(() => {
+    const nextSelection = { letter: letterFromUrl, page: pageFromUrl }
+    const previousSelection = previousArchiveSelectionRef.current
+
+    if (previousSelection) {
+      const previousRank = getArchiveNavigationRank(
+        previousSelection.letter,
+        previousSelection.page
+      )
+      const nextRank = getArchiveNavigationRank(
+        nextSelection.letter,
+        nextSelection.page
+      )
+
+      if (previousRank !== nextRank) {
+        setArchiveRevealDirection(nextRank > previousRank ? "forward" : "backward")
+      }
+
+      if (previousSelection.letter !== nextSelection.letter) {
+        setGridCueToken(current => current + 1)
+      }
+    }
+
+    previousArchiveSelectionRef.current = nextSelection
+  }, [letterFromUrl, pageFromUrl])
+
+  useGsapStagger(archiveGridRef, {
+    selector: "[data-display-card]",
+    deps: [
+      letterFromUrl ?? "all",
+      pageFromUrl,
+      selectedSort,
+      sortedPerfumeIds,
+      archiveRevealDirection,
+    ],
+    enabled: !loading && sortedPerfumes.length > 0,
+    stagger: ARCHIVE_STAGGER,
+    from: {
+      opacity: 0,
+      x:
+        archiveRevealDirection === "forward"
+          ? ARCHIVE_HORIZONTAL_OFFSET
+          : -ARCHIVE_HORIZONTAL_OFFSET,
+      y: ARCHIVE_VERTICAL_OFFSET,
+      scale: 0.982,
+    },
+    to: {
+      opacity: 1,
+      x: 0,
+      y: 0,
+      scale: 1,
+      duration: 0.42,
+      ease: "power2.out",
+      clearProps: "transform,opacity",
+    },
+  })
 
   const buildPath = useMemo(
     () => (page: number) => {
@@ -188,11 +268,19 @@ const TheArchiveClient = ({
         />
 
         <DataDisplaySection
+          containerRef={archiveGridRef}
           data={sortedPerfumes}
           isLoading={loading}
           type="perfume"
           selectedLetter={letterFromUrl}
           sourcePage="archive"
+          transitionCueKey={
+            gridCueToken > 0
+              ? `archive-${gridCueToken}-${letterFromUrl ?? "all"}`
+              : undefined
+          }
+          transitionCueDirection={archiveRevealDirection}
+          transitionCueTone="archive"
           pagination={pagination}
           onPageChange={goToPage}
           onPrefetchNext={onPrefetchNext}

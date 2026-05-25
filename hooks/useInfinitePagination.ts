@@ -55,7 +55,6 @@ export function useInfinitePagination<TPage, TItem>({
 
   const totalPages = totalCount > 0 ? Math.ceil(totalCount / pageSize) : 0
   const safeCurrentPage = totalPages > 0 ? Math.min(currentPage, totalPages) : 1
-  const loading = isLoading || isFetchingNextPage
 
   /**
    * Prefetch enough API pages to cover the current UI page, plus one extra
@@ -87,6 +86,7 @@ export function useInfinitePagination<TPage, TItem>({
   const startIndex = (safeCurrentPage - 1) * pageSize
   const endIndex = startIndex + pageSize
   const items = allItems.slice(startIndex, endIndex)
+  const loading = isLoading || (items.length === 0 && isFetchingNextPage)
 
   const pagination: PaginationState = {
     currentPage: safeCurrentPage,

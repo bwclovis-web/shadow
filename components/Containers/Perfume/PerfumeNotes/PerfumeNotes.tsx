@@ -1,4 +1,9 @@
+"use client"
+
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
+
+import { useGsapStagger } from "@/hooks/useGsapStagger"
 
 interface PerfumeNote {
   id: string
@@ -11,119 +16,18 @@ interface PerfumeNotesProps {
   perfumeNotesClose: PerfumeNote[]
 }
 
-const sortNotesAlphabetically = (notes: PerfumeNote[]): PerfumeNote[] => {
-  return [...notes].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+type NoteSection = {
+  key: string
+  label: string
+  notes: PerfumeNote[]
 }
 
-const renderSingleNotesList = (notes: PerfumeNote[], t: any) => {
-  const sortedNotes = sortNotesAlphabetically(notes)
-  return (
-  <div className="p-4 bg-noir-dark text-noir-gold-100 flex gap-4">
-    <div className="flex flex-col items-start gap-2">
-      <span className="font-medium  tracking-wide pb-1 text-2xl text-noir-gold">
-        {t("general")}:{" "}
-      </span>
-      <ul className="flex font-semibold capitalize flex-wrap ">
-        {sortedNotes.map((note, idx) => (
-          <li key={note.id}>
-            {note.name}
-            {idx + 1 < sortedNotes.length && <span className="pr-1 pl-0">, </span>}
-          </li>
-        ))}
-      </ul>
-    </div>
-  </div>
+const MAX_VISIBLE_NOTES = 8
+
+const sortNotesAlphabetically = (notes: PerfumeNote[]): PerfumeNote[] =>
+  [...notes].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
   )
-}
-
-interface CategorizedNotesProps {
-  perfumeNotesOpen: PerfumeNote[]
-  perfumeNotesHeart: PerfumeNote[]
-  perfumeNotesClose: PerfumeNote[]
-  hasOpen: boolean
-  hasHeart: boolean
-  hasClose: boolean
-  t: any
-}
-
-const renderCategorizedNotes = ({
-  perfumeNotesOpen,
-  perfumeNotesHeart,
-  perfumeNotesClose,
-  hasOpen,
-  hasHeart,
-  hasClose,
-  t,
-}: CategorizedNotesProps) => {
-  const sortedOpen = sortNotesAlphabetically(perfumeNotesOpen)
-  const sortedHeart = sortNotesAlphabetically(perfumeNotesHeart)
-  const sortedClose = sortNotesAlphabetically(perfumeNotesClose)
-
-  //TODO: add prop to make these one or two column layout
-
-  return (
-    <div className=" p-4 bg-noir-dark text-noir-gold-100 grid grid-cols-1 md:grid-cols-3 gap-4">
-      {hasOpen && (
-        <div className="flex flex-col items-start gap-1 lg:border-r-4 lg:border-r-noir-gold pr-4">
-          <span className="font-medium tracking-wide text-lg text-noir-gold">
-            {t("opening")}
-          </span>
-          <ul className="flex capitalize flex-wrap mb-1">
-            {sortedOpen.map((note, idx) => (
-              <li key={note.id}>
-                {note.name}
-                {idx + 1 < sortedOpen.length && <span className="pr-1">,</span>}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {hasHeart && (
-        <div className="flex flex-col items-start lg:border-r-2 lg:border-r-noir-gold-100 pr-4 last-of-type:border-r-0">
-          <span className="font-medium tracking-wide text-lg text-noir-gold">
-            {t("mid")}
-          </span>
-          <ul className="flex font-semibold capitalize flex-wrap mb-1">
-            {sortedHeart.map((note, idx) => (
-              <li key={note.id}>
-                {note.name}
-                {idx + 1 < sortedHeart.length && <span className="pr-1">,</span>}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {hasClose && (
-        <div className="flex flex-col items-start lg:border-r-2 lg:border-r-noir-gold-100 pr-4 last-of-type:border-r-0">
-          <span className="font-medium tracking-wide text-lg text-noir-gold">
-            {t("end")}{" "}
-          </span>
-          <ul className="flex  font-semibold capitalize flex-wrap mb-1">
-            {sortedClose.map((note, idx) => (
-              <li key={note.id}>
-                {note.name}
-                {idx + 1 < sortedClose.length && <span className="pr-1">,</span>}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  )
-}
-
-const useNotesLogic = (
-  perfumeNotesOpen: PerfumeNote[],
-  perfumeNotesHeart: PerfumeNote[],
-  perfumeNotesClose: PerfumeNote[]
-) => {
-  const hasOpen = perfumeNotesOpen.length > 0
-  const hasHeart = perfumeNotesHeart.length > 0
-  const hasClose = perfumeNotesClose.length > 0
-  const noteTypesCount = [hasOpen, hasHeart, hasClose].filter(Boolean).length
-
-  return { hasOpen, hasHeart, hasClose, noteTypesCount }
-}
 
 const PerfumeNotes = ({
   perfumeNotesOpen,
@@ -131,43 +35,158 @@ const PerfumeNotes = ({
   perfumeNotesClose,
 }: PerfumeNotesProps) => {
   const t = useTranslations("singlePerfume.notes")
-
-  // Deduplicate across layers so a note shown in Opening isn't repeated in Mid/End.
-  const seenIds = new Set<string>()
-  const dedupe = (arr: PerfumeNote[]) => arr.filter(n => {
-    if (seenIds.has(n.id)) return false
-    seenIds.add(n.id)
-    return true
-  })
-  const dedupedOpen = dedupe(perfumeNotesOpen)
-  const dedupedHeart = dedupe(perfumeNotesHeart)
-  const dedupedClose = dedupe(perfumeNotesClose)
-
-  const { hasOpen, hasHeart, hasClose, noteTypesCount } = useNotesLogic(
-    dedupedOpen,
-    dedupedHeart,
-    dedupedClose
+  const tCommon = useTranslations("common")
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(
+    {}
   )
 
-  if (noteTypesCount === 1) {
-    const allNotes = [
-      ...dedupedOpen,
-      ...dedupedHeart,
-      ...dedupedClose,
-    ]
-    return renderSingleNotesList(allNotes, t)
+  const { dedupedOpen, dedupedHeart, dedupedClose } = useMemo(() => {
+    const seenIds = new Set<string>()
+    const dedupe = (notes: PerfumeNote[]) =>
+      notes.filter(note => {
+        if (seenIds.has(note.id)) {
+          return false
+        }
+
+        seenIds.add(note.id)
+        return true
+      })
+
+    return {
+      dedupedOpen: dedupe(perfumeNotesOpen),
+      dedupedHeart: dedupe(perfumeNotesHeart),
+      dedupedClose: dedupe(perfumeNotesClose),
+    }
+  }, [perfumeNotesClose, perfumeNotesHeart, perfumeNotesOpen])
+
+  const sections = useMemo<NoteSection[]>(() => {
+    const hasOpen = dedupedOpen.length > 0
+    const hasHeart = dedupedHeart.length > 0
+    const hasClose = dedupedClose.length > 0
+    const noteTypesCount = [hasOpen, hasHeart, hasClose].filter(Boolean).length
+
+    if (noteTypesCount <= 1) {
+      return [
+        {
+          key: "general",
+          label: t("general"),
+          notes: sortNotesAlphabetically([
+            ...dedupedOpen,
+            ...dedupedHeart,
+            ...dedupedClose,
+          ]),
+        },
+      ].filter(section => section.notes.length > 0)
+    }
+
+    return [
+      {
+        key: "opening",
+        label: t("opening"),
+        notes: sortNotesAlphabetically(dedupedOpen),
+      },
+      {
+        key: "mid",
+        label: t("mid"),
+        notes: sortNotesAlphabetically(dedupedHeart),
+      },
+      {
+        key: "end",
+        label: t("end"),
+        notes: sortNotesAlphabetically(dedupedClose),
+      },
+    ].filter(section => section.notes.length > 0)
+  }, [dedupedClose, dedupedHeart, dedupedOpen, t])
+
+  const sectionSignature = sections
+    .map(section => `${section.key}:${section.notes.map(note => note.id).join(",")}`)
+    .join("|")
+
+  useEffect(() => {
+    setExpandedSections({})
+  }, [sectionSignature])
+
+  useGsapStagger(containerRef, {
+    selector: "[data-note-group]",
+    deps: [sectionSignature],
+    enabled: sections.length > 0,
+    stagger: 0.06,
+    from: { opacity: 0, y: 10 },
+    to: {
+      opacity: 1,
+      y: 0,
+      duration: 0.3,
+      ease: "power2.out",
+      clearProps: "transform,opacity",
+    },
+  })
+
+  if (sections.length === 0) {
+    return null
   }
 
-  // Show separate categories when multiple types have notes
-  return renderCategorizedNotes({
-    perfumeNotesOpen: dedupedOpen,
-    perfumeNotesHeart: dedupedHeart,
-    perfumeNotesClose: dedupedClose,
-    hasOpen,
-    hasHeart,
-    hasClose,
-    t,
-  })
+  return (
+    <div
+      ref={containerRef}
+      className={`rounded-xl bg-noir-dark p-4 text-noir-gold-100 ${
+        sections.length > 1 ? "grid grid-cols-1 gap-4 md:grid-cols-3" : "space-y-3"
+      }`}
+    >
+      {sections.map((section, index) => {
+        const isExpanded = Boolean(expandedSections[section.key])
+        const visibleNotes = isExpanded
+          ? section.notes
+          : section.notes.slice(0, MAX_VISIBLE_NOTES)
+        const hiddenCount = section.notes.length - visibleNotes.length
+
+        return (
+          <section
+            key={section.key}
+            data-note-group
+            className={`rounded-xl border border-noir-gold/15 bg-noir-black/20 p-4 transition-colors duration-300 ${
+              sections.length > 1 && index < sections.length - 1
+                ? "md:border-r md:border-r-noir-gold/20"
+                : ""
+            }`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-lg font-medium tracking-wide text-noir-gold">
+                {section.label}
+              </h3>
+              {hiddenCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setExpandedSections(prev => ({
+                      ...prev,
+                      [section.key]: true,
+                    }))
+                  }
+                  aria-label={tCommon("loadMore", {
+                    itemName: section.label.toLowerCase(),
+                  })}
+                  className="rounded-full border border-noir-gold/20 bg-noir-gold/10 px-2.5 py-1 text-xs font-semibold text-noir-gold transition-[transform,background-color,border-color,color] duration-200 motion-safe:hover:-translate-y-0.5 hover:border-noir-gold/35 hover:bg-noir-gold/15"
+                >
+                  +{hiddenCount}
+                </button>
+              )}
+            </div>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {visibleNotes.map(note => (
+                <li
+                  key={note.id}
+                  className="rounded-full border border-noir-gold/20 bg-noir-black/35 px-3 py-1 text-sm font-semibold capitalize text-noir-gold-100"
+                >
+                  {note.name}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      })}
+    </div>
+  )
 }
 
 export default PerfumeNotes

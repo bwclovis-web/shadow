@@ -174,7 +174,7 @@ const PerfumeDetailClient = ({
         </div>
 
         <div className="w-full flex flex-col lg:flex-row gap-4 items-start justify-center">
-          <div className="noir-border relative w-full lg:w-1/3">
+          <aside className="noir-border relative w-full lg:w-1/4 text-center space-y-6 py-4 px-2">
             <PerfumeRatingSystem
               perfumeId={perfume.id}
               userId={user?.id ?? "anonymous"}
@@ -187,7 +187,7 @@ const PerfumeDetailClient = ({
               userSeasonVote={userSeasonVote}
               seasonAggregates={seasonAggregates}
             />
-          </div>
+          </aside>
           <div className="noir-border relative w-full lg:w-3/4 p-4">
             <ReviewSection
               perfumeId={perfume.id}

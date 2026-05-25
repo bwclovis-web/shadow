@@ -1694,7 +1694,7 @@ const truncateChunkAtProseStart = (chunk: string): string => {
 
   // Marketing paragraph starters that signal the end of the note list and begin prose
   const PROSE_STARTS =
-    /(?:\b(?:perfect|ideal|great|wonderful|excellent)\s+(?:for|choice|option)\b|\ba\s+(?:great|perfect|beautiful|wonderful|stunning|luxurious|gorgeous|rich|dark|warm|sensual|cozy)\s+choice\b|\b(?:this\s+(?:fragrance|scent|perfume|inspired|is)|the\s+(?:opening|drydown|dry\s+down|base\s+(?:lingers|settles|brings))|inspired\s+by|perfect\s+for\s+anyone|opens?\s+with\s+(?:a|the)|think\s+(?:crisp|fresh|warm|cool|dark|soft)|vibe\b|scent\s+story\b|how\s+it\s+wears|wear\s*&\s*performance\b|wear\s+guide\b|good\s+to\s+know\b|whether\s+you(?:'|'|&#39;)re\b|surrounds\s+you\s+in\b|sweet,\s*glamorous\b|glamorous\s*&\s*addictive\b|season\s*:|projection\s*:|longevity\s*:|available\s+sizes?|important\s+(?:information|shop|order)|all\s+perfumes?\s+are\s+hand|this\s+is\s+(?:a|an|the)\s+kind|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b|original\s+manufacturers\b)\b)/i
+    /(?:\b(?:perfect|ideal|great|wonderful|excellent)\s+(?:for|choice|option)\b|\ba\s+(?:great|perfect|beautiful|wonderful|stunning|luxurious|gorgeous|rich|dark|warm|sensual|cozy)\s+choice\b|\b(?:this\s+(?:fragrance|scent|perfume|inspired|is)|the\s+(?:opening|drydown|dry\s+down|base\s+(?:lingers|settles|brings))|inspired\s+by|perfect\s+for\s+anyone|opens?\s+with\s+(?:a|the)|think\s+(?:crisp|fresh|warm|cool|dark|soft)|vibe\b|scent\s+story\b|how\s+it\s+wears|wear\s*&\s*performance\b|wear\s+guide\b|good\s+to\s+know\b|whether\s+you(?:'|'|&#39;)re\b|surrounds\s+you\s+in\b|sweet,\s*glamorous\b|glamorous\s*&\s*addictive\b|season\s*:|projection\s*:|longevity\s*:|available\s+sizes?|important\s+(?:information|shop|order)|all\s+perfumes?\s+are\s+hand|this\s+is\s+(?:a|an|the)\s+kind|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b|original\s+manufacturers\b)|description\s*:|like\s+(?:a|an)\b|each\s+(?:spray|spritz)\b)/i
 
   const sentenceBoundary = /[.!]\s+[A-Z]/
 
@@ -2218,6 +2218,7 @@ const FLAT_NOTE_PROSE_BOUNDARY_RES: RegExp[] = [
   /\s+(?:Ingredients|Cruelty[- ]free|Vegan |Dermatologist|Clinically tested|Prop(?:osition|\.)?\s*65|FDA disclaimer)\b/i,
   // Common post-notes sections on indie Shopify PDP
   /\s+(?:When to Wear|Vibe|How It Wears|Wear\s*&\s*Performance|Wear\s+Guide\b|Good\s+to\s+Know\b|Whether\s+You(?:'|'|&#39;)re\b|Original\s+Manufacturers\b|Season\s*:|Projection\s*:|Longevity\s*:|How (?:It\s+)?Smells|Available Sizes?|Important Information|Important Shop Info|Final Sale|Sampling Size Policy|Fragrance Description(?!\s+:)|For\s+milk\s+lovers|pastel\s+girls|Hand-blended\s+with\s+care|Extrait\s+de\s+Parfum\s+strength|Citrus\s+Aromatic\b|Amber-Musky\b|Seaside\s+Breeze\b|Sweet,\s*Glamorous\b)\b/i,
+  /\s+(?:Description\s*:|Like\s+(?:a|an)\b|Each\s+(?:spray|spritz)\b)/i,
   /\s+(?:I was told|Making a dupe|Please text if you)\b/i,
   // Note set followed immediately by marketing paragraph openers (whitespace-collapsed)
   /\s+(?:Think\s+(?:crisp|fresh|warm|cool|dark|soft|juicy|lush)|Opens?\s+(?:with|on)|A\s+(?:crisp|juicy|dark|warm|rich|soft|bright|clean|bold|lush|fresh)\s+(?:and|,)|\bSparkling\b|\bThis\s+inspired\b)/i,
@@ -2345,7 +2346,21 @@ function extractFlatNotes(text: string): string[] {
   const pushChunk = (raw: string) => {
     const chunk = truncateFlatNotesChunk(raw ?? "")
     const parsed = filterStructuredNoteParts(splitNoteList(chunk))
-    found.push(...parsed)
+    if (parsed.length >= 2) {
+      found.push(...parsed)
+      return
+    }
+    if (chunk.split(/\s+/).filter(Boolean).length >= 3) {
+      const glued = splitGluedMerchantNoteRun(chunk)
+      if (glued.length >= 2) {
+        found.push(...filterStructuredNoteParts(glued))
+        return
+      }
+      const exploded = explodeSpaceSeparatedNoteBlob(chunk)
+      if (exploded.length >= 2) {
+        found.push(...filterStructuredNoteParts(exploded))
+      }
+    }
   }
 
   const collapsed = source.replace(/\r/g, "\n").replace(/\s+/g, " ").trim()

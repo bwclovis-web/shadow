@@ -6,6 +6,7 @@ import RichTextEditor from "@/components/Atoms/RichTextEditor"
 import ReviewCard from "@/components/Molecules/ReviewCard"
 import Modal from "@/components/Organisms/Modal"
 import { useCSRF } from "@/hooks/useCSRF"
+import { useGsapStagger } from "@/hooks/useGsapStagger"
 import { useSessionStore } from "@/hooks/sessionStore"
 import { safeAsync } from "@/utils/errorHandling.patterns"
 import { containsDangerousReviewHtml, sanitizeReviewHtml } from "@/utils/sanitize"
@@ -48,6 +49,9 @@ interface ReviewSectionProps {
   pageSize: number
 }
 
+const REVIEW_STAGGER = 0.05
+const REVIEW_FEEDBACK_MS = 1400
+
 const ReviewSection = ({
   perfumeId,
   currentUserId,
@@ -69,7 +73,10 @@ const ReviewSection = ({
   const [reviewsState, setReviewsState] = useState(initialReviewsData)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [isSubmittingReview, setIsSubmittingReview] = useState(false)
+  const [highlightedReviewId, setHighlightedReviewId] = useState<string | null>(null)
+  const [removingReviewIds, setRemovingReviewIds] = useState<string[]>([])
   const { submitForm } = useCSRF()
+  const reviewListRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setReviewsState(initialReviewsData)
@@ -88,12 +95,46 @@ const ReviewSection = ({
     wasReviewModalOpenRef.current = ours
   }, [modalOpen, modalId, reviewModalId])
 
+  useEffect(() => {
+    if (!highlightedReviewId) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setHighlightedReviewId(null)
+    }, REVIEW_FEEDBACK_MS)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [highlightedReviewId])
+
   const reviews = reviewsState?.reviews ?? []
   const hasMore = reviewsState?.pagination?.hasNextPage ?? false
   const currentPage = reviewsState?.pagination?.page ?? 1
   const fetchLimit = reviewsState?.pagination?.limit ?? pageSize
   const showModerationActions =
     currentUserRole === "admin" || currentUserRole === "editor"
+
+  useGsapStagger(reviewListRef, {
+    selector: "[data-review-card]",
+    deps: [
+      userReview?.id ?? "no-user-review",
+      reviews
+        .map(review => review.id)
+        .join(","),
+    ],
+    enabled: Boolean(userReview) || reviews.length > 0,
+    stagger: REVIEW_STAGGER,
+    from: { opacity: 0, y: 14 },
+    to: {
+      opacity: 1,
+      y: 0,
+      duration: 0.34,
+      ease: "power2.out",
+      clearProps: "transform,opacity",
+    },
+  })
 
   const updateReviewsState = (nextData: Review[], pagination: ReviewsPagination) => {
     setReviewsState(prev => {
@@ -188,6 +229,7 @@ const ReviewSection = ({
       setReviewContent("")
       closeModal()
       setUserReview(result?.data || null)
+      setHighlightedReviewId(result?.data?.id ?? null)
       await refreshReviews()
     } catch (error) {
       console.error("Failed to create review", error)
@@ -275,7 +317,8 @@ const ReviewSection = ({
       const result = await response.json()
       // Update with server response (includes updated timestamp, etc.)
       updateReviewInState(editingReviewId, result?.data || optimisticReview)
-      
+      setHighlightedReviewId(result?.data?.id ?? editingReviewId)
+
       setReviewContent("")
       closeModal()
       setEditingReviewId(null)
@@ -300,6 +343,9 @@ const ReviewSection = ({
 
   const handleDeleteReview = async (reviewId: string, isUserReview = false) => {
     try {
+      setRemovingReviewIds(prev =>
+        prev.includes(reviewId) ? prev : [...prev, reviewId]
+      )
       const formData = new FormData()
       formData.append("_action", "delete")
       formData.append("reviewId", reviewId)
@@ -319,10 +365,13 @@ const ReviewSection = ({
 
       await refreshReviews()
     } catch (error) {
+      setRemovingReviewIds(prev => prev.filter(id => id !== reviewId))
       console.error("Failed to delete review", error)
       alert(error instanceof Error
           ? error.message
           : t("failedToDeleteReview"))
+    } finally {
+      setRemovingReviewIds(prev => prev.filter(id => id !== reviewId))
     }
   }
 
@@ -353,7 +402,7 @@ const ReviewSection = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" ref={reviewListRef}>
       <div className="flex items-center justify-between bg-noir-dark rounded-lg p-4">
         <h2 className="text-xl font-semibold">
           {t("heading")} ({reviews.length})
@@ -428,6 +477,8 @@ const ReviewSection = ({
             currentUserRole={currentUserRole}
             onEdit={handleEditReview}
             onDelete={() => handleDeleteReview(userReview.id, true)}
+            isHighlighted={highlightedReviewId === userReview.id}
+            isRemoving={removingReviewIds.includes(userReview.id)}
           />
         </div>
       )}
@@ -445,6 +496,8 @@ const ReviewSection = ({
               onDelete={handleDeleteReview}
               onModerate={handleModerateReview}
               showModerationActions={showModerationActions}
+              isHighlighted={highlightedReviewId === review.id}
+              isRemoving={removingReviewIds.includes(review.id)}
             />
           ))}
 

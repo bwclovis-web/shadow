@@ -67,23 +67,30 @@ const PerfumeRatingSystem = ({
   })
 
   return (
-    <div className="bg-noir-dark/20 p-4">
-      <h3 className="text-center min-w-min border-b border-noir-gold/20 pb-2 mb-4">
+    <div>
+      <h3 className="min-w-min border-b border-noir-gold/20 pb-2 mb-4">
         {isInteractive
           ? t("RateThisPerfume")
           : t("CommunityRatings")}
       </h3>
 
       {!isLoggedIn && (
-        <p className="text-sm text-noir-gold-500 mb-4 text-center">
+        <p className="text-sm text-noir-gold-500 mb-4">
           {t("loginToRate")}
         </p>
       )}
 
       <div className="space-y-6">
         {categories.map(({ key, label }) => (
-          <div key={key} className="flex flex-col items-center">
-            <h3 className="text-sm font-medium text-noir-gold mb-2">{label}</h3>
+          <div
+            key={key}
+            className={`flex flex-col rounded-lg border px-3 py-4 transition-[border-color,background-color,box-shadow,transform] duration-300 ease-out ${
+              currentRatings?.[key]
+                ? "border-noir-gold/45 bg-noir-gold/6 shadow-[0_10px_24px_rgba(212,175,55,0.08)]"
+                : "border-noir-gold/15 bg-noir-black/15"
+            }`}
+          >
+            <h3 className="mb-2">{label}</h3>
             <div className="flex flex-col items-center gap-2">
               <NoirRating
                 category={key}
@@ -92,7 +99,11 @@ const PerfumeRatingSystem = ({
                 readonly={!isInteractive}
                 showLabel
               />
-              <div className="text-xs text-noir-gold-100 text-center">
+              <div
+                className={`text-xs transition-colors duration-300 ${
+                  isRefreshing ? "text-noir-gold" : "text-noir-gold-100"
+                }`}
+              >
                 {averageRatings && averageRatings[key] != null ? (
                   <>
                     {t("communityAverage")}: {Number(averageRatings[key]).toFixed(1)}/5

@@ -1,9 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+const { sendEmailMock } = vi.hoisted(() => ({
+  sendEmailMock: vi.fn().mockResolvedValue({ data: { id: "email-1" }, error: null }),
+}))
+
 vi.mock("resend", () => ({
   Resend: vi.fn().mockImplementation(() => ({
     emails: {
-      send: vi.fn().mockResolvedValue({ data: { id: "email-1" }, error: null }),
+      send: sendEmailMock,
     },
   })),
 }))
@@ -17,6 +21,7 @@ describe("sendTransactionalEmail", () => {
     resetEmailClientForTests()
     process.env.RESEND_API_KEY = "re_test_key"
     process.env.EMAIL_FROM = "Shadow <alerts@example.com>"
+    sendEmailMock.mockClear()
   })
 
   afterEach(() => {
@@ -59,5 +64,49 @@ describe("sendTransactionalEmail", () => {
 
     expect(result.sent).toBe(true)
     expect(result.id).toBe("email-1")
+  })
+
+  it("passes html through to Resend when provided", async () => {
+    await sendTransactionalEmail({
+      to: "user@example.com",
+      subject: "HTML Test",
+      text: "Hello",
+      html: "<strong>Hello</strong>",
+    })
+
+    expect(sendEmailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        html: "<strong>Hello</strong>",
+      })
+    )
+  })
+
+  it("passes attachments through to Resend when provided", async () => {
+    await sendTransactionalEmail({
+      to: "user@example.com",
+      subject: "Attachment Test",
+      text: "Hello",
+      attachments: [
+        {
+          filename: "logo-one-email.png",
+          path: "C:/repos/shadow/public/images/new/logo-one-email.png",
+          contentType: "image/png",
+          contentId: "ph-logo",
+        },
+      ],
+    })
+
+    expect(sendEmailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        attachments: [
+          expect.objectContaining({
+            filename: "logo-one-email.png",
+            path: "C:/repos/shadow/public/images/new/logo-one-email.png",
+            contentType: "image/png",
+            contentId: "ph-logo",
+          }),
+        ],
+      })
+    )
   })
 })

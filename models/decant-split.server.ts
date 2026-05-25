@@ -247,6 +247,7 @@ const notifySplitParticipants = async (params: {
           alertType: params.alertType,
           title: params.title,
           message: params.message,
+          splitId: params.split.id,
         })
       } catch (err) {
         console.error("[email] split event email failed:", err)

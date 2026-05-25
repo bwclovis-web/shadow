@@ -16,6 +16,8 @@ const NOTE_CANONICAL_PHRASES: [string, string][] = [
   ["tree moss", "tree moss"],
   ["salt water", "salt water"],
   ["white musk", "white musk"],
+  ["blonde wood", "blonde woods"],
+  ["blonde woods", "blonde woods"],
   ["black musk", "black musk"],
   ["soft musk", "soft musk"],
   ["skin musk", "skin musk"],
@@ -178,6 +180,8 @@ const HEART_VOLATILITY = new Set<string>([
   "melon",
   "guava",
   "watermelon",
+  "mimosa",
+  "sesame",
   "cinnamon",
   "cardamom",
   "clove",
@@ -242,6 +246,7 @@ const BASE_VOLATILITY = new Set<string>([
   "praline",
   "marshmallow",
   "marshmallow fluff",
+  "blonde woods",
   "tonka absolute",
   "benzoin resinoid",
   "golden patchouli",
@@ -321,6 +326,7 @@ const EXTRA_SINGLE_WORD_MATERIALS = [
   "oudh",
   "milk",
   "mimosa",
+  "sesame",
   "brown",
   "blossom",
   "coconut",
@@ -373,6 +379,7 @@ const MERCHANT_MULTI_WORD_PHRASES: string[] = [
   "balsamic amber",
   "golden amber",
   "white musk",
+  "blonde woods",
   "peach nectar",
   "vanilla bean",
   "fig milk",
@@ -703,12 +710,17 @@ export const canonicalizeNote = (raw: string): string => {
   let s = raw.trim().toLowerCase().replace(/\s+/g, " ")
   if (!s) return s
   for (const [from, to] of NOTE_CANONICAL_PHRASES) {
-    const re = new RegExp(from.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi")
+    const re = new RegExp(`\\b${from.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi")
     if (re.test(s)) s = s.replace(re, to).replace(/\s+/g, " ").trim()
   }
   const words = s.split(/\s+/).filter(Boolean)
   const mapped = words.map(w => NOTE_CANONICAL_TOKENS[w] ?? w)
-  return mapped.join(" ").replace(/\s+/g, " ").trim()
+  s = mapped.join(" ").replace(/\s+/g, " ").trim()
+  for (const [from, to] of NOTE_CANONICAL_PHRASES) {
+    const re = new RegExp(`\\b${from.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi")
+    if (re.test(s)) s = s.replace(re, to).replace(/\s+/g, " ").trim()
+  }
+  return s
 }
 
 export const canonicalizeNoteLayers = (notes: {

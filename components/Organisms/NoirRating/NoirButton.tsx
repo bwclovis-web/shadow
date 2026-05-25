@@ -15,6 +15,7 @@ interface NoirButtonProps {
   size: "sm" | "md" | "lg"
   isInteractive: boolean
   isAnimated: boolean
+  isSelectedPulse?: boolean
   onClick: () => void
   onHover: () => void
   onLeave: () => void
@@ -27,6 +28,7 @@ const NoirButton = ({
   size,
   isInteractive,
   isAnimated,
+  isSelectedPulse = false,
   onClick,
   onHover,
   onLeave,
@@ -44,18 +46,26 @@ const NoirButton = ({
     aria-label={`Rate ${category} ${rating}`}
     className={`
       ${SIZES[size]} 
-      transition-opacity duration-300 
+      transition-[transform,opacity,filter] duration-300 ease-out 
       cursor-pointer
-      ${isInteractive ? "hover:opacity-80" : ""}
+      ${isInteractive ? "motion-safe:hover:-translate-y-1 hover:opacity-90" : ""}
+      ${filled ? "drop-shadow-[0_4px_12px_rgba(212,175,55,0.18)]" : ""}
+      ${isSelectedPulse ? "motion-safe:animate-vault-stamp" : ""}
       flex-shrink-0
     `}
   >
-    <NoirIcon
-      filled={filled}
-      category={category}
-      animated={isAnimated}
-      rating={rating}
-    />
+    <span
+      className={`block transition-transform duration-300 ease-out ${
+        filled ? "scale-[1.03]" : ""
+      } ${isAnimated ? "motion-safe:scale-[1.06]" : ""}`}
+    >
+      <NoirIcon
+        filled={filled}
+        category={category}
+        animated={isAnimated}
+        rating={rating}
+      />
+    </span>
   </button>
 )
 

@@ -50,6 +50,13 @@ export type TransactionalEmailParams = {
   subject: string
   text: string
   html?: string
+  attachments?: Array<{
+    filename: string
+    path?: string
+    content?: string
+    contentType?: string
+    contentId?: string
+  }>
 }
 
 export const sendTransactionalEmail = async (
@@ -76,6 +83,7 @@ export const sendTransactionalEmail = async (
     subject: params.subject,
     text: params.text,
     ...(params.html ? { html: params.html } : {}),
+    ...(params.attachments ? { attachments: params.attachments } : {}),
   })
 
   if (error) {
