@@ -7,10 +7,6 @@ import type { RecommendationPerfume } from "@/services/recommendations"
 
 import { RecommendationReasonLine } from "./RecommendationReasonLine"
 
-/** Chip style aligned with TagList `chipDark` (on-brand). */
-const notePillClass =
-  "inline-flex max-w-full items-center rounded-full border border-noir-gold/30 bg-stone-900/70 px-2 py-0.5 text-xs font-medium text-noir-gold-100"
-
 type SimilarPerfumesCarouselProps = {
   similarPerfumes: RecommendationPerfume[]
   selectedLetter: string | null
@@ -46,8 +42,6 @@ const SimilarPerfumesCarousel = ({
           aria-label={t("similarPerfumes", { defaultValue: "Similar perfumes" })}
         >
           {list.map((p, index) => {
-            const sharedNotes =
-              p.reason?.kind === "similar_notes" ? p.reason.sharedNoteNames.slice(0, 4) : []
             return (
               <li
                 key={p.id}
@@ -74,17 +68,7 @@ const SimilarPerfumesCarousel = ({
                   selectedLetter={selectedLetter}
                   imageAlt={tHouse("perfumeBottleAltText", { name: p.name })}
                   imagePriority={index < 3}
-                >
-                  {sharedNotes.length > 0 ? (
-                    <div className="flex flex-wrap gap-1 justify-center">
-                      {sharedNotes.map(n => (
-                        <span key={n} className={notePillClass}>
-                          {n}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-                </LinkCard>
+                />
               </li>
             )
           })}
