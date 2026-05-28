@@ -1,9 +1,8 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useTransitionRouter } from "next-view-transitions"
 
-import { usePathname, useSearchParams } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button"
@@ -69,7 +68,7 @@ const TheExchangeClient = ({
   const tTraderPrefs = useTranslations("traderProfile.preferences")
   const tListingCondition = useTranslations("listing.condition")
   const tWishlistBottle = useTranslations("wishlist.bottlePreference")
-  const router = useTransitionRouter()
+  const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const isLg = useMediaQuery(DESKTOP_MEDIA)
@@ -96,7 +95,7 @@ const TheExchangeClient = ({
   const pushUrlFromSearchParams = useCallback(
     (nextSearch: URLSearchParams) => {
       const qs = nextSearch.toString()
-      const newUrl = `${ROUTE_PATH}${qs ? `?${qs}` : ""}`
+      const newUrl = `${pathname}${qs ? `?${qs}` : ""}`
       const currentUrl = `${pathname}${searchParamsKey ? `?${searchParamsKey}` : ""}`
       if (newUrl !== currentUrl) {
         router.push(newUrl, { scroll: false })
@@ -160,8 +159,11 @@ const TheExchangeClient = ({
   )
 
   useEffect(() => {
+    const onExchangeRoute =
+      pathname === ROUTE_PATH || pathname.endsWith(ROUTE_PATH)
+
     const onKeyDown = (e: KeyboardEvent) => {
-      if (pathname !== ROUTE_PATH) return
+      if (!onExchangeRoute) return
       const target = e.target as HTMLElement
       const inField =
         target.tagName === "INPUT" ||
