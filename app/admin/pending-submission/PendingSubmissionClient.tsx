@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 import { Button } from "@/components/Atoms/Button/Button"
 import { CSRFToken, CSRFTokenProvider } from "@/components/Molecules/CSRFToken"
@@ -10,6 +11,7 @@ import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import {
   extractInventoryIntent,
   isCsvImportSubmission,
+  MANUAL_COLLECTION_SOURCE,
   stripPerfumeMetadataForDisplay,
 } from "@/lib/csv-import-pending-submission"
 
@@ -27,10 +29,15 @@ export type PendingSubmissionWithRelations = Awaited<
 
 type PendingSubmissionClientProps = {
   submissions: PendingSubmissionWithRelations[]
+  editLinksBySubmissionId: Record<
+    string,
+    { perfumeEditUrl?: string; houseEditUrl?: string }
+  >
 }
 
 const PendingSubmissionClient = ({
   submissions,
+  editLinksBySubmissionId,
 }: PendingSubmissionClientProps) => {
   const router = useRouter()
   const t = useTranslations("pendingSubmissions")
@@ -146,6 +153,8 @@ const PendingSubmissionClient = ({
                   unknown
                 >
                 const isCsvImport = isCsvImportSubmission(submissionData)
+                const isManualCollectionSubmission =
+                  submissionData.source === MANUAL_COLLECTION_SOURCE
                 const inventoryIntent = extractInventoryIntent(submissionData)
                 const linkedHouseBlock = getLinkedHouseBlockReason(submissionData)
                 const approveBlocked =
@@ -155,6 +164,7 @@ const PendingSubmissionClient = ({
                 const displayFields = isCsvImport
                   ? stripPerfumeMetadataForDisplay(submissionData)
                   : submissionData
+                const editLinks = editLinksBySubmissionId[submission.id]
 
                 return (
                   <div
@@ -170,6 +180,11 @@ const PendingSubmissionClient = ({
                           {isCsvImport && (
                             <span className="rounded-full bg-noir-gold/20 px-2 py-0.5 text-xs font-semibold text-noir-gold">
                               {t("csvImportBadge")}
+                            </span>
+                          )}
+                          {isManualCollectionSubmission && (
+                            <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-xs font-semibold text-blue-300">
+                              {t("manualCollectionBadge")}
                             </span>
                           )}
                         </div>
@@ -189,6 +204,26 @@ const PendingSubmissionClient = ({
                           <p className="mt-2 text-sm text-amber-300" role="alert">
                             {linkedHouseBlock}
                           </p>
+                        )}
+                        {(editLinks?.perfumeEditUrl || editLinks?.houseEditUrl) && (
+                          <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
+                            {editLinks?.perfumeEditUrl && (
+                              <Link
+                                href={editLinks.perfumeEditUrl}
+                                className="text-noir-gold underline underline-offset-2 hover:text-noir-light"
+                              >
+                                {t("editPerfumeEntry")}
+                              </Link>
+                            )}
+                            {editLinks?.houseEditUrl && (
+                              <Link
+                                href={editLinks.houseEditUrl}
+                                className="text-noir-gold underline underline-offset-2 hover:text-noir-light"
+                              >
+                                {t("editHouseEntry")}
+                              </Link>
+                            )}
+                          </div>
                         )}
                         {submission.status !== "pending" &&
                           submission.reviewedByUser && (

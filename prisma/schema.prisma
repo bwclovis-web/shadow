@@ -76,6 +76,8 @@ model User {
   decantSplitsHosted        DecantSplit[]        @relation("DecantSplitsHosted")
   decantSplitSlotsClaimed   DecantSplitSlot[]    @relation("DecantSplitSlotsClaimed")
   decantSplitEvents         DecantSplitEvent[]   @relation("DecantSplitEventActor")
+  submittedPerfumes         Perfume[]            @relation("PerfumeSubmittedByUser")
+  submittedPerfumeHouses    PerfumeHouse[]       @relation("PerfumeHouseSubmittedByUser")
 }
 
 model PerfumeHouse {
@@ -90,13 +92,20 @@ model PerfumeHouse {
   phone       String?
   address     String?
   type        HouseType @default(indie)
+  isPending   Boolean   @default(false)
+  submittedBy String?
+  pendingSubmissionId String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   slug        String    @unique
   perfumes    Perfume[]
   followedBy  UserFollow[]
+  submittedByUser User? @relation("PerfumeHouseSubmittedByUser", fields: [submittedBy], references: [id])
 
   @@index([type, name], name: "idx_house_type_name")
+  @@index([submittedBy], name: "idx_house_submitted_by")
+  @@index([isPending, submittedBy], name: "idx_house_pending_submitted_by")
+  @@index([pendingSubmissionId], name: "idx_house_pending_submission")
 }
 
 /// One row per UTC calendar day; written by cron for trend charts on the data quality dashboard.
@@ -116,10 +125,14 @@ model Perfume {
   description           String?
   image                 String?
   perfumeHouseId        String?
+  isPending             Boolean                @default(false)
+  submittedBy           String?
+  pendingSubmissionId   String?
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
   slug                  String                 @unique
   perfumeHouse          PerfumeHouse?          @relation(fields: [perfumeHouseId], references: [id])
+  submittedByUser       User?                  @relation("PerfumeSubmittedByUser", fields: [submittedBy], references: [id])
   
   // Junction table relation
   perfumeNoteRelations  PerfumeNoteRelation[]
@@ -138,6 +151,9 @@ model Perfume {
   @@index([slug], name: "idx_perfume_slug")
   @@index([perfumeHouseId, createdAt], name: "idx_perfume_house_created")
   @@index([name], name: "idx_perfume_name")
+  @@index([submittedBy], name: "idx_perfume_submitted_by")
+  @@index([isPending, submittedBy], name: "idx_perfume_pending_submitted_by")
+  @@index([pendingSubmissionId], name: "idx_perfume_pending_submission")
 }
 
 model UserPerfume {

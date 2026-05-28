@@ -3,6 +3,7 @@
 import { type VariantProps } from "class-variance-authority"
 import {
   type HTMLProps,
+  type ReactNode,
   useCallback,
 } from "react"
 import { useTranslations } from "next-intl"
@@ -24,6 +25,7 @@ interface SearchBarProps
   placeholder?: string
   action?: (item: SearchBarItem) => void
   autoFocus?: boolean
+  footerSlot?: ReactNode | ((ctx: { clearList: () => void }) => ReactNode)
 }
 
 export default function SearchBar({
@@ -33,6 +35,7 @@ export default function SearchBar({
   placeholder,
   variant,
   autoFocus,
+  footerSlot,
 }: SearchBarProps) {
   const tCommon = useTranslations("common")
   const tHome = useTranslations("home")
@@ -85,6 +88,7 @@ export default function SearchBar({
             formatError: (err: string) =>
               mounted ? tCommon("searchError", { error: err }) : `Error: ${err}`,
           }}
+          footerSlot={footerSlot}
           autoFocus={autoFocus}
         />
       </form>

@@ -409,19 +409,53 @@ export const searchPerfumeHouseByName = async (
   name: string,
   includeEmpty = true
 ) => {
+  return searchPerfumeHouseByNameForViewer(name, {
+    includeEmpty,
+  })
+}
+
+type HouseSearchViewerOptions = {
+  includeEmpty?: boolean
+  viewerUserId?: string
+}
+
+const buildHouseVisibilityWhere = (viewerUserId?: string): Prisma.PerfumeHouseWhereInput => {
+  if (!viewerUserId) {
+    return { isPending: false }
+  }
+
+  return {
+    OR: [
+      { isPending: false },
+      {
+        AND: [{ isPending: true }, { submittedBy: viewerUserId }],
+      },
+    ],
+  }
+}
+
+export const searchPerfumeHouseByNameForViewer = async (
+  name: string,
+  options: HouseSearchViewerOptions = {}
+) => {
   const searchTerm = name.trim()
+  const includeEmpty = options.includeEmpty ?? true
+  const visibilityWhere = buildHouseVisibilityWhere(options.viewerUserId)
 
   if (!searchTerm) {
     return []
   }
 
   // Build the perfume filter condition based on includeEmpty flag
-  const perfumeFilter = includeEmpty ? {} : { perfumes: { some: {} } }
+  const perfumeFilter: Prisma.PerfumeHouseWhereInput = includeEmpty
+    ? {}
+    : { perfumes: { some: {} } }
 
   // First, try exact matches and starts-with matches (highest priority)
   const exactMatches = await prisma.perfumeHouse.findMany({
     where: {
       AND: [
+        visibilityWhere,
         {
           OR: [
             { name: { equals: searchTerm, mode: "insensitive" } },
@@ -444,6 +478,7 @@ export const searchPerfumeHouseByName = async (
   const containsMatches = await prisma.perfumeHouse.findMany({
     where: {
       AND: [
+        visibilityWhere,
         { name: { contains: searchTerm, mode: "insensitive" } },
         // Exclude items already found in exact matches
         { id: { notIn: exactMatches.map(h => h.id) } },
@@ -472,6 +507,70 @@ export const searchPerfumeHouseByName = async (
     .slice(0, 10)
 
   return rankedResults
+}
+
+type CreatePendingHousePlaceholderInput = {
+  name: string
+  description: string
+  submittedBy: string
+  pendingSubmissionId?: string
+  image?: string
+  website?: string
+}
+
+const findUniqueHouseSlug = async (
+  tx: Prisma.TransactionClient,
+  baseSlug: string
+): Promise<string> => {
+  if (!baseSlug) return baseSlug
+  let slug = baseSlug
+  let n = 2
+  while (await tx.perfumeHouse.findUnique({ where: { slug } })) {
+    slug = `${baseSlug}-${n}`
+    n += 1
+  }
+  return slug
+}
+
+export const createPendingPerfumeHousePlaceholder = async (
+  input: CreatePendingHousePlaceholderInput
+) => {
+  const name = sanitizeText(input.name)
+  const description = sanitizeText(input.description)
+  const image = input.image?.trim() || null
+  const website = input.website?.trim() || null
+
+  const created = await prisma.$transaction(async tx => {
+    const existing = await tx.perfumeHouse.findFirst({
+      where: {
+        name: { equals: name, mode: "insensitive" },
+        submittedBy: input.submittedBy,
+      },
+    })
+    if (existing) {
+      return existing
+    }
+
+    const slug = await findUniqueHouseSlug(
+      tx,
+      `${createUrlSlug(name)}-pending`
+    )
+
+    return tx.perfumeHouse.create({
+      data: {
+        name,
+        slug,
+        description,
+        image: image ?? undefined,
+        website: website ?? undefined,
+        isPending: true,
+        submittedBy: input.submittedBy,
+        pendingSubmissionId: input.pendingSubmissionId ?? null,
+      },
+    })
+  })
+
+  return created
 }
 
 export const deletePerfumeHouse = async (id: string) => {

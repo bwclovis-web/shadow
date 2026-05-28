@@ -1323,6 +1323,60 @@ function dedupeNotesAcrossLayers(notes: {
   }
 }
 
+const ADJECTIVE_ONLY_NOTE_PREFIXES = new Set([
+  "wild",
+  "sparkling",
+  "crushed",
+  "smoked",
+  "powdery",
+  "creamy",
+  "juicy",
+  "fresh",
+  "warm",
+  "soft",
+  "dark",
+  "bright",
+  "zesty",
+  "tart",
+  "sweet",
+])
+
+/**
+ * Remove parser artifacts that sneak in during flat-list splitting:
+ * - merged long phrases that are just concatenations of already-extracted notes
+ * - lone adjective-prefix tokens (e.g. "wild") when "wild strawberry" is present
+ */
+const pruneLayerArtifactNotes = (arr: string[]): string[] => {
+  const normalized = [...new Set(arr.map(n => n.trim().toLowerCase()).filter(Boolean))]
+  if (normalized.length <= 1) return normalized
+
+  const hasPhraseWithPrefix = (prefix: string): boolean =>
+    normalized.some(
+      other =>
+        other !== prefix && other.startsWith(`${prefix} `) && other.split(/\s+/).filter(Boolean).length >= 2,
+    )
+
+  return normalized.filter(note => {
+    const words = note.split(/\s+/).filter(Boolean)
+    if (words.length === 1 && ADJECTIVE_ONLY_NOTE_PREFIXES.has(note) && hasPhraseWithPrefix(note)) {
+      return false
+    }
+
+    if (words.length >= 3) {
+      let covered = 0
+      for (const other of normalized) {
+        if (other === note) continue
+        if (other.split(/\s+/).filter(Boolean).length < 2) continue
+        if (new RegExp(`\\b${other.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(note)) {
+          covered += 1
+          if (covered >= 2) return false
+        }
+      }
+    }
+    return true
+  })
+}
+
 /** Mask `(...)` so `&` / `and` splitting does not break parenthetical accords (E.g. Pattern by Etsy). */
 const maskParenGroups = (s: string): { masked: string; groups: string[] } => {
   const groups: string[] = []
@@ -2012,11 +2066,13 @@ const finalizeNoteLayersForExport = (
 
   const sanitizeLayer = (arr: string[]) =>
     filterNotesByTrust(
-      uniqueNotes(
-        dropSubsumedShorterNotes(
-          expandLayerNoteBlobs(arr)
-            .map(n => sanitizeExtractedNoteCandidate(n))
-            .filter((n): n is string => Boolean(n)),
+      pruneLayerArtifactNotes(
+        uniqueNotes(
+          dropSubsumedShorterNotes(
+            expandLayerNoteBlobs(arr)
+              .map(n => sanitizeExtractedNoteCandidate(n))
+              .filter((n): n is string => Boolean(n)),
+          ),
         ),
       ),
       merchantTrustedNotes,
@@ -3364,6 +3420,10 @@ const stripProductNameBleedFromNotes = (notes: NotesLayers, productName: string)
 /** Add flat-list materials missing from an existing Top/Heart/Base pyramid (accord + materials). */
 export const mergeFlatMaterialsIntoLayeredPyramid = (notes: NotesLayers, flatAuth: string[]): NotesLayers => {
   if (!hasLayeredMerchantPyramid(notes) || flatAuth.length < 2) return notes
+  const nonOpen = new Set([...notes.heartNotes, ...notes.baseNotes].map(n => n.trim().toLowerCase()))
+  const flatOverlapNonOpen = flatAuth.filter(f => nonOpen.has(f.trim().toLowerCase())).length
+  // Flat lists that already largely overlap heart/base are usually an all-notes summary; don't pour them into open.
+  if (flatOverlapNonOpen >= Math.max(2, Math.floor(flatAuth.length * 0.4))) return notes
   /** Full merchant pyramid already parsed — skip prose flat-list bleed into openNotes. */
   if (
     notes.openNotes.length >= 2 &&
@@ -3516,15 +3576,22 @@ const processSingleProductPhase1 = async (
    */
   mergedBase = sanitizeCopyForNotePipeline(stripPolicyBoilerplate(mergedBase))
   const detailUrl = item.detailURL?.trim() ?? ""
-  const autoPatternEtsyFetch = shouldAutoFetchPatternEtsyNotes(detailUrl, mergedBase)
+  const autoPatternEtsyFetch =
+    opts.enrichOnly === true ? false : shouldAutoFetchPatternEtsyNotes(detailUrl, mergedBase)
+  const autoAndromedaFetch =
+    opts.enrichOnly === true ? false : shouldAutoFetchAndromedaMoonNotes(detailUrl, mergedBase)
+  const shouldFetchAndromedaBootstrap =
+    isAndromedaMoonProductUrl(detailUrl) && opts.fetchPdpNoteBootstrap === true
   if (
-    (opts.fetchPdpNoteBootstrap === true ||
+    (shouldFetchAndromedaBootstrap ||
+      opts.fetchPdpNoteBootstrap === true ||
       autoPatternEtsyFetch ||
-      shouldAutoFetchAndromedaMoonNotes(detailUrl, mergedBase)) &&
-    !hasExplicitNoteListSignal(mergedBase) &&
+      autoAndromedaFetch) &&
+    (shouldFetchAndromedaBootstrap || !hasExplicitNoteListSignal(mergedBase)) &&
     detailUrl.startsWith("http")
   ) {
     throwIfAborted(sig)
+    if (opts.fetchPdpNoteBootstrap === true) pdpNoteBootstrapCache.delete(detailUrl)
     const boot = await tryFetchPdpNoteBootstrap(detailUrl, sig, opts.onProgress)
     if (boot) {
       /**

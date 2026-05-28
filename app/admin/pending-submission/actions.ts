@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache"
 import {
   approvePendingSubmission,
   getPendingSubmissionById,
-  updatePendingSubmissionStatus,
+  rejectPendingSubmission,
 } from "@/models/pending-submission.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import {
@@ -85,14 +85,21 @@ export const processPendingSubmissionAction = async (
 
   if (actionType === "reject") {
     try {
-      await updatePendingSubmissionStatus(
-        submissionId,
-        "rejected",
+      const result = await rejectPendingSubmission(
+        {
+          ...submission,
+          submissionData: submission.submissionData as Record<string, unknown>,
+        },
         session.user.id,
         adminNotes
       )
+      if (!result.success) {
+        return { success: false, error: result.error }
+      }
+      revalidatePerfumeDataCache()
+      revalidateHouseDataCache()
       revalidatePath("/admin/pending-submission")
-      return { success: true, message: "Submission rejected" }
+      return { success: true, message: result.message }
     } catch (error) {
       console.error("Error rejecting submission:", error)
       return {

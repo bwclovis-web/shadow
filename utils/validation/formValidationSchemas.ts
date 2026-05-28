@@ -75,6 +75,28 @@ export const CreatePerfumeSchema = z.object({
   notesBase: z.array(z.string()).optional(),
 })
 
+export const CreateManualCollectionPerfumeSchema = z
+  .object({
+    perfumeName: nameRequired,
+    existingHouseId: z.string().trim().optional(),
+    customHouseName: nameOptional,
+    amount: amountSchema,
+    price: priceSchema,
+    placeOfPurchase: z.string().max(200, { message: V.placeOfPurchaseMax }).optional(),
+    type: z.string().min(1, { message: V.perfumeTypeRequired }).optional(),
+  })
+  .superRefine((data, ctx) => {
+    const hasExistingHouse = !!data.existingHouseId?.trim()
+    const hasCustomHouse = !!data.customHouseName?.trim()
+    if (!hasExistingHouse && !hasCustomHouse) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["existingHouseId"],
+        message: V.perfumeHouseRequired,
+      })
+    }
+  })
+
 export const UpdatePerfumeSchema = z.object({
   perfumeId: z.string().min(1, { message: V.perfumeIdRequired }),
   name: nameOptional,
@@ -429,6 +451,7 @@ export const validationSchemas = {
   createPerfumeHouse: CreatePerfumeHouseSchema,
   updatePerfumeHouse: UpdatePerfumeHouseSchema,
   createPerfume: CreatePerfumeSchema,
+  createManualCollectionPerfume: CreateManualCollectionPerfumeSchema,
   updatePerfume: UpdatePerfumeSchema,
   updateUserPerfume: UpdateUserPerfumeSchema,
   createRating: CreateRatingSchema,

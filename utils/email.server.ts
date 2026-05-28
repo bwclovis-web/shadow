@@ -37,8 +37,11 @@ const getResendClient = (): Resend | null => {
 }
 
 export const getAppBaseUrl = (): string => {
-  const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "")
-  return fromEnv ?? "http://localhost:3000"
+  const fromEnv = process.env.NEXT_PUBLIC_APP_URL?.trim()
+  if (fromEnv) {
+    return fromEnv.replace(/\/$/, "")
+  }
+  return "https://perfumershollow.com"
 }
 
 export const isSendableRecipientEmail = (

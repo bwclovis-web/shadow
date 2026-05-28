@@ -50,6 +50,9 @@ export interface PerfumeHouse {
   phone?: string | null
   address?: string | null
   type: HouseType
+  isPending: boolean
+  submittedBy?: string | null
+  pendingSubmissionId?: string | null
   createdAt: Date
   updatedAt: Date
   perfumes: Perfume[]
@@ -62,6 +65,9 @@ export interface Perfume {
   description?: string | null
   image?: string | null
   perfumeHouseId?: string | null
+  isPending: boolean
+  submittedBy?: string | null
+  pendingSubmissionId?: string | null
   createdAt: Date
   updatedAt: Date
   perfumeHouse?: PerfumeHouse | null

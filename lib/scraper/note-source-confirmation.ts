@@ -300,6 +300,10 @@ export const peelMarketingDescriptorTail = (note: string): string => {
         /\s+(?:wrap\s+(?:yourself|your\s+senses)|float\s+into|if\s+you\s+love|this\s+perfume\s+is|perfect\s+for\s+those|like\s+the\s+scent\s+of)\b.*$/i,
         "",
       )
+      .replace(
+        /\s+(?:bottled\s+by|hand-?blended(?:\s+with\s+care)?|followed\s+by\s+a\s+heart\s+of|brings\s+effortless\s+sensuality|utterly\s+magnetic|(?:j|u)uicy\s+signature\s+scent)\b.*$/i,
+        "",
+      )
       .replace(/(?<=\bvanilla)\s+cloud\s+cream\b.*$/i, "")
       .replace(/(?<=\bcandy)\s+air\b.*$/i, "")
       .replace(/^\s*sugary\s+(?=marshmallow)/i, "")
@@ -324,6 +328,9 @@ export const sanitizeExtractedNoteCandidate = (note: string): string | null => {
   if (/^(?:top|middle|base)\s+notes?$/i.test(raw)) return null
   const layerLeading = raw.match(/^(?:top|middle|base)\s+notes?\s+(?:are|is|of)\s+(.+)$/i)
   if (layerLeading?.[1]) return sanitizeExtractedNoteCandidate(layerLeading[1])
+  if (/^(?:top|heart|base|middle)\b\s+\w+/i.test(raw)) return null
+  if (/\b(?:top|heart|base|middle)\s*$/i.test(raw)) return null
+  if (/\b(?:top|heart|base|middle)\b/i.test(raw) && raw.split(/\s+/).length >= 2) return null
   if (/\s+(?:the|from|with|of|into)\s*$/i.test(raw)) return null
 
   const peeled = peelMarketingDescriptorTail(raw)
@@ -341,6 +348,10 @@ export const sanitizeExtractedNoteCandidate = (note: string): string | null => {
 export const isObviousNonMaterialNote = (note: string): boolean => {
   const n = note.trim().toLowerCase()
   if (!n) return true
+  if (/^[a-z]{1,2}$/i.test(n)) return true
+  if (/^(?:top|heart|base|middle)\b\s+\w+/i.test(n)) return true
+  if (/\b(?:top|heart|base|middle)\s*$/i.test(n)) return true
+  if (/\b(?:top|heart|base|middle)\b/i.test(n) && n.split(/\s+/).length >= 2) return true
   if (LAYER_LABEL_TOKENS.has(n)) return true
   if (STANDALONE_ACCORD_DESCRIPTOR_RE.test(n)) return true
   if (/^(?:a|an|the)\s+[a-z]/i.test(n)) return true
@@ -353,6 +364,11 @@ export const isObviousNonMaterialNote = (note: string): boolean => {
     return true
   if (/\b(?:wrap\s+(?:yourself|your\s+senses)|float\s+into|if\s+you\s+love|pastel\s+dreams\s+with|creamy\s+softness\s+of|nostalgic\s+desserts)\b/i.test(n))
     return true
+  if (/\b(?:bottled\s+by|hand-?blended(?:\s+with\s+care)?|followed\s+by\s+a\s+heart\s+of|brings\s+effortless\s+sensuality|utterly\s+magnetic|(?:j|u)uicy\s+signature\s+scent)\b/i.test(n))
+    return true
+  if (/^(?:llowed\s+by\s+a\s+heart\s+of|ss\s+brings\s+effortless\s+sensuality|tterly\s+magnetic|uicy\s+signature\s+scent)\b/i.test(n))
+    return true
+  if (/^(?:intention|care|inspected)$/i.test(n)) return true
   if (/^(?:touch|then|fabric|rgba|margin|h[1-6]|body|html|div|span|sans-serif|serif|monospace|system-ui|-apple-system|blinkmacsystemfont|roboto|inter|helvetica|arial|ui-sans-serif|ui-serif|ui-monospace|segoe ui|noto sans)$/i.test(n))
     return true
   if (/^(?:radial-gradient|linear-gradient|repeating-linear-gradient)$/i.test(n)) return true
@@ -384,7 +400,7 @@ export const looksLikeProseNotePhrase = (note: string): boolean => {
   if (!n) return true
   if (isObviousNonMaterialNote(n)) return true
   if (
-    /\b(?:adds?\s+a|\badds\b|give\s+the\s+scent|giraffe-inspired|animalic-foral|perfume\s+with\s+notes|with\s+notes\s+of\s+bergamot|subtle\s+grass\s+note|office\s+wear|polished\s+office|originally\s+from|frosted-pastel|summer\s+warm\s+days|clean\s+halo|longer\s+on\s+fabric|cloud\s+cream|candy\s+air|a\s+mug|the\s+creamy|cacao\s+the|powdered\s+vanilla\s+style|then\s+deepens|deepens\s+into|fluffy\s+glow|as\s+the\s+night\s+deepens|starry\s+date\s+evenings|celestial\s+hug|wear\s+guide|flirtatious|glamorous|surrounds\s+you\s+in|european\s+elegance|touch\s+of\s+european|wrap\s+(?:yourself|your\s+senses)|float\s+into|if\s+you\s+love|pastel\s+dreams\s+with|creamy\s+softness\s+of|nostalgic\s+desserts)\b/.test(
+    /\b(?:adds?\s+a|\badds\b|give\s+the\s+scent|giraffe-inspired|animalic-foral|perfume\s+with\s+notes|with\s+notes\s+of\s+bergamot|subtle\s+grass\s+note|office\s+wear|polished\s+office|originally\s+from|frosted-pastel|summer\s+warm\s+days|clean\s+halo|longer\s+on\s+fabric|cloud\s+cream|candy\s+air|a\s+mug|the\s+creamy|cacao\s+the|powdered\s+vanilla\s+style|then\s+deepens|deepens\s+into|fluffy\s+glow|as\s+the\s+night\s+deepens|starry\s+date\s+evenings|celestial\s+hug|wear\s+guide|flirtatious|glamorous|surrounds\s+you\s+in|european\s+elegance|touch\s+of\s+european|wrap\s+(?:yourself|your\s+senses)|float\s+into|if\s+you\s+love|pastel\s+dreams\s+with|creamy\s+softness\s+of|nostalgic\s+desserts|bottled\s+by|hand-?blended(?:\s+with\s+care)?|followed\s+by\s+a\s+heart\s+of|brings\s+effortless\s+sensuality|utterly\s+magnetic|(?:j|u)uicy\s+signature\s+scent)\b/.test(
       n,
     )
   ) {

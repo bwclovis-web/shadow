@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { searchPerfumeHouseByName } from "@/models/house.server"
+import { searchPerfumeHouseByNameForViewer } from "@/models/house.server"
+import { getSessionFromRequest } from "@/utils/session-from-request.server"
 import { parseOptionalAutocompleteQuery } from "@/utils/server/api-route-helpers.server"
 
 export async function GET(request: NextRequest) {
@@ -10,7 +11,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json([])
   }
   try {
-    const result = await searchPerfumeHouseByName(name, true)
+    const session = await getSessionFromRequest(request, { includeUser: false })
+    const result = await searchPerfumeHouseByNameForViewer(name, {
+      includeEmpty: true,
+      viewerUserId: session?.userId,
+    })
     return NextResponse.json(result ?? [])
   } catch (error) {
     console.error("[api/perfume-houses]", error)

@@ -8,6 +8,7 @@ import { CSV_IMPORT_MAX_ROWS } from "@/lib/csv-import-user"
 import { LISTING_CONDITIONS } from "@/utils/listing-display"
 
 export const CSV_IMPORT_SOURCE = "csv_import" as const
+export const MANUAL_COLLECTION_SOURCE = "manual_collection" as const
 
 export const CSV_PERFUME_DEFAULT_DESCRIPTION =
   "Submitted via CSV import. Please review and update this description."
@@ -17,6 +18,8 @@ export const CSV_HOUSE_DEFAULT_DESCRIPTION =
 
 /** Placeholder website — satisfies CreatePerfumeHouseSchema required URL */
 export const CSV_HOUSE_PLACEHOLDER_WEBSITE = "https://example.com"
+export const PERFUME_PLACEHOLDER_IMAGE = "/images/single-bottle.webp"
+export const HOUSE_PLACEHOLDER_IMAGE = "/images/house-soon.webp"
 
 export type CsvInventoryIntent = {
   amount: string

@@ -5,6 +5,9 @@ import {
   buildCsvPerfumeSubmissionData,
   buildPerfumeFormDataFromSubmission,
   CSV_IMPORT_SOURCE,
+  HOUSE_PLACEHOLDER_IMAGE,
+  MANUAL_COLLECTION_SOURCE,
+  PERFUME_PLACEHOLDER_IMAGE,
   extractInventoryIntent,
   isCsvImportSubmission,
   normalizeHouseKey,
@@ -132,5 +135,13 @@ describe("isCsvImportSubmission", () => {
   it("detects csv import source", () => {
     expect(isCsvImportSubmission({ source: CSV_IMPORT_SOURCE })).toBe(true)
     expect(isCsvImportSubmission({ source: "contact" })).toBe(false)
+  })
+})
+
+describe("manual collection placeholders", () => {
+  it("exports manual source and placeholder image constants", () => {
+    expect(MANUAL_COLLECTION_SOURCE).toBe("manual_collection")
+    expect(PERFUME_PLACEHOLDER_IMAGE).toContain("/images/")
+    expect(HOUSE_PLACEHOLDER_IMAGE).toContain("/images/")
   })
 })

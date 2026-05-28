@@ -225,6 +225,18 @@ Middle Notes: Verdant Earth Accord (Rich Soil, Green and Flowering Plants)`
     expect(sanitizeExtractedNoteCandidate("pastel dreams with")).toBeNull()
     expect(sanitizeExtractedNoteCandidate("gourmands")).toBeNull()
     expect(sanitizeExtractedNoteCandidate("nostalgic desserts")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("amber hand-blended")).toBe("amber")
+    expect(sanitizeExtractedNoteCandidate("bottled by")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("juicy signature scent unlike anything else")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("uicy signature scent unlike anything else")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("followed by a heart of frangipani")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("llowed by a heart of frangipani")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("ss brings effortless sensuality")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("tterly magnetic")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("top camphor")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("bergamot heart")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("violet base praline")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("intention")).toBeNull()
   })
 
   it("peelMarketingDescriptorTail strips trailing Shopify copy", () => {

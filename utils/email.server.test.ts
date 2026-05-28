@@ -1,3 +1,28 @@
+import { afterEach, describe, expect, it, vi } from "vitest"
+
+import { getAppBaseUrl } from "./email.server"
+
+describe("getAppBaseUrl", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it("uses NEXT_PUBLIC_APP_URL when provided", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://shadow.example/")
+
+    expect(getAppBaseUrl()).toBe("https://shadow.example")
+  })
+
+  it("falls back to the production domain when env is missing", () => {
+    expect(getAppBaseUrl()).toBe("https://perfumershollow.com")
+  })
+
+  it("falls back to the production domain when env is blank", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "   ")
+
+    expect(getAppBaseUrl()).toBe("https://perfumershollow.com")
+  })
+})
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 const { sendEmailMock } = vi.hoisted(() => ({

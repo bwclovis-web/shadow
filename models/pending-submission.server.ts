@@ -14,9 +14,69 @@ import { createUserAlert } from "./user-alerts.server"
 export type ApprovePendingSubmissionResult =
   | { success: true; message: string }
   | { success: false; error: string }
+export type RejectPendingSubmissionResult =
+  | { success: true; message: string }
+  | { success: false; error: string }
 
 type PendingSubmissionRecord = PendingSubmission & {
   submissionData: Record<string, unknown>
+}
+
+const deletePendingPerfumeById = async (perfumeId: string): Promise<void> => {
+  await prisma.$transaction(async tx => {
+    const userPerfumeRows = await tx.userPerfume.findMany({
+      where: { perfumeId },
+      select: { id: true },
+    })
+    const userPerfumeIds = userPerfumeRows.map(row => row.id)
+
+    await tx.userAlert.updateMany({
+      where: { perfumeId },
+      data: { perfumeId: null },
+    })
+
+    await tx.wishlistNotification.deleteMany({ where: { perfumeId } })
+    await tx.userPerfumeWishlist.deleteMany({ where: { perfumeId } })
+    await tx.userPerfumeReview.deleteMany({ where: { perfumeId } })
+    await tx.userPerfumeSeasonVote.deleteMany({ where: { perfumeId } })
+    await tx.userPerfumeRating.deleteMany({ where: { perfumeId } })
+    await tx.userPerfumeComment.deleteMany({ where: { perfumeId } })
+
+    if (userPerfumeIds.length > 0) {
+      await tx.tradeLineItem.deleteMany({
+        where: { userPerfumeId: { in: userPerfumeIds } },
+      })
+
+      await tx.decantSplit.deleteMany({
+        where: {
+          OR: [
+            { sourceUserPerfumeId: { in: userPerfumeIds } },
+            { perfumeId },
+          ],
+        },
+      })
+    } else {
+      await tx.decantSplit.deleteMany({ where: { perfumeId } })
+    }
+
+    await tx.userPerfume.deleteMany({ where: { perfumeId } })
+    await tx.perfume.deleteMany({ where: { id: perfumeId } })
+  })
+}
+
+const deletePendingHouseById = async (houseId: string): Promise<void> => {
+  const pendingPerfumesForHouse = await prisma.perfume.findMany({
+    where: { perfumeHouseId: houseId, isPending: true },
+    select: { id: true },
+  })
+
+  for (const perfume of pendingPerfumesForHouse) {
+    await deletePendingPerfumeById(perfume.id)
+  }
+
+  await prisma.perfumeHouse.deleteMany({
+    where: { id: houseId, isPending: true },
+  })
 }
 
 /**
@@ -224,7 +284,34 @@ export const approvePendingSubmission = async (
 
   if (submission.submissionType === "perfume_house") {
     const houseFormData = buildHouseFormDataFromSubmission(data)
-    await createPerfumeHouse(houseFormData)
+    const placeholderHouseId =
+      typeof data.placeholderHouseId === "string" ? data.placeholderHouseId : undefined
+    if (placeholderHouseId) {
+      await prisma.perfumeHouse.update({
+        where: { id: placeholderHouseId },
+        data: {
+          name: String(houseFormData.get("name") ?? ""),
+          description:
+            (houseFormData.get("description") as string | null) || null,
+          image: (houseFormData.get("image") as string | null) || null,
+          website: (houseFormData.get("website") as string | null) || null,
+          country: (houseFormData.get("country") as string | null) || null,
+          founded: (houseFormData.get("founded") as string | null) || null,
+          type:
+            (houseFormData.get("type") as
+              | import("@prisma/client").HouseType
+              | null) ?? "indie",
+          email: (houseFormData.get("email") as string | null) || null,
+          phone: (houseFormData.get("phone") as string | null) || null,
+          address: (houseFormData.get("address") as string | null) || null,
+          isPending: false,
+          submittedBy: null,
+          pendingSubmissionId: null,
+        },
+      })
+    } else {
+      await createPerfumeHouse(houseFormData)
+    }
     await updatePendingSubmissionStatus(
       submission.id,
       "approved",
@@ -284,7 +371,30 @@ export const approvePendingSubmission = async (
   }
 
   const perfumeFormData = buildPerfumeFormDataFromSubmission(data, resolvedHouseId)
-  const newPerfume = await createPerfume(perfumeFormData)
+  const placeholderPerfumeId =
+    typeof data.placeholderPerfumeId === "string"
+      ? data.placeholderPerfumeId
+      : undefined
+
+  let newPerfume: { id: string }
+  if (placeholderPerfumeId) {
+    newPerfume = await prisma.perfume.update({
+      where: { id: placeholderPerfumeId },
+      data: {
+        name: String(perfumeFormData.get("name") ?? ""),
+        description: (perfumeFormData.get("description") as string | null) || null,
+        image: (perfumeFormData.get("image") as string | null) || null,
+        perfumeHouseId: resolvedHouseId,
+        isPending: false,
+        submittedBy: null,
+        pendingSubmissionId: null,
+      },
+      select: { id: true },
+    })
+  } else {
+    const created = await createPerfume(perfumeFormData)
+    newPerfume = { id: created.id }
+  }
 
   const submitterId = submission.submittedBy
   if (submitterId && isCsvImportSubmission(data)) {
@@ -317,5 +427,43 @@ export const approvePendingSubmission = async (
     success: true,
     message: `Perfume created successfully.${collectionNote}`,
   }
+}
+
+export const rejectPendingSubmission = async (
+  submission: PendingSubmissionRecord,
+  reviewerId: string,
+  adminNotes?: string
+): Promise<RejectPendingSubmissionResult> => {
+  const data =
+    submission.submissionData &&
+    typeof submission.submissionData === "object" &&
+    !Array.isArray(submission.submissionData)
+      ? (submission.submissionData as Record<string, unknown>)
+      : null
+
+  if (!data) {
+    return { success: false, error: "Invalid submission data" }
+  }
+
+  const placeholderPerfumeId =
+    typeof data.placeholderPerfumeId === "string" ? data.placeholderPerfumeId : undefined
+  const placeholderHouseId =
+    typeof data.placeholderHouseId === "string" ? data.placeholderHouseId : undefined
+
+  if (placeholderPerfumeId) {
+    await deletePendingPerfumeById(placeholderPerfumeId)
+  }
+  if (placeholderHouseId) {
+    await deletePendingHouseById(placeholderHouseId)
+  }
+
+  await updatePendingSubmissionStatus(
+    submission.id,
+    "rejected",
+    reviewerId,
+    adminNotes
+  )
+
+  return { success: true, message: "Submission rejected and placeholder removed" }
 }
 

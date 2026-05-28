@@ -16,7 +16,7 @@ import { LuStore } from "react-icons/lu"
 
 import { Button } from "@/components/Atoms/Button/Button"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
-import PerfumeNotes from "@/components/Containers/Perfume/PerfumeNotes"
+import { CompareCardNotes } from "@/components/Molecules/CompareCardNotes/CompareCardNotes"
 import { PerfumeAggregateRatingsSummary } from "@/components/Molecules/PerfumeAggregateRatingsSummary/PerfumeAggregateRatingsSummary"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import { HOUSE_DETAIL_PATH, THE_ARCHIVE_PATH } from "@/constants/routes"
@@ -52,11 +52,13 @@ function CompareColumn({
   dto,
   bestForYou,
   bestForYouNoteList,
+  sharedNoteIds,
 }: {
   item: { id: string; name: string; slug: string; image?: string }
   dto: ComparePerfumeDto | undefined
   bestForYou?: boolean
   bestForYouNoteList?: string
+  sharedNoteIds?: ReadonlySet<string>
 }) {
   const t = useTranslations("compare")
   const tHouse = useTranslations("singleHouse")
@@ -134,13 +136,12 @@ function CompareColumn({
         )}
       </div>
 
-      <div className="border-t border-noir-light/10">
-        <PerfumeNotes
-          perfumeNotesOpen={dto.perfumeNotesOpen}
-          perfumeNotesHeart={dto.perfumeNotesHeart}
-          perfumeNotesClose={dto.perfumeNotesClose}
-        />
-      </div>
+      <CompareCardNotes
+        perfumeNotesOpen={dto.perfumeNotesOpen}
+        perfumeNotesHeart={dto.perfumeNotesHeart}
+        perfumeNotesClose={dto.perfumeNotesClose}
+        sharedNoteIds={sharedNoteIds}
+      />
 
       {dto.description ? (
         <p className="px-4 text-sm text-noir-gold-500 line-clamp-4">{dto.description}</p>
@@ -300,6 +301,30 @@ function ComparePageInner({ userId }: { userId: string | null }) {
     return notes.map((n) => n.name).join(", ")
   }, [personalize?.explainNotes])
 
+  const sharedNoteIds = useMemo(() => {
+    const noteCounts = new Map<string, number>()
+
+    for (const perfume of data ?? []) {
+      const perfumeNoteIds = new Set(
+        [
+          ...perfume.perfumeNotesOpen,
+          ...perfume.perfumeNotesHeart,
+          ...perfume.perfumeNotesClose,
+        ].map(note => note.id)
+      )
+
+      for (const noteId of perfumeNoteIds) {
+        noteCounts.set(noteId, (noteCounts.get(noteId) ?? 0) + 1)
+      }
+    }
+
+    return new Set(
+      [...noteCounts.entries()]
+        .filter(([, count]) => count > 1)
+        .map(([noteId]) => noteId)
+    )
+  }, [data])
+
   const copyShareLink = useCallback(async () => {
     if (orderedIds.length === 0) return
     const qs = `ids=${orderedIds.map(encodeURIComponent).join(",")}`
@@ -405,6 +430,7 @@ function ComparePageInner({ userId }: { userId: string | null }) {
                 bestForYouNoteList={
                   personalize?.winnerId === item.id ? winnerNoteList : undefined
                 }
+                sharedNoteIds={sharedNoteIds}
               />
             ))}
           </div>

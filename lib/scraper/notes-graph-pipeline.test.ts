@@ -1911,6 +1911,86 @@ Base: white musk`
     expect(invokeMock).not.toHaveBeenCalled()
   })
 
+  it("Andromedas Not Vanilla: keeps layers separated without duplicated cross-layer notes", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const notVanillaPdp =
+      "Top notes of Camphor, Nutmeg, Bergamot Middle notes of Vanilla, Juniper Berries, Cedar, Violet Base notes of Praline, Cetalox, Musk, Guaiac Wood, Moss, Amber"
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when clear layered notes are present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Not Vanilla Borntostandout",
+        description: notVanillaPdp,
+        image: "",
+        detailURL: "https://www.andromedasmoon.com/products/andromedas-inspired-by-eladaria-eau-de-parfum-creed",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+
+    expect(open).toEqual(expect.arrayContaining(["camphor", "nutmeg", "bergamot"]))
+    expect(heart).toEqual(expect.arrayContaining(["vanilla", "juniper berries", "cedar", "violet"]))
+    expect(base).toEqual(
+      expect.arrayContaining(["praline", "cetalox", "musk", "guaiac wood", "moss", "amber"]),
+    )
+    expect(heart).not.toEqual(expect.arrayContaining(["cetalox", "amber", "praline"]))
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas Fragaria: removes merged heart blob and adjective-only duplicate tokens", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const fragariaPdp =
+      "Top Notes: Crushed Pink Pepper, Sparkling Mandarin, Zesty Bergamot Heart Notes: Wild Strawberry, Violet Veil, Orris Butter Base Notes: Smoked Vetiver, Cedarwood Shavings, Patchouli Resin, Fir Balsam"
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when clear layered notes are present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Fragaria Creed",
+        description: fragariaPdp,
+        image: "",
+        detailURL: "https://www.andromedasmoon.com/products/inspired-by-fragaria",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+
+    expect(open).toEqual(expect.arrayContaining(["crushed pink pepper", "sparkling mandarin", "zesty bergamot"]))
+    expect(heart).toEqual(expect.arrayContaining(["wild strawberry", "violet veil", "orris butter"]))
+    expect(heart).not.toEqual(
+      expect.arrayContaining(["wild", "wild strawberry violet veil orris butter"]),
+    )
+    expect(base).toEqual(
+      expect.arrayContaining(["smoked vetiver", "cedarwood shavings", "patchouli", "resin", "fir balsam"]),
+    )
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
   it("Andromedas Milk Orchid: layered Top/Heart/Base notes without prose junk", async () => {
     vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
     vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
@@ -2667,6 +2747,47 @@ Base: white musk`
     expect(heart).toEqual(expect.arrayContaining(["jasmine", "lily"]))
     expect(base).toEqual(expect.arrayContaining(["vanilla", "sandalwood", "sugar"]))
     expect(all).not.toEqual(expect.arrayContaining(["creamy softness of"]))
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas Not Vanilla: layer-label fragments and hand-blended tails are rejected", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const notVanillaPdp =
+      "Top - Camphor, Nutmeg, Bergamot Heart - Vanilla, Juniper Berries, Cedar, Violet Base - Praline, Cetalox, Musk, Guaiac Wood, Moss, Amber Hand-blended and bottled by Andromeda's Moon. Each bottle is made to order with care and intention."
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when Andromeda layered notes are present")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Not Vanilla Borntostandout",
+        description: notVanillaPdp,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromedas-inspired-by-eladaria-eau-de-parfum-creed",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(open).toEqual(expect.arrayContaining(["camphor", "nutmeg", "bergamot"]))
+    expect(heart).toEqual(expect.arrayContaining(["vanilla", "juniper berries", "cedar", "violet"]))
+    expect(base).toEqual(expect.arrayContaining(["praline", "cetalox", "musk", "guaiac wood", "moss", "amber"]))
+    expect(all).not.toEqual(
+      expect.arrayContaining(["top camphor", "bergamot heart", "violet base praline", "bottled by", "intention"]),
+    )
     expect(invokeMock).not.toHaveBeenCalled()
   })
 
