@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useMemo, useRef } from "react"
 import { useTranslations } from "next-intl"
 
 import { useGsapStagger } from "@/hooks/useGsapStagger"
@@ -22,7 +22,8 @@ type NoteSection = {
   notes: PerfumeNote[]
 }
 
-const MAX_VISIBLE_NOTES = 8
+// Legacy "show first N notes" toggle kept for quick re-enable.
+// const MAX_VISIBLE_NOTES = 8
 
 const sortNotesAlphabetically = (notes: PerfumeNote[]): PerfumeNote[] =>
   [...notes].sort((a, b) =>
@@ -35,11 +36,7 @@ const PerfumeNotes = ({
   perfumeNotesClose,
 }: PerfumeNotesProps) => {
   const t = useTranslations("singlePerfume.notes")
-  const tCommon = useTranslations("common")
   const containerRef = useRef<HTMLDivElement>(null)
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(
-    {}
-  )
 
   const { dedupedOpen, dedupedHeart, dedupedClose } = useMemo(() => {
     const seenIds = new Set<string>()
@@ -103,10 +100,6 @@ const PerfumeNotes = ({
     .map(section => `${section.key}:${section.notes.map(note => note.id).join(",")}`)
     .join("|")
 
-  useEffect(() => {
-    setExpandedSections({})
-  }, [sectionSignature])
-
   useGsapStagger(containerRef, {
     selector: "[data-note-group]",
     deps: [sectionSignature],
@@ -134,11 +127,13 @@ const PerfumeNotes = ({
       }`}
     >
       {sections.map((section, index) => {
-        const isExpanded = Boolean(expandedSections[section.key])
-        const visibleNotes = isExpanded
-          ? section.notes
-          : section.notes.slice(0, MAX_VISIBLE_NOTES)
-        const hiddenCount = section.notes.length - visibleNotes.length
+        const visibleNotes = section.notes
+        // Legacy collapsed-notes behavior (kept commented for later use):
+        // const isExpanded = Boolean(expandedSections[section.key])
+        // const visibleNotes = isExpanded
+        //   ? section.notes
+        //   : section.notes.slice(0, MAX_VISIBLE_NOTES)
+        // const hiddenCount = section.notes.length - visibleNotes.length
 
         return (
           <section
@@ -154,7 +149,8 @@ const PerfumeNotes = ({
               <h3 className="text-lg font-medium tracking-wide text-noir-gold">
                 {section.label}
               </h3>
-              {hiddenCount > 0 && (
+              {/* Legacy "+N" expand button; disabled so all notes are always shown. */}
+              {/* {hiddenCount > 0 && (
                 <button
                   type="button"
                   onClick={() =>
@@ -170,7 +166,7 @@ const PerfumeNotes = ({
                 >
                   +{hiddenCount}
                 </button>
-              )}
+              )} */}
             </div>
             <ul className="mt-3 flex flex-wrap gap-2">
               {visibleNotes.map(note => (
