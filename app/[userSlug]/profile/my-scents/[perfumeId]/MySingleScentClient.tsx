@@ -6,12 +6,12 @@ import { Link } from "next-view-transitions"
 import { useRouter } from "next/navigation"
 
 import VooDooDetails from "@/components/Atoms/VooDooDetails"
+import ReviewStatusBadge from "@/components/Atoms/ReviewStatusBadge"
 import DestashManager from "@/components/Containers/MyScents/DestashManager/DestashManager"
 import { CommentsModal } from "@/components/Containers/MyScents"
 import { GeneralDetails, PerfumeComments } from "@/components/Containers/MyScents/MyScentListItem/bones"
 import DangerModal from "@/components/Organisms/DangerModal"
 import Modal from "@/components/Organisms/Modal"
-import AddToCollectionModal from "@/components/Organisms/AddToCollectionModal"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { getPerfumeTypeLabel } from "@/data/SelectTypes"
 import { useCSRF } from "@/hooks/useCSRF"
@@ -20,7 +20,9 @@ import { useSessionStore } from "@/hooks/sessionStore"
 import type { Comment } from "@/types/comments"
 import type { PerfumeI, UserPerfumeI } from "@/types"
 import { getActiveListings, parseMl } from "@/lib/user-inventory"
+import { isCollectionItemInReview } from "@/lib/collection-review-status"
 import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const BOTTLE_BANNER = "/images/single-bottle.webp"
 const USER_PERFUMES_API = "/api/user-perfumes"
@@ -271,7 +273,7 @@ const MySingleScentClient = ({
   const byTypeTotals = Object.values(byTypeMap)
 
   return (
-    <>
+    <main id="main-content">
       {modalOpen && modalId === "delete-item" && (
         <Modal innerType="dark" animateStart="top">
           <DangerModal
@@ -289,16 +291,12 @@ const MySingleScentClient = ({
       <TitleBanner
         image={imageSrc}
         heading={perfume?.name ?? ""}
-      />
-      <div className="inner-container py-6">
-        <div className="flex justify-end mt-4 mb-2">
-          <AddToCollectionModal
-            type="icon"
-            perfume={finalPerfume.perfume as PerfumeI}
-            addAnotherBottle
-            onAddedToCollection={() => router.refresh()}
-          />
-        </div>
+      >
+        {isCollectionItemInReview(finalPerfume) ? (
+          <ReviewStatusBadge size="md" className="mx-auto" />
+        ) : null}
+      </TitleBanner>
+      <PageWrapper>
         <GeneralDetails
           userPerfume={finalPerfume}
           deletePerfume={handleRemovePerfume}
@@ -364,8 +362,8 @@ const MySingleScentClient = ({
           />
           </div>
         </VooDooDetails>
-      </div>
-    </>
+      </PageWrapper>
+    </main>
   )
 }
 

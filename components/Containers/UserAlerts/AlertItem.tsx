@@ -39,6 +39,10 @@ const getAlertIconClassName = (alertType: UserAlert["alertType"]) => {
       return "text-blue-600"
     case "pending_submission_approval":
       return "text-yellow-600"
+    case "submission_approved":
+      return "text-green-600"
+    case "submission_rejected":
+      return "text-red-400"
     case "new_trader_message":
       return "text-indigo-600"
     case "trade_received":
@@ -92,6 +96,14 @@ const alertLink = (alert: UserAlert) => {
     return `${getProfilePathForUser(alert.User)}/security`
   }
   if ((alert.alertType as string) === "pending_submission_approval") return "/admin/pending-submission"
+  if (
+    (alert.alertType as string) === "submission_approved" ||
+    (alert.alertType as string) === "submission_rejected"
+  ) {
+    const targetUrl = alert.metadata?.targetUrl as string | undefined
+    if (targetUrl) return targetUrl.startsWith("/") ? targetUrl : `/${targetUrl}`
+    return "/profile/my-scents"
+  }
   const senderId = alert.metadata?.senderId as string | undefined
   if ((alert.alertType as string) === "new_trader_message" && senderId) {
     return exchangesLink(senderId)
@@ -127,6 +139,8 @@ const alertTypeKey = (alertType: UserAlert["alertType"]) => {
     "wishlist_available",
     "decant_interest",
     "pending_submission_approval",
+    "submission_approved",
+    "submission_rejected",
     "new_trader_message",
     "trade_received",
     "trade_accepted",
@@ -183,6 +197,12 @@ export const AlertItem = ({
   const actionLabel = (() => {
     if (alert.alertType === "pending_submission_approval") {
       return t("actions.reviewSubmission")
+    }
+    if (alert.alertType === "submission_approved") {
+      return t("actions.viewSubmissionApproved")
+    }
+    if (alert.alertType === "submission_rejected") {
+      return t("actions.viewMyScents")
     }
     if (alert.alertType === "new_trader_message") return t("actions.viewMessage")
     if (isTradeAlert(alert.alertType as string)) return t("actions.viewTrade")

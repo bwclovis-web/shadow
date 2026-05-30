@@ -103,6 +103,7 @@ const ProfileForm = ({
           value={avatarUrls}
           onChange={setAvatarUrls}
           maxImages={1}
+          label={t("avatarLabel")}
           uploadFn={uploadAvatarImage}
           translationNamespace="profile.avatar"
           cameraModalId="profile-avatar-camera"

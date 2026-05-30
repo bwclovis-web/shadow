@@ -20,10 +20,12 @@ const defaultAlertPreferences = {
   securityAlertsEnabled: true,
   followAlertsEnabled: true,
   emailFollowAlerts: false,
+  emailSubmissionAlerts: false,
   pushEnabled: false,
   pushTradeAlerts: true,
   pushMessageAlerts: true,
   pushFollowAlerts: true,
+  pushSubmissionAlerts: true,
   maxAlerts: 10,
 } as const
 
@@ -104,10 +106,12 @@ export const updateUserAlertPreferences = async (
       securityAlertsEnabled: preferences.securityAlertsEnabled ?? true,
       followAlertsEnabled: preferences.followAlertsEnabled ?? true,
       emailFollowAlerts: preferences.emailFollowAlerts ?? false,
+      emailSubmissionAlerts: preferences.emailSubmissionAlerts ?? false,
       pushEnabled: preferences.pushEnabled ?? false,
       pushTradeAlerts: preferences.pushTradeAlerts ?? true,
       pushMessageAlerts: preferences.pushMessageAlerts ?? true,
       pushFollowAlerts: preferences.pushFollowAlerts ?? true,
+      pushSubmissionAlerts: preferences.pushSubmissionAlerts ?? true,
       maxAlerts: preferences.maxAlerts ?? 10,
     },
   })

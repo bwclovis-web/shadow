@@ -117,6 +117,7 @@ const ReportTraderModal = ({
               onChange={setImages}
               maxImages={3}
               disabled={isPending}
+              label={t("photosLabel")}
               uploadFn={uploadReportImage}
               translationNamespace="listing"
               cameraModalId={REPORT_CAMERA_MODAL_ID}

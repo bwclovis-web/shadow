@@ -47,18 +47,13 @@ const AddToCollectionModal = ({
       <Button
         background={isIcon ? "gold" : undefined}
         variant={type}
+        size="sm"
         className={cx("z-50", className)}
         onClick={() => toggleModal(modalTrigger, "add-scent", { action: "create" })}
         ref={modalTrigger}
+        leftIcon={isIcon ? <MdLibraryAdd size={20} /> : undefined}
       >
-        {isIcon ? (
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-sm">{buttonLabel}</span>
-            <MdLibraryAdd size={20} />
-          </div>
-        ) : (
-          <span>{buttonLabel}</span>
-        )}
+        <span>{buttonLabel}</span>
       </Button>
 
       {modalOpen && modalId === "add-scent" && (

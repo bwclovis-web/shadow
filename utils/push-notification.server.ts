@@ -10,6 +10,11 @@ import type { AlertType } from "@/types/database"
 import { getAppBaseUrl } from "@/utils/email.server"
 import { ensureVapidConfigured } from "@/utils/push-vapid.server"
 
+const SUBMISSION_PUSH_ALERT_TYPES: AlertType[] = [
+  "submission_approved",
+  "submission_rejected",
+]
+
 const TRADE_PUSH_ALERT_TYPES: AlertType[] = [
   "trade_accepted",
   "trade_shipped",
@@ -68,6 +73,16 @@ const buildNotificationUrl = (
     return `${base}/splits/${metadata.splitId}`
   }
 
+  if (
+    (alertType === "submission_approved" || alertType === "submission_rejected") &&
+    typeof metadata?.targetUrl === "string"
+  ) {
+    const path = metadata.targetUrl.startsWith("/")
+      ? metadata.targetUrl
+      : `/${metadata.targetUrl}`
+    return `${base}${path}`
+  }
+
   return `${base}/profile`
 }
 
@@ -114,6 +129,10 @@ const shouldSendPushForAlert = async (
     return preferences.decantAlertsEnabled && preferences.pushTradeAlerts
   }
 
+  if (SUBMISSION_PUSH_ALERT_TYPES.includes(alertType)) {
+    return preferences.pushSubmissionAlerts
+  }
+
   return false
 }
 
@@ -129,7 +148,9 @@ export const sendPushForUserAlert = async (options: {
   if (
     !TRADE_PUSH_ALERT_TYPES.includes(alertType) &&
     !MESSAGE_PUSH_ALERT_TYPES.includes(alertType) &&
-    !FOLLOW_PUSH_ALERT_TYPES.includes(alertType)
+    !FOLLOW_PUSH_ALERT_TYPES.includes(alertType) &&
+    !SPLIT_PUSH_ALERT_TYPES.includes(alertType) &&
+    !SUBMISSION_PUSH_ALERT_TYPES.includes(alertType)
   ) {
     return
   }

@@ -429,10 +429,12 @@ model UserAlertPreferences {
   securityAlertsEnabled Boolean @default(true)
   followAlertsEnabled   Boolean @default(true)
   emailFollowAlerts     Boolean @default(false)
+  emailSubmissionAlerts Boolean @default(false)
   pushEnabled           Boolean @default(false)
   pushTradeAlerts       Boolean @default(true)
   pushMessageAlerts     Boolean @default(true)
   pushFollowAlerts      Boolean @default(true)
+  pushSubmissionAlerts  Boolean @default(true)
   maxAlerts             Int     @default(10)
   User                  User    @relation(fields: [userId], references: [id])
 }
@@ -797,6 +799,8 @@ enum AlertType {
   wishlist_available
   decant_interest
   pending_submission_approval
+  submission_approved
+  submission_rejected
   new_trader_message
   trade_received
   trade_accepted

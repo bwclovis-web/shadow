@@ -12,6 +12,7 @@ export const buttonVariants = cva(
     },
     variants: {
       size: {
+        xs: "text-xs px-1 py-0.5",
         sm: "text-sm px-1.25 py-1",
         md: "text-base px-2 py-1",
         lg: "text-lg px-2.5 py-1.5",
@@ -29,7 +30,7 @@ export const buttonVariants = cva(
         danger:
           "bg-btn-danger hover:bg-btn-danger-hover focus:bg-btn-danger-focus disabled:bg-btn-danger-disabled text-white",
         link: "bg-transparent text-blue-200 font-semibold hover:underline focus:bg-noir-gold/20 disabled:bg-transparent text-nowrap px-0",
-        icon: "block bg-transparent rounded-sm p-2.5 transition-all duration-300 ease-in-out  disabled:bg-transparent font-medium border gap-3",
+        icon: "block bg-transparent flex items-center justify-center rounded-sm transition-all duration-300 ease-in-out  disabled:bg-transparent font-medium border gap-3",
       },
       leftIcon: {
         true: "flex items-center justify-between gap-2",

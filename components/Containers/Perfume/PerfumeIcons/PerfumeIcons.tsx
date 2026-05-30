@@ -118,9 +118,6 @@ const PerfumeIcons = ({
     "motion-safe:hover:-translate-y-0.5 hover:bg-noir-gold/16 hover:border-noir-gold-500"
   const activeActionButtonClassName =
     "border-noir-gold-100 bg-noir-gold/18 -translate-y-0.5"
-  const iconLabelClassName =
-    "font-medium tracking-[0.08em] transition-[transform,color] duration-300 group-hover:translate-x-0.5"
-
   return (
     <>
       {modalOpen && modalId === DELETE_MODAL_ID && (
@@ -209,22 +206,10 @@ const PerfumeIcons = ({
           } ${animatedAction === "wishlist" ? "motion-safe:animate-vault-stamp" : ""}`}
           disabled={toggleWishlist.isPending}
           aria-label={wishlistAriaLabel}
+          leftIcon={inWishlist ? <BsHeartFill size={22} /> : <BsHearts size={22} />}
         >
-          {inWishlist ? (
-            <IconLabel
-              label={tIcons("icons.inWishlist")}
-              icon={BsHeartFill}
-              size={22}
-              className={iconLabelClassName}
-            />
-          ) : (
-            <IconLabel
-              label={tIcons("icons.addButton")}
-              icon={BsHearts}
-              size={22}
-              className={iconLabelClassName}
-            />
-          )}
+
+          {inWishlist ? tIcons("icons.inWishlist") : tIcons("icons.addButton")}
         </Button>
         <AddToCollectionModal
           type="icon"
@@ -243,7 +228,7 @@ const PerfumeIcons = ({
                 background="gold"
                 size="sm"
                 className={`${actionButtonClassName} flex items-center justify-between gap-2`}
-                rightIcon={<GrEdit size={22} />}
+                leftIcon={<GrEdit size={22} />}
                 url={`/admin/perfume/${perfume.slug}/edit`}
               >
                 {tIcons("icons.editButton")}
@@ -254,7 +239,7 @@ const PerfumeIcons = ({
                 aria-label={`delete ${perfume.name}`}
                 variant="icon"
                 className={`${actionButtonClassName} flex items-center justify-between gap-2`}
-                rightIcon={<MdDeleteForever size={22} />}
+                leftIcon={<MdDeleteForever size={22} />}
                 background="gold"
                 size="sm"
               >

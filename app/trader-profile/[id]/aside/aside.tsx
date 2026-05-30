@@ -42,7 +42,7 @@ export const TraderProfileAside = ({
     <div className="md:col-span-2 xl:col-span-1">
       {showAboutSection ? (
         <div className="noir-border mb-4 p-4">
-          <h2 className="mb-2 text-noir-gold">{t("aboutHeading")}</h2>
+          <h2 className="mb-2">{t("aboutHeading")}</h2>
           {hasAboutText ? (
             <p className="whitespace-pre-wrap text-noir-gold-100">{trader.traderAbout}</p>
           ) : null}

@@ -22,6 +22,7 @@ import DestashForm, { type DeStashData } from "../DeStashForm/DeStashForm"
 import DestashItem from "./DestashItem"
 import PausedDestashItem from "./PausedDestashItem"
 import { isDecantSplitsEnabledClient } from "@/utils/decant-splits-enabled"
+import { LuSplit } from "react-icons/lu"
 
 const totalDestashedForPerfume = (entriesForPerfume: UserPerfumeI[]) =>
   entriesForPerfume.reduce((sum, e) => sum + parseMl(e.available), 0)
@@ -300,9 +301,9 @@ const DestashManager = ({
     : null
 
   return (
-    <div className="p-2 space-y-4">
+    <div className="p-4 rounded-b-md bg-noir-dark/80">
       <div className="flex flex-col md:flex-row gap-3 md:gap-0 justify-between items-center">
-        <h3 className="text-noir-dark! text-xl">
+        <h3>
           {t("title")}
         </h3>
         {!isCreating && !editingId && (
@@ -331,6 +332,7 @@ const DestashManager = ({
                 onClick={() => setShowSplitWizard(true)}
                 variant="secondary"
                 size="sm"
+                leftIcon={<LuSplit size={18} />}
                 disabled={submitState === "submitting" || showSplitWizard}
               >
                 {tSplits("startGroupSplit")}
@@ -352,7 +354,7 @@ const DestashManager = ({
         />
       )}
 
-      <p className="text-sm text-noir-dark font-medium wrap-anywhere">
+      <p className="text-noir-gold-100 font-medium wrap-anywhere mb-4">
         {t("description")}
       </p>
 
@@ -360,7 +362,7 @@ const DestashManager = ({
       {!isCreating && !editingId && (
         <div className="space-y-3">
           {destashes.length === 0 && pausedDestashes.length === 0 ? (
-            <p className="text-noir-dark italic leading-none text-center py-4 text-sm">
+            <p className="text-noir-gold-500 italic leading-none text-center py-4 text-sm">
               {t("noDestashes")}
             </p>
           ) : (
@@ -408,13 +410,13 @@ const DestashManager = ({
       )}
 
       {(isCreating || editingId) && (
-        <div className="noir-border p-4 bg-noir-dark/30">
-          <div className="flex justify-between items-center mb-4">
-            <h4 className="text-lg font-semibold text-noir-dark">
+        <div className="noir-border p-4 bg-noir-black/50 rounded-md">
+          <div className="flex justify-between items-center">
+            <h3>
               {isCreating
                 ? t("createNew")
                 : t("editDestash")}
-            </h4>
+            </h3>
             <Button onClick={handleCancel} variant="secondary" size="sm">
               {t("cancel")}
             </Button>
@@ -476,7 +478,7 @@ const DestashManager = ({
             return (
               <>
                 {currentBottleId && formMaxAvailable != null && (
-                  <p className="text-sm text-noir-dark mb-3">
+                  <p className="text-sm text-noir-gold-100">
                     {t("bottleDestashHint", { max: formMaxAvailable })}
                   </p>
                 )}

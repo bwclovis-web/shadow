@@ -2,8 +2,10 @@ import { useTranslations } from "next-intl"
 import { GiTrade } from "react-icons/gi"
 
 import ListingPhotos from "@/components/Molecules/ListingPhotos/ListingPhotos"
+import ReviewStatusBadge from "@/components/Atoms/ReviewStatusBadge"
 import VooDooDetails from "~/components/Atoms/VooDooDetails"
 import { getPerfumeTypeLabel } from "~/data/SelectTypes"
+import { isCollectionItemInReview } from "@/lib/collection-review-status"
 import { listingConditionI18nKey } from "@/utils/listing-display"
 import type { UserPerfumeI } from "~/types"
 import ProposeTradeButton from "~/components/Containers/TraderProfile/ProposeTradeButton"
@@ -26,8 +28,9 @@ const getTradeLabel = (t: ReturnType<typeof useTranslations>, preference: string
 // Header component for perfume info
 const PerfumeHeader = ({ userPerfume }: { userPerfume: UserPerfumeI }) => (
   <div className="flex flex-col">
-    <div className="font-semibold text-xl text-noir-gold">
-      {userPerfume.perfume?.name || "Unknown Perfume"}
+    <div className="flex flex-wrap items-center gap-2 font-semibold text-xl text-noir-gold">
+      <span>{userPerfume.perfume?.name || "Unknown Perfume"}</span>
+      {isCollectionItemInReview(userPerfume) ? <ReviewStatusBadge size="md" /> : null}
     </div>
     <div className="text-sm text-noir-gold-100">
       by {userPerfume.perfume?.perfumeHouse?.name}

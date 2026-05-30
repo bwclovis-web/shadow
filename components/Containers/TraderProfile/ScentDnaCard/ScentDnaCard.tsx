@@ -88,8 +88,8 @@ const ScentDnaCard = ({
     >
       <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-base font-semibold text-noir-gold">{t("title")}</h2>
-          <p className="text-xs text-noir-gold-500">{t("subtitle", { traderName })}</p>
+          <h2 className="mb-2">{t("title")}</h2>
+          <p className="text-sm text-noir-gold-100">{t("subtitle", { traderName })}</p>
         </div>
         {shareUrl ? (
           <Button

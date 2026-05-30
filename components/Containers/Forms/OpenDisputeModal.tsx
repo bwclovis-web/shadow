@@ -111,6 +111,7 @@ const OpenDisputeModal = ({ tradeId, onSuccess }: OpenDisputeModalProps) => {
               onChange={setImages}
               maxImages={3}
               disabled={isPending}
+              label={t("photosLabel")}
               uploadFn={uploadReportImage}
               translationNamespace="listing"
               cameraModalId={DISPUTE_CAMERA_MODAL_ID}

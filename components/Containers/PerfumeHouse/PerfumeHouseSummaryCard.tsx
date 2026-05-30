@@ -3,6 +3,8 @@
 import PerfumeHouseAddressBlock from "@/components/Containers/PerfumeHouse/AddressBlock/PerfumeHouseAddressBlock"
 import { VooDooLink } from "@/components/Atoms/Button"
 import { useTranslations } from "next-intl"
+import { isPendingDefaultHouseDescription } from "@/lib/csv-import-pending-submission"
+import { LuArrowLeft } from "react-icons/lu"
 
 interface PerfumeHouseSummary {
   description?: string | null
@@ -28,11 +30,16 @@ const PerfumeHouseSummaryCard = ({
   backPath,
 }: PerfumeHouseSummaryCardProps) => {
   const t = useTranslations("singleHouse.summaryCard")
+  const tPending = useTranslations("pendingSubmissions")
   return (
     <div className="noir-border relative bg-white/5 text-noir-gold-500">
       <PerfumeHouseAddressBlock perfumeHouse={perfumeHouse} />
       {perfumeHouse.description && (
-        <p className="px-4 pt-4">{perfumeHouse.description}</p>
+        <p className="px-4 pt-4">
+          {isPendingDefaultHouseDescription(perfumeHouse.description)
+            ? tPending("defaultHouseDescription")
+            : perfumeHouse.description}
+        </p>
       )}
       <div className="flex flex-wrap items-baseline justify-between gap-2 px-4 pb-4 pt-4">
         <span className="text-xs uppercase tracking-[0.3em] text-noir-gold-500">
@@ -48,9 +55,10 @@ const PerfumeHouseSummaryCard = ({
       <span className="tag absolute">{perfumeHouse.type}</span>
       <VooDooLink
         url={backPath}
-        variant="primary"
+        variant="icon"
         background="gold"
         size="sm"
+        leftIcon={<LuArrowLeft size={22} />}
         transitionVariant="detail-to-list"
         className="gap-2 max-w-max ml-2 mb-2 mt-2"
         aria-label={
@@ -59,7 +67,7 @@ const PerfumeHouseSummaryCard = ({
             : t("backToHousesLabel")
         }
       >
-        ← {selectedLetter ? t("backToHouses", { selectedLetter }) : t("backToHousesLabel")}
+        {selectedLetter ? t("backToHouses", { selectedLetter }) : t("backToHousesLabel")}
       </VooDooLink>
     </div>
   )

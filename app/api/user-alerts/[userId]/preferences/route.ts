@@ -16,10 +16,12 @@ const defaultPreferences = {
   securityAlertsEnabled: true,
   followAlertsEnabled: true,
   emailFollowAlerts: false,
+  emailSubmissionAlerts: false,
   pushEnabled: false,
   pushTradeAlerts: true,
   pushMessageAlerts: true,
   pushFollowAlerts: true,
+  pushSubmissionAlerts: true,
   maxAlerts: 10,
 }
 
@@ -94,6 +96,8 @@ async function updatePreferences(
   if (typeof body.pushTradeAlerts === "boolean") preferences.pushTradeAlerts = body.pushTradeAlerts
   if (typeof body.pushMessageAlerts === "boolean") preferences.pushMessageAlerts = body.pushMessageAlerts
   if (typeof body.pushFollowAlerts === "boolean") preferences.pushFollowAlerts = body.pushFollowAlerts
+  if (typeof body.pushSubmissionAlerts === "boolean") preferences.pushSubmissionAlerts = body.pushSubmissionAlerts
+  if (typeof body.emailSubmissionAlerts === "boolean") preferences.emailSubmissionAlerts = body.emailSubmissionAlerts
 
   try {
     const updated = await updateUserAlertPreferences(userId, preferences)

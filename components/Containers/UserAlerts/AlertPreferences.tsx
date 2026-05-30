@@ -61,7 +61,9 @@ export const AlertPreferences = ({
     pushMessageAlerts: preferences.pushMessageAlerts ?? true,
     followAlertsEnabled: preferences.followAlertsEnabled ?? true,
     emailFollowAlerts: preferences.emailFollowAlerts ?? false,
+    emailSubmissionAlerts: preferences.emailSubmissionAlerts ?? false,
     pushFollowAlerts: preferences.pushFollowAlerts ?? true,
+    pushSubmissionAlerts: preferences.pushSubmissionAlerts ?? true,
     maxAlerts: preferences.maxAlerts,
   })
 
@@ -80,7 +82,9 @@ export const AlertPreferences = ({
       pushMessageAlerts: preferences.pushMessageAlerts ?? true,
       followAlertsEnabled: preferences.followAlertsEnabled ?? true,
       emailFollowAlerts: preferences.emailFollowAlerts ?? false,
+      emailSubmissionAlerts: preferences.emailSubmissionAlerts ?? false,
       pushFollowAlerts: preferences.pushFollowAlerts ?? true,
+      pushSubmissionAlerts: preferences.pushSubmissionAlerts ?? true,
       maxAlerts: preferences.maxAlerts,
     })
     setIsEditing(true)
@@ -265,6 +269,14 @@ export const AlertPreferences = ({
                   labelChecked={t("emailFollowAlerts")}
                   labelUnchecked={t("emailFollowAlerts")}
                 />
+
+                <VooDooCheck
+                  id="email-submission-alerts"
+                  checked={editState.emailSubmissionAlerts}
+                  onChange={() => togglePreference("emailSubmissionAlerts")}
+                  labelChecked={t("emailSubmissionAlerts")}
+                  labelUnchecked={t("emailSubmissionAlerts")}
+                />
               </div>
             </div>
 
@@ -277,6 +289,7 @@ export const AlertPreferences = ({
                 pushTradeAlerts: editState.pushTradeAlerts,
                 pushMessageAlerts: editState.pushMessageAlerts,
                 pushFollowAlerts: editState.pushFollowAlerts,
+                pushSubmissionAlerts: editState.pushSubmissionAlerts,
               }}
               onEditStateChange={patch => setEditState(prev => ({ ...prev, ...patch }))}
               onPreferencesChange={onPreferencesChange}
@@ -422,6 +435,13 @@ export const AlertPreferences = ({
 
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-noir-gold-100">
+                      {t("emailSubmissionAlerts")}
+                    </span>
+                    <StatusBadge enabled={preferences.emailSubmissionAlerts ?? false} />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-noir-gold-100">
                       {t("maxAlerts")}
                     </span>
                     <StatusBadge value={preferences.maxAlerts} />
@@ -439,6 +459,7 @@ export const AlertPreferences = ({
                 pushTradeAlerts: preferences.pushTradeAlerts ?? true,
                 pushMessageAlerts: preferences.pushMessageAlerts ?? true,
                 pushFollowAlerts: preferences.pushFollowAlerts ?? true,
+                pushSubmissionAlerts: preferences.pushSubmissionAlerts ?? true,
               }}
               onEditStateChange={() => {}}
               onPreferencesChange={async () => false}

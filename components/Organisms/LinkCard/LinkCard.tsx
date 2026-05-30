@@ -1,4 +1,5 @@
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
+import ReviewStatusBadge from "@/components/Atoms/ReviewStatusBadge"
 import { PerfumeCompareToggle } from "@/components/Molecules/PerfumeCompareToggle/PerfumeCompareToggle"
 import { HOUSE_DETAIL_PATH, PERFUME_PATH } from "@/constants/routes"
 import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
@@ -17,6 +18,7 @@ interface LinkCardProps {
     slug: string
     image?: string
     type?: string
+    isPending?: boolean
     perfumeHouse?: { name: string } | null
   }
   type: "house" | "perfume"
@@ -81,6 +83,11 @@ const LinkCard = ({
           >
             {data.name}
           </h2>
+          {data.isPending && type === "perfume" ? (
+            <div className="mt-1 flex justify-center">
+              <ReviewStatusBadge />
+            </div>
+          ) : null}
           {data?.perfumeHouse?.name && (
             <p className="text-sm text-noir-gold-100 leading-tight">
               {data.perfumeHouse.name}

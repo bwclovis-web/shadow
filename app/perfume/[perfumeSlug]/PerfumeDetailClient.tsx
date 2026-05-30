@@ -6,6 +6,7 @@ import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button"
+import ReviewStatusBadge from "@/components/Atoms/ReviewStatusBadge"
 import PerfumeIcons from "@/components/Containers/Perfume/PerfumeIcons"
 import PerfumeNotes from "@/components/Containers/Perfume/PerfumeNotes"
 import PerfumeRatingSystem from "@/components/Containers/Perfume/PerfumeRatingSystem"
@@ -34,6 +35,8 @@ import SimilarPerfumesCarousel from "@/components/Containers/Recommendations/Sim
 import type { ArticleListItem } from "@/lib/sanity/types"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 import { setRouteTransitionVariant } from "@/utils/route-transitions"
+import { isPendingDefaultPerfumeDescription } from "@/lib/csv-import-pending-submission"
+import { LuArrowLeft } from "react-icons/lu"
 
 type PerfumeDetailClientProps = {
   initialPerfume: Awaited<ReturnType<typeof import("@/models/perfume.server").getPerfumeBySlug>> & { id: string }
@@ -71,6 +74,7 @@ const PerfumeDetailClient = ({
   const { data: perfume } = usePerfume(initialPerfume.slug, initialPerfume)
   const router = useTransitionRouter()
   const t = useTranslations("singlePerfume")
+  const tPending = useTranslations("pendingSubmissions")
   const { closeModal } = useSessionStore()
   const deletePerfume = useDeletePerfume()
 
@@ -133,6 +137,11 @@ const PerfumeDetailClient = ({
         >
           {perfume.name}
         </h1>
+        {"isPending" in perfume && perfume.isPending ? (
+          <div className="mt-2 flex justify-center">
+            <ReviewStatusBadge size="md" />
+          </div>
+        ) : null}
         <p className="text-lg tracking-wide mt-2 text-noir-gold-500">
           {t("subheading")}
           <PrefetchLink
@@ -171,20 +180,27 @@ const PerfumeDetailClient = ({
               perfumeNotesHeart={perfume.perfumeNotesHeart}
               perfumeNotesClose={perfume.perfumeNotesClose}
             />
-            <p className="p-4 mb-14 font-light">{perfume.description}</p>
+            <p className="p-4 mb-14 font-light">
+              {isPendingDefaultPerfumeDescription(perfume.description)
+                ? tPending("defaultPerfumeDescription")
+                : perfume.description}
+            </p>
             <Button
               onClick={handleBack}
               variant="primary"
               background="gold"
               size="sm"
+              leftIcon={<LuArrowLeft size={20} />}
               className="gap-2 max-w-max absolute bottom-4 left-4 z-20"
               aria-label={
                 selectedLetter
-                  ? `Back to perfumes starting with ${selectedLetter}`
-                  : "Back to Perfumes"
+                  ? t("backAriaLabel", { selectedLetter })
+                  : t("backToPerfumesLabel")
               }
             >
-              ← Back {selectedLetter ? `to ${selectedLetter}` : "to Perfumes"}
+              {selectedLetter
+                ? t("backToLetter", { selectedLetter })
+                : t("backToPerfumesLabel")}
             </Button>
           </div>
         </div>

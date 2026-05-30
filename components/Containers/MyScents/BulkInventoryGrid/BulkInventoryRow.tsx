@@ -111,7 +111,7 @@ const BulkInventoryRow = ({
       data-testid={`bulk-inventory-row-${rowIndex}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <span className="text-noir-gold-100 text-sm font-semibold">
+        <span className="text-noir-gold text-md font-semibold">
           {t("rowLabel", { number: rowIndex + 1 })}
         </span>
         <div className="flex items-center gap-2">
@@ -120,6 +120,7 @@ const BulkInventoryRow = ({
             type="button"
             variant="icon"
             size="sm"
+            background="red"
             onClick={() => onRemove(row.id)}
             disabled={isLocked}
             aria-label={t("removeRow")}
@@ -129,8 +130,14 @@ const BulkInventoryRow = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
-        <div className="lg:col-span-4">
+      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)] gap-x-3 gap-y-3 items-start">
+        <div className="flex min-w-0 flex-col gap-1">
+          <label
+            htmlFor={`bulk-perfume-${row.id}`}
+            className="block text-sm font-medium text-noir-gold-100"
+          >
+            {t("perfumeLabel")}
+          </label>
           <SearchTypeahead<PerfumeSearchItem>
             inputId={`bulk-perfume-${row.id}`}
             label={t("perfumeLabel")}
@@ -169,70 +176,76 @@ const BulkInventoryRow = ({
             )}
           />
           {isDuplicate && (
-            <p className="mt-1 text-xs text-amber-400/90">{t("duplicateWarning")}</p>
+            <p className="text-xs text-amber-400/90">{t("duplicateWarning")}</p>
           )}
         </div>
 
-        <div className="lg:col-span-2">
-          <Input
-            inputType="text"
-            name={`bulk-amount-${row.id}`}
-            label={tModal("amountLabel")}
-            value={row.amount}
-            disabled={isLocked}
-            shading
-            onChange={event => {
-              const target = event.target as HTMLInputElement
-              onUpdate(row.id, { amount: target.value })
-            }}
-            placeholder={tModal("amountPlaceholder")}
-          />
-        </div>
+        <Input
+          inputType="text"
+          name={`bulk-amount-${row.id}`}
+          label={tModal("amountLabel")}
+          value={row.amount}
+          disabled={isLocked}
+          shading
+          className="w-full"
+          onChange={event => {
+            const target = event.target as HTMLInputElement
+            onUpdate(row.id, { amount: target.value })
+          }}
+          placeholder={tModal("amountPlaceholder")}
+        />
 
-        <div className="lg:col-span-2">
+        <div className="flex min-w-0 w-full flex-col gap-1">
+          <label
+            htmlFor={`bulk-type-${row.id}`}
+            className="block text-sm font-medium text-noir-gold-100"
+          >
+            {tModal("typeLabel")}
+          </label>
           <Select
             key={`bulk-type-${row.id}-${row.type}`}
             selectId={`bulk-type-${row.id}`}
             selectData={typeSelectData}
-            label={tModal("typeLabel")}
+            ariaLabel={tModal("typeLabel")}
             size="compact"
+            className="w-full max-w-none md:w-full md:min-w-0 pr-0"
             defaultId={row.type || "eauDeParfum"}
             action={evt => onUpdate(row.id, { type: evt.target.value })}
             disabled={isLocked}
           />
         </div>
+      </div>
 
-        <div className="lg:col-span-2">
-          <Input
-            inputType="number"
-            name={`bulk-price-${row.id}`}
-            label={tModal("priceLabel")}
-            value={row.price}
-            disabled={isLocked}
-            shading
-            onChange={event => {
-              const target = event.target as HTMLInputElement
-              onUpdate(row.id, { price: target.value })
-            }}
-            placeholder={tModal("pricePlaceholder")}
-          />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <Input
+          inputType="number"
+          name={`bulk-price-${row.id}`}
+          label={tModal("priceLabel")}
+          value={row.price}
+          disabled={isLocked}
+          shading
+          className="w-full"
+          onChange={event => {
+            const target = event.target as HTMLInputElement
+            onUpdate(row.id, { price: target.value })
+          }}
+          placeholder={tModal("pricePlaceholder")}
+        />
 
-        <div className="lg:col-span-2">
-          <Input
-            inputType="text"
-            name={`bulk-place-${row.id}`}
-            label={tModal("placeOfPurchase")}
-            value={row.placeOfPurchase}
-            disabled={isLocked}
-            shading
-            onChange={event => {
-              const target = event.target as HTMLInputElement
-              onUpdate(row.id, { placeOfPurchase: target.value })
-            }}
-            placeholder={tModal("placeOfPurchasePlaceholder")}
-          />
-        </div>
+        <Input
+          inputType="text"
+          name={`bulk-place-${row.id}`}
+          label={tModal("placeOfPurchase")}
+          value={row.placeOfPurchase}
+          disabled={isLocked}
+          shading
+          className="w-full"
+          onChange={event => {
+            const target = event.target as HTMLInputElement
+            onUpdate(row.id, { placeOfPurchase: target.value })
+          }}
+          placeholder={tModal("placeOfPurchasePlaceholder")}
+        />
       </div>
     </div>
   )

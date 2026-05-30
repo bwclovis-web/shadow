@@ -11,7 +11,11 @@ import type { UserAlertPreferences } from "@/types/database"
 
 type PushEditState = Pick<
   UserAlertPreferences,
-  "pushEnabled" | "pushTradeAlerts" | "pushMessageAlerts" | "pushFollowAlerts"
+  | "pushEnabled"
+  | "pushTradeAlerts"
+  | "pushMessageAlerts"
+  | "pushFollowAlerts"
+  | "pushSubmissionAlerts"
 >
 
 type PushNotificationSectionProps = {
@@ -67,12 +71,14 @@ export const PushNotificationSection = ({
       pushEnabled: true,
       pushTradeAlerts: true,
       pushMessageAlerts: true,
+      pushSubmissionAlerts: true,
     })
     if (success) {
       onEditStateChange({
         pushEnabled: true,
         pushTradeAlerts: true,
         pushMessageAlerts: true,
+        pushSubmissionAlerts: true,
       })
     }
   }
@@ -166,6 +172,10 @@ const PushViewMode = ({
       <span className="text-sm text-noir-gold-100">{t("pushFollowAlerts")}</span>
       <StatusBadge enabled={preferences.pushFollowAlerts && preferences.pushEnabled} />
     </div>
+    <div className="flex items-center justify-between">
+      <span className="text-sm text-noir-gold-100">{t("pushSubmissionAlerts")}</span>
+      <StatusBadge enabled={preferences.pushSubmissionAlerts && preferences.pushEnabled} />
+    </div>
   </div>
 )
 
@@ -210,6 +220,16 @@ const PushToggles = ({
       }
       labelChecked={t("pushFollowAlerts")}
       labelUnchecked={t("pushFollowAlerts")}
+    />
+    <VooDooCheck
+      id="push-submission-alerts"
+      checked={editState.pushSubmissionAlerts}
+      disabled={!editState.pushEnabled || isSaving}
+      onChange={() =>
+        onEditStateChange({ pushSubmissionAlerts: !editState.pushSubmissionAlerts })
+      }
+      labelChecked={t("pushSubmissionAlerts")}
+      labelUnchecked={t("pushSubmissionAlerts")}
     />
   </div>
 )

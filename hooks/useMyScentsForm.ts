@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import { useCSRF } from "@/hooks/useCSRF"
 import type { UserPerfumeI } from "@/types"
+import { parseFormApiError } from "@/utils/parse-form-api-error"
 
 // Helper functions to get initial state values
 function getInitialPerfumeState(initialPerfume?: UserPerfumeI) {
@@ -41,6 +42,11 @@ export type OptimisticCollectionItem = {
 type OptimisticCallbacks = {
   onOptimisticAdd?: (item: OptimisticCollectionItem) => void
   onOptimisticAddRollback?: (tempId: string) => void
+}
+
+type MyScentsFormMessages = {
+  submitError: string
+  networkError: string
 }
 
 const getOptimisticPerfumeDetails = (
@@ -85,7 +91,8 @@ const getOptimisticPerfumeDetails = (
 export const useMyScentsForm = (
   initialPerfume?: UserPerfumeI,
   onSuccess?: () => void,
-  optimisticCallbacks?: OptimisticCallbacks
+  optimisticCallbacks?: OptimisticCallbacks,
+  messages?: MyScentsFormMessages
 ) => {
   const { submitForm } = useCSRF()
 
@@ -93,6 +100,8 @@ export const useMyScentsForm = (
   const [selectedPerfume, setSelectedPerfume] = useState<UserPerfumeI | null>(getInitialPerfumeState(initialPerfume))
   const initialData = getInitialPerfumeData(initialPerfume)
   const [perfumeData, setPerfumeData] = useState(initialData)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Define callbacks
   const resetForm = useCallback(() => {
@@ -101,6 +110,7 @@ export const useMyScentsForm = (
   }, [])
 
   const handleClick = useCallback((item: UserPerfumeI) => {
+    setSubmitError(null)
     setSelectedPerfume(item)
     setPerfumeData({
       amount: item.amount || "",
@@ -133,6 +143,10 @@ export const useMyScentsForm = (
       evt.preventDefault()
       const formData = createFormData()
       if (!formData) return
+
+      setSubmitError(null)
+      setIsSubmitting(true)
+
       const optimisticPerfume = selectedPerfume
         ? getOptimisticPerfumeDetails(selectedPerfume)
         : null
@@ -151,6 +165,9 @@ export const useMyScentsForm = (
         })
       }
 
+      const defaultError = messages?.submitError ?? "Unable to add this fragrance. Please try again."
+      const networkError = messages?.networkError ?? "Network error. Check your connection and try again."
+
       try {
         const response = await submitForm(MY_SCENTS_API, formData)
         const data = await response.json().catch(() => ({}))
@@ -162,8 +179,12 @@ export const useMyScentsForm = (
         }
 
         optimisticCallbacks?.onOptimisticAddRollback?.(optimisticId)
+        setSubmitError(parseFormApiError(data, defaultError))
       } catch {
         optimisticCallbacks?.onOptimisticAddRollback?.(optimisticId)
+        setSubmitError(networkError)
+      } finally {
+        setIsSubmitting(false)
       }
     },
     [
@@ -173,6 +194,8 @@ export const useMyScentsForm = (
       onSuccess,
       selectedPerfume,
       optimisticCallbacks,
+      messages?.networkError,
+      messages?.submitError,
       perfumeData.amount,
       perfumeData.placeOfPurchase,
       perfumeData.price,
@@ -199,5 +222,8 @@ export const useMyScentsForm = (
     setPerfumeData,
     handleClick,
     handleAddPerfume,
+    submitError,
+    isSubmitting,
+    clearSubmitError: () => setSubmitError(null),
   }
 }

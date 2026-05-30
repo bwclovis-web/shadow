@@ -118,6 +118,7 @@ export interface PerfumeI {
   name: string
   description?: string
   image?: string
+  isPending?: boolean
   perfumeHouse?: PerfumeHouseI
 }
 

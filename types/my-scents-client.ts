@@ -24,6 +24,7 @@ export type UserPerfumeForClient = {
     slug: string
     image: string | null
     description: string | null
+    isPending?: boolean
     perfumeHouse: {
       id: string
       name: string

@@ -10,6 +10,7 @@ import { useGsapStagger } from "@/hooks/useGsapStagger"
 import { useSessionStore } from "@/hooks/sessionStore"
 import { safeAsync } from "@/utils/errorHandling.patterns"
 import { containsDangerousReviewHtml, sanitizeReviewHtml } from "@/utils/sanitize"
+import { LuBookOpenText } from "react-icons/lu"
 
 interface Review {
   id: string
@@ -415,6 +416,7 @@ const ReviewSection = ({
               setReviewContent("")
               toggleModal(writeReviewButtonRef, reviewModalId)
             }}
+            leftIcon={<LuBookOpenText size={20} />}
           >
             {t("writeReview")}
           </Button>

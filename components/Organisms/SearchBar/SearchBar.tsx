@@ -11,12 +11,13 @@ import { useTranslations } from "next-intl"
 import SearchTypeahead, {
   type TypeaheadItem,
 } from "@/components/Molecules/SearchTypeahead"
+import ReviewStatusBadge from "@/components/Atoms/ReviewStatusBadge"
 import { useMounted } from "@/hooks/useMounted"
 import { styleMerge } from "@/utils/styleUtils"
 
 import { searchbarVariants } from "@/components/Molecules/SearchTypeahead/searchbar-variants"
 
-type SearchBarItem = TypeaheadItem & { slug: string }
+type SearchBarItem = TypeaheadItem & { slug: string; isPending?: boolean }
 
 interface SearchBarProps
   extends Omit<HTMLProps<HTMLDivElement>, "action" | "size">,
@@ -90,6 +91,16 @@ export default function SearchBar({
           }}
           footerSlot={footerSlot}
           autoFocus={autoFocus}
+          renderOption={
+            searchType === "perfume"
+              ? (item, { highlighted }) => (
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span>{highlighted}</span>
+                    {item.isPending ? <ReviewStatusBadge /> : null}
+                  </span>
+                )
+              : undefined
+          }
         />
       </form>
     </div>

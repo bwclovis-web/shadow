@@ -13,6 +13,7 @@ import type { WishlistBottlePreference } from "@/lib/mutations/wishlist"
 
 import { revalidateWishlistPage } from "./actions"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
+import { THE_ARCHIVE_PATH } from "@/constants/routes"
 
 /** Shape of a single wishlist item as returned by getUserWishlist (serializable from server). */
 export type WishlistItemForClient = {
@@ -87,7 +88,7 @@ const WishlistPageClient = ({
           <h2>{t("empty.heading")}</h2>
           <p className="text-xl text-noir-gold-100">{t("empty.subheading")}</p>
           <VooDooLink
-            url="/all-perfumes"
+            url={THE_ARCHIVE_PATH}
             className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
             Browse Perfumes

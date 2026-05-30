@@ -4,6 +4,7 @@
 
 import type { ListingCondition, TradePreference } from "@prisma/client"
 
+import enMessages from "@/messages/en.json"
 import { CSV_IMPORT_MAX_ROWS } from "@/lib/csv-import-user"
 import { LISTING_CONDITIONS } from "@/utils/listing-display"
 
@@ -11,10 +12,18 @@ export const CSV_IMPORT_SOURCE = "csv_import" as const
 export const MANUAL_COLLECTION_SOURCE = "manual_collection" as const
 
 export const CSV_PERFUME_DEFAULT_DESCRIPTION =
-  "Submitted via CSV import. Please review and update this description."
+  enMessages.pendingSubmissions.defaultPerfumeDescription
 
 export const CSV_HOUSE_DEFAULT_DESCRIPTION =
-  "Submitted via CSV import. Please review and update this description."
+  enMessages.pendingSubmissions.defaultHouseDescription
+
+export const isPendingDefaultPerfumeDescription = (
+  description: string | null | undefined
+): boolean => description === CSV_PERFUME_DEFAULT_DESCRIPTION
+
+export const isPendingDefaultHouseDescription = (
+  description: string | null | undefined
+): boolean => description === CSV_HOUSE_DEFAULT_DESCRIPTION
 
 /** Placeholder website — satisfies CreatePerfumeHouseSchema required URL */
 export const CSV_HOUSE_PLACEHOLDER_WEBSITE = "https://example.com"

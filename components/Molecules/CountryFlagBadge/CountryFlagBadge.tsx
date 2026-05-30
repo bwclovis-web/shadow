@@ -70,7 +70,7 @@ const CountryFlagBadge = ({
           ) : null}
         </span>
       ) : null}
-      {label ? <span>{label}</span> : null}
+      {label ? <span className="text-xs text-noir-gold-500">{label}</span> : null}
     </span>
   )
 }

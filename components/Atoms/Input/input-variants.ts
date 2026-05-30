@@ -4,7 +4,7 @@ export type InputVariants = VariantProps<typeof inputVariants>
 
 export const inputVariants = cva(
   [
-    "w-full border-double border-8 rounded-sm px-2 py-1 text-lg mt-1 text-noir-dark",
+    "w-full border-double border-8 rounded-sm px-2 py-1 text-lg  text-noir-dark",
     "transition-all focus:outline-none focus:ring font-semibold ",
   ],
   {

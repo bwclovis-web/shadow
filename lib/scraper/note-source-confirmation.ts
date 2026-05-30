@@ -276,9 +276,13 @@ export const LAYER_LABEL_TOKENS = new Set([
   "note",
 ])
 
+/** Single-word color/marketing labels — not pyramid materials (e.g. "pink" from "fairy-kissed pink"). */
+export const STANDALONE_COLOR_NOTE_RE =
+  /^(?:pink|red|blue|green|yellow|purple|blush|nude|fuchsia|magenta|turquoise|navy|teal|grey|gray|brown|beige|tan|taupe|crimson|scarlet|azure|ivory|bronze|silver|gold)$/i
+
 /** Main-accord / genre labels — not pyramid materials when standing alone. */
 export const STANDALONE_ACCORD_DESCRIPTOR_RE =
-  /^(?:powdery|woody|musky|mossy|fresh|sweet|floral|oriental|gourmands?|citrus|spicy|aromatic|green|aquatic|fruity|smoky|balsamic|earthy|intense|light|dark|lactonic|desserts?|white floral|second-skin|frosted-pastel|frosted|pastel|originally from byredo|originally from commodity|resort evenings|warm days|starry date evenings|date evenings|celestial hug|wear guide|delicate|intimate|cozy|celestial|flirtatious|glamorous|addictive|ruby|sexy|pretty|playful|warm|airy|joyfully|joyfully luminous|luminous|addictive|comforting|candy-drip|creamy|smooth|smoother|sugary|golden mist|warm sweetness|european elegance|elegant|opulent|refined|radiant|silky)$/i
+  /^(?:powdery|woody|musky|mossy|fresh|sweet|floral|oriental|gourmands?|citrus|spicy|aromatic|green|aquatic|fruity|smoky|balsamic|earthy|intense|light|dark|lactonic|desserts?|white floral|creamy florals?|warm wood|second-skin|frosted-pastel|frosted|pastel|originally from byredo|originally from commodity|resort evenings|warm days|starry date evenings|date evenings|celestial hug|wear guide|delicate|intimate|cozy|celestial|flirtatious|glamorous|addictive|ruby|sexy|pretty|playful|warm|airy|joyfully|joyfully luminous|luminous|addictive|comforting|candy-drip|creamy|smooth|smoother|sugary|golden mist|warm sweetness|european elegance|elegant|opulent|refined|radiant|silky|sensual|seductive|rebellious|unforgettable|plush|magnetic|alluring|intoxicating|effortless|dreamy|rebellious|golden light|golden glow|fairy-kissed|sun-kissed|star-kissed)$/i
 
 /** Strip trailing Shopify marketing copy glued to merchant note phrases. */
 export const peelMarketingDescriptorTail = (note: string): string => {
@@ -300,6 +304,11 @@ export const peelMarketingDescriptorTail = (note: string): string => {
         /\s+(?:wrap\s+(?:yourself|your\s+senses)|float\s+into|if\s+you\s+love|this\s+perfume\s+is|perfect\s+for\s+those|like\s+the\s+scent\s+of)\b.*$/i,
         "",
       )
+      .replace(/\s+wear\s+it(?:\s+on)?\b.*$/i, "")
+      .replace(
+        /\s+(?:drenched\s+in|creating\s+an?\s+(?:unforgettable|experience|memory)|rather\s+than|flanker\s+to|infused\s+cocktails?)\b.*$/i,
+        "",
+      )
       .replace(
         /\s+(?:bottled\s+by|hand-?blended(?:\s+with\s+care)?|followed\s+by\s+a\s+heart\s+of|brings\s+effortless\s+sensuality|utterly\s+magnetic|(?:j|u)uicy\s+signature\s+scent)\b.*$/i,
         "",
@@ -314,6 +323,9 @@ export const peelMarketingDescriptorTail = (note: string): string => {
       .replace(/^\s*(?:soft|smooth)\s+(?=vanilla|tonka\b)/i, "")
       .replace(/\s*[—–—-]\s*(?:smooth|creamy|aromatic|refined|delicate|opulent|radiant|silky)\b.*$/i, "")
       .replace(/\s+european\s+elegance\b.*$/i, "")
+      .replace(/\s+\bfragrance\b\s*$/i, "")
+      .replace(/\s+(?:your\s+skins?|skin)\s+signature\b.*$/i, "")
+      .replace(/\s+signature\s*$/i, "")
       .trim()
   }
   return s
@@ -325,6 +337,9 @@ export const sanitizeExtractedNoteCandidate = (note: string): string | null => {
   if (!raw) return null
   if (/^(?:a|an|the)\s+[a-z]/i.test(raw)) return null
   if (/^then\s+/i.test(raw)) return null
+  if (/^(?:softened|becomes)\s+with\b/i.test(raw)) return null
+  if (/^becomes\s+your\s+skins?\b/i.test(raw)) return null
+  if (/\b\w+-kissed\b/i.test(raw)) return null
   if (/^(?:top|middle|base)\s+notes?$/i.test(raw)) return null
   const layerLeading = raw.match(/^(?:top|middle|base)\s+notes?\s+(?:are|is|of)\s+(.+)$/i)
   if (layerLeading?.[1]) return sanitizeExtractedNoteCandidate(layerLeading[1])
@@ -337,6 +352,7 @@ export const sanitizeExtractedNoteCandidate = (note: string): string | null => {
   if (!peeled) return null
   const lc = peeled.toLowerCase()
   if (LAYER_LABEL_TOKENS.has(lc)) return null
+  if (STANDALONE_COLOR_NOTE_RE.test(lc)) return null
   if (STANDALONE_ACCORD_DESCRIPTOR_RE.test(lc)) return null
   if (isObviousNonMaterialNote(peeled) || looksLikeProseNotePhrase(peeled)) return null
 
@@ -353,6 +369,7 @@ export const isObviousNonMaterialNote = (note: string): boolean => {
   if (/\b(?:top|heart|base|middle)\s*$/i.test(n)) return true
   if (/\b(?:top|heart|base|middle)\b/i.test(n) && n.split(/\s+/).length >= 2) return true
   if (LAYER_LABEL_TOKENS.has(n)) return true
+  if (STANDALONE_COLOR_NOTE_RE.test(n)) return true
   if (STANDALONE_ACCORD_DESCRIPTOR_RE.test(n)) return true
   if (/^(?:a|an|the)\s+[a-z]/i.test(n)) return true
   if (/\s+(?:the|from|with|of|into)\s*$/i.test(n)) return true
@@ -371,6 +388,8 @@ export const isObviousNonMaterialNote = (note: string): boolean => {
   if (/^(?:intention|care|inspected)$/i.test(n)) return true
   if (/^(?:touch|then|fabric|rgba|margin|h[1-6]|body|html|div|span|sans-serif|serif|monospace|system-ui|-apple-system|blinkmacsystemfont|roboto|inter|helvetica|arial|ui-sans-serif|ui-serif|ui-monospace|segoe ui|noto sans)$/i.test(n))
     return true
+  if (/^(?:luxurious|wear\s+it|wear\s+it\s+on)$/i.test(n)) return true
+  if (/\bwear\s+it(?:\s+on)?\b/i.test(n)) return true
   if (/^(?:radial-gradient|linear-gradient|repeating-linear-gradient)$/i.test(n)) return true
   if (/\b(?:linear-gradient|radial-gradient|rgba\s*\(|rgb\s*\(|hsl\s*\()\b/i.test(n)) return true
   if (/\b(?:font-family|font-size|font-weight|background-color|webkit-font-smoothing)\b/i.test(n)) return true
@@ -400,10 +419,13 @@ export const looksLikeProseNotePhrase = (note: string): boolean => {
   if (!n) return true
   if (isObviousNonMaterialNote(n)) return true
   if (
-    /\b(?:adds?\s+a|\badds\b|give\s+the\s+scent|giraffe-inspired|animalic-foral|perfume\s+with\s+notes|with\s+notes\s+of\s+bergamot|subtle\s+grass\s+note|office\s+wear|polished\s+office|originally\s+from|frosted-pastel|summer\s+warm\s+days|clean\s+halo|longer\s+on\s+fabric|cloud\s+cream|candy\s+air|a\s+mug|the\s+creamy|cacao\s+the|powdered\s+vanilla\s+style|then\s+deepens|deepens\s+into|fluffy\s+glow|as\s+the\s+night\s+deepens|starry\s+date\s+evenings|celestial\s+hug|wear\s+guide|flirtatious|glamorous|surrounds\s+you\s+in|european\s+elegance|touch\s+of\s+european|wrap\s+(?:yourself|your\s+senses)|float\s+into|if\s+you\s+love|pastel\s+dreams\s+with|creamy\s+softness\s+of|nostalgic\s+desserts|bottled\s+by|hand-?blended(?:\s+with\s+care)?|followed\s+by\s+a\s+heart\s+of|brings\s+effortless\s+sensuality|utterly\s+magnetic|(?:j|u)uicy\s+signature\s+scent)\b/.test(
+    /\b(?:adds?\s+a|\badds\b|give\s+the\s+scent|giraffe-inspired|animalic-foral|perfume\s+with\s+notes|with\s+notes\s+of\s+bergamot|subtle\s+grass\s+note|office\s+wear|polished\s+office|originally\s+from|frosted-pastel|summer\s+warm\s+days|clean\s+halo|longer\s+on\s+fabric|cloud\s+cream|candy\s+air|a\s+mug|the\s+creamy|cacao\s+the|powdered\s+vanilla\s+style|then\s+deepens|deepens\s+into|fluffy\s+glow|as\s+the\s+night\s+deepens|starry\s+date\s+evenings|celestial\s+hug|wear\s+guide|flirtatious|glamorous|surrounds\s+you\s+in|european\s+elegance|touch\s+of\s+european|wrap\s+(?:yourself|your\s+senses)|float\s+into|if\s+you\s+love|pastel\s+dreams\s+with|creamy\s+softness\s+of|nostalgic\s+desserts|bottled\s+by|hand-?blended(?:\s+with\s+care)?|followed\s+by\s+a\s+heart\s+of|brings\s+effortless\s+sensuality|utterly\s+magnetic|(?:j|u)uicy\s+signature\s+scent|drenched\s+in|creating\s+an?\s+(?:unforgettable|experience)|rather\s+than|flanker\s+to|infused\s+cocktails?|elegant\s+rather|becomes\s+your\s+skins?|skins?\s+signature|softened\s+with|fairy-kissed|sun-kissed|star-kissed|\w+-kissed)\b/.test(
       n,
     )
   ) {
+    return true
+  }
+  if (/^(?:drenched\s+in|creating\s+an?\s+(?:unforgettable|experience)|rebellious|sensual|seductive|softened\s+with|becomes\s+your)$/i.test(n)) {
     return true
   }
   if (/\b(?:projection|facets|trail|style|concentration|strength|nuances|enveloping|sparkle|halos?)\b/.test(n)) {
@@ -483,10 +505,186 @@ export const isNoteSubstantiatedInSource = (note: string, corpus: string, fullSo
   return false
 }
 
+/** Layer-scoped substantiation — no fallback to full PDP text (avoids cross-layer false positives). */
+const isNoteSubstantiatedInLayerCorpus = (note: string, corpus: string): boolean => {
+  const normalized = canonicalizeNote(note)
+  if (!normalized || !corpus) return false
+  const haystack = normalizeCorpusText(corpus)
+  if (!haystack) return false
+
+  if (corpusIncludesNote(normalized, haystack)) return true
+
+  const words = normalized.split(/\s+/).filter(Boolean)
+  if (words.length === 1) {
+    const w = words[0]
+    if (PROSE_FRAGMENT_TOKENS.has(w)) return false
+    return new RegExp(`\\b${escapeRegExp(w)}\\b`, "i").test(haystack)
+  }
+
+  if (words.every(w => new RegExp(`\\b${escapeRegExp(w)}\\b`, "i").test(haystack))) {
+    const spanRe = new RegExp(
+      `\\b${escapeRegExp(words[0])}\\b[\\s\\S]{0,48}\\b${escapeRegExp(words[words.length - 1])}\\b`,
+      "i",
+    )
+    if (spanRe.test(haystack)) return true
+  }
+
+  if (/\baccord\b/i.test(normalized) && words.length >= 2) {
+    const head = words[0]
+    if (head && head.length >= 4 && !/^(?:and|the|a|an)$/i.test(head)) {
+      return new RegExp(`\\b${escapeRegExp(head)}\\b`, "i").test(haystack)
+    }
+  }
+
+  return false
+}
+
 export type NoteLayers = {
   openNotes: string[]
   heartNotes: string[]
   baseNotes: string[]
+}
+
+const trimDuplicateLayerTail = (chunk: string): string => {
+  let s = chunk.trim()
+  const notesOfTail = s.match(/\s+\b(?:top|middle|base)\s+notes?\s+(?:of|are|is)\s+/i)
+  if (notesOfTail?.index != null && notesOfTail.index >= 3) {
+    s = s.slice(0, notesOfTail.index).trim()
+  }
+  const colonTail = s.match(
+    /\s+\b(?:top|open|heart|middle|base)\s+notes?\s*[:\-\u2013\u2014–—]\s*/i,
+  )
+  if (colonTail?.index != null && colonTail.index >= 3) {
+    s = s.slice(0, colonTail.index).trim()
+  }
+  return s
+}
+
+const buildLayerScopedCorpora = (
+  source: string,
+): { open: string; heart: string; base: string } | null => {
+  const raw = (source ?? "").replace(/\r/g, "\n")
+  if (!raw.trim()) return null
+  const collapsed = raw.replace(/\s+/g, " ").trim()
+  const layerChunks: { open: string[]; heart: string[]; base: string[] } = {
+    open: [],
+    heart: [],
+    base: [],
+  }
+
+  const colonRe =
+    /\b(top|open|opening|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry\s*down|drydown|end)\s*(?:notes?)?\s*[:\-\u2013\u2014–—]\s*([\s\S]*?)(?=\s+\b(?:top|open|opening|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry\s*down|drydown|end)\s*(?:notes?)?\s*[:\-\u2013\u2014–—]|\s+\b(?:available\s+sizes?|when\s+to\s+wear|main\s+accords?|how\s+it\s+wears|processing|important|disclaimer|shipping)\b|$)/gi
+  let cm: RegExpExecArray | null
+  while ((cm = colonRe.exec(collapsed)) !== null) {
+    const label = (cm[1] ?? "").toLowerCase()
+    const chunk = trimDuplicateLayerTail(cm[2] ?? "")
+    if (!chunk) continue
+    const key =
+      /^(?:heart|middle|mid|core|body|center|centre)$/.test(label)
+        ? "heart"
+        : /^(?:base|bottom|background|foundation|dry\s*down|drydown|end)$/.test(label)
+          ? "base"
+          : "open"
+    layerChunks[key].push(chunk)
+  }
+
+  const notesOfRe = /\b(top|middle|base)\s+notes?\s+(?:of|are|is)\s+/gi
+  const notesOfMatches = [...collapsed.matchAll(notesOfRe)]
+  for (let i = 0; i < notesOfMatches.length; i += 1) {
+    const m = notesOfMatches[i]
+    const label = (m[1] ?? "").toLowerCase()
+    const start = (m.index ?? 0) + m[0].length
+    const end = i + 1 < notesOfMatches.length ? notesOfMatches[i + 1].index! : collapsed.length
+    const chunk = trimDuplicateLayerTail(collapsed.slice(start, end))
+    if (!chunk) continue
+    const key = label === "middle" ? "heart" : label === "base" ? "base" : "open"
+    layerChunks[key].push(chunk)
+  }
+
+  if (
+    layerChunks.open.length === 0 &&
+    layerChunks.heart.length === 0 &&
+    layerChunks.base.length === 0
+  ) {
+    return null
+  }
+
+  return {
+    open: normalizeCorpusText(layerChunks.open.join(" ")),
+    heart: normalizeCorpusText(layerChunks.heart.join(" ")),
+    base: normalizeCorpusText(layerChunks.base.join(" ")),
+  }
+}
+
+const layerCorpusMatches = (
+  note: string,
+  layer: "open" | "heart" | "base",
+  layerCorpora: { open: string; heart: string; base: string },
+): boolean => {
+  const corpus = layerCorpora[layer]
+  return Boolean(corpus && isNoteSubstantiatedInLayerCorpus(note, corpus))
+}
+
+/** When a labeled pyramid exists, assign each note to the layer whose corpus substantiates it. */
+const relayerNotesByLayerCorpora = (
+  layers: NoteLayers,
+  source: string,
+  layerCorpora: { open: string; heart: string; base: string },
+): NoteLayers => {
+  const open: string[] = []
+  const heart: string[] = []
+  const base: string[] = []
+  const seen = new Set<string>()
+
+  const pushUnique = (layer: "open" | "heart" | "base", note: string) => {
+    const lc = note.trim().toLowerCase()
+    if (!lc || seen.has(lc)) return
+    seen.add(lc)
+    if (layer === "open") open.push(note)
+    else if (layer === "heart") heart.push(note)
+    else base.push(note)
+  }
+
+  const assignNote = (raw: string, originLayer: "open" | "heart" | "base") => {
+    const note = sanitizeExtractedNoteCandidate(raw)
+    if (!note) return
+
+    const inOpen = layerCorpusMatches(note, "open", layerCorpora)
+    const inHeart = layerCorpusMatches(note, "heart", layerCorpora)
+    const inBase = layerCorpusMatches(note, "base", layerCorpora)
+    const matchCount = [inOpen, inHeart, inBase].filter(Boolean).length
+
+    if (matchCount === 0) {
+      const originCorpus = layerCorpora[originLayer]
+      if (originCorpus && isNoteSubstantiatedInSource(note, originCorpus, source)) {
+        pushUnique(originLayer, note)
+      }
+      return
+    }
+
+    if (matchCount === 1) {
+      if (inOpen) pushUnique("open", note)
+      else if (inHeart) pushUnique("heart", note)
+      else pushUnique("base", note)
+      return
+    }
+
+    // Ambiguous (e.g. vanilla in heart + base prose): prefer original parser layer when valid.
+    if (originLayer === "open" && inOpen) pushUnique("open", note)
+    else if (originLayer === "heart" && inHeart) pushUnique("heart", note)
+    else if (originLayer === "base" && inBase) pushUnique("base", note)
+    else if (inHeart && !inOpen) pushUnique("heart", note)
+    else if (inBase && !inOpen && !inHeart) pushUnique("base", note)
+    else if (inOpen) pushUnique("open", note)
+    else if (inHeart) pushUnique("heart", note)
+    else if (inBase) pushUnique("base", note)
+  }
+
+  for (const n of layers.openNotes) assignNote(n, "open")
+  for (const n of layers.heartNotes) assignNote(n, "heart")
+  for (const n of layers.baseNotes) assignNote(n, "base")
+
+  return { openNotes: open, heartNotes: heart, baseNotes: base }
 }
 
 /** Drop notes that cannot be confirmed in the merchant source text. */
@@ -496,9 +694,16 @@ export const confirmNoteLayersAgainstSource = (
   options?: { minKept?: number; merchantTrusted?: Set<string> },
 ): NoteLayers => {
   const corpus = buildNoteConfirmationCorpus(source)
+  const layerCorpora = buildLayerScopedCorpora(source)
   const substantiate = (n: string) =>
     isNoteSubstantiatedInSource(n, corpus, source)
   const trusted = options?.merchantTrusted
+  const hasLayerScopedCorpus =
+    Boolean(layerCorpora?.open) || Boolean(layerCorpora?.heart) || Boolean(layerCorpora?.base)
+
+  if (hasLayerScopedCorpus && layerCorpora) {
+    return relayerNotesByLayerCorpora(layers, source, layerCorpora)
+  }
 
   const filterLayer = (arr: string[]) =>
     arr

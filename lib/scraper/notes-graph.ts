@@ -1830,7 +1830,14 @@ const JUNK_NOTE_PATTERNS: RegExp[] = [
   /\b(livrare|cumpara|adauga|comanda|rapid|gratuit)\b/i, // Romanian commerce
   /\b(livraison|acheter|commande|gratuit)\b/i, // French commerce
   /\b(extrait|parfum|eau de|huile|spray|ml|oz)\b/i,
-  /\b(discover|explore|experience|transform|reinvent|secret|powerful|irresistible|seductive|sensual|intense|long-lasting|unisex|pure)\b/i,
+  /\b(discover|explore|experience|transform|reinvent|secret|powerful|irresistible|seductive|sensual|intense|long-lasting|unisex|pure|rebellious|unforgettable|alluring|intoxicating)\b/i,
+  /\b(drenched\s+in|creating\s+an?\s+(?:unforgettable|experience)|rather\s+than|flanker\s+to|infused\s+cocktails?)\b/i,
+  /\b(?:elegant\s+rather|dreamy\s+flanker|golden\s+light)\b/i,
+  /\b\w+-kissed\b/i,
+  /\bbecomes\s+your\s+skins?\b/i,
+  /\bsoftened\s+with\b/i,
+  /\bskins?\s+signature\b/i,
+  /^(?:pink|red|blue|green|yellow|purple|blush|nude|fuchsia|magenta|turquoise|navy|teal|grey|gray)$/i,
   /\b(it is|you will|you can|this is|that is|with every|just a)\b/i,
   /\b(?:pastel\s+girls|gentle\s+projection|for\s+milk\s+lovers|hand-blended\s+with\s+care|scent\s+description)\b/i,
   /^(?:with|fans|roller)$/i,
@@ -1918,7 +1925,7 @@ const JUNK_NOTE_PATTERNS: RegExp[] = [
   /\bavailable\s+sizes\b/i,
   // Prose/experience words that are never standalone ingredients
   /\bfeel\b/i,
-  /\bwarmth\b/i,
+  /(?<!(?:amber|golden|honeyed|brown|burnt|warm|sheer|powdered|caramelized|rum-like|lingering woody)\s)\bwarmth\b/i,
   // Keep merchant phrases like "Honeyed Sweetness"; drop bare sensory descriptors only
   /(?<!(?:honeyed|brown|burnt|golden|warm|sheer|powdered|caramelized)\s)\bsweetness\b/i,
   /\btexture\b/i,
@@ -2010,7 +2017,8 @@ const isMerchantLabeledNote = (note: string): boolean => {
   if (words.length < 1 || words.length > 8) return false
   if (lower.length < 2 || lower.length > 80) return false
   if (MERCHANT_LABELED_HARD_JUNK_PATTERNS.some(p => p.test(lower))) return false
-  return true
+  if (looksLikeProseNotePhrase(t) || isObviousNonMaterialNote(t)) return false
+  return isScraperKeptNote(t)
 }
 
 /**
@@ -2029,7 +2037,7 @@ const collectMerchantTrustedNotes = (
   const trusted = new Set<string>()
   for (const n of [...layers.openNotes, ...layers.heartNotes, ...layers.baseNotes]) {
     const lc = n.trim().toLowerCase()
-    if (!lc || !isMerchantLabeledNote(n) || looksLikeProseNotePhrase(n)) continue
+    if (!lc || !isMerchantLabeledNote(n)) continue
     if (isNoteSubstantiatedInSource(n, corpus, source)) trusted.add(lc)
   }
   return trusted
@@ -2045,11 +2053,8 @@ const mergeMerchantTrustedNotes = (
   }
 }
 
-const filterNotesByTrust = (arr: string[], trusted: Set<string>): string[] =>
-  arr.filter(n => {
-    const lc = n.trim().toLowerCase()
-    return trusted.has(lc) ? isMerchantLabeledNote(n) : isScraperKeptNote(n)
-  })
+const filterNotesByTrust = (arr: string[], _trusted: Set<string>): string[] =>
+  arr.filter(n => isScraperKeptNote(n) && !looksLikeProseNotePhrase(n))
 
 /** Expand space-joined blobs, sanitize marketing junk, and dedupe before CSV export. */
 const finalizeNoteLayersForExport = (
@@ -2278,7 +2283,7 @@ const FLAT_NOTE_PROSE_BOUNDARY_RES: RegExp[] = [
   /\s+(?:Wrap\s+(?:yourself|your\s+senses)|Float\s+into|If\s+you\s+love|This\s+perfume\s+is)\b/i,
   /\s+(?:I was told|Making a dupe|Please text if you)\b/i,
   // Note set followed immediately by marketing paragraph openers (whitespace-collapsed)
-  /\s+(?:Think\s+(?:crisp|fresh|warm|cool|dark|soft|juicy|lush)|Opens?\s+(?:with|on)|A\s+(?:crisp|juicy|dark|warm|rich|soft|bright|clean|bold|lush|fresh)\s+(?:and|,)|\bSparkling\b|\bThis\s+inspired\b)/i,
+  /\s+(?:Think\s+(?:crisp|fresh|warm|cool|dark|soft|juicy|lush)|Opens?\s+(?:with|on)|A\s+(?:crisp|juicy|dark|warm|rich|soft|bright|clean|bold|lush|fresh|dreamy|radiant|sleek|daring)\b|\bSparkling\b|\bThis\s+inspired\b)/i,
 ]
 
 const MIN_FLAT_CHUNK_BEFORE_TRUNCATE = 8
@@ -3444,13 +3449,50 @@ export const mergeFlatMaterialsIntoLayeredPyramid = (notes: NotesLayers, flatAut
   }
 }
 
+const looksLikeProseFlatNoteList = (notes: string[]): boolean => {
+  if (notes.length === 0) return true
+  let proseHits = 0
+  for (const n of notes) {
+    const t = n.trim().toLowerCase()
+    if (!t) continue
+    if (looksLikeProseNotePhrase(n) || isObviousNonMaterialNote(n)) proseHits += 1
+    else if (/^(?:two|one|being|that'?s|why|there|was|issue|blend|fragrances?|found|formula)$/i.test(t)) {
+      proseHits += 1
+    }
+  }
+  return proseHits >= Math.max(1, Math.ceil(notes.length * 0.34))
+}
+
 const preferAuthoritativeFlatNoteList = (notes: NotesLayers, flatAuth: string[]): NotesLayers => {
-  if (flatAuth.length < 3) return notes
+  if (flatAuth.length < 2) return notes
+  if (looksLikeProseFlatNoteList(flatAuth)) return notes
 
   const current = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
   if (looksLikeMainAccordsDescriptorList(flatAuth) && current.length > flatAuth.length) {
     return notes
   }
+
+  /**
+   * Merchant Key/Featured lists (2–6 notes) beat sparse LLM/noir prose extractions
+   * (e.g. Donna Born In Roma: Key Notes has 4 materials but noir prose only yields amber/musk).
+   */
+  if (flatAuth.length >= 2 && !hasLayeredMerchantPyramid(notes)) {
+    const currentLc = new Set(current.map(n => n.trim().toLowerCase()))
+    const flatCovered = flatAuth.filter(f => currentLc.has(f.trim().toLowerCase())).length
+    if (
+      current.length === 0 ||
+      flatCovered < flatAuth.length ||
+      (flatAuth.length >= 3 && flatCovered / flatAuth.length < 0.75)
+    ) {
+      return {
+        openNotes: uniqueNotes(flatAuth),
+        heartNotes: [],
+        baseNotes: [],
+      }
+    }
+  }
+
+  if (flatAuth.length < 3) return notes
 
   /**
    * Long labeled lists ("Featured notes:", "Key notes:", etc.) are merchant-authored. When regex

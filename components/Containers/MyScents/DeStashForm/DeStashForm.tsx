@@ -3,7 +3,9 @@ import { useTranslations } from "next-intl"
 import { useCallback, useMemo } from "react"
 
 import { Button } from "@/components/Atoms/Button"
+import Input from "@/components/Atoms/Input"
 import RadioSelect from "@/components/Atoms/RadioSelect"
+import Select from "@/components/Atoms/Select"
 import RangeSlider from "@/components/Atoms/RangeSlider"
 import VooDooCheck from "@/components/Atoms/VooDooCheck/VooDooCheck"
 import ImageUploader from "@/components/Molecules/ImageUploader/ImageUploader"
@@ -110,8 +112,6 @@ const DeStashForm = ({
 
   const onSubmit = useCallback(
     (values: typeof initialValues) => {
-      // Set tradeOnly automatically based on tradePreference
-      // If preference is "trade", then tradeOnly is true, otherwise false
       const tradeOnly = values.tradePreference === "trade"
       
       const deStashData: DeStashData = {
@@ -137,7 +137,6 @@ const DeStashForm = ({
   })
 
   const isNewDecant = isCreating || values.createNew
-  // Use maxAvailable if provided, otherwise fall back to owned amount or 100
   const maxAmount = maxAvailable !== undefined
     ? Math.max(0, maxAvailable)
     : 100
@@ -162,17 +161,41 @@ const DeStashForm = ({
     [t, values.tradePreference]
   )
 
+  const conditionSelectData = useMemo(
+    () => [
+      { id: "", name: "condition", label: tListing("conditionPlaceholder") },
+      ...LISTING_CONDITIONS.map((option) => ({
+        id: option,
+        name: "condition",
+        label: tListing(`condition.${option}`),
+      })),
+    ],
+    [tListing]
+  )
+
+  const decantFormatSelectData = useMemo(
+    () => [
+      { id: "", name: "decantFormat", label: tListing("decantFormatPlaceholder") },
+      ...DECANT_FORMATS.map((option) => ({
+        id: option,
+        name: "decantFormat",
+        label: tListing(`decantFormat.${option}`),
+      })),
+    ],
+    [tListing]
+  )
+
   return (
     <div className="p-4">
       {isFormMode && (
         <>
-          <h3 className="text-noir-dark!">
+          <h3>
             {t("decantOptionsTitle")}
           </h3>
-          <p className="text-sm text-noir-black">
+          <p className="text-sm text-noir-gold-500">
             {t("decantOptionsDescriptionOne")}
           </p>
-          <p className="text-sm text-noir-black">
+          <p className="text-sm text-noir-gold-500">
             {t("decantOptionsDescriptionTwo")}
           </p>
         </>
@@ -218,91 +241,61 @@ const DeStashForm = ({
         {showPriceAndTrade && (
           <>
             <div>
-              <p className="block text-sm font-medium text-noir-dark mb-1">
+              <p className="block text-sm font-medium text-noir-gold-100 mb-1">
                 {tListing("photosLabel")}
               </p>
               <p className="text-xs text-noir-gold-500 mb-2">{tListing("photosHint")}</p>
               <ImageUploader
                 value={values.images}
                 onChange={(urls) => setValue("images", urls)}
+                label={tListing("photosLabel")}
               />
             </div>
-            <div>
-              <label
-                htmlFor="condition"
-                className="block text-sm font-medium text-noir-dark mb-1"
-              >
-                {tListing("conditionLabel")}
-              </label>
-              <select
-                id="condition"
-                name="condition"
-                value={values.condition ?? ""}
-                onChange={(event) =>
-                  setValue(
-                    "condition",
-                    (event.target.value || null) as ListingCondition | null
-                  )
-                }
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              >
-                <option value="">{tListing("conditionPlaceholder")}</option>
-                {LISTING_CONDITIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {tListing(`condition.${option}`)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label
-                htmlFor="decantFormat"
-                className="block text-sm font-medium text-noir-dark mb-1"
-              >
-                {tListing("decantFormatLabel")}
-              </label>
-              <select
-                id="decantFormat"
-                name="decantFormat"
-                value={values.decantFormat ?? ""}
-                onChange={(event) =>
-                  setValue(
-                    "decantFormat",
-                    (event.target.value || null) as DecantFormat | null
-                  )
-                }
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-              >
-                <option value="">{tListing("decantFormatPlaceholder")}</option>
-                {DECANT_FORMATS.map((option) => (
-                  <option key={option} value={option}>
-                    {tListing(`decantFormat.${option}`)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label
-                htmlFor="price"
-                className="block text-sm font-medium text-noir-dark mb-1"
-              >
-                {t("decantOptionsPriceLabel")}
-              </label>
-              <input
-                type="number"
-                id="price"
+            <div className="flex flex-col md:flex-row gap-2 items-center justify-between my-6">
+            <Select
+              selectId="condition"
+              className="w-full"
+              selectData={conditionSelectData}
+              label={tListing("conditionLabel")}
+              value={values.condition ?? ""}
+              action={(event) =>
+                setValue(
+                  "condition",
+                  (event.target.value || null) as ListingCondition | null
+                )
+              }
+            />
+            <Select
+              selectId="decantFormat"
+              selectData={decantFormatSelectData}
+              label={tListing("decantFormatLabel")}
+              value={values.decantFormat ?? ""}
+              action={(event) =>
+                setValue(
+                  "decantFormat",
+                  (event.target.value || null) as DecantFormat | null
+                )
+              }
+            />
+              <Input
+                inputType="number"
+                inputId="price"
                 name="price"
+                label={t("decantOptionsPriceLabel")}
                 placeholder="0.00"
                 value={values.price}
-                onChange={event => setValue("price", event.target.value)}
+                shading
                 step="0.01"
                 min="0"
-                className="mt-1 px-2 py-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                onChange={event => setValue("price", event.target.value)}
               />
+              {errors.price && (
+                <p className="text-red-500 text-sm mt-1">{errors.price}</p>
+              )}
             </div>
             <div>
               <fieldset>
-                <legend className="block text-sm font-medium text-gray-700 mb-2">
+                <legend className="block text-sm font-medium text-noir-gold-100 mb-2">
                   {t("decantOptionsTradePreferencesLabel")}
                 </legend>
                 <RadioSelect
@@ -315,7 +308,7 @@ const DeStashForm = ({
                 />
               </fieldset>
             </div>
-            <label className="flex items-start gap-2 text-sm text-noir-dark">
+            <label className="flex items-start gap-2 text-sm text-noir-gold-100">
               <input
                 type="checkbox"
                 checked={values.disclaimerAccepted}

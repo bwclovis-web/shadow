@@ -9,6 +9,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { useSessionStore } from "@/hooks/sessionStore"
 
 import { Button } from "@/components/Atoms/Button"
+import ReviewStatusBadge from "@/components/Atoms/ReviewStatusBadge"
 import VooDooDetails from "@/components/Atoms/VooDooDetails"
 import Select from "@/components/Atoms/Select/Select"
 import { PaginationBar } from "@/components/Molecules/PaginationBar"
@@ -37,6 +38,7 @@ import {
   parseMl,
 } from "@/lib/user-inventory"
 import { computeCollectionCounts } from "@/lib/user-inventory-stats"
+import { isCollectionItemInReview } from "@/lib/collection-review-status"
 import type { UserInventoryStats } from "@/models/user-inventory-stats.server"
 import type { TraderWantingUserListingEnriched } from "@/services/trade-match"
 import type { MyScentsView, UserPerfumeForClient } from "@/types/my-scents-client"
@@ -601,19 +603,23 @@ const MyScentsPageClient = ({
                 const bottleCount = bottleCountByPerfumeId.get(userPerfume.perfumeId) ?? 0
                 const bottleLabel = buildBottleLabel(userPerfume, bottleCount)
                 const listingStatus = getInventoryListingStatus(userPerfume, userPerfumes)
+                const inReview = isCollectionItemInReview(userPerfume)
                 return (
                   <li
                     key={userPerfume.id}
                     className="relative flex flex-col items-center justify-center border-4 border-double border-noir-gold p-1"
                   >
+                    {inReview && (
+                      <ReviewStatusBadge className="absolute left-1 top-1 z-10" />
+                    )}
                     <span
                       className={styleMerge(
                         "absolute right-1 top-1 z-10 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
                         listingStatus === "listed"
-                          ? "bg-noir-gold/30 text-noir-gold"
+                          ? "bg-noir-gold/80 text-noir-black"
                           : listingStatus === "partiallyListed"
-                            ? "bg-noir-gold/20 text-noir-gold-100"
-                            : "bg-noir-black/60 text-noir-gold-500"
+                            ? "bg-noir-gold-500/70 text-noir-black"
+                            : "bg-noir-black/80 text-noir-gold-500"
                       )}
                     >
                       {tStatus(listingStatus)}

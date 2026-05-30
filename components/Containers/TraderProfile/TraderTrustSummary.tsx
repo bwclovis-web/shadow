@@ -57,7 +57,7 @@ const TraderTrustSummary = ({ reputation }: TraderTrustSummaryProps) => {
       aria-label={t("ariaLabel")}
     >
       <div className="flex flex-col gap-1  md:items-start md:justify-between">
-        <h2 className="text-lg font-semibold text-noir-gold">{t("title")}</h2>
+        <h2>{t("title")}</h2>
         <p className="text-sm text-noir-gold-100 mt-1">{t("subtitle")}</p>
         <div>
 

@@ -318,7 +318,9 @@
     "inventoryCondition": "Condition",
     "inventoryTradePreference": "Exchange preference",
     "linkedHousePending": "Linked house submission must be approved first (ID: {id})",
-    "linkedHouseRejected": "Linked house submission was rejected — reject this perfume too"
+    "linkedHouseRejected": "Linked house submission was rejected — reject this perfume too",
+    "defaultPerfumeDescription": "This fragrance is in the process of being added to the archive. Description will be added soon.",
+    "defaultHouseDescription": "This house is in the process of being added to the archive. Description will be added soon."
   },
   "aboutUs": {
     "meta": {
@@ -365,6 +367,7 @@
     "emailWishlistAlerts": "Email Wishlist Alerts",
     "emailDecantAlerts": "Email Decant Alerts",
     "emailTradeAlerts": "Email Exchange Updates",
+    "emailSubmissionAlerts": "Email Archive submission updates",
     "followAlerts": "Followed Activity",
     "emailFollowAlerts": "Email followed activity",
     "securityAlerts": "Security Alerts",
@@ -387,6 +390,7 @@
     "pushTradeAlerts": "Exchange Updates",
     "pushMessageAlerts": "New Conversations",
     "pushFollowAlerts": "Followed Activity",
+    "pushSubmissionAlerts": "Archive submission updates",
     "pushDescription": "Get notified when exchanges move forward or someone messages you (when you're not in that conversation).",
     "enablePush": "Enable Notifications",
     "disablePush": "Disable push notifications",
@@ -399,6 +403,8 @@
       "wishlist_available": "Wishlist",
       "decant_interest": "Interest",
       "pending_submission_approval": "Submission",
+      "submission_approved": "Archive approved",
+      "submission_rejected": "Archive rejected",
       "new_trader_message": "Message",
       "trade_received": "Exchange Proposal",
       "trade_accepted": "Exchange accepted",
@@ -420,10 +426,14 @@
       "trade_completed": "Exchange completed with {actorName}",
       "trade_cancelled_declined": "{actorName} declined your exchange proposal",
       "trade_cancelled_cancelled": "{actorName} cancelled the exchange",
-      "trade_update_fallback": "Exchange update from {actorName}"
+      "trade_update_fallback": "Exchange update from {actorName}",
+      "submission_approved": "\"{submissionName}\" was approved for the Archive",
+      "submission_rejected": "\"{submissionName}\" was not approved for the Archive"
     },
     "actions": {
       "reviewSubmission": "Review submission",
+      "viewSubmissionApproved": "View in the Archive",
+      "viewMyScents": "View My Scents",
       "viewMessage": "View message",
       "viewTrade": "View exchange",
       "viewSecurity": "Security settings",
@@ -439,7 +449,10 @@
     },
     "messages": {
       "wishlistAvailable": "{perfumeLabel} has surfaced in the Exchange.",
-      "wishlistAvailableWithCollectors": "{perfumeLabel} has surfaced in the Exchange from {count} collector(s)."
+      "wishlistAvailableWithCollectors": "{perfumeLabel} has surfaced in the Exchange from {count} collector(s).",
+      "submission_approved": "\"{submissionName}\" has been approved and is now part of the Archive.",
+      "submission_rejected": "\"{submissionName}\" was not approved for the Archive and has been removed from your collection.",
+      "submission_rejected_with_notes": "\"{submissionName}\" was not approved for the Archive and has been removed from your collection. Note from the review team: {adminNotes}"
     },
     "timeAgo": {
       "justNow": "Just now",
@@ -950,6 +963,11 @@
       "listed": "Listed",
       "partiallyListed": "Partially listed"
     },
+    "reviewStatus": {
+      "inReview": "In review",
+      "inReviewInfo": "This fragrance has been submitted for inclusion in the Archive. Collector listings and Exchange activity remain available while review is in progress.",
+      "inReviewInfoAriaLabel": "About in review status"
+    },
     "listingKind": {
       "decant": "Decant",
       "sample": "Sample",
@@ -1114,7 +1132,25 @@
       "placeOfPurchasePlaceholder": "Boutique, collector, retailer, or exchange source",
       "placeOfPurchase": "Acquired From",
       "priceLabel": "Acquisition Price",
-      "pricePlaceholder": "Enter the original purchase price"
+      "pricePlaceholder": "Enter the original purchase price",
+      "priceAndPurchaseInfo": "Acquisition Details",
+      "priceAndPurchaseDescription": "Record where you acquired this bottle and what you paid—for your personal archive.",
+      "addManuallyLink": "Can't find it? Add manually",
+      "manualEntryDescription": "Add a placeholder entry now. Admins will review details.",
+      "backToSearch": "Back to search",
+      "houseNotListed": "House not listed",
+      "fragranceNameLabel": "Fragrance Name",
+      "fragranceNamePlaceholder": "Enter fragrance name",
+      "customHouseNameLabel": "Custom Fragrance House Name",
+      "customHouseNamePlaceholder": "Enter fragrance house name",
+      "fragranceHouseLabel": "Fragrance House",
+      "houseClearLabel": "Clear",
+      "submitting": "Submitting...",
+      "submitError": "Unable to add this fragrance. Please try again.",
+      "networkError": "Network error. Check your connection and try again.",
+      "manualReviewInfo": "Your fragrance remains part of your Collection Archive during review. Once approved, it will become discoverable to other collectors in the Archive.",
+      "manualReviewInfoAriaLabel": "About the review process",
+      "manualSubmitButton": "Add and submit for review"
     },
     "comments": {
       "heading": "Private Notes",
@@ -1545,6 +1581,9 @@
     },
     "similarPerfumes": "Similar perfumes",
     "subheading": "By: ",
+    "backToLetter": "Back to {selectedLetter}",
+    "backAriaLabel": "Back to perfumes starting with {selectedLetter}",
+    "backToPerfumesLabel": "Back to Perfumes",
     "notes": {
       "opening": "Opening Notes",
       "mid": "Mid Notes",
@@ -2114,7 +2153,7 @@
     },
     "reputation": {
       "ariaLabel": "Collector trust and reputation",
-      "title": "Trust summary",
+      "title": "Trust Summary",
       "subtitle": "Based on collector feedback, exchange history, and response activity.",
       "scoreLabel": "Reputation",
       "scoreOutOf": "{score}/100",

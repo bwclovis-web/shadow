@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl"
 import { Link } from "next-view-transitions"
 
 import { Button } from "@/components/Atoms/Button"
+import ReviewStatusBadge from "@/components/Atoms/ReviewStatusBadge"
 import type { UserPerfumeForClient } from "@/types/my-scents-client"
 import { useCSRF } from "@/hooks/useCSRF"
 import {
@@ -17,6 +18,7 @@ import {
   parseMl,
 } from "@/lib/user-inventory"
 import { resolveListingApiError } from "@/lib/resolve-listing-api-error"
+import { isCollectionItemInReview } from "@/lib/collection-review-status"
 import { postDecantListingAmount } from "@/lib/user-perfume-listing-actions"
 import { getPrimaryListingImage, tradePreferenceChipLabel } from "@/utils/listing-display"
 import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
@@ -77,7 +79,10 @@ const ListingCard = ({
           sizes="80px"
         />
         <div className="min-w-0 flex-1">
-          <h3 className="font-semibold text-noir-gold">{perfume.name}</h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-semibold text-noir-gold">{perfume.name}</h3>
+            {isCollectionItemInReview(row) && <ReviewStatusBadge />}
+          </div>
           {perfume.perfumeHouse && (
             <p className="text-sm text-noir-gold-100">{perfume.perfumeHouse.name}</p>
           )}

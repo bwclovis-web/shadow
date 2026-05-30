@@ -11,6 +11,8 @@ import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import {
   extractInventoryIntent,
   isCsvImportSubmission,
+  isPendingDefaultHouseDescription,
+  isPendingDefaultPerfumeDescription,
   MANUAL_COLLECTION_SOURCE,
   stripPerfumeMetadataForDisplay,
 } from "@/lib/csv-import-pending-submission"
@@ -90,6 +92,31 @@ const PendingSubmissionClient = ({
       return t("linkedHouseRejected")
     }
     return null
+  }
+
+  const formatSubmissionFieldValue = (
+    submissionType: string,
+    key: string,
+    value: unknown
+  ): string => {
+    if (key === "description" && typeof value === "string") {
+      if (
+        submissionType === "perfume" &&
+        isPendingDefaultPerfumeDescription(value)
+      ) {
+        return t("defaultPerfumeDescription")
+      }
+      if (
+        submissionType === "perfume_house" &&
+        isPendingDefaultHouseDescription(value)
+      ) {
+        return t("defaultHouseDescription")
+      }
+    }
+    if (Array.isArray(value)) {
+      return value.join(", ")
+    }
+    return String(value ?? "N/A")
   }
 
   return (
@@ -304,9 +331,11 @@ const PendingSubmissionClient = ({
                                 {key.replace(/([A-Z])/g, " $1").trim()}:{" "}
                               </span>
                               <span>
-                                {Array.isArray(value)
-                                  ? value.join(", ")
-                                  : String(value ?? "N/A")}
+                                {formatSubmissionFieldValue(
+                                  submission.submissionType,
+                                  key,
+                                  value
+                                )}
                               </span>
                             </div>
                           ))}

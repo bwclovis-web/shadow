@@ -129,7 +129,9 @@
     "inventoryCondition": "Condizione",
     "inventoryTradePreference": "Preferenza di scambio",
     "linkedHousePending": "La casa collegata deve essere approvata prima (ID: {id})",
-    "linkedHouseRejected": "La casa collegata è stata rifiutata — rifiuta anche questo profumo"
+    "linkedHouseRejected": "La casa collegata è stata rifiutata — rifiuta anche questo profumo",
+    "defaultPerfumeDescription": "Questa fragranza è in fase di aggiunta all'Archivio. La descrizione sarà aggiunta presto.",
+    "defaultHouseDescription": "Questa casa è in fase di aggiunta all'Archivio. La descrizione sarà aggiunta presto."
   },
   "aboutUs": {
     "meta": {
@@ -176,6 +178,7 @@
     "emailWishlistAlerts": "Notifiche wishlist per email",
     "emailDecantAlerts": "Notifiche decant per email",
     "emailTradeAlerts": "Notifiche scambi per email",
+    "emailSubmissionAlerts": "Email — aggiornamenti sulle submission all'Archivio",
     "emailRequiresInApp": "Le notifiche email richiedono che l'alerta corrispondente nell'app sia attiva.",
     "alertLimits": "Limiti notifiche",
     "maxAlerts": "Numero massimo di notifiche da tenere",
@@ -193,6 +196,7 @@
     "pushTradeAlerts": "Aggiornamenti scambi",
     "pushMessageAlerts": "Nuovi messaggi",
     "pushFollowAlerts": "Attività seguiti",
+    "pushSubmissionAlerts": "Aggiornamenti submission all'Archivio",
     "pushDescription": "Ricevi avvisi quando uno scambio avanza o qualcuno ti scrive (se non sei già in quella conversazione).",
     "enablePush": "Attiva notifiche push",
     "disablePush": "Disattiva notifiche push",
@@ -210,6 +214,8 @@
       "wishlist_available": "Lista dei desideri",
       "decant_interest": "Interesse",
       "pending_submission_approval": "Invio",
+      "submission_approved": "Archivio approvato",
+      "submission_rejected": "Archivio rifiutato",
       "new_trader_message": "Messaggio",
       "trade_received": "Offerta di scambio",
       "trade_accepted": "Scambio accettato",
@@ -231,10 +237,14 @@
       "trade_completed": "Scambio completato con {actorName}",
       "trade_cancelled_declined": "{actorName} ha rifiutato la tua proposta di scambio",
       "trade_cancelled_cancelled": "{actorName} ha annullato lo scambio",
-      "trade_update_fallback": "Aggiornamento scambio da {actorName}"
+      "trade_update_fallback": "Aggiornamento scambio da {actorName}",
+      "submission_approved": "\"{submissionName}\" è stato approvato per l'Archivio",
+      "submission_rejected": "\"{submissionName}\" non è stato approvato per l'Archivio"
     },
     "actions": {
       "reviewSubmission": "Revisiona invio",
+      "viewSubmissionApproved": "Vedi nell'Archivio",
+      "viewMyScents": "Vedi My Scents",
       "viewMessage": "Vedi messaggio",
       "viewTrade": "Vedi scambio",
       "viewSecurity": "Impostazioni sicurezza",
@@ -250,7 +260,10 @@
     },
     "messages": {
       "wishlistAvailable": "{perfumeLabel} è apparso in L'Exchange.",
-      "wishlistAvailableWithCollectors": "{perfumeLabel} è apparso in L'Exchange da {count} collezionista/i."
+      "wishlistAvailableWithCollectors": "{perfumeLabel} è apparso in L'Exchange da {count} collezionista/i.",
+      "submission_approved": "\"{submissionName}\" è stato approvato ed è ora parte dell'Archivio.",
+      "submission_rejected": "\"{submissionName}\" non è stato approvato per l'Archivio ed è stato rimosso dalla tua collezione.",
+      "submission_rejected_with_notes": "\"{submissionName}\" non è stato approvato per l'Archivio ed è stato rimosso dalla tua collezione. Nota del team di revisione: {adminNotes}"
     },
     "timeAgo": {
       "justNow": "Proprio ora",
@@ -761,6 +774,11 @@
       "listed": "In vendita",
       "partiallyListed": "Parzialmente in vendita"
     },
+    "reviewStatus": {
+      "inReview": "In revisione",
+      "inReviewInfo": "Questa fragranza è stata inviata per l'inclusione nell'Archivio. Le inserzioni del collezionista e l'attività sull'Exchange restano disponibili durante la revisione.",
+      "inReviewInfoAriaLabel": "Informazioni sullo stato in revisione"
+    },
     "listingKind": {
       "decant": "Decant",
       "sample": "Campione",
@@ -925,7 +943,25 @@
       "placeOfPurchasePlaceholder": "Luogo di acquisto",
       "placeOfPurchase": "Luogo di acquisto",
       "priceLabel": "Prezzo di acquisto",
-      "pricePlaceholder": "Prezzo del profumo"
+      "pricePlaceholder": "Prezzo del profumo",
+      "priceAndPurchaseInfo": "Dettagli di acquisizione",
+      "priceAndPurchaseDescription": "Registra dove hai acquistato questo flacone e quanto hai pagato, per il tuo archivio personale.",
+      "addManuallyLink": "Non lo trovi? Aggiungi manualmente",
+      "manualEntryDescription": "Aggiungi subito una voce provvisoria. Gli amministratori verificheranno i dettagli.",
+      "backToSearch": "Torna alla ricerca",
+      "houseNotListed": "Casa non in elenco",
+      "fragranceNameLabel": "Nome della fragranza",
+      "fragranceNamePlaceholder": "Inserisci il nome della fragranza",
+      "customHouseNameLabel": "Nome personalizzato della casa di profumeria",
+      "customHouseNamePlaceholder": "Inserisci il nome della casa di profumeria",
+      "fragranceHouseLabel": "Casa di profumeria",
+      "houseClearLabel": "Rimuovi",
+      "submitting": "Invio in corso...",
+      "submitError": "Impossibile aggiungere questa fragranza. Riprova.",
+      "networkError": "Errore di rete. Controlla la connessione e riprova.",
+      "manualReviewInfo": "La tua fragranza resta nel tuo Archivio Collezione durante la revisione. Una volta approvata, sarà visibile agli altri collezionisti nell'Archivio.",
+      "manualReviewInfoAriaLabel": "Informazioni sul processo di revisione",
+      "manualSubmitButton": "Aggiungi e invia per revisione"
     },
     "comments": {
       "heading": "Commenti",
@@ -1354,6 +1390,9 @@
       "descriptionStandalone": "Esplora {name}: note, valutazioni e annunci della community su perfumer's hollow."
     },
     "subheading": "Di: ",
+    "backToLetter": "Torna a {selectedLetter}",
+    "backAriaLabel": "Torna ai profumi che iniziano con {selectedLetter}",
+    "backToPerfumesLabel": "Torna ai profumi",
     "notes": {
       "opening": "Note di testa",
       "mid": "Note di cuore",

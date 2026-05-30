@@ -150,6 +150,50 @@ Middle Notes: Verdant Earth Accord (Rich Soil, Green and Flowering Plants)`
     expect(confirmed.openNotes).not.toEqual(expect.arrayContaining(["moss"]))
   })
 
+  it("confirmNoteLayersAgainstSource relayers mis-assigned pyramid notes (Fragaria)", () => {
+    const source =
+      "Top Notes: Crushed Pink Pepper, Sparkling Mandarin, Zesty Bergamot Heart Notes: Wild Strawberry, Violet Veil, Orris Butter Base Notes: Smoked Vetiver, Cedarwood Shavings, Patchouli Resin, Fir Balsam"
+    const mislayered = {
+      openNotes: [
+        "crushed pink pepper",
+        "sparkling mandarin",
+        "zesty bergamot",
+        "wild strawberry",
+        "violet veil",
+        "orris butter",
+      ],
+      heartNotes: [],
+      baseNotes: ["smoked vetiver", "cedarwood shavings", "patchouli resin", "fir balsam"],
+    }
+    const confirmed = confirmNoteLayersAgainstSource(mislayered, source)
+    expect(confirmed.openNotes).toEqual(
+      expect.arrayContaining(["crushed pink pepper", "sparkling mandarin", "zesty bergamot"]),
+    )
+    expect(confirmed.openNotes).not.toEqual(
+      expect.arrayContaining(["wild strawberry", "violet veil", "orris butter"]),
+    )
+    expect(confirmed.heartNotes).toEqual(
+      expect.arrayContaining(["wild strawberry", "violet veil", "orris butter"]),
+    )
+    expect(confirmed.baseNotes).toEqual(
+      expect.arrayContaining(["smoked vetiver", "cedarwood shavings", "patchouli resin", "fir balsam"]),
+    )
+  })
+
+  it("confirmNoteLayersAgainstSource keeps Not Vanilla heart materials in heart layer", () => {
+    const source =
+      "open notes: Camphor, Nutmeg, Bergamot heart notes: Vanilla, Juniper Berries, Cedar, Violet base notes: Praline, Cetalox, Musk, Guaiac Wood, Moss, Amber Top notes of Camphor, Nutmeg, Bergamot Middle notes of Vanilla, Juniper Berries, Cedar, Violet Base notes of Praline, Cetalox, Musk, Guaiac Wood, Moss, Amber"
+    const layers = {
+      openNotes: ["camphor", "nutmeg", "bergamot"],
+      heartNotes: ["vanilla", "juniper berries", "cedar", "violet"],
+      baseNotes: ["praline", "cetalox", "musk", "guaiac wood", "moss", "amber"],
+    }
+    const confirmed = confirmNoteLayersAgainstSource(layers, source)
+    expect(confirmed.heartNotes).toEqual(
+      expect.arrayContaining(["vanilla", "juniper berries", "cedar", "violet"]),
+    )
+  })
+
   it("pipeline drops Black Tie When to Wear prose while keeping Fragrance Notes materials", async () => {
     vi.stubEnv("OPENAI_API_KEY", "test-key")
     vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
@@ -237,6 +281,19 @@ Middle Notes: Verdant Earth Accord (Rich Soil, Green and Flowering Plants)`
     expect(sanitizeExtractedNoteCandidate("bergamot heart")).toBeNull()
     expect(sanitizeExtractedNoteCandidate("violet base praline")).toBeNull()
     expect(sanitizeExtractedNoteCandidate("intention")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("sensual")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("seductive")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("rebellious")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("drenched in warmth")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("creating an unforgettable")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("fairy-kissed")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("pink")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("becomes your skins signature")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("softened with creamy florals")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("warm wood")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("creamy florals")).toBeNull()
+    expect(sanitizeExtractedNoteCandidate("sandalwood fragrance")).toBe("sandalwood")
+    expect(sanitizeExtractedNoteCandidate("pink pepper")).toBe("pink pepper")
   })
 
   it("peelMarketingDescriptorTail strips trailing Shopify copy", () => {

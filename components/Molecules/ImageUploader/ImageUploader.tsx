@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl"
 import Image from "next/image"
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useId, useRef, useState } from "react"
 import { MdAddAPhoto, MdClose, MdPhotoCamera } from "react-icons/md"
 
 import { Button } from "@/components/Atoms/Button"
@@ -25,6 +25,7 @@ interface ImageUploaderProps {
   onChange: (urls: string[]) => void
   maxImages?: number
   disabled?: boolean
+  label?: string
   uploadFn?: ImageUploadFn
   translationNamespace?: string
   cameraModalId?: string
@@ -35,11 +36,14 @@ const ImageUploader = ({
   onChange,
   maxImages = MAX_IMAGES_DEFAULT,
   disabled = false,
+  label,
   uploadFn = uploadListingImage,
   translationNamespace = "listing",
   cameraModalId = CAMERA_MODAL_ID,
 }: ImageUploaderProps) => {
   const t = useTranslations(translationNamespace)
+  const inputId = useId()
+  const accessibleLabel = label ?? t("chooseFiles")
   const { addToHeaders } = useCSRF()
   const { modalOpen, modalId, toggleModal, closeModal } = useSessionStore()
   const cameraButtonRef = useRef<HTMLButtonElement>(null)
@@ -192,7 +196,11 @@ const ImageUploader = ({
             dragActive ? "border-noir-gold bg-noir-gold/10" : "border-noir-gold/30"
           }`}
         >
+          <label htmlFor={inputId} className="sr-only">
+            {accessibleLabel}
+          </label>
           <input
+            id={inputId}
             ref={fileInputRef}
             type="file"
             accept="image/jpeg,image/png,image/webp"

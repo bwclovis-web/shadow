@@ -35,7 +35,7 @@ import {
   getPausedAvailable,
   setPausedAvailable,
 } from "./user-perfume-pause.server"
-import { userPerfumeListingSelect } from "./user-perfume-listing-fields"
+import { userPerfumeListingSelect, userPerfumeNestedPerfumeSelect } from "./user-perfume-listing-fields"
 import { getUserByEmail } from "./user.query"
 
 /** Thrown when free signup limit is reached during atomic create (race condition). */
@@ -170,6 +170,7 @@ export const getTraderById = cache(async (id: string) => {
               id: true,
               name: true,
               slug: true,
+              isPending: true,
               perfumeHouse: {
                 select: {
                   id: true,
@@ -351,20 +352,7 @@ export const getUserPerfumes = async (userId: string) => {
       createdAt: true,
       ...userPerfumeListingSelect,
       perfume: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          image: true,
-          description: true,
-          perfumeHouse: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-            },
-          },
-        },
+        select: userPerfumeNestedPerfumeSelect,
       },
       _count: {
         select: {
@@ -564,20 +552,7 @@ export const createDestashEntry = async ({
       createdAt: true,
       ...userPerfumeListingSelect,
       perfume: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          image: true,
-          description: true,
-          perfumeHouse: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-            },
-          },
-        },
+        select: userPerfumeNestedPerfumeSelect,
       },
       _count: {
         select: {
@@ -703,20 +678,7 @@ const updatePerfumeInDatabase = async (perfumeId: string, updateData: any) => aw
       createdAt: true,
       ...userPerfumeListingSelect,
       perfume: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          image: true,
-          description: true,
-          perfumeHouse: {
-            select: {
-              id: true,
-              name: true,
-              slug: true,
-            },
-          },
-        },
+        select: userPerfumeNestedPerfumeSelect,
       },
       _count: {
         select: {
@@ -967,16 +929,7 @@ export const updateUserPerfumeAmount = async ({
         createdAt: true,
         ...userPerfumeListingSelect,
         perfume: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            image: true,
-            description: true,
-            perfumeHouse: {
-              select: { id: true, name: true, slug: true },
-            },
-          },
+          select: userPerfumeNestedPerfumeSelect,
         },
       },
     })

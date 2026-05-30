@@ -95,9 +95,9 @@ h1 {
 }
 
 h2 {
-  font-size: clamp(1.5rem, 2vw + 1rem, 4rem);
+  font-size: clamp(1.5rem, 2vw + 1rem, 3.5rem);
   font-weight: 800;
-  line-height: 1.2;
+  line-height: 1;
   contain: layout style;
 }
 

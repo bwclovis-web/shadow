@@ -5,6 +5,7 @@ import { Button } from "@/components/Atoms/Button"
 import { useSessionStore } from "@/hooks/sessionStore"
 import type { Comment } from "@/types/comments"
 import type { UserPerfumeI } from "@/types"
+import { LuBookPlus } from "react-icons/lu"
 
 interface PerfumeCommentsProps {
   userPerfume: UserPerfumeI
@@ -27,10 +28,10 @@ const PerfumeComments = ({
   }
 
   return (
-    <div className="mt1 p-4 rounded-b-md bg-noir-dark/80">
-      <h3 className="text-lg font-semibold">{t("heading")}</h3>
-      <p className="text-base mb-2 text-noir-gold-100">{t("subheading2")}</p>
-      <p className="text-sm mb-2 text-noir-gold-500">
+    <div className="p-4 rounded-b-md bg-noir-dark/80">
+      <h3>{t("heading")}</h3>
+      <p className="mb-4 text-noir-gold-100">{t("subheading2")}</p>
+      <p className="text-sm text-noir-gold-500">
         {t("subheading", {
           perfumeName: userPerfume.perfume.name,
         })}
@@ -64,12 +65,15 @@ const PerfumeComments = ({
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-noir-gold-500 mb-2">
+        <p className="text-sm text-noir-gold-100 mb-2">
           {t("noComments")}
         </p>
       )}
       <Button
-        className="mt-2"
+        className="mt-6"
+        variant="icon"
+        leftIcon={<LuBookPlus size={20} />}
+        background="gold"
         onClick={() => {
           const buttonRef = { current: document.createElement("button") }
           toggleModal(buttonRef as any, uniqueModalId, { action: "create" })

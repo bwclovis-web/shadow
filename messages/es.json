@@ -129,7 +129,9 @@
     "inventoryCondition": "Condición",
     "inventoryTradePreference": "Preferencia de intercambio",
     "linkedHousePending": "La casa vinculada debe aprobarse primero (ID: {id})",
-    "linkedHouseRejected": "La casa vinculada fue rechazada — rechaza también este perfume"
+    "linkedHouseRejected": "La casa vinculada fue rechazada — rechaza también este perfume",
+    "defaultPerfumeDescription": "Esta fragancia está en proceso de ser añadida al Archivo. La descripción se añadirá pronto.",
+    "defaultHouseDescription": "Esta casa está en proceso de ser añadida al Archivo. La descripción se añadirá pronto."
   },
   "aboutUs": {
     "meta": {
@@ -176,6 +178,7 @@
     "emailWishlistAlerts": "Notificaciones por Email de Lista de Deseos",
     "emailDecantAlerts": "Notificaciones por Email de Interés en Decants",
     "emailTradeAlerts": "Notificaciones por email de intercambios",
+    "emailSubmissionAlerts": "Correo — actualizaciones de envíos al Archivo",
     "emailRequiresInApp": "Las alertas por correo requieren que la alerta correspondiente en la aplicación esté activada.",
     "alertLimits": "Límites de Alertas",
     "maxAlerts": "Máximas Alertas a Mantener",
@@ -193,6 +196,7 @@
     "pushTradeAlerts": "Actualizaciones de intercambio",
     "pushMessageAlerts": "Mensajes nuevos",
     "pushFollowAlerts": "Actividad de seguidos",
+    "pushSubmissionAlerts": "Actualizaciones de envíos al Archivo",
     "pushDescription": "Recibe avisos cuando avancen los intercambios o te escriban (si no estás ya en esa conversación).",
     "enablePush": "Activar notificaciones push",
     "disablePush": "Desactivar notificaciones push",
@@ -210,6 +214,8 @@
       "wishlist_available": "Lista de deseos",
       "decant_interest": "Interés",
       "pending_submission_approval": "Envío",
+      "submission_approved": "Archivo aprobado",
+      "submission_rejected": "Archivo rechazado",
       "new_trader_message": "Mensaje",
       "trade_received": "Oferta de intercambio",
       "trade_accepted": "Intercambio aceptado",
@@ -231,10 +237,14 @@
       "trade_completed": "Intercambio completado con {actorName}",
       "trade_cancelled_declined": "{actorName} rechazó tu propuesta de intercambio",
       "trade_cancelled_cancelled": "{actorName} canceló el intercambio",
-      "trade_update_fallback": "Actualización de intercambio de {actorName}"
+      "trade_update_fallback": "Actualización de intercambio de {actorName}",
+      "submission_approved": "\"{submissionName}\" fue aprobado para el Archivo",
+      "submission_rejected": "\"{submissionName}\" no fue aprobado para el Archivo"
     },
     "actions": {
       "reviewSubmission": "Revisar envío",
+      "viewSubmissionApproved": "Ver en el Archivo",
+      "viewMyScents": "Ver My Scents",
       "viewMessage": "Ver mensaje",
       "viewTrade": "Ver intercambio",
       "viewSecurity": "Configuración de seguridad",
@@ -250,7 +260,10 @@
     },
     "messages": {
       "wishlistAvailable": "{perfumeLabel} ha aparecido en El Intercambio.",
-      "wishlistAvailableWithCollectors": "{perfumeLabel} ha aparecido en El Intercambio de {count} coleccionista(s)."
+      "wishlistAvailableWithCollectors": "{perfumeLabel} ha aparecido en El Intercambio de {count} coleccionista(s).",
+      "submission_approved": "\"{submissionName}\" ha sido aprobado y ahora forma parte del Archivo.",
+      "submission_rejected": "\"{submissionName}\" no fue aprobado para el Archivo y se ha eliminado de tu colección.",
+      "submission_rejected_with_notes": "\"{submissionName}\" no fue aprobado para el Archivo y se ha eliminado de tu colección. Nota del equipo de revisión: {adminNotes}"
     },
     "timeAgo": {
       "justNow": "Ahora mismo",
@@ -761,6 +774,11 @@
       "listed": "En venta",
       "partiallyListed": "Parcialmente en venta"
     },
+    "reviewStatus": {
+      "inReview": "En revisión",
+      "inReviewInfo": "Esta fragancia se ha enviado para su inclusión en el Archivo. Los anuncios del coleccionista y la actividad en el Intercambio siguen disponibles mientras dura la revisión.",
+      "inReviewInfoAriaLabel": "Información sobre el estado en revisión"
+    },
     "listingKind": {
       "decant": "Decant",
       "sample": "Muestra",
@@ -925,7 +943,25 @@
       "placeOfPurchasePlaceholder": "Ingresa el lugar de compra",
       "placeOfPurchase": "Lugar de Compra",
       "priceLabel": "Precio de Compra",
-      "pricePlaceholder": "Ingresa el precio del perfume"
+      "pricePlaceholder": "Ingresa el precio del perfume",
+      "priceAndPurchaseInfo": "Detalles de adquisición",
+      "priceAndPurchaseDescription": "Registra dónde adquiriste este frasco y cuánto pagaste, para tu archivo personal.",
+      "addManuallyLink": "¿No lo encuentras? Añadir manualmente",
+      "manualEntryDescription": "Añade una entrada provisional ahora. Los administradores revisarán los detalles.",
+      "backToSearch": "Volver a la búsqueda",
+      "houseNotListed": "Casa no listada",
+      "fragranceNameLabel": "Nombre de la fragancia",
+      "fragranceNamePlaceholder": "Introduce el nombre de la fragancia",
+      "customHouseNameLabel": "Nombre personalizado de la casa de fragancias",
+      "customHouseNamePlaceholder": "Introduce el nombre de la casa de fragancias",
+      "fragranceHouseLabel": "Casa de fragancias",
+      "houseClearLabel": "Quitar",
+      "submitting": "Enviando...",
+      "submitError": "No se pudo agregar esta fragancia. Inténtalo de nuevo.",
+      "networkError": "Error de red. Comprueba tu conexión e inténtalo de nuevo.",
+      "manualReviewInfo": "Tu fragancia sigue formando parte de tu Archivo de Colección durante la revisión. Una vez aprobada, será visible para otros coleccionistas en el Archivo.",
+      "manualReviewInfoAriaLabel": "Información sobre el proceso de revisión",
+      "manualSubmitButton": "Agregar y enviar para revisión"
     },
     "comments": {
       "heading": "Comentarios",
@@ -1355,6 +1391,9 @@
     },
     "similarPerfumes": "Perfumes similares",
     "subheading": "Por: ",
+    "backToLetter": "Volver a {selectedLetter}",
+    "backAriaLabel": "Volver a perfumes que comienzan con {selectedLetter}",
+    "backToPerfumesLabel": "Volver a perfumes",
     "notes": {
       "opening": "Notas de Salida",
       "mid": "Notas de Corazón",

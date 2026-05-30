@@ -19,6 +19,7 @@ type AlertPrefsSlice = Pick<
   | "emailWishlistAlerts"
   | "emailDecantAlerts"
   | "emailTradeAlerts"
+  | "emailSubmissionAlerts"
   | "securityAlertsEnabled"
   | "emailSecurityAlerts"
 >
@@ -30,6 +31,7 @@ type EditorialAlertVariant =
   | "split"
   | "security"
   | "dispute"
+  | "submission"
 
 type EditorialAlertEmailInput = {
   variant: EditorialAlertVariant
@@ -57,6 +59,11 @@ type BuiltEditorialAlertEmail = {
     contentId?: string
   }>
 }
+
+const SUBMISSION_EMAIL_ALERT_TYPES = [
+  "submission_approved",
+  "submission_rejected",
+] as const satisfies readonly AlertType[]
 
 const TRADE_EMAIL_ALERT_TYPES = [
   "trade_received",
@@ -142,6 +149,16 @@ const EDITORIAL_ALERT_COPY: Record<
       "perfumer's hollow connects collectors and moderates disputes, but never processes payments or shipping.",
     ],
   },
+  submission: {
+    templateVariant: "correspondence",
+    dispatchLabel: "Notes From The Archive",
+    eyebrow: "Archive submission update",
+    footerTagline: "Every bottle in the Archive begins with a collector's discovery.",
+    footerDetails: [
+      "This message was sent to the email address on your perfumer's hollow account.",
+      "You can manage alert preferences from your profile whenever you like.",
+    ],
+  },
 }
 
 type RecipientUser = {
@@ -167,6 +184,10 @@ export const shouldSendDecantEmail = (
 export const shouldSendTradeEmail = (
   preferences: AlertPrefsSlice | null | undefined
 ): boolean => preferences?.emailTradeAlerts === true
+
+export const shouldSendSubmissionEmail = (
+  preferences: AlertPrefsSlice | null | undefined
+): boolean => preferences?.emailSubmissionAlerts === true
 
 export const shouldSendSecurityEmail = (
   preferences: AlertPrefsSlice | null | undefined
@@ -546,6 +567,76 @@ export const sendDisputeResolutionEmail = async (params: {
   } else {
     logEmailDebug(
       `Dispute resolution email not sent to ${params.user.email} (check RESEND_API_KEY / EMAIL_FROM)`
+    )
+  }
+}
+
+export const sendSubmissionOutcomeEmail = async (params: {
+  user: RecipientUser
+  preferences: AlertPrefsSlice | null | undefined
+  alertType: AlertType
+  title: string
+  message: string
+  targetUrl: string
+}): Promise<void> => {
+  if (
+    !SUBMISSION_EMAIL_ALERT_TYPES.includes(
+      params.alertType as (typeof SUBMISSION_EMAIL_ALERT_TYPES)[number]
+    )
+  ) {
+    return
+  }
+  if (!shouldSendSubmissionEmail(params.preferences)) {
+    logEmailDebug(
+      `Skipped submission email for ${params.user.email}: emailSubmissionAlerts=${params.preferences?.emailSubmissionAlerts}`
+    )
+    return
+  }
+  if (!isSendableRecipientEmail(params.user.email)) {
+    logEmailDebug(`Skipped submission email: invalid recipient ${params.user.email}`)
+    return
+  }
+
+  const baseUrl = getAppBaseUrl()
+  const displayName = getUserDisplayName(params.user)
+  const destinationPath = params.targetUrl.startsWith("/")
+    ? params.targetUrl
+    : `/${params.targetUrl}`
+  const destinationUrl = `${baseUrl}${destinationPath}`
+  const preferencesUrl = `${baseUrl}${getProfilePathForUser(params.user)}`
+  const ctaLabel =
+    params.alertType === "submission_approved" ? "View in the Archive" : "View My Scents"
+
+  const email = buildEditorialAlertEmail({
+    variant: "submission",
+    displayName,
+    title: params.title,
+    preheader: params.title,
+    lead: params.message,
+    body: [
+      params.alertType === "submission_approved"
+        ? "Your fragrance is now part of the Archive."
+        : "Open My Scents to review your collection.",
+    ],
+    ctaLabel,
+    ctaUrl: destinationUrl,
+    secondaryLabel: "Manage alert preferences",
+    secondaryUrl: preferencesUrl,
+  })
+
+  const result = await sendTransactionalEmail({
+    to: params.user.email,
+    subject: params.title,
+    text: email.text,
+    html: email.html,
+    attachments: email.attachments,
+  })
+
+  if (result.sent) {
+    logEmailDebug(`Sent submission email to ${params.user.email} (id: ${result.id ?? "unknown"})`)
+  } else {
+    logEmailDebug(
+      `Submission email not sent to ${params.user.email} (check RESEND_API_KEY / EMAIL_FROM)`
     )
   }
 }

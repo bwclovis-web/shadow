@@ -8,6 +8,10 @@ import { prisma } from "@/lib/db"
 import type { PendingSubmission, PendingSubmissionStatus, PendingSubmissionType } from "@/types/database"
 import { createPerfumeHouse, getPerfumeHouseByName } from "./house.server"
 import { createPerfume } from "./perfume.server"
+import {
+  notifySubmissionApproved,
+  notifySubmissionRejected,
+} from "./submission-alerts.server"
 import { addUserPerfume } from "./user.server"
 import { createUserAlert } from "./user-alerts.server"
 
@@ -287,7 +291,7 @@ export const approvePendingSubmission = async (
     const placeholderHouseId =
       typeof data.placeholderHouseId === "string" ? data.placeholderHouseId : undefined
     if (placeholderHouseId) {
-      await prisma.perfumeHouse.update({
+      const updatedHouse = await prisma.perfumeHouse.update({
         where: { id: placeholderHouseId },
         data: {
           name: String(houseFormData.get("name") ?? ""),
@@ -308,16 +312,46 @@ export const approvePendingSubmission = async (
           submittedBy: null,
           pendingSubmissionId: null,
         },
+        select: { slug: true },
       })
+      await updatePendingSubmissionStatus(
+        submission.id,
+        "approved",
+        reviewerId,
+        adminNotes
+      )
+      try {
+        await notifySubmissionApproved({
+          submitterId: submission.submittedBy,
+          submissionId: submission.id,
+          submissionType: submission.submissionType,
+          submissionData: data,
+          houseSlug: updatedHouse.slug,
+          adminNotes,
+        })
+      } catch (error) {
+        console.error("[pending-submission] approval notification failed:", error)
+      }
     } else {
       await createPerfumeHouse(houseFormData)
+      await updatePendingSubmissionStatus(
+        submission.id,
+        "approved",
+        reviewerId,
+        adminNotes
+      )
+      try {
+        await notifySubmissionApproved({
+          submitterId: submission.submittedBy,
+          submissionId: submission.id,
+          submissionType: submission.submissionType,
+          submissionData: data,
+          adminNotes,
+        })
+      } catch (error) {
+        console.error("[pending-submission] approval notification failed:", error)
+      }
     }
-    await updatePendingSubmissionStatus(
-      submission.id,
-      "approved",
-      reviewerId,
-      adminNotes
-    )
     return { success: true, message: "Perfume house created successfully" }
   }
 
@@ -376,7 +410,7 @@ export const approvePendingSubmission = async (
       ? data.placeholderPerfumeId
       : undefined
 
-  let newPerfume: { id: string }
+  let newPerfume: { id: string; slug?: string }
   if (placeholderPerfumeId) {
     newPerfume = await prisma.perfume.update({
       where: { id: placeholderPerfumeId },
@@ -389,11 +423,11 @@ export const approvePendingSubmission = async (
         submittedBy: null,
         pendingSubmissionId: null,
       },
-      select: { id: true },
+      select: { id: true, slug: true },
     })
   } else {
     const created = await createPerfume(perfumeFormData)
-    newPerfume = { id: created.id }
+    newPerfume = { id: created.id, slug: created.slug }
   }
 
   const submitterId = submission.submittedBy
@@ -417,6 +451,20 @@ export const approvePendingSubmission = async (
   }
 
   await updatePendingSubmissionStatus(submission.id, "approved", reviewerId, adminNotes)
+
+  try {
+    await notifySubmissionApproved({
+      submitterId: submission.submittedBy,
+      submissionId: submission.id,
+      submissionType: submission.submissionType,
+      submissionData: data,
+      perfumeId: newPerfume.id,
+      perfumeSlug: newPerfume.slug,
+      adminNotes,
+    })
+  } catch (error) {
+    console.error("[pending-submission] approval notification failed:", error)
+  }
 
   const collectionNote =
     submitterId && isCsvImportSubmission(data)
@@ -463,6 +511,18 @@ export const rejectPendingSubmission = async (
     reviewerId,
     adminNotes
   )
+
+  try {
+    await notifySubmissionRejected({
+      submitterId: submission.submittedBy,
+      submissionId: submission.id,
+      submissionType: submission.submissionType,
+      submissionData: data,
+      adminNotes,
+    })
+  } catch (error) {
+    console.error("[pending-submission] rejection notification failed:", error)
+  }
 
   return { success: true, message: "Submission rejected and placeholder removed" }
 }

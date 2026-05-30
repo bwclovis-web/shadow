@@ -1,5 +1,5 @@
  import { type VariantProps } from "class-variance-authority"
-import { type HTMLAttributes, useEffect, useState } from "react"
+import { type HTMLAttributes, useEffect, useId, useState } from "react"
 
 import { useRangeSlider } from "@/hooks/useRangeSlider"
 import { styleMerge } from "@/utils/styleUtils"
@@ -33,6 +33,7 @@ interface RangeSliderProps
   onChange?: (value: number) => void
   disabled?: boolean
   label?: string
+  ariaLabel?: string
   formatValue?: (value: number) => string
   showManualInput?: boolean
   inputPlaceholder?: string
@@ -47,12 +48,20 @@ const RangeSlider = ({
   onChange,
   disabled = false,
   label,
+  ariaLabel,
   formatValue,
   size = "medium",
   showManualInput = false,
   inputPlaceholder,
   ...restProps
 }: RangeSliderProps) => {
+  const labelId = useId()
+  const inputId = useId()
+  const sliderAccessibleName = label ?? ariaLabel ?? "Range slider"
+  const sliderLabelProps = label
+    ? { "aria-labelledby": labelId }
+    : { "aria-label": sliderAccessibleName }
+
   const {
     trackRef,
     fillRef,
@@ -115,7 +124,7 @@ const RangeSlider = ({
     <div className="w-full space-y-2 text-noir-gold">
       {label && (
         <div className="flex justify-between items-center text-md">
-          <span>{label}</span>
+          <span id={labelId}>{label}</span>
           <span className="font-medium">
             {formatValue ? formatValue(internalValue) : `${internalValue}ml`}
           </span>
@@ -135,6 +144,7 @@ const RangeSlider = ({
           aria-valuemax={max}
           aria-valuenow={internalValue}
           aria-disabled={disabled}
+          {...sliderLabelProps}
           className={styleMerge(rangeSliderVariants({ className, theme: "dark" }))}
           onClick={handleTrackClick}
           onTouchStart={handleTrackTouch}
@@ -183,6 +193,7 @@ const RangeSlider = ({
       {showManualInput && (
         <div className="mt-3">
           <input
+            id={inputId}
             type="number"
             value={inputValue}
             onChange={handleInputChange}
@@ -194,6 +205,9 @@ const RangeSlider = ({
             min={min}
             max={max}
             step={step}
+            {...(label
+              ? { "aria-labelledby": labelId }
+              : { "aria-label": sliderAccessibleName })}
             className={styleMerge(
               inputBaseClasses,
               disabled

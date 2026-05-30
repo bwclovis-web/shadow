@@ -11,6 +11,7 @@ type DisplayItem = {
   slug: string
   image?: string
   type?: string
+  isPending?: boolean
   perfumeHouse?: { name: string } | null
 }
 

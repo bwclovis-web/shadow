@@ -53,4 +53,25 @@ describe("RangeSlider", () => {
     expect(slider.getAttribute("aria-disabled")).toBe("true")
     expect(slider.getAttribute("tabindex")).toBe("-1")
   })
+
+  it("associates the slider with its visible label", () => {
+    render(<RangeSlider label="Volume" />)
+
+    const slider = screen.getByRole("slider", { name: "Volume" })
+    expect(slider).toBeDefined()
+  })
+
+  it("uses aria-label when no visible label is provided", () => {
+    render(<RangeSlider ariaLabel="Amount to destash" />)
+
+    const slider = screen.getByRole("slider", { name: "Amount to destash" })
+    expect(slider).toBeDefined()
+  })
+
+  it("gives the manual input an accessible name", () => {
+    render(<RangeSlider label="Volume" showManualInput />)
+
+    const input = screen.getByRole("spinbutton", { name: "Volume" })
+    expect(input).toBeDefined()
+  })
 })

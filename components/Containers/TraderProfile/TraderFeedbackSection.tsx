@@ -262,7 +262,7 @@ const TraderFeedbackSection = memo(function TraderFeedbackSection({
     >
       <header>
         <h2>{t("title")}</h2>
-        <p className="text-noir-gold-100">{t("subtitle")}</p>
+        <p className="text-sm text-noir-gold-100">{t("subtitle")}</p>
       </header>
 
       {isLoading && (

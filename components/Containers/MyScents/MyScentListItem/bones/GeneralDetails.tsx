@@ -2,14 +2,18 @@
 
 import { useRef, useState } from "react"
 import { useTranslations } from "next-intl"
+import { useRouter } from "next/navigation"
 import { MdDeleteForever, MdEdit, MdCheck, MdClose } from "react-icons/md"
 
 import { Button } from "@/components/Atoms/Button"
+import ReviewStatusBadge from "@/components/Atoms/ReviewStatusBadge"
 import Select from "@/components/Atoms/Select"
+import AddToCollectionModal from "@/components/Organisms/AddToCollectionModal"
 import { getPerfumeTypeLabel, perfumeTypes } from "@/data/SelectTypes"
 import { useCSRF } from "@/hooks/useCSRF"
+import { isCollectionItemInReview } from "@/lib/collection-review-status"
 import { useSessionStore } from "@/hooks/sessionStore"
-import type { UserPerfumeI } from "@/types"
+import type { PerfumeI, UserPerfumeI } from "@/types"
 import { formatPrice } from "@/utils/numberUtils"
 
 const USER_PERFUMES_API = "/api/user-perfumes"
@@ -39,6 +43,7 @@ const GeneralDetails = ({
   onBottleUpdated,
 }: GeneralDetailsProps) => {
   const t = useTranslations("myScents.listItem")
+  const router = useRouter()
   const { toggleModal } = useSessionStore()
   const { addToFormData } = useCSRF()
   const removeButtonRef = useRef<HTMLButtonElement>(null)
@@ -53,6 +58,7 @@ const GeneralDetails = ({
 
   const priceNum = userPerfume.price != null ? Number(userPerfume.price) : null
   const typeLabel = getPerfumeTypeLabel(userPerfume.type ?? undefined) ?? "—"
+  const inReview = isCollectionItemInReview(userPerfume)
 
   const handleSave = async () => {
     if (!editAmount.trim()) {
@@ -139,26 +145,37 @@ const GeneralDetails = ({
             </div>
           )}
         </div>
-        <Button
-          ref={removeButtonRef}
-          onClick={() => toggleModal(removeButtonRef, "delete-item")}
-          disabled={isRemoving}
-          variant="icon"
-          background="red"
-          size="sm"
-          leftIcon={<MdDeleteForever size={20} fill="white" />}
-        >
-          <span className="text-white/90 font-bold text-sm">
-            {isRemoving ? t("removing") : t("removeButton")}
-          </span>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <AddToCollectionModal
+            type="icon"
+            perfume={userPerfume.perfume as PerfumeI}
+            addAnotherBottle
+            onAddedToCollection={() => router.refresh()}
+          />
+          <Button
+            ref={removeButtonRef}
+            onClick={() => toggleModal(removeButtonRef, "delete-item")}
+            disabled={isRemoving}
+            variant="icon"
+            background="red"
+            size="sm"
+            leftIcon={<MdDeleteForever size={20} fill="white" />}
+          >
+            <span className="text-white/90 font-bold text-sm">
+              {isRemoving ? t("removing") : t("removeButton")}
+            </span>
+          </Button>
+        </div>
       </div>
 
       {/* This bottle's details + edit */}
       {!isEditing ? (
-        <div className="noir-border p-4 bg-noir-dark/10 flex flex-col gap-2">
-          <div className="flex justify-between items-center">
-            <h2>{t("thisBottle")}</h2>
+        <div className="noir-border p-4 bg-noir-dark/10 flex flex-col gap-2 rounded-md">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2>{t("thisBottle")}</h2>
+              {inReview && <ReviewStatusBadge size="md" />}
+            </div>
             <Button
               onClick={() => setIsEditing(true)}
               variant="icon"

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db"
 import { deleteFromR2, getR2KeyFromPublicUrl } from "@/lib/r2"
 import { migratePerfumeImageToR2 } from "@/lib/r2-migrate"
 import { transformNotesForDisplay } from "@/models/perfume-notes-helpers"
+import { userPerfumeNestedPerfumeSelect } from "@/models/user-perfume-listing-fields"
 import { calculateRelevanceScore } from "@/utils/calculateRelevanceScore"
 import {
   buildPerfumeCatalogNameOrderBy,
@@ -32,6 +33,7 @@ const perfumeListSelect = {
   description: true,
   image: true,
   slug: true,
+  isPending: true,
   perfumeHouseId: true,
   createdAt: true,
   updatedAt: true,
@@ -127,23 +129,7 @@ export const getSingleUserPerfumeById = async (userPerfumeId: string, userId: st
     },
     price: true,
     perfume: { 
-      select: { 
-        id: true, 
-        name: true, 
-        description: true, 
-        image: true, 
-        slug: true, 
-        perfumeHouseId: true, 
-        createdAt: true, 
-        updatedAt: true,
-        perfumeHouse: { 
-          select: { id: true, 
-            name: true, 
-            slug: true, 
-            type: true 
-          } 
-        } 
-      } 
+      select: userPerfumeNestedPerfumeSelect,
     },
     },
   })
@@ -298,6 +284,7 @@ export const searchPerfumeByNameForViewer = async (
       description: true,
       image: true,
       slug: true,
+      isPending: true,
       perfumeHouseId: true,
       createdAt: true,
       updatedAt: true,
@@ -330,6 +317,7 @@ export const searchPerfumeByNameForViewer = async (
       description: true,
       image: true,
       slug: true,
+      isPending: true,
       perfumeHouseId: true,
       createdAt: true,
       updatedAt: true,
