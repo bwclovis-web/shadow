@@ -98,6 +98,7 @@ const ExchangeListingRow = ({
         tradeOnly={listing.tradeOnly}
         className="mt-2"
         lightboxSize="default"
+        trigger="button"
       />
       <p className="mt-2 text-noir-gold-100">
         <span className="text-noir-gold-500">{tProfile("amount")}:</span>{" "}

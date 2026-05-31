@@ -1,6 +1,7 @@
 "use client"
 
 import { type VariantProps } from "class-variance-authority"
+import { PrefetchKind } from "next/dist/client/components/router-reducer/router-reducer-types"
 import { Link } from "next-view-transitions"
 import { useTransitionRouter } from "next-view-transitions"
 import {
@@ -8,6 +9,7 @@ import {
   type MouseEvent,
   type ReactNode,
   type Ref,
+  type TouchEvent,
 } from "react"
 
 import { styleMerge } from "@/utils/styleUtils"
@@ -31,6 +33,7 @@ export interface VooDooLinkProps
   rightIcon?: ReactNode
   icon?: IconName
   transitionVariant?: RouteTransitionVariant
+  prefetch?: boolean
 }
 
 export const VooDooLink = ({
@@ -44,10 +47,18 @@ export const VooDooLink = ({
   rightIcon,
   icon,
   transitionVariant,
+  prefetch = true,
   onClick,
+  onMouseEnter,
+  onTouchStart,
   ...props
 }: VooDooLinkProps) => {
   const router = useTransitionRouter()
+
+  const prefetchRoute = () => {
+    if (!prefetch) return
+    router.prefetch(url, { kind: PrefetchKind.FULL })
+  }
 
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (props["aria-disabled"]) {
@@ -62,9 +73,16 @@ export const VooDooLink = ({
   return (
     <Link
       href={url}
-      prefetch={true}
+      prefetch={prefetch}
       className={styleMerge(buttonVariants({ className, size, variant, background }))}
-      onMouseEnter={() => router.prefetch(url)}
+      onMouseEnter={(event) => {
+        prefetchRoute()
+        onMouseEnter?.(event)
+      }}
+      onTouchStart={(event: TouchEvent<HTMLAnchorElement>) => {
+        prefetchRoute()
+        onTouchStart?.(event)
+      }}
       onClick={handleClick}
       {...props}
     >

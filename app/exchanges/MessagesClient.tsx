@@ -123,7 +123,7 @@ export default function MessagesClient({
                 return (
                   <li
                     key={conv.otherUserId}
-                    className="flex flex-col lg:flex-row gap-2 rounded-lg border bg-noir-dark border-noir-gold hover:bg-noir-gold transition-colors group p-2 lg:px-4"
+                    className="flex flex-col lg:flex-row gap-2 rounded-lg border bg-noir-dark border-noir-gold hover:bg-noir-gold/10 transition-colors group p-2 lg:px-4"
                   >
                     <Link
                       href={`/exchanges/${conv.otherUserId}`}
@@ -137,7 +137,7 @@ export default function MessagesClient({
                       />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium truncate text-noir-gold group-hover:text-noir-black transition-colors">
+                          <span className="font-medium truncate text-noir-gold group-hover:text-noir-gold-500 transition-colors">
                             {displayName}
                           </span>
                           <RecentlyActiveBadge
@@ -156,13 +156,13 @@ export default function MessagesClient({
                           )}
                         </div>
                         {conv.lastMessagePreview && (
-                          <p className="text-sm text-noir-gold-500 group-hover:text-noir-dark transition-colors truncate mt-0.5">
+                          <p className="text-sm text-noir-gold-500 group-hover:text-noir-gold transition-colors truncate mt-0.5">
                             {conv.lastMessagePreview}
                           </p>
                         )}
                       </div>
                       <time
-                        className="text-xs text-noir-gold-100 group-hover:text-noir-black transition-colors shrink-0"
+                        className="text-xs text-noir-gold-100 group-hover:text-noir-gold-500 transition-colors shrink-0"
                         dateTime={
                           typeof conv.lastMessageAt === "string"
                             ? conv.lastMessageAt

@@ -360,10 +360,32 @@ export const sanitizeExtractedNoteCandidate = (note: string): string | null => {
   return canonical || null
 }
 
+/** Alcohol-ingredient / organic-farming / trademark boilerplate — not fragrance materials. */
+export const isComplianceOrSourcingNote = (note: string): boolean => {
+  const n = note.trim().toLowerCase()
+  if (!n) return true
+  if (
+    /^(?:using\s+uncut|organic|reproduction|designers?\s*name|grown\s+organically|non-gmo|non\s+gmo|sourced\s+sustainably|ethically|no\s+pesticides|pesticides|fertilizers|environmentally\s+friendly|sugarcane|ethyl\s+alcohol|carcinogen|phthalate|phthalate-free|gmo|uncut|sustainably\s+sourced)$/i.test(
+      n,
+    )
+  ) {
+    return true
+  }
+  if (
+    /\b(?:non-gmo|non\s+gmo|pesticides|fertilizers|phthalate|carcinogen|sugarcane\s+alcohol|grown\s+organically|sourced\s+sustainably|using\s+uncut|designers?\s*name|chemical\s+analysis|reproduction|environmentally\s+friendly|ethically\s+sourced)\b/i.test(
+      n,
+    )
+  ) {
+    return true
+  }
+  return false
+}
+
 /** CSS / HTML / truncated prose tokens that must never become pyramid notes. */
 export const isObviousNonMaterialNote = (note: string): boolean => {
   const n = note.trim().toLowerCase()
   if (!n) return true
+  if (isComplianceOrSourcingNote(n)) return true
   if (/^[a-z]{1,2}$/i.test(n)) return true
   if (/^(?:top|heart|base|middle)\b\s+\w+/i.test(n)) return true
   if (/\b(?:top|heart|base|middle)\s*$/i.test(n)) return true

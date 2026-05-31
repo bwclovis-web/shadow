@@ -37,7 +37,10 @@ export const TradeAlertUnreadProvider = ({
 
     const poll = async () => {
       try {
-        const response = await fetch(`/api/user-alerts/${userId}`)
+        const response = await fetch(`/api/user-alerts/${userId}`, {
+          cache: "no-store",
+          credentials: "include",
+        })
         if (response.ok) {
           const data: { tradeUnreadCount?: number } = await response.json()
           setCount(data.tradeUnreadCount ?? 0)

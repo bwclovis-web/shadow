@@ -40,6 +40,7 @@ import {
   buildNoteConfirmationCorpus,
   confirmNoteLayersAgainstSource,
   extractUnlabeledFragranceNotesBlock,
+  isComplianceOrSourcingNote,
   isNoteSubstantiatedInSource,
   looksLikeProseNotePhrase,
   isObviousNonMaterialNote,
@@ -276,7 +277,7 @@ const hasExplicitNoteListSignal = (text: string): boolean => {
   if (/\*{0,2}(?:top|heart|middle|mid|base|opening|dry[\s-]*down)\*{0,2}\s*(?:notes?)?\s*:/i.test(t))
     return true
   if (/\bfragrance\s+notes?\b(?!\s*(?:include|are|is|:))/i.test(t)) return true
-  if (/\bnotes?\s*:\s*[a-z0-9]/i.test(t)) return true
+  if (/(?<!(?:please|processing)\s)\bnotes?\s*:\s*[a-z0-9]/i.test(t)) return true
   if (/\b(?:kopfnoten?|herznoten?|basisnoten?|duftnoten)\s*:/i.test(t)) return true
   if (/\bnote\s+di\s+(?:testa|cuore|fondo|olfattive)\s*:/i.test(t)) return true
   if (/\b(?:topnoten?|hartnoten?|basisnoten?)\s*:/i.test(t)) return true
@@ -296,6 +297,83 @@ export const isPatternByEtsyProductUrl = (detailURL: string): boolean =>
 
 export const isAndromedaMoonProductUrl = (detailURL: string): boolean =>
   /andromedasmoon\.com/i.test(detailURL ?? "")
+
+/** Shopify paths that are not individual fragrance PDPs (sampler sets, gift cards, promos). */
+const NON_PERFUME_ANDROMEDA_PRODUCT_URL_RE =
+  /\/products\/(?:fragrance-sampler|gift-card|sample-pack|coupon|wish-list|file-claim|join-our-newsletter)/i
+
+const URL_MATCH_NAME_STOPWORDS = new Set([
+  "eau",
+  "de",
+  "parfum",
+  "edp",
+  "extrait",
+  "the",
+  "and",
+  "or",
+  "for",
+  "with",
+  "inspired",
+  "by",
+  "moon",
+  "andromeda",
+  "andromedas",
+])
+
+const significantNameTokensForUrlMatch = (name: string): string[] => {
+  const words = name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+  return words.filter(w => w.length >= 4 && !URL_MATCH_NAME_STOPWORDS.has(w))
+}
+
+/** True when the scraped PDP URL plausibly belongs to this product name. */
+export const detailUrlAlignsWithProductName = (name: string, detailURL: string): boolean => {
+  if (!name?.trim() || !detailURL?.trim()) return true
+  if (NON_PERFUME_ANDROMEDA_PRODUCT_URL_RE.test(detailURL)) return false
+  try {
+    const tokens = significantNameTokensForUrlMatch(name)
+    if (tokens.length === 0) return true
+    const slug = new URL(detailURL).pathname.toLowerCase().replace(/-/g, " ")
+    return tokens.some(t => slug.includes(t))
+  } catch {
+    return true
+  }
+}
+
+const buildAndromedaCandidateProductUrls = (name: string): string[] => {
+  const words = name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter(w => w.length >= 2 && !URL_MATCH_NAME_STOPWORDS.has(w))
+  if (words.length === 0) return []
+
+  const slugs = new Set<string>()
+  for (let n = Math.min(2, words.length); n <= Math.min(4, words.length); n += 1) {
+    slugs.add(words.slice(0, n).join("-"))
+  }
+  slugs.add(words.join("-"))
+
+  const prefixes = ["andromeda-s-inspired-by-", "andromedas-inspired-by-"]
+  const coreSlugs = [...slugs].sort((a, b) => b.length - a.length).slice(0, 2)
+  const suffixes = ["-eau-de-parfum", ""]
+  const lastWord = words.filter(w => w.length >= 4).at(-1)
+  if (lastWord) suffixes.push(`-eau-de-parfum-${lastWord}`)
+
+  const urls: string[] = []
+  for (const slug of coreSlugs) {
+    if (slug.length < 6) continue
+    for (const prefix of prefixes) {
+      for (const suffix of suffixes) {
+        urls.push(`https://www.andromedasmoon.com/products/${prefix}${slug}${suffix}`)
+      }
+    }
+  }
+  return [...new Set(urls)].slice(0, 16)
+}
 
 /** Pattern-by-Etsy PDPs almost always have Note Structure; fetch when the scrape missed it. */
 const shouldAutoFetchPatternEtsyNotes = (detailURL: string, mergedBase: string): boolean =>
@@ -1570,7 +1648,13 @@ const POLICY_BOILERPLATE_START_PATTERNS: RegExp[] = [
   /\bplease\s+read\s+our\s+policy\s+page\b/i,
   /\binspired\s+by\s+is\s+used\s+only\s+to\s+describe\b/i,
   /\bstore\s+polic(?:y|ies)\s*[:.]?/i,
+  /\bingredients?\s*:/i,
   /\bingredients?\s*:\s*(?:sugarcane|ethyl)\s+alcohol\b/i,
+  /\borganic\s+sugarcane\s+alcohol\b/i,
+  /\bwe\s+specialize\s+in\s+(?:making|using)\b/i,
+  /\busing\s+uncut\b/i,
+  /\bchemical\s+analysis\s+and\s+reproduction\b/i,
+  /\bplease\s+note\s*:/i,
   /\b(?:carcinogen|phthalate)[-\s]?free\s+fragrance\b/i,
   /\bbi[-\s]?phase\s+fragrance\b/i,
   /\bdoes\s+require\s+shaking\s+before\s+use\b/i,
@@ -1616,6 +1700,94 @@ const stripAtEarliestPatterns = (text: string, patterns: RegExp[]): string => {
 
 const stripPolicyBoilerplate = (text: string): string =>
   stripAtEarliestPatterns(text, POLICY_BOILERPLATE_START_PATTERNS)
+
+/** Notes-source text after policy / ingredients / compliance blocks are removed. */
+const prepareMerchantNotesSource = (text: string): string =>
+  sanitizeCopyForNotePipeline(stripPolicyBoilerplate(text ?? ""))
+
+/** PDP bootstrap chunk is useless when it is only shipping/legal/ingredients copy. */
+const isUsablePdpNoteBootstrap = (chunk: string): boolean => {
+  const prepared = prepareMerchantNotesSource(chunk)
+  if (!prepared || prepared.length < 12) return false
+  if (isPolicyOnlyMerchantDescription(chunk)) return false
+  return hasExplicitNoteListSignal(prepared)
+}
+
+const probeAndromedaProductUrlForNotes = async (
+  detailUrl: string,
+  sig: AbortSignal | undefined,
+): Promise<boolean> => {
+  try {
+    const res = await fetch(detailUrl, {
+      signal: sig,
+      redirect: "follow",
+      headers: {
+        "user-agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
+        "accept-language": "en-US,en;q=0.9",
+      },
+    })
+    if (!res.ok) return false
+    const html = await res.text()
+    const chunk = extractMerchantNoteBootstrapFromHtml(html)
+    if (!chunk || !isUsablePdpNoteBootstrap(chunk) || !hasExplicitNoteListSignal(chunk)) {
+      return false
+    }
+    pdpNoteBootstrapCache.set(detailUrl, chunk)
+    return true
+  } catch {
+    return false
+  }
+}
+
+const resolveAndromedaDetailUrl = async (
+  name: string,
+  detailURL: string,
+  sig: AbortSignal | undefined,
+  onProgress?: (msg: string) => void,
+): Promise<string> => {
+  if (
+    detailURL?.trim() &&
+    detailUrlAlignsWithProductName(name, detailURL) &&
+    !NON_PERFUME_ANDROMEDA_PRODUCT_URL_RE.test(detailURL)
+  ) {
+    return detailURL
+  }
+  if (!name?.trim()) return detailURL
+
+  for (const candidate of buildAndromedaCandidateProductUrls(name)) {
+    if (candidate === detailURL) continue
+    pdpNoteBootstrapCache.delete(candidate)
+    if (await probeAndromedaProductUrlForNotes(candidate, sig)) {
+      onProgress?.(
+        `Notes pipeline: resolved Andromeda PDP URL for "${name.slice(0, 48)}" → ${candidate}`,
+      )
+      return candidate
+    }
+  }
+  return detailURL
+}
+
+/** Wipe layers when every extracted token is alcohol/compliance boilerplate. */
+const rejectComplianceDominatedLayers = (notes: {
+  openNotes: string[]
+  heartNotes: string[]
+  baseNotes: string[]
+}): { openNotes: string[]; heartNotes: string[]; baseNotes: string[] } => {
+  const all = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
+  if (all.length === 0) return notes
+  const complianceCount = all.filter(n => isComplianceOrSourcingNote(n)).length
+  if (complianceCount >= 2 && complianceCount >= all.length * 0.5) {
+    return { openNotes: [], heartNotes: [], baseNotes: [] }
+  }
+  const drop = (arr: string[]) => arr.filter(n => !isComplianceOrSourcingNote(n))
+  return {
+    openNotes: drop(notes.openNotes),
+    heartNotes: drop(notes.heartNotes),
+    baseNotes: drop(notes.baseNotes),
+  }
+}
 
 /** Template blocks (Scent Vibe, Sizes, Application, …) — for final CSV descriptions, not note extraction. */
 const stripPdpSectionBoilerplate = (text: string): string =>
@@ -1870,6 +2042,8 @@ const JUNK_NOTE_PATTERNS: RegExp[] = [
   /\baugeo\b/i,
   /\brenewable resources\b/i,
   /\bmade from renewable\b/i,
+  /\b(?:non-gmo|non gmo|pesticides|fertilizers|phthalate|carcinogen|sugarcane alcohol|grown organically|sourced sustainably|using uncut|designers name|chemical analysis|environmentally friendly)\b/i,
+  /^(?:organic|reproduction|ethically|uncut|gmo)$/i,
   /\bwhich is (colourless|colorless)\b/i,
   /\b(is vegan|colourless|colorless|odourless|odorless)\b/i,
   /\broom sprays\b/i,
@@ -1997,6 +2171,7 @@ const MERCHANT_LABELED_HARD_JUNK_PATTERNS: RegExp[] = [
   /\d+(?:rem|em|ch|vw|vh|px|pt)\b/i,
   /\b(buy|shop|order|add to cart|checkout|shipping|delivery|free|sale|discount|price|quantity|qty|sku)\b/i,
   /\b(cancellations?|no\s+cancellations?|no\s+changes?|refunds?|refundable|processing|policy|allocated|labor)\b/i,
+  /\b(?:non-gmo|pesticides|fertilizers|phthalate|carcinogen|sugarcane|grown organically|using uncut|designers name)\b/i,
   /\bgift\s+ideas\b/i,
   /\bpower source\b/i,
   /\bavailable\s+sizes\b/i,
@@ -2054,7 +2229,7 @@ const mergeMerchantTrustedNotes = (
 }
 
 const filterNotesByTrust = (arr: string[], _trusted: Set<string>): string[] =>
-  arr.filter(n => isScraperKeptNote(n) && !looksLikeProseNotePhrase(n))
+  arr.filter(n => isScraperKeptNote(n) && !looksLikeProseNotePhrase(n) && !isComplianceOrSourcingNote(n))
 
 /** Expand space-joined blobs, sanitize marketing junk, and dedupe before CSV export. */
 const finalizeNoteLayersForExport = (
@@ -2363,8 +2538,8 @@ const shouldSkipFlatNotesMatch = (source: string, matchIndex: number, prefixChar
  * (or a prose boundary in `FLAT_NOTE_PROSE_BOUNDARY_RES` if the list runs into accordion text).
  */
 const FLAT_NOTE_LIST_PATTERNS: RegExp[] = [
-  // "Notes:", "Fragrance notes – …" (line to newline)
-  /(?:^|[\s.!?\n])(?:fragrance\s+)?notes?\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi,
+  // "Notes:", "Fragrance notes – …" (line to newline) — not "Please note:" / processing banners
+  /(?:^|[\s.!?\n])(?<!(?:please|processing)\s)(?:fragrance\s+)?notes?\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi,
   // "Scent/fragrance/… notes include …" (sentence)
   /(?:^|[\s.!?\n*])(?:perfume|fragrance|scent|aroma|olfactory)\s+notes?\s+include\s+([^.!?\n*]+)/gi,
   // "The / our / these notes include …"
@@ -3075,6 +3250,12 @@ const isJunkScrapedDescription = (text: string | null | undefined): boolean => {
   ) {
     return true
   }
+  if (/\bfragrance\s+sampler\b/i.test(lower)) return true
+  if (/\bfour\s+piece,\s*glass,\s*5\s*ml\b/i.test(lower)) return true
+  if (/\bplease\s+pick\s+6-8\s+choices\b/i.test(lower)) return true
+  if (/\border\s+special\s+instructions\s+box\b/i.test(lower)) return true
+  if (/\bvegan\s+faux\s+suede\s+bag\b/i.test(lower)) return true
+  if (/\b15\s+coupon\b/i.test(lower)) return true
   return false
 }
 
@@ -3610,14 +3791,26 @@ const processSingleProductPhase1 = async (
   opts.onProgress?.(
     `Notes pipeline ${index + 1}/${totalItems}: ${(name || resolvedName || "product").slice(0, 72)}`,
   )
-  let mergedBase = resolveNotesSource(item)
+  const scrapedDescription = isJunkScrapedDescription(item.description ?? "")
+    ? ""
+    : (item.description ?? "")
+  const pipelineItem: ScrapedItem = scrapedDescription === (item.description ?? "")
+    ? item
+    : { ...item, description: scrapedDescription }
+
+  let detailUrl = pipelineItem.detailURL?.trim() ?? ""
+  if (isAndromedaMoonProductUrl(detailUrl) || /andromeda/i.test(houseName ?? "")) {
+    throwIfAborted(sig)
+    detailUrl = await resolveAndromedaDetailUrl(name || resolvedName, detailUrl, sig, opts.onProgress)
+  }
+
+  let mergedBase = resolveNotesSource(pipelineItem)
   /**
    * Strip merchant policy/shipping/disclaimer boilerplate from the notes source BEFORE extraction.
    * Otherwise LLM extraction sees "Processing: AT LEAST 7 business days... no changes, no cancellations..."
    * and either gets confused or extracts shipping fragments as notes.
    */
-  mergedBase = sanitizeCopyForNotePipeline(stripPolicyBoilerplate(mergedBase))
-  const detailUrl = item.detailURL?.trim() ?? ""
+  mergedBase = prepareMerchantNotesSource(mergedBase)
   const autoPatternEtsyFetch =
     opts.enrichOnly === true ? false : shouldAutoFetchPatternEtsyNotes(detailUrl, mergedBase)
   const autoAndromedaFetch =
@@ -3635,7 +3828,7 @@ const processSingleProductPhase1 = async (
     throwIfAborted(sig)
     if (opts.fetchPdpNoteBootstrap === true) pdpNoteBootstrapCache.delete(detailUrl)
     const boot = await tryFetchPdpNoteBootstrap(detailUrl, sig, opts.onProgress)
-    if (boot) {
+    if (boot && isUsablePdpNoteBootstrap(boot)) {
       /**
        * Skip the merge if the bootstrap chunk is already substantially present in the description
        * (e.g. Wix PDP description IS "Dew and Honeysuckle…", and the regex would otherwise capture
@@ -3645,7 +3838,7 @@ const processSingleProductPhase1 = async (
       const haystack = mergedBase.toLowerCase().replace(/\s+/g, " ")
       const needle = boot.toLowerCase().replace(/\s+/g, " ")
       if (!haystack.includes(needle)) {
-        mergedBase = `${boot}\n\n${mergedBase}`.trim()
+        mergedBase = prepareMerchantNotesSource(`${boot}\n\n${mergedBase}`.trim())
         opts.onProgress?.(
           `Notes pipeline ${index + 1}/${totalItems}: injected note list from PDP HTML for ${(name || resolvedName || "product").slice(0, 48)}`,
         )
@@ -3692,10 +3885,18 @@ const processSingleProductPhase1 = async (
 
     if (totalParsedDirectly === 0 && notesSource?.trim()) {
       throwIfAborted(sig)
-      const extracted = await extractNotesFromDescription(llm, notesSource, name || resolvedName, inferenceMode)
-      notes = extracted.layers
-      if (extracted.extractionPath === "description") usedDescPathLlm = true
-      if (extracted.extractionPath === "name_only") usedNameOnlyPath = true
+      const policyOnly = isPolicyOnlyMerchantDescription(notesSource)
+      if (!(policyOnly && inferenceMode === "strict")) {
+        const extracted = await extractNotesFromDescription(
+          llm,
+          policyOnly ? "" : prepareMerchantNotesSource(notesSource),
+          name || resolvedName,
+          inferenceMode,
+        )
+        notes = extracted.layers
+        if (extracted.extractionPath === "description") usedDescPathLlm = true
+        if (extracted.extractionPath === "name_only") usedNameOnlyPath = true
+      }
     }
 
     if (
@@ -3837,6 +4038,7 @@ const processSingleProductPhase1 = async (
       }
     }
 
+    notes = rejectComplianceDominatedLayers(notes)
     notes = finalizeNoteLayersForExport(notes, merchantTrustedNotes)
 
     const resolveNoteSource = (): ScraperNoteSource => {
@@ -3858,7 +4060,7 @@ const processSingleProductPhase1 = async (
     const noteSource = resolveNoteSource()
 
     const allNoteStrs = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
-    const sanitizedDescription = sanitizeCopyForNotePipeline(item.description ?? "")
+    const sanitizedDescription = sanitizeCopyForNotePipeline(pipelineItem.description ?? "")
     const stripRaw = stripNotesFromDescription(sanitizedDescription, allNoteStrs)
 
     let descriptionForRecord: string
@@ -3887,7 +4089,7 @@ const processSingleProductPhase1 = async (
       openNotes: JSON.stringify(notes.openNotes),
       heartNotes: JSON.stringify(notes.heartNotes),
       baseNotes: JSON.stringify(notes.baseNotes),
-      detailURL: item.detailURL,
+      detailURL: detailUrl || item.detailURL,
       _noteSource: noteSource,
     }
 
@@ -4090,7 +4292,9 @@ function buildGraph(
       const shouldRunNoir =
         opts.generateNoirDescriptions &&
         noirLlm &&
-        (totalNotes >= 2 || (totalNotes >= 1 && !hasUsableMerchantDescription))
+        (totalNotes >= 2 ||
+          (totalNotes >= 1 && !hasUsableMerchantDescription) ||
+          (totalNotes === 0 && !hasUsableMerchantDescription && p.name.trim().length > 0))
 
       if (shouldRunNoir) {
         throwIfAborted(sig)

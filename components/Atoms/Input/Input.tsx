@@ -20,6 +20,7 @@ export interface InputProps
     errors?: { [key: string]: string }
   }
   autoComplete?: string
+  helpText?: string
 }
 
 const resolveAutoComplete = (
@@ -44,6 +45,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       shading,
       autoComplete,
       inputRef,
+      helpText,
       ...props
     },
     ref
@@ -113,6 +115,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             {label}
           </label>
           {inputElement}
+          {helpText && <p className="text-noir-gold-100 text-xs ml-1" role="note">{helpText}</p>}
         </div>
       )
     }

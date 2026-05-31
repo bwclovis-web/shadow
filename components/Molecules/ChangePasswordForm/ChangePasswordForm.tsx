@@ -83,7 +83,7 @@ export const ChangePasswordForm = ({
 
       {!hideHeading && (
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">{t("changePassword")}</h2>
+          <h2>{t("changePassword")}</h2>
           <p className="text-gray-600">
             {t("updatePasswordToKeepAccountSecure")}
           </p>

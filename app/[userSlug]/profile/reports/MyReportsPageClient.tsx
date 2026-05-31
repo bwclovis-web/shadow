@@ -18,6 +18,7 @@ import {
   type WithdrawReportActionState,
 } from "./actions"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
+import { VooDooLink } from "@/components/Atoms/Button/VooDooLink"
 
 export type MyReportRow = {
   id: string
@@ -65,12 +66,15 @@ const MyReportsPageClient = ({
         heading={t("heading")}
         subheading={t("subheading")}
       >
-        <Link
-          href={`/${userSlug}/profile`}
-          className="text-sm text-noir-gold-100 underline hover:text-noir-gold"
+        <VooDooLink
+          url={`/${userSlug}/profile`}
+          variant="link"
+          size="sm"
+          prefetch
+          transitionVariant="detail-to-list"
         >
           {t("backToProfile")}
-        </Link>
+        </VooDooLink>
       </TitleBanner>
 
       <PageWrapper>

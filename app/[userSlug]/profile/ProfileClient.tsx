@@ -135,10 +135,8 @@ const ProfileForm = ({
         label={t("username")}
         action={username}
         inputRef={inputRef}
+        helpText={t("usernameHint")}
       />
-      <p className="text-stone-400 text-sm -mt-2 mb-2" role="note">
-        {t("usernameHint")}
-      </p>
 
       <Input
         shading={true}
@@ -164,10 +162,8 @@ const ProfileForm = ({
         label={t("instagramHandle")}
         action={instagramHandle}
         inputRef={inputRef}
+        helpText={t("instagramHint")}
       />
-      <p className="text-stone-400 text-sm -mt-2 mb-2" role="note">
-        {t("instagramHint")}
-      </p>
 
       <Input
         shading={true}
@@ -176,10 +172,8 @@ const ProfileForm = ({
         label={t("redditUsername")}
         action={redditUsername}
         inputRef={inputRef}
+        helpText={t("redditHint")}
       />
-      <p className="text-stone-400 text-sm -mt-2 mb-2" role="note">
-        {t("redditHint")}
-      </p>
 
       <Input
         shading={true}
@@ -188,10 +182,8 @@ const ProfileForm = ({
         label={t("fragranticaUrl")}
         action={fragranticaUrl}
         inputRef={inputRef}
+        helpText={t("fragranticaHint")}
       />
-      <p className="text-stone-400 text-sm -mt-2 mb-2" role="note">
-        {t("fragranticaHint")}
-      </p>
 
       <div className="flex flex-col gap-1">
         <label

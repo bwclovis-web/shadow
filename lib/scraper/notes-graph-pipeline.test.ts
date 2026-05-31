@@ -14,6 +14,7 @@ import { scrapedItemsNeedPatternEtsyEnrichment } from "./map-scraped-items"
 import { canonicalizeNote, explodeSpaceSeparatedNoteBlob, splitGluedMerchantNoteRun } from "./canonical-notes"
 import {
   computeBatchNoteUniformityWarnings,
+  detailUrlAlignsWithProductName,
   extractNotesForItems,
   mergeFlatMaterialsIntoLayeredPyramid,
   sanitizeCopyForNotePipeline,
@@ -1450,6 +1451,160 @@ Base: white musk`
     // With noir disabled and policy-only original, description is wiped to "".
     expect(d).toBe("")
   })
+
+  it("Andromedas Moon Silky Woods Elixir: policy-only PDP must not emit ingredients/compliance as notes", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    const silkyDesc = `Inspired by Silky Woods Elixir EDP
+ ORIGINAL MANUFACTURERS PICTURES OF BOTTLE IS FOR REFERENCE ONLY- ALL PRODUCTS SENT WILL USE OUR COMPANIES BOTTLES AND FORMULA
+ Size options-
+5ml glass spray bottle (EDP)
+15ml glass perfume bottle (EDP)
+30ml glass perfume bottle (EDP)
+60ml glass perfume bottle (EDP)
+100ml glass perfume bottle (EDP)
+
+As with any fragrance, as it matures you will get a stronger scent. However, your fragrance has been pre macerated as well!
+
+Please note: These fragrances are all poured by hand and slight differences can be seen bottle to bottle example: more perfume oil to perfumers diluent.
+I also do not use the same chemicals as what most marketed fragrances use. It is a bi- phase fragrance that does require shaking before use to make sure the oil to diluent is mixed properly.
+
+
+We specialize in making and using uncut, organic and sustainably sourced perfume oil to make your Eau De Parfum. We do not sell straight perfume oil at this time. Our list of available fragrances continues to grow as well as the types of products we offer. We have never compromised our quality and never will. You may find that other companies may offer lower prices, but they cannot match or provide the quality we offer. We encourage you to do your own research and make your own decision. We will always honor our commitment in offering the highest quality fragrances. Thank you for giving us your time and becoming part of Andromeda's Moon!
+
+Name trademarks and copyrights are properties of their respective manufacturers and/or designers. Andromeda's Moon has no affiliation with the manufacturers / designers. Our interpretation of these fragrances was created through chemical analysis and reproduction, and the purpose of this description and original manufactures picture of fragrance is to give the customer an idea of scent character, not to mislead or confuse the customer. It is not intended to infringe on the manufacturers / designer's name and valuable trademark.
+
+We are not responsible for lost or stolen packages, nor items damaged upon delivery. We are not responsible for customs fees. Please read our Policy page for more info or contact us with any questions.
+
+Ingredients:
+•Organic Sugarcane Alcohol (Ethyl
+Alcohol) Carcinogen & Phthalate-Free
+Fragrance
+Organic Sugarcane Alcohol Benefits
+•Environmentally Friendly | Grown
+Organically |
+• Non-GMO | Sourced Sustainably & Ethically | No Pesticides, Fertilizers`
+    invokeMock.mockImplementation(() => ({
+      content: JSON.stringify({
+        openNotes: [],
+        heartNotes: [
+          "using uncut",
+          "organic",
+          "reproduction",
+          "designers name",
+          "grown organically",
+          "non-gmo",
+          "sourced sustainably",
+          "ethically",
+          "no pesticides",
+          "fertilizers",
+        ],
+        baseNotes: [],
+      }),
+    }))
+    const items: ScrapedItem[] = [
+      {
+        name: "Silky Woods Elixir",
+        description: silkyDesc,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromeda-s-inspired-by-silky-woods-elixir-eau-de-parfum-goldfield-banks",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+      noteInferenceMode: "strict",
+    })
+    const all = [
+      ...(JSON.parse(records[0].openNotes) as string[]),
+      ...(JSON.parse(records[0].heartNotes) as string[]),
+      ...(JSON.parse(records[0].baseNotes) as string[]),
+    ]
+    expect(all).toEqual([])
+    expect(records[0]._noteSource).toBe("empty")
+  })
+
+  it("detailUrlAlignsWithProductName rejects sampler URLs and accepts matching fragrance slugs", () => {
+    expect(
+      detailUrlAlignsWithProductName(
+        "Vanille Diabolique Renoir",
+        "https://www.andromedasmoon.com/products/fragrance-sampler-set-with-15-coupon",
+      ),
+    ).toBe(false)
+    expect(
+      detailUrlAlignsWithProductName(
+        "Vanille Diabolique Renoir",
+        "https://www.andromedasmoon.com/products/andromeda-s-inspired-by-vanille-diabolique-eau-de-parfum-gucci",
+      ),
+    ).toBe(true)
+  })
+
+  it("Andromedas Moon Vanille Diabolique: parses Top notes are / middle notes are pyramid", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM must not run when merchant pyramid is present")
+    })
+    const vanilleDesc =
+      "Inspired by Vanille Diabolique EDP Renoir Parfums Top notes are Coca-Cola, Orange and Pink Pepper; middle notes are Rum, Dark Chocolate, Cinnamon and Cardamom; base notes are Bourbon Vanilla, Sandalwood and Amber. ORIGINAL MANUFACTURERS PICTURES OF BOTTLE IS FOR REFERENCE ONLY"
+    const items: ScrapedItem[] = [
+      {
+        name: "Vanille Diabolique Renoir",
+        description: vanilleDesc,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromeda-s-inspired-by-vanille-diabolique-eau-de-parfum-gucci",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+      noteInferenceMode: "strict",
+    })
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    expect(open).toEqual(expect.arrayContaining(["coca-cola", "orange", "pink pepper"]))
+    expect(heart).toEqual(
+      expect.arrayContaining(["rum", "dark chocolate", "cinnamon", "cardamom"]),
+    )
+    expect(base).toEqual(expect.arrayContaining(["bourbon vanilla", "sandalwood", "amber"]))
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas Moon Vanille Diabolique: wipes sampler-set scrape bleed and resolves notes from PDP URL", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    const samplerBleed =
+      "Get a four piece, glass, 5ml fragrance sampler set.Now arriving in a vegan faux suede bag. PLEASE PICK 6-8 CHOICES IN CASE SOME ARE OUT OF STOCK."
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM must not run when merchant pyramid is present")
+    })
+    const items: ScrapedItem[] = [
+      {
+        name: "Vanille Diabolique Renoir",
+        description: samplerBleed,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/fragrance-sampler-set-with-15-coupon?utm_source=show-recent-order",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+      noteInferenceMode: "strict",
+    })
+    expect(records[0].description).toBe("")
+    expect(records[0].detailURL).toMatch(/vanille-diabolique/i)
+    const all = [
+      ...(JSON.parse(records[0].openNotes) as string[]),
+      ...(JSON.parse(records[0].heartNotes) as string[]),
+      ...(JSON.parse(records[0].baseNotes) as string[]),
+    ]
+    expect(all.length).toBeGreaterThanOrEqual(6)
+    expect(all).toEqual(expect.arrayContaining(["coca-cola", "rum", "bourbon vanilla"]))
+  }, 30_000)
 
   it("Andromedas Moon London Fog PDP: extracts layered notes and strips template copy from description", async () => {
     vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")

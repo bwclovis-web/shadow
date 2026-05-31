@@ -6,6 +6,7 @@ import Image from "next/image"
 import { useState } from "react"
 import { MdChevronLeft, MdChevronRight } from "react-icons/md"
 
+import { Button } from "@/components/Atoms/Button/Button"
 import Modal from "@/components/Organisms/Modal"
 import { useSessionStore } from "@/hooks/sessionStore"
 import {
@@ -26,6 +27,7 @@ interface ListingPhotosProps {
   tradeOnly?: boolean
   className?: string
   lightboxSize?: "default" | "large"
+  trigger?: "thumbnails" | "button"
 }
 
 export const ListingImageBadges = ({
@@ -62,6 +64,7 @@ const ListingPhotos = ({
   tradeOnly,
   className = "",
   lightboxSize = "default",
+  trigger = "thumbnails",
 }: ListingPhotosProps) => {
   const t = useTranslations("listing")
   const gallery =
@@ -99,31 +102,43 @@ const ListingPhotos = ({
 
   return (
     <>
-      <ul className={`flex flex-wrap gap-2 ${className}`}>
-        {gallery.map((url, index) => {
-          const src = normalizeRemoteImageSrc(url)
-          if (!src) return null
-          return (
-            <li key={`${url}-${index}`}>
-              <button
-                type="button"
-                className="relative block aspect-square cursor-pointer overflow-hidden rounded border border-noir-gold focus:outline-none focus:ring-2 focus:ring-noir-gold"
-                style={{ width: THUMB_SIZE, height: THUMB_SIZE }}
-                onClick={() => openLightbox(index)}
-                aria-label={t("openPhoto", { index: index + 1 })}
-              >
-                <Image
-                  src={src}
-                  alt=""
-                  fill
-                  className="object-cover"
-                  sizes={`${THUMB_SIZE}px`}
-                />
-              </button>
-            </li>
-          )
-        })}
-      </ul>
+      {trigger === "button" ? (
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className={className}
+          onClick={() => openLightbox(0)}
+        >
+          {t("viewImages")}
+        </Button>
+      ) : (
+        <ul className={`flex flex-wrap gap-2 ${className}`}>
+          {gallery.map((url, index) => {
+            const src = normalizeRemoteImageSrc(url)
+            if (!src) return null
+            return (
+              <li key={`${url}-${index}`}>
+                <button
+                  type="button"
+                  className="relative block aspect-square cursor-pointer overflow-hidden rounded border border-noir-gold focus:outline-none focus:ring-2 focus:ring-noir-gold"
+                  style={{ width: THUMB_SIZE, height: THUMB_SIZE }}
+                  onClick={() => openLightbox(index)}
+                  aria-label={t("openPhoto", { index: index + 1 })}
+                >
+                  <Image
+                    src={src}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    sizes={`${THUMB_SIZE}px`}
+                  />
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
 
       {lightboxIndex !== null && (
         <Modal

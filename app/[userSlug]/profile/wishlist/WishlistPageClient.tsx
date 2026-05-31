@@ -68,10 +68,10 @@ const WishlistPageClient = ({
       </TitleBanner>
       <PageWrapper>
       <div className="mb-6 px-4">
-        <div className="noir-border mx-auto max-w-2xl p-4">
-          <h2 className="text-base font-semibold text-noir-gold">{t("share.stripTitle")}</h2>
+        <div className="noir-border mx-auto max-w-2xl p-4 text-center">
+          <h2>{t("share.stripTitle")}</h2>
           <p className="mt-1 text-sm text-noir-gold-100">{t("share.stripHint")}</p>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
+          <div className="mt-4 flex flex-wrap items-center gap-3 justify-center">
             <CopyShareLinkButton sharePath={`/wishlist/${userId}`} />
             <PrefetchLink
               href={`/wishlist/${userId}`}
@@ -84,7 +84,7 @@ const WishlistPageClient = ({
       </div>
 
       {wishlist.length === 0 ? (
-        <div className="noir-border mx-auto my-6 flex max-w-max flex-col items-center justify-center gap-4 p-4 text-center">
+        <div className="mx-auto flex max-w-max flex-col items-center justify-center gap-4 p-4 text-center">
           <h2>{t("empty.heading")}</h2>
           <p className="text-xl text-noir-gold-100">{t("empty.subheading")}</p>
           <VooDooLink

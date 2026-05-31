@@ -498,6 +498,22 @@ export const rejectPendingSubmission = async (
   const placeholderHouseId =
     typeof data.placeholderHouseId === "string" ? data.placeholderHouseId : undefined
 
+  let submitterId = submission.submittedBy
+  if (!submitterId && placeholderPerfumeId) {
+    const placeholder = await prisma.perfume.findUnique({
+      where: { id: placeholderPerfumeId },
+      select: { submittedBy: true },
+    })
+    submitterId = placeholder?.submittedBy ?? null
+  }
+  if (!submitterId && placeholderHouseId) {
+    const placeholder = await prisma.perfumeHouse.findUnique({
+      where: { id: placeholderHouseId },
+      select: { submittedBy: true },
+    })
+    submitterId = placeholder?.submittedBy ?? null
+  }
+
   if (placeholderPerfumeId) {
     await deletePendingPerfumeById(placeholderPerfumeId)
   }
@@ -514,7 +530,7 @@ export const rejectPendingSubmission = async (
 
   try {
     await notifySubmissionRejected({
-      submitterId: submission.submittedBy,
+      submitterId,
       submissionId: submission.id,
       submissionType: submission.submissionType,
       submissionData: data,

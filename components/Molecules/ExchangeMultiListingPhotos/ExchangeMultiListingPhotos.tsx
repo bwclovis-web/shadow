@@ -6,17 +6,13 @@ import { useState } from "react"
 import { MdChevronLeft, MdChevronRight } from "react-icons/md"
 
 import type { ExchangeUserPerfumeRow } from "@/app/the-exchange/exchange-types"
+import { Button } from "@/components/Atoms/Button/Button"
 import Modal from "@/components/Organisms/Modal"
 import { ListingImageBadges } from "@/components/Molecules/ListingPhotos/ListingPhotos"
 import { useSessionStore } from "@/hooks/sessionStore"
-import {
-  buildAttributedGallerySlides,
-  getListingMosaicThumbs,
-  MOSAIC_THUMB_MAX,
-} from "@/utils/exchange-listing-photos"
+import { buildAttributedGallerySlides } from "@/utils/exchange-listing-photos"
 import { normalizeRemoteImageSrc } from "@/utils/styleUtils"
 
-const MOSAIC_THUMB_SIZE = 56
 const EXCHANGE_MULTI_LIGHTBOX_MODAL_ID = "exchange-multi-listing-lightbox"
 
 type ExchangeMultiListingPhotosProps = {
@@ -30,23 +26,14 @@ export const ExchangeMultiListingPhotos = ({
 }: ExchangeMultiListingPhotosProps) => {
   const t = useTranslations("tradingPost.listings")
   const tListing = useTranslations("listing")
-  const mosaicThumbs = getListingMosaicThumbs(listings)
   const gallery = buildAttributedGallerySlides(listings)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const openModal = useSessionStore(state => state.openModal)
 
-  if (mosaicThumbs.length === 0) return null
+  if (gallery.length === 0) return null
 
-  const visibleThumbs = mosaicThumbs.slice(0, MOSAIC_THUMB_MAX)
-  const overflowCount = mosaicThumbs.length - visibleThumbs.length
-
-  const openLightboxAt = (mosaicIndex: number) => {
-    const thumb = visibleThumbs[mosaicIndex]
-    if (!thumb) return
-    const galleryIndex = gallery.findIndex(
-      slide => slide.userPerfumeId === thumb.userPerfumeId && slide.url === thumb.url
-    )
-    setLightboxIndex(galleryIndex >= 0 ? galleryIndex : 0)
+  const openLightbox = () => {
+    setLightboxIndex(0)
     openModal(EXCHANGE_MULTI_LIGHTBOX_MODAL_ID)
   }
 
@@ -71,45 +58,15 @@ export const ExchangeMultiListingPhotos = ({
 
   return (
     <>
-      <div className={className}>
-        <p className="text-xs text-noir-gold-500 mb-1.5">
-          {t("photosFromListings", { count: mosaicThumbs.length })}
-        </p>
-        <ul className="flex flex-wrap gap-1.5">
-          {visibleThumbs.map((thumb, index) => {
-            const src = normalizeRemoteImageSrc(thumb.url)
-            if (!src) return null
-            const isLastVisible = index === visibleThumbs.length - 1
-            return (
-              <li key={`${thumb.userPerfumeId}-${thumb.url}`} className="relative">
-                <button
-                  type="button"
-                  className="relative block aspect-square cursor-pointer overflow-hidden rounded border border-noir-gold focus:outline-none focus:ring-2 focus:ring-noir-gold"
-                  style={{ width: MOSAIC_THUMB_SIZE, height: MOSAIC_THUMB_SIZE }}
-                  onClick={() => openLightboxAt(index)}
-                  aria-label={t("openListingPhoto", {
-                    collector: thumb.traderName,
-                    index: index + 1,
-                  })}
-                >
-                  <Image
-                    src={src}
-                    alt=""
-                    fill
-                    className="object-cover"
-                    sizes={`${MOSAIC_THUMB_SIZE}px`}
-                  />
-                </button>
-                {isLastVisible && overflowCount > 0 ? (
-                  <span className="pointer-events-none absolute inset-0 flex items-center justify-center rounded bg-noir-black/65 text-xs font-semibold text-noir-gold">
-                    +{overflowCount}
-                  </span>
-                ) : null}
-              </li>
-            )
-          })}
-        </ul>
-      </div>
+      <Button
+        type="button"
+        variant="link"
+        size="sm"
+        className={className}
+        onClick={openLightbox}
+      >
+        {tListing("viewImages")}
+      </Button>
 
       {lightboxIndex !== null && activeSlide ? (
         <Modal

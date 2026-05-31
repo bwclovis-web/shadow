@@ -32,16 +32,21 @@ export const useUserAlerts = ({
     addToHeadersRef.current = addToHeaders
   }, [addToHeaders])
 
+  // Only re-sync from SSR when the signed-in user changes — not when parent passes a new array reference.
   useEffect(() => {
     setAlerts(initialAlerts)
     setUnreadCount(initialUnreadCount)
-  }, [userId, initialAlerts, initialUnreadCount])
+    // initialAlerts / initialUnreadCount are tied to userId from the layout; omit them from deps to avoid resetting after dismiss.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: sync on user change only
+  }, [userId])
 
   const refresh = useCallback(async () => {
     if (!userId) return
     try {
       const response = await fetch(`/api/user-alerts/${userId}`, {
         headers: addToHeadersRef.current(),
+        cache: "no-store",
+        credentials: "include",
       })
       if (response.ok) {
         const data = await response.json()
@@ -80,6 +85,7 @@ export const useUserAlerts = ({
       const response = await fetch(`/api/user-alerts/${userId}/dismiss-all`, {
         method: "POST",
         headers: addToHeadersRef.current(),
+        credentials: "include",
       })
       if (response.ok) {
         setAlerts([])
@@ -97,6 +103,7 @@ export const useUserAlerts = ({
       const response = await fetch(`/api/user-alerts/${userId}/alert/${alertId}/read`, {
         method: "POST",
         headers: addToHeadersRef.current(),
+        credentials: "include",
       })
 
       if (response.ok) {
@@ -116,22 +123,37 @@ export const useUserAlerts = ({
   }
 
   const handleDismissAlert = async (alertId: string) => {
-    const wasUnread = alerts.find(a => a.id === alertId)?.isRead === false
+    const target = alerts.find(a => a.id === alertId)
+    if (!target) return
+
+    const wasUnread = !target.isRead
+    if (wasUnread) {
+      setUnreadCount(prev => Math.max(0, prev - 1))
+    }
+
     try {
       const response = await fetch(`/api/user-alerts/${userId}/alert/${alertId}/dismiss`, {
         method: "POST",
         headers: addToHeadersRef.current(),
+        credentials: "include",
       })
 
       if (response.ok) {
         setAlerts(prev => prev.filter(alert => alert.id !== alertId))
-        if (wasUnread) {
-          setUnreadCount(prev => Math.max(0, prev - 1))
-        }
         dispatchUserAlertsRefresh()
+        return
       }
+
+      if (wasUnread) {
+        setUnreadCount(prev => prev + 1)
+      }
+      void refresh()
     } catch (error) {
       console.error("Failed to dismiss alert:", error)
+      if (wasUnread) {
+        setUnreadCount(prev => prev + 1)
+      }
+      void refresh()
     }
   }
 

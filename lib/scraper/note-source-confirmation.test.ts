@@ -7,6 +7,7 @@ import {
   confirmNoteLayersAgainstSource,
   extractUnlabeledFragranceNotesBlock,
   isNoteSubstantiatedInSource,
+  isComplianceOrSourcingNote,
   isObviousNonMaterialNote,
   peelMarketingDescriptorTail,
   sanitizeExtractedNoteCandidate,
@@ -310,6 +311,25 @@ Middle Notes: Verdant Earth Accord (Rich Soil, Green and Flowering Plants)`
     expect(sanitizeExtractedNoteCandidate("flirtatious")).toBeNull()
     expect(sanitizeExtractedNoteCandidate("glamorous")).toBeNull()
     expect(sanitizeExtractedNoteCandidate("ruby")).toBeNull()
+  })
+
+  it("isComplianceOrSourcingNote rejects alcohol-ingredient and organic-farming boilerplate", () => {
+    for (const junk of [
+      "using uncut",
+      "organic",
+      "reproduction",
+      "designers name",
+      "grown organically",
+      "non-gmo",
+      "sourced sustainably",
+      "ethically",
+      "no pesticides",
+      "fertilizers",
+    ]) {
+      expect(isComplianceOrSourcingNote(junk), junk).toBe(true)
+    }
+    expect(isComplianceOrSourcingNote("sandalwood")).toBe(false)
+    expect(isComplianceOrSourcingNote("agarwood")).toBe(false)
   })
 
   it("isObviousNonMaterialNote rejects CSS bleed and truncated prose fragments", () => {

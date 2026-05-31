@@ -87,9 +87,9 @@ const SecurityPageClient = ({
         subheading={t("subheading")}
       />
       <PageWrapper>
-        <div className="bg-white shadow-lg rounded-lg p-6 space-y-4">
-          <h2 className="font-semibold text-gray-900">{tPassword("changePassword")}</h2>
-          <p className="text-sm text-gray-700">
+        <div className="shadow-lg rounded-lg p-6">
+          <h2>{tPassword("changePassword")}</h2>
+          <p className="text-sm text-noir-gold-100 mb-4">
             {tPassword("updatePasswordToKeepAccountSecure")}
           </p>
           <ChangePasswordForm hideHeading />

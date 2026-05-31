@@ -29,7 +29,7 @@ export const buttonVariants = cva(
           "transition-[transform,background-color,border-color,color,box-shadow] duration-300 ease-out motion-reduce:transition-none",
         danger:
           "bg-btn-danger hover:bg-btn-danger-hover focus:bg-btn-danger-focus disabled:bg-btn-danger-disabled text-white",
-        link: "bg-transparent text-blue-200 font-semibold hover:underline focus:bg-noir-gold/20 disabled:bg-transparent text-nowrap px-0",
+        link: "bg-transparent border-none text-blue-200 font-semibold hover:underline hover:text-noir-gold-500 disabled:bg-transparent text-nowrap px-0",
         icon: "block bg-transparent flex items-center justify-center rounded-sm transition-all duration-300 ease-in-out  disabled:bg-transparent font-medium border gap-3",
       },
       leftIcon: {

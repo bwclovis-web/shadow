@@ -101,7 +101,7 @@ const CountryTypeahead = ({
       />
       <input type="hidden" name={name} value={selectedId} />
       {selectedCountry ? (
-        <p className="text-xs text-green-400 mt-1 flex items-center gap-1.5">
+        <p className="text-xs text-noir-gold-100 mt-1 flex items-center gap-1.5">
           <CountryFlagBadge code={selectedCountry.code} size="sm" />
           <span>{t("countrySelected", { country: selectedCountry.name })}</span>
         </p>

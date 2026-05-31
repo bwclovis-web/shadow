@@ -128,16 +128,16 @@ const TradeStatusCard = ({
       </div>
 
       {trade.notes ? (
-        <p className="mt-2 text-sm text-noir-gold-100">
+        <p className="mt-6 text-sm text-noir-gold-100">
           <span className="text-noir-gold-500">{t("notes")}: </span>
           {trade.notes}
         </p>
       ) : null}
 
-      <p className="mt-2 text-xs text-noir-gold-500">
+      <p className="mt-1 text-xs text-noir-gold-500">
         <Link
           href="/community-policy"
-          className="text-noir-gold underline-offset-2 hover:text-noir-light hover:underline"
+          className="text-noir-gold underline-offset-2 hover:text-noir-light underline"
         >
           {t("communityPolicyLink")}
         </Link>
@@ -148,7 +148,7 @@ const TradeStatusCard = ({
       ) : null}
 
       {!readOnly ? (
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-6 flex flex-wrap gap-2">
           {trade.status === "pending" && isCounterparty ? (
             <>
               <Button

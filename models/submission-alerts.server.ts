@@ -86,7 +86,7 @@ export const notifySubmitterOfSubmissionOutcome = async (
 
   const resolvedTargetUrl =
     targetUrl ??
-    (user ? `${getProfilePathForUser(user)}/profile/my-scents` : "/profile/my-scents")
+    (user ? `${getProfilePathForUser(user)}/my-scents` : "/profile/my-scents")
 
   const metadataWithTarget = { ...metadata, targetUrl: resolvedTargetUrl }
 

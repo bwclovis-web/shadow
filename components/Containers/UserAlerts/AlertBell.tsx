@@ -42,7 +42,10 @@ export const AlertBell = ({
   const triggerRef = useRef<HTMLButtonElement>(null)
   const previousUnreadCountRef = useRef(unreadCount)
 
+  const leavingSet = new Set(leavingAlertIds)
   const recentAlerts = alerts.slice(0, RECENT_ALERTS_LIMIT)
+  const activeAlertCount = alerts.filter(alert => !leavingSet.has(alert.id)).length
+  const activeRecentCount = recentAlerts.filter(alert => !leavingSet.has(alert.id)).length
 
   const close = useCallback(() => {
     setIsOpen(false)
@@ -170,8 +173,9 @@ export const AlertBell = ({
 
       if (!isNewDismissal) return
 
+      onDismissAlert(alert.id)
+
       window.setTimeout(() => {
-        onDismissAlert(alert.id)
         setLeavingAlertIds(prev => prev.filter(id => id !== alert.id))
       }, ALERT_ROW_EXIT_MS)
 
@@ -260,10 +264,10 @@ export const AlertBell = ({
             )}
           </div>
 
-          {recentAlerts.length > 0 && (
+          {activeRecentCount > 0 && (
             <div className="p-3 border-t border-noir-gold bg-noir-gold-100">
               <p className="text-xs text-noir-dark text-center">
-                Showing {recentAlerts.length} of {alerts.length} alerts
+                Showing {activeRecentCount} of {activeAlertCount} alerts
               </p>
             </div>
           )}

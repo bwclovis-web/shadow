@@ -28,6 +28,7 @@ export const ExchangeCardPhotos = ({
         tradeOnly={listing.tradeOnly}
         className={className}
         lightboxSize="default"
+        trigger="button"
       />
     )
   }
