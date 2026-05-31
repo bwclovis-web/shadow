@@ -3,7 +3,7 @@ import type React from "react"
 import { getTranslations } from "next-intl/server"
 import { redirect } from "next/navigation"
 
-import { getCachedDisplayableNotesForQuiz } from "@/models/tags.server"
+import { getCachedMaterialsForQuiz } from "@/models/tags.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
@@ -70,11 +70,11 @@ export default async function ScentQuizPage({
     return ""
   }
 
-  const notes = await getCachedDisplayableNotesForQuiz()
+  const materials = await getCachedMaterialsForQuiz()
 
   return (
     <ScentQuizClient
-      notes={notes}
+      notes={materials}
       step={step}
       initialNoteIds={initialNoteIds}
       initialAvoidNoteIds={initialAvoidNoteIds}

@@ -7,9 +7,7 @@ import {
   updateScentProfileFromQuiz,
   type ScentQuizData,
 } from "@/models/scent-profile.server"
-import {
-  getCachedDisplayableNotesForQuiz,
-} from "@/models/tags.server"
+import { getCachedMaterialsForQuiz } from "@/models/tags.server"
 import {
   budgetTierToPriceRange,
   parseQuizBudgetTier,
@@ -48,16 +46,16 @@ export const submitScentQuizAction = async (
     return { error: t("mustSignIn") }
   }
 
-  const allowedIds = new Set(
-    (await getCachedDisplayableNotesForQuiz()).map((n) => n.id)
+  const allowedMaterialIds = new Set(
+    (await getCachedMaterialsForQuiz()).map((m) => m.id)
   )
 
-  const noteIds = formData
+  const materialIds = formData
     .getAll("noteIds")
-    .filter((v): v is string => typeof v === "string" && allowedIds.has(v))
-  const avoidNoteIds = formData
+    .filter((v): v is string => typeof v === "string" && allowedMaterialIds.has(v))
+  const materialAvoidIds = formData
     .getAll("avoidNoteIds")
-    .filter((v): v is string => typeof v === "string" && allowedIds.has(v))
+    .filter((v): v is string => typeof v === "string" && allowedMaterialIds.has(v))
   const seasonIdsRaw = formData
     .getAll("season")
     .filter((v): v is string => typeof v === "string")
@@ -81,20 +79,20 @@ export const submitScentQuizAction = async (
 
   const tErr = await getTranslations("quiz.errors")
 
-  if (noteIds.length < MIN_NOTE_SELECTIONS) {
+  if (materialIds.length < MIN_NOTE_SELECTIONS) {
     return {
       error: tErr("minNotes", { min: MIN_NOTE_SELECTIONS }),
     }
   }
-  if (noteIds.length > MAX_NOTE_SELECTIONS) {
+  if (materialIds.length > MAX_NOTE_SELECTIONS) {
     return {
       error: tErr("maxNotes", { max: MAX_NOTE_SELECTIONS }),
     }
   }
 
-  const noteWeights: Record<string, number> = {}
-  for (const id of noteIds) {
-    noteWeights[id] = 1
+  const materialWeights: Record<string, number> = {}
+  for (const id of materialIds) {
+    materialWeights[id] = 1
   }
 
   const priceRangeFromBudget = budgetTier ? budgetTierToPriceRange(budgetTier) : null
@@ -107,8 +105,8 @@ export const submitScentQuizAction = async (
         }
 
   const quizData: ScentQuizData = {
-    noteWeights,
-    avoidNoteIds,
+    materialWeights,
+    materialAvoidIds,
     seasonHints,
     browsingStyle,
     preferredPriceRange: budgetTier != null ? preferredPriceRange : null,

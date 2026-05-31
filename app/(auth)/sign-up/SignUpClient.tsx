@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl"
 
 import Input from "@/components/Atoms/Input"
 import { Button } from "@/components/Atoms/Button/Button"
+import { VooDooLink } from "@/components/Atoms/Button/VooDooLink"
 import CheckBox from "@/components/Atoms/CheckBox/CheckBox"
 import { CSRFToken } from "@/components/Molecules/CSRFToken"
 import PasswordStrengthIndicator from "@/components/Organisms/PasswordStrengthIndicator"
@@ -102,7 +103,21 @@ const SignUpClient = ({ sessionId, prefillEmail }: SignUpClientProps) => {
             value="on"
             required
             className="mt-1"
-            htmlLabel={`${tAuth("termsAndConditions")} <a href='/terms-and-conditions' class='text-noir-gold hover:text-noir-light'>${tAuth("termsAndConditionsLink")}</a>`}
+            label={
+              <>
+                {tAuth("termsAndConditions")}{" "}
+                <VooDooLink
+                  url="/terms-and-conditions"
+                  variant="link"
+                  size="sm"
+                  prefetch
+                  transitionVariant="detail-to-list"
+                  className="text-noir-gold hover:text-noir-light"
+                >
+                  {tAuth("termsAndConditionsLink")}
+                </VooDooLink>
+              </>
+            }
             labelSize="sm"
             labelPosition="right"
           />

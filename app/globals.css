@@ -94,14 +94,23 @@ h1 {
   transform: translateZ(0);
 }
 
-h2 {
+.h1 {
+  font-size: clamp(3.5rem, 4vw + 1rem, 12rem);
+  font-weight: 900;
+  line-height: 1;
+  contain: layout style;
+  will-change: auto;
+  transform: translateZ(0);
+}
+
+h2, .h2 {
   font-size: clamp(1.5rem, 2vw + 1rem, 3.5rem);
   font-weight: 800;
   line-height: 1;
   contain: layout style;
 }
 
-h3 {
+h3, .h3 {
   font-size: clamp(1.2rem, 1.5vw + 0.5rem, 1.7rem);
   font-weight: 600;
   line-height: 1;
@@ -173,7 +182,7 @@ h3 {
 }
 
 .inner-container {
-  @apply w-full 2xl:max-w-[70%] mx-auto px-4 lg:px-8 min-h-full;
+  @apply w-11/12 2xl:max-w-[70%] mx-auto px-4 lg:px-8 min-h-full;
   contain: layout style;
 }
 

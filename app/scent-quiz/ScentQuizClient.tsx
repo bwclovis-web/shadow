@@ -41,7 +41,7 @@ import {
 } from "./constants"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
-const BANNER_IMAGE = "/images/quiz.png"
+const BANNER_IMAGE = "/images/new/quiz.webp"
 
 type BrowsingId = "explorer" | "focused" | "trader"
 

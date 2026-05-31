@@ -64,7 +64,7 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
           className="h-[var(--spacing-site-header-desktop)] w-auto max-h-42 drop-shadow-[0_4px_24px_rgba(0,0,0,0.55)]"
         />
       </PrefetchLink>
-      <div className="relative z-10 flex justify-end items-center px-30 bg-noir-black/60 backdrop-blur-md w-full gap-4">
+      <div className="relative py-2 z-10 flex justify-end items-center px-30 bg-noir-black/60 backdrop-blur-md w-full gap-4">
         <LanguageSwitcher />
         <div className="flex items-center gap-2">
           {!user ? (

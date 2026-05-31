@@ -1,6 +1,6 @@
 /**
  * Single source of truth for "is this a valid scent note for display?"
- * Used by: clean-notes.js (cleanup), app (getAllTags / scent quiz) so only confirmed notes are shown.
+ * Used by: app (getAllTags / scent quiz) and note-materials tooling so only confirmed notes are shown.
  *
  * Stopwords apply only to exact single-word matches. Multi-word notes are valid, e.g.:
  * cut grass, hot cocoa, gray musk, cold steel, old makeup, hot melted wax, grey iris.
@@ -117,6 +117,6 @@ export function isDisplayableScentNote(name) {
   return true
 }
 
-/** For use in clean-notes.js: same lists/patterns so cleanup and display stay in sync. */
+/** Shared lists/patterns so validation stays consistent across app and scripts. */
 export { STOPWORDS, PLACEHOLDER_PHRASES, TRAILING_FRAGMENT_REGEX, KNOWN_BAD_PATTERNS }
 export { normalize as normalizeForValidation }

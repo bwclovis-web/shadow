@@ -60,6 +60,17 @@ These appear to be one-time use scripts for importing specific perfume brands. A
   - If migration is complete, this can likely be removed
   - However, it might still be needed for future migrations or rollbacks
 
+### 8. Note cleanup pipeline (archived — use NoteMaterial aliases)
+
+Moved to `scripts/archive/note-cleanup-legacy/` (May 2026):
+
+- `merge-duplicate-notes.js` — deleted duplicate `PerfumeNotes` rows
+- `clean-notes.js`, `clean-notes-complete.js` — destructive cleanup
+- `clean-notes-ai.py`, `extract-ambiguous-notes.js`, `apply-ai-recommendations.js`
+- `setup-venv-ai.js`, `normalize-note-ai.py`
+
+**Replacement:** `npm run notes:seed-materials` and `lib/note-materials/` (see `scripts/NOTE-MATERIALS.md`).
+
 ## Summary Count
 
 **High Confidence (Remove):**

@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache"
 
 import { prisma } from "@/lib/db"
+import { persistAliasIfRuleMatches } from "@/models/note-materials.server"
 import {
   isDisplayableScentNote,
   validateNoteForApi,
@@ -8,6 +9,22 @@ import {
 
 /** Invalidate when displayable notes change (e.g. admin tooling). */
 export const SCENT_QUIZ_NOTES_CACHE_TAG = "scent-quiz-displayable-notes" as const
+
+/** Invalidate when note materials or aliases change. */
+export const SCENT_QUIZ_MATERIALS_CACHE_TAG = "scent-quiz-materials" as const
+
+/**
+ * Canonical materials for the scent quiz (not raw PerfumeNotes).
+ */
+export const getCachedMaterialsForQuiz = unstable_cache(
+  async (): Promise<{ id: string; name: string; slug: string }[]> =>
+    prisma.noteMaterial.findMany({
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, slug: true },
+    }),
+  ["scent-quiz-materials"],
+  { revalidate: 300, tags: [SCENT_QUIZ_MATERIALS_CACHE_TAG] }
+)
 
 /**
  * Displayable notes for the scent quiz, cached across requests.
@@ -130,6 +147,8 @@ export const createTag = async (name: string): Promise<CreateTagResult> => {
     update: {},
     create: { name: trimmedName },
   })
+
+  await persistAliasIfRuleMatches(tag.id, tag.name)
 
   return { success: true, tag: { id: tag.id, name: tag.name } }
 }

@@ -29,6 +29,8 @@
     "migrate:images": "npx tsx scripts/migrate-images-to-r2.ts",
     "refresh:house-notes": "npx tsx scripts/refresh-house-notes-from-description.ts",
     "notes:fixture": "npx tsx scripts/run-note-pipeline-fixture.ts",
+    "notes:seed-materials": "npx tsx scripts/seed-note-materials.ts",
+    "notes:materials:report": "npx tsx scripts/note-materials-report.ts",
     "start": "next start",
     "lint": "eslint",
     "knip": "knip",

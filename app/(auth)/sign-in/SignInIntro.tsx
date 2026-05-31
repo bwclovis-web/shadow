@@ -7,10 +7,10 @@ const SignInIntro = async () => {
   const t = await getTranslations("auth")
 
   return (
-    <div className="relative w-full noir-border bg-noir-black/20 px-4 py-6 text-center text-noir-gold shadow-md backdrop-blur-xs md:px-6">
+    <div className="relative w-full noir-border mt-40 lg:mt-0 bg-noir-black/20 px-4 py-6 text-center text-noir-gold shadow-md backdrop-blur-xs md:px-6">
       <h1
         id="sign-in-heading"
-        className="text-shadow-lg text-shadow-black leading-tight"
+        className="text-shadow-lg text-shadow-black h1 mb-4"
       >
         {t("heading")}
       </h1>

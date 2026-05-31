@@ -1,13 +1,19 @@
 import { Prisma } from "@prisma/client"
+import { resolveNoteToMaterialId } from "@/lib/note-materials"
 import { prisma } from "@/lib/db"
+import { getNoteMaterialIndex } from "@/models/note-materials.server"
 
 const EMPTY_NOTE_WEIGHTS: Record<string, number> = {}
 const EMPTY_AVOID_IDS: string[] = []
+const EMPTY_MATERIAL_WEIGHTS: Record<string, number> = {}
+const EMPTY_MATERIAL_AVOID_IDS: string[] = []
 const BEHAVIOR_WEIGHT_DELTA = 1
 
 const createEmptyProfileData = () => ({
   noteWeights: EMPTY_NOTE_WEIGHTS as object,
   avoidNoteIds: EMPTY_AVOID_IDS as string[],
+  materialWeights: EMPTY_MATERIAL_WEIGHTS as object,
+  materialAvoidIds: EMPTY_MATERIAL_AVOID_IDS as string[],
   preferredPriceRange: Prisma.JsonNull,
   preferredConcentration: null,
   preferredHouseTier: null,
@@ -41,10 +47,21 @@ const incrementWeightsForNotes = (
   }
 }
 
+const incrementWeightsForMaterials = (
+  weights: Record<string, number>,
+  materialIds: string[]
+): void => {
+  for (const materialId of materialIds) {
+    weights[materialId] = (weights[materialId] ?? 0) + BEHAVIOR_WEIGHT_DELTA
+  }
+}
+
 /** Quiz payload from onboarding scent quiz. */
 export type ScentQuizData = {
   noteWeights?: Record<string, number>
   avoidNoteIds?: string[]
+  materialWeights?: Record<string, number>
+  materialAvoidIds?: string[]
   preferredPriceRange?: { min?: number; max?: number } | null
   preferredConcentration?: "edt" | "edp" | "parfum" | "noPreference" | null
   preferredHouseTier?: "designer" | "niche" | "indie" | "all" | null
@@ -138,6 +155,30 @@ export const updateScentProfileFromQuiz = async (
           : existingAvoidIds
       : existingAvoidIds
 
+  const existingMaterialWeights =
+    (profile.materialWeights as Record<string, number>) ?? {}
+  const existingMaterialAvoidIds =
+    (profile.materialAvoidIds as string[]) ?? []
+
+  const materialWeights =
+    quizData.materialWeights !== undefined
+      ? isRetake
+        ? { ...quizData.materialWeights }
+        : mergeNoteWeights(
+            existingMaterialWeights,
+            quizData.materialWeights as Record<string, number>
+          )
+      : existingMaterialWeights
+
+  const materialAvoidIds =
+    quizData.materialAvoidIds !== undefined
+      ? isRetake
+        ? [...quizData.materialAvoidIds]
+        : quizData.materialAvoidIds.length > 0
+          ? [...new Set([...existingMaterialAvoidIds, ...quizData.materialAvoidIds])]
+          : existingMaterialAvoidIds
+      : existingMaterialAvoidIds
+
   const seasonHint = Array.isArray(quizData.seasonHints)
     ? quizData.seasonHints.length > 0
       ? quizData.seasonHints.join(",")
@@ -158,6 +199,8 @@ export const updateScentProfileFromQuiz = async (
     data: {
       noteWeights: noteWeights as object,
       avoidNoteIds: avoidNoteIds as string[],
+      materialWeights: materialWeights as object,
+      materialAvoidIds: materialAvoidIds as string[],
       preferredPriceRange:
         quizData.preferredPriceRange !== undefined
           ? quizData.preferredPriceRange === null
@@ -205,15 +248,35 @@ export const updateScentProfileFromBehavior = async (
   const noteIds = await getNoteIdsForPerfume(event.perfumeId)
   if (noteIds.length === 0) return getOrCreateScentProfile(userId)
 
+  const index = await getNoteMaterialIndex()
+  const noteRows =
+    noteIds.length > 0
+      ? await prisma.perfumeNotes.findMany({
+          where: { id: { in: noteIds } },
+          select: { id: true, name: true },
+        })
+      : []
+  const materialIdsForEvent = [
+    ...new Set(
+      noteRows
+        .map((n) =>
+          resolveNoteToMaterialId(index, { noteId: n.id, noteName: n.name })
+        )
+        .filter((id): id is string => id != null)
+    ),
+  ]
+
   return prisma.$transaction(async (tx) => {
     type LockedRow = {
       id: string
       userId: string
       noteWeights: unknown
       avoidNoteIds: unknown
+      materialWeights: unknown
+      materialAvoidIds: unknown
     }
     let rows = await tx.$queryRaw<LockedRow[]>`
-      SELECT id, "userId", "noteWeights", "avoidNoteIds"
+      SELECT id, "userId", "noteWeights", "avoidNoteIds", "materialWeights", "materialAvoidIds"
       FROM "ScentProfile"
       WHERE "userId" = ${userId}
       FOR UPDATE
@@ -227,7 +290,7 @@ export const updateScentProfileFromBehavior = async (
         if (getPrismaErrorCode(err) !== "P2002") throw err
       }
       rows = await tx.$queryRaw<LockedRow[]>`
-        SELECT id, "userId", "noteWeights", "avoidNoteIds"
+        SELECT id, "userId", "noteWeights", "avoidNoteIds", "materialWeights", "materialAvoidIds"
         FROM "ScentProfile"
         WHERE "userId" = ${userId}
         FOR UPDATE
@@ -237,15 +300,24 @@ export const updateScentProfileFromBehavior = async (
     const row = rows[0]!
     const weights = { ...((row.noteWeights as Record<string, number>) ?? {}) }
     let avoidIds = [...((row.avoidNoteIds as string[]) ?? [])]
+    const materialWeights = {
+      ...((row.materialWeights as Record<string, number>) ?? {}),
+    }
+    let materialAvoidIds = [...((row.materialAvoidIds as string[]) ?? [])]
 
     if (event.type === "rating") {
       if (event.overall >= 4) {
         incrementWeightsForNotes(weights, noteIds)
+        incrementWeightsForMaterials(materialWeights, materialIdsForEvent)
       } else if (event.overall <= 2) {
         avoidIds = [...new Set([...avoidIds, ...noteIds])]
+        materialAvoidIds = [
+          ...new Set([...materialAvoidIds, ...materialIdsForEvent]),
+        ]
       }
     } else {
       incrementWeightsForNotes(weights, noteIds)
+      incrementWeightsForMaterials(materialWeights, materialIdsForEvent)
     }
 
     return tx.scentProfile.update({
@@ -253,6 +325,8 @@ export const updateScentProfileFromBehavior = async (
       data: {
         noteWeights: weights as object,
         avoidNoteIds: avoidIds as string[],
+        materialWeights: materialWeights as object,
+        materialAvoidIds: materialAvoidIds as string[],
       },
     })
   })

@@ -280,6 +280,40 @@ model PerfumeNotes {
   
   // Junction table relation
   perfumeNoteRelations PerfumeNoteRelation[]
+  materialAliases      NoteMaterialAlias[]
+}
+
+/// Canonical scent material for quiz preferences and recommendation rollup (e.g. bergamot).
+model NoteMaterial {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  family    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  aliases NoteMaterialAlias[]
+}
+
+enum NoteMaterialAliasSource {
+  seed
+  rule
+  manual
+}
+
+/// Maps an existing PerfumeNotes row to a NoteMaterial without changing the note name.
+model NoteMaterialAlias {
+  id         String                  @id @default(cuid())
+  materialId String
+  noteId     String                  @unique
+  source     NoteMaterialAliasSource @default(seed)
+  createdAt  DateTime                @default(now())
+  updatedAt  DateTime                @updatedAt
+
+  material NoteMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  note     PerfumeNotes @relation(fields: [noteId], references: [id], onDelete: Cascade)
+
+  @@index([materialId])
 }
 
 // New junction table
@@ -684,6 +718,8 @@ model ScentProfile {
   userId              String   @unique
   noteWeights         Json     // { noteId: number }
   avoidNoteIds        Json     // string[]
+  materialWeights     Json     @default("{}") // { materialId: number }
+  materialAvoidIds    Json     @default("[]") // string[]
   preferredPriceRange    Json?    // { min?: number, max?: number }
   preferredConcentration String?  // "edt" | "edp" | "parfum" | null (no preference)
   preferredHouseTier     String?  // "designer" | "niche" | "indie" | "all"

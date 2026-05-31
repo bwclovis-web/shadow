@@ -3,6 +3,14 @@ import { prisma } from "@/lib/db"
 import { fetchPerfumeIdsWithListingPriceInRange } from "@/models/perfume.server"
 import { getUserCollectionOrDestashPerfumeIds } from "@/models/user.server"
 import {
+  buildMaterialAvoidSet,
+  buildMaterialPreferenceWeights,
+  expandMaterialIdToNoteIds,
+  perfumeHasAvoidedMaterial,
+  scorePerfumeNotesByMaterial,
+} from "@/lib/note-materials"
+import { getNoteMaterialIndex } from "@/models/note-materials.server"
+import {
   getNoteIdsForPerfume,
   getOrCreateScentProfile,
 } from "@/models/scent-profile.server"
@@ -360,42 +368,101 @@ async function getPersonalizedForUser(
   const excludeOwned = await getUserCollectionOrDestashPerfumeIds(userId)
 
   const profile = await getOrCreateScentProfile(userId)
-  const weights = profile.noteWeights as Record<string, number>
-  const avoidIds = (profile.avoidNoteIds as string[]) ?? []
+  const index = await getNoteMaterialIndex()
 
-  const preferredNoteIds = Object.entries(weights)
-    .filter(([, w]) => w > 0)
-    .map(([id]) => id)
+  const noteWeights = (profile.noteWeights as Record<string, number>) ?? {}
+  const avoidNoteIds = (profile.avoidNoteIds as string[]) ?? []
+  const materialWeightsJson =
+    (profile.materialWeights as Record<string, number>) ?? {}
+  const materialAvoidIds = (profile.materialAvoidIds as string[]) ?? []
 
-  if (preferredNoteIds.length === 0) {
+  const legacyNoteIds = [
+    ...Object.keys(noteWeights),
+    ...avoidNoteIds,
+  ]
+  const legacyNoteRows =
+    legacyNoteIds.length > 0
+      ? await prisma.perfumeNotes.findMany({
+          where: { id: { in: [...new Set(legacyNoteIds)] } },
+          select: { id: true, name: true },
+        })
+      : []
+  const noteNamesById = new Map(legacyNoteRows.map((n) => [n.id, n.name]))
+
+  const materialWeights = buildMaterialPreferenceWeights(index, {
+    materialWeights: materialWeightsJson,
+    noteWeights,
+    noteNamesById,
+  })
+
+  if (materialWeights.size === 0) {
     return getPopularPerfumesFallback(limit, excludeOwned)
   }
 
-  const relations = await prisma.perfumeNoteRelation.findMany({
-    where: { noteId: { in: preferredNoteIds } },
-    select: { perfumeId: true, noteId: true },
+  const avoidMaterials = buildMaterialAvoidSet(index, {
+    materialAvoidIds,
+    avoidNoteIds,
+    noteNamesById,
   })
+
+  const seedNoteIds = new Set<string>()
+  for (const materialId of materialWeights.keys()) {
+    for (const noteId of expandMaterialIdToNoteIds(index, materialId)) {
+      seedNoteIds.add(noteId)
+    }
+  }
+
+  const seedRelations =
+    seedNoteIds.size > 0
+      ? await prisma.perfumeNoteRelation.findMany({
+          where: { noteId: { in: [...seedNoteIds] } },
+          select: { perfumeId: true },
+        })
+      : []
+
+  let candidateIds = [...new Set(seedRelations.map((r) => r.perfumeId))]
 
   const scoreByPerfume: Record<string, number> = {}
   const contribByPerfume: Record<string, Record<string, number>> = {}
-  for (const r of relations) {
-    const w = weights[r.noteId] ?? 0
-    if (w <= 0) continue
-    scoreByPerfume[r.perfumeId] = (scoreByPerfume[r.perfumeId] ?? 0) + w
-    if (!contribByPerfume[r.perfumeId]) contribByPerfume[r.perfumeId] = {}
-    contribByPerfume[r.perfumeId][r.noteId] =
-      (contribByPerfume[r.perfumeId][r.noteId] ?? 0) + w
-  }
 
-  let candidateIds = Object.keys(scoreByPerfume)
-
-  if (avoidIds.length > 0) {
-    const withAvoid = await prisma.perfumeNoteRelation.findMany({
-      where: { noteId: { in: avoidIds } },
-      select: { perfumeId: true },
+  if (candidateIds.length > 0) {
+    const allRelations = await prisma.perfumeNoteRelation.findMany({
+      where: { perfumeId: { in: candidateIds } },
+      select: {
+        perfumeId: true,
+        noteId: true,
+        note: { select: { id: true, name: true } },
+      },
     })
-    const avoidPerfumeIds = new Set(withAvoid.map(r => r.perfumeId))
-    candidateIds = candidateIds.filter(id => !avoidPerfumeIds.has(id))
+
+    const notesByPerfume = new Map<string, string[]>()
+    const namesById = new Map(noteNamesById)
+
+    for (const r of allRelations) {
+      namesById.set(r.note.id, r.note.name)
+      const list = notesByPerfume.get(r.perfumeId) ?? []
+      if (!list.includes(r.noteId)) list.push(r.noteId)
+      notesByPerfume.set(r.perfumeId, list)
+    }
+
+    candidateIds = []
+    for (const [perfumeId, noteIds] of notesByPerfume) {
+      if (
+        perfumeHasAvoidedMaterial(index, noteIds, namesById, avoidMaterials)
+      ) {
+        continue
+      }
+      const { score, contribByMaterialId } = scorePerfumeNotesByMaterial(
+        index,
+        noteIds,
+        namesById,
+        materialWeights
+      )
+      if (score <= 0) continue
+      scoreByPerfume[perfumeId] = score
+      contribByPerfume[perfumeId] = contribByMaterialId
+      candidateIds.push(perfumeId)
+    }
   }
 
   candidateIds = candidateIds.filter((id) => !excludeOwned.has(id))
@@ -550,11 +617,11 @@ async function getPersonalizedForUser(
   if (sortedIds.length === 0)
     return getPopularPerfumesFallback(limit, excludeOwned)
 
-  const noteNameRows = await prisma.perfumeNotes.findMany({
-    where: { id: { in: preferredNoteIds } },
+  const materialNameRows = await prisma.noteMaterial.findMany({
+    where: { id: { in: [...materialWeights.keys()] } },
     select: { id: true, name: true },
   })
-  const idToName = new Map(noteNameRows.map(n => [n.id, n.name]))
+  const materialIdToName = new Map(materialNameRows.map((m) => [m.id, m.name]))
 
   const perfumes = (await prisma.perfume.findMany({
     where: { id: { in: sortedIds } },
@@ -567,12 +634,12 @@ async function getPersonalizedForUser(
       const p = byId.get(id)
       if (!p) return null
       const contrib = contribByPerfume[id] ?? {}
-      const topNoteIds = Object.entries(contrib)
+      const topMaterialIds = Object.entries(contrib)
         .sort(([, a], [, b]) => b - a)
         .slice(0, 4)
-        .map(([noteId]) => noteId)
-      const matchedNoteNames = topNoteIds
-        .map(nid => idToName.get(nid))
+        .map(([materialId]) => materialId)
+      const matchedNoteNames = topMaterialIds
+        .map((mid) => materialIdToName.get(mid))
         .filter((n): n is string => !!n)
       const reason: RecommendationReason = {
         kind: "profile_match",
