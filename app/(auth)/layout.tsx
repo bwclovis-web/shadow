@@ -6,7 +6,7 @@ export default function AuthLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="relative flex flex-col items-center min-h-dvh px-4 pb-24 md:pb-12 bg-noir-gold-500/30">
+    <div className="relative flex flex-col items-center min-h-dvh px-4 pb-24 md:pb-12 bg-noir-gold-500/30 justify-center">
       <Image
         src="/images/new/sign-in.webp"
         alt=""
@@ -18,7 +18,7 @@ export default function AuthLayout({
         sizes="100vw"
       />
       <div className="absolute inset-0 md:mask-radial-from-45% mask-radial-to-64%" />
-      <div className="relative z-10 w-full max-w-4xl flex flex-col items-center gap-4 md:gap-8 mx-auto pt-[var(--spacing-site-header-mobile)] md:pt-[var(--spacing-site-header-desktop)]">
+      <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center gap-4 px-0">
         {children}
       </div>
     </div>

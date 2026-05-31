@@ -326,6 +326,8 @@ export const peelMarketingDescriptorTail = (note: string): string => {
       .replace(/\s+\bfragrance\b\s*$/i, "")
       .replace(/\s+(?:your\s+skins?|skin)\s+signature\b.*$/i, "")
       .replace(/\s+signature\s*$/i, "")
+      .replace(/\s+scent\s+description\b.*$/i, "")
+      .replace(/\s+description\b\s*$/i, "")
       .trim()
   }
   return s
@@ -410,6 +412,10 @@ export const isObviousNonMaterialNote = (note: string): boolean => {
   if (/^(?:intention|care|inspected)$/i.test(n)) return true
   if (/^(?:touch|then|fabric|rgba|margin|h[1-6]|body|html|div|span|sans-serif|serif|monospace|system-ui|-apple-system|blinkmacsystemfont|roboto|inter|helvetica|arial|ui-sans-serif|ui-serif|ui-monospace|segoe ui|noto sans)$/i.test(n))
     return true
+  if (/^\/(?:head|body|html|script|style|meta|link|title)$/i.test(n)) return true
+  if (/^<\/?(?:head|body|html|script|style|meta|link|title)$/i.test(n)) return true
+  if (/^(?:lt|gt|charset|utf-8|description)$/i.test(n)) return true
+  if (/\s+description\b/i.test(n) && n.split(/\s+/).length <= 4) return true
   if (/^(?:luxurious|wear\s+it|wear\s+it\s+on)$/i.test(n)) return true
   if (/\bwear\s+it(?:\s+on)?\b/i.test(n)) return true
   if (/^(?:radial-gradient|linear-gradient|repeating-linear-gradient)$/i.test(n)) return true

@@ -1,7 +1,9 @@
 import { type FieldMetadata, getInputProps } from "@conform-to/react"
 import { type VariantProps } from "class-variance-authority"
-import { forwardRef, useId, type HTMLProps, type RefObject } from "react"
+import { forwardRef, useId, useState, type HTMLProps, type RefObject } from "react"
+import { BsFillEyeFill, BsFillEyeSlashFill } from "react-icons/bs"
 
+import { Button } from "@/components/Atoms/Button"
 import { styleMerge } from "@/utils/styleUtils"
 
 import { inputVariants } from "./input-variants"
@@ -21,6 +23,7 @@ export interface InputProps
   }
   autoComplete?: string
   helpText?: string
+  passwordToggle?: boolean
 }
 
 const resolveAutoComplete = (
@@ -46,23 +49,31 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       autoComplete,
       inputRef,
       helpText,
+      passwordToggle = false,
       ...props
     },
     ref
   ) => {
+    const [passwordVisible, setPasswordVisible] = useState(false)
     const generatedId = useId()
     const resolvedAutoComplete = resolveAutoComplete(inputType, autoComplete)
     const resolvedId = inputId ?? action?.id ?? (label ? generatedId : undefined)
+    const resolvedInputType =
+      passwordToggle && inputType === "password"
+        ? passwordVisible
+          ? "text"
+          : "password"
+        : inputType
     const inputProps = action
       ? {
-          ...getInputProps(action, { ariaAttributes: true, type: inputType }),
+          ...getInputProps(action, { ariaAttributes: true, type: resolvedInputType }),
           id: resolvedId,
           placeholder,
           autoComplete: resolvedAutoComplete,
         }
       : {
           id: resolvedId,
-          type: inputType,
+          type: resolvedInputType,
           placeholder,
           autoComplete: resolvedAutoComplete,
         }
@@ -97,12 +108,33 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         ref={setRef}
         name={action?.name}
         aria-invalid={actionData?.errors?.[action?.name ?? ""] ? true : undefined}
-        className={styleMerge(inputVariants({ shading }), className)}
+        className={styleMerge(
+          inputVariants({ shading }),
+          passwordToggle && "pr-10",
+          className
+        )}
         data-testid="Input"
         {...(restInputProps as Omit<HTMLProps<HTMLInputElement>, "value" | "defaultValue">)}
         {...valueProps}
         {...props}
       />
+    )
+
+    const inputWithToggle = passwordToggle ? (
+      <div className="relative">
+        {inputElement}
+        <Button
+          type="button"
+          variant="icon"
+          className="absolute inset-y-0 right-0 flex h-full w-auto items-center border-none bg-transparent px-2 text-noir-dark/60 hover:text-noir-dark right-2"
+          onClick={() => setPasswordVisible((visible) => !visible)}
+          aria-label={passwordVisible ? "Hide password" : "Show password"}
+        >
+          {passwordVisible ? <BsFillEyeSlashFill /> : <BsFillEyeFill />}
+        </Button>
+      </div>
+    ) : (
+      inputElement
     )
 
     if (label !== undefined) {
@@ -114,13 +146,13 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           >
             {label}
           </label>
-          {inputElement}
+          {inputWithToggle}
           {helpText && <p className="text-noir-gold-100 text-xs ml-1" role="note">{helpText}</p>}
         </div>
       )
     }
 
-    return inputElement
+    return inputWithToggle
   }
 )
 

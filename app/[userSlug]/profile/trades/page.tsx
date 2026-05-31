@@ -47,7 +47,7 @@ export default async function MyTradesPage({
   const userId = session.user.id
   const [activeTrades, historyTrades] = await Promise.all([
     getTradesForUserProfile(userId, userId, "active"),
-    getTradesForUserProfile(userId, userId, "history"),
+    getTradesForUserProfile(userId, userId, "history", { limit: null }),
   ])
 
   return (

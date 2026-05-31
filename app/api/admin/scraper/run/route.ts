@@ -102,13 +102,17 @@ const normalizePreviewName = (value: string): string =>
     .replace(/\s+/g, " ")
     .trim()
 
+const NON_PERFUME_PRODUCT_URL_RE =
+  /\/products\/(?:fragrance-sampler|gift-card|sample-pack|coupon|wish-list|file-claim)/i
+
 const scorePreviewRecordCompleteness = (record: PerfumeCsvRecord): number => {
   const openCount = safeJsonArrayCount(record.openNotes)
   const heartCount = safeJsonArrayCount(record.heartNotes)
   const baseCount = safeJsonArrayCount(record.baseNotes)
   const descScore = record.description?.trim() ? 10 : 0
   const imageScore = record.image?.trim() ? 10 : 0
-  return openCount + heartCount + baseCount + descScore + imageScore
+  const urlPenalty = NON_PERFUME_PRODUCT_URL_RE.test(record.detailURL ?? "") ? -50 : 0
+  return openCount + heartCount + baseCount + descScore + imageScore + urlPenalty
 }
 
 const safeJsonArrayCount = (value: string): number => {

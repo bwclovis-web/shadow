@@ -33,7 +33,7 @@ const SignInClient = () => {
       <form
         {...getFormProps(signInForm)}
         action={formAction}
-        className="max-w-md mx-auto p-1 md:p-4 relative w-full flex flex-col gap-4 noir-border"
+        className="relative mx-auto flex w-full max-w-md flex-col gap-4 noir-border bg-noir-dark/30 p-4 backdrop-blur-sm md:p-6 lg:mx-0 lg:max-w-none"
       >
         <CSRFToken />
         <Input

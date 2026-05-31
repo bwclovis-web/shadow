@@ -95,7 +95,15 @@
     "backToProfile": "Retour au profil",
     "empty": "Vous n'avez pas encore d'échanges.",
     "activeSummary": "Échanges actifs ({count})",
-    "historySummary": "Historique des échanges ({count})"
+    "historySummary": "Historique des échanges ({count})",
+    "filters": {
+      "collectorPlaceholder": "Rechercher par nom de collectionneur…",
+      "dateFrom": "Du",
+      "dateTo": "Au",
+      "clearAll": "Effacer les filtres"
+    },
+    "noFilterMatches": "Aucun échange ne correspond à vos filtres.",
+    "noActiveFilterMatches": "Aucun échange actif ne correspond à vos filtres."
   },
   "pendingSubmissions": {
     "meta": {

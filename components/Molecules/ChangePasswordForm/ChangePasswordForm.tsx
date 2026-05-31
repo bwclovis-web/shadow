@@ -1,14 +1,16 @@
 "use client"
 
-import { type ChangeEvent, useActionState, useEffect, useState } from "react"
+import { type ChangeEvent, type FocusEvent, useActionState, useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
-import { BsFillEyeFill, BsFillEyeSlashFill } from "react-icons/bs"
 
 import { changePasswordAction } from "@/app/[userSlug]/profile/security/actions"
 import { Button } from "@/components/Atoms/Button"
+import { FormInput } from "@/components/Atoms/Input"
+import ErrorDisplay from "@/components/Containers/ErrorDisplay/ErrorDisplay"
 import { CSRFToken } from "@/components/Molecules/CSRFToken"
 import PasswordStrengthIndicator from "@/components/Organisms/PasswordStrengthIndicator"
 import { authSchemas } from "@/utils/validation"
+import { getTranslatedError } from "@/utils/validation/validationKeys"
 
 interface ChangePasswordFormProps {
   className?: string
@@ -21,6 +23,7 @@ export const ChangePasswordForm = ({
   hideHeading = false,
 }: ChangePasswordFormProps) => {
   const t = useTranslations("password")
+  const tValidation = useTranslations()
   const [state, formAction, isPending] = useActionState(changePasswordAction, null)
 
   const [formData, setFormData] = useState({
@@ -28,17 +31,24 @@ export const ChangePasswordForm = ({
     newPassword: "",
     confirmNewPassword: "",
   })
-  const [showPasswords, setShowPasswords] = useState({
-    current: false,
-    new: false,
-    confirm: false,
-  })
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({})
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
+    setTouchedFields((prev) => ({ ...prev, [name]: true }))
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
+
+  const handleInputBlur = (e: FocusEvent<HTMLInputElement>) => {
+    const { name } = e.target
+    setTouchedFields((prev) => ({ ...prev, [name]: true }))
+  }
+
+  const fieldError = (fieldName: string) =>
+    touchedFields[fieldName]
+      ? getTranslatedError(validationErrors[fieldName], tValidation)
+      : undefined
 
   useEffect(() => {
     const result = authSchemas.changePassword.safeParse(formData)
@@ -62,14 +72,32 @@ export const ChangePasswordForm = ({
         newPassword: "",
         confirmNewPassword: "",
       })
+      setTouchedFields({})
     }
   }, [state?.success])
 
-  const togglePasswordVisibility = (field: "current" | "new" | "confirm") => {
-    setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }))
+  const clearForm = () => {
+    setFormData({
+      currentPassword: "",
+      newPassword: "",
+      confirmNewPassword: "",
+    })
+    setTouchedFields({})
   }
 
   const passwordsMatch = formData.newPassword === formData.confirmNewPassword
+  const confirmTouched = touchedFields.confirmNewPassword
+  const confirmMismatch =
+    confirmTouched && formData.confirmNewPassword && !passwordsMatch
+      ? t("passwordsDoNotMatch")
+      : undefined
+  const confirmError =
+    fieldError("confirmNewPassword") || confirmMismatch
+  const confirmSuccess =
+    confirmTouched && formData.confirmNewPassword && !confirmError && passwordsMatch
+      ? t("passwordsMatch")
+      : undefined
+
   const isFormValid =
     Object.keys(validationErrors).length === 0 &&
     Boolean(formData.currentPassword) &&
@@ -84,79 +112,46 @@ export const ChangePasswordForm = ({
       {!hideHeading && (
         <div>
           <h2>{t("changePassword")}</h2>
-          <p className="text-gray-600">
+          <p className="text-noir-gold-100">
             {t("updatePasswordToKeepAccountSecure")}
           </p>
         </div>
       )}
 
-      <div>
-        <label
-          htmlFor="currentPassword"
-          className="block text-sm font-medium text-gray-700 mb-2"
-        >
-          {t("currentPassword")}
-        </label>
-        <div className="relative">
-          <input
-            type={showPasswords.current ? "text" : "password"}
-            id="currentPassword"
-            name="currentPassword"
-            value={formData.currentPassword}
-            onChange={handleInputChange}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              validationErrors.currentPassword ? "border-red-300" : "border-gray-300"
-            }`}
-            placeholder={t("enterCurrentPassword")}
-            required
-          />
-          <button
-            type="button"
-            onClick={() => togglePasswordVisibility("current")}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-          >
-            {showPasswords.current ? <BsFillEyeSlashFill /> : <BsFillEyeFill />}
-          </button>
-        </div>
-        {validationErrors.currentPassword && (
-          <p className="mt-1 text-sm text-red-600">
-            {validationErrors.currentPassword}
-          </p>
-        )}
-      </div>
+      <FormInput
+        shading
+        inputId="currentPassword"
+        label={t("currentPassword")}
+        inputType="password"
+        name="currentPassword"
+        value={formData.currentPassword}
+        onChange={handleInputChange}
+        onBlur={handleInputBlur}
+        placeholder={t("enterCurrentPassword")}
+        autoComplete="current-password"
+        required
+        passwordToggle
+        showValidationIcon={false}
+        error={fieldError("currentPassword")}
+      />
 
       <div>
-        <label
-          htmlFor="newPassword"
-          className="block text-sm font-medium text-gray-700 mb-2"
-        >
-          {t("newPassword")}
-        </label>
-        <div className="relative">
-          <input
-            type={showPasswords.new ? "text" : "password"}
-            id="newPassword"
-            name="newPassword"
-            value={formData.newPassword}
-            onChange={handleInputChange}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              validationErrors.newPassword ? "border-red-300" : "border-gray-300"
-            }`}
-            placeholder={t("enterNewPassword")}
-            required
-          />
-          <button
-            type="button"
-            onClick={() => togglePasswordVisibility("new")}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-          >
-            {showPasswords.new ? <BsFillEyeSlashFill /> : <BsFillEyeFill />}
-          </button>
-        </div>
-
-        {validationErrors.newPassword && (
-          <p className="mt-1 text-sm text-red-600">{validationErrors.newPassword}</p>
-        )}
+        <FormInput
+          shading
+          inputId="newPassword"
+          label={t("newPassword")}
+          inputType="password"
+          name="newPassword"
+          value={formData.newPassword}
+          onChange={handleInputChange}
+          onBlur={handleInputBlur}
+          placeholder={t("enterNewPassword")}
+          autoComplete="new-password"
+          required
+          passwordToggle
+          showValidationIcon={false}
+          error={fieldError("newPassword")}
+        />
 
         {formData.newPassword && (
           <div className="mt-2">
@@ -165,98 +160,41 @@ export const ChangePasswordForm = ({
         )}
       </div>
 
-      <div>
-        <label
-          htmlFor="confirmNewPassword"
-          className="block text-sm font-medium text-gray-700 mb-2"
-        >
-          {t("confirmNewPassword")}
-        </label>
-        <div className="relative">
-          <input
-            type={showPasswords.confirm ? "text" : "password"}
-            id="confirmNewPassword"
-            name="confirmNewPassword"
-            value={formData.confirmNewPassword}
-            onChange={handleInputChange}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              validationErrors.confirmNewPassword ||
-              (formData.confirmNewPassword && !passwordsMatch)
-                ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                : "border-gray-300"
-            }`}
-            placeholder={t("confirmNewPasswordPlaceholder")}
-            required
-          />
-          <button
-            type="button"
-            onClick={() => togglePasswordVisibility("confirm")}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-          >
-            {showPasswords.confirm ? <BsFillEyeSlashFill /> : <BsFillEyeFill />}
-          </button>
-        </div>
-
-        {validationErrors.confirmNewPassword && (
-          <p className="mt-1 text-sm text-red-600">
-            {validationErrors.confirmNewPassword}
-          </p>
-        )}
-
-        {formData.confirmNewPassword && !validationErrors.confirmNewPassword && (
-          <div className="mt-1 text-sm">
-            {passwordsMatch ? (
-              <span className="text-green-600 flex items-center space-x-1">
-                <span>✅</span>
-                <span>{t("passwordsMatch")}</span>
-              </span>
-            ) : (
-              <span className="text-red-600 flex items-center space-x-1">
-                <span>❌</span>
-                <span>{t("passwordsDoNotMatch")}</span>
-              </span>
-            )}
-          </div>
-        )}
-      </div>
+      <FormInput
+        shading
+        inputId="confirmNewPassword"
+        label={t("confirmNewPassword")}
+        inputType="password"
+        name="confirmNewPassword"
+        value={formData.confirmNewPassword}
+        onChange={handleInputChange}
+        onBlur={handleInputBlur}
+        placeholder={t("confirmNewPasswordPlaceholder")}
+        autoComplete="new-password"
+        required
+        passwordToggle
+        showValidationIcon={false}
+        error={confirmError}
+        success={confirmSuccess}
+      />
 
       {state?.success === false && state.error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <div className="flex">
-            <div className="shrink-0">
-              <span className="text-red-400">⚠️</span>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">{t("error")}</h3>
-              <div className="mt-2 text-sm text-red-700">
-                <p>{state.error}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ErrorDisplay
+          error={state.error}
+          variant="inline"
+          title={t("error")}
+        />
       )}
 
       {state?.success && (
-        <div className="bg-green-50 border border-green-200 rounded-md p-4">
-          <div className="flex">
-            <div className="shrink-0">
-              <span className="text-green-400">✅</span>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-green-800">{t("success")}</h3>
-              <div className="mt-2 text-sm text-green-700">
-                <p>{state.message}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <p className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-md px-3 py-2">
+          {state.message}
+        </p>
       )}
 
-      <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-        <h4 className="text-sm font-medium text-blue-800 mb-2">
-          {t("passwordRequirements")}:
-        </h4>
-        <ul className="text-sm text-blue-700 space-y-1">
+      <div className="bg-noir-dark border border-noir-gold rounded-md p-3 text-xs text-noir-gold">
+        <p className="font-medium mb-1">{t("passwordRequirements")}:</p>
+        <ul className="space-y-1">
           <li>• {t("requirements.8characters")}</li>
           <li>• {t("requirements.uppercase")}</li>
           <li>• {t("requirements.number")}</li>
@@ -266,25 +204,16 @@ export const ChangePasswordForm = ({
         </ul>
       </div>
 
-      <div className="flex justify-end space-x-3">
-        <button
-          type="button"
-          onClick={() => {
-            setFormData({
-              currentPassword: "",
-              newPassword: "",
-              confirmNewPassword: "",
-            })
-            setShowPasswords({ current: false, new: false, confirm: false })
-          }}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
+      <div className="flex justify-end gap-3">
+        <Button type="button" variant="secondary" onClick={clearForm}>
           {t("clear")}
-        </button>
+        </Button>
         <Button
           type="submit"
+          variant="icon"
+          background="gold"
+          size="lg"
           disabled={!isFormValid || isPending}
-          className="px-6 py-2"
         >
           {isPending ? t("changingPassword") : t("changePassword")}
         </Button>

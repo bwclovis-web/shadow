@@ -87,7 +87,7 @@ const SecurityPageClient = ({
         subheading={t("subheading")}
       />
       <PageWrapper>
-        <div className="shadow-lg rounded-lg p-6">
+        <div className=" mb-4">
           <h2>{tPassword("changePassword")}</h2>
           <p className="text-sm text-noir-gold-100 mb-4">
             {tPassword("updatePasswordToKeepAccountSecure")}
@@ -95,19 +95,19 @@ const SecurityPageClient = ({
           <ChangePasswordForm hideHeading />
         </div>
 
-        <h2 className="text-lg font-semibold text-noir-gold-100 pt-2">
+        <h2 className="pt-2">
           {t("twoFactorSectionTitle")}
         </h2>
 
         {isAdmin && !twoFactorEnabled && (
-          <p className="text-sm text-noir-gold-100/90 border border-noir-gold-500/40 rounded p-3">
+          <p className="text-sm text-noir-gold-100/90">
             {t("adminRecommendation")}
           </p>
         )}
 
         {!twoFactorEnabled && !backupCodes && (
-          <div className="bg-white shadow-lg rounded-lg p-6 space-y-4">
-            <p className="text-sm text-gray-700">{t("disabledDescription")}</p>
+          <div className="py-6 space-y-4">
+            <p className="text-sm text-noir-gold-500">{t("disabledDescription")}</p>
             {startState?.success === false && (
               <ErrorDisplay
                 error={startState.error}
@@ -124,14 +124,14 @@ const SecurityPageClient = ({
               </form>
             ) : (
               <div className="space-y-4">
-                <p className="text-sm text-gray-700">{t("scanQr")}</p>
+                <p className="text-sm text-noir-gold-100">{t("scanQr")}</p>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={startState.qrDataUrl}
                   alt={t("qrAlt")}
                   className="mx-auto w-48 h-48"
                 />
-                <p className="text-xs text-gray-600 break-all">
+                <p className="text-xs text-noir-gold-100 break-all">
                   {t("manualKey")}: {startState.manualKey}
                 </p>
                 <form action={confirmFormAction} className="space-y-3">

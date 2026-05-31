@@ -284,7 +284,15 @@
     "backToProfile": "Back to Collector Ledger",
     "empty": "You have no exchanges yet.",
     "activeSummary": "Active exchanges ({count})",
-    "historySummary": "Exchange history ({count})"
+    "historySummary": "Exchange history ({count})",
+    "filters": {
+      "collectorPlaceholder": "Search by Collector name…",
+      "dateFrom": "From",
+      "dateTo": "To",
+      "clearAll": "Clear filters"
+    },
+    "noFilterMatches": "No exchanges match your filters.",
+    "noActiveFilterMatches": "No active exchanges match your filters."
   },
   "pendingSubmissions": {
     "meta": {

@@ -15,13 +15,16 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function SignInPage() {
   return (
-    <>
+    <section
+      aria-labelledby="sign-in-heading"
+      className="flex flex-col lg:flex-row lg:items-start lg:justify-center h-full gap-4"
+    >
       <SignInIntro />
-      <div className="w-full lg:w-1/2 form">
+      <div className="w-full min-w-0">
         <Suspense fallback={null}>
           <SignInClient />
         </Suspense>
       </div>
-    </>
+    </section>
   )
 }

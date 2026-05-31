@@ -1573,6 +1573,73 @@ Organically |
     expect(invokeMock).not.toHaveBeenCalled()
   })
 
+  it("Andromedas Moon Maui Kayali: strips encoded &lt;head&gt; HTML bleed from base notes", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM must not run when merchant pyramid is present")
+    })
+    const mauiDesc =
+      "Inspired by Maui in a Bottle Sweet Banana EDP Kayali Floral Fruity Fragrance Top notes are Banana and Pear; middle notes are Coconut and Jasmine; base notes are Vanilla and Sandalwood &lt;head&gt;&lt;meta charset=\"UTF-8\" /&gt;&lt;/head&gt; Please note: These fragrances are all poured by hand and slight differences can be seen bottle to bottle."
+    const items: ScrapedItem[] = [
+      {
+        name: "Maui In A Bottle Sweet Banana Kayali",
+        description: mauiDesc,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromeda-s-inspired-by-maui-in-a-bottle-eau-de-parfum-kayali",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+      noteInferenceMode: "strict",
+    })
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    expect(open).toEqual(expect.arrayContaining(["banana", "pear"]))
+    expect(heart).toEqual(expect.arrayContaining(["coconut", "jasmine"]))
+    expect(base).toEqual(expect.arrayContaining(["vanilla", "sandalwood"]))
+    expect(base).not.toEqual(expect.arrayContaining(["/head", "head", "charset"]))
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas Moon MallowBerry Brulee: strips Description section header from Soft Musk note", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM must not run when merchant pyramid is present")
+    })
+    const mallowDesc =
+      "MallowBerry Brulee A dreamy dessert fantasy where silky vanilla custard meets caramelized sugar and glossy strawberry glaze. Fragrance Notes Top: Strawberry Glaze, Caramelized Sugar Middle: Creme Brulee Custard, Marshmallow, Madagascar Vanilla Bean Base: White Vanilla, Tonka Bean, Soft Musk Description This fragrance leans sweet, creamy, and dessert-forward with a smooth, airy vanilla finish. Processing: AT LEAST 7 business days"
+    const items: ScrapedItem[] = [
+      {
+        name: "Mallowberry Brulee",
+        description: mallowDesc,
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/andromeda-s-mallowberry-brulee-eau-de-parfum-original-fragrance",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+      noteInferenceMode: "strict",
+    })
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+    expect(open).toEqual(expect.arrayContaining(["strawberry glaze", "caramelized sugar"]))
+    expect(heart).toEqual(
+      expect.arrayContaining(["creme brulee custard", "marshmallow", "madagascar vanilla bean"]),
+    )
+    expect(base).toEqual(expect.arrayContaining(["white vanilla", "tonka bean", "soft musk"]))
+    expect(all.some(n => /\bdescription\b/i.test(n))).toBe(false)
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
   it("Andromedas Moon Vanille Diabolique: wipes sampler-set scrape bleed and resolves notes from PDP URL", async () => {
     vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
     const samplerBleed =

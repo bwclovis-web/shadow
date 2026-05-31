@@ -1,5 +1,5 @@
-import { Link } from "next-view-transitions"
 import { getTranslations } from "next-intl/server"
+import { VooDooLink } from "@/components/Atoms/Button/VooDooLink"
 
 const SIGN_UP_PATH = "/sign-up"
 
@@ -7,16 +7,25 @@ const SignInIntro = async () => {
   const t = await getTranslations("auth")
 
   return (
-    <div className="mx-auto min-w-1/3 relative noir-border py-5 px-3 bg-noir-dark/10 shadow-md text-noir-gold content text-center">
-      <h1 className="text-shadow-lg text-shadow-black">{t("heading")}</h1>
-      <p className="subtitle mb-4">{t("subheading")}</p>
-      <p className="subtitle mb-4">{t("newHere")}</p>
-      <Link
-        href={SIGN_UP_PATH}
-        className="bg-transparent text-blue-200 font-semibold hover:underline focus:bg-noir-gold/20 disabled:bg-transparent text-nowrap px-0 block"
+    <div className="relative w-full noir-border bg-noir-black/20 px-4 py-6 text-center text-noir-gold shadow-md backdrop-blur-xs md:px-6">
+      <h1
+        id="sign-in-heading"
+        className="text-shadow-lg text-shadow-black leading-tight"
+      >
+        {t("heading")}
+      </h1>
+      <p className="text-lg text-noir-gold-100 mb-4">{t("subheading")}</p>
+      <p className="text-lg font-semibold text-noir-gold-500 mb-4">{t("newHere")}</p>
+      <VooDooLink
+        url={SIGN_UP_PATH}
+        variant="primary"
+        background="gold"
+        size="sm"
+        prefetch
+        transitionVariant="detail-to-list"
       >
         {t("createAccount")}
-      </Link>
+      </VooDooLink>
     </div>
   )
 }

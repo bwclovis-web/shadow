@@ -72,6 +72,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
           action={action}
           actionData={actionData}
           disabled={disabled}
+          required={required}
           {...inputProps}
         />
       </FormField>

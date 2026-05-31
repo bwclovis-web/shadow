@@ -95,7 +95,15 @@
     "backToProfile": "Torna al profilo",
     "empty": "Non hai ancora scambi.",
     "activeSummary": "Scambi attivi ({count})",
-    "historySummary": "Cronologia scambi ({count})"
+    "historySummary": "Cronologia scambi ({count})",
+    "filters": {
+      "collectorPlaceholder": "Cerca per nome del collezionista…",
+      "dateFrom": "Da",
+      "dateTo": "A",
+      "clearAll": "Cancella filtri"
+    },
+    "noFilterMatches": "Nessuno scambio corrisponde ai tuoi filtri.",
+    "noActiveFilterMatches": "Nessuno scambio attivo corrisponde ai tuoi filtri."
   },
   "pendingSubmissions": {
     "meta": {

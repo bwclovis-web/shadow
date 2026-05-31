@@ -599,11 +599,17 @@ export const getActiveTradesForThread = async (
   return trades.map(serializeTrade)
 }
 
+type GetTradesForUserProfileOptions = {
+  limit?: number | null
+}
+
 export const getTradesForUserProfile = async (
   profileUserId: string,
   viewerId: string | null,
-  mode: "active" | "history"
+  mode: "active" | "history",
+  options: GetTradesForUserProfileOptions = {}
 ): Promise<TradeForClient[]> => {
+  const { limit = 50 } = options
   if (mode === "active" && !viewerId) return []
 
   if (mode === "history" && !viewerId) return []
@@ -639,7 +645,7 @@ export const getTradesForUserProfile = async (
     },
     include: tradeInclude,
     orderBy: { updatedAt: "desc" },
-    take: 50,
+    ...(limit != null ? { take: limit } : {}),
   })
 
   return trades.map(serializeTrade)

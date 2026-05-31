@@ -6,7 +6,7 @@ import { renderWithProviders } from "@/test/utils/test-utils"
 import { ChangePasswordForm } from "./ChangePasswordForm"
 
 // Mock PasswordStrengthIndicator
-vi.mock("~/components/Organisms/PasswordStrengthIndicator", () => ({
+vi.mock("@/components/Organisms/PasswordStrengthIndicator", () => ({
   default: ({ password }: { password: string }) => (
     <div data-testid="password-strength-indicator">
       Strength: {password.length > 8 ? "Strong" : "Weak"}
@@ -28,7 +28,7 @@ describe("ChangePasswordForm", () => {
       renderWithProviders(<ChangePasswordForm />)
 
       expect(screen.getByRole("heading", { name: "Change Password" })).toBeInTheDocument()
-      expect(screen.getByText(/update your password to keep your account secure/i)).toBeInTheDocument()
+      expect(screen.getByText(/update your password to help protect your account/i)).toBeInTheDocument()
     })
 
     it("renders password requirements", () => {
@@ -100,6 +100,15 @@ describe("ChangePasswordForm", () => {
   })
 
   describe("Password Visibility Toggle", () => {
+    const getPasswordToggle = (label: RegExp | string) => {
+      const input = screen.getByLabelText(label)
+      const field = input.closest(".space-y-1")
+      if (!field) {
+        throw new Error("Password field container not found")
+      }
+      return field.querySelector('button[aria-label="Show password"], button[aria-label="Hide password"]') as HTMLButtonElement
+    }
+
     it("toggles current password visibility", async () => {
       const user = userEvent.setup()
       renderWithProviders(<ChangePasswordForm />)
@@ -107,12 +116,11 @@ describe("ChangePasswordForm", () => {
       const currentPasswordInput = screen.getByLabelText(/current password/i) as HTMLInputElement
       expect(currentPasswordInput.type).toBe("password")
 
-      const toggleButtons = screen.getAllByRole("button", { name: "" })
-      await user.click(toggleButtons[0])
-
+      const toggle = getPasswordToggle(/current password/i)
+      await user.click(toggle)
       expect(currentPasswordInput.type).toBe("text")
 
-      await user.click(toggleButtons[0])
+      await user.click(getPasswordToggle(/current password/i))
       expect(currentPasswordInput.type).toBe("password")
     })
 
@@ -123,9 +131,7 @@ describe("ChangePasswordForm", () => {
       const newPasswordInput = screen.getByLabelText("New Password") as HTMLInputElement
       expect(newPasswordInput.type).toBe("password")
 
-      const toggleButtons = screen.getAllByRole("button", { name: "" })
-      await user.click(toggleButtons[1])
-
+      await user.click(getPasswordToggle("New Password"))
       expect(newPasswordInput.type).toBe("text")
     })
 
@@ -136,9 +142,7 @@ describe("ChangePasswordForm", () => {
       const confirmPasswordInput = screen.getByLabelText(/confirm new password/i) as HTMLInputElement
       expect(confirmPasswordInput.type).toBe("password")
 
-      const toggleButtons = screen.getAllByRole("button", { name: "" })
-      await user.click(toggleButtons[2])
-
+      await user.click(getPasswordToggle(/confirm new password/i))
       expect(confirmPasswordInput.type).toBe("text")
     })
 
@@ -232,7 +236,7 @@ describe("ChangePasswordForm", () => {
       await user.type(newPasswordInput, "Password123!")
       await user.type(confirmPasswordInput, "Password123!")
 
-      expect(confirmPasswordInput).toHaveClass("border-gray-300")
+      expect(confirmPasswordInput).toHaveClass("border-green-300")
     })
   })
 
@@ -297,24 +301,6 @@ describe("ChangePasswordForm", () => {
       })
       expect(submitButton).not.toBeDisabled()
     })
-
-    it("disables submit button when isSubmitting is true", async () => {
-      const user = userEvent.setup()
-      renderWithProviders(<ChangePasswordForm isSubmitting={true} />)
-
-      const currentPasswordInput = screen.getByLabelText(/current password/i)
-      const newPasswordInput = screen.getByLabelText("New Password")
-      const confirmPasswordInput = screen.getByLabelText(/confirm new password/i)
-
-      await user.type(currentPasswordInput, "OldPassword123!")
-      await user.type(newPasswordInput, "NewPassword123!")
-      await user.type(confirmPasswordInput, "NewPassword123!")
-
-      const submitButton = screen.getByRole("button", {
-        name: /changing password.../i,
-      })
-      expect(submitButton).toBeDisabled()
-    })
   })
 
   describe("Clear Button", () => {
@@ -377,60 +363,16 @@ describe("ChangePasswordForm", () => {
   })
 
   describe("Error Display", () => {
-    it("displays error message when actionData contains error", () => {
-      const actionData = {
-        error: "Current password is incorrect",
-      }
-
-      renderWithProviders(<ChangePasswordForm actionData={actionData} />)
-
-      expect(screen.getByText("Error")).toBeInTheDocument()
-      expect(screen.getByText("Current password is incorrect")).toBeInTheDocument()
-    })
-
-    it("applies error styling to error message", () => {
-      const actionData = {
-        error: "Current password is incorrect",
-      }
-
-      const { container } = renderWithProviders(<ChangePasswordForm actionData={actionData} />)
-      const errorContainer = container.querySelector(".bg-red-50")
-      expect(errorContainer).toBeInTheDocument()
-    })
-
-    it("does not display error when actionData has no error", () => {
+    it("does not display error when form has no server error", () => {
       renderWithProviders(<ChangePasswordForm />)
-      expect(screen.queryByText("Error")).not.toBeInTheDocument()
+      expect(screen.queryByText("Current password is incorrect")).not.toBeInTheDocument()
     })
   })
 
   describe("Success Display", () => {
-    it("displays success message when actionData contains success", () => {
-      const actionData = {
-        success: true,
-        message: "Password changed successfully",
-      }
-
-      renderWithProviders(<ChangePasswordForm actionData={actionData} />)
-
-      expect(screen.getByText("Success")).toBeInTheDocument()
-      expect(screen.getByText("Password changed successfully")).toBeInTheDocument()
-    })
-
-    it("applies success styling to success message", () => {
-      const actionData = {
-        success: true,
-        message: "Password changed successfully",
-      }
-
-      const { container } = renderWithProviders(<ChangePasswordForm actionData={actionData} />)
-      const successContainer = container.querySelector(".bg-green-50")
-      expect(successContainer).toBeInTheDocument()
-    })
-
-    it("does not display success when actionData has no success", () => {
+    it("does not display success when form has not been submitted", () => {
       renderWithProviders(<ChangePasswordForm />)
-      expect(screen.queryByText("Success")).not.toBeInTheDocument()
+      expect(screen.queryByText("Password changed successfully")).not.toBeInTheDocument()
     })
   })
 
@@ -439,28 +381,9 @@ describe("ChangePasswordForm", () => {
       renderWithProviders(<ChangePasswordForm />)
       expect(screen.getByRole("button", { name: /change password/i })).toBeInTheDocument()
     })
-
-    it("shows loading text when submitting", () => {
-      renderWithProviders(<ChangePasswordForm isSubmitting={true} />)
-      expect(screen.getByRole("button", { name: /changing password.../i })).toBeInTheDocument()
-    })
-
-    it("disables submit button during submission", () => {
-      renderWithProviders(<ChangePasswordForm isSubmitting={true} />)
-      const submitButton = screen.getByRole("button", {
-        name: /changing password.../i,
-      })
-      expect(submitButton).toBeDisabled()
-    })
   })
 
   describe("Form Submission", () => {
-    it("has correct form method", () => {
-      const { container } = renderWithProviders(<ChangePasswordForm />)
-      const form = container.querySelector("form")
-      expect(form).toHaveAttribute("method", "post")
-    })
-
     it("submits form with all field values", async () => {
       const user = userEvent.setup()
       renderWithProviders(<ChangePasswordForm />)
@@ -543,9 +466,8 @@ describe("ChangePasswordForm", () => {
       expect(screen.getByText(/passwords match/i)).toBeInTheDocument()
 
       await user.clear(confirmPasswordInput)
-      await user.type(confirmPasswordInput, "Different!")
+      fireEvent.change(confirmPasswordInput, { target: { value: "DifferentPassword123!" } })
 
-      // Error message indicates passwords do not match
       expect(screen.getByText(/passwords do not match/i)).toBeInTheDocument()
     })
   })
@@ -557,20 +479,20 @@ describe("ChangePasswordForm", () => {
       expect(form).toHaveClass("space-y-6")
     })
 
-    it("applies focus styles to inputs", () => {
+    it("applies design-system input styles", () => {
       renderWithProviders(<ChangePasswordForm />)
 
       const currentPasswordInput = screen.getByLabelText(/current password/i)
-      expect(currentPasswordInput).toHaveClass("focus:ring-2")
-      expect(currentPasswordInput).toHaveClass("focus:ring-blue-500")
+      expect(currentPasswordInput).toHaveClass("bg-noir-gold")
+      expect(currentPasswordInput).toHaveClass("focus:ring")
     })
 
-    it("applies correct button styling", () => {
+    it("applies design-system button styling", () => {
       renderWithProviders(<ChangePasswordForm />)
 
       const clearButton = screen.getByRole("button", { name: /clear/i })
-      expect(clearButton).toHaveClass("border-gray-300")
-      expect(clearButton).toHaveClass("hover:bg-gray-50")
+      expect(clearButton).toHaveClass("bg-noir-dark")
+      expect(clearButton).toHaveClass("border-noir-gold")
     })
   })
 
@@ -613,13 +535,8 @@ describe("ChangePasswordForm", () => {
       expect(screen.getByTestId("password-strength-indicator")).toBeInTheDocument()
     })
 
-    it("handles missing actionData prop", () => {
+    it("handles missing server state gracefully", () => {
       expect(() => renderWithProviders(<ChangePasswordForm />)).not.toThrow()
-    })
-
-    it("handles undefined isSubmitting prop", () => {
-      renderWithProviders(<ChangePasswordForm isSubmitting={undefined} />)
-      expect(screen.getByRole("button", { name: /change password/i })).toBeInTheDocument()
     })
   })
 

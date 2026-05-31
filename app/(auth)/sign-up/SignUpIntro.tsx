@@ -7,8 +7,13 @@ const SignUpIntro = async () => {
   const t = await getTranslations("auth.signUp")
 
   return (
-    <div className="mx-auto min-w-1/3 relative noir-border py-5 px-3 bg-noir-dark/10 shadow-md text-noir-gold content text-center">
-      <h1 className="text-shadow-lg text-shadow-black">{t("heading")}</h1>
+    <div className="relative w-full noir-border bg-noir-dark/70 px-4 py-6 text-center text-noir-gold shadow-md backdrop-blur-sm md:px-6">
+      <h1
+        id="sign-up-heading"
+        className="text-shadow-lg text-shadow-black"
+      >
+        {t("heading")}
+      </h1>
       <p className="subtitle mb-4">{t("subheading")}</p>
       <p className="subtitle mb-4">{t("alreadyHere")}</p>
       <Link

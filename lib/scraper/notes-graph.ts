@@ -375,6 +375,47 @@ const buildAndromedaCandidateProductUrls = (name: string): string[] => {
   return [...new Set(urls)].slice(0, 16)
 }
 
+/** Shopify storefront search when slug guessing fails (e.g. `-gucci` suffix not in product name). */
+const searchAndromedaProductUrl = async (
+  name: string,
+  sig: AbortSignal | undefined,
+): Promise<string | null> => {
+  const tokens = significantNameTokensForUrlMatch(name)
+  if (tokens.length === 0) return null
+  const query = tokens.slice(0, 3).join(" ")
+  const searchUrl = `https://www.andromedasmoon.com/search?q=${encodeURIComponent(query)}&type=product`
+  try {
+    const res = await fetch(searchUrl, {
+      signal: sig,
+      redirect: "follow",
+      headers: {
+        "user-agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
+      },
+    })
+    if (!res.ok) return null
+    const html = await res.text()
+    const paths = [
+      ...html.matchAll(/\/products\/([a-z0-9-]{8,120})/gi),
+    ].map(m => `/products/${m[1]}`)
+    const unique = [...new Set(paths)].filter(p => !NON_PERFUME_ANDROMEDA_PRODUCT_URL_RE.test(p))
+    let best: { path: string; score: number } | null = null
+    for (const path of unique) {
+      const slug = path.replace(/^\/products\//, "").replace(/-/g, " ")
+      const score = tokens.filter(t => slug.includes(t)).length
+      if (score === 0) continue
+      if (!best || score > best.score || (score === best.score && path.length < best.path.length)) {
+        best = { path, score }
+      }
+    }
+    if (!best) return null
+    return `https://www.andromedasmoon.com${best.path}`
+  } catch {
+    return null
+  }
+}
+
 /** Pattern-by-Etsy PDPs almost always have Note Structure; fetch when the scrape missed it. */
 const shouldAutoFetchPatternEtsyNotes = (detailURL: string, mergedBase: string): boolean =>
   isPatternByEtsyProductUrl(detailURL) && !hasExplicitNoteListSignal(mergedBase)
@@ -489,15 +530,25 @@ const shouldPreferRescuedOverCurrent = (
 /** One fetch per URL per process — scrapes hit the same PDPs many times in a single run. */
 const pdpNoteBootstrapCache = new Map<string, string | null>()
 
+/** Remove HTML tag markup (encoded or literal) pasted into merchant copy — e.g. Andromeda &lt;head&gt; blobs. */
+const stripEmbeddedHtmlMarkup = (text: string): string =>
+  text
+    .replace(/\\u003c/gi, "<")
+    .replace(/\\u003e/gi, ">")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/<\/?(?:head|body|html|script|style|meta|link|title)\b[^>]*>/gi, " ")
+    .replace(/\s+\/?(?:head|body|html|script|style|meta|charset|utf-8)\b/gi, " ")
+
 const stripHtmlToPlainText = (html: string): string =>
-  html
+  stripEmbeddedHtmlMarkup(html)
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
     .replace(/<style[\s\S]*?<\/style>/gi, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
     .replace(/\s+/g, " ")
     .trim()
 
@@ -972,7 +1023,7 @@ const extractAndromedaBulletPyramidFromPlain = (plain: string): string[] => {
   const collapsed = (plain ?? "").replace(/\s+/g, " ").trim()
 
   const block = collapsed.match(
-    /\b(?:notes?\s+pyramid|notes?)\b\s+top\b\s+(.+?)\s+heart\b\s+(.+?)\s+base\b\s+(.+?)(?=\s+(?:scent\s+story|opening\b|wear\s+guide|vibe\s*&\s*wear|vibe\b|good\s+to\s+know|layering\s+ideas|drydown\b|fragrance\s+description|important\s+information|original\s+manufacturers)|$)/i,
+    /\b(?:notes?\s+pyramid|notes?)\b\s+top\b\s+(.+?)\s+heart\b\s+(.+?)\s+base\b\s+(.+?)(?=\s+(?:scent\s+story|opening\b|wear\s+guide|vibe\s*&\s*wear|vibe\b|good\s+to\s+know|layering\s+ideas|drydown\b|fragrance\s+description|description\b|important\s+information|original\s+manufacturers)|$)/i,
   )
   if (!block?.[1] || !block[2] || !block[3]) return []
 
@@ -1537,9 +1588,7 @@ const expandParentheticalLayers = (notes: {
 
 function splitNoteList(text: string): string[] {
   if (!text?.trim()) return []
-  const normalized = text
-    .replace(/\\u003c/gi, "<")
-    .replace(/\\u003e/gi, ">")
+  const normalized = stripEmbeddedHtmlMarkup(text)
     .replace(/\\\//g, "/")
     .replace(/\\u0026amp;/gi, "&")
     .replace(/\\u0026/gi, "&")
@@ -1580,6 +1629,7 @@ function splitNoteList(text: string): string[] {
       .replace(/\s+surrounds\s+you\s+in\b.*$/i, "")
       .replace(/\s+flirtatious\b.*$/i, "")
       .replace(/\s+glamorous\b.*$/i, "")
+      .replace(/\s+description\b.*$/i, "")
       .trim()
 
   return uniqueNotes(
@@ -1596,7 +1646,7 @@ function splitNoteList(text: string): string[] {
 
 
 function stripTrailingNonNoteSections(text: string): string {
-  return text
+  return stripEmbeddedHtmlMarkup(text)
     .replace(
       /\s+(?:additional information|ingredients|how to use|directions(?:\s+for\s+use)?|customer reviews?|reviews?|specifications|size [Gg]uide|care [Ii]nstructions|warnings?|disclaimer|how it wears|how (?:it\s+)?smells|wear(?:ability|ing)\s+notes?|wear\s+guide\b|good\s+to\s+know\b|whether\s+you(?:'|'|&#39;)re\b|original\s+manufacturers\b|important information|important\s+(?:shop|order)\s+info|available\s+sizes?|size\s+options?|available\s+in|shipping|processing|packing|please\s+note|please\s+read|about\s+this\s+fragrance|about\s+(?:our|the)\s+brand|(?:scent\s+)?profile\s+(?:guide|overview)|pairing\s+suggestions?|frequently\s+asked)\b[\s\S]*$/i,
       "",
@@ -1756,7 +1806,13 @@ const resolveAndromedaDetailUrl = async (
   }
   if (!name?.trim()) return detailURL
 
-  for (const candidate of buildAndromedaCandidateProductUrls(name)) {
+  const candidates = buildAndromedaCandidateProductUrls(name)
+  const searched = await searchAndromedaProductUrl(name, sig)
+  if (searched && !candidates.includes(searched)) {
+    candidates.unshift(searched)
+  }
+
+  for (const candidate of candidates) {
     if (candidate === detailURL) continue
     pdpNoteBootstrapCache.delete(candidate)
     if (await probeAndromedaProductUrlForNotes(candidate, sig)) {
@@ -1884,7 +1940,7 @@ const normalizeImplicitLayerColons = (text: string): string => {
 /** Stop last layer chunk before Pattern/Etsy listing meta (avoids ':' in tokens → junk filter drops all base notes). */
 const truncateAtShopMetaLabels = (s: string): string => {
   const m = s.match(
-    /\s+(?:series|perfume\s+family|unisex|contains\s+true\s+animalics|scent\s+strength|extra info|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|original\s+manufacturers|vibe\s*&\s*wear|vibe\b|wear\s*&\s*performance|wear\s+guide\b|good\s+to\s+know\b|season\s*:|projection\s*:|longevity\s*:|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b)\b/i,
+    /\s+(?:series|perfume\s+family|unisex|contains\s+true\s+animalics|scent\s+strength|extra info|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|original\s+manufacturers|vibe\s*&\s*wear|vibe\b|wear\s*&\s*performance|wear\s+guide\b|good\s+to\s+know\b|season\s*:|projection\s*:|longevity\s*:|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b|description)\b/i,
   )
   if (m?.index != null) return s.slice(0, m.index).trim()
   return s.trim()
@@ -1920,7 +1976,7 @@ const truncateChunkAtProseStart = (chunk: string): string => {
 
   // Marketing paragraph starters that signal the end of the note list and begin prose
   const PROSE_STARTS =
-    /(?:\b(?:perfect|ideal|great|wonderful|excellent)\s+(?:for|choice|option)\b|\ba\s+(?:great|perfect|beautiful|wonderful|stunning|luxurious|gorgeous|rich|dark|warm|sensual|cozy)\s+choice\b|\b(?:this\s+(?:fragrance|scent|perfume|inspired|is)|the\s+(?:opening|drydown|dry\s+down|base\s+(?:lingers|settles|brings))|inspired\s+by|perfect\s+for\s+anyone|opens?\s+with\s+(?:a|the)|think\s+(?:crisp|fresh|warm|cool|dark|soft)|vibe\b|scent\s+story\b|how\s+it\s+wears|wear\s*&\s*performance\b|wear\s+guide\b|good\s+to\s+know\b|whether\s+you(?:'|'|&#39;)re\b|surrounds\s+you\s+in\b|sweet,\s*glamorous\b|glamorous\s*&\s*addictive\b|season\s*:|projection\s*:|longevity\s*:|available\s+sizes?|important\s+(?:information|shop|order)|all\s+perfumes?\s+are\s+hand|this\s+is\s+(?:a|an|the)\s+kind|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b|original\s+manufacturers\b|wrap\s+(?:yourself|your\s+senses)|float\s+into|if\s+you\s+love)\b|description\s*:|like\s+(?:a|an)\b|each\s+(?:spray|spritz)\b)/i
+    /(?:\b(?:perfect|ideal|great|wonderful|excellent)\s+(?:for|choice|option)\b|\ba\s+(?:great|perfect|beautiful|wonderful|stunning|luxurious|gorgeous|rich|dark|warm|sensual|cozy)\s+choice\b|\b(?:this\s+(?:fragrance|scent|perfume|inspired|is)|the\s+(?:opening|drydown|dry\s+down|base\s+(?:lingers|settles|brings))|inspired\s+by|perfect\s+for\s+anyone|opens?\s+with\s+(?:a|the)|think\s+(?:crisp|fresh|warm|cool|dark|soft)|vibe\b|scent\s+story\b|how\s+it\s+wears|wear\s*&\s*performance\b|wear\s+guide\b|good\s+to\s+know\b|whether\s+you(?:'|'|&#39;)re\b|surrounds\s+you\s+in\b|sweet,\s*glamorous\b|glamorous\s*&\s*addictive\b|season\s*:|projection\s*:|longevity\s*:|available\s+sizes?|important\s+(?:information|shop|order)|all\s+perfumes?\s+are\s+hand|this\s+is\s+(?:a|an|the)\s+kind|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b|original\s+manufacturers\b|wrap\s+(?:yourself|your\s+senses)|float\s+into|if\s+you\s+love)\b|description\s*:|(?:\s|^)description\b|like\s+(?:a|an)\b|each\s+(?:spray|spritz)\b)/i
 
   const sentenceBoundary = /[.!]\s+[A-Z]/
 
@@ -2457,6 +2513,8 @@ const FLAT_NOTE_PROSE_BOUNDARY_RES: RegExp[] = [
   /\s+(?:Description\s*:|Like\s+(?:a|an)\b|Each\s+(?:spray|spritz)\b)/i,
   /\s+(?:Wrap\s+(?:yourself|your\s+senses)|Float\s+into|If\s+you\s+love|This\s+perfume\s+is)\b/i,
   /\s+(?:I was told|Making a dupe|Please text if you)\b/i,
+  // Encoded HTML pasted after note pyramids (Andromeda Shopify template bleed)
+  /\s+(?:&lt;|<)\/?(?:head|meta|body|html|script|style)\b/i,
   // Note set followed immediately by marketing paragraph openers (whitespace-collapsed)
   /\s+(?:Think\s+(?:crisp|fresh|warm|cool|dark|soft|juicy|lush)|Opens?\s+(?:with|on)|A\s+(?:crisp|juicy|dark|warm|rich|soft|bright|clean|bold|lush|fresh|dreamy|radiant|sleek|daring)\b|\bSparkling\b|\bThis\s+inspired\b)/i,
 ]
