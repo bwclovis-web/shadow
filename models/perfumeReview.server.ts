@@ -17,6 +17,14 @@ export interface ReviewFilters {
   perfumeId?: string
 }
 
+/** Public review author fields — never include email. */
+export const publicReviewUserSelect = {
+  id: true,
+  username: true,
+  firstName: true,
+  lastName: true,
+} as const
+
 export interface PaginationOptions {
   page?: number
   limit?: number
@@ -37,13 +45,7 @@ export async function createPerfumeReview(data: CreateReviewData) {
     },
     include: {
       user: {
-        select: {
-          id: true,
-          username: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
+        select: publicReviewUserSelect,
       },
       perfume: {
         select: {
@@ -88,13 +90,7 @@ export async function updatePerfumeReview(
     },
     include: {
       user: {
-        select: {
-          id: true,
-          username: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
+        select: publicReviewUserSelect,
       },
       perfume: {
         select: {
@@ -160,13 +156,7 @@ export async function getPerfumeReviews(
       where,
       include: {
         user: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
+          select: publicReviewUserSelect,
         },
       },
       orderBy: {
@@ -199,13 +189,7 @@ export async function getPerfumeReview(reviewId: string) {
     where: { id: reviewId },
     include: {
       user: {
-        select: {
-          id: true,
-          username: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
+        select: publicReviewUserSelect,
       },
       perfume: {
         select: {
@@ -231,13 +215,7 @@ export async function getUserPerfumeReview(userId: string, perfumeId: string) {
     },
     include: {
       user: {
-        select: {
-          id: true,
-          username: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
+        select: publicReviewUserSelect,
       },
       perfume: {
         select: {
@@ -313,13 +291,7 @@ export async function moderatePerfumeReview(reviewId: string, isApproved: boolea
     data: { isApproved },
     include: {
       user: {
-        select: {
-          id: true,
-          username: true,
-          firstName: true,
-          lastName: true,
-          email: true,
-        },
+        select: publicReviewUserSelect,
       },
       perfume: {
         select: {
@@ -346,13 +318,7 @@ export async function getPendingReviews(pagination: PaginationOptions = {}) {
       where: { isApproved: false },
       include: {
         user: {
-          select: {
-            id: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
+          select: publicReviewUserSelect,
         },
         perfume: {
           select: {

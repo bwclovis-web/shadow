@@ -34,7 +34,7 @@ export type WishlistItemForClient = {
       perfumeId: string
       available: string | null
       userId: string
-      user: { id: string; firstName: string | null; lastName: string | null; username: string | null; email: string }
+      user: { id: string; firstName: string | null; lastName: string | null; username: string | null }
     }>
   }
 }

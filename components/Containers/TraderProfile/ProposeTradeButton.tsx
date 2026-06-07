@@ -40,7 +40,7 @@ const ProposeTradeButton = ({
   const traderName = getTraderDisplayName({
     firstName: trader.firstName,
     lastName: trader.lastName,
-    email: trader.email || trader.id,
+    username: trader.username,
   })
 
   const itemModalId = tradeComposerModalId(userPerfume.id)

@@ -130,7 +130,6 @@ const WishlistItemCard = ({
             <WishListAvailabilityInfo
               userPerfumes={item.perfume.userPerfume}
               availableAmount={availableAmount}
-              perfumeName={item.perfume.name}
             />
           )}
 

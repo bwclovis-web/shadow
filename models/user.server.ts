@@ -20,6 +20,7 @@ import {
   canSignupForFree,
 } from "@/utils/server/user-limit.server"
 import { allocateUniqueProfileSlug } from "@/utils/profile-slug.server"
+import { sanitizeText } from "@/utils/server/sanitize.server"
 import { generateUniqueUsername } from "@/utils/username-generator.server"
 
 import {
@@ -130,107 +131,72 @@ export const createUser = async (
   })
 }
 
-export const getTraderById = cache(async (id: string) => {
-  const trader = await prisma.user.findUnique({
-    where: { id },
+/** Public trader profile fields — never include email. */
+const traderPublicSelect = {
+  id: true,
+  createdAt: true,
+  firstName: true,
+  lastName: true,
+  username: true,
+  traderAbout: true,
+  avatarImage: true,
+  region: true,
+  instagramHandle: true,
+  fragranticaUrl: true,
+  redditUsername: true,
+  lastActiveAt: true,
+  UserPerfume: {
+    where: {
+      available: {
+        not: "0",
+      },
+    },
     select: {
       id: true,
-      email: true,
-      createdAt: true,
-      firstName: true,
-      lastName: true,
-      username: true,
-      traderAbout: true,
-      avatarImage: true,
-      region: true,
-      instagramHandle: true,
-      fragranticaUrl: true,
-      redditUsername: true,
-      lastActiveAt: true,
-      UserPerfume: {
-        where: {
-          available: {
-            not: "0",
-          },
-        },
+      perfumeId: true,
+      available: true,
+      amount: true,
+      price: true,
+      placeOfPurchase: true,
+      tradePrice: true,
+      tradePreference: true,
+      tradeOnly: true,
+      type: true,
+      ...userPerfumeListingSelect,
+      perfume: {
         select: {
           id: true,
-          perfumeId: true,
-          available: true,
-          amount: true,
-          price: true,
-          placeOfPurchase: true,
-          tradePrice: true,
-          tradePreference: true,
-          tradeOnly: true,
-          type: true,
-          ...userPerfumeListingSelect,
-          perfume: {
+          name: true,
+          slug: true,
+          isPending: true,
+          perfumeHouse: {
             select: {
               id: true,
               name: true,
               slug: true,
-              isPending: true,
-              perfumeHouse: {
-                select: {
-                  id: true,
-                  name: true,
-                  slug: true,
-                },
-              },
-            },
-          },
-          comments: {
-            where: {
-              isPublic: true,
-            },
-            select: {
-              id: true,
-              userId: true,
-              perfumeId: true,
-              userPerfumeId: true,
-              comment: true,
-              isPublic: true,
-              createdAt: true,
-              updatedAt: true,
-              user: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                  username: true,
-                },
-              },
-            },
-            orderBy: {
-              createdAt: "desc",
             },
           },
         },
       },
-      UserPerfumeWishlist: {
+      comments: {
         where: {
           isPublic: true,
         },
         select: {
           id: true,
+          userId: true,
           perfumeId: true,
+          userPerfumeId: true,
+          comment: true,
           isPublic: true,
-          bottlePreference: true,
           createdAt: true,
-          perfume: {
+          updatedAt: true,
+          user: {
             select: {
               id: true,
-              name: true,
-              slug: true,
-              image: true,
-              perfumeHouse: {
-                select: {
-                  id: true,
-                  name: true,
-                  slug: true,
-                },
-              },
+              firstName: true,
+              lastName: true,
+              username: true,
             },
           },
         },
@@ -239,9 +205,48 @@ export const getTraderById = cache(async (id: string) => {
         },
       },
     },
+  },
+  UserPerfumeWishlist: {
+    where: {
+      isPublic: true,
+    },
+    select: {
+      id: true,
+      perfumeId: true,
+      isPublic: true,
+      bottlePreference: true,
+      createdAt: true,
+      perfume: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          image: true,
+          perfumeHouse: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  },
+} as const
+
+export const getPublicTraderById = cache(async (id: string) =>
+  prisma.user.findUnique({
+    where: { id },
+    select: traderPublicSelect,
   })
-  return trader
-})
+)
+
+/** @deprecated Use getPublicTraderById — kept as alias for existing imports. */
+export const getTraderById = getPublicTraderById
 
 export type SignInCustomerResult =
   | { kind: "not_found" }
@@ -957,23 +962,33 @@ export const addPerfumeComment = async ({
   userPerfumeId,
 }: AddCommentParams) => {
   try {
-    // Check if the user owns this perfume (only owners can comment)
-    const existingPerfume = await findUserPerfume(userId, perfumeId)
-
-    if (!existingPerfume) {
+    const listing = await getUserPerfumeById(userPerfumeId)
+    if (!listing || listing.userId !== userId) {
       return {
         success: false,
-        error: "You can only comment on perfumes in your collection",
+        error: "You can only comment on your own listings",
       }
     }
 
-    // Create the comment
+    const resolvedPerfumeId = perfumeId || listing.perfumeId
+    if (perfumeId && listing.perfumeId !== perfumeId) {
+      return {
+        success: false,
+        error: "Listing does not match the selected perfume",
+      }
+    }
+
+    const sanitizedComment = sanitizeText(comment)
+    if (!sanitizedComment) {
+      return { success: false, error: "Comment cannot be empty" }
+    }
+
     const userComment = await prisma.userPerfumeComment.create({
       data: {
         userId,
-        perfumeId,
-        userPerfumeId, // Use the provided userPerfumeId
-        comment,
+        perfumeId: resolvedPerfumeId,
+        userPerfumeId,
+        comment: sanitizedComment,
         isPublic,
       },
       include: {
@@ -1121,11 +1136,15 @@ export const getUserPerfumeComments = async (userId: string, perfumeId: string) 
 }
 
 // Get comments for a specific userPerfumeId (for when we know the exact destash)
-export const getCommentsByUserPerfumeId = async (userPerfumeId: string) => {
+export const getCommentsByUserPerfumeId = async (
+  userPerfumeId: string,
+  options?: { publicOnly?: boolean }
+) => {
   try {
     const comments = await prisma.userPerfumeComment.findMany({
       where: {
         userPerfumeId,
+        ...(options?.publicOnly ? { isPublic: true } : {}),
       },
       select: {
         id: true,

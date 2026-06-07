@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getR2PublicUrl, uploadToR2 } from "@/lib/r2"
 import { authenticateUser } from "@/utils/server/auth.server"
 import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
+import { validateUploadedImage } from "@/utils/server/validate-image-upload.server"
 
 const MAX_BYTES = 5 * 1024 * 1024
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"])
@@ -43,12 +44,16 @@ export const POST = async (request: NextRequest) => {
       )
     }
 
-    const ext =
-      file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg"
-    const key = `listings/${authResult.user!.id}/${randomUUID()}.${ext}`
-    const buffer = Buffer.from(await file.arrayBuffer())
+    const validated = await validateUploadedImage(file, ALLOWED_TYPES)
+    if (!validated.ok) {
+      return NextResponse.json({ success: false, error: validated.error }, { status: 400 })
+    }
 
-    await uploadToR2(key, buffer, file.type)
+    const ext =
+      validated.mime === "image/png" ? "png" : validated.mime === "image/webp" ? "webp" : "jpg"
+    const key = `listings/${authResult.user!.id}/${randomUUID()}.${ext}`
+
+    await uploadToR2(key, validated.buffer, validated.mime)
     const url = getR2PublicUrl(key)
 
     return NextResponse.json({ success: true, url, key })

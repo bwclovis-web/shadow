@@ -6,6 +6,7 @@ import {
   createDestashEntry,
   deletePerfumeComment,
   getCommentsByUserPerfumeId,
+  getUserPerfumeById,
   getUserPerfumes,
   removeUserPerfume,
   updateAvailableAmount,
@@ -202,7 +203,14 @@ export async function POST(request: NextRequest) {
         if (!userPerfumeId) {
           return NextResponse.json({ success: false, error: "User Perfume ID is required" }, { status: 400 })
         }
-        const comments = await getCommentsByUserPerfumeId(userPerfumeId)
+        const listing = await getUserPerfumeById(userPerfumeId)
+        if (!listing) {
+          return NextResponse.json({ success: false, error: "Listing not found" }, { status: 404 })
+        }
+        const isOwner = listing.userId === user.id
+        const comments = await getCommentsByUserPerfumeId(userPerfumeId, {
+          publicOnly: !isOwner,
+        })
         result = { success: true, comments }
         break
       }

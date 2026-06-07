@@ -229,7 +229,6 @@ export default function TraderProfileClient({
                     firstName: trader.firstName ?? "",
                     lastName: trader.lastName ?? "",
                     username: trader.username ?? "",
-                    email: trader.email,
                   },
                   perfume: item.perfume,
                 }))}

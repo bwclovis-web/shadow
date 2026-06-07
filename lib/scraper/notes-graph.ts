@@ -1280,7 +1280,7 @@ const extractEtatLibreMainNotesFromHtml = (html: string): string | null => {
   }
   const plain = stripHtmlToPlainText(html)
   const m = plain.match(
-    /\bMAIN NOTES\s+(.+?)(?=\bPronunciation\b|\bCustomer Reviews\b|\bCHOOSE SIZE\b|$)/is,
+    /\bMAIN NOTES\s+([\s\S]+?)(?=\bPronunciation\b|\bCustomer Reviews\b|\bCHOOSE SIZE\b|$)/i,
   )
   if (m?.[1]?.trim()) return `MAIN NOTES: ${m[1].trim()}`.slice(0, 4000)
   return null
@@ -2247,7 +2247,7 @@ const extractFullDescriptionFromHtml = (html: string): string | null => {
 
   const plain = stripHtmlToPlainText(html)
   const m = plain.match(
-    /\bFULL DESCRIPTION\b\s*(.+?)(?=\bMAIN NOTES\b|\bPronunciation\b|\bCustomer Reviews\b|$)/is,
+    /\bFULL DESCRIPTION\b\s*([\s\S]+?)(?=\bMAIN NOTES\b|\bPronunciation\b|\bCustomer Reviews\b|$)/i,
   )
   if (m?.[1]) return m[1].replace(/\s+/g, " ").trim().replace(/[ .]+$/, "").trim()
   return null

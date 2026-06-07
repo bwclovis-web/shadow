@@ -23,7 +23,6 @@ interface ReviewCardProps {
       username?: string | null
       firstName?: string | null
       lastName?: string | null
-      email: string
     }
   }
   currentUserId?: string
@@ -67,7 +66,7 @@ const ReviewCard = ({
     review.user.username ||
     (review.user.firstName && review.user.lastName
       ? `${review.user.firstName} ${review.user.lastName}`
-      : review.user.firstName || review.user.email)
+      : review.user.firstName || "Reviewer")
 
   const formattedDate = (() => {
     try {

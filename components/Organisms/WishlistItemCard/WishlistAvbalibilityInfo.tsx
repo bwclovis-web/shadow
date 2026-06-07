@@ -2,18 +2,26 @@
 
 import { useTranslations } from "next-intl"
 
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { getTraderDisplayName } from "@/utils/user"
 
 interface WishListAvailabilityInfoI {
-  userPerfumes: any[]
+  userPerfumes: Array<{
+    id: string
+    available: string
+    user: {
+      id: string
+      firstName?: string | null
+      lastName?: string | null
+      username?: string | null
+    }
+  }>
   availableAmount: number
-  perfumeName: string
 }
 
 const WishListAvailabilityInfo = ({
   userPerfumes,
   availableAmount,
-  perfumeName,
 }: WishListAvailabilityInfoI) => {
   const t = useTranslations("wishlist.itemCard")
 
@@ -22,7 +30,7 @@ const WishListAvailabilityInfo = ({
       <h4 className="text-sm font-semibold text-green-800 dark:text-green-200 mb-2">
         {t("availableFromCollectors", { count: userPerfumes.length })}
       </h4>
-      {userPerfumes.map((userPerfume: any) => (
+      {userPerfumes.map((userPerfume) => (
         <div
           key={userPerfume.id}
           className="flex justify-between items-center text-sm mb-1"
@@ -35,12 +43,13 @@ const WishListAvailabilityInfo = ({
               {t("mlAvailable", { amount: userPerfume.available })}
             </span>
           </div>
-          <a
-            href={`mailto:${userPerfume.user.email}?subject=${encodeURIComponent(t("emailSubject", { perfumeName }))}&body=${encodeURIComponent(t("emailBody", { perfumeName }))}`}
+          <PrefetchLink
+            href={`/trader-profile/${userPerfume.user.id}`}
+            prefetch={false}
             className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-200 underline"
           >
             {t("contact")}
-          </a>
+          </PrefetchLink>
         </div>
       ))}
       <div className="text-xs text-green-600 dark:text-green-400 mt-2 font-medium">

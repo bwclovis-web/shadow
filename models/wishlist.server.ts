@@ -203,7 +203,6 @@ export const getUserWishlist = async (userId: string) => {
                 firstName: true,
                 lastName: true,
                 username: true,
-                email: true,
               },
             },
           },

@@ -181,10 +181,14 @@ describe("checkWishlistAvailabilityAlerts", () => {
     expect(createData?.message).toContain("from 2 collector(s).")
     expect(createData?.metadata).toMatchObject({
       availableTraders: [
-        { userId: "trader-1" },
-        { userId: "trader-2" },
+        { userId: "trader-1", displayName: "ada" },
+        { userId: "trader-2", displayName: "grace" },
       ],
     })
+    expect(
+      (createData?.metadata as { availableTraders?: Array<{ email?: string }> })
+        ?.availableTraders?.every((trader) => !("email" in trader))
+    ).toBe(true)
     expect(mockSendWishlistAlertEmail).toHaveBeenCalledWith(
       expect.objectContaining({
         message: expect.stringContaining("from 2 collector(s)."),

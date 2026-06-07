@@ -27,6 +27,7 @@ vi.mock("@/models/contactMessage.server", () => ({
 }))
 vi.mock("@/models/user-alerts.server", () => ({
   createUserAlert: (...args: unknown[]) => mockCreateUserAlert(...args),
+  dispatchPushForUserAlert: vi.fn(),
 }))
 vi.mock("@/lib/db", () => ({
   prisma: {

@@ -5,7 +5,7 @@ import type { SessionFromRequest } from "@/utils/session-from-request.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
 /**
- * Get session and require admin role. Redirects to sign-in or unauthorized if not allowed.
+ * Get session and require admin or editor role. Redirects to sign-in or unauthorized if not allowed.
  * Use in server components and server actions.
  */
 export const requireAdminSession = async (
@@ -25,7 +25,7 @@ export const requireAdminSession = async (
     redirect(`/sign-in?redirect=${encodeURIComponent(redirectPath)}`)
   }
 
-  if (session.user.role !== "admin") {
+  if (session.user.role !== "admin" && session.user.role !== "editor") {
     redirect("/unauthorized")
   }
 

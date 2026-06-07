@@ -28,7 +28,6 @@ interface AlertItemProps {
 type AvailableTrader = {
   userId: string
   displayName?: string
-  email?: string
 }
 
 const getAlertIconClassName = (alertType: UserAlert["alertType"]) => {
@@ -380,9 +379,7 @@ export const AlertItem = ({
                                 prefetch={false}
                                 className="block text-noir-blue/80 hover:text-noir-blue"
                               >
-                                {trader.displayName ??
-                                  trader.email ??
-                                  t("actions.unknownTrader")}
+                                {trader.displayName ?? t("actions.unknownTrader")}
                               </PrefetchLink>
                               </li>
                             )
@@ -397,13 +394,28 @@ export const AlertItem = ({
                       <span className="font-medium text-gray-700">
                         {t("actions.interestedUser")}
                       </span>
-                      <span className="ml-2 text-blue-600">
-                        {(alert.metadata as { interestedUserName?: string; interestedUserEmail?: string })
-                          ?.interestedUserName ??
-                          (alert.metadata as { interestedUserEmail?: string })
-                            ?.interestedUserEmail ??
-                          t("actions.unknownUser")}
-                      </span>
+                      {(() => {
+                        const meta = alert.metadata as {
+                          interestedUserId?: string
+                          interestedUserName?: string
+                        } | null
+                        const name =
+                          meta?.interestedUserName ?? t("actions.unknownUser")
+                        if (meta?.interestedUserId) {
+                          return (
+                            <PrefetchLink
+                              href={`/trader-profile/${meta.interestedUserId}`}
+                              prefetch={false}
+                              className="ml-2 text-blue-600 hover:underline"
+                            >
+                              {name}
+                            </PrefetchLink>
+                          )
+                        }
+                        return (
+                          <span className="ml-2 text-blue-600">{name}</span>
+                        )
+                      })()}
                     </div>
                   )}
                 </div>

@@ -21,6 +21,7 @@ import { authenticateUser } from "@/utils/server/auth.server"
 
 export async function GET(request: NextRequest) {
   try {
+    const authResult = await authenticateUser(request)
     const params = parseQueryParams(request)
     const pagination = parsePaginationParams(request)
     const perfumeId = (params.get("perfumeId") ?? "").trim()
@@ -37,8 +38,24 @@ export async function GET(request: NextRequest) {
     const filters: Record<string, unknown> = {}
     if (perfumeId) filters.perfumeId = perfumeId
     if (userId) filters.userId = userId
-    const isApproved = params.get("isApproved")
-    if (isApproved !== null) filters.isApproved = params.getBoolean("isApproved")
+
+    const isApprovedParam = params.get("isApproved")
+    if (isApprovedParam !== null) {
+      const wantsApproved = params.getBoolean("isApproved")
+      if (!wantsApproved) {
+        if (!authResult.success || !authResult.user) {
+          return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+        }
+        if (authResult.user.role !== "admin" && authResult.user.role !== "editor") {
+          return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 })
+        }
+        filters.isApproved = false
+      } else {
+        filters.isApproved = true
+      }
+    } else {
+      filters.isApproved = true
+    }
 
     const result = await getPerfumeReviews(perfumeId || "", filters, {
       page: pagination.page,

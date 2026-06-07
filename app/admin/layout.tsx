@@ -7,7 +7,7 @@ type AdminLayoutProps = {
 }
 
 /**
- * Protects all routes under /admin. Requires an authenticated admin session;
+ * Protects all routes under /admin. Requires an authenticated admin or editor session;
  * redirects to sign-in or unauthorized when not allowed.
  * Individual pages do not need to call requireAdminSession.
  */

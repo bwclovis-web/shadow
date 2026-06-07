@@ -40,7 +40,7 @@ const ContactTraderButton = ({
   const traderName = getTraderDisplayName({
     firstName: trader.firstName,
     lastName: trader.lastName,
-    email: trader.email || trader.id,
+    username: trader.username,
   })
 
   const handleSubmit = async (formData: FormData) => {

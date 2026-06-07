@@ -14,7 +14,6 @@ interface WishlistItem {
     firstName: string
     lastName: string
     username: string
-    email: string
   }
   perfume: {
     id: string

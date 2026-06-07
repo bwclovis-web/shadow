@@ -1,5 +1,5 @@
 import type { VariantProps } from "class-variance-authority"
-import type { HTMLProps } from "react"
+import type { HTMLProps, ReactNode } from "react"
 
 import { styleMerge } from "@/utils/styleUtils"
 
@@ -10,11 +10,11 @@ import {
 } from "./checkbox-variants"
 
 interface CheckBoxProps
-  extends Omit<HTMLProps<HTMLDivElement>, "onChange">,
+  extends Omit<HTMLProps<HTMLDivElement>, "onChange" | "label">,
     VariantProps<typeof checkboxVariants> {
   inputType?: VariantProps<typeof checkboxInputVariants>["inputType"]
   labelSize?: VariantProps<typeof checkboxLabelVariants>["labelSize"]
-  htmlLabel?: string
+  label?: ReactNode
   checked?: boolean
   onChange?: () => void
 }
@@ -25,7 +25,6 @@ const CheckBox = ({
   checked,
   onChange,
   label,
-  htmlLabel,
   labelPosition,
   labelSize,
   value,
@@ -34,7 +33,7 @@ const CheckBox = ({
   name,
   ...props
 }: CheckBoxProps) => {
-  const inputId = id || label
+  const inputId = id || (typeof label === "string" ? label : name)
   return (
     <div
       className={styleMerge(checkboxVariants({ className, labelPosition }))}
@@ -46,7 +45,7 @@ const CheckBox = ({
         aria-label="group"
         htmlFor={inputId}
       >
-        {htmlLabel ? <div dangerouslySetInnerHTML={{ __html: htmlLabel }} /> : label}
+        {label}
       </label>
       <input
         className={styleMerge(checkboxInputVariants({ inputType }))}

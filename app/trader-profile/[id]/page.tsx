@@ -31,7 +31,7 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
   const t = await getTranslations("traderProfile.meta")
   const traderName =
     [trader.firstName, trader.lastName].filter(Boolean).join(" ").trim() ||
-    trader.email ||
+    trader.username ||
     "Trader"
   return {
     title: t("title"),

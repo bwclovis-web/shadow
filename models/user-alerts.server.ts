@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client"
+
 import { prisma } from "@/lib/db"
 import { parseMl } from "@/lib/user-inventory"
 import type { AlertType, UserAlertPreferences } from "@/types/database"
@@ -7,6 +8,7 @@ import {
   sendWishlistAlertEmail,
 } from "@/utils/alert-email.server"
 import { sendPushForUserAlert } from "@/utils/push-notification.server"
+import { getTraderDisplayName } from "@/utils/user"
 
 const ALERT_DEDUPE_WINDOW_MS = 24 * 60 * 60 * 1000
 
@@ -319,7 +321,6 @@ export const checkWishlistAvailabilityAlerts = async (
           firstName: true,
           lastName: true,
           username: true,
-          email: true,
         },
       },
     },
@@ -336,7 +337,6 @@ export const checkWishlistAvailabilityAlerts = async (
               firstName: string | null
               lastName: string | null
               username: string | null
-              email: string
             }
           }) => parseMl(trader.available) > 0
         )
@@ -396,16 +396,9 @@ export const checkWishlistAvailabilityAlerts = async (
       perfumeName: wishlistItem.perfume.name,
       perfumeSlug: wishlistItem.perfume.slug,
       metadata: {
-        availableTraders: availableTraders.map((trader: { user: { id: string; firstName: string | null; lastName: string | null; username: string | null; email: string } }) => ({
+        availableTraders: availableTraders.map((trader) => ({
           userId: trader.user.id,
-          displayName:
-            trader.user.username ||
-            (trader.user.firstName && trader.user.lastName
-              ? `${trader.user.firstName} ${trader.user.lastName}`.trim()
-              : null) ||
-            trader.user.email ||
-            "Unknown Trader",
-          email: trader.user.email,
+          displayName: getTraderDisplayName(trader.user),
         })),
       },
     })
@@ -500,7 +493,6 @@ export const checkDecantInterestAlerts = async (
       firstName: true,
       lastName: true,
       username: true,
-      email: true,
     },
   })
 
@@ -544,13 +536,7 @@ export const checkDecantInterestAlerts = async (
     if (existingDecanterIds.has(decanter.userId)) continue
     existingDecanterIds.add(decanter.userId)
 
-    const interestedUserName =
-      interestedUser.username ||
-      (interestedUser.firstName && interestedUser.lastName
-        ? `${interestedUser.firstName} ${interestedUser.lastName}`.trim()
-        : null) ||
-      interestedUser.email ||
-      "Unknown User"
+    const interestedUserName = getTraderDisplayName(interestedUser)
 
     const title = `Someone wants your ${decanter.perfume.name}!`
     const message = `${interestedUserName} added ${decanter.perfume.name} by ${decanter.perfume.perfumeHouse?.name} to their wishlist. They might be interested in trading with you!`
@@ -567,7 +553,6 @@ export const checkDecantInterestAlerts = async (
       metadata: {
         interestedUserId,
         interestedUserName,
-        interestedUserEmail: interestedUser.email,
       },
     })
   }

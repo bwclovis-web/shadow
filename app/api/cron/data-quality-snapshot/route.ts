@@ -7,7 +7,7 @@ export const maxDuration = 120
 
 /**
  * Writes or updates today’s data quality snapshot (UTC date).
- * Requires CRON_SECRET: Authorization: Bearer <CRON_SECRET> or ?secret=<CRON_SECRET>.
+ * Requires CRON_SECRET: Authorization: Bearer <CRON_SECRET>.
  */
 export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET?.trim()
@@ -17,8 +17,7 @@ export async function GET(request: NextRequest) {
 
   const authHeader = request.headers.get("authorization")
   const bearer = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null
-  const querySecret = request.nextUrl.searchParams.get("secret")
-  if (bearer !== cronSecret && querySecret !== cronSecret) {
+  if (bearer !== cronSecret) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 

@@ -179,7 +179,6 @@ export interface TraderResponse {
   firstName?: string | null
   lastName?: string | null
   username?: string | null
-  email: string
   traderAbout?: string | null
   avatarImage?: string | null
   region?: string | null

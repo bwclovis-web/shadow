@@ -56,7 +56,6 @@ describe("ReviewCard", () => {
       username: "testuser",
       firstName: "John",
       lastName: "Doe",
-      email: "john.doe@example.com",
     },
   }
 
@@ -95,8 +94,8 @@ describe("ReviewCard", () => {
       const { container } = render(<ReviewCard review={mockReview} />)
       const card = container.firstChild
       expect(card).toHaveClass("bg-white/5")
-      expect(card).toHaveClass("border-noir-gold")
-      expect(card).toHaveClass("rounded-lg")
+      expect(card).toHaveClass("border-noir-gold/30")
+      expect(card).toHaveClass("rounded-xl")
     })
   })
 
@@ -124,8 +123,8 @@ describe("ReviewCard", () => {
       expect(screen.getByText("John")).toBeInTheDocument()
     })
 
-    it("displays email as fallback when no name or username is available", () => {
-      const reviewWithOnlyEmail = {
+    it("displays Reviewer fallback when no name or username is available", () => {
+      const reviewWithNoDisplayName = {
         ...mockReview,
         user: {
           ...mockReview.user,
@@ -134,8 +133,8 @@ describe("ReviewCard", () => {
           lastName: null,
         },
       }
-      render(<ReviewCard review={reviewWithOnlyEmail} />)
-      expect(screen.getByText("john.doe@example.com")).toBeInTheDocument()
+      render(<ReviewCard review={reviewWithNoDisplayName} />)
+      expect(screen.getByText("Reviewer")).toBeInTheDocument()
     })
 
     it("creates avatar with correct first letter for each display name type", () => {
@@ -147,8 +146,7 @@ describe("ReviewCard", () => {
           username: null,
           firstName: null,
           lastName: null,
-          email: "dan@example.com",
-          expected: "D",
+          expected: "R",
         },
       ]
 
@@ -161,7 +159,6 @@ describe("ReviewCard", () => {
             username: testCase.username,
             firstName: testCase.firstName || null,
             lastName: testCase.lastName || null,
-            email: testCase.email || "test@example.com",
           },
         }
         const { container, unmount } = render(<ReviewCard review={review} />)
@@ -401,13 +398,13 @@ describe("ReviewCard", () => {
       const approvedReview = { ...mockReview, isApproved: true }
       render(<ReviewCard review={approvedReview} showModerationActions={true} />)
 
-      expect(screen.getByText(/✓ Approved/)).toBeInTheDocument()
+      expect(screen.getByText("Approved")).toBeInTheDocument()
     })
 
     it("shows pending status when review is not approved and showModerationActions is true", () => {
       render(<ReviewCard review={mockReview} showModerationActions={true} />)
 
-      expect(screen.getByText(/⏳ Pending Review/)).toBeInTheDocument()
+      expect(screen.getByText("Pending Review")).toBeInTheDocument()
     })
 
     it("does not show status when showModerationActions is false", () => {
@@ -461,7 +458,7 @@ describe("ReviewCard", () => {
       const { container } = render(<ReviewCard review={mockReview} />)
 
       // Should have proper div structure
-      expect(container.querySelector(".space-y-3")).toBeInTheDocument()
+      expect(container.querySelector("[data-review-card]")).toBeInTheDocument()
     })
 
     it("has accessible avatar with text", () => {
@@ -517,8 +514,8 @@ describe("ReviewCard", () => {
       const approvedReview = { ...mockReview, isApproved: true }
       render(<ReviewCard review={approvedReview} showModerationActions={true} />)
 
-      const approvedStatus = screen.getByText(/✓ Approved/)
-      expect(approvedStatus).toHaveClass("text-green-600")
+      const approvedStatus = screen.getByText("Approved")
+      expect(approvedStatus).toHaveClass("text-green-500")
     })
 
     it("applies correct hover effects to buttons", () => {
