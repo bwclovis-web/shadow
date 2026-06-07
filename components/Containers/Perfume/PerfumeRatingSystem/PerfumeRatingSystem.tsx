@@ -1,8 +1,11 @@
+"use client"
+
 import { useCallback, useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 
 import NoirRating from "@/components/Organisms/NoirRating"
 import { useRatingSystem } from "@/hooks/useRatingSystem"
+import { getRatings } from "@/lib/queries/reviews"
 import type {
   PerfumeDetailAverageRatingsProp,
   PerfumeDetailUserRatingsProp,
@@ -34,14 +37,7 @@ const PerfumeRatingSystem = ({
   const refreshAverageRatings = useCallback(async () => {
     setIsRefreshing(true)
     try {
-      const response = await fetch(`/api/ratings?${new URLSearchParams({ perfumeId })}`)
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}))
-        throw new Error((errorPayload as { message?: string }).message ?? "Failed to refresh ratings")
-      }
-      const data = (await response.json()) as {
-        averageRatings?: PerfumeDetailAverageRatingsProp
-      }
+      const data = await getRatings(perfumeId)
       setAverageRatings(data.averageRatings ?? null)
     } catch (error) {
       console.error("Failed to refresh ratings", error)

@@ -25,11 +25,8 @@ vi.mock("next-view-transitions", () => ({
   ),
 }))
 
-vi.mock("@/components/Molecules/DirectMessageUnread/DirectMessageUnreadProvider", () => ({
-  useDirectMessageUnreadCount: () => 2,
-}))
-
 vi.mock("@/components/Molecules/UserAlertsProvider/UserAlertsProvider", () => ({
+  useDirectMessageUnreadCount: () => 2,
   useUserAlertsContext: () => ({ unreadCount: 1 }),
 }))
 

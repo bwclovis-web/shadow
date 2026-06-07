@@ -1,3 +1,5 @@
+"use client"
+
 import { type HTMLProps, useCallback, useEffect, useState } from "react"
 
 import SearchTypeahead from "@/components/Molecules/SearchTypeahead"

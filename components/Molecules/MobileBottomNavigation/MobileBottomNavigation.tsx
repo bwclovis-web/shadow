@@ -1,7 +1,7 @@
 "use client"
 
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
-import { useDirectMessageUnreadCount } from "@/components/Molecules/DirectMessageUnread/DirectMessageUnreadProvider"
+import { useDirectMessageUnreadCount } from "@/components/Molecules/UserAlertsProvider/UserAlertsProvider"
 import { useUserAlertsContext } from "@/components/Molecules/UserAlertsProvider/UserAlertsProvider"
 import { SIGN_IN } from "@/constants/routes"
 import { getProfilePathForUser } from "@/utils/user"

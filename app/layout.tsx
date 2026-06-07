@@ -9,7 +9,6 @@ import { ViewTransitionsWrapper } from './ViewTransitionsWrapper'
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import GlobalNavigation from '@/components/Molecules/GlobalNavigation/GlobalNavigation'
-import { DirectMessageUnreadProvider } from '@/components/Molecules/DirectMessageUnread/DirectMessageUnreadProvider'
 import MobileNavigation from '@/components/Molecules/MobileNavigation'
 import MobileBottomNavigation from '@/components/Molecules/MobileBottomNavigation/MobileBottomNavigation'
 import { ActivityPing } from '@/components/Molecules/ActivityPing'
@@ -18,7 +17,6 @@ import { getNewListingsThisWeekCount } from '@/models/activity-feed.server'
 import { getUnreadDirectMessageCount } from '@/models/contactMessage.server'
 import { getUnreadAlertCount, getUnreadTradeAlertCount, getUserAlerts } from '@/models/user-alerts.server'
 import { ExchangeNewListingsBadgeProvider } from '@/components/Molecules/ExchangeNewListingsBadge/ExchangeNewListingsBadgeProvider'
-import { TradeAlertUnreadProvider } from '@/components/Molecules/TradeAlertUnread/TradeAlertUnreadProvider'
 import { UserAlertsProvider } from '@/components/Molecules/UserAlertsProvider/UserAlertsProvider'
 import SiteFooter from '@/components/Organisms/SiteFooter/SiteFooter'
 import OnboardingBannerSlot from '@/components/Containers/Onboarding/OnboardingBannerSlot'
@@ -98,35 +96,27 @@ export default async function RootLayout({
       <body className={`${inter.className} bg-noir-black`}>
         <ViewTransitionsWrapper>
           <NextIntlClientProvider locale={locale} messages={messages}>
-            <DirectMessageUnreadProvider
+            <UserAlertsProvider
               userId={user?.id}
-              initialCount={directMessageUnreadInitial}
+              initialAlerts={initialAlerts}
+              initialUnreadCount={initialAlertUnreadCount}
+              initialTradeUnreadCount={initialTradeAlertUnreadCount}
+              initialDirectMessageUnreadCount={directMessageUnreadInitial}
             >
-              <TradeAlertUnreadProvider
-                userId={user?.id}
-                initialCount={initialTradeAlertUnreadCount}
+              <ExchangeNewListingsBadgeProvider
+                initialCount={exchangeNewThisWeekCount}
               >
-              <UserAlertsProvider
-                userId={user?.id}
-                initialAlerts={initialAlerts}
-                initialUnreadCount={initialAlertUnreadCount}
-              >
-                <ExchangeNewListingsBadgeProvider
-                  initialCount={exchangeNewThisWeekCount}
-                >
-                <GlobalNavigation user={user} />
-                <MobileNavigation user={user} />
-                <MobileBottomNavigation user={user} />
-                <ActivityPing userId={user?.id} />
-                <Providers enableTokenRefresh={hasRefreshToken}>
-                  {user?.id ? <OnboardingBannerSlot userId={user.id} /> : null}
-                  {children}
-                  <SiteFooter />
-                </Providers>
-                </ExchangeNewListingsBadgeProvider>
-              </UserAlertsProvider>
-              </TradeAlertUnreadProvider>
-            </DirectMessageUnreadProvider>
+              <GlobalNavigation user={user} />
+              <MobileNavigation user={user} />
+              <MobileBottomNavigation user={user} />
+              <ActivityPing userId={user?.id} />
+              <Providers enableTokenRefresh={hasRefreshToken}>
+                {user?.id ? <OnboardingBannerSlot userId={user.id} /> : null}
+                {children}
+                <SiteFooter />
+              </Providers>
+              </ExchangeNewListingsBadgeProvider>
+            </UserAlertsProvider>
           </NextIntlClientProvider>
           <div id="modal-portal" />
         </ViewTransitionsWrapper>

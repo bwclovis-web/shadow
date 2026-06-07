@@ -1,3 +1,5 @@
+"use client"
+
 import { type RefObject, useEffect, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 
@@ -8,6 +10,7 @@ import Modal from "@/components/Organisms/Modal"
 import { useCSRF } from "@/hooks/useCSRF"
 import { useGsapStagger } from "@/hooks/useGsapStagger"
 import { useSessionStore } from "@/hooks/sessionStore"
+import { getReviews } from "@/lib/queries/reviews"
 import { safeAsync } from "@/utils/errorHandling.patterns"
 import { containsDangerousReviewHtml, sanitizeReviewHtml } from "@/utils/sanitize"
 import { LuBookOpenText } from "react-icons/lu"
@@ -154,18 +157,10 @@ const ReviewSection = ({
   const fetchReviews = async (pageToLoad: number, append = false) => {
     try {
       if (append) setIsLoadingMore(true)
-      const params = new URLSearchParams({
-        perfumeId,
-        page: pageToLoad.toString(),
-        limit: fetchLimit.toString(),
-        isApproved: "true",
-      })
-      const response = await fetch(`/api/reviews?${params}`)
-      if (!response.ok) {
-        const errorPayload = await response.json().catch(() => ({}))
-        throw new Error(errorPayload.message || "Failed to fetch reviews")
-      }
-      const payload = await response.json()
+      const payload = await getReviews(
+        { perfumeId, isApproved: true },
+        { page: pageToLoad, limit: fetchLimit }
+      )
       updateReviewsState(payload.reviews || [], payload.pagination)
     } catch (error) {
       console.error("Failed to fetch reviews", error)

@@ -6,8 +6,10 @@ import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { FaChevronDown } from "react-icons/fa"
 
-import { useDirectMessageUnreadCount } from "@/components/Molecules/DirectMessageUnread/DirectMessageUnreadProvider"
-import { useTradeAlertUnreadCount } from "@/components/Molecules/TradeAlertUnread/TradeAlertUnreadProvider"
+import {
+  useDirectMessageUnreadCount,
+  useTradeAlertUnreadCount,
+} from "@/components/Molecules/UserAlertsProvider/UserAlertsProvider"
 import {
   getNavigationDropdownStyles,
   type NavigationDropdownVariant,

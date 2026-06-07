@@ -7,7 +7,7 @@ import { AiFillHome } from "react-icons/ai"
 import { FaBars } from "react-icons/fa6"
 
 import { GlobalAlertBell } from "@/components/Containers/UserAlerts/GlobalAlertBell"
-import { useDirectMessageUnreadCount } from "@/components/Molecules/DirectMessageUnread/DirectMessageUnreadProvider"
+import { useDirectMessageUnreadCount } from "@/components/Molecules/UserAlertsProvider/UserAlertsProvider"
 
 interface MobileHeaderProps {
   logoText: string

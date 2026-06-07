@@ -5,6 +5,7 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts")
 
 const nextConfig: NextConfig = {
   transpilePackages: ["next-sanity"],
+  serverExternalPackages: ["@prisma/client", "prisma"],
   experimental: {
     viewTransition: true,
     // Softer navigations: reuse prefetched RSC payloads briefly instead of always showing loading UI.

@@ -1,3 +1,5 @@
+"use client"
+
 import type { MutableRefObject, ReactNode } from 'react'
 import { useCallback, useEffect, useRef } from 'react'
 

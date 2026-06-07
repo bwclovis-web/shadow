@@ -1,14 +1,26 @@
 "use client"
 
-import { useEffect, useId, useState } from "react"
+import { type FC, useEffect, useId, useState } from "react"
 
+import { Button } from "@/components/Atoms/Button/Button"
 import SearchTypeahead from "@/components/Molecules/SearchTypeahead"
 import { searchbarVariants } from "@/components/Molecules/SearchTypeahead/searchbar-variants"
 import { styleMerge } from "@/utils/styleUtils"
 
-type PerfumeHouseOption = { id: string; name: string }
+export type HouseOption = { id: string; name: string }
 
-interface HouseTypeaheadProps {
+/** @deprecated Use HouseOption */
+export type HouseAutocompleteOption = HouseOption
+
+const searchPerfumeHouses = async (query: string): Promise<HouseOption[]> => {
+  const res = await fetch(`/api/perfume-houses?name=${encodeURIComponent(query)}`)
+  if (!res.ok) throw new Error("House search failed")
+  const data = await res.json()
+  return (Array.isArray(data) ? data : []) as HouseOption[]
+}
+
+type HouseTypeaheadFormProps = {
+  variant?: "form"
   label?: string
   name: string
   defaultId?: string
@@ -17,14 +29,26 @@ interface HouseTypeaheadProps {
   onNameChange?: (name: string) => void
 }
 
-const HouseTypeahead = ({
+type HouseTypeaheadControlledProps = {
+  variant: "controlled"
+  selected: HouseOption | null
+  onSelect: (house: HouseOption | null) => void
+  inputId: string
+  label: string
+  clearLabel: string
+  className?: string
+}
+
+export type HouseTypeaheadProps = HouseTypeaheadFormProps | HouseTypeaheadControlledProps
+
+const HouseTypeaheadForm = ({
   label,
   name,
   defaultId,
   defaultName,
   className,
   onNameChange,
-}: HouseTypeaheadProps) => {
+}: HouseTypeaheadFormProps) => {
   const uid = useId()
   const fieldInputId = `house-typeahead-${uid}`
   const [text, setText] = useState(defaultName ?? "")
@@ -35,22 +59,15 @@ const HouseTypeahead = ({
     if (defaultId !== undefined) setSelectedId(defaultId)
   }, [defaultName, defaultId])
 
-  const searchFn = async (query: string) => {
-    const res = await fetch(`/api/perfume-houses?name=${encodeURIComponent(query)}`)
-    if (!res.ok) throw new Error("House search failed")
-    const data = await res.json()
-    return (Array.isArray(data) ? data : []) as PerfumeHouseOption[]
-  }
-
   return (
     <div className={styleMerge("relative w-full", className)}>
-      <SearchTypeahead<PerfumeHouseOption>
+      <SearchTypeahead<HouseOption>
         inputId={fieldInputId}
         listboxId={`${fieldInputId}-listbox`}
         label={label ?? "House"}
         labelClassName={label ? undefined : "sr-only"}
         placeholder="Search for a perfume house..."
-        searchFn={searchFn}
+        searchFn={searchPerfumeHouses}
         minLength={2}
         delay={300}
         inputValue={text}
@@ -59,7 +76,7 @@ const HouseTypeahead = ({
           onNameChange?.(query)
           if (selectedId) setSelectedId("")
         }}
-        onSelect={(item: PerfumeHouseOption) => {
+        onSelect={(item: HouseOption) => {
           setText(item.name)
           setSelectedId(item.id)
           onNameChange?.(item.name)
@@ -81,6 +98,70 @@ const HouseTypeahead = ({
       ) : null}
     </div>
   )
+}
+
+const HouseTypeaheadControlled: FC<HouseTypeaheadControlledProps> = ({
+  selected,
+  onSelect,
+  inputId,
+  label,
+  clearLabel,
+  className,
+}) => {
+  if (selected) {
+    return (
+      <div className={styleMerge("relative", className)}>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            id={inputId}
+            type="text"
+            readOnly
+            value={selected.name}
+            className={styleMerge(
+              searchbarVariants({ size: "standard" }),
+              "cursor-default capitalize"
+            )}
+          />
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => onSelect(null)}
+          >
+            {clearLabel}
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={styleMerge("relative", className)}>
+      <SearchTypeahead<HouseOption>
+        inputId={inputId}
+        listboxId={`${inputId}-listbox`}
+        label={label}
+        searchFn={searchPerfumeHouses}
+        minLength={2}
+        delay={300}
+        defaultInputValue=""
+        onSelect={(item: HouseOption) => onSelect({ id: item.id, name: item.name })}
+        inputClassName={searchbarVariants({ size: "standard" })}
+        messages={{
+          loading: "…",
+          empty: "—",
+          formatError: (err: string) => err,
+        }}
+      />
+    </div>
+  )
+}
+
+const HouseTypeahead = (props: HouseTypeaheadProps) => {
+  if (props.variant === "controlled") {
+    return <HouseTypeaheadControlled {...props} />
+  }
+  return <HouseTypeaheadForm {...props} />
 }
 
 export default HouseTypeahead

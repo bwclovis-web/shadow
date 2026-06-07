@@ -1,12 +1,11 @@
-import { useRef, useState } from "react"
+"use client"
+
+import { useState } from "react"
 import { useTranslations } from "next-intl"
 
-import { Button } from "@/components/Atoms/Button/Button"
 import ContactTraderModal from "@/components/Containers/Forms/ContactTraderModal"
-import Modal from "@/components/Organisms/Modal/Modal"
-import { useSessionStore } from "@/hooks/sessionStore"
+import TraderActionButton from "@/components/Containers/TraderProfile/TraderActionButton"
 import { useCSRF } from "@/hooks/useCSRF"
-import { getTraderDisplayName } from "@/utils/user"
 
 interface ContactTraderButtonProps {
   traderId: string
@@ -26,28 +25,15 @@ const ContactTraderButton = ({
   viewerId,
 }: ContactTraderButtonProps) => {
   const t = useTranslations("contactTrader")
-  const { modalOpen, toggleModal, modalId, closeModal } = useSessionStore()
-  const modalTrigger = useRef<HTMLButtonElement>(null)
   const { prepareApiRequest } = useCSRF()
   const [result, setResult] = useState<any>(null)
   const [, setIsSubmitting] = useState(false)
 
-  // Only show button if viewer is authenticated and not viewing their own profile
-  if (viewerId === traderId || !viewerId) {
-    return null
-  }
-
-  const traderName = getTraderDisplayName({
-    firstName: trader.firstName,
-    lastName: trader.lastName,
-    username: trader.username,
-  })
-
   const handleSubmit = async (formData: FormData) => {
     setIsSubmitting(true)
-    
+
     const { formData: protectedFormData, headers } = prepareApiRequest(formData)
-    
+
     try {
       const response = await fetch("/api/contact-trader", {
         method: "POST",
@@ -67,46 +53,27 @@ const ContactTraderButton = ({
     }
   }
 
-  const handleSuccess = () => {
-    // Close modal after successful submission
-    setTimeout(() => {
-      closeModal()
-    }, 1500)
-  }
-
   return (
-    <>
-      <Button
-        variant="primary"
-        background="gold"
-        className="w-full"
-        onClick={() => {
-          toggleModal(modalTrigger, "contact-trader", {
-            traderId,
-            traderName,
-          })
-        }}
-        ref={modalTrigger}
-      >
-        {t("button")}
-      </Button>
-
-      {modalOpen && modalId === "contact-trader" && (
-        <Modal background="default" innerType="dark" animateStart="top">
-          <ContactTraderModal
-            recipientId={traderId}
-            recipientName={traderName}
-            lastResult={result}
-            onSubmit={handleSubmit}
-            onSuccess={handleSuccess}
-          />
-        </Modal>
+    <TraderActionButton
+      traderId={traderId}
+      trader={trader}
+      viewerId={viewerId}
+      label={t("button")}
+      modalId="contact-trader"
+      className="w-full"
+      renderModal={({ traderId: recipientId, traderName, closeModal }) => (
+        <ContactTraderModal
+          recipientId={recipientId}
+          recipientName={traderName}
+          lastResult={result}
+          onSubmit={handleSubmit}
+          onSuccess={() => {
+            setTimeout(() => closeModal(), 1500)
+          }}
+        />
       )}
-    </>
+    />
   )
 }
 
 export default ContactTraderButton
-
-
-

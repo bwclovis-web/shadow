@@ -3,12 +3,10 @@
 import type { ListingCondition } from "@prisma/client"
 import { useTranslations } from "next-intl"
 import Image from "next/image"
-import { useState } from "react"
-import { MdChevronLeft, MdChevronRight } from "react-icons/md"
 
 import { Button } from "@/components/Atoms/Button/Button"
-import Modal from "@/components/Organisms/Modal"
-import { useSessionStore } from "@/hooks/sessionStore"
+import { PhotoLightbox } from "@/components/Molecules/PhotoLightbox/PhotoLightbox"
+import { usePhotoLightbox } from "@/hooks/usePhotoLightbox"
 import {
   getPrimaryListingImage,
   listingConditionI18nKey,
@@ -74,31 +72,10 @@ const ListingPhotos = ({
         ? [getPrimaryListingImage({ images, perfume: { image: perfumeImage } })!]
         : []
 
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
-  const openModal = useSessionStore((state) => state.openModal)
+  const { lightboxIndex, openLightbox, closeLightbox, goPrev, goNext } =
+    usePhotoLightbox({ imageCount: gallery.length, modalId: LISTING_LIGHTBOX_MODAL_ID })
 
   if (gallery.length === 0) return null
-
-  const openLightbox = (index: number) => {
-    setLightboxIndex(index)
-    openModal(LISTING_LIGHTBOX_MODAL_ID)
-  }
-
-  const closeLightbox = () => {
-    setLightboxIndex(null)
-    const { modalId, closeModal } = useSessionStore.getState()
-    if (modalId === LISTING_LIGHTBOX_MODAL_ID) {
-      closeModal()
-    }
-  }
-  const goPrev = () =>
-    setLightboxIndex((current) =>
-      current === null ? null : (current - 1 + gallery.length) % gallery.length
-    )
-  const goNext = () =>
-    setLightboxIndex((current) =>
-      current === null ? null : (current + 1) % gallery.length
-    )
 
   return (
     <>
@@ -140,82 +117,24 @@ const ListingPhotos = ({
         </ul>
       )}
 
-      {lightboxIndex !== null && (
-        <Modal
-          innerType="dark"
-          animateStart="top"
+      {lightboxIndex !== null ? (
+        <PhotoLightbox
+          images={gallery}
+          lightboxIndex={lightboxIndex}
+          onClose={closeLightbox}
+          onPrev={goPrev}
+          onNext={goNext}
           dialogAriaLabel={t("lightboxTitle")}
-          onClose={() => setLightboxIndex(null)}
-          className={
-            lightboxSize === "large"
-              ? "!w-[min(98vw,80rem)] !max-w-[min(98vw,80rem)] !max-h-[96dvh]"
-              : undefined
+          lightboxSize={lightboxSize}
+          footer={
+            <ListingImageBadges
+              condition={condition}
+              tradePreference={tradePreference}
+              tradeOnly={tradeOnly}
+            />
           }
-        >
-          <div
-            className={`relative p-2 sm:p-4 mx-auto w-full ${
-              lightboxSize === "large" ? "max-w-full" : "max-w-3xl"
-            }`}
-          >
-            {gallery.length > 1 && (
-              <>
-                <button
-                  type="button"
-                  className="absolute left-2 top-1/2 -translate-y-1/2 z-10 text-noir-gold p-2"
-                  onClick={goPrev}
-                  aria-label={t("previousPhoto")}
-                >
-                  <MdChevronLeft size={32} />
-                </button>
-                <button
-                  type="button"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 z-10 text-noir-gold p-2"
-                  onClick={goNext}
-                  aria-label={t("nextPhoto")}
-                >
-                  <MdChevronRight size={32} />
-                </button>
-              </>
-            )}
-            <div
-              className={`relative w-full ${gallery.length > 1 ? "mx-4 sm:mx-8" : ""} ${
-                lightboxSize === "large"
-                  ? "h-[min(88vh,920px)] min-h-[55vh] w-full"
-                  : "aspect-square max-h-[70vh]"
-              }`}
-            >
-              {normalizeRemoteImageSrc(gallery[lightboxIndex]) && (
-                <Image
-                  src={normalizeRemoteImageSrc(gallery[lightboxIndex])!}
-                  alt=""
-                  fill
-                  className="object-contain"
-                  sizes={
-                    lightboxSize === "large"
-                      ? "(max-width: 768px) 98vw, 80rem"
-                      : "(max-width: 768px) 90vw, 70vw"
-                  }
-                  priority
-                />
-              )}
-            </div>
-            <div className="flex justify-center mt-3">
-              <ListingImageBadges
-                condition={condition}
-                tradePreference={tradePreference}
-                tradeOnly={tradeOnly}
-              />
-            </div>
-            <button
-              type="button"
-              className="mt-4 w-full text-center text-sm text-noir-gold-100 underline"
-              onClick={closeLightbox}
-            >
-              {t("closeLightbox")}
-            </button>
-          </div>
-        </Modal>
-      )}
+        />
+      ) : null}
     </>
   )
 }

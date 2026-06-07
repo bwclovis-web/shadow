@@ -11,6 +11,8 @@ type UseUserAlertsOptions = {
   userId: string
   initialAlerts?: UserAlert[]
   initialUnreadCount?: number
+  initialTradeUnreadCount?: number
+  initialDirectMessageUnreadCount?: number
   pollIntervalMs?: number
   /** When true, skips polling (e.g. profile uses shared provider context). */
   disabled?: boolean
@@ -20,11 +22,17 @@ export const useUserAlerts = ({
   userId,
   initialAlerts = [],
   initialUnreadCount = 0,
+  initialTradeUnreadCount = 0,
+  initialDirectMessageUnreadCount = 0,
   pollIntervalMs = 30_000,
   disabled = false,
 }: UseUserAlertsOptions) => {
   const [alerts, setAlerts] = useState<UserAlert[]>(initialAlerts)
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount)
+  const [tradeUnreadCount, setTradeUnreadCount] = useState(initialTradeUnreadCount)
+  const [directMessageUnreadCount, setDirectMessageUnreadCount] = useState(
+    initialDirectMessageUnreadCount
+  )
   const { addToHeaders } = useCSRF()
   const addToHeadersRef = useRef(addToHeaders)
 
@@ -36,6 +44,8 @@ export const useUserAlerts = ({
   useEffect(() => {
     setAlerts(initialAlerts)
     setUnreadCount(initialUnreadCount)
+    setTradeUnreadCount(initialTradeUnreadCount)
+    setDirectMessageUnreadCount(initialDirectMessageUnreadCount)
     // initialAlerts / initialUnreadCount are tied to userId from the layout; omit them from deps to avoid resetting after dismiss.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: sync on user change only
   }, [userId])
@@ -43,18 +53,29 @@ export const useUserAlerts = ({
   const refresh = useCallback(async () => {
     if (!userId) return
     try {
-      const response = await fetch(`/api/user-alerts/${userId}`, {
-        headers: addToHeadersRef.current(),
-        cache: "no-store",
-        credentials: "include",
-      })
-      if (response.ok) {
-        const data = await response.json()
+      const [alertsResponse, messagesResponse] = await Promise.all([
+        fetch(`/api/user-alerts/${userId}`, {
+          headers: addToHeadersRef.current(),
+          cache: "no-store",
+          credentials: "include",
+        }),
+        fetch("/api/messages?unreadCountOnly=1", {
+          cache: "no-store",
+          credentials: "include",
+        }),
+      ])
+      if (alertsResponse.ok) {
+        const data = await alertsResponse.json()
         setAlerts(data.alerts ?? [])
         setUnreadCount(data.unreadCount ?? 0)
+        setTradeUnreadCount(data.tradeUnreadCount ?? 0)
+      }
+      if (messagesResponse.ok) {
+        const data: { unreadCount?: number } = await messagesResponse.json()
+        setDirectMessageUnreadCount(data.unreadCount ?? 0)
       }
     } catch (error) {
-      console.error("Failed to fetch alerts:", error)
+      console.error("Failed to fetch unread counts:", error)
     }
   }, [userId])
 
@@ -160,6 +181,8 @@ export const useUserAlerts = ({
   return {
     alerts,
     unreadCount,
+    tradeUnreadCount,
+    directMessageUnreadCount,
     refresh,
     handleMarkAsRead,
     handleDismissAlert,
