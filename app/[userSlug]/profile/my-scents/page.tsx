@@ -66,6 +66,7 @@ export default async function MyScentsPage({
 
   return (
     <MyScentsPageClient
+      key={user.id}
       userPerfumes={serialized}
       wishlistDemand={wishlistDemand}
       inventoryStats={inventoryStats}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo } from "react"
+import { memo, useCallback, useMemo } from "react"
 import { useTranslations } from "next-intl"
 import { MdCheck, MdDelete, MdError } from "react-icons/md"
 
@@ -35,7 +35,7 @@ const perfumeSearchFn = async (query: string): Promise<PerfumeSearchItem[]> => {
   return (await res.json()) as PerfumeSearchItem[]
 }
 
-const BulkInventoryRow = ({
+const BulkInventoryRow = memo(({
   row,
   rowIndex,
   existingPerfumeIds,
@@ -249,6 +249,7 @@ const BulkInventoryRow = ({
       </div>
     </div>
   )
-}
+})
+BulkInventoryRow.displayName = "BulkInventoryRow"
 
 export default BulkInventoryRow

@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useRef } from "react"
 
 const REFRESH_INTERVAL_MS = 50 * 60 * 1000 // 50 minutes (before 1h access expiry)
-const REFRESH_ON_MOUNT_DELAY_MS = 1_000 // 1s after mount so tokens refresh soon without blocking first paint
 
 const REFRESH_API = "/api/auth/refresh"
 
@@ -30,17 +29,20 @@ export const useTokenRefresh = (enabled: boolean) => {
   useEffect(() => {
     if (!enabled) return
 
-    const onMount = setTimeout(() => {
-      void doRefresh()
-    }, REFRESH_ON_MOUNT_DELAY_MS)
-
     intervalRef.current = setInterval(() => {
       void doRefresh()
     }, REFRESH_INTERVAL_MS)
 
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void doRefresh()
+      }
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange)
+
     return () => {
-      clearTimeout(onMount)
       if (intervalRef.current) clearInterval(intervalRef.current)
+      document.removeEventListener("visibilitychange", onVisibilityChange)
     }
   }, [doRefresh, enabled])
 }

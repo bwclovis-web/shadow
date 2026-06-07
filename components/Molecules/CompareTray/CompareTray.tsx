@@ -22,6 +22,7 @@ function CompareThumb({ image, alt }: { image?: string; alt: string }) {
       alt={alt}
       width={36}
       height={36}
+      sizes="36px"
       className="h-9 w-9 shrink-0 rounded-sm object-cover"
     />
   )

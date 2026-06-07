@@ -1,6 +1,6 @@
 "use client"
 
-import { type ChangeEvent, useState, useCallback, useEffect, useMemo } from "react"
+import { type ChangeEvent, memo, useState, useCallback, useEffect, useMemo } from "react"
 import { useTranslations } from "next-intl"
 import Image from "next/image"
 import { Link } from "next-view-transitions"
@@ -33,8 +33,6 @@ import {
   getBottleEntries,
   getInventoryListingStatus,
   getPausedListings,
-  isActiveListing,
-  isPausedListing,
   parseMl,
 } from "@/lib/user-inventory"
 import { computeCollectionCounts } from "@/lib/user-inventory-stats"
@@ -85,43 +83,6 @@ const buildBottleLabel = (up: UserPerfumeForClient, bottleCount: number): string
   const amtStr = up.amount && up.amount !== "0" && !isNaN(amtNum) ? `${amtNum.toFixed(1)} ml` : null
   const parts = [typeLabel, amtStr].filter(Boolean)
   return parts.length > 0 ? parts.join(" · ") : null
-}
-
-/** Keep client pause state when a soft navigation returns stale server listing fields. */
-const mergeUserPerfumesWithServer = (
-  local: UserPerfumeForClient[],
-  server: UserPerfumeForClient[]
-): UserPerfumeForClient[] => {
-  if (local.length === 0) return server
-
-  const serverById = new Map(server.map((up) => [up.id, up]))
-  const merged = local.map((row) => {
-    const fromServer = serverById.get(row.id)
-    if (!fromServer) return row
-    if (isPausedListing(row) && isActiveListing(fromServer)) {
-      return {
-        ...fromServer,
-        available: "0",
-        pausedAvailable: row.pausedAvailable ?? fromServer.pausedAvailable,
-      }
-    }
-    if (isActiveListing(row) && isPausedListing(fromServer)) {
-      return {
-        ...fromServer,
-        available: row.available,
-        pausedAvailable: null,
-      }
-    }
-    return { ...row, ...fromServer }
-  })
-
-  for (const row of server) {
-    if (!local.some((up) => up.id === row.id)) {
-      merged.push(row)
-    }
-  }
-
-  return merged
 }
 
 const serializeUserPerfume = (up: Record<string, unknown>): UserPerfumeForClient => {
@@ -187,6 +148,77 @@ const buildOptimisticUserPerfume = (
 
 const SORT_OPTIONS: SortOption[] = ["name-asc", "name-desc", "created-desc", "created-asc"]
 
+type CollectionGridItemProps = {
+  userPerfume: UserPerfumeForClient
+  basePath: string
+  bottleCount: number
+  listingStatus: ReturnType<typeof getInventoryListingStatus>
+  inReview: boolean
+  listingStatusLabel: string
+}
+
+const CollectionGridItem = memo(({
+  userPerfume,
+  basePath,
+  bottleCount,
+  listingStatus,
+  inReview,
+  listingStatusLabel,
+}: CollectionGridItemProps) => {
+  const { perfume } = userPerfume
+  const normalized = normalizeRemoteImageSrc(perfume.image)
+  const imageSrc =
+    normalized && !validImageRegex.test(normalized)
+      ? normalized
+      : BOTTLE_PLACEHOLDER
+  const bottleLabel = buildBottleLabel(userPerfume, bottleCount)
+
+  return (
+    <li className="relative flex flex-col items-center justify-center border-4 border-double border-noir-gold p-1">
+      {inReview && (
+        <ReviewStatusBadge className="absolute left-1 top-1 z-10" />
+      )}
+      <span
+        className={styleMerge(
+          "absolute right-1 top-1 z-10 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+          listingStatus === "listed"
+            ? "bg-noir-gold/80 text-noir-black"
+            : listingStatus === "partiallyListed"
+              ? "bg-noir-gold-500/70 text-noir-black"
+              : "bg-noir-black/80 text-noir-gold-500"
+        )}
+      >
+        {listingStatusLabel}
+      </span>
+      <Link
+        href={`${basePath}/${userPerfume.id}`}
+        className="block"
+      >
+        <Image
+          src={imageSrc}
+          alt={perfume.name ?? "Perfume Bottle"}
+          priority={false}
+          width={192}
+          height={192}
+          quality={75}
+          className="w-48 h-48 object-cover rounded-lg mb-2 mx-auto dark:brightness-90"
+          sizes="(max-width: 768px) 50vw, 33vw"
+          style={
+            {
+              viewTransitionName: userBottleImageTransitionName(userPerfume.id),
+            } as React.CSSProperties
+          }
+        />
+        <span className="text-noir-gold">{perfume.name}</span>
+        {bottleLabel && (
+          <span className="block text-xs text-noir-gold-100 mt-1">{bottleLabel}</span>
+        )}
+      </Link>
+    </li>
+  )
+})
+CollectionGridItem.displayName = "CollectionGridItem"
+
 const MyScentsPageClient = ({
   userPerfumes: initialUserPerfumes,
   wishlistDemand = [],
@@ -196,19 +228,12 @@ const MyScentsPageClient = ({
   const params = useParams()
   const userSlug = params?.userSlug as string
   const [userPerfumes, setUserPerfumes] = useState<UserPerfumeForClient[]>(initialUserPerfumes)
-  const [stats, setStats] = useState<UserInventoryStats>(inventoryStats)
+  const [statsOverride, setStatsOverride] = useState<UserInventoryStats | null>(null)
+  const stats = statsOverride ?? inventoryStats
   const t = useTranslations("myScents")
   const tSort = useTranslations("sortOptions")
   const tTabs = useTranslations("myScents.tabs")
   const tStatus = useTranslations("myScents.listingStatus")
-
-  useEffect(() => {
-    setUserPerfumes((prev) => mergeUserPerfumesWithServer(prev, initialUserPerfumes))
-  }, [initialUserPerfumes])
-
-  useEffect(() => {
-    setStats(inventoryStats)
-  }, [inventoryStats])
 
   const liveInventoryStats = useMemo((): UserInventoryStats => {
     const { bottleCount, houseCount } = computeCollectionCounts(userPerfumes)
@@ -226,7 +251,7 @@ const MyScentsPageClient = ({
     if (!data?.success || !Array.isArray(data.userPerfumes)) return
     setUserPerfumes(data.userPerfumes.map(serializeUserPerfume))
     if (data.inventoryStats) {
-      setStats(data.inventoryStats as UserInventoryStats)
+      setStatsOverride(data.inventoryStats as UserInventoryStats)
     }
   }, [])
 
@@ -468,15 +493,17 @@ const MyScentsPageClient = ({
           listingsLabel={tTabs("listings")}
           listingsCount={activeListings.length + pausedListings.length}
           listingsPanel={
-            <>
-              <DecantSplitsPanel />
-              <MyListingsPanel
-                activeListings={activeListings}
-                pausedListings={pausedListings}
-                basePath={basePath}
-                onListingChange={handleListingChange}
-              />
-            </>
+            activeView === "listings" ? (
+              <>
+                <DecantSplitsPanel />
+                <MyListingsPanel
+                  activeListings={activeListings}
+                  pausedListings={pausedListings}
+                  basePath={basePath}
+                  onListingChange={handleListingChange}
+                />
+              </>
+            ) : null
           }
           inventoryPanel={
             <>
@@ -594,61 +621,22 @@ const MyScentsPageClient = ({
           <div className="animate-fade-in">
             <ul className="w-full animate-fade-in grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {paginatedPerfumes.map((userPerfume) => {
-                const { perfume } = userPerfume
-                const normalized = normalizeRemoteImageSrc(perfume.image)
-                const imageSrc =
-                  normalized && !validImageRegex.test(normalized)
-                    ? normalized
-                    : BOTTLE_PLACEHOLDER
-                const bottleCount = bottleCountByPerfumeId.get(userPerfume.perfumeId) ?? 0
-                const bottleLabel = buildBottleLabel(userPerfume, bottleCount)
-                const listingStatus = getInventoryListingStatus(userPerfume, userPerfumes)
-                const inReview = isCollectionItemInReview(userPerfume)
+                const listingStatus = getInventoryListingStatus(
+                  userPerfume,
+                  userPerfumes
+                )
                 return (
-                  <li
+                  <CollectionGridItem
                     key={userPerfume.id}
-                    className="relative flex flex-col items-center justify-center border-4 border-double border-noir-gold p-1"
-                  >
-                    {inReview && (
-                      <ReviewStatusBadge className="absolute left-1 top-1 z-10" />
-                    )}
-                    <span
-                      className={styleMerge(
-                        "absolute right-1 top-1 z-10 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                        listingStatus === "listed"
-                          ? "bg-noir-gold/80 text-noir-black"
-                          : listingStatus === "partiallyListed"
-                            ? "bg-noir-gold-500/70 text-noir-black"
-                            : "bg-noir-black/80 text-noir-gold-500"
-                      )}
-                    >
-                      {tStatus(listingStatus)}
-                    </span>
-                    <Link
-                      href={`${basePath}/${userPerfume.id}`}
-                      className="block"
-                    >
-                      <Image
-                        src={imageSrc}
-                        alt={perfume.name ?? "Perfume Bottle"}
-                        priority={false}
-                        width={192}
-                        height={192}
-                        quality={75}
-                        className="w-48 h-48 object-cover rounded-lg mb-2 mx-auto dark:brightness-90"
-                        sizes="(max-width: 768px) 50vw, 33vw"
-                        style={
-                          {
-                            viewTransitionName: userBottleImageTransitionName(userPerfume.id),
-                          } as React.CSSProperties
-                        }
-                      />
-                      <span className="text-noir-gold">{perfume.name}</span>
-                      {bottleLabel && (
-                        <span className="block text-xs text-noir-gold-100 mt-1">{bottleLabel}</span>
-                      )}
-                    </Link>
-                  </li>
+                    userPerfume={userPerfume}
+                    basePath={basePath}
+                    bottleCount={
+                      bottleCountByPerfumeId.get(userPerfume.perfumeId) ?? 0
+                    }
+                    listingStatus={listingStatus}
+                    inReview={isCollectionItemInReview(userPerfume)}
+                    listingStatusLabel={tStatus(listingStatus)}
+                  />
                 )
               })}
             </ul>

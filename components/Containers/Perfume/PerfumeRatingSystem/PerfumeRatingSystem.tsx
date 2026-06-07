@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useState } from "react"
 import { useTranslations } from "next-intl"
 
 import NoirRating from "@/components/Organisms/NoirRating"
@@ -27,18 +27,16 @@ const PerfumeRatingSystem = ({
   readonly = false,
 }: PerfumeRatingSystemProps) => {
   const t = useTranslations("singlePerfume.rating")
-  const [averageRatings, setAverageRatings] = useState(initialAverageRatings)
+  const [refreshedAverageRatings, setRefreshedAverageRatings] =
+    useState<PerfumeDetailAverageRatingsProp>(null)
   const [isRefreshing, setIsRefreshing] = useState(false)
-
-  useEffect(() => {
-    setAverageRatings(initialAverageRatings)
-  }, [initialAverageRatings])
+  const averageRatings = refreshedAverageRatings ?? initialAverageRatings
 
   const refreshAverageRatings = useCallback(async () => {
     setIsRefreshing(true)
     try {
       const data = await getRatings(perfumeId)
-      setAverageRatings(data.averageRatings ?? null)
+      setRefreshedAverageRatings(data.averageRatings ?? null)
     } catch (error) {
       console.error("Failed to refresh ratings", error)
     } finally {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { memo, useCallback, useState } from "react"
 import Image from "next/image"
 import { useTranslations } from "next-intl"
 import { Link } from "next-view-transitions"
@@ -35,7 +35,7 @@ type ListingCardProps = {
   onResume: (row: UserPerfumeForClient) => void
 }
 
-const ListingCard = ({
+const ListingCard = memo(({
   row,
   basePath,
   variant,
@@ -149,7 +149,8 @@ const ListingCard = ({
       </div>
     </li>
   )
-}
+})
+ListingCard.displayName = "ListingCard"
 
 type MyListingsPanelProps = {
   activeListings: UserPerfumeForClient[]

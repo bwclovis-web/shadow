@@ -1,10 +1,15 @@
 import { cx } from "class-variance-authority"
+import dynamic from "next/dynamic"
 import { useRef } from "react"
 import { useTranslations } from "next-intl"
 import { MdLibraryAdd } from "react-icons/md"
 
 import { Button } from "@/components/Atoms/Button"
-import MyScentsModal from "@/components/Containers/MyScents/MyScentsModal"
+
+const MyScentsModal = dynamic(
+  () => import("@/components/Containers/MyScents/MyScentsModal"),
+  { ssr: false }
+)
 import { useSessionStore } from "@/hooks/sessionStore"
 import type { OptimisticCollectionItem } from "@/hooks/useMyScentsForm"
 import type { PerfumeI } from "@/types"

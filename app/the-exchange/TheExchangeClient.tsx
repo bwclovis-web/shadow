@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import dynamic from "next/dynamic"
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -8,7 +9,6 @@ import { useTranslations } from "next-intl"
 import { Button } from "@/components/Atoms/Button"
 import { PaginationBar } from "@/components/Molecules/PaginationBar"
 import { FilterChipStrip } from "@/components/Molecules/FilterChipStrip"
-import { DiscoveryFiltersPanel } from "@/components/Organisms/DiscoveryFiltersPanel"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import { ExchangePerfumeCard } from "@/components/Molecules/ExchangePerfumeCard"
 import { ExchangeOpenSplitChip } from "@/components/Molecules/ExchangeOpenSplitChip/ExchangeOpenSplitChip"
@@ -18,7 +18,22 @@ import { DESKTOP_MEDIA } from "@/constants/breakpoints"
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
 import { useGsapStagger } from "@/hooks/useGsapStagger"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
-import { TradeComposerModal } from "@/components/Containers/Trade/TradeComposerModal"
+
+const DiscoveryFiltersPanel = dynamic(
+  () =>
+    import("@/components/Organisms/DiscoveryFiltersPanel").then(
+      (mod) => mod.DiscoveryFiltersPanel
+    ),
+  { ssr: false }
+)
+
+const TradeComposerModal = dynamic(
+  () =>
+    import("@/components/Containers/Trade/TradeComposerModal").then(
+      (mod) => mod.TradeComposerModal
+    ),
+  { ssr: false }
+)
 import { useTradeComposerModal } from "@/hooks/useTradeComposerModal"
 import {
   getTradeCtaLabelKey,

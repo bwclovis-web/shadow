@@ -1,10 +1,15 @@
 "use client"
 
 import { type RefObject, useEffect, useRef, useState } from "react"
+import dynamic from "next/dynamic"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button"
-import RichTextEditor from "@/components/Atoms/RichTextEditor"
+
+const RichTextEditor = dynamic(
+  () => import("@/components/Atoms/RichTextEditor"),
+  { ssr: false }
+)
 import ReviewCard from "@/components/Molecules/ReviewCard"
 import Modal from "@/components/Organisms/Modal"
 import { useCSRF } from "@/hooks/useCSRF"
@@ -73,22 +78,16 @@ const ReviewSection = ({
   const isReviewModalOpen = modalOpen && modalId === reviewModalId
   const [reviewContent, setReviewContent] = useState("")
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null)
-  const [userReview, setUserReview] = useState(existingUserReview || null)
-  const [reviewsState, setReviewsState] = useState(initialReviewsData)
+  const [userReviewOverride, setUserReviewOverride] = useState<Review | null>(null)
+  const [reviewsOverride, setReviewsOverride] = useState<ReviewsData | null>(null)
+  const userReview = userReviewOverride ?? existingUserReview ?? null
+  const reviewsState = reviewsOverride ?? initialReviewsData
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [isSubmittingReview, setIsSubmittingReview] = useState(false)
   const [highlightedReviewId, setHighlightedReviewId] = useState<string | null>(null)
   const [removingReviewIds, setRemovingReviewIds] = useState<string[]>([])
   const { submitForm } = useCSRF()
   const reviewListRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    setReviewsState(initialReviewsData)
-  }, [initialReviewsData])
-
-  useEffect(() => {
-    setUserReview(existingUserReview || null)
-  }, [existingUserReview])
 
   useEffect(() => {
     const ours = modalOpen && modalId === reviewModalId
@@ -141,12 +140,13 @@ const ReviewSection = ({
   })
 
   const updateReviewsState = (nextData: Review[], pagination: ReviewsPagination) => {
-    setReviewsState(prev => {
-      if (!prev || pagination.page === 1) {
+    setReviewsOverride(prev => {
+      const base = prev ?? initialReviewsData
+      if (!base || pagination.page === 1) {
         return { reviews: nextData, pagination }
       }
-      const existingIds = new Set(prev.reviews.map(review => review.id))
-      const merged = [...prev.reviews]
+      const existingIds = new Set(base.reviews.map(review => review.id))
+      const merged = [...base.reviews]
       nextData.forEach(review => {
         if (!existingIds.has(review.id)) merged.push(review)
       })
@@ -181,16 +181,17 @@ const ReviewSection = ({
   }
 
   const updateReviewInState = (reviewId: string, updatedReview: Review) => {
-    setReviewsState(prev => {
-      if (!prev) return prev
+    setReviewsOverride(prev => {
+      const base = prev ?? initialReviewsData
+      if (!base) return prev
       return {
-        ...prev,
-        reviews: prev.reviews.map(review =>
+        ...base,
+        reviews: base.reviews.map(review =>
           review.id === reviewId ? updatedReview : review
         ),
       }
     })
-    if (userReview?.id === reviewId) setUserReview(updatedReview)
+    if (userReview?.id === reviewId) setUserReviewOverride(updatedReview)
   }
 
   const handleCreateReview = async () => {
@@ -224,7 +225,7 @@ const ReviewSection = ({
       const result = await response.json()
       setReviewContent("")
       closeModal()
-      setUserReview(result?.data || null)
+      setUserReviewOverride(result?.data || null)
       setHighlightedReviewId(result?.data?.id ?? null)
       await refreshReviews()
     } catch (error) {
@@ -356,7 +357,7 @@ const ReviewSection = ({
       }
 
       if (isUserReview) {
-        setUserReview(null)
+        setUserReviewOverride(null)
       }
 
       await refreshReviews()

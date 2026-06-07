@@ -1,5 +1,7 @@
 "use client"
 
+import { memo } from "react"
+
 import LinkCard from "@/components/Organisms/LinkCard"
 import { ListingImageBadges } from "@/components/Molecules/ListingPhotos/ListingPhotos"
 import { ExchangeCardPhotos } from "@/components/Molecules/ExchangeCardPhotos"
@@ -17,7 +19,7 @@ type ExchangePerfumeCardProps = {
   enableSharedViewTransitions?: boolean
 }
 
-export const ExchangePerfumeCard = ({
+export const ExchangePerfumeCard = memo(({
   perfume,
   viewerId = null,
   imagePriority = false,
@@ -61,4 +63,5 @@ export const ExchangePerfumeCard = ({
       </div>
     </LinkCard>
   )
-}
+})
+ExchangePerfumeCard.displayName = "ExchangePerfumeCard"

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { memo, useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 import Image from "next/image"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
@@ -29,7 +29,7 @@ interface WishlistItemCardProps {
   onRemove?: () => void
 }
 
-const WishlistItemCard = ({
+const WishlistItemCard = memo(({
   item,
   isAvailable,
   availableAmount,
@@ -201,6 +201,7 @@ const WishlistItemCard = ({
       </div>
     </div>
   )
-}
+})
+WishlistItemCard.displayName = "WishlistItemCard"
 
 export default WishlistItemCard

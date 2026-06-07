@@ -4,15 +4,29 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import dynamic from 'next/dynamic'
 import { useState } from 'react'
 
-import { CompareTray } from '@/components/Molecules/CompareTray/CompareTray'
 import ModalRouteCleanup from '@/components/Molecules/ModalRouteCleanup/ModalRouteCleanup'
+import { useCompareStore } from '@/hooks/compareStore'
 import { useTokenRefresh } from '@/hooks/useTokenRefresh'
+
+const CompareTray = dynamic(
+  () =>
+    import('@/components/Molecules/CompareTray/CompareTray').then(
+      (mod) => mod.CompareTray
+    ),
+  { ssr: false }
+)
 
 const ReactQueryDevtools = dynamic(
   () =>
     import('@tanstack/react-query-devtools').then((mod) => mod.ReactQueryDevtools),
   { ssr: false }
 )
+
+const LazyCompareTray = () => {
+  const itemCount = useCompareStore((s) => s.items.length)
+  if (itemCount === 0) return null
+  return <CompareTray />
+}
 
 type ProvidersProps = {
   children: React.ReactNode
@@ -31,7 +45,7 @@ export function Providers({
     <QueryClientProvider client={queryClient}>
       <ModalRouteCleanup />
       {children}
-      <CompareTray />
+      <LazyCompareTray />
       {process.env.NODE_ENV === 'development' && (
         <ReactQueryDevtools initialIsOpen={false} />
       )}

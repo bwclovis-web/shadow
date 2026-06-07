@@ -25,7 +25,6 @@ import { useCompareStore, type CompareItem } from "@/hooks/compareStore"
 import {
   comparePersonalizeQueryKeys,
   fetchComparePersonalize,
-  fetchComparePerfumes,
 } from "@/lib/queries/compare"
 import type { ComparePerfumeDto } from "@/models/compare.server"
 import { compareIdsExceedMax, normalizeCompareIds } from "@/utils/compare-ids"
@@ -187,7 +186,17 @@ function ComparePageSuspenseFallback() {
   )
 }
 
-function ComparePageInner({ userId }: { userId: string | null }) {
+type ComparePageInnerProps = {
+  userId: string | null
+  initialUrlIds?: string[]
+  initialCompareData?: ComparePerfumeDto[]
+}
+
+function ComparePageInner({
+  userId,
+  initialUrlIds = [],
+  initialCompareData,
+}: ComparePageInnerProps) {
   const t = useTranslations("compare")
   const tCommon = useTranslations("common")
   const router = useRouter()
@@ -233,29 +242,23 @@ function ComparePageInner({ userId }: { userId: string | null }) {
     const key = urlIds.join("|")
     if (hydrateKeyRef.current === key) return
 
-    let cancelled = false
     hydrateKeyRef.current = key
     urlSyncBlockRef.current = true
 
-    void fetchComparePerfumes(urlIds)
-      .then((data) => {
-        if (cancelled) return
-        const mapped: CompareItem[] = urlIds.map((id) => {
-          const dto = data.find((p) => p.id === id)
-          if (dto) return dtoToCompareItem(dto)
-          return { id, slug: "", name: id, image: undefined }
-        })
-        setItems(mapped)
+    if (
+      initialCompareData &&
+      initialUrlIds.join("|") === key
+    ) {
+      const mapped: CompareItem[] = urlIds.map((id) => {
+        const dto = initialCompareData.find((p) => p.id === id)
+        if (dto) return dtoToCompareItem(dto)
+        return { id, slug: "", name: id, image: undefined }
       })
-      .finally(() => {
-        if (!cancelled) urlSyncBlockRef.current = false
-      })
-
-    return () => {
-      cancelled = true
-      urlSyncBlockRef.current = false
+      setItems(mapped)
     }
-  }, [urlIds, setItems])
+
+    urlSyncBlockRef.current = false
+  }, [urlIds, initialCompareData, initialUrlIds, setItems])
 
   const orderedIds = useMemo(() => items.map((i) => i.id), [items])
 
@@ -279,7 +282,16 @@ function ComparePageInner({ userId }: { userId: string | null }) {
     router.replace(next, { scroll: false })
   }, [orderedIds, pathname, router, searchParams])
 
-  const { data, isLoading, isError, error, refetch } = useComparePayload(orderedIds)
+  const compareInitialData = useMemo(() => {
+    if (!initialCompareData || initialUrlIds.length === 0) return undefined
+    if (initialUrlIds.join("|") !== orderedIds.join("|")) return undefined
+    return initialCompareData
+  }, [initialCompareData, initialUrlIds, orderedIds])
+
+  const { data, isLoading, isError, error, refetch } = useComparePayload(
+    orderedIds,
+    { initialData: compareInitialData }
+  )
 
   const { data: personalize } = useQuery({
     queryKey: comparePersonalizeQueryKeys.byOrderedIds(orderedIds),
@@ -440,10 +452,24 @@ function ComparePageInner({ userId }: { userId: string | null }) {
   )
 }
 
-export default function ComparePageClient({ userId }: { userId: string | null }) {
+type ComparePageClientProps = {
+  userId: string | null
+  initialUrlIds?: string[]
+  initialCompareData?: ComparePerfumeDto[]
+}
+
+export default function ComparePageClient({
+  userId,
+  initialUrlIds,
+  initialCompareData,
+}: ComparePageClientProps) {
   return (
     <Suspense fallback={<ComparePageSuspenseFallback />}>
-      <ComparePageInner userId={userId} />
+      <ComparePageInner
+        userId={userId}
+        initialUrlIds={initialUrlIds}
+        initialCompareData={initialCompareData}
+      />
     </Suspense>
   )
 }

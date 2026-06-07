@@ -1,5 +1,6 @@
 "use client"
 
+import { memo } from "react"
 import { useTranslations } from "next-intl"
 import { GiTrade } from "react-icons/gi"
 
@@ -26,7 +27,7 @@ type ExchangeListingRowProps = {
   showProfileLink?: boolean
 }
 
-const ExchangeListingRow = ({
+const ExchangeListingRow = memo(({
   listing,
   perfumeImage = null,
   reputation,
@@ -144,6 +145,7 @@ const ExchangeListingRow = ({
       ) : null}
     </li>
   )
-}
+})
+ExchangeListingRow.displayName = "ExchangeListingRow"
 
 export default ExchangeListingRow

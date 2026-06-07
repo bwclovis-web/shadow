@@ -60,7 +60,7 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
           width={356}
           height={356}
           priority={pathname !== "/"}
-          quality={90}
+          quality={75}
           className="h-[var(--spacing-site-header-desktop)] w-auto max-h-42 drop-shadow-[0_4px_24px_rgba(0,0,0,0.55)]"
         />
       </PrefetchLink>
