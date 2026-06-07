@@ -1,3 +1,5 @@
+import { createLetterPaginatedQuery } from "@/lib/queries/create-letter-paginated-query"
+
 /**
  * Query functions and query keys for Houses (Perfume Houses)
  * 
@@ -202,37 +204,18 @@ export async function getHouseBySlug(slug: string): Promise<any> {
  * @param take - Number of records to take
  * @returns Promise resolving to paginated houses response
  */
-export async function getHousesByLetterPaginated(
+const fetchHousesByLetterPaginated = createLetterPaginatedQuery<HousesByLetterPaginatedResponse>({
+  endpoint: "/api/houses-by-letter-paginated",
+  errorLabel: "houses by letter (paginated)",
+})
+
+export const getHousesByLetterPaginated = (
   letter: string,
   houseType: string = "all",
   skip: number = 0,
   take: number = 16
-): Promise<HousesByLetterPaginatedResponse> {
-  if (!letter || !/^[A-Za-z]$/.test(letter)) {
-    throw new Error("Valid letter parameter is required (single letter A-Z)")
-  }
-
-  const params = new URLSearchParams({
-    letter: letter.toUpperCase(),
-    houseType,
-    skip: skip.toString(),
-    take: take.toString(),
-  })
-
-  const response = await fetch(`/api/houses-by-letter-paginated?${params}`)
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch houses by letter (paginated): ${response.statusText}`)
-  }
-
-  const data: HousesByLetterPaginatedResponse = await response.json()
-
-  if (!data.success) {
-    throw new Error("Failed to fetch houses by letter (paginated)")
-  }
-
-  return data
-}
+): Promise<HousesByLetterPaginatedResponse> =>
+  fetchHousesByLetterPaginated(letter, houseType, skip, take)
 
 /**
  * Query options factory for houses queries.

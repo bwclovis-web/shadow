@@ -1,5 +1,7 @@
 "use client"
 
+import { uploadImage } from "@/lib/api-client"
+
 const MAX_EDGE = 1200
 const JPEG_QUALITY = 0.85
 
@@ -42,30 +44,5 @@ export const compressImageFile = async (
 export const uploadListingImage = async (
   file: File | Blob,
   csrfHeaders: HeadersInit
-): Promise<{ url: string }> => {
-  const formData = new FormData()
-  const uploadFile =
-    file instanceof File
-      ? file
-      : new File([file], "listing.jpg", { type: "image/jpeg" })
-  formData.append("file", uploadFile)
-
-  const response = await fetch("/api/listing-images", {
-    method: "POST",
-    headers: csrfHeaders,
-    body: formData,
-    credentials: "include",
-  })
-
-  const data = (await response.json().catch(() => ({}))) as {
-    success?: boolean
-    url?: string
-    error?: string
-  }
-
-  if (!response.ok || !data.success || !data.url) {
-    throw new Error(data.error ?? "Upload failed")
-  }
-
-  return { url: data.url }
-}
+): Promise<{ url: string }> =>
+  uploadImage("/api/listing-images", file, csrfHeaders, "listing.jpg")

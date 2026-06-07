@@ -1,8 +1,6 @@
 import type { Metadata } from "next"
 import type React from "react"
-import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getTranslations } from "next-intl/server"
-import { redirect } from "next/navigation"
 
 import {
   getUnreadAlertCount,
@@ -15,9 +13,8 @@ import {
 } from "@/services/recommendations"
 import type { UserAlert } from "@/types/database"
 import type { SessionUser } from "@/utils/session-from-request.server"
-import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { publicAssetUrl } from "@/utils/public-asset-url.server"
-import { getProfileSlug } from "@/utils/user"
+import { requireOwnedProfileSession } from "@/utils/server/require-profile-session.server"
 
 import ProfileClient from "./ProfileClient"
 
@@ -36,21 +33,7 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
 
 export default async function ProfilePage({ params }: Props): Promise<React.ReactElement> {
   const { userSlug } = await params
-  const cookieHeader = await getCookieHeader()
-  const session = await getSessionFromCookieHeader(cookieHeader, {
-    includeUser: true,
-  })
-
-  if (!session?.user) {
-    redirect("/sign-in")
-  }
-
-  const slug = getProfileSlug(session.user)
-  if (slug !== userSlug) {
-    redirect(`/${slug}/profile`)
-  }
-
-  const user = session.user
+  const { user } = await requireOwnedProfileSession(userSlug)
 
   let alerts: Awaited<ReturnType<typeof getUserAlerts>> = []
   let preferences: Awaited<ReturnType<typeof getUserAlertPreferences>> | null = null

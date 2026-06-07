@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
+import { getCsrfHeaders } from "@/lib/api-client"
 import { queryKeys as houseQueryKeys } from "@/lib/queries/houses"
 import { queryKeys } from "@/lib/queries/perfumes"
 import { queryKeys as dataQualityQueryKeys } from "@/lib/queries/dataQuality"
@@ -14,23 +15,13 @@ export interface DeletePerfumeResponse {
   error?: string
 }
 
-const getCsrfHeader = (): HeadersInit => {
-  if (typeof document === "undefined") return {}
-  const cookie = document.cookie
-    .split(";")
-    .map((c) => c.trim())
-    .find((c) => c.startsWith("_csrf="))
-  const token = cookie ? cookie.split("=")[1]?.trim() : null
-  return token ? { "x-csrf-token": token } : {}
-}
-
 const deletePerfume = async (params: DeletePerfumeParams): Promise<DeletePerfumeResponse> => {
   const { perfumeId } = params
 
   const response = await fetch(`/api/deletePerfume?id=${encodeURIComponent(perfumeId)}`, {
     method: "DELETE",
     credentials: "include",
-    headers: getCsrfHeader(),
+    headers: getCsrfHeaders(),
   })
 
   const result = await response.json().catch(() => ({}))

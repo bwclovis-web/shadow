@@ -1,5 +1,7 @@
 import { useMutation } from "@tanstack/react-query"
 
+import { getCsrfHeaders } from "@/lib/api-client"
+
 export type FollowTargetType = "user" | "house" | "perfume"
 
 export interface FollowActionParams {
@@ -17,16 +19,6 @@ export interface FollowActionResponse {
   error?: string
 }
 
-const getCsrfHeader = (): HeadersInit => {
-  if (typeof document === "undefined") return {}
-  const cookie = document.cookie
-    .split(";")
-    .map(c => c.trim())
-    .find(c => c.startsWith("_csrf="))
-  const token = cookie ? cookie.split("=")[1]?.trim() : null
-  return token ? { "x-csrf-token": token } : {}
-}
-
 const followAction = async (params: FollowActionParams): Promise<FollowActionResponse> => {
   const formData = new FormData()
   formData.append("action", params.action)
@@ -36,7 +28,7 @@ const followAction = async (params: FollowActionParams): Promise<FollowActionRes
   const response = await fetch("/api/follow", {
     method: "POST",
     body: formData,
-    headers: getCsrfHeader(),
+    headers: getCsrfHeaders(),
   })
 
   const json = (await response.json()) as FollowActionResponse & {

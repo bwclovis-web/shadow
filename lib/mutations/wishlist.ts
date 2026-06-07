@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
+import { getCsrfHeaders } from "@/lib/api-client"
 import { queryKeys as perfumeQueryKeys } from "@/lib/queries/perfumes"
 import { queryKeys, type WishlistResponse as WishlistCache } from "@/lib/queries/user"
 
@@ -34,16 +35,6 @@ const isInWishlist = (items: WishlistItem[], perfumeId: string) =>
     item => item.perfumeId === perfumeId || item.perfume?.id === perfumeId
   )
 
-const getCsrfHeader = (): HeadersInit => {
-  if (typeof document === "undefined") return {}
-  const cookie = document.cookie
-    .split(";")
-    .map((c) => c.trim())
-    .find((c) => c.startsWith("_csrf="))
-  const token = cookie ? cookie.split("=")[1]?.trim() : null
-  return token ? { "x-csrf-token": token } : {}
-}
-
 const wishlistAction = async (
   params: WishlistActionParams
 ): Promise<WishlistResponse> => {
@@ -63,7 +54,7 @@ const wishlistAction = async (
     method: "POST",
     body: formData,
     credentials: "include",
-    headers: getCsrfHeader(),
+    headers: getCsrfHeaders(),
   })
 
   if (!response.ok) {

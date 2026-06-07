@@ -1,3 +1,5 @@
+import { createLetterPaginatedQuery } from "@/lib/queries/create-letter-paginated-query"
+
 /**
  * Query functions and query keys for Perfumes
  * 
@@ -86,27 +88,18 @@ export const queryKeys = {
  * @param take - Number of records to take (default: 16)
  * @returns Promise resolving to perfumes response with metadata
  */
-export const getPerfumesByLetter = async (
+const fetchPerfumesByLetter = createLetterPaginatedQuery<PerfumesByLetterResponse>({
+  endpoint: "/api/perfumes-by-letter",
+  errorLabel: "perfumes by letter",
+})
+
+export const getPerfumesByLetter = (
   letter: string,
   houseType: string = "all",
   skip: number = 0,
   take: number = 16
-): Promise<PerfumesByLetterResponse> => {
-  if (!letter || !/^[A-Za-z]$/.test(letter)) {
-    throw new Error("Valid letter parameter is required (single letter A-Z)")
-  }
-  const params = new URLSearchParams({
-    letter: letter.toUpperCase(),
-    houseType,
-    skip: skip.toString(),
-    take: take.toString(),
-  })
-  const response = await fetch(`/api/perfumes-by-letter?${params}`)
-  if (!response.ok) throw new Error(`Failed to fetch perfumes by letter: ${response.statusText}`)
-  const data: PerfumesByLetterResponse = await response.json()
-  if (!data.success) throw new Error("Failed to fetch perfumes by letter")
-  return data
-}
+): Promise<PerfumesByLetterResponse> =>
+  fetchPerfumesByLetter(letter, houseType, skip, take)
 
 /**
  * Fetch a single perfume by slug.

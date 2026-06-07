@@ -7,7 +7,7 @@ import { Button } from "~/components/Atoms/Button/Button"
 import FormField from "~/components/Atoms/FormField/FormField"
 import { FormInput } from "~/components/Atoms/Input"
 import { CSRFToken } from "~/components/Molecules/CSRFToken"
-import { ContactTraderSchema } from "~/utils/formValidationSchemas"
+import { ContactTraderSchema } from "@/utils/validation/formValidationSchemas"
 
 interface ItemInfo {
   userPerfumeId: string

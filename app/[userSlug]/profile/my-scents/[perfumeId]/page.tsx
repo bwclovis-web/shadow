@@ -1,13 +1,11 @@
 import type { Metadata } from "next"
 import type React from "react"
-import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getTranslations } from "next-intl/server"
 import { redirect } from "next/navigation"
 
 import { getSingleUserPerfumeById } from "@/models/perfume.server"
 import { getUserPerfumes } from "@/models/user.server"
-import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
-import { getProfileSlug } from "@/utils/user"
+import { requireOwnedProfileSession } from "@/utils/server/require-profile-session.server"
 
 import MySingleScentClient, { type SerializedUserPerfume } from "./MySingleScentClient"
 
@@ -49,27 +47,15 @@ export default async function MySingleScentPage({
   params,
 }: Props): Promise<React.ReactElement> {
   const { userSlug, perfumeId } = await params
-  const cookieHeader = await getCookieHeader()
-  const session = await getSessionFromCookieHeader(cookieHeader, {
-    includeUser: true,
-  })
-
-  if (!session?.userId || !session?.user) {
-    redirect("/sign-in")
-  }
-
-  const slug = getProfileSlug(session.user)
-  if (slug !== userSlug) {
-    redirect(`/${slug}/profile/my-scents`)
-  }
+  const { user } = await requireOwnedProfileSession(userSlug, { subPath: "my-scents" })
 
   const [userPerfume, allUserPerfumes] = await Promise.all([
-    getSingleUserPerfumeById(perfumeId, session.userId),
-    getUserPerfumes(session.userId),
+    getSingleUserPerfumeById(perfumeId, user.id),
+    getUserPerfumes(user.id),
   ])
 
   if (!userPerfume) {
-    redirect(`/${slug}/profile/my-scents`)
+    redirect(`/${userSlug}/profile/my-scents`)
   }
 
   const serializedUserPerfume = serializeUserPerfume(
@@ -94,7 +80,7 @@ export default async function MySingleScentPage({
     <MySingleScentClient
       userPerfume={serializedUserPerfume as SerializedUserPerfume}
       allUserPerfumes={serializedAll}
-      userSlug={slug}
+      userSlug={userSlug}
     />
   )
 }

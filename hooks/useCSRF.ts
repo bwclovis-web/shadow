@@ -1,15 +1,8 @@
 import { useEffect, useState } from "react"
 
-const CSRF_COOKIE_PREFIX = "_csrf="
+import { getCSRFFromCookie } from "@/lib/api-client"
 
-const getCSRFFromCookie = (): string | null => {
-  const csrfCookie = document.cookie
-    .split(";")
-    .find((c) => c.trim().startsWith(CSRF_COOKIE_PREFIX))
-  if (!csrfCookie) return null
-  const token = csrfCookie.split("=")[1]?.trim()
-  return token || null
-}
+export { getCSRFFromCookie }
 
 /**
  * Hook to manage CSRF tokens in React components.
