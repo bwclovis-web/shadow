@@ -9,6 +9,7 @@ import {
   isNoteSubstantiatedInSource,
   isComplianceOrSourcingNote,
   isObviousNonMaterialNote,
+  isThemeCssTokenNote,
   peelMarketingDescriptorTail,
   sanitizeExtractedNoteCandidate,
 } from "./note-source-confirmation"
@@ -334,6 +335,38 @@ Middle Notes: Verdant Earth Accord (Rich Soil, Green and Flowering Plants)`
     }
     expect(isComplianceOrSourcingNote("sandalwood")).toBe(false)
     expect(isComplianceOrSourcingNote("agarwood")).toBe(false)
+  })
+
+  it("isComplianceOrSourcingNote rejects Andromeda policy prose mistaken for notes", () => {
+    for (const junk of [
+      "these fragrances are all poured by hand",
+      "the purpose of this description",
+      "thank you for giving us your time",
+      "becoming part of andromeda",
+      "sweet notes",
+      "main notes",
+    ]) {
+      expect(isComplianceOrSourcingNote(junk), junk).toBe(true)
+    }
+  })
+
+  it("isThemeCssTokenNote rejects Shopify theme CSS bleed", () => {
+    for (const junk of [
+      "--",
+      "--light-",
+      "--button-",
+      "button",
+      "footer",
+      "navigation",
+      "header",
+      "secondary-elements",
+      "--product-badge-",
+    ]) {
+      expect(isThemeCssTokenNote(junk), junk).toBe(true)
+      expect(isObviousNonMaterialNote(junk), junk).toBe(true)
+    }
+    expect(isThemeCssTokenNote("vetiver")).toBe(false)
+    expect(isThemeCssTokenNote("iris")).toBe(false)
   })
 
   it("isObviousNonMaterialNote rejects CSS bleed and truncated prose fragments", () => {

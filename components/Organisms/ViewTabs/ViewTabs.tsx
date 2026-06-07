@@ -68,7 +68,7 @@ const ViewTabs = <T extends string>({
         role="tablist"
         aria-label={ariaLabel}
         aria-orientation="horizontal"
-        className="flex w-full gap-1 border-b border-noir-gold/50"
+        className="flex w-full gap-1"
       >
         {tabs.map((tab, idx) => {
           const isActive = activeIndex === idx
@@ -90,7 +90,7 @@ const ViewTabs = <T extends string>({
                 "relative -mb-px flex-1 cursor-pointer rounded-t-lg border px-4 py-3 text-sm font-semibold transition-colors sm:text-base",
                 isActive
                   ? "z-10 border border-noir-gold border-b-transparent bg-noir-black/30 text-noir-gold"
-                  : "border border-transparent border-b-noir-gold/50 bg-transparent text-noir-gold-500 hover:border-noir-gold/30 hover:bg-noir-gold/5 hover:text-noir-gold-100"
+                  : "border border-transparent border-b-noir-gold bg-transparent text-noir-gold-500 hover:border-noir-gold/30 hover:bg-noir-gold/5 hover:text-noir-gold-100"
               )}
             >
               {tab.label}
@@ -112,7 +112,7 @@ const ViewTabs = <T extends string>({
           aria-labelledby={`${baseId}-tab-${tab.id}`}
           hidden={activeIndex !== idx}
           tabIndex={0}
-          className="rounded-b-lg border border-t-0 border-noir-gold/50 bg-noir-black/30 p-4 pt-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-noir-gold/50"
+          className="rounded-b-lg border border-t-0 border-noir-gold bg-noir-black/30 p-4 pt-6 focus:outline-none focus-visible:ring-2 focus-visible:ring-noir-gold/50"
         >
           {tab.panel}
         </section>

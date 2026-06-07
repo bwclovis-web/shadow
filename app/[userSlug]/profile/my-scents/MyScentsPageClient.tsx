@@ -459,7 +459,7 @@ const MyScentsPageClient = ({
         />
       )}
       <WishlistDemandSection demand={wishlistDemand} />
-      <div className="noir-border relative mx-auto p-4">
+      <div >
         <MyScentsViewTabs
           activeView={activeView}
           onViewChange={setActiveView}
@@ -480,7 +480,7 @@ const MyScentsPageClient = ({
           }
           inventoryPanel={
             <>
-              <h2 className="text-center text-xl text-noir-gold">{t("inventory.heading")}</h2>
+              <h2 className="text-center mb-4">{t("inventory.heading")}</h2>
               {bottleEntries.length > 0 && (
                 <div className="mb-4 w-full">
                   <SearchInput

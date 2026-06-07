@@ -328,7 +328,7 @@ const MyListingsPanel = ({
       )}
       {pausedListings.length > 0 && (
         <section>
-          <h3 className="mb-3 text-center text-lg text-noir-gold">{t("pausedHeading")}</h3>
+          <h2 className="mb-3 text-center">{t("pausedHeading")}</h2>
           <p className="mb-4 text-center text-sm text-noir-gold-500">{t("pausedSubheading")}</p>
           <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {pausedListings.map((row) => (

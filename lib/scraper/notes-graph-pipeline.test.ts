@@ -10,15 +10,19 @@ vi.mock("@langchain/openai", () => ({
   })),
 }))
 
-import { scrapedItemsNeedPatternEtsyEnrichment } from "./map-scraped-items"
-import { canonicalizeNote, explodeSpaceSeparatedNoteBlob, splitGluedMerchantNoteRun } from "./canonical-notes"
 import {
   computeBatchNoteUniformityWarnings,
   detailUrlAlignsWithProductName,
   extractNotesForItems,
+  isEtatLibreProductUrl,
+  isUnusableMerchantDescription,
   mergeFlatMaterialsIntoLayeredPyramid,
+  normalizePdpDescription,
   sanitizeCopyForNotePipeline,
+  stripEtatLibreUiNoise,
 } from "./notes-graph"
+import { scrapedItemsNeedNodeRepair, scrapedItemsNeedPatternEtsyEnrichment } from "./map-scraped-items"
+import { canonicalizeNote, explodeSpaceSeparatedNoteBlob, splitGluedMerchantNoteRun } from "./canonical-notes"
 
 /** Structured notes with 3 layers and enough notes to skip merge LLM; keeps Phase 1 free of invoke(). */
 const NOTES_TEXT_NO_LLM = `Top: bergamot, lemon
@@ -288,6 +292,45 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
     expect(JSON.parse(records[0].heartNotes)).toContain("oak")
     expect(JSON.parse(records[0].baseNotes)).toContain("vanilla")
     expect(records[0].description).toContain("bourbon-soaked confession")
+  })
+
+  it("empty detailURL (DB refresh): noir still runs when 2+ notes are extracted", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Smoked Oak",
+        description: "Top notes: bourbon, oak. Base: vanilla.",
+        image: "",
+        detailURL: "",
+        perfumeHouse: "Test House",
+      },
+    ]
+
+    let noirCalls = 0
+    invokeMock.mockImplementation(async (messages: unknown) => {
+      const msgs = messages as { role: string; content: string }[]
+      const sys = msgs.find(m => m.role === "system")?.content ?? ""
+      if (sys.includes("film noir")) {
+        noirCalls++
+        return { content: "Neon rain on wet oak and bourbon smoke." }
+      }
+      if (sys.includes("master perfumer")) {
+        return {
+          content: JSON.stringify({
+            openNotes: ["bourbon"],
+            heartNotes: ["oak"],
+            baseNotes: ["vanilla"],
+          }),
+        }
+      }
+      return { content: JSON.stringify({ openNotes: [], heartNotes: [], baseNotes: [] }) }
+    })
+
+    const { records } = await extractNotesForItems(items, "Test House", { generateNoirDescriptions: true })
+
+    expect(noirCalls).toBe(1)
+    expect(records[0].description).toContain("Neon rain")
   })
 
   it("pure metaphor with no materials: NOTE_SYSTEM returns empty, name+house fallback runs and provides notes", async () => {
@@ -1671,6 +1714,131 @@ Organically |
     ]
     expect(all.length).toBeGreaterThanOrEqual(6)
     expect(all).toEqual(expect.arrayContaining(["coca-cola", "rum", "bourbon vanilla"]))
+  }, 30_000)
+
+  it("Ellis Brooklyn Vanilla Milk: extracts Top/Mid/Dry dt/dd pyramid from PDP HTML", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM must not run when dt/dd pyramid is present")
+    })
+    const ellisHtml = `<html><body>
+      <dl>
+        <dt class="h5">Top</dt><dd>Creamy Milk Accord, Frangipani, Peony Rose</dd>
+        <dt class="h5">Mid</dt><dd>Bourbon Vanilla Bean, Madagascar Vanilla Bean Extract, Upcycled Cocoa Shell Extract</dd>
+        <dt class="h5">Dry</dt><dd>Benzoin Resinoid, Amyris, Sandalwood, Musk</dd>
+      </dl>
+    </body></html>`
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      text: async () => ellisHtml,
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Vanilla Milk",
+        description: "",
+        image: "",
+        detailURL: "https://www.ellisbrooklyn.com/products/eau-de-parfum-vanilla-milk",
+        perfumeHouse: "Ellis Brooklyn",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "Ellis Brooklyn", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: true,
+      noteInferenceMode: "strict",
+    })
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    expect(open).toEqual(
+      expect.arrayContaining(["creamy milk accord", "frangipani", "peony", "rose"]),
+    )
+    expect(heart).toEqual(
+      expect.arrayContaining(["bourbon vanilla bean", "madagascar vanilla bean extract"]),
+    )
+    expect(base).toEqual(expect.arrayContaining(["benzoin resinoid", "amyris", "sandalwood", "musk"]))
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Ellis Brooklyn Forever Pistachio: extracts Top/Mid/Dry dt/dd pyramid from PDP HTML", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM must not run when dt/dd pyramid is present")
+    })
+    const ellisHtml = `<html><body>
+      <dl>
+        <dt>Top</dt><dd>Pistachio, Almond Milk, Clove Bud</dd>
+        <dt>Mid</dt><dd>Lily of the Valley, Buttermilk, Salted Caramel</dd>
+        <dt>Dry</dt><dd>Tonka Bean, Madagascar Vanilla, Musks</dd>
+      </dl>
+    </body></html>`
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      text: async () => ellisHtml,
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Forever Pistachio",
+        description: "Philosophy Founder's Note literary lions",
+        image: "",
+        detailURL: "https://www.ellisbrooklyn.com/products/forever-pistachio-perfume-mist",
+        perfumeHouse: "Ellis Brooklyn",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "Ellis Brooklyn", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: true,
+      noteInferenceMode: "strict",
+    })
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    expect(open).toEqual(
+      expect.arrayContaining(["pistachio", "almond milk", "clove bud"]),
+    )
+    expect(heart).toEqual(
+      expect.arrayContaining(["lily of the valley", "buttermilk", "salted caramel"]),
+    )
+    expect(base).toEqual(
+      expect.arrayContaining(["tonka bean", "madagascar vanilla", "musk"]),
+    )
+    expect(invokeMock).not.toHaveBeenCalled()
+  })
+
+  it("Andromedas Moon Cheirosa 71: repairs sampler URL and extracts notes of flat list", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM must not run when merchant note list is present on PDP")
+    })
+    const items: ScrapedItem[] = [
+      {
+        name: "Cheirosa Sol De Janerio",
+        description: "",
+        image: "",
+        detailURL:
+          "https://www.andromedasmoon.com/products/fragrance-sampler-set-with-15-coupon?pr_prod_strat=jac",
+        perfumeHouse: "Andromeda's Moon",
+      },
+    ]
+    const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
+      generateNoirDescriptions: false,
+      fetchPdpNoteBootstrap: false,
+      noteInferenceMode: "strict",
+    })
+    expect(records[0].detailURL).toMatch(/cheirosa-71/i)
+    const all = [
+      ...(JSON.parse(records[0].openNotes) as string[]),
+      ...(JSON.parse(records[0].heartNotes) as string[]),
+      ...(JSON.parse(records[0].baseNotes) as string[]),
+    ]
+    expect(all.length).toBeGreaterThanOrEqual(4)
+    expect(all).toEqual(
+      expect.arrayContaining(["caramelized vanilla", "toasted macadamia nut", "sea salt"]),
+    )
+    expect(records[0].description).not.toMatch(/fragrance\s+sampler/i)
   }, 30_000)
 
   it("Andromedas Moon London Fog PDP: extracts layered notes and strips template copy from description", async () => {
@@ -3637,3 +3805,458 @@ describe("scrapedItemsNeedPatternEtsyEnrichment", () => {
     ).toBe(false)
   })
 })
+
+describe("Vivamor Parfums (WooCommerce OLFACTORY NOTES pyramid)", () => {
+  const VIVAMOR_AURA_DESCRIPTION =
+    "Aura Celeste (100ml) exudes elegance and modernity where the freshness from the Calabrian bergamot, Spanish lemon and Flordian grapefruit is perfectly balanced with Brazilian rosewood, Madagascan black pepper, Egyptian jasmin and Guatemalan cardamom. The base of Madagascan vanilla , Indian olibanum, amber and Tibetan musk add depth to the fragrance lasting through the day."
+
+  const VIVAMOR_AURA_PYRAMID = `OLFACTORY NOTES
+
+Top Notes:
+Calabrian Bergamot & Spanish Lemon
+
+Heart Notes:
+Brazilian Rosewood, Egyptian Jasmine, Madagascan Black Pepper, Floridian Grapefruit & Guatemalan Cardamom
+
+Base Notes:
+Indian Olibanum, Amber, Madagascan Vanilla & Tibetan Musk
+
+Description
+
+PRODUCT REVIEWS & VIDEOS
+
+Related products
+Spicy Nights Uncategorized $155 $101.50`
+
+  beforeEach(() => {
+    vi.stubEnv("OPENAI_API_KEY", "test-key")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+    invokeMock.mockReset()
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM must not run when Vivamor OLFACTORY NOTES pyramid is present")
+    })
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it("extracts full Top/Heart/Base pyramid and drops reviews/related-products bleed", async () => {
+    const notesText = `${VIVAMOR_AURA_DESCRIPTION}\n\n${VIVAMOR_AURA_PYRAMID}`
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Aura Celeste",
+        description: notesText,
+        notesText,
+        image: "https://vivamorparfums.com/wp-content/uploads/2022/10/Aura-Celeste.jpg",
+        detailURL: "https://vivamorparfums.com/store/aura-celeste/",
+        perfumeHouse: "Vivamor",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Vivamor", { generateNoirDescriptions: false })
+
+    expect(invokeMock).not.toHaveBeenCalled()
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+
+    expect(open).toEqual(expect.arrayContaining(["calabrian bergamot", "spanish lemon"]))
+    expect(heart).toEqual(
+      expect.arrayContaining([
+        "brazilian rosewood",
+        "egyptian jasmine",
+        "madagascan black pepper",
+        "floridian grapefruit",
+        "guatemalan cardamom",
+      ]),
+    )
+    expect(base).toEqual(
+      expect.arrayContaining(["indian olibanum", "amber", "madagascan vanilla", "tibetan musk"]),
+    )
+
+    const all = [...open, ...heart, ...base]
+    expect(all).not.toEqual(expect.arrayContaining(["videos", "videos related products"]))
+    expect(all.some(n => /related products|product reviews|captivate your senses/i.test(n))).toBe(false)
+  })
+
+  it("description-only scrape (no accordion tab): auto-fetches WooCommerce /store/ pyramid", async () => {
+    const htmlSnippet = `<h5>Top Notes:</h5><p>Calabrian Bergamot &amp; Spanish Lemon</p>
+<h5>Heart Notes:</h5><p>Brazilian Rosewood, Egyptian Jasmine, Madagascan Black Pepper, Floridian Grapefruit &amp; Guatemalan Cardamom</p>
+<h5>Base Notes:</h5><p>Indian Olibanum, Amber, Madagascan Vanilla &amp; Tibetan Musk</p>
+<h2 class="rev-title">PRODUCT REVIEWS & VIDEOS</h2>`
+
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      text: async () => htmlSnippet,
+    } as Response)
+
+    try {
+      const items: ScrapedItem[] = [
+        {
+          name: "Aura Celeste",
+          description: VIVAMOR_AURA_DESCRIPTION,
+          notesText: VIVAMOR_AURA_DESCRIPTION,
+          image: "https://vivamorparfums.com/wp-content/uploads/2022/10/Aura-Celeste.jpg",
+          detailURL: "https://vivamorparfums.com/store/aura-celeste/",
+          perfumeHouse: "Vivamor",
+        },
+      ]
+
+      const { records } = await extractNotesForItems(items, "Vivamor", { generateNoirDescriptions: false })
+
+      expect(fetchMock).toHaveBeenCalled()
+      const open = JSON.parse(records[0].openNotes) as string[]
+      const heart = JSON.parse(records[0].heartNotes) as string[]
+      const base = JSON.parse(records[0].baseNotes) as string[]
+      const all = [...open, ...heart, ...base]
+
+      expect(all).toEqual(
+        expect.arrayContaining([
+          "calabrian bergamot",
+          "spanish lemon",
+          "brazilian rosewood",
+          "indian olibanum",
+        ]),
+      )
+    } finally {
+      fetchMock.mockRestore()
+    }
+  })
+
+  it("Crème Exquis collapsed accordion (headers only): still fetches full pyramid", async () => {
+    const description =
+      "Creme Exquis (100ml) is a sophisticated and seductive scent leaving an impactful trail making a statement. Opening with iris and a black cherry accord, Creme Exquis captures attention from the first spray. A unique blend of chocolate, caramel and floral orchid continue to mesmerize the wearer with the base having a balance of coffee. Honey, oak tree absolute, Tahitian vanilla and Ceylon Cinnamon."
+
+    const collapsedAccordion = `${description}
+
+OLFACTORY NOTES
+
+Top Notes:
+
+Heart Notes:
+
+Base Notes:
+
+Description
+
+PRODUCT REVIEWS & VIDEOS`
+
+    const htmlSnippet = `<h5>Top Notes:</h5><p>Brazilian Orange, Iris &amp; Black Cherry Accord</p>
+<h5>Heart Notes:</h5><p>Floral Orchid, Chocolate &amp; Caramel</p>
+<h5>Base Notes:</h5><p>Tahitian Vanilla, Coffee, Honey, Oak Tree Absolute &amp; Ceylon Cinnamon</p>`
+
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      text: async () => htmlSnippet,
+    } as Response)
+
+    invokeMock.mockImplementation(async (messages: unknown) => {
+      const msgs = messages as { role: string; content: string }[]
+      const sys = msgs.find(m => m.role === "system")?.content ?? ""
+      if (sys.includes("perfumery expert")) {
+        return {
+          content: JSON.stringify({
+            valid: [
+              { in: "brazilian orange", out: "brazilian orange" },
+              { in: "iris", out: "iris" },
+              { in: "black cherry accord", out: "black cherry accord" },
+              { in: "floral orchid", out: "floral orchid" },
+              { in: "chocolate", out: "chocolate" },
+              { in: "caramel", out: "caramel" },
+              { in: "tahitian vanilla", out: "tahitian vanilla" },
+              { in: "coffee", out: "coffee" },
+              { in: "honey", out: "honey" },
+              { in: "oak tree absolute", out: "oak tree absolute" },
+              { in: "ceylon cinnamon", out: "ceylon cinnamon" },
+            ],
+          }),
+        }
+      }
+      throw new Error(`Unexpected LLM call: ${sys.slice(0, 80)}`)
+    })
+
+    try {
+      const items: ScrapedItem[] = [
+        {
+          name: "Crème Exquis",
+          description: collapsedAccordion,
+          notesText: collapsedAccordion,
+          image: "https://vivamorparfums.com/wp-content/uploads/2022/10/Creme-Exquis.jpg",
+          detailURL: "https://vivamorparfums.com/store/creme-exquis/",
+          perfumeHouse: "Vivamor",
+        },
+      ]
+
+      const { records } = await extractNotesForItems(items, "Vivamor", {
+        generateNoirDescriptions: false,
+        noteValidationMode: "llm",
+      })
+
+      expect(fetchMock).toHaveBeenCalled()
+      const open = JSON.parse(records[0].openNotes) as string[]
+      const heart = JSON.parse(records[0].heartNotes) as string[]
+      const base = JSON.parse(records[0].baseNotes) as string[]
+
+      expect(open).toContain("brazilian orange")
+      expect(heart).toContain("floral orchid")
+      expect(base).toContain("tahitian vanilla")
+    } finally {
+      fetchMock.mockRestore()
+    }
+  })
+
+  it("Crème Exquis description-only: auto-fetch pyramid includes first note per layer", async () => {
+    const description =
+      "Creme Exquis (100ml) is a sophisticated and seductive scent leaving an impactful trail making a statement. Opening with iris and a black cherry accord, Creme Exquis captures attention from the first spray. A unique blend of chocolate, caramel and floral orchid continue to mesmerize the wearer with the base having a balance of coffee. Honey, oak tree absolute, Tahitian vanilla and Ceylon Cinnamon."
+
+    const htmlSnippet = `<h5>Top Notes:</h5><p>Brazilian Orange, Iris &amp; Black Cherry Accord</p>
+<h5>Heart Notes:</h5><p>Floral Orchid, Chocolate &amp; Caramel</p>
+<h5>Base Notes:</h5><p>Tahitian Vanilla, Coffee, Honey, Oak Tree Absolute &amp; Ceylon Cinnamon</p>`
+
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      text: async () => htmlSnippet,
+    } as Response)
+
+    try {
+      const items: ScrapedItem[] = [
+        {
+          name: "Crème Exquis",
+          description,
+          notesText: description,
+          image: "https://vivamorparfums.com/wp-content/uploads/2022/10/Creme-Exquis.jpg",
+          detailURL: "https://vivamorparfums.com/store/creme-exquis/",
+          perfumeHouse: "Vivamor",
+        },
+      ]
+
+      const { records } = await extractNotesForItems(items, "Vivamor", {
+        generateNoirDescriptions: false,
+        noteValidationMode: "llm",
+      })
+
+      const open = JSON.parse(records[0].openNotes) as string[]
+      const heart = JSON.parse(records[0].heartNotes) as string[]
+      const base = JSON.parse(records[0].baseNotes) as string[]
+
+      expect(open).toContain("brazilian orange")
+      expect(heart).toContain("floral orchid")
+      expect(base).toContain("tahitian vanilla")
+    } finally {
+      fetchMock.mockRestore()
+    }
+  })
+
+  it("Crème Exquis: keeps first note in each Vivamor layer (Brazilian Orange, Floral Orchid, Tahitian Vanilla)", async () => {
+    const description =
+      "Creme Exquis (100ml) is a sophisticated and seductive scent leaving an impactful trail making a statement. Opening with iris and a black cherry accord, Creme Exquis captures attention from the first spray. A unique blend of chocolate, caramel and floral orchid continue to mesmerize the wearer with the base having a balance of coffee. Honey, oak tree absolute, Tahitian vanilla and Ceylon Cinnamon."
+
+    const pyramid = `OLFACTORY NOTES
+
+Top Notes:
+Brazilian Orange, Iris & Black Cherry Accord
+
+Heart Notes:
+Floral Orchid, Chocolate & Caramel
+
+Base Notes:
+Tahitian Vanilla, Coffee, Honey, Oak Tree Absolute & Ceylon Cinnamon`
+
+    const notesText = `${description}\n\n${pyramid}`
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Crème Exquis",
+        description: notesText,
+        notesText,
+        image: "https://vivamorparfums.com/wp-content/uploads/2022/10/Creme-Exquis.jpg",
+        detailURL: "https://vivamorparfums.com/store/creme-exquis/",
+        perfumeHouse: "Vivamor",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Vivamor", { generateNoirDescriptions: false })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+
+    expect(open).toEqual(
+      expect.arrayContaining(["brazilian orange", "iris", "black cherry accord"]),
+    )
+    expect(heart).toEqual(
+      expect.arrayContaining(["floral orchid", "chocolate", "caramel"]),
+    )
+    expect(base).toEqual(
+      expect.arrayContaining([
+        "tahitian vanilla",
+        "coffee",
+        "honey",
+        "oak tree absolute",
+        "ceylon cinnamon",
+      ]),
+    )
+  })
+
+  it("omits shop/collection listing rows mistaken for products", async () => {
+    const items: ScrapedItem[] = [
+      {
+        name: "Store",
+        description:
+          "Showing 112 of 39 results Default sorting Add to cart Addiction Absolu $155 Add to cart Akoya $155",
+        image: "https://vivamorparfums.com/wp-content/uploads/2022/10/Ultimate-Aphrodisiac-Image-2.png",
+        detailURL: "https://vivamorparfums.com/about-us",
+        perfumeHouse: "Vivamor",
+      },
+      {
+        name: "Aura Celeste",
+        description: VIVAMOR_AURA_DESCRIPTION,
+        notesText: `${VIVAMOR_AURA_DESCRIPTION}\n\n${VIVAMOR_AURA_PYRAMID}`,
+        image: "https://vivamorparfums.com/wp-content/uploads/2022/10/Aura-Celeste.jpg",
+        detailURL: "https://vivamorparfums.com/store/aura-celeste/",
+        perfumeHouse: "Vivamor",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Vivamor", { generateNoirDescriptions: false })
+
+    expect(records).toHaveLength(1)
+    expect(records[0].name).toBe("Aura Celeste")
+  })
+})
+
+describe("Etat Libre d'Orange description cleanup", () => {
+  beforeEach(() => {
+    vi.stubEnv("OPENAI_API_KEY", "test-key")
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    invokeMock.mockReset()
+  })
+
+  const TEASER =
+    "interested in trying a sample? Try In a 4 Piece Sample Kit Fresh The brainchild of Chandler Burr, discerning New York Times Perfume Critic and author of the namesake novel, You Or Someone Like You is dedicated to his novels main character, Anne."
+
+  it("normalizePdpDescription strips sample-kit prefix and family tags", () => {
+    const cleaned = normalizePdpDescription(TEASER)
+    expect(cleaned.toLowerCase()).not.toMatch(/^interested in trying/)
+    expect(cleaned.toLowerCase()).toContain("chandler burr")
+  })
+
+  it("isUnusableMerchantDescription flags teaser blobs and truncated FULL DES tails", () => {
+    expect(isUnusableMerchantDescription(TEASER)).toBe(true)
+    expect(isUnusableMerchantDescription("Divin'enfant FULL DESCRIP")).toBe(true)
+    expect(isUnusableMerchantDescription("")).toBe(true)
+  })
+
+  it("stripEtatLibreUiNoise removes Woody, Spicy family tag prefixes", () => {
+    const out = stripEtatLibreUiNoise("Woody, Spicy A tribute to Marquis de Sade, the father of sadism.")
+    expect(out).toMatch(/^A tribute to Marquis de Sade/)
+  })
+
+  it("collections PDP URLs are treated as perfume pages", () => {
+    const url = "https://etatlibredorange.us/collections/fragrances/products/secretions-magnifiques"
+    expect(isEtatLibreProductUrl(url)).toBe(true)
+    expect(detailUrlAlignsWithProductName("Secretions Magnifiques", url)).toBe(true)
+  })
+
+  it("scrapedItemsNeedNodeRepair triggers on sample-kit description bleed", () => {
+    const items: ScrapedItem[] = [
+      {
+        name: "Jasmin Et Cigarette",
+        description: TEASER,
+        image: "",
+        detailURL: "https://etatlibredorange.us/collections/fragrances/products/jasmin-et-cigarette",
+        perfumeHouse: "Etat Libre d'Orange",
+        openNotes: ["jasmine absolute"],
+        heartNotes: [],
+        baseNotes: [],
+      },
+    ]
+    expect(scrapedItemsNeedNodeRepair(items)).toBe(true)
+  })
+
+  it("Etat Libre repair pass backfills FULL DESCRIPTION and generates noir", async () => {
+    const html = `<html><body>
+<h3>FULL DESCRIPTION</h3>
+<p>True olfactory coitus, Magnificent Secretions takes us to the summit of jouissance.</p>
+<h3>MAIN NOTES</h3>
+<p>iris, coconut, sandalwood, opoponax</p>
+</body></html>`
+
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(html, { status: 200, headers: { "content-type": "text/html" } }),
+    )
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Secretions Magnifiques",
+        description: TEASER,
+        image: "",
+        detailURL: "https://etatlibredorange.us/collections/fragrances/products/secretions-magnifiques",
+        perfumeHouse: "Etat Libre d'Orange",
+        openNotes: ["iris", "coconut", "sandalwood", "opoponax"],
+        heartNotes: [],
+        baseNotes: [],
+      },
+    ]
+
+    invokeMock.mockResolvedValue({
+      content: "Neon rain slicks the alley as iris and sandalwood cling to skin like a dangerous secret.",
+    })
+
+    const { records } = await extractNotesForItems(items, "Etat Libre d'Orange", {
+      enrichOnly: true,
+      generateNoirDescriptions: true,
+      noteValidationMode: "off",
+    })
+
+    expect(fetchMock).toHaveBeenCalled()
+    expect(records[0].description.toLowerCase()).not.toMatch(/^interested in trying/)
+    expect(records[0].description.toLowerCase()).toContain("iris")
+    expect(records[0].description.length).toBeGreaterThan(40)
+    fetchMock.mockRestore()
+  })
+
+  it("rejects Shopify theme CSS tokens mistaken for notes", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "test-key")
+    const cssBleed =
+      ":root { --light-: #fff; --button-: #000; --header-: #111; --newsletter-popup-: 1; --product-badge-: red; } " +
+      ".secondary-elements, .footer, .navigation, .header, .button { display: block; }"
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Fat Electrician",
+        description: cssBleed,
+        notesText: cssBleed,
+        image: "",
+        detailURL: "https://etatlibredorange.us/products/fat-electrician-en",
+        perfumeHouse: "Etat Libre d'Orange",
+      },
+    ]
+
+    const html = `<html><body>
+<h3>MAIN NOTES</h3><p>vetiver from haiti, chestnut cream, olive leaves, myrrh, vanilla, opoponax</p>
+</body></html>`
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(html, { status: 200, headers: { "content-type": "text/html" } }),
+    )
+
+    const { records } = await extractNotesForItems(items, "Etat Libre d'Orange", {
+      generateNoirDescriptions: false,
+      noteValidationMode: "off",
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+    expect(all.some(n => n.includes("vetiver") || n.includes("myrrh"))).toBe(true)
+    expect(all.some(n => n === "--" || n === "footer" || n === "navigation")).toBe(false)
+    fetchMock.mockRestore()
+  })
+})
+

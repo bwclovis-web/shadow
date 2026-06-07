@@ -41,6 +41,7 @@ import {
   confirmNoteLayersAgainstSource,
   extractUnlabeledFragranceNotesBlock,
   isComplianceOrSourcingNote,
+  isThemeCssTokenNote,
   isNoteSubstantiatedInSource,
   looksLikeProseNotePhrase,
   isObviousNonMaterialNote,
@@ -326,7 +327,10 @@ const significantNameTokensForUrlMatch = (name: string): string[] => {
     .replace(/[^a-z0-9\s]/g, " ")
     .split(/\s+/)
     .filter(Boolean)
-  return words.filter(w => w.length >= 4 && !URL_MATCH_NAME_STOPWORDS.has(w))
+  return words.filter(w => {
+    if (/^\d{2,}$/.test(w)) return true
+    return w.length >= 4 && !URL_MATCH_NAME_STOPWORDS.has(w)
+  })
 }
 
 /** True when the scraped PDP URL plausibly belongs to this product name. */
@@ -348,7 +352,7 @@ const buildAndromedaCandidateProductUrls = (name: string): string[] => {
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, " ")
     .split(/\s+/)
-    .filter(w => w.length >= 2 && !URL_MATCH_NAME_STOPWORDS.has(w))
+    .filter(w => (w.length >= 2 || /^\d+$/.test(w)) && !URL_MATCH_NAME_STOPWORDS.has(w))
   if (words.length === 0) return []
 
   const slugs = new Set<string>()
@@ -357,7 +361,7 @@ const buildAndromedaCandidateProductUrls = (name: string): string[] => {
   }
   slugs.add(words.join("-"))
 
-  const prefixes = ["andromeda-s-inspired-by-", "andromedas-inspired-by-"]
+  const prefixes = ["inspired-by-", "andromeda-s-inspired-by-", "andromedas-inspired-by-"]
   const coreSlugs = [...slugs].sort((a, b) => b.length - a.length).slice(0, 2)
   const suffixes = ["-eau-de-parfum", ""]
   const lastWord = words.filter(w => w.length >= 4).at(-1)
@@ -426,6 +430,38 @@ const shouldAutoFetchPatternEtsyNotes = (detailURL: string, mergedBase: string):
  */
 const shouldAutoFetchAndromedaMoonNotes = (detailURL: string, mergedBase: string): boolean =>
   isAndromedaMoonProductUrl(detailURL) && !hasExplicitNoteListSignal(mergedBase)
+
+/** Etat Libre accordion tabs often omit MAIN NOTES from Selenium copy; HTTP bootstrap recovers them. */
+const shouldAutoFetchEtatLibreNotes = (detailURL: string, mergedBase: string): boolean =>
+  isEtatLibreProductUrl(detailURL) &&
+  (!hasExplicitNoteListSignal(mergedBase) || !/\bMAIN NOTES\b/i.test(mergedBase))
+
+/** WooCommerce /store/{slug} PDPs (e.g. Vivamor) hide OLFACTORY NOTES in accordion tabs Selenium may miss. */
+const isWooCommerceStoreProductUrl = (detailURL: string): boolean => {
+  try {
+    const path = new URL(detailURL).pathname.replace(/\/+$/, "")
+    return /\/store\/[^/]+$/i.test(path) && !/\/store$/i.test(path)
+  } catch {
+    return false
+  }
+}
+
+const shouldAutoFetchWooCommerceStoreNotes = (detailURL: string, mergedBase: string): boolean => {
+  if (!isWooCommerceStoreProductUrl(detailURL)) return false
+  if (!hasExplicitNoteListSignal(mergedBase)) return true
+  return isThinLayeredPyramidScrape(mergedBase)
+}
+
+/** Collection / shop grid pages mistaken for a product (e.g. Vivamor "Store" row with about-us URL). */
+const isShopCollectionListingScrape = (item: ScrapedItem, name: string): boolean => {
+  const desc = `${item.description ?? ""}\n${item.notesText ?? ""}`.trim()
+  const lower = desc.toLowerCase()
+  if (/showing\s+\d+\s+of\s+\d+\s+results/i.test(lower)) return true
+  if (/default sorting/i.test(lower) && (lower.match(/\badd to cart\b/g) ?? []).length >= 3) return true
+  if (/^store$/i.test(name.trim()) && /\badd to cart\b/i.test(lower)) return true
+  if (/<img\s+width=/i.test(desc) && /\badd to cart\b/i.test(lower) && /\$\d/.test(desc)) return true
+  return false
+}
 
 /** Same four "ingredients" the noir generator hammers — if that's all we extracted, PDP bootstrap likely failed first pass. */
 const NOIR_NOTE_CLICHE = new Set(["plum", "rose", "brown sugar", "golden honey"])
@@ -870,6 +906,14 @@ const extractFeaturedBlockFromPlain = (t: string): string | null => {
     return `fragrance notes are ${body}.`.slice(0, 4000)
   }
 
+  const notesOf = plain.match(/\b(?:inviting\s+)?notes?\s+of\s+([^.]{12,220})/i)
+  if (notesOf?.[1]) {
+    const body = notesOf[1].trim().replace(/[,;]\s*$/, "")
+    if (body.length >= 12 && /,/.test(body)) {
+      return `fragrance notes: ${body}`.slice(0, 4000)
+    }
+  }
+
   const patternEtsy = extractPatternEtsyNoteSegmentsFromPlain(plain)
   if (patternEtsy.length > 0) return patternEtsy.join("\n").slice(0, 4000)
 
@@ -885,6 +929,9 @@ const extractFeaturedBlockFromPlain = (t: string): string | null => {
   if (emDashLayers.length >= 2) {
     return emDashLayers.join("\n").slice(0, 4000)
   }
+
+  const layeredHeadingPyramid = extractLayeredHeadingPyramidFromPlain(plain)
+  if (layeredHeadingPyramid) return layeredHeadingPyramid
 
   const mainNotesGlued = plain.match(
     /\b(?:fragrance\s+profile\s+)?main\s+notes?\s+(?![:\-\u2013\u2014–—])([A-Za-z][^.!?]{8,220}?)(?=\s+Overall\s+Vibe|\s+Main\s+Accords?|\s+When\s+to\s+Wear|\s+Available\s+Sizes?|\s+How\s+(?:It\s+)?Wears|$)/i,
@@ -1132,6 +1179,113 @@ const extractFeaturedFromRawHtmlQuotes = (html: string): string | null => {
   return extractFeaturedBlockFromPlain(rough)
 }
 
+const LAYERED_PYRAMID_LABEL_RE =
+  /\b(top|open|opening|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry\s*down|drydown|end)\s*(?:notes?)?\s*[:\-\u2013\u2014–—]\s*/gi
+
+const PYRAMID_LAYER_STOP_RE =
+  /\s+(?:product\s+reviews?(?:\s*&\s*videos?)?|related\s+products|description\b|master\s+perfumer|olfactory\s+notes|shopping\s+cart|add to cart|you may also|customers also)\b/i
+
+/**
+ * Vivamor / WooCommerce themes: <h5>Top Notes:</h5><p>Calabrian Bergamot …</p> (accordion tab).
+ * Also matches collapsed plain text after stripHtmlToPlainText.
+ */
+const extractLayeredHeadingPyramidFromPlain = (plain: string): string | null => {
+  const collapsed = (plain ?? "").replace(/\s+/g, " ").trim()
+  if (!collapsed) return null
+  const layerMatches = [...collapsed.matchAll(LAYERED_PYRAMID_LABEL_RE)]
+  if (layerMatches.length < 2) return null
+
+  const segments: string[] = []
+  for (let i = 0; i < layerMatches.length; i += 1) {
+    const m = layerMatches[i]
+    const label = (m[1] ?? "").trim().toLowerCase()
+    const start = (m.index ?? 0) + m[0].length
+    const end = i + 1 < layerMatches.length ? layerMatches[i + 1].index! : collapsed.length
+    let chunk = collapsed.slice(start, end).trim()
+    const stop = chunk.search(PYRAMID_LAYER_STOP_RE)
+    if (stop != null && stop >= 3) chunk = chunk.slice(0, stop).trim()
+    chunk = chunk.replace(/,\s*$/, "").trim()
+    if (chunk.length < 3) continue
+    const layer =
+      /^(?:heart|middle|mid|core|body|center|centre)$/.test(label)
+        ? "heart"
+        : /^(?:base|bottom|background|foundation|dry\s*down|drydown|end)$/.test(label)
+          ? "base"
+          : "top"
+    segments.push(`${layer} notes: ${chunk}`)
+  }
+  return segments.length >= 2 ? segments.join("\n").slice(0, 4000) : null
+}
+
+const extractLayeredHeadingPyramidFromHtml = (html: string): string | null => {
+  const segments: string[] = []
+  const re =
+    /<h[1-6][^>]*>\s*(top|open|opening|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry\s*down|drydown|end)\s*(?:notes?)?\s*:?\s*<\/h[1-6]>\s*(?:<p[^>]*>([\s\S]*?)<\/p>|<[^>]+>([\s\S]*?)<\/[^>]+>)/gi
+  let match: RegExpExecArray | null
+  while ((match = re.exec(html)) !== null) {
+    const label = (match[1] ?? "").trim().toLowerCase()
+    const body = (match[2] ?? match[3] ?? "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+    if (body.length < 3) continue
+    const layer =
+      /^(?:heart|middle|mid|core|body|center|centre)$/.test(label)
+        ? "heart"
+        : /^(?:base|bottom|background|foundation|dry\s*down|drydown|end)$/.test(label)
+          ? "base"
+          : "top"
+    segments.push(`${layer} notes: ${body}`)
+  }
+  if (segments.length >= 2) return segments.join("\n").slice(0, 4000)
+  return null
+}
+
+/** Ellis Brooklyn / Shopify themes: <dt>Top</dt><dd>Creamy Milk Accord, …</dd> */
+const extractDtDdPyramidFromHtml = (html: string): string | null => {
+  const segments: string[] = []
+  const re =
+    /<dt[^>]*>\s*(top|mid|middle|heart|base|dry)\s*<\/dt>\s*<dd[^>]*>([\s\S]*?)<\/dd>/gi
+  let match: RegExpExecArray | null
+  while ((match = re.exec(html)) !== null) {
+    const label = (match[1] ?? "").trim().toLowerCase()
+    const body = (match[2] ?? "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+    if (body.length < 4) continue
+    const layer =
+      label === "top"
+        ? "top"
+        : label === "mid" || label === "middle" || label === "heart"
+          ? "heart"
+          : "base"
+    segments.push(`${layer} notes: ${body}`)
+  }
+  if (segments.length >= 2) return segments.join("\n").slice(0, 4000)
+  return null
+}
+
+/** Etat Libre d'Orange: <h3>MAIN NOTES</h3><p>iris, coconut, …</p> */
+const extractEtatLibreMainNotesFromHtml = (html: string): string | null => {
+  const re =
+    /<h[1-6][^>]*>\s*MAIN NOTES\s*<\/h[1-6]>\s*(?:<p[^>]*>([\s\S]*?)<\/p>|<[^>]+>([\s\S]*?)<\/[^>]+>)/gi
+  let match: RegExpExecArray | null
+  while ((match = re.exec(html)) !== null) {
+    const body = (match[1] ?? match[2] ?? "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+    if (body.length >= 8) return `MAIN NOTES: ${body}`.slice(0, 4000)
+  }
+  const plain = stripHtmlToPlainText(html)
+  const m = plain.match(
+    /\bMAIN NOTES\s+(.+?)(?=\bPronunciation\b|\bCustomer Reviews\b|\bCHOOSE SIZE\b|$)/is,
+  )
+  if (m?.[1]?.trim()) return `MAIN NOTES: ${m[1].trim()}`.slice(0, 4000)
+  return null
+}
+
 /**
  * Pull a single merchant-authored note line from raw PDP HTML when Selenium/plain description missed it.
  */
@@ -1141,15 +1295,105 @@ const extractMerchantNoteBootstrapFromHtml = (html: string): string | null => {
   const fromMeta = extractFromMetaDescriptionTag(html)
   if (fromMeta) return fromMeta
 
+  const fromEtatLibreMain = extractEtatLibreMainNotesFromHtml(html)
+  if (fromEtatLibreMain) return fromEtatLibreMain
+
+  const fromHeadingPyramid = extractLayeredHeadingPyramidFromHtml(html)
+  if (fromHeadingPyramid) return fromHeadingPyramid
+
+  const fromDtDd = extractDtDdPyramidFromHtml(html)
+  if (fromDtDd) return fromDtDd
+
   const fromRaw = extractFeaturedFromRawHtmlQuotes(html)
   if (fromRaw) return fromRaw
 
   const t = stripHtmlToPlainText(html)
+  const fromPlainPyramid = extractLayeredHeadingPyramidFromPlain(t)
+  if (fromPlainPyramid) return fromPlainPyramid
+
   return extractFeaturedBlockFromPlain(t)
 }
 
 const PDP_FETCH_ATTEMPTS = 3
 const PDP_FETCH_BACKOFFS_MS = [400, 1200]
+
+/** Shared PDP HTML cache (notes bootstrap + Etat Libre description backfill). */
+const pdpHtmlCache = new Map<string, string | null>()
+
+const fetchPdpHtml = async (
+  detailUrl: string,
+  sig: AbortSignal | undefined,
+  onProgress?: (msg: string) => void,
+): Promise<string | null> => {
+  if (pdpHtmlCache.has(detailUrl)) return pdpHtmlCache.get(detailUrl) ?? null
+
+  let u: URL
+  try {
+    u = new URL(detailUrl)
+  } catch {
+    pdpHtmlCache.set(detailUrl, null)
+    return null
+  }
+  if (u.protocol !== "http:" && u.protocol !== "https:") {
+    pdpHtmlCache.set(detailUrl, null)
+    return null
+  }
+
+  let lastErrSummary: string | null = null
+  for (let attempt = 0; attempt < PDP_FETCH_ATTEMPTS; attempt++) {
+    if (attempt > 0) {
+      const backoff = PDP_FETCH_BACKOFFS_MS[attempt - 1] ?? 1500
+      try {
+        await sleep(backoff, sig)
+      } catch {
+        return null
+      }
+    }
+    try {
+      const res = await fetch(detailUrl, {
+        signal: sig,
+        redirect: "follow",
+        headers: {
+          "user-agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
+          "accept-language": "en-US,en;q=0.9",
+        },
+      })
+      if (res.ok) {
+        const html = await res.text()
+        pdpHtmlCache.set(detailUrl, html)
+        return html
+      }
+      lastErrSummary = `HTTP ${res.status}`
+      if (res.status >= 400 && res.status < 500 && res.status !== 429 && res.status !== 408) {
+        pdpHtmlCache.set(detailUrl, null)
+        return null
+      }
+    } catch (err) {
+      if (sig?.aborted) return null
+      lastErrSummary =
+        err instanceof Error ? err.message.slice(0, 160) : String(err).slice(0, 160)
+    }
+  }
+
+  if (lastErrSummary) {
+    onProgress?.(`PDP fetch failed for ${detailUrl} after ${PDP_FETCH_ATTEMPTS} attempts (${lastErrSummary})`)
+  }
+  return null
+}
+
+const tryFetchEtatLibreProductDescription = async (
+  detailUrl: string,
+  sig: AbortSignal | undefined,
+  onProgress?: (msg: string) => void,
+): Promise<string | null> => {
+  const html = await fetchPdpHtml(detailUrl, sig, onProgress)
+  if (!html) return null
+  const extracted = extractFullDescriptionFromHtml(html)
+  if (!extracted) return null
+  return normalizePdpDescription(extracted) || extracted
+}
 
 const sleep = (ms: number, sig: AbortSignal | undefined): Promise<void> =>
   new Promise((resolve, reject) => {
@@ -1186,64 +1430,14 @@ const tryFetchPdpNoteBootstrap = async (
   const cached = pdpNoteBootstrapCache.get(detailUrl)
   if (cached !== undefined) return cached
 
-  let u: URL
-  try {
-    u = new URL(detailUrl)
-  } catch {
-    pdpNoteBootstrapCache.set(detailUrl, null)
+  const html = await fetchPdpHtml(detailUrl, sig, onProgress)
+  if (!html) {
+    // Don't cache null HTML failures: noir-cliché rescue path may benefit from another fresh attempt.
     return null
   }
-  if (u.protocol !== "http:" && u.protocol !== "https:") {
-    pdpNoteBootstrapCache.set(detailUrl, null)
-    return null
-  }
-
-  let lastErrSummary: string | null = null
-  for (let attempt = 0; attempt < PDP_FETCH_ATTEMPTS; attempt++) {
-    if (attempt > 0) {
-      const backoff = PDP_FETCH_BACKOFFS_MS[attempt - 1] ?? 1500
-      try {
-        await sleep(backoff, sig)
-      } catch {
-        return null
-      }
-    }
-    try {
-      const res = await fetch(detailUrl, {
-        signal: sig,
-        redirect: "follow",
-        headers: {
-          "user-agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          accept: "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
-          "accept-language": "en-US,en;q=0.9",
-        },
-      })
-      if (res.ok) {
-        const html = await res.text()
-        const chunk = extractMerchantNoteBootstrapFromHtml(html)
-        pdpNoteBootstrapCache.set(detailUrl, chunk)
-        return chunk
-      }
-      // Don't cache 4xx that may be a one-shot WAF challenge / 5xx that may recover; retry.
-      lastErrSummary = `HTTP ${res.status}`
-      if (res.status >= 400 && res.status < 500 && res.status !== 429 && res.status !== 408) {
-        // Hard 4xx (404, 403 fixed) — won't recover; cache and bail.
-        pdpNoteBootstrapCache.set(detailUrl, null)
-        return null
-      }
-    } catch (err) {
-      if (sig?.aborted) return null
-      lastErrSummary =
-        err instanceof Error ? err.message.slice(0, 160) : String(err).slice(0, 160)
-    }
-  }
-
-  if (lastErrSummary) {
-    onProgress?.(`PDP fetch failed for ${detailUrl} after ${PDP_FETCH_ATTEMPTS} attempts (${lastErrSummary})`)
-  }
-  // Don't cache failures: noir-cliché rescue path may benefit from another fresh attempt.
-  return null
+  const chunk = extractMerchantNoteBootstrapFromHtml(html)
+  pdpNoteBootstrapCache.set(detailUrl, chunk)
+  return chunk
 }
 
 /**
@@ -1648,7 +1842,7 @@ function splitNoteList(text: string): string[] {
 function stripTrailingNonNoteSections(text: string): string {
   return stripEmbeddedHtmlMarkup(text)
     .replace(
-      /\s+(?:additional information|ingredients|how to use|directions(?:\s+for\s+use)?|customer reviews?|reviews?|specifications|size [Gg]uide|care [Ii]nstructions|warnings?|disclaimer|how it wears|how (?:it\s+)?smells|wear(?:ability|ing)\s+notes?|wear\s+guide\b|good\s+to\s+know\b|whether\s+you(?:'|'|&#39;)re\b|original\s+manufacturers\b|important information|important\s+(?:shop|order)\s+info|available\s+sizes?|size\s+options?|available\s+in|shipping|processing|packing|please\s+note|please\s+read|about\s+this\s+fragrance|about\s+(?:our|the)\s+brand|(?:scent\s+)?profile\s+(?:guide|overview)|pairing\s+suggestions?|frequently\s+asked)\b[\s\S]*$/i,
+      /\s+(?:additional information|ingredients|how to use|directions(?:\s+for\s+use)?|customer reviews?|reviews?|specifications|size [Gg]uide|care [Ii]nstructions|warnings?|disclaimer|how it wears|how (?:it\s+)?smells|wear(?:ability|ing)\s+notes?|wear\s+guide\b|good\s+to\s+know\b|whether\s+you(?:'|'|&#39;)re\b|original\s+manufacturers\b|important information|important\s+(?:shop|order)\s+info|available\s+sizes?|size\s+options?|available\s+in|shipping|processing|packing|please\s+note|please\s+read|about\s+this\s+fragrance|about\s+(?:our|the)\s+brand|(?:scent\s+)?profile\s+(?:guide|overview)|pairing\s+suggestions?|frequently\s+asked|product\s+reviews?(?:\s*&\s*videos?)?|related\s+products|master\s+perfumer|shopping\s+cart)\b[\s\S]*$/i,
       "",
     )
     .replace(/\s+extra info\b[\s\S]*$/i, "")
@@ -1797,23 +1991,32 @@ const resolveAndromedaDetailUrl = async (
   sig: AbortSignal | undefined,
   onProgress?: (msg: string) => void,
 ): Promise<string> => {
-  if (
-    detailURL?.trim() &&
-    detailUrlAlignsWithProductName(name, detailURL) &&
-    !NON_PERFUME_ANDROMEDA_PRODUCT_URL_RE.test(detailURL)
-  ) {
-    return detailURL
+  const normalizedUrl = detailURL?.split("?")[0]?.split("#")[0]?.trim() ?? ""
+  const currentBad =
+    !normalizedUrl ||
+    NON_PERFUME_ANDROMEDA_PRODUCT_URL_RE.test(normalizedUrl) ||
+    !detailUrlAlignsWithProductName(name, normalizedUrl)
+
+  if (normalizedUrl && !currentBad) {
+    return normalizedUrl
   }
-  if (!name?.trim()) return detailURL
+  if (!name?.trim()) return normalizedUrl || detailURL
+
+  const searched = await searchAndromedaProductUrl(name, sig)
+  if (searched && detailUrlAlignsWithProductName(name, searched)) {
+    onProgress?.(
+      `Notes pipeline: resolved Andromeda PDP URL for "${name.slice(0, 48)}" → ${searched}`,
+    )
+    return searched
+  }
 
   const candidates = buildAndromedaCandidateProductUrls(name)
-  const searched = await searchAndromedaProductUrl(name, sig)
   if (searched && !candidates.includes(searched)) {
     candidates.unshift(searched)
   }
 
   for (const candidate of candidates) {
-    if (candidate === detailURL) continue
+    if (candidate === normalizedUrl) continue
     pdpNoteBootstrapCache.delete(candidate)
     if (await probeAndromedaProductUrlForNotes(candidate, sig)) {
       onProgress?.(
@@ -1822,7 +2025,7 @@ const resolveAndromedaDetailUrl = async (
       return candidate
     }
   }
-  return detailURL
+  return normalizedUrl || detailURL
 }
 
 /** Wipe layers when every extracted token is alcohol/compliance boilerplate. */
@@ -1845,6 +2048,38 @@ const rejectComplianceDominatedLayers = (notes: {
   }
 }
 
+const isThemeJunkDominatedLayers = (notes: {
+  openNotes: string[]
+  heartNotes: string[]
+  baseNotes: string[]
+}): boolean => {
+  const all = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
+  if (all.length === 0) return false
+  const junkCount = all.filter(n => isThemeCssTokenNote(n) || isObviousNonMaterialNote(n)).length
+  return junkCount >= 2 && junkCount >= all.length * 0.5
+}
+
+/** Wipe layers when Shopify theme CSS tokens dominate (Etat Libre accordion HTML comment bleed). */
+const rejectThemeJunkDominatedLayers = (notes: {
+  openNotes: string[]
+  heartNotes: string[]
+  baseNotes: string[]
+}): { openNotes: string[]; heartNotes: string[]; baseNotes: string[] } => {
+  const all = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
+  if (all.length === 0) return notes
+  const drop = (arr: string[]) =>
+    arr.filter(n => !isThemeCssTokenNote(n) && !isObviousNonMaterialNote(n))
+  const cleaned = {
+    openNotes: drop(notes.openNotes),
+    heartNotes: drop(notes.heartNotes),
+    baseNotes: drop(notes.baseNotes),
+  }
+  if (isThemeJunkDominatedLayers(notes)) {
+    return cleaned
+  }
+  return cleaned
+}
+
 /** Template blocks (Scent Vibe, Sizes, Application, …) — for final CSV descriptions, not note extraction. */
 const stripPdpSectionBoilerplate = (text: string): string =>
   stripAtEarliestPatterns(text, PDP_SECTION_BOILERPLATE_START_PATTERNS)
@@ -1859,7 +2094,8 @@ const stripMerchantDescriptionForStorage = (text: string): string =>
  */
 export const sanitizeCopyForNotePipeline = (text: string): string => {
   if (!text?.trim()) return ""
-  let s = text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+  let s = text.replace(/<!--[\s\S]*?-->/g, " ")
+  s = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
   s = s.replace(/[\u2500-\u257F\u2580-\u259F]/g, " ")
   const lines = s.split(/\r?\n/)
   const kept: string[] = []
@@ -1893,9 +2129,128 @@ export const sanitizeCopyForNotePipeline = (text: string): string => {
 const isPolicyOnlyMerchantDescription = (raw: string | null | undefined): boolean => {
   const t = (raw ?? "").trim()
   if (!t) return false
+  if (/\bFULL DESCRIPTION\b/i.test(t)) return false
   const stripped = stripPolicyBoilerplate(t)
   // Less than 80 chars of real narrative after policy cutoff = treat as boilerplate-only.
   return stripped.length < 80
+}
+
+const ETAT_LIBRE_BRAND_BOILERPLATE_START_RE =
+  /^The Brand Etat Libre dOrange currently presents\b/i
+
+const ETAT_LIBRE_SAMPLE_PREFIX_RE =
+  /^interested in trying a sample\?\s*(?:Try In a 4 Piece Sample Kit\s*)?(?:Sample\s*\$[\d.]+\s*)?/i
+
+const ETAT_LIBRE_SAMPLE_INLINE_RE =
+  /interested in trying a sample\?\s*(?:Try In a 4 Piece Sample Kit\s*)?(?:Sample\s*\$[\d.]+\s*)?/gi
+
+const ETAT_LIBRE_FAMILY_TAGS_RE =
+  /^(?:(?:Fresh|Floral|Woody|Gourmand|Spicy|Leathery|Tobacco|Powdery|Aromatic|Earthy|Citrus)(?:\s*,?\s*)?)+/i
+
+const ETAT_LIBRE_PDP_SECTION_END_RE =
+  /\b(?:MAIN NOTES|Pronunciation|Customer Reviews|CHOOSE SIZE|Ingredients)\b/i
+
+export const isEtatLibreProductUrl = (detailURL: string): boolean =>
+  /etatlibredorange/i.test(detailURL ?? "")
+
+/** Strip sample-kit promos and family-tag teasers prepended to Etat Libre PDP copy. */
+export const stripEtatLibreUiNoise = (text: string): string => {
+  let t = (text ?? "").trim()
+  if (!t) return ""
+  t = t.replace(ETAT_LIBRE_SAMPLE_PREFIX_RE, "").trim()
+  t = t.replace(ETAT_LIBRE_SAMPLE_INLINE_RE, "").trim()
+  for (let i = 0; i < 3; i += 1) {
+    const nxt = t.replace(ETAT_LIBRE_FAMILY_TAGS_RE, "").trim()
+    if (nxt === t) break
+    t = nxt
+  }
+  return t
+}
+
+const hasDuplicatedProseBlock = (text: string, minLen = 72): boolean => {
+  const t = text.replace(/\s+/g, " ").trim()
+  if (t.length < minLen * 2) return false
+  for (let size = minLen; size <= Math.min(180, Math.floor(t.length / 2) + 1); size += 1) {
+    const chunk = t.slice(0, size).trim()
+    if (chunk.length >= minLen && t.slice(size).includes(chunk)) return true
+  }
+  return false
+}
+
+/** True when scraped description should be wiped and replaced from PDP HTML or noir. */
+export const isUnusableMerchantDescription = (raw: string | null | undefined): boolean => {
+  const t = (raw ?? "").trim()
+  if (!t) return true
+  if (isJunkScrapedDescription(t)) return true
+  if (ETAT_LIBRE_BRAND_BOILERPLATE_START_RE.test(t.replace(/<!--[\s\S]*?-->/g, " ").trim())) return true
+  const lower = t.toLowerCase()
+  if (lower.startsWith("interested in trying a sample?")) return true
+  if (/\btry in a 4 piece sample kit\b/i.test(lower) && t.length < 520) return true
+  if (/\bfull des(?:crip(?:tion)?)?\s*$/i.test(t)) return true
+  if (hasDuplicatedProseBlock(t)) return true
+  if (t.length < 220 && !/[.!?"'\u2019\u201d]\s*$/.test(t)) return true
+  return false
+}
+
+/** Strip HTML comments, Etat Libre accordion bleed, and FULL DESCRIPTION labels. */
+export const normalizePdpDescription = (text: string): string => {
+  let t = (text ?? "").replace(/<!--[\s\S]*?-->/g, " ").replace(/\s+/g, " ").trim()
+  if (!t) return ""
+
+  t = stripEtatLibreUiNoise(t)
+  if (!t) return ""
+
+  const fullIdx = t.search(/\bFULL DESCRIPTION\b/i)
+  if (fullIdx >= 0) {
+    t = t.slice(fullIdx).trim()
+    const end = t.search(ETAT_LIBRE_PDP_SECTION_END_RE)
+    if (end > 20) t = t.slice(0, end).trim()
+    t = t.replace(/^\s*FULL DESCRIPTION\s+/i, "").trim()
+    return t.replace(/[ .]+$/, "").trim()
+  }
+
+  if (ETAT_LIBRE_BRAND_BOILERPLATE_START_RE.test(t)) {
+    const cut = t.search(
+      /(?:interested in trying a sample\?|S as in blood|\bFULL DESCRIPTION\b)/i,
+    )
+    if (cut >= 0) {
+      t = t.slice(cut).trim()
+      t = t.replace(/^\s*FULL DESCRIPTION\s+/i, "").trim()
+    } else {
+      return ""
+    }
+  }
+
+  const end = t.search(ETAT_LIBRE_PDP_SECTION_END_RE)
+  if (end > 80) t = t.slice(0, end).trim()
+  t = t.replace(/^\s*FULL DESCRIPTION\s+/i, "").trim()
+  return t.replace(/[ .]+$/, "").trim()
+}
+
+const extractFullDescriptionFromHtml = (html: string): string | null => {
+  if (!html?.trim()) return null
+
+  const headingRe =
+    /<h[1-6][^>]*>\s*FULL DESCRIPTION\s*<\/h[1-6]>([\s\S]*?)(?=<h[1-6][^>]*>|$)/gi
+  let match: RegExpExecArray | null
+  const blocks: string[] = []
+  while ((match = headingRe.exec(html)) !== null) {
+    const body = (match[1] ?? "")
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+    if (body.length >= 20) blocks.push(body)
+  }
+  if (blocks.length > 0) return blocks.join(" ").trim()
+
+  const plain = stripHtmlToPlainText(html)
+  const m = plain.match(
+    /\bFULL DESCRIPTION\b\s*(.+?)(?=\bMAIN NOTES\b|\bPronunciation\b|\bCustomer Reviews\b|$)/is,
+  )
+  if (m?.[1]) return m[1].replace(/\s+/g, " ").trim().replace(/[ .]+$/, "").trim()
+  return null
 }
 
 /** Pattern-by-Etsy and minified HTML glue layer headers: "AccordMiddle Notes:" → "Accord Middle Notes:" */
@@ -1940,7 +2295,7 @@ const normalizeImplicitLayerColons = (text: string): string => {
 /** Stop last layer chunk before Pattern/Etsy listing meta (avoids ':' in tokens → junk filter drops all base notes). */
 const truncateAtShopMetaLabels = (s: string): string => {
   const m = s.match(
-    /\s+(?:series|perfume\s+family|unisex|contains\s+true\s+animalics|scent\s+strength|extra info|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|original\s+manufacturers|vibe\s*&\s*wear|vibe\b|wear\s*&\s*performance|wear\s+guide\b|good\s+to\s+know\b|season\s*:|projection\s*:|longevity\s*:|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b|description)\b/i,
+    /\s+(?:series|perfume\s+family|unisex|contains\s+true\s+animalics|scent\s+strength|extra info|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|original\s+manufacturers|vibe\s*&\s*wear|vibe\b|wear\s*&\s*performance|wear\s+guide\b|good\s+to\s+know\b|season\s*:|projection\s*:|longevity\s*:|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b|description|product\s+reviews?(?:\s*&\s*videos?)?|related\s+products|shopping\s+cart)\b/i,
   )
   if (m?.index != null) return s.slice(0, m.index).trim()
   return s.trim()
@@ -2238,6 +2593,11 @@ const MERCHANT_LABELED_HARD_JUNK_PATTERNS: RegExp[] = [
   /\b(?:originally\s+from|frosted-pastel|summer\s+warm\s+days|clean\s+halo|longer\s+on\s+fabric|cloud\s+cream|candy\s+air|powdered\s+vanilla\s+style|the\s+creamy|cacao\s+the|a\s+mug|then\s+deepens|deepens\s+into|fluffy\s+glow)\b/i,
   /\b(?:projection|facets|trail|style|concentration|strength|nuances|enveloping|sparkle|halos?)\b/i,
   /\badds\b/i,
+  /\bvideos\b/i,
+  /\brelated products\b/i,
+  /\bcaptivate your senses\b/i,
+  /^romance$/i,
+  /^exotic sophistication$/i,
 ]
 
 const isMerchantLabeledNote = (note: string): boolean => {
@@ -2355,6 +2715,7 @@ const isScraperExtendedAccordNote = (note: string): boolean => {
 const isScraperKeptNote = (note: string): boolean => {
   const t = note.trim()
   if (!t) return false
+  if (isThemeCssTokenNote(t) || isObviousNonMaterialNote(t)) return false
   if (isDisplayableScentNote(t) && !looksLikeJunkNote(t)) return true
   if (isScraperExtendedAccordNote(t)) return true
   return false
@@ -2431,7 +2792,8 @@ function classifyNoteLayer(label: string): "open" | "heart" | "base" | null {
   if (/^hartnoten?$/.test(normalized)) return "heart"
   if (/^(top|open|opening|head)(?: notes?)?$/.test(normalized)) return "open"
   if (/^(heart|middle|mid|core|body|center|centre)(?: notes?)?$/.test(normalized)) return "heart"
-  if (/^(base|bottom|background|foundation|dry down|drydown|end)(?: notes?)?$/.test(normalized)) return "base"
+  if (/^(base|bottom|background|foundation|dry down|drydown|dry|end)(?: notes?)?$/.test(normalized))
+    return "base"
   return null
 }
 
@@ -2454,7 +2816,7 @@ function extractInlineLayeredNotes(text: string): {
   if (!source) return empty
 
   const sectionRe =
-    /\b(top(?:\s+notes?)?|open(?:ing)?(?:\s+notes?)?|head(?:\s+notes?)?|heart(?:\s+notes?)?|middle(?:\s+notes?)?|mid(?:\s+notes?)?|core(?:\s+notes?)?|body(?:\s+notes?)?|cent(?:er|re)(?:\s+notes?)?|base(?:\s+notes?)?|bottom(?:\s+notes?)?|background(?:\s+notes?)?|foundation(?:\s+notes?)?|dry\s*down(?:\s+notes?)?|drydown(?:\s+notes?)?|end(?:\s+notes?)?|notes?\s+de\s+(?:tête|tete)|notes?\s+de\s+(?:cœur|coeur)|notes?\s+de\s+fond|note\s+di\s+(?:testa|cuore|fondo|olfattive)|notas\s+de\s+(?:salida|coraz[oó]n|corazon|fondo)|kopfnoten?|herznoten?|basisnoten?|duftnoten?|topnoten?|hartnoten?)\s*[:\-\u2013\u2014–—]\s*/gi
+    /\b(top(?:\s+notes?)?|open(?:ing)?(?:\s+notes?)?|head(?:\s+notes?)?|heart(?:\s+notes?)?|middle(?:\s+notes?)?|mid(?:\s+notes?)?|core(?:\s+notes?)?|body(?:\s+notes?)?|cent(?:er|re)(?:\s+notes?)?|base(?:\s+notes?)?|bottom(?:\s+notes?)?|background(?:\s+notes?)?|foundation(?:\s+notes?)?|dry\s*down(?:\s+notes?)?|drydown(?:\s+notes?)?|dry(?:\s+notes?)?|end(?:\s+notes?)?|notes?\s+de\s+(?:tête|tete)|notes?\s+de\s+(?:cœur|coeur)|notes?\s+de\s+fond|note\s+di\s+(?:testa|cuore|fondo|olfattive)|notas\s+de\s+(?:salida|coraz[oó]n|corazon|fondo)|kopfnoten?|herznoten?|basisnoten?|duftnoten?|topnoten?|hartnoten?)\s*[:\-\u2013\u2014–—]\s*/gi
   const matches = [...source.matchAll(sectionRe)]
   if (matches.length === 0) return empty
 
@@ -2505,7 +2867,7 @@ const FLAT_NOTE_PROSE_BOUNDARY_RES: RegExp[] = [
   // "Sweet " only as a prose-tail (not "Sweet Orange" etc.). Negative lookahead lists common
   // compound notes that begin with "Sweet"; anything else means we hit prose like "Sweet as a memory".
   /\s+Sweet\s+(?!(?:Orange|Pea|Peas|Almond|Almonds|Basil|Pepper|Peppers|Marjoram|Tea|Onion|Lime|Mandarin|Sage|Corn|Potato|Cinnamon|Vanilla|Cherry|Plum|Rose|Apple|Caramel|Tobacco|Honey|Spice|Spices|Fennel|Clover|Grass|Wood|Woods|Cream|Milk|Butter|Bay|Pea|Pepper|Mint|Birch|Annie|William|Wattle|Acacia|Lemon|Magnolia|Osmanthus|Pea|Pepper))\b/i,
-  /\s+(?:Available in |Originally (?:a |the )?|Our oil perfume|NOTE:|Packaging:|How to use|Shipping:|Return [Pp]olicy|Subscribe(?:\s+now|\s+today)?|You may also|Customers also|Related products|Complete the look|Pairs well|Also available|More from|Write a review|Questions\?|Leave a review)\b/i,
+  /\s+(?:Available in |Originally (?:a |the )?|Our oil perfume|NOTE:|Packaging:|How to use|Shipping:|Return [Pp]olicy|Subscribe(?:\s+now|\s+today)?|You may also|Customers also|Related products|Complete the look|Pairs well|Also available|More from|Write a review|Questions\?|Leave a review|Product reviews?(?:\s*&\s*videos?)?|Ingredients captivate your senses)\b/i,
   /\s+#{1,6}\s*(?:Ingredients|How to use|Shipping|Returns?|FAQ|Details|Directions|Warnings?|Disclaimer|Specifications|Size [Gg]uide|Care [Ii]nstructions)\b/i,
   /\s+(?:Ingredients|Cruelty[- ]free|Vegan |Dermatologist|Clinically tested|Prop(?:osition|\.)?\s*65|FDA disclaimer)\b/i,
   // Common post-notes sections on indie Shopify PDP
@@ -2569,6 +2931,35 @@ const countInlineLayerLabels = (source: string): number => {
   return [...source.matchAll(re)].length
 }
 
+/**
+ * WooCommerce accordions (Vivamor): Selenium often captures "Top Notes:" / "Heart Notes:" headers
+ * without the hidden tab body. Treat that as "no usable pyramid" so HTTP bootstrap still runs.
+ */
+const isThinLayeredPyramidScrape = (text: string): boolean => {
+  const collapsed = (text ?? "").replace(/\s+/g, " ").trim()
+  if (!collapsed) return false
+  const labelCount = countInlineLayerLabels(collapsed)
+  if (labelCount < 2) return false
+
+  const layerBodyRe =
+    /\b(?:top|open|opening|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry\s*down|drydown|end)\s*(?:notes?)?\s*:\s*([\s\S]*?)(?=\s+\b(?:top|open|opening|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry\s*down|drydown|end)\s*(?:notes?)?\s*:|$)/gi
+  let match: RegExpExecArray | null
+  let layersWithMaterial = 0
+  while ((match = layerBodyRe.exec(collapsed)) !== null) {
+    const body = (match[1] ?? "")
+      .trim()
+      .replace(
+        /\b(?:description|product\s+reviews?(?:\s*&\s*videos?)?|related\s+products|master\s+perfumer|olfactory\s+notes)\b.*$/i,
+        "",
+      )
+      .trim()
+    if (body.length >= 4 && /[a-z]{3,}/i.test(body) && (/,|&/.test(body) || body.split(/\s+/).filter(Boolean).length >= 2)) {
+      layersWithMaterial += 1
+    }
+  }
+  return layersWithMaterial < labelCount
+}
+
 /** True when the match is immediately preceded by a layered label (top/heart/base …). */
 const shouldSkipFlatNotesMatch = (source: string, matchIndex: number, prefixChars = 48): boolean => {
   const rawPrefix = source.slice(Math.max(0, matchIndex - prefixChars), matchIndex)
@@ -2614,6 +3005,8 @@ const FLAT_NOTE_LIST_PATTERNS: RegExp[] = [
   /(?:^|[\s.!?\n*])(?:key\s+)?accords?\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi,
   // "With notes of …" (marketing sentence; stop at sentence end)
   /(?:^|[\s.!?\n*])\bwith\s+notes?\s+of\s+([^.!?\n*]+)/gi,
+  // "… notes of caramelized vanilla, …" (Andromeda gourmand PDPs, e.g. Cheirosa 71)
+  /(?:^|[\s.!?\n*])(?:inviting\s+)?notes?\s+of\s+([^.!?\n*]+)/gi,
   // "The fragrance composition includes …"
   /(?:^|[\s.!?\n*])(?:the\s+)?(?:fragrance|scent|perfume)\s+composition\s+(?:includes|features|contains)\s+([^.!?\n*]+)/gi,
   // "… blend of …" — exclude `$` so `[^.!?]+` does not swallow `$16.00` and merge the last note with price.
@@ -2659,6 +3052,15 @@ function extractFlatNotes(text: string): string[] {
   }
 
   const collapsed = source.replace(/\r/g, "\n").replace(/\s+/g, " ").trim()
+
+  const etatLibreMain = collapsed.match(
+    /\bMAIN NOTES\s+(.+?)(?=\s+(?:Pronunciation|Customer Reviews|Ingredients|CHOOSE SIZE|Share)\b|$)/i,
+  )
+  if (etatLibreMain?.[1]) {
+    const parsed = filterStructuredNoteParts(splitNoteList(etatLibreMain[1].trim()))
+    if (parsed.length >= 2) found.push(...parsed)
+  }
+
   const mainNotesGlued = collapsed.match(
     /\b(?:fragrance\s+profile\s+)?main\s+notes?\s+(?![:\-\u2013\u2014–—])([A-Za-z][^.!?]{8,220}?)(?=\s+Overall\s+Vibe|\s+Main\s+Accords?|\s+When\s+to\s+Wear|\s+Available\s+Sizes?|\s+How\s+(?:It\s+)?Wears|$)/i,
   )
@@ -3093,8 +3495,13 @@ const mergeExistingPythonNotes = (
 ): NotesLayers => {
   if (!existing || noteLayerCount(existing) === 0) return current
 
+  if (isThemeJunkDominatedLayers(current) && noteLayerCount(existing) >= 2) {
+    return dedupeNotesAcrossLayers(existing)
+  }
+
   const currentIsAuthoritative =
-    hasLayeredMerchantPyramid(current) || noteLayerCount(current) >= noteLayerCount(existing)
+    (hasLayeredMerchantPyramid(current) || noteLayerCount(current) >= noteLayerCount(existing)) &&
+    !isThemeJunkDominatedLayers(current)
 
   if (!currentIsAuthoritative) {
     return dedupeNotesAcrossLayers({
@@ -3314,6 +3721,9 @@ const isJunkScrapedDescription = (text: string | null | undefined): boolean => {
   if (/\border\s+special\s+instructions\s+box\b/i.test(lower)) return true
   if (/\bvegan\s+faux\s+suede\s+bag\b/i.test(lower)) return true
   if (/\b15\s+coupon\b/i.test(lower)) return true
+  if (/^interested in trying a sample\?/i.test(t)) return true
+  if (/\btry in a 4 piece sample kit\b/i.test(lower) && t.length < 520) return true
+  if (/\bfull des(?:crip(?:tion)?)?\s*$/i.test(t)) return true
   return false
 }
 
@@ -3849,17 +4259,37 @@ const processSingleProductPhase1 = async (
   opts.onProgress?.(
     `Notes pipeline ${index + 1}/${totalItems}: ${(name || resolvedName || "product").slice(0, 72)}`,
   )
-  const scrapedDescription = isJunkScrapedDescription(item.description ?? "")
+  const scrapedDescriptionRaw = isJunkScrapedDescription(item.description ?? "")
     ? ""
     : (item.description ?? "")
-  const pipelineItem: ScrapedItem = scrapedDescription === (item.description ?? "")
-    ? item
-    : { ...item, description: scrapedDescription }
+  const scrapedDescriptionNormalized = scrapedDescriptionRaw
+    ? normalizePdpDescription(scrapedDescriptionRaw) || scrapedDescriptionRaw
+    : ""
+  let pipelineItem: ScrapedItem =
+    scrapedDescriptionNormalized === (item.description ?? "")
+      ? item
+      : { ...item, description: scrapedDescriptionNormalized }
 
   let detailUrl = pipelineItem.detailURL?.trim() ?? ""
   if (isAndromedaMoonProductUrl(detailUrl) || /andromeda/i.test(houseName ?? "")) {
     throwIfAborted(sig)
     detailUrl = await resolveAndromedaDetailUrl(name || resolvedName, detailUrl, sig, opts.onProgress)
+  }
+
+  if (
+    isEtatLibreProductUrl(detailUrl) &&
+    detailUrl.startsWith("http") &&
+    isUnusableMerchantDescription(pipelineItem.description ?? "")
+  ) {
+    throwIfAborted(sig)
+    const htmlDesc = await tryFetchEtatLibreProductDescription(detailUrl, sig, opts.onProgress)
+    const currentLen = (pipelineItem.description ?? "").trim().length
+    if (htmlDesc && htmlDesc.length > currentLen + 20) {
+      pipelineItem = { ...pipelineItem, description: htmlDesc }
+      opts.onProgress?.(
+        `Notes pipeline ${index + 1}/${totalItems}: backfilled FULL DESCRIPTION from PDP HTML for ${(name || resolvedName || "product").slice(0, 48)}`,
+      )
+    }
   }
 
   let mergedBase = resolveNotesSource(pipelineItem)
@@ -3873,14 +4303,22 @@ const processSingleProductPhase1 = async (
     opts.enrichOnly === true ? false : shouldAutoFetchPatternEtsyNotes(detailUrl, mergedBase)
   const autoAndromedaFetch =
     opts.enrichOnly === true ? false : shouldAutoFetchAndromedaMoonNotes(detailUrl, mergedBase)
+  const autoEtatLibreFetch =
+    opts.enrichOnly === true ? false : shouldAutoFetchEtatLibreNotes(detailUrl, mergedBase)
+  const autoWooStoreFetch =
+    opts.enrichOnly === true ? false : shouldAutoFetchWooCommerceStoreNotes(detailUrl, mergedBase)
   const shouldFetchAndromedaBootstrap =
     isAndromedaMoonProductUrl(detailUrl) && opts.fetchPdpNoteBootstrap === true
   if (
     (shouldFetchAndromedaBootstrap ||
       opts.fetchPdpNoteBootstrap === true ||
       autoPatternEtsyFetch ||
-      autoAndromedaFetch) &&
-    (shouldFetchAndromedaBootstrap || !hasExplicitNoteListSignal(mergedBase)) &&
+      autoAndromedaFetch ||
+      autoEtatLibreFetch ||
+      autoWooStoreFetch) &&
+    (shouldFetchAndromedaBootstrap ||
+      !hasExplicitNoteListSignal(mergedBase) ||
+      autoWooStoreFetch) &&
     detailUrl.startsWith("http")
   ) {
     throwIfAborted(sig)
@@ -4096,6 +4534,7 @@ const processSingleProductPhase1 = async (
       }
     }
 
+    notes = rejectThemeJunkDominatedLayers(notes)
     notes = rejectComplianceDominatedLayers(notes)
     notes = finalizeNoteLayersForExport(notes, merchantTrustedNotes)
 
@@ -4124,6 +4563,7 @@ const processSingleProductPhase1 = async (
     let descriptionForRecord: string
     if (stripRaw) descriptionForRecord = stripRaw.trim()
     else descriptionForRecord = sanitizedDescription
+    descriptionForRecord = normalizePdpDescription(descriptionForRecord) || descriptionForRecord
     if (isJunkScrapedDescription(descriptionForRecord)) descriptionForRecord = ""
     /**
      * Drop merchant policy/shipping/disclaimer trail from the stored description, and wipe entirely
@@ -4132,7 +4572,10 @@ const processSingleProductPhase1 = async (
      * no-changes-no-refunds). With notes present, noir generation later replaces the empty string.
      */
     if (descriptionForRecord) {
-      if (isPolicyOnlyMerchantDescription(descriptionForRecord)) {
+      if (
+        isPolicyOnlyMerchantDescription(descriptionForRecord) ||
+        isUnusableMerchantDescription(descriptionForRecord)
+      ) {
         descriptionForRecord = ""
       } else {
         descriptionForRecord = stripMerchantDescriptionForStorage(descriptionForRecord)
@@ -4269,7 +4712,6 @@ function buildGraph(
           for (const n of arr) {
             const lc = n.trim().toLowerCase()
             if (trusted.has(lc)) {
-              if (!isMerchantLabeledNote(n)) continue
               if (!lc || seen.has(lc)) continue
               seen.add(lc)
               out.push(lc)
@@ -4335,6 +4777,12 @@ function buildGraph(
     for (let idx = 0; idx < totalItems; idx++) {
       throwIfAborted(sig)
       const p = phase1[idx]
+      if (isShopCollectionListingScrape(state.items[idx], p.record.name)) {
+        opts.onProgress?.(
+          `Notes pipeline: omitted shop/collection listing row "${p.record.name.slice(0, 48)}"`,
+        )
+        continue
+      }
       if (!p.ok) {
         results.push(p.record)
         continue
@@ -4347,9 +4795,16 @@ function buildGraph(
        */
       const totalNotes = noteLayerCount(p.notes)
       const hasUsableMerchantDescription = (p.record.description || "").trim().length > 0
+      const detailUrl = (p.record.detailURL || "").split("?")[0]?.split("#")[0]?.trim() ?? ""
+      /** Empty URL is OK (e.g. refresh-house-notes from DB). Block only bad/mismatched scraper PDPs. */
+      const hasBlockingProductUrl =
+        detailUrl.length > 0 &&
+        (NON_PERFUME_ANDROMEDA_PRODUCT_URL_RE.test(detailUrl) ||
+          !detailUrlAlignsWithProductName(p.name, detailUrl))
       const shouldRunNoir =
         opts.generateNoirDescriptions &&
         noirLlm &&
+        !hasBlockingProductUrl &&
         (totalNotes >= 2 ||
           (totalNotes >= 1 && !hasUsableMerchantDescription) ||
           (totalNotes === 0 && !hasUsableMerchantDescription && p.name.trim().length > 0))
@@ -4372,7 +4827,11 @@ function buildGraph(
         })
       } else {
         if (opts.generateNoirDescriptions && noirLlm) {
-          if (totalNotes === 0) {
+          if (hasBlockingProductUrl) {
+            opts.onProgress?.(
+              `Notes pipeline: skipped noir for "${p.name.slice(0, 60)}" — product URL is non-perfume or does not match the name.`,
+            )
+          } else if (totalNotes === 0) {
             opts.onProgress?.(
               `Notes pipeline: skipped noir for "${p.name.slice(0, 60)}" — no notes extracted.`,
             )

@@ -374,12 +374,33 @@ export const isComplianceOrSourcingNote = (note: string): boolean => {
     return true
   }
   if (
-    /\b(?:non-gmo|non\s+gmo|pesticides|fertilizers|phthalate|carcinogen|sugarcane\s+alcohol|grown\s+organically|sourced\s+sustainably|using\s+uncut|designers?\s*name|chemical\s+analysis|reproduction|environmentally\s+friendly|ethically\s+sourced)\b/i.test(
+    /\b(?:non-gmo|non\s+gmo|pesticides|fertilizers|phthalate|carcinogen|sugarcane\s+alcohol|grown\s+organically|sourced\s+sustainably|using\s+uncut|designers?\s*name|chemical\s+analysis|reproduction|environmentally\s+friendly|ethically\s+sourced|poured\s+by\s+hand|purpose\s+of\s+this\s+description|original\s+manufactures?\s+picture|nasty\s+chemicals|long-lasting\s+fragrance|could\s+take\s+longer|monday\s*[-–]?\s*friday|inspected\s+before\s+shipping|optional\s+third-party\s+insurance|becoming\s+part\s+of\s+andromeda|thank\s+you\s+for\s+giving\s+us)\b/i.test(
       n,
     )
   ) {
     return true
   }
+  if (/^(?:these\s+fragrances\s+are\s+all\s+poured\s+by\s+hand|the\s+purpose\s+of\s+this\s+description)\b/i.test(n)) {
+    return true
+  }
+  if (/^(?:sweet|main|featured|key)\s+notes?\s*$/i.test(n)) return true
+  return false
+}
+
+/** Shopify theme CSS custom properties and DOM class tokens — not fragrance materials. */
+export const isThemeCssTokenNote = (note: string): boolean => {
+  const n = note.trim().toLowerCase()
+  if (!n) return true
+  if (n === "--" || n.startsWith("--")) return true
+  if (/^--[\w-]+-$/.test(n)) return true
+  if (
+    /^(?:footer|navigation|header|button|sidebar|secondary-elements|newsletter-popup|product-badge|overlay|popup|cookie|gdpr|chatbot|breadcrumb|pagination|announcement|wishlist|compare|share|modal|template|stylesheet)$/i.test(
+      n,
+    )
+  ) {
+    return true
+  }
+  if (/^--(?:light|button|header|newsletter-popup|product-badge)-$/i.test(n)) return true
   return false
 }
 
@@ -387,6 +408,7 @@ export const isComplianceOrSourcingNote = (note: string): boolean => {
 export const isObviousNonMaterialNote = (note: string): boolean => {
   const n = note.trim().toLowerCase()
   if (!n) return true
+  if (isThemeCssTokenNote(n)) return true
   if (isComplianceOrSourcingNote(n)) return true
   if (/^[a-z]{1,2}$/i.test(n)) return true
   if (/^(?:top|heart|base|middle)\b\s+\w+/i.test(n)) return true
@@ -418,7 +440,11 @@ export const isObviousNonMaterialNote = (note: string): boolean => {
   if (/\s+description\b/i.test(n) && n.split(/\s+/).length <= 4) return true
   if (/^(?:luxurious|wear\s+it|wear\s+it\s+on)$/i.test(n)) return true
   if (/\bwear\s+it(?:\s+on)?\b/i.test(n)) return true
-  if (/^(?:radial-gradient|linear-gradient|repeating-linear-gradient)$/i.test(n)) return true
+  if (/^(?:radial-gradient|linear-gradient|repeating-linear-gradient|videos|romance|exotic sophistication)$/i.test(n))
+    return true
+  if (/^(?:videos related products|ingredients captivate your senses|related products|product reviews)$/i.test(n))
+    return true
+  if (/\b(?:videos related products|ingredients captivate your senses|captivate your senses)\b/i.test(n)) return true
   if (/\b(?:linear-gradient|radial-gradient|rgba\s*\(|rgb\s*\(|hsl\s*\()\b/i.test(n)) return true
   if (/\b(?:font-family|font-size|font-weight|background-color|webkit-font-smoothing)\b/i.test(n)) return true
   if (/\b(?:max-width|font-size|z-index|display|position|opacity|transform|transition)\b/i.test(n)) {
@@ -584,6 +610,12 @@ const trimDuplicateLayerTail = (chunk: string): string => {
   )
   if (colonTail?.index != null && colonTail.index >= 3) {
     s = s.slice(0, colonTail.index).trim()
+  }
+  const sectionTail = s.search(
+    /\s+(?:product\s+reviews?(?:\s*&\s*videos?)?|related\s+products|description\b|master\s+perfumer|shopping\s+cart)\b/i,
+  )
+  if (sectionTail != null && sectionTail >= 3) {
+    s = s.slice(0, sectionTail).trim()
   }
   return s
 }

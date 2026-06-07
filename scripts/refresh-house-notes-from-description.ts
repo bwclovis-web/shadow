@@ -6,7 +6,8 @@
  *
  * Run from project root:
  *   npm run refresh:house-notes
- *   npm run refresh:house-notes -- "Other House"
+ *   npm run refresh:house-notes -- Other House
+ *   npm run refresh:house-notes -- "Other House"   (quotes also work)
  *   npm run refresh:house-notes -- --dry-run
  *   npm run refresh:house-notes -- --no-noir
  *   npm run refresh:house-notes -- --validate   (optional: bulk LLM note validation, same as admin scraper)
@@ -54,7 +55,7 @@ const parseArgv = (): {
   validateNotes: boolean
 } => {
   const args = process.argv.slice(2)
-  let houseNameFromArg: string | null = null
+  const positional: string[] = []
   let dryRun = false
   let noNoir = false
   let validateNotes = false
@@ -63,10 +64,12 @@ const parseArgv = (): {
     if (arg === "--dry-run") dryRun = true
     else if (arg === "--no-noir") noNoir = true
     else if (arg === "--validate") validateNotes = true
-    else if (!arg.startsWith("--") && arg.trim() && houseNameFromArg === null) {
-      houseNameFromArg = arg.trim()
+    else if (!arg.startsWith("--") && arg.trim()) {
+      positional.push(arg.trim())
     }
   }
+
+  const houseNameFromArg = positional.length > 0 ? positional.join(" ") : null
   return { houseNameFromArg, dryRun, noNoir, validateNotes }
 }
 

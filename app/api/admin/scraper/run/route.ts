@@ -25,7 +25,12 @@ import path from "path"
 import { NextResponse, type NextRequest } from "next/server"
 
 import { assessDuplicateRisk } from "@/lib/scraper/duplicate-review"
-import { pythonPipelineComplete } from "@/lib/scraper/map-scraped-items"
+import {
+  mapScrapedItemsToRecords,
+  pythonPipelineComplete,
+  scrapedItemsNeedNodeRepair,
+  scrapedItemsNeedPatternEtsyEnrichment,
+} from "@/lib/scraper/map-scraped-items"
 import { extractNotesForItems, type ScraperPipelineOptions } from "@/lib/scraper/notes-graph"
 import { isAllowedNotesPipelineModel, NOTES_PIPELINE_MODEL_ALLOWLIST } from "@/lib/scraper/notes-pipeline-models"
 import { prisma } from "@/lib/db"
@@ -102,6 +107,12 @@ const normalizePreviewName = (value: string): string =>
     .replace(/\s+/g, " ")
     .trim()
 
+const normalizePreviewDetailUrl = (value: string): string =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/\/+$/, "")
+
 const NON_PERFUME_PRODUCT_URL_RE =
   /\/products\/(?:fragrance-sampler|gift-card|sample-pack|coupon|wish-list|file-claim)/i
 
@@ -111,8 +122,10 @@ const scorePreviewRecordCompleteness = (record: PerfumeCsvRecord): number => {
   const baseCount = safeJsonArrayCount(record.baseNotes)
   const descScore = record.description?.trim() ? 10 : 0
   const imageScore = record.image?.trim() ? 10 : 0
-  const urlPenalty = NON_PERFUME_PRODUCT_URL_RE.test(record.detailURL ?? "") ? -50 : 0
-  return openCount + heartCount + baseCount + descScore + imageScore + urlPenalty
+  const detailUrl = record.detailURL ?? ""
+  const urlPenalty = NON_PERFUME_PRODUCT_URL_RE.test(detailUrl) ? -50 : 0
+  const contentPagePenalty = /\/pages\//i.test(detailUrl) ? -40 : 0
+  return openCount + heartCount + baseCount + descScore + imageScore + urlPenalty + contentPagePenalty
 }
 
 const safeJsonArrayCount = (value: string): number => {
@@ -134,7 +147,7 @@ const dedupePreviewRecords = (
   for (const record of records) {
     const house = (record.perfumeHouse ?? "").trim().toLowerCase()
     const name = normalizePreviewName(record.name ?? "")
-    const detailUrl = (record.detailURL ?? "").trim().toLowerCase()
+    const detailUrl = normalizePreviewDetailUrl(record.detailURL ?? "")
     const image = (record.image ?? "").trim().toLowerCase()
     const keys = [
       detailUrl ? `url:${detailUrl}` : "",
@@ -437,6 +450,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       let scrapeClientAborted = false
       let scrapeKillTimer: ReturnType<typeof setTimeout> | undefined
       let keepaliveTimer: ReturnType<typeof setInterval> | undefined
+      let keepalivePhase = "scraping"
 
       let stdout = ""
       let scraperLog = ""
@@ -450,15 +464,23 @@ export async function POST(request: NextRequest): Promise<Response> {
       const pythonArgs = [scriptPath]
       const childRef: { current: ChildProcess | null } = { current: null }
 
-      const clearScrapeTimers = () => {
+      const clearScrapeKillTimer = () => {
         if (scrapeKillTimer !== undefined) {
           clearTimeout(scrapeKillTimer)
           scrapeKillTimer = undefined
         }
+      }
+
+      const clearKeepalive = () => {
         if (keepaliveTimer !== undefined) {
           clearInterval(keepaliveTimer)
           keepaliveTimer = undefined
         }
+      }
+
+      const clearScrapeTimers = () => {
+        clearScrapeKillTimer()
+        clearKeepalive()
       }
 
       const killPythonIfRunning = () => {
@@ -487,7 +509,13 @@ export async function POST(request: NextRequest): Promise<Response> {
 
       keepaliveTimer = setInterval(() => {
         try {
-          sendLine(controller, { type: "log", message: "Still running…" })
+          const phase =
+            keepalivePhase === "scraping"
+              ? "Scraper still running…"
+              : keepalivePhase === "notes"
+                ? "Note extraction still running…"
+                : "Finalizing results…"
+          sendLine(controller, { type: "log", message: phase })
         } catch {
           // stream already closed
         }
@@ -598,7 +626,7 @@ export async function POST(request: NextRequest): Promise<Response> {
       }
 
       child.on("close", async (code: number | null) => {
-        clearScrapeTimers()
+        clearScrapeKillTimer()
         try {
           child?.stdin?.destroy()
           child?.stdout?.destroy()
@@ -610,6 +638,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         if (scrapeClientAborted) {
           detachAbortListener()
           invokeClientAbort = null
+          clearKeepalive()
           try {
             controller.close()
           } catch {
@@ -640,6 +669,7 @@ export async function POST(request: NextRequest): Promise<Response> {
             }
             detachAbortListener()
             invokeClientAbort = null
+            clearKeepalive()
             sendLine(controller, { type: "result", data: result })
             controller.close()
             return
@@ -657,6 +687,7 @@ export async function POST(request: NextRequest): Promise<Response> {
             }
             detachAbortListener()
             invokeClientAbort = null
+            clearKeepalive()
             sendLine(controller, { type: "result", data: result })
             controller.close()
             return
@@ -675,6 +706,7 @@ export async function POST(request: NextRequest): Promise<Response> {
             }
             detachAbortListener()
             invokeClientAbort = null
+            clearKeepalive()
             sendLine(controller, { type: "result", data: result })
             controller.close()
             return
@@ -683,6 +715,7 @@ export async function POST(request: NextRequest): Promise<Response> {
           if (request.signal.aborted || scrapeClientAborted) {
             detachAbortListener()
             invokeClientAbort = null
+            clearKeepalive()
             try {
               controller.close()
             } catch {
@@ -691,15 +724,23 @@ export async function POST(request: NextRequest): Promise<Response> {
             return
           }
 
-          // Python may have pre-extracted notes; Node always refines (split blobs, fill layers, merchant trust).
           const hasPythonNotes = pythonPipelineComplete(scrapedItems)
+          const needsNodeEnrichment = scrapedItemsNeedPatternEtsyEnrichment(scrapedItems)
+          const needsNodeRepair = scrapedItemsNeedNodeRepair(scrapedItems)
+          const skipNodeNotesPipeline = hasPythonNotes && !needsNodeEnrichment && !needsNodeRepair
+
+          keepalivePhase = skipNodeNotesPipeline ? "finalize" : "notes"
 
           try {
             sendLine(controller, {
               type: "log",
-              message: hasPythonNotes
-                ? `Python pipeline complete — refining ${scrapedItems.length} product(s) via Node.js (progress lines follow).`
-                : `Starting note extraction for ${scrapedItems.length} products (Node.js pipeline — progress lines follow).`,
+              message: skipNodeNotesPipeline
+                ? `Python notes pipeline complete — mapping ${scrapedItems.length} product(s) (skipping duplicate Node LLM pass).`
+                : hasPythonNotes
+                  ? needsNodeRepair
+                    ? `Python pipeline complete — Node repair pass for ${scrapedItems.length} product(s) (compliance/URL fixes; progress lines follow).`
+                    : `Python pipeline complete — Node enrichment for ${scrapedItems.length} product(s) (progress lines follow).`
+                  : `Starting note extraction for ${scrapedItems.length} products (Node.js pipeline — progress lines follow).`,
             })
           } catch {
             // ignore
@@ -737,11 +778,9 @@ export async function POST(request: NextRequest): Promise<Response> {
               }
             },
           }
-          const { records: nodeRecords, batchWarnings } = await extractNotesForItems(
-            scrapedItems,
-            body.houseName,
-            pipelineOptions,
-          )
+          const { records: nodeRecords, batchWarnings } = skipNodeNotesPipeline
+            ? { records: mapScrapedItemsToRecords(scrapedItems, body.houseName), batchWarnings: [] as string[] }
+            : await extractNotesForItems(scrapedItems, body.houseName, pipelineOptions)
           const { records: dedupedRecords, warnings: dedupeWarnings } = dedupePreviewRecords(nodeRecords)
           let removedRepeatedNotes = 0
           const notesNormalizedRecords = dedupedRecords.map(r => {
@@ -767,12 +806,14 @@ export async function POST(request: NextRequest): Promise<Response> {
           }
           detachAbortListener()
           invokeClientAbort = null
+          clearKeepalive()
           sendLine(controller, { type: "result", data: result })
           controller.close()
         } catch (err) {
           if (isAbortLike(err) && (scrapeClientAborted || request.signal.aborted)) {
             detachAbortListener()
             invokeClientAbort = null
+            clearKeepalive()
             try {
               controller.close()
             } catch {
@@ -792,6 +833,7 @@ export async function POST(request: NextRequest): Promise<Response> {
           try {
             detachAbortListener()
             invokeClientAbort = null
+            clearKeepalive()
             sendLine(controller, { type: "result", data: result })
             controller.close()
           } catch {
