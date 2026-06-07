@@ -50,9 +50,9 @@ These appear to be one-time use scripts for importing specific perfume brands. A
 ## Medium Confidence - Review Before Removing
 
 ### 6. Utility/One-Time Analysis Scripts
-- **`count-unattached-notes.js`** - Utility script to count notes not attached to any perfume
-  - Could be useful for data quality checks
-  - Consider keeping if used for maintenance/debugging
+- ~~**`count-unattached-notes.js`**~~ - ✅ **ARCHIVED** to `scripts/archive/utility-scripts/` (June 2026)
+  - Utility script to count notes not attached to any perfume
+  - Kept for occasional data-quality checks; not referenced in package.json
 
 ### 7. Migration Scripts
 - **`migrate-to-accelerate-fixed.js`** - May be a one-time migration script

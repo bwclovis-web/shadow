@@ -1,51 +1,36 @@
 "use client"
 
-import { type ChangeEvent, memo, useState, useCallback, useEffect, useMemo } from "react"
+import { useState, useCallback, useEffect, useMemo } from "react"
 import { useTranslations } from "next-intl"
-import Image from "next/image"
-import { Link } from "next-view-transitions"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 
 import { useSessionStore } from "@/hooks/sessionStore"
 
 import { Button } from "@/components/Atoms/Button"
-import ReviewStatusBadge from "@/components/Atoms/ReviewStatusBadge"
-import VooDooDetails from "@/components/Atoms/VooDooDetails"
-import Select from "@/components/Atoms/Select/Select"
-import { PaginationBar } from "@/components/Molecules/PaginationBar"
-import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import BulkInventoryGrid from "@/components/Containers/MyScents/BulkInventoryGrid/BulkInventoryGrid"
 import CsvImportPanel from "@/components/Containers/MyScents/CsvImport/CsvImportPanel"
+import CollectionTab from "@/components/Containers/MyScents/CollectionTab"
+import ListingsTab from "@/components/Containers/MyScents/ListingsTab"
 import AddToCollectionModal from "@/components/Organisms/AddToCollectionModal"
 import type { OptimisticCollectionItem } from "@/hooks/useMyScentsForm"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
-import { getPerfumeTypeLabel } from "@/data/SelectTypes"
 import { useResponsivePageSize } from "@/hooks/useMediaQuery"
 import { useDataWithFilters } from "@/hooks/useDataWithFilters"
-import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
-import InventoryStatsStrip from "@/components/Containers/MyScents/InventoryStatsStrip"
-import DecantSplitsPanel from "@/components/Containers/MyScents/DecantSplit/DecantSplitsPanel"
-import MyListingsPanel from "@/components/Containers/MyScents/MyListingsPanel"
-import MyScentsViewTabs from "@/components/Containers/MyScents/MyScentsViewTabs"
 import WishlistDemandSection from "@/components/Containers/MyScents/WishlistDemandSection"
 import {
   getActiveListings,
   getBottleEntries,
-  getInventoryListingStatus,
   getPausedListings,
   parseMl,
 } from "@/lib/user-inventory"
 import { computeCollectionCounts } from "@/lib/user-inventory-stats"
-import { isCollectionItemInReview } from "@/lib/collection-review-status"
 import type { UserInventoryStats } from "@/models/user-inventory-stats.server"
 import type { TraderWantingUserListingEnriched } from "@/services/trade-match"
 import type { MyScentsView, UserPerfumeForClient } from "@/types/my-scents-client"
 import type { SortOption } from "@/utils/sortUtils"
-import { styleMerge } from "@/utils/styleUtils"
-import { userBottleImageTransitionName } from "@/utils/view-transition-names"
+import MyScentsViewTabs from "@/components/Containers/MyScents/MyScentsViewTabs"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
-const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
 const USER_PERFUMES_API = "/api/user-perfumes"
 
 export type { UserPerfumeForClient }
@@ -74,15 +59,6 @@ type MyScentsPageClientProps = {
   wishlistDemand?: TraderWantingUserListingEnriched[]
   inventoryStats: UserInventoryStats
   bannerImage: string
-}
-
-const buildBottleLabel = (up: UserPerfumeForClient, bottleCount: number): string | null => {
-  if (bottleCount < 2) return null
-  const typeLabel = getPerfumeTypeLabel(up.type ?? undefined)
-  const amtNum = parseFloat((up.amount ?? "").replace(/[^0-9.]/g, "") || "0")
-  const amtStr = up.amount && up.amount !== "0" && !isNaN(amtNum) ? `${amtNum.toFixed(1)} ml` : null
-  const parts = [typeLabel, amtStr].filter(Boolean)
-  return parts.length > 0 ? parts.join(" · ") : null
 }
 
 const serializeUserPerfume = (up: Record<string, unknown>): UserPerfumeForClient => {
@@ -148,77 +124,6 @@ const buildOptimisticUserPerfume = (
 
 const SORT_OPTIONS: SortOption[] = ["name-asc", "name-desc", "created-desc", "created-asc"]
 
-type CollectionGridItemProps = {
-  userPerfume: UserPerfumeForClient
-  basePath: string
-  bottleCount: number
-  listingStatus: ReturnType<typeof getInventoryListingStatus>
-  inReview: boolean
-  listingStatusLabel: string
-}
-
-const CollectionGridItem = memo(({
-  userPerfume,
-  basePath,
-  bottleCount,
-  listingStatus,
-  inReview,
-  listingStatusLabel,
-}: CollectionGridItemProps) => {
-  const { perfume } = userPerfume
-  const normalized = normalizeRemoteImageSrc(perfume.image)
-  const imageSrc =
-    normalized && !validImageRegex.test(normalized)
-      ? normalized
-      : BOTTLE_PLACEHOLDER
-  const bottleLabel = buildBottleLabel(userPerfume, bottleCount)
-
-  return (
-    <li className="relative flex flex-col items-center justify-center border-4 border-double border-noir-gold p-1">
-      {inReview && (
-        <ReviewStatusBadge className="absolute left-1 top-1 z-10" />
-      )}
-      <span
-        className={styleMerge(
-          "absolute right-1 top-1 z-10 rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-          listingStatus === "listed"
-            ? "bg-noir-gold/80 text-noir-black"
-            : listingStatus === "partiallyListed"
-              ? "bg-noir-gold-500/70 text-noir-black"
-              : "bg-noir-black/80 text-noir-gold-500"
-        )}
-      >
-        {listingStatusLabel}
-      </span>
-      <Link
-        href={`${basePath}/${userPerfume.id}`}
-        className="block"
-      >
-        <Image
-          src={imageSrc}
-          alt={perfume.name ?? "Perfume Bottle"}
-          priority={false}
-          width={192}
-          height={192}
-          quality={75}
-          className="w-48 h-48 object-cover rounded-lg mb-2 mx-auto dark:brightness-90"
-          sizes="(max-width: 768px) 50vw, 33vw"
-          style={
-            {
-              viewTransitionName: userBottleImageTransitionName(userPerfume.id),
-            } as React.CSSProperties
-          }
-        />
-        <span className="text-noir-gold">{perfume.name}</span>
-        {bottleLabel && (
-          <span className="block text-xs text-noir-gold-100 mt-1">{bottleLabel}</span>
-        )}
-      </Link>
-    </li>
-  )
-})
-CollectionGridItem.displayName = "CollectionGridItem"
-
 const MyScentsPageClient = ({
   userPerfumes: initialUserPerfumes,
   wishlistDemand = [],
@@ -233,7 +138,6 @@ const MyScentsPageClient = ({
   const t = useTranslations("myScents")
   const tSort = useTranslations("sortOptions")
   const tTabs = useTranslations("myScents.tabs")
-  const tStatus = useTranslations("myScents.listingStatus")
 
   const liveInventoryStats = useMemo((): UserInventoryStats => {
     const { bottleCount, houseCount } = computeCollectionCounts(userPerfumes)
@@ -327,34 +231,6 @@ const MyScentsPageClient = ({
     customFilterValues.house && customFilterValues.house !== "all" ||
     customFilterValues.minAmt ||
     customFilterValues.maxAmt
-
-  const handleSortChange = useCallback(
-    (evt: ChangeEvent<HTMLSelectElement>) => {
-      setSelectedSort(evt.target.value as SortOption)
-    },
-    [setSelectedSort],
-  )
-
-  const handleHouseChange = useCallback(
-    (evt: ChangeEvent<HTMLSelectElement>) => {
-      setCustomFilterValue("house", evt.target.value)
-    },
-    [setCustomFilterValue],
-  )
-
-  const handleMinAmtChange = useCallback(
-    (evt: ChangeEvent<HTMLInputElement>) => {
-      setCustomFilterValue("minAmt", evt.target.value)
-    },
-    [setCustomFilterValue],
-  )
-
-  const handleMaxAmtChange = useCallback(
-    (evt: ChangeEvent<HTMLInputElement>) => {
-      setCustomFilterValue("maxAmt", evt.target.value)
-    },
-    [setCustomFilterValue],
-  )
 
   const pageSize = useResponsivePageSize()
   const router = useRouter()
@@ -476,7 +352,7 @@ const MyScentsPageClient = ({
           onAllSaved={refreshCollection}
         />
       )}
-      
+
       {csvImportOpen && (
         <CsvImportPanel
           onClose={() => setCsvImportOpen(false)}
@@ -484,7 +360,7 @@ const MyScentsPageClient = ({
         />
       )}
       <WishlistDemandSection demand={wishlistDemand} />
-      <div >
+      <div>
         <MyScentsViewTabs
           activeView={activeView}
           onViewChange={setActiveView}
@@ -494,166 +370,44 @@ const MyScentsPageClient = ({
           listingsCount={activeListings.length + pausedListings.length}
           listingsPanel={
             activeView === "listings" ? (
-              <>
-                <DecantSplitsPanel />
-                <MyListingsPanel
-                  activeListings={activeListings}
-                  pausedListings={pausedListings}
-                  basePath={basePath}
-                  onListingChange={handleListingChange}
-                />
-              </>
+              <ListingsTab
+                activeListings={activeListings}
+                pausedListings={pausedListings}
+                basePath={basePath}
+                onListingChange={handleListingChange}
+              />
             ) : null
           }
           inventoryPanel={
-            <>
-              <h2 className="text-center mb-4">{t("inventory.heading")}</h2>
-              {bottleEntries.length > 0 && (
-                <div className="mb-4 w-full">
-                  <SearchInput
-                    value={searchQuery}
-                    onChange={setSearchQuery}
-                    placeholder={t("search.placeholder")}
-                  />
-                </div>
-              )}
-              <VooDooDetails
-                name="inventory-at-a-glance"
-                type="primary"
-                background="dark"
-                summary={t("inventory.atAGlance")}
-                className="mb-4 w-full"
-                defaultOpen
-              >
-                <div className="px-3 pb-4 pt-2">
-                  <InventoryStatsStrip stats={liveInventoryStats} />
-                </div>
-              </VooDooDetails>
-              {bottleEntries.length > 0 && (
-                <>
-                  <div className="mb-2 flex w-full flex-col items-end justify-between gap-4 border-b border-t border-noir-gold py-4 md:flex-row">
-                    <Select
-                      selectId="my-scents-sort"
-                      selectData={sortSelectData}
-                      action={handleSortChange}
-                      defaultId={selectedSort}
-                      label={t("filters.sort")}
-                      size="compact"
-                    />
-
-                    <Select
-                      selectId="my-scents-house"
-                      selectData={houseOptions}
-                      action={handleHouseChange}
-                      defaultId={customFilterValues.house || "all"}
-                      label={t("filters.house")}
-                      size="compact"
-                    />
-
-                    <div className="flex gap-2 items-end">
-                <div className="flex flex-col items-start">
-                  <label
-                    htmlFor="my-scents-min-amt"
-                    className="font-semibold text-lg mb-1 capitalize text-noir-gold text-shadow-lg text-shadow-noir-black/60 tracking-wide"
-                  >
-                    {t("filters.minAmount")}
-                  </label>
-                  <input
-                    id="my-scents-min-amt"
-                    type="number"
-                    min={0}
-                    step={1}
-                    value={customFilterValues.minAmt || ""}
-                    onChange={handleMinAmtChange}
-                    className="w-24 bg-noir-black/90 px-2 py-2 text-noir-gold-100 border border-noir-gold rounded-sm font-semibold outline-none focus:outline-none focus:ring-2 focus:ring-noir-gold/50 focus:bg-noir-dark"
-                  />
-                </div>
-                <div className="flex flex-col items-start">
-                  <label
-                    htmlFor="my-scents-max-amt"
-                    className="font-semibold text-lg mb-1 capitalize text-noir-gold text-shadow-lg text-shadow-noir-black/60 tracking-wide"
-                  >
-                    {t("filters.maxAmount")}
-                  </label>
-                  <input
-                    id="my-scents-max-amt"
-                    type="number"
-                    min={0}
-                    step={1}
-                    value={customFilterValues.maxAmt || ""}
-                    onChange={handleMaxAmtChange}
-                    className="w-24 bg-noir-black/90 px-2 py-2 text-noir-gold-100 border border-noir-gold rounded-sm font-semibold outline-none focus:outline-none focus:ring-2 focus:ring-noir-gold/50 focus:bg-noir-dark"
-                  />
-                </div>
-              </div>
-
-              {hasActiveFilters && (
-                <Button
-                  onClick={resetFilters}
-                  variant="secondary"
-                  size="sm"
-                >
-                  {t("filters.clearAll")}
-                </Button>
-              )}
-            </div>
-          </>
-        )}
-        {bottleEntries.length === 0 ? (
-          <div>
-            <p className="text-noir-gold-100 text-xl">
-              {t("collection.empty.heading")}
-            </p>
-            <p className="text-noir-gold-500 italic">
-              {t("collection.empty.subheading")}
-            </p>
-          </div>
-        ) : filteredData.length === 0 ? (
-          <div className="animate-fade-in">
-            <p className="text-noir-gold-100 text-xl">
-              {t("search.noResults")}
-            </p>
-            <p className="text-noir-gold-500 italic">
-              {t("search.tryDifferent")}
-            </p>
-          </div>
-        ) : (
-          <div className="animate-fade-in">
-            <ul className="w-full animate-fade-in grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {paginatedPerfumes.map((userPerfume) => {
-                const listingStatus = getInventoryListingStatus(
-                  userPerfume,
-                  userPerfumes
-                )
-                return (
-                  <CollectionGridItem
-                    key={userPerfume.id}
-                    userPerfume={userPerfume}
-                    basePath={basePath}
-                    bottleCount={
-                      bottleCountByPerfumeId.get(userPerfume.perfumeId) ?? 0
-                    }
-                    listingStatus={listingStatus}
-                    inReview={isCollectionItemInReview(userPerfume)}
-                    listingStatusLabel={tStatus(listingStatus)}
-                  />
-                )
-              })}
-            </ul>
-            {totalPages > 1 && (
-              <PaginationBar
-                className="py-6"
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
-            )}
-          </div>
-        )}
-            </>
+            <CollectionTab
+              basePath={basePath}
+              bottleEntries={bottleEntries}
+              userPerfumes={userPerfumes}
+              bottleCountByPerfumeId={bottleCountByPerfumeId}
+              liveInventoryStats={liveInventoryStats}
+              filteredData={filteredData}
+              paginatedPerfumes={paginatedPerfumes}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              sortSelectData={sortSelectData}
+              selectedSort={selectedSort}
+              onSortChange={(evt) => setSelectedSort(evt.target.value as SortOption)}
+              houseOptions={houseOptions}
+              selectedHouse={customFilterValues.house || "all"}
+              onHouseChange={(evt) => setCustomFilterValue("house", evt.target.value)}
+              minAmt={customFilterValues.minAmt || ""}
+              maxAmt={customFilterValues.maxAmt || ""}
+              onMinAmtChange={(evt) => setCustomFilterValue("minAmt", evt.target.value)}
+              onMaxAmtChange={(evt) => setCustomFilterValue("maxAmt", evt.target.value)}
+              hasActiveFilters={Boolean(hasActiveFilters)}
+              onResetFilters={resetFilters}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           }
         />
-        </div>
+      </div>
       </PageWrapper>
     </main>
   )
