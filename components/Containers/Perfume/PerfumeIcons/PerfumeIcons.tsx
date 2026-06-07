@@ -34,8 +34,6 @@ interface PerfumeIconsProps {
   isInWishlist: boolean
 }
 
-import { IconLabel } from "@/components/Molecules/IconLabel/IconLabel"
-
 const PerfumeIcons = ({
   perfume,
   handleDelete,
