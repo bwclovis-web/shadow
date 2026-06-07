@@ -5,17 +5,10 @@ import { getPerfumeBySlug, queryKeys } from "@/lib/queries/perfumes"
 const STALE_TIME_5_MIN = 5 * 60 * 1000
 
 /**
- * Hook to fetch a single perfume by slug with hydration from loader data.
+ * Hook to fetch a single perfume by slug with optional SSR hydration.
  *
  * @param slug - Perfume slug
- * @param initialData - Initial data from React Router loader (optional)
- * @returns Query result with perfume data
- *
- * @example
- * ```tsx
- * const loaderData = useLoaderData<typeof loader>()
- * const { data: perfume } = usePerfume(perfumeSlug, loaderData.perfume)
- * ```
+ * @param initialData - Data prefetched in the server `page.tsx` (optional)
  */
 export const usePerfume = (slug: string, initialData?: unknown) =>
   useQuery({

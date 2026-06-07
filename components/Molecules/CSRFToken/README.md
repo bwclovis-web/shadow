@@ -1,160 +1,82 @@
-# CSRF Token Components
+# CSRF protection
 
-This directory contains components and hooks for CSRF (Cross-Site Request Forgery) protection in the application.
+This app uses the **double-submit cookie** pattern. The token is stored in a `_csrf` cookie and must be echoed on mutating requests via the `x-csrf-token` header or a `_csrf` form field.
+
+## How tokens are issued
+
+[`proxy.ts`](../../../proxy.ts) (Next.js middleware) sets the `_csrf` cookie when it is missing:
+
+- `httpOnly: false` — **intentional**; client JavaScript must read the cookie to attach the token to `fetch` and `FormData` requests.
+- `sameSite: "lax"`
+- `secure: true` in production
+- `maxAge`: 7 days
+
+Server-side validation lives in [`utils/server/csrf.server.ts`](../../../utils/server/csrf.server.ts) (`requireCSRF`). API routes and server actions compare the cookie value to the submitted token using timing-safe comparison.
+
+## XSS dependency
+
+Because the cookie is readable by script, **XSS in the app could exfiltrate the CSRF token**. Mitigations:
+
+- Sanitize user-generated HTML (see `utils/sanitize.ts`).
+- Avoid `dangerouslySetInnerHTML` except for trusted content.
+- Keep dependencies patched; CSP where practical.
+
+CSRF tokens protect against cross-site request forgery; they do not replace XSS prevention.
 
 ## Components
 
 ### `CSRFToken`
 
-A simple component that renders a hidden input field with the CSRF token.
+Hidden input for HTML forms:
 
 ```tsx
-import { CSRFToken } from '~/components/Molecules/CSRFToken'
+import { CSRFToken } from "@/components/Molecules/CSRFToken"
 
-// In a form
 <form method="POST">
   <CSRFToken />
-  <input type="text" name="username" />
-  <button type="submit">Submit</button>
-</form>
-
-// With custom name
-<form method="POST">
-  <CSRFToken name="custom_csrf" />
-  <input type="text" name="username" />
   <button type="submit">Submit</button>
 </form>
 ```
 
 ### `CSRFProtectedForm`
 
-A form wrapper that automatically includes CSRF protection.
-
-```tsx
-import { CSRFProtectedForm } from "~/components/Molecules/CSRFToken"
-;<CSRFProtectedForm method="POST" action="/api/submit">
-  <input type="text" name="username" />
-  <button type="submit">Submit</button>
-</CSRFProtectedForm>
-```
+Form wrapper that injects the token automatically.
 
 ### `CSRFTokenProvider`
 
-A context provider for CSRF token management across the app.
-
-```tsx
-import { CSRFTokenProvider } from "~/components/Molecules/CSRFToken"
-
-function App() {
-  return <CSRFTokenProvider>{/* Your app components */}</CSRFTokenProvider>
-}
-```
+Optional context provider for apps that centralize token state.
 
 ## Hooks
 
-### `useCSRF`
-
-Hook for accessing CSRF token and utilities.
+### `useCSRF` (preferred)
 
 ```tsx
-import { useCSRF } from "~/hooks/useCSRF"
+import { useCSRF } from "@/hooks/useCSRF"
 
-function MyComponent() {
-  const { csrfToken, addToFormData, addToHeaders, submitForm } = useCSRF()
+const { addToHeaders, submitForm } = useCSRF()
 
-  const handleSubmit = async (formData: FormData) => {
-    // Automatically includes CSRF token
-    const response = await submitForm("/api/submit", formData)
-  }
-
-  const handleFetch = async () => {
-    const headers = addToHeaders({ "Content-Type": "application/json" })
-    const response = await fetch("/api/data", { headers })
-  }
-}
+await submitForm("/api/ratings", formData)
 ```
 
 ### `useCSRFToken`
 
-Hook for accessing CSRF context (must be used within CSRFTokenProvider).
+Same API when used inside `CSRFTokenProvider`.
 
-```tsx
-import { useCSRFToken } from "~/components/Molecules/CSRFToken"
+## Client utilities
 
-function MyComponent() {
-  const { csrfToken, addToFormData } = useCSRFToken()
-  // Same API as useCSRF
-}
-```
+[`lib/api-client.ts`](../../../lib/api-client.ts) exports shared helpers used by mutations and upload code:
 
-## Server Integration
+- `getCSRFFromCookie()` — parse `_csrf` from `document.cookie`
+- `getCsrfHeaders()` — `{ "x-csrf-token": token }` or `{}`
+- `postFormWithCsrf(url, formData)` — POST with token in header and body
+- `apiFetch` — JSON fetch with credentials
 
-The CSRF protection works with the server-side middleware in `api/server.js`:
+## Server integration summary
 
-- CSRF tokens are automatically generated and set as HTTP-only cookies
-- The `csrfMiddleware` validates tokens on protected routes
-- Protected routes: `/auth/*` and `/api/*` (with some exclusions)
+| Layer | Role |
+|-------|------|
+| `proxy.ts` | Issue `_csrf` cookie (readable by client) |
+| `utils/server/csrf.server.ts` | Validate cookie vs header/body on server |
+| `lib/api-client.ts` / `useCSRF` | Attach token from cookie on client |
 
-## Security Features
-
-- **HTTP-Only Cookies**: Tokens stored securely in cookies
-- **SameSite Protection**: `lax` SameSite policy
-- **Secure in Production**: HTTPS-only cookies in production
-- **24-hour Expiry**: Tokens expire after 24 hours
-- **Timing-Safe Validation**: Prevents timing attacks
-- **Multiple Input Methods**: Header (`x-csrf-token`) and form field (`_csrf`)
-
-## Usage Examples
-
-### Basic Form Protection
-
-```tsx
-import { CSRFToken } from "~/components/Molecules/CSRFToken"
-;<form method="POST" action="/api/ratings">
-  <CSRFToken />
-  <input type="hidden" name="perfumeId" value="123" />
-  <input type="number" name="rating" min="1" max="5" />
-  <button type="submit">Rate</button>
-</form>
-```
-
-### API Request Protection
-
-```tsx
-import { useCSRF } from "~/hooks/useCSRF"
-
-function RatingComponent() {
-  const { submitForm } = useCSRF()
-
-  const handleRating = async (perfumeId: string, rating: number) => {
-    const formData = new FormData()
-    formData.append("perfumeId", perfumeId)
-    formData.append("rating", rating.toString())
-
-    const response = await submitForm("/api/ratings", formData)
-    // CSRF token automatically included
-  }
-}
-```
-
-### Custom Headers
-
-```tsx
-import { useCSRF } from "~/hooks/useCSRF"
-
-function ApiComponent() {
-  const { addToHeaders } = useCSRF()
-
-  const fetchData = async () => {
-    const headers = addToHeaders({
-      "Content-Type": "application/json",
-    })
-
-    const response = await fetch("/api/data", {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ data: "example" }),
-    })
-  }
-}
-```
+Protected routes include `/api/*` mutations and server actions that call `requireCSRF`.

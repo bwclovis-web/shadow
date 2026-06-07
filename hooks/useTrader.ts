@@ -3,17 +3,10 @@ import { useQuery } from "@tanstack/react-query"
 import { getTraderById, queryKeys, type TraderResponse } from "@/lib/queries/user"
 
 /**
- * Hook to fetch a trader profile by ID with hydration from loader data.
- * 
+ * Hook to fetch a trader profile by ID with optional SSR hydration.
+ *
  * @param traderId - Trader/User ID
- * @param initialData - Initial data from React Router loader (optional)
- * @returns Query result with trader data
- * 
- * @example
- * ```tsx
- * const loaderData = useLoaderData<typeof loader>()
- * const { data: trader } = useTrader(traderId, loaderData.trader)
- * ```
+ * @param initialData - Data prefetched in the server `page.tsx` (optional)
  */
 export const useTrader = (traderId: string, initialData?: TraderResponse) =>
   useQuery({

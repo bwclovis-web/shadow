@@ -5,6 +5,7 @@ import {
   apiFetch,
   getCSRFFromCookie,
   getCsrfHeaders,
+  postFormWithCsrf,
   uploadImage,
 } from "./api-client"
 
@@ -86,6 +87,32 @@ describe("api-client", () => {
         expect((err as ApiFetchError).status).toBe(403)
         return true
       })
+    })
+  })
+
+  describe("postFormWithCsrf", () => {
+    it("attaches CSRF token to form data and headers", async () => {
+      mockDocumentCookie("_csrf=form-token")
+      const fetchMock = vi.fn().mockResolvedValue({ ok: true })
+      vi.stubGlobal("fetch", fetchMock)
+
+      const formData = new FormData()
+      formData.append("action", "test")
+
+      await postFormWithCsrf("/api/test", formData)
+
+      expect(formData.get("_csrf")).toBe("form-token")
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/test",
+        expect.objectContaining({
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        })
+      )
+      const init = fetchMock.mock.calls[0][1] as RequestInit
+      const headers = new Headers(init.headers)
+      expect(headers.get("x-csrf-token")).toBe("form-token")
     })
   })
 
