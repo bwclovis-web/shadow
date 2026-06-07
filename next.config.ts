@@ -6,6 +6,10 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts")
 const nextConfig: NextConfig = {
   transpilePackages: ["next-sanity"],
   serverExternalPackages: ["@prisma/client", "prisma"],
+  turbopack: {
+    // spawn() with SCRAPER_PYTHON / venv paths is runtime-only; suppress false-positive tracing warnings.
+    ignoreIssue: [{ path: "**/lib/scraper/spawn-scraper-python.ts" }],
+  },
   experimental: {
     viewTransition: true,
     // Softer navigations: reuse prefetched RSC payloads briefly instead of always showing loading UI.

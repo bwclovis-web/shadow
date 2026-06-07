@@ -19,12 +19,12 @@
  * Requires admin or editor role.
  */
 
-import { spawn, type ChildProcess } from "child_process"
-import path from "path"
+import type { ChildProcess } from "node:child_process"
 
 import { NextResponse, type NextRequest } from "next/server"
 
 import { assessDuplicateRisk } from "@/lib/scraper/duplicate-review"
+import { spawnScraperPythonProcess } from "@/lib/scraper/spawn-scraper-python"
 import {
   mapScrapedItemsToRecords,
   pythonPipelineComplete,
@@ -456,12 +456,6 @@ export async function POST(request: NextRequest): Promise<Response> {
       let scraperLog = ""
       let stderrBuffer = ""
 
-      const scriptPath = path.join(process.cwd(), "scraper", "run_scraper.py")
-      const venvPython = process.platform === "win32"
-        ? path.join(process.cwd(), "scraper", ".venv", "Scripts", "python.exe")
-        : path.join(process.cwd(), "scraper", ".venv", "bin", "python")
-      const pythonCmd = process.env.SCRAPER_PYTHON || venvPython
-      const pythonArgs = [scriptPath]
       const childRef: { current: ChildProcess | null } = { current: null }
 
       const clearScrapeKillTimer = () => {
@@ -521,7 +515,7 @@ export async function POST(request: NextRequest): Promise<Response> {
         }
       }, KEEPALIVE_INTERVAL_MS)
 
-      const child = spawn(pythonCmd, pythonArgs, { stdio: ["pipe", "pipe", "pipe"] })
+      const child = spawnScraperPythonProcess()
       childRef.current = child
       const childStdin = child.stdin
       const childStdout = child.stdout
