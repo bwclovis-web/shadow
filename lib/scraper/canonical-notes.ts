@@ -409,6 +409,7 @@ const MERCHANT_MULTI_WORD_PHRASES: string[] = [
   "powdery notes",
   "woody notes",
   "floral notes",
+  "animal notes",
   "bourbon vanilla",
   "patchouli resin",
   "crushed pink pepper",

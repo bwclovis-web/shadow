@@ -64,10 +64,17 @@ Avoid embedding Prisma queries or multi-step business rules directly in route fi
 
 The note-extraction LangGraph pipeline splits into:
 
-- `notes-graph.ts` — public API and graph wiring
-- `stages/` — PDP bootstrap, title cleaning, LLM extraction, noir copy, validation
+- `notes-graph.ts` — public API re-exports only
+- `stages/pipeline-options.ts` — options and LangGraph state
+- `stages/pdp-bootstrap.ts` — URL/name resolution, PDP HTTP bootstrap
+- `stages/title-cleaning.ts` — title cleaning, sanitization, structured note parsing
+- `stages/llm-extraction.ts` — LLM extract / merge
+- `stages/noir-description.ts` — film noir copy
+- `stages/note-translation.ts` — non-English note translation
+- `stages/note-validator.ts` — bulk note validator
+- `stages/extract-notes-node.ts` — graph node and orchestration
 
-Stages may share helpers via explicit exports; keep orchestration in the graph module.
+Stages may share helpers via explicit exports; keep the public entry point at `notes-graph.ts`.
 
 ## Quick decision guide
 

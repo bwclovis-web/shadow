@@ -1,22 +1,21 @@
 # Scraper pipeline stages
 
-The note-extraction LangGraph pipeline lives in `../notes-graph.ts`. Stages are extracted incrementally so behavior and tests stay stable.
+The note-extraction LangGraph pipeline is split across `../notes-graph.ts` (facade) and the modules below. Stages were extracted incrementally with no intended behavior change.
 
 ## Current layout
 
 | Module | Contents |
 |--------|----------|
 | `pipeline-options.ts` | `ScraperPipelineOptions`, LangGraph `ScraperState` |
-| `notes-graph.ts` | PDP bootstrap, title cleaning, LLM extraction, noir copy, graph node, public API |
-
-## Planned extractions (no behavior change)
-
-1. `pdp-bootstrap.ts` — URL/name resolution, HTTP PDP fetch, HTML note bootstrap (~lines 142–1477)
-2. `title-cleaning.ts` — title transforms, note list parsing, description sanitization
-3. `llm-extraction.ts` — note extraction / merge prompts
-4. `noir-description.ts` — film noir description generation
-5. `note-translation.ts` — non-English note translation
-6. `note-validator.ts` — batch LLM note validator
-7. `extract-notes-node.ts` — `extractNotes` graph node and `buildGraph`
+| `notes-layers.ts` | Shared `NotesLayers` type |
+| `notes-layers-utils.ts` | `noteLayerCount`, `hasLayeredMerchantPyramid` |
+| `pdp-bootstrap.ts` | URL/name resolution, HTTP PDP fetch, HTML note bootstrap |
+| `title-cleaning.ts` | Title transforms, note list parsing, description sanitization, structured extraction |
+| `llm-extraction.ts` | Note extraction / merge prompts |
+| `noir-description.ts` | Film noir description generation |
+| `note-translation.ts` | Non-English note translation |
+| `note-validator.ts` | Batch LLM note validator |
+| `extract-notes-node.ts` | `extractNotes` graph node, `buildGraph`, `extractNotesForItems` |
+| `notes-graph.ts` | Public API re-exports only |
 
 See [docs/server-layers.md](../../../docs/server-layers.md) for how scraper code fits the server layer model.

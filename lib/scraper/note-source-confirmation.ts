@@ -284,6 +284,30 @@ export const STANDALONE_COLOR_NOTE_RE =
 export const STANDALONE_ACCORD_DESCRIPTOR_RE =
   /^(?:powdery|woody|musky|mossy|fresh|sweet|floral|oriental|gourmands?|citrus|spicy|aromatic|green|aquatic|fruity|smoky|balsamic|earthy|intense|light|dark|lactonic|desserts?|white floral|creamy florals?|warm wood|second-skin|frosted-pastel|frosted|pastel|originally from byredo|originally from commodity|resort evenings|warm days|starry date evenings|date evenings|celestial hug|wear guide|delicate|intimate|cozy|celestial|flirtatious|glamorous|addictive|ruby|sexy|pretty|playful|warm|airy|joyfully|joyfully luminous|luminous|addictive|comforting|candy-drip|creamy|smooth|smoother|sugary|golden mist|warm sweetness|european elegance|elegant|opulent|refined|radiant|silky|sensual|seductive|rebellious|unforgettable|plush|magnetic|alluring|intoxicating|effortless|dreamy|rebellious|golden light|golden glow|fairy-kissed|sun-kissed|star-kissed)$/i
 
+/** Strip marketing lead-ins glued to a material ("infused with bright bergamot" → "bergamot"). */
+export const stripFragranceNoteProseLead = (note: string): string => {
+  const s = note.trim()
+  if (!s) return s
+
+  const wrapped = s.match(
+    /^(?:infused\s+with|lifted\s+by|surrounded\s+by|wrapped\s+in|opens?\s+with|breaks?\s+the\s+unexpected\s+accord\s+of|unexpected\s+accord\s+of|accord\s+of)\s+(?:bright|aromatic|soft|warm|unexpected|the\s+)?(.+)$/i,
+  )
+  if (wrapped?.[1]) return wrapped[1].trim()
+
+  const hint = s.match(/^(?:a\s+)?(?:hint|touch|whisper|thread|veil|wash|burst)\s+of\s+(.+)$/i)
+  if (hint?.[1]) return hint[1].trim()
+
+  return s
+}
+
+/** Peel merchant origin / grade suffixes ("vetiver from haiti" → "vetiver", "cumin he" → "cumin"). */
+export const peelFragranceNoteOriginSuffix = (note: string): string =>
+  note
+    .trim()
+    .replace(/\s+from\s+(?:haiti|laos|madagascar|sri\s+lanka|indonesia|ceylon|siam|bulgaria|morocco|grasse|turkey|jungle|laos)\s*$/i, "")
+    .replace(/\s+he(?:\s+sustainable)?\s*$/i, "")
+    .trim()
+
 /** Strip trailing Shopify marketing copy glued to merchant note phrases. */
 export const peelMarketingDescriptorTail = (note: string): string => {
   let s = note.trim()
@@ -350,8 +374,14 @@ export const sanitizeExtractedNoteCandidate = (note: string): string | null => {
   if (/\b(?:top|heart|base|middle)\b/i.test(raw) && raw.split(/\s+/).length >= 2) return null
   if (/\s+(?:the|from|with|of|into)\s*$/i.test(raw)) return null
 
-  const peeled = peelMarketingDescriptorTail(raw)
+  let peeled = stripFragranceNoteProseLead(raw)
+  peeled = peelMarketingDescriptorTail(peeled)
   if (!peeled) return null
+  peeled = peelFragranceNoteOriginSuffix(peeled)
+    .replace(/\s+pure\s+je$/i, "")
+    .replace(/\s+siam\s+pure$/i, " siam")
+    .replace(/[™®©]/g, "")
+    .trim()
   const lc = peeled.toLowerCase()
   if (LAYER_LABEL_TOKENS.has(lc)) return null
   if (STANDALONE_COLOR_NOTE_RE.test(lc)) return null
@@ -464,6 +494,24 @@ export const isObviousNonMaterialNote = (note: string): boolean => {
   if (/\bpolished\b/i.test(n) && /\bimpression\b/i.test(n)) return true
   if (/\bor\s+andromedas\b/i.test(n)) return true
   if (/\bandromedas\s+moon\b/i.test(n)) return true
+  // Etat Libre FULL DESCRIPTION marketing copy mistaken for notes (Putain des Palaces, etc.)
+  if (/^(?:like|comes|comes a hint|fluid|flexible)$/i.test(n)) return true
+  if (/^(?:hear her|touch her|smell her|see her)$/i.test(n)) return true
+  if (/^(?:one thrilling night|there are forbidden pleasures)$/i.test(n)) return true
+  if (/^(?:she|her|he|him|they|them|you|we|it|me|us)$/i.test(n)) return true
+  if (/^(?:she replies|he replies|notes swirl|like a faceted|to the imagination|or what)$/i.test(n)) return true
+  if (/^(?:dance|swirl|faceted|imagination|replies|powdered|essence|others|white|silk|clutching|mystical|enchanting|thus|asleep|sudden|direct|sky|there|suddenly|issued|seduces|lulls|dominates|delectable|let|where|devour|liberate|revolutionary|philosopher|beauty|snatch|how)$/i.test(n))
+    return true
+  if (/^absolute$/i.test(n)) return true
+  if (
+    /^(?:when the hope|becomes reality|at last|everything makes sense|we whisper|penetrating dream|she pirouettes|to the poet rumi|there is a bridge|symbolic bridge|what a pretty word|peculiarly parisian|joins another bank|returns by following its|like something|thanks to you|clear-cut formula|instead of an apple|beyond light|gravity newton|dear god|to drive|to desire|to wreak havoc|or possibly|even violence|ignite the world|marquis de sade|without explaining too much|according to lacan|more vast|more true|more sincere|without apotheosis|all nostrils out|infused with bright bergamot|lifted by aromatic incense|breaks the unexpected accord of coffee|cleansed of dictates|to hold|i wrote in mint|weve given you outrageous|true olfactory coitus|to sécrétions|canon powder accord okay|stock for late-night parties)$/i.test(
+      n,
+    )
+  ) {
+    return true
+  }
+  if (/\b(?:tilda swinton|victor hugo|roland mouret|tom of finland|poet rumi)\b/i.test(n)) return true
+  if (/^(?:to|or)\s+[a-z]/i.test(n) && n.split(/\s+/).length <= 4) return true
   return false
 }
 
@@ -482,11 +530,33 @@ export const looksLikeProseNotePhrase = (note: string): boolean => {
   if (/^(?:drenched\s+in|creating\s+an?\s+(?:unforgettable|experience)|rebellious|sensual|seductive|softened\s+with|becomes\s+your)$/i.test(n)) {
     return true
   }
+  if (/^(?:notes swirl|like a faceted|to the imagination|or what|she replies|he replies)$/i.test(n)) {
+    return true
+  }
+  if (/\b(?:notes?\s+swirl|like a faceted|to the imagination|when the hope|becomes reality|everything makes sense|we whisper|penetrating dream|she pirouettes|to the poet|there is a bridge|symbolic bridge|what a pretty word|peculiarly parisian|joins another bank|returns by following|like something|thanks to you|clear-cut formula|instead of an apple|beyond light|gravity newton)\b/.test(n))
+    return true
+  if (/\b(?:tilda swinton|victor hugo|roland mouret|tom of finland)\b/.test(n)) return true
+  if (
+    /\b(?:dear god|ignite the world|marquis de sade|even violence|or possibly|to wreak havoc|without explaining|according to lacan|without apotheosis|all nostrils|olfactory coitus|accord of coffee|infused with|lifted by|unexpected accord|wrote in mint|given you outrageous|cleansed of dictates)\b/.test(
+      n,
+    )
+  ) {
+    return true
+  }
+  const words = n.split(/\s+/).filter(Boolean)
+  if (
+    words.length >= 3 &&
+    /\b(?:the|and|or|of|to|with|by|in|from|without|according|possibly|even|all|let|where|when|how)\b/.test(n) &&
+    /\b(?:ignite|liberate|seduce|devour|snatch|explain|issued|apotheosis|nostril|wreak|accord|infused|lifted|breaks|unexpected|violence|philosopher|revolutionary|desire|drive|god|pirouette|clutching|whisper|hope|reality|bridge|symbolic|imagination|faceted|swirl|makes sense|outrageous|dictates|coitus|sécrétions|parties|mint)\b/.test(
+      n,
+    )
+  ) {
+    return true
+  }
   if (/\b(?:projection|facets|trail|style|concentration|strength|nuances|enveloping|sparkle|halos?)\b/.test(n)) {
     return true
   }
   if (/\bcompletes\b/.test(n)) return true
-  const words = n.split(/\s+/).filter(Boolean)
   if (words.length > 6) return true
   if (words.length > 4 && /\b(?:adds?|inspired|composed|glow|mimics|follow|completes)\b/.test(n)) {
     return true
@@ -761,7 +831,7 @@ export const confirmNoteLayersAgainstSource = (
   const hasLayerScopedCorpus =
     Boolean(layerCorpora?.open) || Boolean(layerCorpora?.heart) || Boolean(layerCorpora?.base)
 
-  if (hasLayerScopedCorpus && layerCorpora) {
+  if (hasLayerScopedCorpus && layerCorpora && !/\bMAIN NOTES\b/i.test(source)) {
     return relayerNotesByLayerCorpora(layers, source, layerCorpora)
   }
 
@@ -771,7 +841,7 @@ export const confirmNoteLayersAgainstSource = (
       .filter((n): n is string => Boolean(n))
       .filter(n => {
         const lc = n.trim().toLowerCase()
-        if (trusted?.has(lc)) return substantiate(n)
+        if (trusted?.has(lc)) return true
         const words = n.trim().split(/\s+/).filter(Boolean).length
         if (words <= 4 && !/\baccord\b/i.test(n)) return true
         return substantiate(n)

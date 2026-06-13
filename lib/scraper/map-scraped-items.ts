@@ -1,5 +1,15 @@
-import { isComplianceOrSourcingNote, isThemeCssTokenNote } from "@/lib/scraper/note-source-confirmation"
-import { detailUrlAlignsWithProductName, isPatternByEtsyProductUrl, isUnusableMerchantDescription } from "@/lib/scraper/notes-graph"
+import {
+  isComplianceOrSourcingNote,
+  isObviousNonMaterialNote,
+  isThemeCssTokenNote,
+  looksLikeProseNotePhrase,
+} from "@/lib/scraper/note-source-confirmation"
+import {
+  detailUrlAlignsWithProductName,
+  isEtatLibreProductUrl,
+  isPatternByEtsyProductUrl,
+  isUnusableMerchantDescription,
+} from "@/lib/scraper/notes-graph"
 import type { PerfumeCsvRecord, ScrapedItem, ScraperNoteSource } from "@/types/scraper"
 
 const NON_PERFUME_ANDROMEDA_PRODUCT_URL_RE =
@@ -63,6 +73,28 @@ export const scrapedItemsNeedPatternEtsyEnrichment = (items: ScrapedItem[]): boo
   items.some(
     item => isPatternByEtsyProductUrl(item.detailURL ?? "") && scrapedItemNoteCount(item) <= 6,
   )
+
+const hasProseJunkScrapedNote = (note: string): boolean => {
+  const t = note.trim()
+  if (!t) return true
+  return looksLikeProseNotePhrase(t) || isObviousNonMaterialNote(t)
+}
+
+/**
+ * Etat Libre Python scrapes often keep FULL DESCRIPTION prose as notes ("she", "notes swirl")
+ * while omitting accordion MAIN NOTES — Node must re-run even when Python populated layers.
+ */
+export const scrapedItemsNeedEtatLibreEnrichment = (items: ScrapedItem[]): boolean =>
+  items.some(item => {
+    if (!isEtatLibreProductUrl(item.detailURL ?? "")) return false
+    const allNotes = [
+      ...(item.openNotes ?? []),
+      ...(item.heartNotes ?? []),
+      ...(item.baseNotes ?? []),
+    ]
+    if (allNotes.length === 0) return true
+    return allNotes.some(hasProseJunkScrapedNote)
+  })
 
 /** Re-run Node enrichment when Python output still has compliance notes, junk URLs, or sampler bleed. */
 export const scrapedItemsNeedNodeRepair = (items: ScrapedItem[]): boolean =>

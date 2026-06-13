@@ -14,6 +14,7 @@ import {
   computeBatchNoteUniformityWarnings,
   detailUrlAlignsWithProductName,
   extractNotesForItems,
+  extractNotesFromStructuredText,
   isEtatLibreProductUrl,
   isUnusableMerchantDescription,
   mergeFlatMaterialsIntoLayeredPyramid,
@@ -21,7 +22,11 @@ import {
   sanitizeCopyForNotePipeline,
   stripEtatLibreUiNoise,
 } from "./notes-graph"
-import { scrapedItemsNeedNodeRepair, scrapedItemsNeedPatternEtsyEnrichment } from "./map-scraped-items"
+import {
+  scrapedItemsNeedEtatLibreEnrichment,
+  scrapedItemsNeedNodeRepair,
+  scrapedItemsNeedPatternEtsyEnrichment,
+} from "./map-scraped-items"
 import { canonicalizeNote, explodeSpaceSeparatedNoteBlob, splitGluedMerchantNoteRun } from "./canonical-notes"
 
 /** Structured notes with 3 layers and enough notes to skip merge LLM; keeps Phase 1 free of invoke(). */
@@ -4257,6 +4262,316 @@ describe("Etat Libre d'Orange description cleanup", () => {
     expect(all.some(n => n.includes("vetiver") || n.includes("myrrh"))).toBe(true)
     expect(all.some(n => n === "--" || n === "footer" || n === "navigation")).toBe(false)
     fetchMock.mockRestore()
+  })
+
+  it("MAIN NOTES beats FULL DESCRIPTION prose (Putain des Palaces)", () => {
+    const source =
+      "FULL DESCRIPTION Sheer sensuous fantasy. Under the bitter-sweet touch of almond, like a secret that unfolds, comes a hint of supple leather, fluid and flexible. For one night only, one thrilling night, there are forbidden pleasures. you can see her, hear her, touch her and smell her. MAIN NOTES Rose absolute, violet, leather, lily of the valley, tangerine, ginger, rice powder, amber, animal notes Pronunciation"
+    const notes = extractNotesFromStructuredText(source, 2)
+    const all = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
+    expect(all).toEqual(
+      expect.arrayContaining([
+        "rose absolute",
+        "violet",
+        "leather",
+        "lily of the valley",
+        "tangerine",
+        "ginger",
+        "rice powder",
+        "amber",
+        "animal notes",
+      ]),
+    )
+    expect(all).toHaveLength(9)
+    expect(all).not.toContain("like")
+    expect(all).not.toContain("comes")
+    expect(all).not.toContain("hear her")
+  })
+
+  it("Putain des Palaces: PDP bootstrap injects MAIN NOTES when prose triggers note-list signal", async () => {
+    const fullDescOnly =
+      "Sheer sensuous fantasy. The powdered top note evokes a woman who dresses for seduction. Under the bitter-sweet touch of almond, like a secret that unfolds, comes a hint of supple leather, fluid and flexible. For one night only, one thrilling night, there are forbidden pleasures. you can see her, hear her, touch her and smell her."
+    const html = `<html><body>
+<h3>FULL DESCRIPTION</h3><p>${fullDescOnly}</p>
+<h3>MAIN NOTES</h3><p>Rose absolute, violet, leather, lily of the valley, tangerine, ginger, rice powder, amber, animal notes</p>
+</body></html>`
+
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(html, { status: 200, headers: { "content-type": "text/html" } }),
+    )
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Putain Des Palaces",
+        description: fullDescOnly,
+        image: "",
+        detailURL: "https://etatlibredorange.us/collections/fragrances/products/putain-des-palaces",
+        perfumeHouse: "Etat Libre d'Orange",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Etat Libre d'Orange", {
+      generateNoirDescriptions: false,
+      noteValidationMode: "off",
+    })
+
+    expect(fetchMock).toHaveBeenCalled()
+    const open = JSON.parse(records[0].openNotes) as string[]
+    expect(open).toEqual(
+      expect.arrayContaining([
+        "rose absolute",
+        "violet",
+        "leather",
+        "lily of the valley",
+        "tangerine",
+        "ginger",
+        "rice powder",
+        "amber",
+        "animal notes",
+      ]),
+    )
+    expect(open).toHaveLength(9)
+    expect(open).not.toContain("like")
+    expect(open).not.toContain("comes")
+    fetchMock.mockRestore()
+  })
+
+  it("scrapedItemsNeedEtatLibreEnrichment triggers on prose junk from Python", () => {
+    expect(
+      scrapedItemsNeedEtatLibreEnrichment([
+        {
+          name: "Noel Au Balcon",
+          description: "marketing prose",
+          image: "",
+          detailURL: "https://etatlibredorange.us/collections/fragrances/products/noel-au-balcon",
+          perfumeHouse: "Etat Libre d'Orange",
+          openNotes: ["honey", "notes swirl", "dance", "like a faceted"],
+          heartNotes: [],
+          baseNotes: [],
+        },
+      ]),
+    ).toBe(true)
+    expect(
+      scrapedItemsNeedEtatLibreEnrichment([
+        {
+          name: "Putain Des Palaces",
+          description: "noir",
+          image: "",
+          detailURL: "https://etatlibredorange.us/collections/fragrances/products/putain-des-palaces",
+          perfumeHouse: "Etat Libre d'Orange",
+          openNotes: ["leather", "powdered", "almond"],
+          heartNotes: [],
+          baseNotes: [],
+        },
+      ]),
+    ).toBe(true)
+  })
+
+  it("enrichOnly: replaces thin Python notes with MAIN NOTES from live-style h5 PDP", async () => {
+    const noirOnly =
+      "Closing time at a shadowy bar sets the stage for whispered confessions. A seductive blend of leather and powdered almond wraps around you."
+    const html = `<html><body>
+<h5 style="text-align: justify;"><strong>MAIN NOTES</strong></h5>
+<p style="text-align: justify;">Rose absolute, violet, leather, lily of the valley, tangerine, ginger, rice powder, amber, animal notes</p>
+</body></html>`
+
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(html, { status: 200, headers: { "content-type": "text/html" } }),
+    )
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Putain Des Palaces",
+        description: noirOnly,
+        image: "",
+        detailURL: "https://etatlibredorange.us/collections/fragrances/products/putain-des-palaces",
+        perfumeHouse: "Etat Libre d'Orange",
+        openNotes: ["leather", "powdered", "almond"],
+        heartNotes: [],
+        baseNotes: [],
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Etat Libre d'Orange", {
+      enrichOnly: true,
+      generateNoirDescriptions: false,
+      noteValidationMode: "off",
+      fetchPdpNoteBootstrap: true,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    expect(open).toEqual(
+      expect.arrayContaining([
+        "rose absolute",
+        "violet",
+        "leather",
+        "lily of the valley",
+        "tangerine",
+        "ginger",
+        "rice powder",
+        "amber",
+        "animal notes",
+      ]),
+    )
+    expect(open).toHaveLength(9)
+    expect(open).not.toContain("powdered")
+    expect(open).not.toContain("she")
+    expect(open).not.toContain("her")
+    fetchMock.mockRestore()
+  })
+
+  it("Story Of Your Life: layered MAIN NOTES beat FULL DESCRIPTION prose", () => {
+    const source =
+      "FULL DESCRIPTION We whisper when the hope becomes reality. At last, everything makes sense. MAIN NOTES Top notes : Cistus Essence, Davana Essence, Benzoin Siam Pure JE™ Heart notes: Laurel Essence, Orange Blossom Absolute, Brioche Accord Base notes: Rum Pure JE™, Vanilla Infusion & Absolute, Amber Wood Pronunciation"
+    const notes = extractNotesFromStructuredText(source, 2)
+    const all = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
+    expect(notes.openNotes).toEqual(
+      expect.arrayContaining(["cistus essence", "davana essence"]),
+    )
+    expect(notes.heartNotes).toEqual(
+      expect.arrayContaining(["orange blossom absolute", "laurel essence"]),
+    )
+    expect(notes.baseNotes).toEqual(
+      expect.arrayContaining(["vanilla infusion", "amber"]),
+    )
+    expect(all).not.toContain("when the hope")
+    expect(all).not.toContain("becomes reality")
+    expect(all).not.toContain("we whisper")
+    expect(all).not.toContain("at last")
+    expect(all).not.toContain("everything makes sense")
+  })
+
+  it("Spice Must Flow: flat MAIN NOTES beat celebrity prose", () => {
+    const source =
+      "FULL DESCRIPTION Tilda Swinton wore it. To the poet Rumi, mystical and enchanting. MAIN NOTES Turkish Rose, Ginger, Pepper, Cardamom, Cinnamon, Saffron Pronunciation"
+    const notes = extractNotesFromStructuredText(source, 2)
+    const all = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
+    expect(all).toEqual(
+      expect.arrayContaining(["turkish rose", "ginger", "pepper", "cardamom", "cinnamon", "saffron"]),
+    )
+    expect(all).toHaveLength(6)
+    expect(all).not.toContain("to the poet rumi")
+    expect(all).not.toContain("tilda swinton")
+    expect(all).not.toContain("mystical")
+    expect(all).not.toContain("enchanting")
+  })
+
+  it("Story Of Your Life: enrichOnly replaces prose Python notes with layered MAIN NOTES", async () => {
+    const noirOnly =
+      "A penetrating dream where we whisper when the hope becomes reality. At last, everything makes sense in vanilla and davana."
+    const html = `<html><body>
+<h5><strong>MAIN NOTES</strong></h5>
+<div class="ql-block">Top notes : Cistus Essence, Davana Essence, Benzoin Siam Pure JE™<br>Heart notes: Laurel Essence, Orange Blossom Absolute, Brioche Accord<br>Base notes: Rum Pure JE™, Vanilla Infusion &amp; Absolute, Amber Wood</div>
+</body></html>`
+
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(html, { status: 200, headers: { "content-type": "text/html" } }),
+    )
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Story Of Your Life",
+        description: noirOnly,
+        image: "",
+        detailURL: "https://etatlibredorange.us/collections/fragrances/products/story-of-your-life",
+        perfumeHouse: "Etat Libre d'Orange",
+        openNotes: ["davana essence"],
+        heartNotes: ["orange blossom absolute", "absolute"],
+        baseNotes: [
+          "vanilla infusion",
+          "others",
+          "penetrating dream",
+          "we whisper",
+          "when the hope",
+          "becomes reality",
+          "at last",
+          "everything makes sense",
+        ],
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Etat Libre d'Orange", {
+      enrichOnly: true,
+      generateNoirDescriptions: false,
+      noteValidationMode: "off",
+      fetchPdpNoteBootstrap: true,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+    expect(open).toEqual(expect.arrayContaining(["cistus essence", "davana essence"]))
+    expect(heart).toEqual(expect.arrayContaining(["orange blossom absolute", "laurel essence"]))
+    expect(all).not.toContain("when the hope")
+    expect(all).not.toContain("penetrating dream")
+    expect(all).not.toContain("becomes reality")
+    expect(all).not.toContain("we whisper")
+    fetchMock.mockRestore()
+  })
+
+  it("Above The Waves: layered MAIN NOTES beat infused/lifted prose", () => {
+    const source =
+      "FULL DESCRIPTION Infused with bright bergamot under an open sky, lifted by aromatic incense on the water. MAIN NOTES Top notes : Bergamot, Cardamom, IncenseHeart notes: Green Maté, Ceylan, Black TeaBase notes: Tonka Bean, Cedar, Vetiver Ingredients ALCOHOL DENAT"
+    const notes = extractNotesFromStructuredText(source, 2)
+    const all = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
+    expect(notes.openNotes).toEqual(expect.arrayContaining(["bergamot", "cardamom", "incense"]))
+    expect(notes.heartNotes).toEqual(expect.arrayContaining(["green maté", "black tea"]))
+    expect(notes.baseNotes).toEqual(expect.arrayContaining(["tonka bean", "cedar", "vetiver"]))
+    expect(all).not.toContain("infused with bright bergamot")
+    expect(all).not.toContain("sky")
+    expect(all).not.toContain("lifted by aromatic incense")
+  })
+
+  it("Attaquer Le Soleil: single MAIN NOTE blocks literary prose", () => {
+    const source =
+      "FULL DESCRIPTION Dear god, snatch how to drive marquis de sade revolutionary philosopher beauty even violence ignite the world liberate or possibly to desire. MAIN NOTES Cistus (A genus of flowering plants in the rockrose family) Pronunciation"
+    const notes = extractNotesFromStructuredText(source, 2)
+    const all = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
+    expect(all).toEqual(["cistus"])
+    expect(all).not.toContain("dear god")
+    expect(all).not.toContain("snatch")
+    expect(all).not.toContain("how")
+  })
+
+  it("Divin'enfant: MAIN NOTES flat list; coffee not prose accord phrase", () => {
+    const source =
+      "FULL DESCRIPTION breaks the unexpected accord of coffee in the air. MAIN NOTES Orange blossom, marshmallow, coffee, rose, cold tobacco, leather, amber, musk Pronunciation"
+    const notes = extractNotesFromStructuredText(source, 2)
+    const all = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
+    expect(all).toEqual(
+      expect.arrayContaining(["orange blossom", "marshmallow", "coffee", "rose", "cold tobacco", "leather", "amber", "musk"]),
+    )
+    expect(all).not.toContain("breaks the unexpected accord of coffee")
+    expect(all.filter(n => n === "coffee")).toHaveLength(1)
+  })
+
+  it("Frustration: MAIN NOTES materials only, not Lacan prose", () => {
+    const source =
+      "FULL DESCRIPTION without explaining too much there suddenly according to lacan issued more vast seduces lulls dominates delectable all nostrils out let devour. MAIN NOTES Cumin HE, Cinnamon HE, Pure Rhum Jungle Essence™, Vanilla Absolute, Ciste Absolute, Chestnut Wood Accord, Bourbon Vetiver HE INGREDIENTS ALCOHOL DENAT"
+    const notes = extractNotesFromStructuredText(source, 2)
+    const all = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
+    expect(all).toEqual(
+      expect.arrayContaining(["cumin", "cinnamon", "vanilla absolute", "ciste absolute", "bourbon vetiver"]),
+    )
+    expect(all).not.toContain("there")
+    expect(all).not.toContain("according to lacan")
+    expect(all).not.toContain("devour")
+  })
+
+  it("filters Noel Au Balcon prose junk from structured extraction", () => {
+    const source =
+      "FULL DESCRIPTION Honeyed whispers mingle with tangerine. Notes swirl like a faceted gem. MAIN NOTES Honey, tangerine, vanilla, cinnamon from Sri Lanka, nigella, red pepper, apricot, patchouli, solar musked accord Pronunciation"
+    const notes = extractNotesFromStructuredText(source, 2)
+    const all = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
+    expect(all).toEqual(
+      expect.arrayContaining(["honey", "tangerine", "vanilla", "patchouli"]),
+    )
+    expect(all).not.toContain("notes swirl")
+    expect(all).not.toContain("dance")
+    expect(all).not.toContain("like a faceted")
+    expect(all).not.toContain("she")
+    expect(all).not.toContain("her")
   })
 })
 

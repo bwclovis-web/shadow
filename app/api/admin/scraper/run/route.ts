@@ -28,6 +28,7 @@ import { spawnScraperPythonProcess } from "@/lib/scraper/spawn-scraper-python"
 import {
   mapScrapedItemsToRecords,
   pythonPipelineComplete,
+  scrapedItemsNeedEtatLibreEnrichment,
   scrapedItemsNeedNodeRepair,
   scrapedItemsNeedPatternEtsyEnrichment,
 } from "@/lib/scraper/map-scraped-items"
@@ -721,7 +722,9 @@ export async function POST(request: NextRequest): Promise<Response> {
           const hasPythonNotes = pythonPipelineComplete(scrapedItems)
           const needsNodeEnrichment = scrapedItemsNeedPatternEtsyEnrichment(scrapedItems)
           const needsNodeRepair = scrapedItemsNeedNodeRepair(scrapedItems)
-          const skipNodeNotesPipeline = hasPythonNotes && !needsNodeEnrichment && !needsNodeRepair
+          const needsEtatLibreEnrichment = scrapedItemsNeedEtatLibreEnrichment(scrapedItems)
+          const skipNodeNotesPipeline =
+            hasPythonNotes && !needsNodeEnrichment && !needsNodeRepair && !needsEtatLibreEnrichment
 
           keepalivePhase = skipNodeNotesPipeline ? "finalize" : "notes"
 
