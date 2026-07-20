@@ -3,6 +3,7 @@ import { Inter, Cormorant_Garamond } from 'next/font/google'
 import { cookies } from 'next/headers'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
+import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { Providers } from './providers'
 import { ViewTransitionsWrapper } from './ViewTransitionsWrapper'
@@ -121,6 +122,7 @@ export default async function RootLayout({
           <div id="modal-portal" />
         </ViewTransitionsWrapper>
         <ServiceWorkerRegistration />
+        <Analytics />
       </body>
     </html>
   )
