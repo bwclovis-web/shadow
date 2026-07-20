@@ -65,6 +65,92 @@ export const pythonPipelineComplete = (items: ScrapedItem[]): boolean =>
 export const scrapedItemNoteCount = (item: ScrapedItem): number =>
   (item.openNotes?.length ?? 0) + (item.heartNotes?.length ?? 0) + (item.baseNotes?.length ?? 0)
 
+const merchantNoteSource = (source: string | undefined): boolean => {
+  const s = (source ?? "").toLowerCase()
+  return (
+    s.includes("text_regex_layered") ||
+    s.startsWith("html_") ||
+    s.includes("html_") ||
+    s === "labeled_list"
+  )
+}
+
+/** Python extracted a full merchant pyramid — skip Node re-extraction that drops head notes. */
+export const pythonMerchantNotesComplete = (items: ScrapedItem[]): boolean =>
+  items.length > 0 &&
+  items.every(item => {
+    const count = scrapedItemNoteCount(item)
+    if (count < 6) return false
+    if (!merchantNoteSource(item._noteSource)) return false
+    const open = (item.openNotes?.length ?? 0) > 0
+    const heart = (item.heartNotes?.length ?? 0) > 0
+    const base = (item.baseNotes?.length ?? 0) > 0
+    return open && heart && base
+  })
+
+/** True when Python already parsed the on-page Head/Heart/Base pyramid — Node must not relayer. */
+export const pythonMerchantPyramidTrusted = (items: ScrapedItem[]): boolean =>
+  items.some(
+    item =>
+      merchantNoteSource(item._noteSource) &&
+      (item.openNotes?.length ?? 0) > 0 &&
+      (item.heartNotes?.length ?? 0) > 0 &&
+      (item.baseNotes?.length ?? 0) > 0 &&
+      scrapedItemNoteCount(item) >= 6,
+  )
+
+const isArtisticFragrancesProductUrl = (detailURL: string): boolean => {
+  try {
+    return /artisticfragrances\.com/i.test(detailURL) && /\/milano-fragranze\/[^/]+/i.test(detailURL)
+  } catch {
+    return false
+  }
+}
+
+/** Entire scrape batch is Milano Fragranze on Artistic Fragrances (browser PDP pyramid only). */
+export const scrapedItemsAreArtisticMilanoFragranzeHouse = (items: ScrapedItem[]): boolean =>
+  items.length > 0 && items.every(item => isArtisticFragrancesProductUrl(item.detailURL ?? ""))
+
+const GENERIC_NOIR_SCRAPED_NOTES = new Set([
+  "bergamot",
+  "jasmine",
+  "rose",
+  "musk",
+  "amber",
+  "cedar",
+  "lemon",
+  "oud",
+])
+
+const looksLikeGenericNoirScrapedNotes = (item: ScrapedItem): boolean => {
+  const all = [...(item.openNotes ?? []), ...(item.heartNotes ?? []), ...(item.baseNotes ?? [])]
+    .map(n => n.trim().toLowerCase())
+    .filter(Boolean)
+  if (all.length === 0 || all.length > 8) return false
+  const genericHits = all.filter(n => GENERIC_NOIR_SCRAPED_NOTES.has(n)).length
+  return genericHits >= Math.max(2, Math.ceil(all.length * 0.6))
+}
+
+/** Milano Fragranze: WebDriver redirect + thin noir cliché notes need PDP HTML bootstrap. */
+export const scrapedItemsNeedArtisticFragrancesRepair = (items: ScrapedItem[]): boolean =>
+  items.some(item => {
+    if (!isArtisticFragrancesProductUrl(item.detailURL ?? "")) return false
+    if (
+      merchantNoteSource(item._noteSource) &&
+      (item.openNotes?.length ?? 0) > 0 &&
+      (item.heartNotes?.length ?? 0) > 0 &&
+      (item.baseNotes?.length ?? 0) > 0 &&
+      scrapedItemNoteCount(item) >= 6
+    ) {
+      return false
+    }
+    if ((item.openNotes?.length ?? 0) === 0) return true
+    if (scrapedItemNoteCount(item) < 6) return true
+    if (looksLikeGenericNoirScrapedNotes(item)) return true
+    if (!merchantNoteSource(item._noteSource)) return true
+    return false
+  })
+
 /**
  * Pattern/Etsy listings with thin accord-only pyramids benefit from the Node enrichment pass
  * even when Python already populated notes.

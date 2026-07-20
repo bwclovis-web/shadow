@@ -237,8 +237,24 @@ const mergeExistingPythonNotes = (
   current: NotesLayers,
   existing: NotesLayers | null,
   notesSource: string,
+  enrichOnly = false,
 ): NotesLayers => {
   if (!existing || noteLayerCount(existing) === 0) return current
+
+  if (
+    enrichOnly &&
+    existing.openNotes.length > 0 &&
+    existing.heartNotes.length > 0 &&
+    existing.baseNotes.length > 0 &&
+    noteLayerCount(existing) >= 6 &&
+    !isThemeJunkDominatedLayers(existing)
+  ) {
+    return dedupeNotesAcrossLayers({
+      openNotes: uniqueNotes([...existing.openNotes, ...current.openNotes]),
+      heartNotes: uniqueNotes([...existing.heartNotes, ...current.heartNotes]),
+      baseNotes: uniqueNotes([...existing.baseNotes, ...current.baseNotes]),
+    })
+  }
 
   if (
     /\bMAIN NOTES\b/i.test(notesSource) &&

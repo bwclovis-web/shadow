@@ -11,6 +11,7 @@ vi.mock("@langchain/openai", () => ({
 }))
 
 import {
+  clearPdpCachesForTests,
   computeBatchNoteUniformityWarnings,
   detailUrlAlignsWithProductName,
   extractNotesForItems,
@@ -152,10 +153,17 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
      */
     vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
     invokeMock.mockReset()
+    clearPdpCachesForTests()
+    /**
+     * Default to returning 404 for all fetch calls so tests that don't need real HTTP don't make
+     * real network requests. Tests that need specific PDP HTML must stub fetch themselves.
+     */
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 404, text: async () => "" }))
   })
 
   afterEach(() => {
     vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
   })
 
   it("Featured notes after long prelude: still extracts merchant list (augment + flat)", async () => {
@@ -1399,20 +1407,25 @@ Base: white musk`
     vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
 
     /**
-     * Three invocations expected (in order):
-     *   1. extractNotesFromDescription for the first product
-     *   2. extractNotesFromDescription for the second product (all junk)
-     *   3. validateNotesWithLlm (bulk) — returns substitution map:
+     * Four invocations expected (in order):
+     *   1. extractNotesFromDescription for the first product (description path)
+     *   2. extractNotesFromDescription for the second product (name-only path — description is
+     *      policy-only at 64 chars). Returns junk notes that all get filtered by isScraperKeptNote
+     *      and looksLikeProseNotePhrase, leaving 0 notes.
+     *   3. extractNotesFallbackLookup for the second product (triggered because it has 0 notes
+     *      after filtering and inferenceMode is "standard"). Returns empty.
+     *   4. validateNotesWithLlm (bulk) — runs over product 1's surviving notes only:
      *      - "bergamot" → "bergamot" (kept)
      *      - "delicate apple blossom" → "apple blossom" (prose stripped)
      *      - "creamy vanilla" → "creamy vanilla" (olfactory adjective kept)
      *      - "sandalwood" → "sandalwood" (kept)
-     *      - "a sweet" → omitted (pure prose)
-     *      - "glowing amber warmth" → omitted (no material core)
+     *      - "a sweet" → omitted (pure prose — already dropped before validator)
+     *      - "glowing amber warmth" → omitted (no material core — already dropped before validator)
      */
     const responses = [
       '{"openNotes":["bergamot","a sweet","delicate apple blossom"],"heartNotes":["creamy vanilla"],"baseNotes":["sandalwood","glowing amber warmth"]}',
       '{"openNotes":["a sweet"],"heartNotes":[],"baseNotes":["glowing amber warmth"]}',
+      '{"openNotes":[],"heartNotes":[],"baseNotes":[]}',
       '{"valid":[{"in":"bergamot","out":"bergamot"},{"in":"delicate apple blossom","out":"apple blossom"},{"in":"creamy vanilla","out":"creamy vanilla"},{"in":"sandalwood","out":"sandalwood"}]}',
     ]
     let i = 0
@@ -1437,7 +1450,6 @@ Base: white musk`
     const { records } = await extractNotesForItems(items, "House", {
       generateNoirDescriptions: false,
       fetchPdpNoteBootstrap: false,
-      noteInferenceMode: "strict",
     })
 
     const r0Open = JSON.parse(records[0].openNotes) as string[]
@@ -1705,6 +1717,29 @@ Organically |
         perfumeHouse: "Andromeda's Moon",
       },
     ]
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url: string) => {
+        const u = String(url)
+        if (/andromedasmoon\.com\/search/i.test(u)) {
+          return {
+            ok: true,
+            text: async () =>
+              '<a href="/products/inspired-by-vanille-diabolique-renoir">Vanille Diabolique</a>',
+          }
+        }
+        if (/vanille-diabolique/i.test(u)) {
+          return {
+            ok: true,
+            text: async () =>
+              "<h3>Top notes</h3><p>Coca-Cola, Rum, Cherry, Orange Blossom</p>" +
+              "<h3>Heart notes</h3><p>Bourbon Vanilla, Caramel, Milk</p>" +
+              "<h3>Base notes</h3><p>Benzoin, Sandalwood</p>",
+          }
+        }
+        return { ok: false, status: 404, text: async () => "" }
+      }),
+    )
     const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
       generateNoirDescriptions: false,
       fetchPdpNoteBootstrap: false,
@@ -1828,6 +1863,29 @@ Organically |
         perfumeHouse: "Andromeda's Moon",
       },
     ]
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url: string) => {
+        const u = String(url)
+        if (/andromedasmoon\.com\/search/i.test(u)) {
+          return {
+            ok: true,
+            text: async () =>
+              '<a href="/products/inspired-by-cheirosa-71-sol-de-janerio">Cheirosa 71</a>',
+          }
+        }
+        if (/cheirosa-71/i.test(u)) {
+          return {
+            ok: true,
+            text: async () =>
+              "<h3>Top notes</h3><p>Sea Salt, Coconut Water, Pistachio</p>" +
+              "<h3>Heart notes</h3><p>Caramelized Vanilla, Toasted Macadamia Nut</p>" +
+              "<h3>Base notes</h3><p>Sandalwood, Warm Musk</p>",
+          }
+        }
+        return { ok: false, status: 404, text: async () => "" }
+      }),
+    )
     const { records } = await extractNotesForItems(items, "Andromeda's Moon", {
       generateNoirDescriptions: false,
       fetchPdpNoteBootstrap: false,
@@ -3528,7 +3586,6 @@ Organically |
     const { records } = await extractNotesForItems(items, "House", {
       generateNoirDescriptions: false,
       fetchPdpNoteBootstrap: false,
-      noteInferenceMode: "strict",
     })
 
     expect(JSON.parse(records[0].openNotes)).toEqual(["bergamot"])
@@ -4223,6 +4280,113 @@ describe("Etat Libre d'Orange description cleanup", () => {
     expect(records[0].description.toLowerCase()).not.toMatch(/^interested in trying/)
     expect(records[0].description.toLowerCase()).toContain("iris")
     expect(records[0].description.length).toBeGreaterThan(40)
+    fetchMock.mockRestore()
+  })
+
+  it("Matiere Premiere: CREATIVE APPROACH PDP bootstrap extracts materials and drops theme CSS bleed", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    const cssBleed = "gradient color color-badge payment-terms"
+    const falconHtml = `<html><body><div class="product__description">
+INITIAL IDEA: "Create a leathery scent inspired by falconers' gloves"
+MAIN INGREDIENT: A vegetal leather note, Birch Tar Finland.
+CREATIVE APPROACH: Exacerbate the power of the note at the start thanks to Saffron. Unfold and enrich the texture of Birch Tar to evoke both sides of leather: highlight the smooth full-grain side with Ciste Labdanum Andalusia, amplify the soft suede side with Benzoin Absolute Laos.
+Available sizes: Eau de parfum 100ml spray
+</div></body></html>`
+
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input: RequestInfo | URL) => {
+      const url = String(input)
+      if (url.includes("falcon-leather")) {
+        return new Response(falconHtml, { status: 200, headers: { "content-type": "text/html" } })
+      }
+      return new Response("", { status: 404 })
+    })
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run when Matiere Premiere CREATIVE APPROACH parses from PDP")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Falcon Leather",
+        description: cssBleed,
+        image: "",
+        detailURL: "https://matiere-premiere.us/products/falcon-leather",
+        perfumeHouse: "Matiere Premiere",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Matiere Premiere", {
+      generateNoirDescriptions: false,
+    })
+
+    const open = JSON.parse(records[0].openNotes) as string[]
+    const heart = JSON.parse(records[0].heartNotes) as string[]
+    const base = JSON.parse(records[0].baseNotes) as string[]
+    const all = [...open, ...heart, ...base]
+
+    expect(fetchMock).toHaveBeenCalled()
+    expect(all).toEqual(expect.arrayContaining(["saffron", "birch tar", "ciste labdanum andalusia", "benzoin absolute laos"]))
+    expect(all).not.toEqual(expect.arrayContaining(["gradient", "color", "color-badge", "payment-terms"]))
+    expect(records[0]._noteSource).not.toBe("empty")
+
+    fetchMock.mockRestore()
+  })
+
+  it("Matiere Premiere: LLM validator preserves CREATIVE APPROACH merchant materials", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "llm")
+
+    const cssBleed = "gradient color color-badge payment-terms"
+    const falconHtml = `<html><body><div class="product__description">
+MAIN INGREDIENT: A vegetal leather note, Birch Tar Finland.
+CREATIVE APPROACH: Exacerbate the power of the note at the start thanks to Saffron. Unfold and enrich the texture of Birch Tar to evoke both sides of leather: highlight the smooth full-grain side with Ciste Labdanum Andalusia, amplify the soft suede side with Benzoin Absolute Laos.
+</div></body></html>`
+
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input: RequestInfo | URL) => {
+      if (String(input).includes("falcon-leather")) {
+        return new Response(falconHtml, { status: 200, headers: { "content-type": "text/html" } })
+      }
+      return new Response("", { status: 404 })
+    })
+
+    let call = 0
+    invokeMock.mockImplementation(() => {
+      call++
+      if (call === 1) {
+        return {
+          content:
+            '{"valid":[{"in":"birch tar finland","out":"birch tar finland"},{"in":"saffron","out":"saffron"},{"in":"birch tar","out":"birch tar"},{"in":"ciste labdanum andalusia","out":"ciste labdanum andalusia"},{"in":"benzoin absolute laos","out":"benzoin absolute laos"}]}',
+        }
+      }
+      throw new Error("LLM extraction should not run")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Falcon Leather",
+        description: cssBleed,
+        image: "",
+        detailURL: "https://matiere-premiere.us/products/falcon-leather",
+        perfumeHouse: "Matiere Premiere",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Matiere Premiere", {
+      generateNoirDescriptions: false,
+    })
+
+    const all = [
+      ...(JSON.parse(records[0].openNotes) as string[]),
+      ...(JSON.parse(records[0].heartNotes) as string[]),
+      ...(JSON.parse(records[0].baseNotes) as string[]),
+    ]
+    expect(all).toEqual(
+      expect.arrayContaining(["saffron", "ciste labdanum andalusia", "benzoin absolute laos"]),
+    )
+    expect(all.length).toBeGreaterThanOrEqual(4)
+
     fetchMock.mockRestore()
   })
 

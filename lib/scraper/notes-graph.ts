@@ -9,6 +9,7 @@ export {
   isPatternByEtsyProductUrl,
   isAndromedaMoonProductUrl,
   detailUrlAlignsWithProductName,
+  clearPdpCachesForTests,
 } from "@/lib/scraper/stages/pdp-bootstrap"
 
 export {

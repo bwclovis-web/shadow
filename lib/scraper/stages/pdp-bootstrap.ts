@@ -150,7 +150,7 @@ const hasExplicitNoteListSignal = (text: string): boolean => {
   if (/\b(?:fragrance\s+profile\s+)?main\s+notes?\s+(?![:\-\u2013\u2014–—])[A-Za-z]/i.test(t)) return true
   if (/\bscent\s+profile\s+(?!(?:top|heart|base|middle)\s*:)[A-Za-z]/i.test(t)) return true
   if (/\b(?:top|middle|base)\s+notes?\s+(?:of|are|is)\s+[a-z]/i.test(t)) return true
-  if (/\bnotes?\s+(?!(?:top|heart|base|middle)\s*:|[:-\u2013\u2014–—])[A-Z]/i.test(t) && /\bwear\s*(?:&|and)\s*layer\b/i.test(t))
+  if (/\bnotes?\s+(?!(?:top|heart|base|middle)\s*:|[:\-\u2013\u2014–—])[A-Z]/i.test(t) && /\bwear\s*(?:&|and)\s*layer\b/i.test(t))
     return true
   if (/\bscent\s+notes?\s+include\b/i.test(t)) return true
   if (/\bscent\s+notes?\s+(?:top|heart|base)\s*:/i.test(t)) return true
@@ -172,6 +172,7 @@ const hasExplicitNoteListSignal = (text: string): boolean => {
   if (/\bnotes?\b\s+top\b\s+.+?\s+heart\b\s+.+?\s+base\b/i.test(t)) return true
   if (/\bnotes?\s+pyramid\b/i.test(t)) return true
   if (/\bscent\s+profile\s+[A-Za-z0-9]/i.test(t) && /[•·]/.test(t)) return true
+  if (/\b(?:main\s+ingredient|creative\s+approach|initial\s+idea)\s*:/i.test(t)) return true
   return false
 }
 
@@ -318,11 +319,30 @@ const shouldAutoFetchEtatLibreNotes = (detailURL: string, mergedBase: string): b
   isEtatLibreProductUrl(detailURL) &&
   (!hasExplicitNoteListSignal(mergedBase) || !/\bMAIN NOTES\b/i.test(mergedBase))
 
-/** WooCommerce /store/{slug} PDPs (e.g. Vivamor) hide OLFACTORY NOTES in accordion tabs Selenium may miss. */
+/** WooCommerce PDPs — /store/{slug} (Vivamor) or brand-category permalinks like /milano-fragranze/naviglio/. */
 const isWooCommerceStoreProductUrl = (detailURL: string): boolean => {
   try {
-    const path = new URL(detailURL).pathname.replace(/\/+$/, "")
-    return /\/store\/[^/]+$/i.test(path) && !/\/store$/i.test(path)
+    const parsed = new URL(detailURL)
+    const path = parsed.pathname.replace(/\/+$/, "")
+    if (/\/store\/[^/]+$/i.test(path) && !/\/store$/i.test(path)) return true
+    const parts = path.split("/").filter(Boolean)
+    if (parts.length < 2) return false
+    if (parts.length === 2 && /^[a-z]{2}$/i.test(parts[0] ?? "")) return false
+    const excluded = new Set([
+      "shop",
+      "cart",
+      "checkout",
+      "my-account",
+      "wishlist",
+      "account",
+      "wp-json",
+      "feed",
+      "product-category",
+    ])
+    if (parts.some(p => excluded.has(p.toLowerCase()) || p.toLowerCase().startsWith("wp-"))) {
+      return false
+    }
+    return true
   } catch {
     return false
   }
@@ -332,6 +352,24 @@ const shouldAutoFetchWooCommerceStoreNotes = (detailURL: string, mergedBase: str
   if (!isWooCommerceStoreProductUrl(detailURL)) return false
   if (!hasExplicitNoteListSignal(mergedBase)) return true
   return isThinLayeredPyramidScrape(mergedBase)
+}
+
+/** Shopify /products/{handle} PDPs when Selenium captures theme CSS or marketing prose only. */
+const isShopifyProductPdpUrl = (detailURL: string): boolean => {
+  try {
+    const path = new URL(detailURL).pathname.replace(/\/+$/, "")
+    return /\/products\/[^/]+$/i.test(path)
+  } catch {
+    return false
+  }
+}
+
+const shouldAutoFetchShopifyProductNotes = (detailURL: string, mergedBase: string): boolean => {
+  if (!isShopifyProductPdpUrl(detailURL)) return false
+  if (isAndromedaMoonProductUrl(detailURL)) return false
+  if (isPatternByEtsyProductUrl(detailURL)) return false
+  if (isEtatLibreProductUrl(detailURL)) return false
+  return !hasExplicitNoteListSignal(mergedBase)
 }
 
 /** Collection / shop grid pages mistaken for a product (e.g. Vivamor "Store" row with about-us URL). */
@@ -566,10 +604,126 @@ const relayerNotesWithEmbeddedLayerMarkers = (layers: {
 }
 
 /**
+ * Matiere Premiere (and similar) Shopify PDPs: MAIN INGREDIENT + CREATIVE APPROACH prose blocks.
+ * Example: "thanks to Saffron … with Ciste Labdanum Andalusia … MAIN INGREDIENT: Birch Tar Finland."
+ */
+const trimMatiereMaterial = (raw: string): string | null => {
+  const t = raw.trim().replace(/[.]+$/, "").trim()
+  if (!t || t.length < 3 || t.length > 80) return null
+  if (!/[a-z]{2,}/i.test(t)) return null
+  return t
+}
+
+const CREATIVE_MATERIAL_VERB_RE =
+  /\s+(?:amplifies?|underlines?|accentuates?|both\s+accentuates?|brings?|envelop(?:s)?)\b/i
+
+const MATIERE_PROGRAMME_TAIL_RE =
+  /\b(?:fair for life|agricultural programme|programme|certified|organic)\b/i
+
+const extractMatierePremiereMaterialsFromPlain = (plain: string): string[] => {
+  const collapsed = (plain ?? "").replace(/\s+/g, " ").trim()
+  if (!/\b(?:main\s+ingredient|creative\s+approach)\s*:/i.test(collapsed)) return []
+
+  const materials: string[] = []
+  const push = (raw: string | null | undefined) => {
+    const t = raw ? trimMatiereMaterial(raw) : null
+    if (t) materials.push(t.toLowerCase())
+  }
+
+  const mainMatch = collapsed.match(/\bmain\s+ingredient\s*:\s*(.+?)(?=\s+CREATIVE\s+APPROACH\b|$)/i)
+  if (mainMatch?.[1]) {
+    let body = mainMatch[1].trim().replace(/\.\s*$/, "")
+    const noteTail = body.match(/\bnote,?\s+(.+)$/i)
+    if (noteTail?.[1]) {
+      push(noteTail[1])
+    } else if (/,\s*/.test(body)) {
+      const parts = body.split(/,\s*/).map(p => p.trim()).filter(Boolean)
+      const materialPart = parts.find(p => !MATIERE_PROGRAMME_TAIL_RE.test(p))
+      push(materialPart ?? parts[0])
+    } else {
+      body = body.replace(/^a\s+(?:\w+(?:\s+\w+){0,4}\s+)?note,?\s*/i, "").trim()
+      push(body)
+    }
+  }
+
+  const creativeMatch = collapsed.match(
+    /\bcreative\s+approach\s*:\s*(.+?)(?=\s+Available\s+sizes?\b|\s+Customer\s+Reviews\b|$)/i,
+  )
+  if (creativeMatch?.[1]) {
+    const body = creativeMatch[1]
+    const materialPatterns = [
+      /\bthanks\s+to\s+([A-Z][A-Za-z'°\s-]+?)(?=[,;.]|$)/gi,
+      /\btexture\s+of\s+([A-Z][A-Za-z'°\s-]+?)\s+to\b/gi,
+      /\bwith\s+([A-Z][A-Za-z'°\s-]+?)(?=[,;.]|$)/gi,
+      /\b(?:amplified|reinforced)\s+by\s+([A-Za-z][A-Za-z'°\s-]+?)(?=[,;.]|$)/gi,
+      /\b([A-Z][A-Za-z'°\s-]+?)\s+is\s+used\s+to\b/gi,
+    ]
+    for (const re of materialPatterns) {
+      re.lastIndex = 0
+      for (const m of body.matchAll(re)) push(m[1])
+    }
+    for (const sentence of body.split(/(?<=[.!?])\s+/)) {
+      const verbMatch = sentence.match(CREATIVE_MATERIAL_VERB_RE)
+      if (!verbMatch?.index || verbMatch.index <= 0) continue
+      let candidate = sentence.slice(0, verbMatch.index).trim()
+      const ofTail = candidate.match(/\bof\s+([A-Za-z][A-Za-z'°\s-]+)$/i)
+      if (ofTail?.[1]) candidate = ofTail[1]
+      push(candidate)
+    }
+  }
+
+  return uniqueNotes(materials)
+}
+
+/** Extrait PDPs without CREATIVE APPROACH — prose cites Absolutes and guest ingredients. */
+const extractMatierePremiereExtraitMaterialsFromPlain = (plain: string): string[] => {
+  const collapsed = (plain ?? "").replace(/\s+/g, " ").trim()
+  if (!collapsed) return []
+
+  const materials: string[] = []
+  const push = (raw: string | null | undefined) => {
+    const t = raw ? trimMatiereMaterial(raw) : null
+    if (!t) return
+    if (/\b(?:intensity of|deep intensity|contrast between|guest ingredient)\b/i.test(t)) return
+    materials.push(t.toLowerCase())
+  }
+
+  for (const m of collapsed.matchAll(
+    /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,3}\s+Absolute)\s+from\s+([A-Z][a-z]+)\b/g,
+  )) {
+    push(`${m[1]} ${m[2]}`)
+  }
+
+  const guest = collapsed.match(/\bguest\s+ingredient\s*:\s*([^.]{4,80})/i)
+  if (guest?.[1]) push(guest[1].trim())
+
+  for (const m of collapsed.matchAll(
+    /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2}\s+Absolute)\s+([A-Z][a-z]+)\b/g,
+  )) {
+    if (/^\s*from\b/i.test(m[2])) continue
+    push(`${m[1]} ${m[2]}`)
+  }
+
+  return uniqueNotes(materials)
+}
+
+const extractMatierePremiereNoteBlockFromPlain = (plain: string): string | null => {
+  const materials = uniqueNotes([
+    ...extractMatierePremiereMaterialsFromPlain(plain),
+    ...extractMatierePremiereExtraitMaterialsFromPlain(plain),
+  ])
+  if (materials.length < 2) return null
+  return `fragrance notes: ${materials.join(", ")}`.slice(0, 4000)
+}
+
+/**
  * Extract "Featured notes: …" / key notes from already-plain text (meta description, stripped body).
  */
 const extractFeaturedBlockFromPlain = (t: string): string | null => {
   const plain = (t ?? "").replace(/\s+/g, " ").trim()
+
+  const matiereBlock = extractMatierePremiereNoteBlockFromPlain(plain)
+  if (matiereBlock) return matiereBlock
 
   /**
    * Wix / boutique PDPs (e.g. Seventh Muse): product blurb is a prose line with
@@ -637,6 +791,14 @@ const extractFeaturedBlockFromPlain = (t: string): string | null => {
   }
 
   if (plain.length < 30) return null
+
+  const aromasOf = plain.match(/\b(?:seamlessly\s+)?blending\s+aromas?\s+of\s+([^.]{12,220})/i)
+  if (aromasOf?.[1]) {
+    const body = aromasOf[1].trim().replace(/[,;]\s*$/, "")
+    if (body.length >= 12 && /,/.test(body)) {
+      return `fragrance notes: ${body}`.slice(0, 4000)
+    }
+  }
 
   const featured = plain.match(
     new RegExp(String.raw`\bfeatured\s+notes?\s*:\s*(.+?)${FEATURED_LIST_SECTION_STOP}`, "i"),
@@ -725,7 +887,7 @@ const extractFeaturedBlockFromPlain = (t: string): string | null => {
  */
 const extractAndromedaStackedNotesFromPlain = (plain: string): string[] => {
   const stacked = plain.match(
-    /\bnotes?\s+(?!(?:top|heart|base|middle)\s*:|[:-\u2013\u2014–—])([A-Z][A-Za-z\s&'’-]{3,280}?)(?=\s+Wear\s*(?:&|and)\s*Layer|\s+Available\s+Sizes?|\s+What\s+You(?:'|'|&#39;)ll\s+Smell|\s+Important\b|\s+\*?\s*Processing\b|\s+Scent\s+Vibe|\s+How\s+(?:It\s+)?Wears|\s+Main\s+Accords?|\s+Overall\s+Vibe|$)/i,
+    /\bnotes?\s+(?!(?:top|heart|base|middle)\s*:|[:\-\u2013\u2014–—])([A-Z][A-Za-z\s'-]{3,280}?)(?=\s+Wear\s*(?:&|and)\s*Layer|\s+Available\s+Sizes?|\s+What\s+You(?:'|'|&#39;)ll\s+Smell|\s+Important\b|\s+\*?\s*Processing\b|\s+Scent\s+Vibe|\s+How\s+(?:It\s+)?Wears|\s+Main\s+Accords?|\s+Overall\s+Vibe|$)/i,
   )
   if (!stacked?.[1]) return []
   const body = stacked[1].trim()
@@ -1247,6 +1409,11 @@ const augmentNotesSourceWithLabeledLists = (raw: string): string => {
   if (allSegmentsAlreadyPresent) return raw
   return `${boost}\n\n${raw}`.trim()
 }
+const clearPdpCachesForTests = (): void => {
+  pdpHtmlCache.clear()
+  pdpNoteBootstrapCache.clear()
+}
+
 export {
   resolveProductName,
   resolveNotesSource,
@@ -1255,11 +1422,14 @@ export {
   shouldAutoFetchAndromedaMoonNotes,
   shouldAutoFetchEtatLibreNotes,
   shouldAutoFetchWooCommerceStoreNotes,
+  shouldAutoFetchShopifyProductNotes,
   tryFetchPdpNoteBootstrap,
   tryFetchEtatLibreProductDescription,
   augmentNotesSourceWithLabeledLists,
   relayerNotesWithEmbeddedLayerMarkers,
   extractMerchantNoteBootstrapFromHtml,
+  extractMatierePremiereMaterialsFromPlain,
+  extractMatierePremiereExtraitMaterialsFromPlain,
   pdpNoteBootstrapCache,
   searchAndromedaProductUrl,
   buildAndromedaCandidateProductUrls,
@@ -1270,4 +1440,5 @@ export {
   extractAndromedaScentProfileFromPlain,
   inferAndromedaAmarettoNotesFromProse,
   hasEmbeddedLayerMarkers,
+  clearPdpCachesForTests,
 }

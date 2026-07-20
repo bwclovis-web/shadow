@@ -27,7 +27,10 @@ import { assessDuplicateRisk } from "@/lib/scraper/duplicate-review"
 import { spawnScraperPythonProcess } from "@/lib/scraper/spawn-scraper-python"
 import {
   mapScrapedItemsToRecords,
+  pythonMerchantNotesComplete,
   pythonPipelineComplete,
+  scrapedItemsAreArtisticMilanoFragranzeHouse,
+  scrapedItemsNeedArtisticFragrancesRepair,
   scrapedItemsNeedEtatLibreEnrichment,
   scrapedItemsNeedNodeRepair,
   scrapedItemsNeedPatternEtsyEnrichment,
@@ -659,7 +662,18 @@ export async function POST(request: NextRequest): Promise<Response> {
               scrapedCount: 0,
               records: [],
               csvContent: "",
-              errors: [`Scraper exited with code ${code}. Stderr: ${scraperLog.slice(0, 1000)}`],
+              errors: [
+                (() => {
+                  const tail = scraperLog.trim()
+                  const errorLine = tail.match(/(?:^|\n)Error: .+$/m)?.[0]
+                  if (errorLine) {
+                    return `Scraper exited with code ${code}. ${errorLine}`
+                  }
+                  const snippet =
+                    tail.length <= 1500 ? tail : `${tail.slice(-1500)}`
+                  return `Scraper exited with code ${code}. Stderr (last 1500 chars): ${snippet}`
+                })(),
+              ],
               scraperLog: scraperLog.trim() || undefined,
             }
             detachAbortListener()
@@ -720,11 +734,20 @@ export async function POST(request: NextRequest): Promise<Response> {
           }
 
           const hasPythonNotes = pythonPipelineComplete(scrapedItems)
+          const hasCompleteMerchantNotes = pythonMerchantNotesComplete(scrapedItems)
           const needsNodeEnrichment = scrapedItemsNeedPatternEtsyEnrichment(scrapedItems)
           const needsNodeRepair = scrapedItemsNeedNodeRepair(scrapedItems)
           const needsEtatLibreEnrichment = scrapedItemsNeedEtatLibreEnrichment(scrapedItems)
+          const needsArtisticFragrancesRepair = scrapedItemsNeedArtisticFragrancesRepair(scrapedItems)
+          const allArtisticMilano = scrapedItemsAreArtisticMilanoFragranzeHouse(scrapedItems)
           const skipNodeNotesPipeline =
-            hasPythonNotes && !needsNodeEnrichment && !needsNodeRepair && !needsEtatLibreEnrichment
+            (allArtisticMilano && hasCompleteMerchantNotes) ||
+            (hasPythonNotes && hasCompleteMerchantNotes && !needsArtisticFragrancesRepair) ||
+            (hasPythonNotes &&
+              !needsNodeEnrichment &&
+              !needsNodeRepair &&
+              !needsEtatLibreEnrichment &&
+              !needsArtisticFragrancesRepair)
 
           keepalivePhase = skipNodeNotesPipeline ? "finalize" : "notes"
 

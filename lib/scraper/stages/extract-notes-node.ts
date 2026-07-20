@@ -26,6 +26,7 @@ import {
   shouldAutoFetchEtatLibreNotes,
   shouldAutoFetchPatternEtsyNotes,
   shouldAutoFetchWooCommerceStoreNotes,
+  shouldAutoFetchShopifyProductNotes,
   tryFetchEtatLibreProductDescription,
   tryFetchPdpNoteBootstrap,
   detailUrlAlignsWithProductName,
@@ -437,9 +438,29 @@ const processSingleProductPhase1 = async (
   opts.onProgress?.(
     `Notes pipeline ${index + 1}/${totalItems}: ${(name || resolvedName || "product").slice(0, 72)}`,
   )
-  const scrapedDescriptionRaw = isJunkScrapedDescription(item.description ?? "")
-    ? ""
-    : (item.description ?? "")
+  const scrapedDescriptionRaw = (() => {
+    const raw = item.description ?? ""
+    if (!isJunkScrapedDescription(raw)) return raw
+    /**
+     * Even when the main description is junk (Wix cross-sell bleed, CSS, etc.) there may be
+     * labeled note lines below a paragraph break or even a single newline.
+     * Try double-newline paragraph split first; fall back to single-newline line scan.
+     * The stored description is cleared separately at the record-building stage.
+     */
+    const blocks = raw.split(/\n{2,}/)
+    for (let i = 1; i < blocks.length; i++) {
+      if (hasExplicitNoteListSignal(blocks[i])) {
+        return blocks.slice(i).join("\n\n")
+      }
+    }
+    const lines = raw.split(/\n/)
+    for (let i = 0; i < lines.length; i++) {
+      if (hasExplicitNoteListSignal(lines[i])) {
+        return lines.slice(i).join("\n")
+      }
+    }
+    return ""
+  })()
   const scrapedDescriptionNormalized = scrapedDescriptionRaw
     ? normalizePdpDescription(scrapedDescriptionRaw) || scrapedDescriptionRaw
     : ""
@@ -486,8 +507,21 @@ const processSingleProductPhase1 = async (
   /** Etat Libre MAIN NOTES bootstrap — not gated on enrichOnly (Python prose notes still need PDP). */
   const needsEtatLibreMainNotesBootstrap =
     isEtatLibreProductUrl(detailUrl) && shouldAutoFetchEtatLibreNotes(detailUrl, mergedBase)
+  const isArtisticFragrancesMilanoPdp = (url: string): boolean =>
+    /artisticfragrances\.com/i.test(url) && /\/milano-fragranze\/[^/]+/i.test(url)
+
+  const artisticFragrancesThinPython =
+    opts.enrichOnly === true &&
+    isArtisticFragrancesMilanoPdp(detailUrl) &&
+    (existingFromPython == null ||
+      noteLayerCount(existingFromPython) < 6 ||
+      (existingFromPython.openNotes?.length ?? 0) === 0)
+
   const autoWooStoreFetch =
-    opts.enrichOnly === true ? false : shouldAutoFetchWooCommerceStoreNotes(detailUrl, mergedBase)
+    artisticFragrancesThinPython ||
+    (opts.enrichOnly !== true && shouldAutoFetchWooCommerceStoreNotes(detailUrl, mergedBase))
+  const autoShopifyFetch =
+    opts.enrichOnly === true ? false : shouldAutoFetchShopifyProductNotes(detailUrl, mergedBase)
   const shouldFetchAndromedaBootstrap =
     isAndromedaMoonProductUrl(detailUrl) && opts.fetchPdpNoteBootstrap === true
   if (
@@ -497,10 +531,13 @@ const processSingleProductPhase1 = async (
       autoAndromedaFetch ||
       autoEtatLibreFetch ||
       needsEtatLibreMainNotesBootstrap ||
-      autoWooStoreFetch) &&
+      autoWooStoreFetch ||
+      autoShopifyFetch) &&
     (shouldFetchAndromedaBootstrap ||
+      opts.fetchPdpNoteBootstrap === true ||
       !hasExplicitNoteListSignal(mergedBase) ||
       autoWooStoreFetch ||
+      autoShopifyFetch ||
       needsEtatLibreMainNotesBootstrap) &&
     detailUrl.startsWith("http")
   ) {
@@ -534,16 +571,41 @@ const processSingleProductPhase1 = async (
       : 2
 
   const notesSource = augmentNotesSourceWithLabeledLists(mergedBase)
-  try {
-    const flatAuthEarly = extractFlatNotes(notesSource)
-    let notes = extractNotesFromStructuredText(notesSource, minFlat)
-    let merchantTrustedNotes = collectMerchantTrustedNotes(notes, notesSource)
+  const pythonHasMerchantPyramid =
+    opts.enrichOnly === true &&
+    existingFromPython != null &&
+    existingFromPython.openNotes.length > 0 &&
+    existingFromPython.heartNotes.length > 0 &&
+    existingFromPython.baseNotes.length > 0 &&
+    noteLayerCount(existingFromPython) >= 6 &&
+    typeof item._noteSource === "string" &&
+    /text_regex_layered|html_(?:heading|strong)_layers/.test(item._noteSource)
 
-    const initialStructuredNoteCount = noteLayerCount(notes)
+  try {
+    let notes: NotesLayers
+    let merchantTrustedNotes: Set<string>
+    let initialStructuredNoteCount: number
     let usedDescPathLlm = false
     let usedNameOnlyPath = false
     let usedFallbackLookup = false
     let pdpRescueApplied = false
+
+    if (pythonHasMerchantPyramid && existingFromPython) {
+      notes = dedupeNotesAcrossLayers({
+        openNotes: uniqueNotes(existingFromPython.openNotes),
+        heartNotes: uniqueNotes(existingFromPython.heartNotes),
+        baseNotes: uniqueNotes(existingFromPython.baseNotes),
+      })
+      merchantTrustedNotes = new Set(
+        [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes].map(n => n.trim().toLowerCase()),
+      )
+      initialStructuredNoteCount = noteLayerCount(notes)
+    } else {
+    const flatAuthEarly = extractFlatNotes(notesSource)
+    notes = extractNotesFromStructuredText(notesSource, minFlat)
+    merchantTrustedNotes = collectMerchantTrustedNotes(notes, notesSource)
+
+    initialStructuredNoteCount = noteLayerCount(notes)
 
     const totalParsedDirectly = notes.openNotes.length + notes.heartNotes.length + notes.baseNotes.length
 
@@ -685,7 +747,7 @@ const processSingleProductPhase1 = async (
     }
     notes = dedupeNotesAcrossLayers(notes)
 
-    notes = mergeExistingPythonNotes(notes, existingFromPython, notesSource)
+    notes = mergeExistingPythonNotes(notes, existingFromPython, notesSource, opts.enrichOnly === true)
 
     if (hasEmbeddedLayerMarkers(notes)) {
       notes = relayerNotesWithEmbeddedLayerMarkers(notes)
@@ -701,7 +763,9 @@ const processSingleProductPhase1 = async (
       baseNotes: filterNotesByTrust(notes.baseNotes, merchantTrustedNotes),
     }
     notes = dedupeNotesAcrossLayers(notes)
+    } // end standard extraction path (not pythonHasMerchantPyramid)
 
+    if (!pythonHasMerchantPyramid) {
     const needsAndromedaMerchantRescue =
       isAndromedaMoonProductUrl(detailUrl) && !hasExplicitNoteListSignal(notesSource)
     if (
@@ -738,13 +802,14 @@ const processSingleProductPhase1 = async (
         }
       }
     }
+    } // end !pythonHasMerchantPyramid rescue path
 
     /**
      * Guaranteed name + theme inference — runs AFTER the junk filter so a regex extraction whose
      * candidates all fail isScraperKeptNote (e.g. layered list of single-letter placeholders, or
      * noise that survived earlier stages) still ends up with real notes. Skipped in strict mode.
      */
-    if (noteLayerCount(notes) === 0) {
+    if (!pythonHasMerchantPyramid && noteLayerCount(notes) === 0) {
       const fallbackName = name || resolvedName
       if (fallbackName?.trim() && inferenceMode !== "strict") {
         throwIfAborted(sig)
@@ -764,6 +829,9 @@ const processSingleProductPhase1 = async (
     notes = finalizeNoteLayersForExport(notes, merchantTrustedNotes)
 
     const resolveNoteSource = (): ScraperNoteSource => {
+      if (pythonHasMerchantPyramid && typeof item._noteSource === "string") {
+        return item._noteSource as ScraperNoteSource
+      }
       if (noteLayerCount(notes) === 0) return "empty"
       if (usedFallbackLookup) return "llm_name_inferred"
       if (pdpRescueApplied) return "pdp_bootstrap"

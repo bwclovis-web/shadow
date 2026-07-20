@@ -33,6 +33,8 @@ import {
   extractAndromedaStackedNotesFromPlain,
   extractAndromedaScentProfileFromPlain,
   inferAndromedaAmarettoNotesFromProse,
+  extractMatierePremiereMaterialsFromPlain,
+  extractMatierePremiereExtraitMaterialsFromPlain,
   hasEmbeddedLayerMarkers,
 } from "@/lib/scraper/stages/pdp-bootstrap"
 
@@ -154,6 +156,9 @@ const repairBrokenProseAfterNoteStrip = (text: string): string =>
     .replace(/\bthen\s+finishes\s+with\s+a\s+touch\s+of\s+or\s+a\b/gi, "then finishes with")
     .replace(/\s+or\s+or\s+/gi, " or ")
     .replace(/\s{2,}/g, " ")
+    // Strip dangling note-layer labels (e.g. "Heart:", "Top:", "Base:", "Notes:") left at the end
+    // after their note values have been removed by stripNotesFromDescription.
+    .replace(/\s*\b(?:top|heart|middle|base|bottom|notes?|accord|opening)\s*:\s*$/i, "")
     .trim()
 
 /** Remove extracted note phrases from description text so it's not redundant with the notes fields. */
@@ -516,9 +521,6 @@ export const isJunkScrapedDescription = (text: string | null | undefined): boole
   if (!t) return false
   const lower = t.toLowerCase()
   if (/original,\s*artisan\s+perfumes/i.test(lower) && /art in air/i.test(lower)) return true
-  if (/the scent story/i.test(lower) && /\b(?:top|middle|base)\s+notes?\s*:/i.test(lower)) {
-    return true
-  }
   if (/click\s+pic\s+to\s+see\s+all/i.test(lower)) return true
   if (/shea\s+butter\s*&\s*aloe\s+lotion/i.test(lower) && /\$\s*\d/.test(t)) return true
   if (/spray\s+mists\s*\$/i.test(lower)) return true
@@ -693,6 +695,9 @@ export const sanitizeCopyForNotePipeline = (text: string): string => {
   let s = text.replace(/<!--[\s\S]*?-->/g, " ")
   s = s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
   s = s.replace(/[\u2500-\u257F\u2580-\u259F]/g, " ")
+  // Strip inline CSS blocks that may be glued to valid text after whitespace collapsing
+  // (e.g. "airy florals body, .cls { font-family: sans-serif; background: radial-gradient(...); }")
+  s = s.replace(/\s*\{[^}]*(?:font-family|radial-gradient|linear-gradient|background-color)[^}]*\}/gi, "")
   const lines = s.split(/\r?\n/)
   const kept: string[] = []
   for (const line of lines) {
@@ -745,6 +750,9 @@ const ETAT_LIBRE_FAMILY_TAGS_RE =
 
 const ETAT_LIBRE_PDP_SECTION_END_RE =
   /\b(?:MAIN NOTES|Pronunciation|Customer Reviews|CHOOSE SIZE|Ingredients)\b/i
+
+/** Section-end anchors safe to apply outside an explicit Etat Libre context (excludes MAIN NOTES which is used as a note-block header on other merchant sites). */
+const GENERAL_PDP_SECTION_END_RE = /\b(?:Pronunciation|Customer Reviews|CHOOSE SIZE|Ingredients)\b/i
 
 export const isEtatLibreProductUrl = (detailURL: string): boolean =>
   /etatlibredorange/i.test(detailURL ?? "")
@@ -802,7 +810,7 @@ export const normalizePdpDescription = (text: string): string => {
     const end = t.search(ETAT_LIBRE_PDP_SECTION_END_RE)
     if (end > 20) t = t.slice(0, end).trim()
     t = t.replace(/^\s*FULL DESCRIPTION\s+/i, "").trim()
-    return t.replace(/[ .]+$/, "").trim()
+    return t.replace(/\.{2,}\s*$/, "").replace(/[ \t]+$/, "").trim()
   }
 
   if (ETAT_LIBRE_BRAND_BOILERPLATE_START_RE.test(t)) {
@@ -817,10 +825,10 @@ export const normalizePdpDescription = (text: string): string => {
     }
   }
 
-  const end = t.search(ETAT_LIBRE_PDP_SECTION_END_RE)
+  const end = t.search(GENERAL_PDP_SECTION_END_RE)
   if (end > 80) t = t.slice(0, end).trim()
   t = t.replace(/^\s*FULL DESCRIPTION\s+/i, "").trim()
-  return t.replace(/[ .]+$/, "").trim()
+  return t.replace(/\.{2,}\s*$/, "").replace(/[ \t]+$/, "").trim()
 }
 
 const extractFullDescriptionFromHtml = (html: string): string | null => {
@@ -1227,6 +1235,16 @@ const collectMerchantTrustedNotes = (
       const lc = n.trim().toLowerCase()
       if (lc) trusted.add(lc)
     }
+  }
+  if (/\b(?:main\s+ingredient|creative\s+approach)\s*:/i.test(source)) {
+    for (const n of extractMatierePremiereMaterialsFromPlain(source)) {
+      const lc = n.trim().toLowerCase()
+      if (lc) trusted.add(lc)
+    }
+  }
+  for (const n of extractMatierePremiereExtraitMaterialsFromPlain(source)) {
+    const lc = n.trim().toLowerCase()
+    if (lc) trusted.add(lc)
   }
   for (const n of [...layers.openNotes, ...layers.heartNotes, ...layers.baseNotes]) {
     const lc = n.trim().toLowerCase()
@@ -1653,6 +1671,17 @@ const trimEtatLibreMainNotesBody = (body: string): string => {
   )
   if (inlineProseCut >= 0) s = s.slice(0, inlineProseCut).trim()
 
+  /**
+   * Truncate at prose that bleeds onto the last note when accordion/newline separation is lost
+   * (e.g. "amber, animal notes Closing time at a shadowy bar..." → stop after "animal notes").
+   * Signal: after the last comma-separated item (no further comma), a sentence starts with an
+   * uppercase word that is not itself a material (detected by common prose continuation words).
+   */
+  const nounProseCut = s.search(
+    /\s+(?:Closing|Opening|Step|Walk|Imagine|Picture|Enter|Discover|Experience|Let|Wear|Feel|Breathe|Dive|Drift|Surrender|Embody|Inspired|Created|Born|Designed|Made|Crafted|Perfect|Ideal|Suitable|Available|Order|Shop|Buy|Get|Add|Use|Apply|Spray)\b/i,
+  )
+  if (nounProseCut >= 0) s = s.slice(0, nounProseCut).trim()
+
   return s.replace(/[.,\s]+$/, "").trim()
 }
 
@@ -1727,8 +1756,16 @@ function extractFlatNotes(text: string): string[] {
   const etatBody = extractEtatLibreMainNotesSectionBody(collapsed)
   if (etatBody) {
     const layers = extractEtatLibreAuthoritativeLayersFromBody(etatBody)
-    return uniqueNotes([...layers.openNotes, ...layers.heartNotes, ...layers.baseNotes])
+    const etatFlat = uniqueNotes([...layers.openNotes, ...layers.heartNotes, ...layers.baseNotes])
+    if (etatFlat.length > 0) return etatFlat
+    // Fall through when Etat Libre extraction yields nothing (e.g. space-glued Andromeda "Main Notes" block)
   }
+
+  const matiereMaterials = uniqueNotes([
+    ...extractMatierePremiereMaterialsFromPlain(collapsed),
+    ...extractMatierePremiereExtraitMaterialsFromPlain(collapsed),
+  ])
+  if (matiereMaterials.length >= 2) return matiereMaterials
 
   const found: string[] = []
 
@@ -1810,7 +1847,7 @@ function extractNotesFromStructuredText(
       etatLayers.openNotes.length + etatLayers.heartNotes.length + etatLayers.baseNotes.length
     if (etatCount >= Math.max(2, minConfidentFlatNotes)) return etatLayers
     if (etatCount > 0) return etatLayers
-    return empty
+    // Fall through when Etat Libre extraction yields nothing (e.g. space-glued Andromeda "Main Notes")
   }
 
   /**

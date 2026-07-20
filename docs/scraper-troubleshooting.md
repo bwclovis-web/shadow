@@ -64,6 +64,12 @@ If these keys are missing from the JSON, use sensible defaults (e.g. no delay, 1
 4. **403 Forbidden** — If the site returns **403 Forbidden** (e.g. **thoo.it**), you’ll see a message and 0 product links. First enable **Open visible browser** and run again. If you still get 403 (the site blocks all WebDriver), install **undetected-chromedriver** and run again with **Open visible browser** checked. Run locally (e.g. `npm run dev`).  
    **Installing undetected-chromedriver:** The API runs the scraper with the same Python as the launcher: on Windows it uses `py -3`, so install with **`py -3 -m pip install undetected-chromedriver`** (not plain `pip`, so the package is installed for the same interpreter the scraper uses). If you still see "undetected-chromedriver not installed", set **`SCRAPER_PYTHON`** to the full path of the Python executable that has the package (e.g. `C:\Python314\python.exe`).
 
+   **WooCommerce sites that block Selenium (e.g. artisticfragrances.com):** The storefront may return **403** to Chrome and **202/captcha** to plain HTTP (SiteGround). Leave **Discovery mode** on **Auto** (default) and enable **Open visible browser**. The scraper tries HTTP discovery first, then uses the **browser session** to call `/wp-json/wc/store/products` when HTTP is captcha-blocked — you should see `Discovery (browser WooCommerce category=…)` followed by `Using N discovered product URL(s) (skipping collection-page crawl)`. Brand category pages like `/milano-fragranze/` are scoped automatically. If you still get 403, install **undetected-chromedriver** into the scraper venv (see below) and run again with **Open visible browser** checked.
+
+   **Installing undetected-chromedriver:** The admin UI runs `scraper/.venv/Scripts/python.exe` on Windows. Install with:
+   **`C:\repos\shadow\scraper\.venv\Scripts\python.exe -m pip install undetected-chromedriver`**
+   (Use your repo path if different.) If you still see "undetected-chromedriver not installed", set **`SCRAPER_PYTHON`** to that same venv `python.exe`.
+
 3. **Pagination** — The scraper does not auto-follow “Next” links. Add every listing page URL explicitly (e.g. `...?page=1`, `...?page=2`, `...?page=3`).
 
 ---

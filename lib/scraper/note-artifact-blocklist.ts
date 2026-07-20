@@ -1,0 +1,83 @@
+/**
+ * DOM / theme / Shopify tokens that must never become perfume pyramid notes.
+ * Keep in sync with scraper/note_source_confirmation.py (_DOM_ARTIFACT_*).
+ */
+
+/** Exact lowercase tokens (Matiere Premiere, Shopify color-scheme bleed, JS/HTML keywords). */
+export const DOM_ARTIFACT_EXACT_TOKENS = new Set([
+  "gradient",
+  "color",
+  "color-badge",
+  "payment-terms",
+  "this",
+  "arguments",
+  "function",
+  "prototype",
+  "undefined",
+  "script",
+  "charset",
+  "rgba",
+  "hsl",
+  "hsla",
+  "opacity",
+  "transform",
+  "webkit",
+  "flex",
+  "grid",
+  "viewport",
+  "stylesheet",
+  "shopify-section",
+  "cart-drawer",
+  "color-scheme",
+  "color-background",
+  "payment",
+  "terms",
+  "badge",
+  "section",
+  "drawer",
+  "modal",
+  "overlay",
+  "template",
+  "linear-gradient",
+  "radial-gradient",
+  "redirect",
+  "document",
+])
+
+/** Kebab-case segment vocabulary — DOM/UI class name parts, not fragrance materials. */
+export const KEBAB_UI_VOCAB_SEGMENTS = new Set([
+  "color",
+  "badge",
+  "payment",
+  "terms",
+  "gradient",
+  "button",
+  "modal",
+  "cart",
+  "header",
+  "footer",
+  "template",
+  "section",
+  "shopify",
+  "drawer",
+  "overlay",
+  "popup",
+  "scheme",
+  "background",
+  "stylesheet",
+  "navigation",
+  "sidebar",
+  "announcement",
+  "newsletter",
+  "breadcrumb",
+  "pagination",
+  "wishlist",
+  "compare",
+  "share",
+  "cookie",
+  "gdpr",
+  "chatbot",
+])
+
+/** Kebab-case tokens where every segment is UI vocabulary (e.g. color-badge, payment-terms). */
+export const KEBAB_DOM_ARTIFACT_RE = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)+$/

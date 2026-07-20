@@ -4,6 +4,11 @@
  */
 
 import { canonicalizeNote } from "@/lib/scraper/canonical-notes"
+import {
+  DOM_ARTIFACT_EXACT_TOKENS,
+  KEBAB_DOM_ARTIFACT_RE,
+  KEBAB_UI_VOCAB_SEGMENTS,
+} from "@/lib/scraper/note-artifact-blocklist"
 
 /** Sections after note lists — not valid note sources. */
 const NOTE_REGION_END_RE =
@@ -352,6 +357,10 @@ export const peelMarketingDescriptorTail = (note: string): string => {
       .replace(/\s+signature\s*$/i, "")
       .replace(/\s+scent\s+description\b.*$/i, "")
       .replace(/\s+description\b\s*$/i, "")
+      .replace(
+        /\s+(?:curved\s+backs|folk\s+songs|bookmakers|busy\s+calculating|the\s+hustle|at\s+night|paintings|echoed|whispered|whistle|departs|ladies)\b.*$/i,
+        "",
+      )
       .trim()
   }
   return s
@@ -373,6 +382,15 @@ export const sanitizeExtractedNoteCandidate = (note: string): string | null => {
   if (/\b(?:top|heart|base|middle)\s*$/i.test(raw)) return null
   if (/\b(?:top|heart|base|middle)\b/i.test(raw) && raw.split(/\s+/).length >= 2) return null
   if (/\s+(?:the|from|with|of|into)\s*$/i.test(raw)) return null
+  // Milano Fragranze / WooCommerce: description prose glued after last base note ("Acquatic notes. Curved backs…").
+  if (
+    /\b(?:abs|accord|resinoid|essence|e\.o\.?|notes)\b/i.test(raw) &&
+    /\b(?:curved|folk|bookmakers|busy|calculating|hustle|paintings|echoed|whispered|shadows|closing|midnight|rain|whistle|departs)\b/i.test(
+      raw,
+    )
+  ) {
+    return null
+  }
 
   let peeled = stripFragranceNoteProseLead(raw)
   peeled = peelMarketingDescriptorTail(peeled)
@@ -421,6 +439,11 @@ export const isComplianceOrSourcingNote = (note: string): boolean => {
 export const isThemeCssTokenNote = (note: string): boolean => {
   const n = note.trim().toLowerCase()
   if (!n) return true
+  if (DOM_ARTIFACT_EXACT_TOKENS.has(n)) return true
+  if (KEBAB_DOM_ARTIFACT_RE.test(n)) {
+    const segments = n.split("-").filter(Boolean)
+    if (segments.length >= 2 && segments.every(s => KEBAB_UI_VOCAB_SEGMENTS.has(s))) return true
+  }
   if (n === "--" || n.startsWith("--")) return true
   if (/^--[\w-]+-$/.test(n)) return true
   if (
@@ -547,7 +570,7 @@ export const looksLikeProseNotePhrase = (note: string): boolean => {
   if (
     words.length >= 3 &&
     /\b(?:the|and|or|of|to|with|by|in|from|without|according|possibly|even|all|let|where|when|how)\b/.test(n) &&
-    /\b(?:ignite|liberate|seduce|devour|snatch|explain|issued|apotheosis|nostril|wreak|accord|infused|lifted|breaks|unexpected|violence|philosopher|revolutionary|desire|drive|god|pirouette|clutching|whisper|hope|reality|bridge|symbolic|imagination|faceted|swirl|makes sense|outrageous|dictates|coitus|sécrétions|parties|mint)\b/.test(
+    /\b(?:ignite|liberate|seduce|devour|snatch|explain|issued|apotheosis|nostril|wreak|infused|lifted|breaks|unexpected|violence|philosopher|revolutionary|desire|drive|god|pirouette|clutching|whisper|hope|reality|bridge|symbolic|imagination|faceted|swirl|makes sense|outrageous|dictates|coitus|sécrétions|parties|mint)\b/.test(
       n,
     )
   ) {
@@ -817,11 +840,25 @@ const relayerNotesByLayerCorpora = (
   return { openNotes: open, heartNotes: heart, baseNotes: base }
 }
 
+/** Merchant PDP already labels Head / Heart / Base — keep parser layer assignment. */
+const hasExplicitHeadHeartBasePyramid = (source: string): boolean => {
+  const hasOpen = /\b(?:head|top|opening)\s+notes?\s*:/i.test(source)
+  const hasHeart = /\b(?:heart|middle|mid|core)\s+notes?\s*:/i.test(source)
+  const hasBase = /\bbase\s+notes?\s*:/i.test(source)
+  if (hasOpen && hasHeart && hasBase) return true
+  return /^top\s*:/im.test(source) && /^heart\s*:/im.test(source) && /^base\s*:/im.test(source)
+}
+
+const sanitizeExplicitPyramidLayer = (arr: string[]): string[] =>
+  arr
+    .map(n => sanitizeExtractedNoteCandidate(n))
+    .filter((n): n is string => Boolean(n))
+
 /** Drop notes that cannot be confirmed in the merchant source text. */
 export const confirmNoteLayersAgainstSource = (
   layers: NoteLayers,
   source: string,
-  options?: { minKept?: number; merchantTrusted?: Set<string> },
+  options?: { minKept?: number; merchantTrusted?: Set<string>; preserveLayerAssignment?: boolean },
 ): NoteLayers => {
   const corpus = buildNoteConfirmationCorpus(source)
   const layerCorpora = buildLayerScopedCorpora(source)
@@ -830,6 +867,20 @@ export const confirmNoteLayersAgainstSource = (
   const trusted = options?.merchantTrusted
   const hasLayerScopedCorpus =
     Boolean(layerCorpora?.open) || Boolean(layerCorpora?.heart) || Boolean(layerCorpora?.base)
+
+  const layersPopulated =
+    layers.openNotes.length > 0 && layers.heartNotes.length > 0 && layers.baseNotes.length > 0
+
+  if (
+    hasExplicitHeadHeartBasePyramid(source) &&
+    (options?.preserveLayerAssignment === true || layersPopulated)
+  ) {
+    return {
+      openNotes: sanitizeExplicitPyramidLayer(layers.openNotes),
+      heartNotes: sanitizeExplicitPyramidLayer(layers.heartNotes),
+      baseNotes: sanitizeExplicitPyramidLayer(layers.baseNotes),
+    }
+  }
 
   if (hasLayerScopedCorpus && layerCorpora && !/\bMAIN NOTES\b/i.test(source)) {
     return relayerNotesByLayerCorpora(layers, source, layerCorpora)
