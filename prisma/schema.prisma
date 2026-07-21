@@ -123,6 +123,8 @@ model Perfume {
   id                    String                 @id @default(cuid())
   name                  String
   description           String?
+  /// Raw merchant Head/Heart/Base (or MAIN NOTES) text captured at scrape time — survives noir rewrite.
+  merchantNotesText     String?
   image                 String?
   perfumeHouseId        String?
   isPending             Boolean                @default(false)
@@ -133,10 +135,10 @@ model Perfume {
   slug                  String                 @unique
   perfumeHouse          PerfumeHouse?          @relation(fields: [perfumeHouseId], references: [id])
   submittedByUser       User?                  @relation("PerfumeSubmittedByUser", fields: [submittedBy], references: [id])
-  
+
   // Junction table relation
   perfumeNoteRelations  PerfumeNoteRelation[]
-  
+
   UserAlert             UserAlert[]
   userPerfume           UserPerfume[]
   userPerfumeComments   UserPerfumeComment[]

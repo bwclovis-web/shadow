@@ -28,11 +28,15 @@ export interface ImportResult {
   created: boolean
   /** Whether the image field was set/updated (false when overwriteImageUrls was false and existing record had an image) */
   imageWasUpdated: boolean
+  /** True when existing DB notes were kept because the incoming record would have thinned them */
+  notesPreserved?: boolean
 }
 
 export interface ImportSummary {
   successful: ImportResult[]
   errors: Array<{ record: PerfumeCsvRecord; error: string }>
+  /** Soft warnings (e.g. notes preserved against thinner import) */
+  warnings?: string[]
 }
 
 // ---------------------------------------------------------------------------
@@ -85,6 +89,24 @@ export function fixImageUrl(imageUrl: string | null | undefined): string | null 
   let url = imageUrl.trim()
   if (url.startsWith("//")) url = "https:" + url
   return url
+}
+
+/** True when notes came from a labeled merchant pyramid (safe to replace DB notes). */
+export const isLabeledMerchantPyramidSource = (source: string | undefined): boolean => {
+  const s = (source ?? "").toLowerCase()
+  if (!s) return false
+  return (
+    s.includes("text_regex_layered") ||
+    s.startsWith("html_") ||
+    s.includes("html_") ||
+    s === "labeled_list" ||
+    s === "merchant_structured"
+  )
+}
+
+const merchantNotesTextForWrite = (data: PerfumeCsvRecord): string | undefined => {
+  const t = data.merchantNotesText?.trim()
+  return t ? t.slice(0, 8000) : undefined
 }
 
 function calculateDataCompleteness(data: {
@@ -172,6 +194,8 @@ async function importOneRecord(
   let perfume: { id: string; name: string }
   let created = false
   let imageWasUpdated = true
+  /** Existing relations on the perfume we are updating (same-house match). */
+  let existingRelationsForPreserve: Array<{ noteType: string }> | null = null
 
   if (existingPerfumes.length > 0) {
     const sameHouse = existingPerfumes.filter(p => p.perfumeHouseId === houseId)
@@ -202,12 +226,19 @@ async function importOneRecord(
         }
       }
 
+      existingRelationsForPreserve = best.perfume.perfumeNoteRelations
       const { description: parsedDescription } = parseDescription(data.description)
       const existingImage = best.perfume.image
       const shouldSetImage = overwriteImages || !existingImage
       if (!shouldSetImage) imageWasUpdated = false
-      const updateData: { description: string | null; image?: string | null } = { description: parsedDescription }
+      const updateData: {
+        description: string | null
+        image?: string | null
+        merchantNotesText?: string | null
+      } = { description: parsedDescription }
       if (shouldSetImage) updateData.image = fixImageUrl(data.image)
+      const merchantText = merchantNotesTextForWrite(data)
+      if (merchantText) updateData.merchantNotesText = merchantText
       perfume = await prisma.perfume.update({
         where: { id: best.perfume.id },
         data: updateData,
@@ -218,15 +249,23 @@ async function importOneRecord(
       const newName = `${perfumeName} - ${houseName}`
       const renamedExists = await prisma.perfume.findFirst({
         where: { name: newName },
+        include: { perfumeNoteRelations: true },
       })
 
       if (renamedExists) {
         if (renamedExists.perfumeHouseId === houseId) {
+          existingRelationsForPreserve = renamedExists.perfumeNoteRelations
           const { description: parsedDescription } = parseDescription(data.description)
           const shouldSetImage = overwriteImages || !renamedExists.image
           if (!shouldSetImage) imageWasUpdated = false
-          const updateData: { description: string | null; image?: string | null } = { description: parsedDescription }
+          const updateData: {
+            description: string | null
+            image?: string | null
+            merchantNotesText?: string | null
+          } = { description: parsedDescription }
           if (shouldSetImage) updateData.image = fixImageUrl(data.image)
+          const merchantText = merchantNotesTextForWrite(data)
+          if (merchantText) updateData.merchantNotesText = merchantText
           perfume = await prisma.perfume.update({
             where: { id: renamedExists.id },
             data: updateData,
@@ -248,6 +287,7 @@ async function importOneRecord(
             image: fixImageUrl(data.image),
             perfumeHouseId: houseId,
             slug,
+            merchantNotesText: merchantNotesTextForWrite(data),
           },
         })
         created = true
@@ -267,6 +307,7 @@ async function importOneRecord(
         image: fixImageUrl(data.image),
         perfumeHouseId: houseId,
         slug,
+        merchantNotesText: merchantNotesTextForWrite(data),
       },
     })
     created = true
@@ -294,8 +335,28 @@ async function importOneRecord(
   const openNotesDeduped = deduped(openNotes)
   const heartNotesDeduped = deduped(heartNotes)
   const baseNotesDeduped = deduped(baseNotes)
+  const incomingNoteCount =
+    openNotesDeduped.length + heartNotesDeduped.length + baseNotesDeduped.length
+  const existingNoteCount = existingRelationsForPreserve?.length ?? 0
+  const merchantPyramid = isLabeledMerchantPyramidSource(data._noteSource)
 
-  // Replace all note relations (CSV is source of truth)
+  // Never thin: keep richer DB notes when incoming is thinner and not from a labeled merchant pyramid.
+  if (
+    !created &&
+    existingNoteCount > 0 &&
+    incomingNoteCount < existingNoteCount &&
+    !merchantPyramid
+  ) {
+    return {
+      id: perfume.id,
+      name: perfume.name,
+      created,
+      imageWasUpdated,
+      notesPreserved: true,
+    }
+  }
+
+  // Replace all note relations (CSV is source of truth when allowed)
   await prisma.perfumeNoteRelation.deleteMany({ where: { perfumeId: perfume.id } })
 
   for (const n of openNotesDeduped) {
@@ -330,20 +391,27 @@ export async function importPerfumeRecords(
 ): Promise<ImportSummary> {
   const ownClient = !options?.prismaClient
   const prisma = options?.prismaClient ?? new PrismaClient()
-  const summary: ImportSummary = { successful: [], errors: [] }
+  const summary: ImportSummary = { successful: [], errors: [], warnings: [] }
 
   try {
     for (let i = 0; i < records.length; i++) {
-      const { _noteSource: _stripNoteSource, ...rec } = records[i]
-      void _stripNoteSource
+      const rec = records[i]
       try {
+        // Keep `_noteSource` for never-thin decisions; strip happens after importOneRecord.
         const result = await importOneRecord(prisma, rec, {
           overwriteImageUrls: options?.overwriteImageUrls,
         })
         summary.successful.push(result)
+        if (result.notesPreserved) {
+          summary.warnings?.push(
+            `${result.name}: preserved existing DB notes (incoming record had fewer notes and was not a labeled merchant pyramid)`,
+          )
+        }
       } catch (err) {
+        const { _noteSource: _strip, ...safeRec } = rec
+        void _strip
         summary.errors.push({
-          record: rec,
+          record: safeRec,
           error: err instanceof Error ? err.message : String(err),
         })
       }

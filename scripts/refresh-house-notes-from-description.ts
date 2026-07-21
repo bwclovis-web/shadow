@@ -32,7 +32,7 @@ import { ChatOpenAI } from "@langchain/openai"
 import { PrismaClient, type PerfumeNoteType } from "@prisma/client"
 
 import { extractNotesForItems } from "@/lib/scraper/notes-graph"
-import { importPerfumeRecords } from "@/lib/import-perfume-csv"
+import { importPerfumeRecords, isLabeledMerchantPyramidSource } from "@/lib/import-perfume-csv"
 import { generateNoirDescription, openingFingerprint } from "@/lib/scraper/stages/noir-description"
 import type { PerfumeCsvRecord, ScrapedItem } from "@/types/scraper"
 
@@ -177,6 +177,7 @@ const main = async () => {
       id: true,
       name: true,
       description: true,
+      merchantNotesText: true,
       image: true,
       slug: true,
       perfumeNoteRelations: {
@@ -212,15 +213,19 @@ const buildPreparedPerfume = (p: DbPerfumeRow, houseName: string): PreparedPerfu
   const heart = notesForLayer(p.perfumeNoteRelations, "heart")
   const base = notesForLayer(p.perfumeNoteRelations, "base")
   const rawDesc = (p.description ?? "").trim()
+  const merchantNotes = (p.merchantNotesText ?? "").trim()
   const notesTextFromDb = buildPyramidNotesText(open, heart, base)
-  const descHasPyramid = hasMerchantPyramidInText(rawDesc)
+  const descHasPyramid = hasMerchantPyramidInText(rawDesc) || hasMerchantPyramidInText(merchantNotes)
   const dbComplete = dbPyramidComplete(open, heart, base)
 
   let description = rawDesc
   let notesText = ""
 
-  if (descHasPyramid) {
-    notesText = notesTextFromDb
+  if (merchantNotes && hasMerchantPyramidInText(merchantNotes)) {
+    notesText = merchantNotes
+    description = rawDesc ? `${merchantNotes}\n\n${rawDesc}`.trim() : merchantNotes
+  } else if (descHasPyramid) {
+    notesText = notesTextFromDb || merchantNotes
   } else if (notesTextFromDb) {
     description = `${notesTextFromDb}\n\n${rawDesc}`.trim()
     notesText = notesTextFromDb
@@ -233,6 +238,7 @@ const buildPreparedPerfume = (p: DbPerfumeRow, houseName: string): PreparedPerfu
     name: p.name,
     description,
     notesText,
+    merchantNotesText: merchantNotes || undefined,
     image: p.image ?? "",
     detailURL,
     perfumeHouse: houseName,
@@ -367,7 +373,39 @@ const buildPreserveRecord = async (
         console.log(`  ${message}`)
       },
     })
-    records.push(...extracted.records)
+
+    const byName = new Map(toExtract.map(p => [p.perfume.name.toLowerCase(), p]))
+    for (const r of extracted.records) {
+      const preparedRow = byName.get(r.name.toLowerCase())
+      if (!preparedRow) {
+        records.push(r)
+        continue
+      }
+      const open = parseNotesColumn(r.openNotes, r.name, "openNotes")
+      const heart = parseNotesColumn(r.heartNotes, r.name, "heartNotes")
+      const base = parseNotesColumn(r.baseNotes, r.name, "baseNotes")
+      const incomingCount = open.length + heart.length + base.length
+      const existingCount = preparedRow.open.length + preparedRow.heart.length + preparedRow.base.length
+      if (
+        existingCount > 0 &&
+        incomingCount < existingCount &&
+        !isLabeledMerchantPyramidSource(r._noteSource) &&
+        !preparedRow.descHasPyramid
+      ) {
+        console.log(
+          `  ⚠ ${r.name}: extract thinned notes (${incomingCount} < ${existingCount}) — keeping DB layers`,
+        )
+        records.push({
+          ...r,
+          openNotes: JSON.stringify(preparedRow.open),
+          heartNotes: JSON.stringify(preparedRow.heart),
+          baseNotes: JSON.stringify(preparedRow.base),
+          _noteSource: "labeled_list",
+        })
+      } else {
+        records.push(r)
+      }
+    }
     batchWarnings = extracted.batchWarnings
   }
 
@@ -442,6 +480,10 @@ const buildPreserveRecord = async (
   })
 
   console.log(`\nImported: ${summary.successful.length} succeeded`)
+  if (summary.warnings && summary.warnings.length > 0) {
+    console.log("Import warnings:")
+    summary.warnings.forEach(w => console.log(`  ⚠ ${w}`))
+  }
   if (summary.errors.length > 0) {
     console.error("Errors:")
     summary.errors.forEach(e => console.error(`  ${e.record.name}: ${e.error}`))

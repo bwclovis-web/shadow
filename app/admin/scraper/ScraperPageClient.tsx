@@ -21,6 +21,7 @@ import {
 } from "@/utils/scraper-import-chunking"
 
 import { SHOPIFY_DEFAULTS } from "./partials/constants"
+import type { DetectedPlatform, ScraperDetectResult } from "@/lib/scraper/detect-platform"
 import {
   buildPreviewRows,
   filterRecords,
@@ -86,6 +87,12 @@ export const ScraperPageClient = () => {
   const [discoveryMode, setDiscoveryMode] = useState<DiscoveryMode>("auto")
   const [maxProducts, setMaxProducts] = useState("")
   const [externalNoteRescue, setExternalNoteRescue] = useState(true)
+  const [platformHint, setPlatformHint] = useState<DetectedPlatform | "">("")
+  const [detectSucceeded, setDetectSucceeded] = useState(false)
+  const [detectSummary, setDetectSummary] = useState<string | null>(null)
+  const [detecting, setDetecting] = useState(false)
+  const [detectError, setDetectError] = useState<string | null>(null)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   const [savedSources, setSavedSources] = useState<ScraperSourcePreset[]>([])
   const [previewFilter, setPreviewFilter] = useState<PreviewFilter>("all")
   const [allowHighDuplicateRisk, setAllowHighDuplicateRisk] = useState(false)
@@ -257,6 +264,74 @@ export const ScraperPageClient = () => {
         return Number.isFinite(n) && n > 0 ? n : undefined
       })(),
       externalNoteRescue,
+      platformHint: platformHint || undefined,
+    }
+  }
+
+  const applyDetectResult = (result: ScraperDetectResult & { suggestedHouseName: string | null }) => {
+    setPlatformHint(result.platformHint)
+    setDiscoveryMode(result.discoveryMode)
+    setBaseUrl(result.baseUrl)
+    setProductLinkSelector(result.selectors.productLinkSelector)
+    setNameSelector(result.selectors.nameSelector)
+    setDescriptionSelector(result.selectors.descriptionSelector)
+    setImageSelector(result.selectors.imageSelector)
+    if (result.notesSelector) setNotesSelector(result.notesSelector)
+    if (result.needsHeaded) setHeaded(true)
+    if (result.needsEtsyHeaded) setEtsyHeaded(true)
+    if (result.suggestedHouseName && !houseName.trim()) {
+      setHouseName(result.suggestedHouseName)
+    }
+    setDetectSucceeded(true)
+    const parts = [
+      `Platform: ${result.platform}`,
+      result.needsHeaded ? "visible browser recommended" : null,
+      result.captchaDetected ? "captcha detected" : null,
+    ].filter(Boolean)
+    setDetectSummary(parts.join(" · "))
+    setDetectError(null)
+  }
+
+  const handleSmartDetect = async () => {
+    const firstUrl = collectionUrlsRaw
+      .split(/\n|,/)
+      .map(u => u.trim())
+      .find(u => /^https?:\/\//i.test(u))
+    if (!firstUrl) {
+      setDetectError("Add at least one collection URL starting with http:// or https://.")
+      return
+    }
+    setDetecting(true)
+    setDetectError(null)
+    try {
+      const csrf = getTokenWithFallback()
+      const res = await fetch("/api/admin/scraper/detect", {
+        method: "POST",
+        headers: addToHeaders({ "Content-Type": "application/json" }),
+        credentials: "include",
+        body: JSON.stringify({
+          collectionUrl: firstUrl,
+          sampleProductUrl: sampleProductUrl.trim() || undefined,
+          ...(csrf ? { _csrf: csrf } : {}),
+        }),
+      })
+      const data = (await res.json()) as
+        | (ScraperDetectResult & { suggestedHouseName: string | null })
+        | { ok: false; error: string }
+      if (!res.ok || !data.ok) {
+        setDetectError("error" in data ? data.error : "Detect failed")
+        setDetectSucceeded(false)
+        return
+      }
+      applyDetectResult(data)
+      if (data.warnings.length > 0) {
+        setDetectSummary(prev => `${prev ?? ""} · ${data.warnings[0]}`.replace(/^ · /, ""))
+      }
+    } catch (err) {
+      setDetectError(err instanceof Error ? err.message : String(err))
+      setDetectSucceeded(false)
+    } finally {
+      setDetecting(false)
     }
   }
 
@@ -264,6 +339,7 @@ export const ScraperPageClient = () => {
     const c = preset.configJson
     setHouseName(c.houseName)
     setCollectionUrlsRaw(c.collectionUrls.join("\n"))
+    setSampleProductUrl(c.sampleProductUrl ?? "")
     setProductLinkSelector(c.productLinkSelector)
     setNameSelector(c.nameSelector)
     setDescriptionSelector(c.descriptionSelector)
@@ -273,6 +349,38 @@ export const ScraperPageClient = () => {
     setBaseUrl(c.baseUrl ?? "")
     if (c.discoveryMode) setDiscoveryMode(c.discoveryMode)
     if (c.titleDashSegment) setTitleDashSegment(c.titleDashSegment)
+    if (c.titleColonSegment) setTitleColonSegment(c.titleColonSegment)
+    if (typeof c.titleTakeBeforeFirstComma === "boolean") {
+      setTitleTakeBeforeFirstComma(c.titleTakeBeforeFirstComma)
+    }
+    if (typeof c.titleTakeAfterFirstComma === "boolean") {
+      setTitleTakeAfterFirstComma(c.titleTakeAfterFirstComma)
+    }
+    if (typeof c.titleStripNumbers === "boolean") setTitleStripNumbers(c.titleStripNumbers)
+    if (c.titleOmitWords?.length) setTitleOmitWordsRaw(c.titleOmitWords.join(", "))
+    if (typeof c.generateNoirDescriptions === "boolean") {
+      setGenerateNoirDescriptions(c.generateNoirDescriptions)
+    }
+    if (typeof c.skipSizeVariants === "boolean") setSkipSizeVariants(c.skipSizeVariants)
+    if (typeof c.headed === "boolean") setHeaded(c.headed)
+    if (typeof c.etsyHeaded === "boolean") setEtsyHeaded(c.etsyHeaded)
+    if (typeof c.delayBetweenUrlsMs === "number") setDelayBetweenUrlsMs(String(c.delayBetweenUrlsMs))
+    if (typeof c.retryAttempts === "number") setRetryAttempts(String(c.retryAttempts))
+    if (c.noteInferenceMode) setNoteInferenceMode(c.noteInferenceMode)
+    if (typeof c.minConfidentFlatNotes === "number") {
+      setMinConfidentFlatNotes(String(c.minConfidentFlatNotes))
+    }
+    if (c.notesPipelineModel) setNotesPipelineModel(c.notesPipelineModel)
+    if (c.noirPipelineModel) setNoirPipelineModel(c.noirPipelineModel)
+    if (c.noteValidationMode) setNoteValidationMode(c.noteValidationMode)
+    if (typeof c.externalNoteRescue === "boolean") setExternalNoteRescue(c.externalNoteRescue)
+    if (typeof c.maxProducts === "number") setMaxProducts(String(c.maxProducts))
+    const hint = (c.platformHint ?? preset.platformType ?? "") as DetectedPlatform | ""
+    if (hint === "shopify" || hint === "woocommerce" || hint === "etsy" || hint === "unknown") {
+      setPlatformHint(hint)
+      setDetectSucceeded(true)
+      setDetectSummary(`Loaded preset · platform: ${hint}`)
+    }
   }
 
   const handleScrape = async (e: FormEvent) => {
@@ -620,7 +728,7 @@ export const ScraperPageClient = () => {
       credentials: "include",
       body: JSON.stringify({
         config: body,
-        platformType: discoveryMode,
+        platformType: platformHint || discoveryMode,
         ...(csrf ? { _csrf: csrf } : {}),
       }),
     })
@@ -641,6 +749,44 @@ export const ScraperPageClient = () => {
       </div>
 
       <form onSubmit={handleScrape} className="flex flex-col gap-6">
+        <section className="flex flex-col gap-4 rounded-lg border border-border p-4 bg-noir-dark border-noir-gold text-noir-gold-100">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Quick start
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Paste a collection URL, run Smart Detect to fill platform defaults, then Run. Open
+            Advanced only when you need custom selectors or title rules.
+          </p>
+          {detectSummary && (
+            <p className="rounded border border-noir-gold/40 bg-noir-gold/10 px-3 py-2 text-sm">
+              {detectSucceeded ? "Detected — " : ""}
+              {detectSummary}
+            </p>
+          )}
+          {detectError && (
+            <p className="rounded border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+              {detectError}
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="rounded border border-noir-gold px-3 py-2 text-sm hover:bg-noir-gold/20 disabled:opacity-50"
+              disabled={detecting || scraping}
+              onClick={() => void handleSmartDetect()}
+            >
+              {detecting ? "Detecting…" : "Smart Detect"}
+            </button>
+            <button
+              type="button"
+              className="rounded border border-border px-3 py-2 text-sm hover:bg-muted/20"
+              onClick={() => setShowAdvanced(v => !v)}
+            >
+              {showAdvanced ? "Hide advanced" : "Show advanced"}
+            </button>
+          </div>
+        </section>
+
         <ScraperHouseSection
           houseName={houseName}
           setHouseName={setHouseName}
@@ -667,54 +813,59 @@ export const ScraperPageClient = () => {
           setDelayBetweenUrlsMs={setDelayBetweenUrlsMs}
           retryAttempts={retryAttempts}
           setRetryAttempts={setRetryAttempts}
+          simpleMode={!showAdvanced}
         />
 
-        <ScraperSelectorsSection
-          productLinkSelector={productLinkSelector}
-          setProductLinkSelector={setProductLinkSelector}
-          nameSelector={nameSelector}
-          setNameSelector={setNameSelector}
-          descriptionSelector={descriptionSelector}
-          setDescriptionSelector={setDescriptionSelector}
-          notesSelector={notesSelector}
-          setNotesSelector={setNotesSelector}
-          imageSelector={imageSelector}
-          setImageSelector={setImageSelector}
-        />
+        {showAdvanced && (
+          <>
+            <ScraperSelectorsSection
+              productLinkSelector={productLinkSelector}
+              setProductLinkSelector={setProductLinkSelector}
+              nameSelector={nameSelector}
+              setNameSelector={setNameSelector}
+              descriptionSelector={descriptionSelector}
+              setDescriptionSelector={setDescriptionSelector}
+              notesSelector={notesSelector}
+              setNotesSelector={setNotesSelector}
+              imageSelector={imageSelector}
+              setImageSelector={setImageSelector}
+            />
 
-        <ScraperSkipRulesSection
-          skipKeywordsRaw={skipKeywordsRaw}
-          setSkipKeywordsRaw={setSkipKeywordsRaw}
-        />
+            <ScraperSkipRulesSection
+              skipKeywordsRaw={skipKeywordsRaw}
+              setSkipKeywordsRaw={setSkipKeywordsRaw}
+            />
 
-        <ScraperTitleDescriptionSection
-          titleDashSegment={titleDashSegment}
-          setTitleDashSegment={setTitleDashSegment}
-          titleColonSegment={titleColonSegment}
-          setTitleColonSegment={setTitleColonSegment}
-          titleTakeBeforeFirstComma={titleTakeBeforeFirstComma}
-          setTitleTakeBeforeFirstComma={setTitleTakeBeforeFirstComma}
-          titleTakeAfterFirstComma={titleTakeAfterFirstComma}
-          setTitleTakeAfterFirstComma={setTitleTakeAfterFirstComma}
-          titleStripNumbers={titleStripNumbers}
-          setTitleStripNumbers={setTitleStripNumbers}
-          titleOmitWordsRaw={titleOmitWordsRaw}
-          setTitleOmitWordsRaw={setTitleOmitWordsRaw}
-          noteInferenceMode={noteInferenceMode}
-          setNoteInferenceMode={setNoteInferenceMode}
-          minConfidentFlatNotes={minConfidentFlatNotes}
-          setMinConfidentFlatNotes={setMinConfidentFlatNotes}
-          notesPipelineModel={notesPipelineModel}
-          setNotesPipelineModel={setNotesPipelineModel}
-          noirPipelineModel={noirPipelineModel}
-          setNoirPipelineModel={setNoirPipelineModel}
-          noteValidationMode={noteValidationMode}
-          setNoteValidationMode={setNoteValidationMode}
-          externalNoteRescue={externalNoteRescue}
-          setExternalNoteRescue={setExternalNoteRescue}
-          generateNoirDescriptions={generateNoirDescriptions}
-          setGenerateNoirDescriptions={setGenerateNoirDescriptions}
-        />
+            <ScraperTitleDescriptionSection
+              titleDashSegment={titleDashSegment}
+              setTitleDashSegment={setTitleDashSegment}
+              titleColonSegment={titleColonSegment}
+              setTitleColonSegment={setTitleColonSegment}
+              titleTakeBeforeFirstComma={titleTakeBeforeFirstComma}
+              setTitleTakeBeforeFirstComma={setTitleTakeBeforeFirstComma}
+              titleTakeAfterFirstComma={titleTakeAfterFirstComma}
+              setTitleTakeAfterFirstComma={setTitleTakeAfterFirstComma}
+              titleStripNumbers={titleStripNumbers}
+              setTitleStripNumbers={setTitleStripNumbers}
+              titleOmitWordsRaw={titleOmitWordsRaw}
+              setTitleOmitWordsRaw={setTitleOmitWordsRaw}
+              noteInferenceMode={noteInferenceMode}
+              setNoteInferenceMode={setNoteInferenceMode}
+              minConfidentFlatNotes={minConfidentFlatNotes}
+              setMinConfidentFlatNotes={setMinConfidentFlatNotes}
+              notesPipelineModel={notesPipelineModel}
+              setNotesPipelineModel={setNotesPipelineModel}
+              noirPipelineModel={noirPipelineModel}
+              setNoirPipelineModel={setNoirPipelineModel}
+              noteValidationMode={noteValidationMode}
+              setNoteValidationMode={setNoteValidationMode}
+              externalNoteRescue={externalNoteRescue}
+              setExternalNoteRescue={setExternalNoteRescue}
+              generateNoirDescriptions={generateNoirDescriptions}
+              setGenerateNoirDescriptions={setGenerateNoirDescriptions}
+            />
+          </>
+        )}
 
         <ScraperFormActions
           scraping={scraping}

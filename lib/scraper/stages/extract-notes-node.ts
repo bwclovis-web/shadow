@@ -36,7 +36,6 @@ import {
   NON_PERFUME_ANDROMEDA_PRODUCT_URL_RE,
 } from "@/lib/scraper/stages/pdp-bootstrap"
 import {
-  assignVolatilityLayersFromFlatOpen,
   cleanTitle,
   collectMerchantTrustedNotes,
   dedupeNotesAcrossLayers,
@@ -498,10 +497,23 @@ const processSingleProductPhase1 = async (
    * and either gets confused or extracts shipping fragments as notes.
    */
   mergedBase = prepareMerchantNotesSource(mergedBase)
+
+  const enrichOnlyNeedsBootstrap =
+    opts.enrichOnly === true &&
+    (existingFromPython == null ||
+      noteLayerCount(existingFromPython) < 6 ||
+      (existingFromPython.openNotes?.length ?? 0) === 0 ||
+      isLikelyNoirClicheOnlyNotes(existingFromPython) ||
+      hasObviousJunkExtractedNotes(existingFromPython))
+
   const autoPatternEtsyFetch =
-    opts.enrichOnly === true ? false : shouldAutoFetchPatternEtsyNotes(detailUrl, mergedBase)
+    opts.enrichOnly === true
+      ? enrichOnlyNeedsBootstrap && shouldAutoFetchPatternEtsyNotes(detailUrl, mergedBase)
+      : shouldAutoFetchPatternEtsyNotes(detailUrl, mergedBase)
   const autoAndromedaFetch =
-    opts.enrichOnly === true ? false : shouldAutoFetchAndromedaMoonNotes(detailUrl, mergedBase)
+    opts.enrichOnly === true
+      ? enrichOnlyNeedsBootstrap && shouldAutoFetchAndromedaMoonNotes(detailUrl, mergedBase)
+      : shouldAutoFetchAndromedaMoonNotes(detailUrl, mergedBase)
   const autoEtatLibreFetch =
     opts.enrichOnly === true ? false : shouldAutoFetchEtatLibreNotes(detailUrl, mergedBase)
   /** Etat Libre MAIN NOTES bootstrap — not gated on enrichOnly (Python prose notes still need PDP). */
@@ -519,9 +531,13 @@ const processSingleProductPhase1 = async (
 
   const autoWooStoreFetch =
     artisticFragrancesThinPython ||
-    (opts.enrichOnly !== true && shouldAutoFetchWooCommerceStoreNotes(detailUrl, mergedBase))
+    (opts.enrichOnly === true
+      ? enrichOnlyNeedsBootstrap && shouldAutoFetchWooCommerceStoreNotes(detailUrl, mergedBase)
+      : shouldAutoFetchWooCommerceStoreNotes(detailUrl, mergedBase))
   const autoShopifyFetch =
-    opts.enrichOnly === true ? false : shouldAutoFetchShopifyProductNotes(detailUrl, mergedBase)
+    opts.enrichOnly === true
+      ? enrichOnlyNeedsBootstrap && shouldAutoFetchShopifyProductNotes(detailUrl, mergedBase)
+      : shouldAutoFetchShopifyProductNotes(detailUrl, mergedBase)
   const shouldFetchAndromedaBootstrap =
     isAndromedaMoonProductUrl(detailUrl) && opts.fetchPdpNoteBootstrap === true
   if (
@@ -714,14 +730,7 @@ const processSingleProductPhase1 = async (
       !skipStructuredLlmMerge
     ) {
       throwIfAborted(sig)
-      if (
-        notes.openNotes.length >= 4 &&
-        notes.heartNotes.length === 0 &&
-        notes.baseNotes.length === 0 &&
-        flatAuthEarly.length >= notes.openNotes.length
-      ) {
-        notes = assignVolatilityLayersFromFlatOpen(notes.openNotes)
-      }
+      // Keep flat merchant lists in openNotes — do not invent Heart/Base via volatility.
       notes = await mergeStructuredNotesWithLlm(llm, notes, notesSource, name || resolvedName)
     }
 
@@ -875,6 +884,28 @@ const processSingleProductPhase1 = async (
       }
     }
 
+    const merchantNotesText = (() => {
+      const fromItem = item.merchantNotesText?.trim() || item.notesText?.trim() || ""
+      if (
+        fromItem &&
+        (/\b(?:head|top|opening|heart|middle|base)\s+notes?\s*:/i.test(fromItem) ||
+          /\bMAIN NOTES\b/i.test(fromItem))
+      ) {
+        return fromItem.slice(0, 8000)
+      }
+      if (
+        /\b(?:head|top|opening)\s+notes?\s*:/i.test(notesSource) &&
+        /\b(?:heart|middle|mid|core)\s+notes?\s*:/i.test(notesSource) &&
+        /\bbase\s+notes?\s*:/i.test(notesSource)
+      ) {
+        return notesSource.slice(0, 8000)
+      }
+      if (/\bMAIN NOTES\b/i.test(notesSource)) {
+        return notesSource.slice(0, 8000)
+      }
+      return fromItem.slice(0, 8000) || undefined
+    })()
+
     const record: PerfumeCsvRecord = {
       name,
       description: descriptionForRecord,
@@ -884,6 +915,7 @@ const processSingleProductPhase1 = async (
       heartNotes: JSON.stringify(notes.heartNotes),
       baseNotes: JSON.stringify(notes.baseNotes),
       detailURL: detailUrl || item.detailURL,
+      merchantNotesText,
       _noteSource: noteSource,
     }
 

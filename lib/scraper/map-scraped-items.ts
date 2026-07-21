@@ -43,6 +43,7 @@ export const mapScrapedItemsToRecords = (
     heartNotes: JSON.stringify(item.heartNotes ?? []),
     baseNotes: JSON.stringify(item.baseNotes ?? []),
     detailURL: item.detailURL,
+    merchantNotesText: item.merchantNotesText?.trim() || item.notesText?.trim() || undefined,
     _noteSource: item._noteSource as ScraperNoteSource | undefined,
     noteConfidence: item.noteConfidence,
     noteWarnings: item.noteWarnings,
@@ -65,7 +66,8 @@ export const pythonPipelineComplete = (items: ScrapedItem[]): boolean =>
 export const scrapedItemNoteCount = (item: ScrapedItem): number =>
   (item.openNotes?.length ?? 0) + (item.heartNotes?.length ?? 0) + (item.baseNotes?.length ?? 0)
 
-const merchantNoteSource = (source: string | undefined): boolean => {
+/** True when `_noteSource` indicates a labeled merchant pyramid / HTML layers. */
+export const merchantNoteSource = (source: string | undefined): boolean => {
   const s = (source ?? "").toLowerCase()
   return (
     s.includes("text_regex_layered") ||
@@ -75,7 +77,23 @@ const merchantNoteSource = (source: string | undefined): boolean => {
   )
 }
 
-/** Python extracted a full merchant pyramid — skip Node re-extraction that drops head notes. */
+const itemHasProseJunkNotes = (item: ScrapedItem): boolean => {
+  const allNotes = [
+    ...(item.openNotes ?? []),
+    ...(item.heartNotes ?? []),
+    ...(item.baseNotes ?? []),
+  ]
+  if (allNotes.length === 0) return false
+  const junkCount = allNotes.filter(
+    n => looksLikeProseNotePhrase(n) || isObviousNonMaterialNote(n) || isThemeCssTokenNote(n),
+  ).length
+  return junkCount >= Math.max(1, Math.ceil(allNotes.length * 0.25))
+}
+
+/**
+ * Python extracted a full merchant pyramid that is safe to skip Node for.
+ * Completeness alone is not enough — reject junk notes, empty open, URL mismatch, etc.
+ */
 export const pythonMerchantNotesComplete = (items: ScrapedItem[]): boolean =>
   items.length > 0 &&
   items.every(item => {
@@ -85,7 +103,27 @@ export const pythonMerchantNotesComplete = (items: ScrapedItem[]): boolean =>
     const open = (item.openNotes?.length ?? 0) > 0
     const heart = (item.heartNotes?.length ?? 0) > 0
     const base = (item.baseNotes?.length ?? 0) > 0
-    return open && heart && base
+    if (!open || !heart || !base) return false
+
+    if (itemHasProseJunkNotes(item)) return false
+
+    const url = item.detailURL ?? ""
+    const name = item.name ?? ""
+    if (url && name && !detailUrlAlignsWithProductName(name, url)) return false
+    if (NON_PERFUME_ANDROMEDA_PRODUCT_URL_RE.test(url)) return false
+
+    if (isArtisticFragrancesProductUrl(url) && (item.openNotes?.length ?? 0) === 0) return false
+
+    const desc = item.description?.trim() ?? ""
+    const notesText = item.notesText?.trim() ?? ""
+    if (
+      (isJunkScrapedDescriptionForRepair(desc) || isUnusableMerchantDescription(desc)) &&
+      !notesText
+    ) {
+      return false
+    }
+
+    return true
   })
 
 /** True when Python already parsed the on-page Head/Heart/Base pyramid — Node must not relayer. */

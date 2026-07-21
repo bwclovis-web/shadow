@@ -783,6 +783,7 @@ const relayerNotesByLayerCorpora = (
   layers: NoteLayers,
   source: string,
   layerCorpora: { open: string; heart: string; base: string },
+  merchantTrusted?: Set<string>,
 ): NoteLayers => {
   const open: string[] = []
   const heart: string[] = []
@@ -808,8 +809,13 @@ const relayerNotesByLayerCorpora = (
     const matchCount = [inOpen, inHeart, inBase].filter(Boolean).length
 
     if (matchCount === 0) {
+      const lc = note.trim().toLowerCase()
+      const trusted = Boolean(lc && merchantTrusted?.has(lc))
       const originCorpus = layerCorpora[originLayer]
+      // Prefer origin-layer corpus, then full merchant source, then merchant-trusted keep.
       if (originCorpus && isNoteSubstantiatedInSource(note, originCorpus, source)) {
+        pushUnique(originLayer, note)
+      } else if (isNoteSubstantiatedInSource(note, "", source) || trusted) {
         pushUnique(originLayer, note)
       }
       return
@@ -883,7 +889,7 @@ export const confirmNoteLayersAgainstSource = (
   }
 
   if (hasLayerScopedCorpus && layerCorpora && !/\bMAIN NOTES\b/i.test(source)) {
-    return relayerNotesByLayerCorpora(layers, source, layerCorpora)
+    return relayerNotesByLayerCorpora(layers, source, layerCorpora, trusted)
   }
 
   const filterLayer = (arr: string[]) =>

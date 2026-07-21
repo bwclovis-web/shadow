@@ -13,6 +13,7 @@ import {
   peelMarketingDescriptorTail,
   sanitizeExtractedNoteCandidate,
 } from "./note-source-confirmation"
+import { filterNotesByTrust } from "./stages/title-cleaning"
 
 const invokeMock = vi.hoisted(() => vi.fn())
 
@@ -196,6 +197,56 @@ Middle Notes: Verdant Earth Accord (Rich Soil, Green and Flowering Plants)`
     )
   })
 
+  it("relayer keeps notes substantiated in full source when layer corpus misses them", () => {
+    const source = `
+Head Notes: Marseille Soapbar Accord, Bergamot Calabria E.O.
+Heart Notes: Lavandin E.O., Petitgrain E.O.
+Base Notes: Cedarwood E.O., White Musks
+Also listed elsewhere: Neroli E.O. among featured materials.
+`
+    const layers = {
+      openNotes: ["marseille soapbar accord", "bergamot calabria e.o.", "neroli e.o."],
+      heartNotes: ["lavandin e.o.", "petitgrain e.o."],
+      baseNotes: ["cedarwood e.o.", "white musks"],
+    }
+    const trusted = new Set(["neroli e.o.", "lavandin e.o."])
+    const confirmed = confirmNoteLayersAgainstSource(layers, source, { merchantTrusted: trusted })
+    expect(confirmed.openNotes).toEqual(expect.arrayContaining(["neroli e.o."]))
+    expect(confirmed.heartNotes).toEqual(expect.arrayContaining(["lavandin e.o.", "petitgrain e.o."]))
+  })
+
+  it("filterNotesByTrust keeps merchant-trusted materials that look prose-like", () => {
+    const trusted = new Set(["marseille soapbar accord", "lavandin e.o."])
+    const kept = filterNotesByTrust(
+      ["marseille soapbar accord", "lavandin e.o.", "a whisper of rain-slick streets"],
+      trusted,
+    )
+    expect(kept).toEqual(expect.arrayContaining(["marseille soapbar accord", "lavandin e.o."]))
+    expect(kept).not.toEqual(expect.arrayContaining(["a whisper of rain-slick streets"]))
+  })
+
+  it("filterNotesByTrust still drops compliance and theme tokens even when trusted", () => {
+    const trusted = new Set([
+      "phthalate-free",
+      "--tw-shadow",
+      "esc",
+      "left arrow key",
+      "right arrow key",
+      "ndash",
+    ])
+    const kept = filterNotesByTrust(
+      ["phthalate-free", "--tw-shadow", "esc", "left arrow key", "right arrow key", "ndash", "bergamot"],
+      trusted,
+    )
+    expect(kept).not.toContain("phthalate-free")
+    expect(kept).not.toContain("--tw-shadow")
+    expect(kept).not.toContain("esc")
+    expect(kept).not.toContain("left arrow key")
+    expect(kept).not.toContain("right arrow key")
+    expect(kept).not.toContain("ndash")
+    expect(kept).toContain("bergamot")
+  })
+
   it("pipeline drops Black Tie When to Wear prose while keeping Fragrance Notes materials", async () => {
     vi.stubEnv("OPENAI_API_KEY", "test-key")
     vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
@@ -367,6 +418,15 @@ Middle Notes: Verdant Earth Accord (Rich Soil, Green and Flowering Plants)`
       "header",
       "secondary-elements",
       "--product-badge-",
+      "esc",
+      "ndash",
+      "left arrow key",
+      "right arrow key",
+      "left arrow",
+      "right arrow",
+      "arrow key",
+      "arrow keys",
+      "close (esc)",
     ]) {
       expect(isThemeCssTokenNote(junk), junk).toBe(true)
       expect(isObviousNonMaterialNote(junk), junk).toBe(true)

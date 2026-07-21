@@ -1264,8 +1264,18 @@ const mergeMerchantTrustedNotes = (
   }
 }
 
-const filterNotesByTrust = (arr: string[], _trusted: Set<string>): string[] =>
-  arr.filter(n => isScraperKeptNote(n) && !looksLikeProseNotePhrase(n) && !isComplianceOrSourcingNote(n))
+/**
+ * Keep merchant-trusted materials even when they fail prose/kept-note heuristics.
+ * Still drop compliance boilerplate and theme/CSS bleed.
+ */
+const filterNotesByTrust = (arr: string[], trusted: Set<string>): string[] =>
+  arr.filter(n => {
+    const lc = n.trim().toLowerCase()
+    if (!lc) return false
+    if (isComplianceOrSourcingNote(n) || isThemeCssTokenNote(n)) return false
+    if (trusted.has(lc)) return true
+    return isScraperKeptNote(n) && !looksLikeProseNotePhrase(n)
+  })
 
 /** Expand space-joined blobs, sanitize marketing junk, and dedupe before CSV export. */
 const finalizeNoteLayersForExport = (

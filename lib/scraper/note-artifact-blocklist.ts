@@ -42,6 +42,16 @@ export const DOM_ARTIFACT_EXACT_TOKENS = new Set([
   "radial-gradient",
   "redirect",
   "document",
+  // Shopify / PhotoSwipe gallery zoom a11y chrome (Damask Haus et al.)
+  "esc",
+  "ndash",
+  "left arrow key",
+  "right arrow key",
+  "left arrow",
+  "right arrow",
+  "arrow key",
+  "arrow keys",
+  "close (esc)",
 ])
 
 /** Kebab-case segment vocabulary — DOM/UI class name parts, not fragrance materials. */
