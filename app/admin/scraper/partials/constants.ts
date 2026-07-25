@@ -23,5 +23,14 @@ export const ETSY_DEFAULTS = {
   imageSelector: "ul[data-carousel-pagination] img, img[data-carousel-first-image], img",
 }
 
+export const WIX_DEFAULTS = {
+  productLinkSelector: "a[href*='/product-page/']",
+  nameSelector: "h1, [data-hook='ProductTitle'], [data-hook='product-title']",
+  descriptionSelector:
+    "[data-hook='description'], [data-hook='product-description'], [data-hook='InfoSection.Description'], [data-hook='content-viewer']",
+  imageSelector:
+    "[data-hook='main-media-image'] img, [data-hook='product-image'] img, img[data-hook='wow-image'], .gallery-item img",
+}
+
 export const SECTION_CLASS =
   "flex flex-col gap-4 rounded-lg border border-border p-4 bg-noir-dark border-noir-gold text-noir-gold-100"

@@ -1,16 +1,12 @@
 import type { ScrapedItem } from "@/types/scraper"
 import {
-  buildNoteConfirmationCorpus,
   extractUnlabeledFragranceNotesBlock,
-  isNoteSubstantiatedInSource,
-  isObviousNonMaterialNote,
   sanitizeExtractedNoteCandidate,
 } from "@/lib/scraper/note-source-confirmation"
 import {
   explodeSpaceSeparatedNoteBlob,
   splitGluedMerchantNoteRun,
 } from "@/lib/scraper/canonical-notes"
-import { noteLayerCount } from "@/lib/scraper/stages/notes-layers-utils"
 import {
   extractFullDescriptionFromHtml,
   isEtatLibreProductUrl,
@@ -161,6 +157,8 @@ const hasExplicitNoteListSignal = (text: string): boolean => {
     return true
   if (/\bfragrance\s+notes?\b(?!\s*(?:include|are|is|:))/i.test(t)) return true
   if (/(?<!(?:please|processing)\s)\bnotes?\s*:\s*[a-z0-9]/i.test(t)) return true
+  // AOE / Wix: "NOTES - BLACKBERRY, HONEY MEAD, …"
+  if (/(?<!(?:please|processing)\s)\bnotes?\s*[-–—]\s*[A-Za-z0-9]/i.test(t)) return true
   if (/\b(?:kopfnoten?|herznoten?|basisnoten?|duftnoten)\s*:/i.test(t)) return true
   if (/\bnote\s+di\s+(?:testa|cuore|fondo|olfattive)\s*:/i.test(t)) return true
   if (/\b(?:topnoten?|hartnoten?|basisnoten?)\s*:/i.test(t)) return true

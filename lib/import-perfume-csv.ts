@@ -172,6 +172,35 @@ async function upsertNoteRelation(
 // Core single-record import
 // ---------------------------------------------------------------------------
 
+type PerfumeWithNotes = {
+  id: string
+  name: string
+  description: string | null
+  image: string | null
+  perfumeHouseId: string | null
+  perfumeNoteRelations: Array<{ noteType: string; note: { name: string } }>
+}
+
+const scorePerfumeCompleteness = (p: PerfumeWithNotes): number =>
+  calculateDataCompleteness({
+    description: p.description,
+    image: p.image,
+    openNotes: JSON.stringify(
+      p.perfumeNoteRelations.filter(r => r.noteType === "open").map(r => r.note.name),
+    ),
+    heartNotes: JSON.stringify(
+      p.perfumeNoteRelations.filter(r => r.noteType === "heart").map(r => r.note.name),
+    ),
+    baseNotes: JSON.stringify(
+      p.perfumeNoteRelations.filter(r => r.noteType === "base").map(r => r.note.name),
+    ),
+  })
+
+const pickBestSameHousePerfume = (sameHouse: PerfumeWithNotes[]): PerfumeWithNotes => {
+  const scored = sameHouse.map(p => ({ perfume: p, score: scorePerfumeCompleteness(p) }))
+  return scored.reduce((a, b) => (b.score > a.score ? b : a)).perfume
+}
+
 async function importOneRecord(
   prisma: PrismaClient,
   data: PerfumeCsvRecord,
@@ -183,6 +212,22 @@ async function importOneRecord(
   const house = data.perfumeHouse ? await createOrGetPerfumeHouse(prisma, data.perfumeHouse) : null
   const houseId = house?.id ?? null
   const perfumeName = data.name.trim()
+  const houseName = data.perfumeHouse?.trim() || house?.name?.trim() || "Unknown"
+  const suffixName = `${perfumeName} - ${houseName}`
+
+  // Prefer same-house matches: plain name OR legacy "Name - HouseName" rows.
+  const sameHouseMatches: PerfumeWithNotes[] =
+    houseId == null
+      ? []
+      : await prisma.perfume.findMany({
+          where: {
+            perfumeHouseId: houseId,
+            OR: [{ name: perfumeName }, { name: suffixName }],
+          },
+          include: {
+            perfumeNoteRelations: { include: { note: true } },
+          },
+        })
 
   const existingPerfumes = await prisma.perfume.findMany({
     where: { name: perfumeName },
@@ -197,101 +242,80 @@ async function importOneRecord(
   /** Existing relations on the perfume we are updating (same-house match). */
   let existingRelationsForPreserve: Array<{ noteType: string }> | null = null
 
-  if (existingPerfumes.length > 0) {
-    const sameHouse = existingPerfumes.filter(p => p.perfumeHouseId === houseId)
+  if (sameHouseMatches.length > 0) {
+    const best = pickBestSameHousePerfume(sameHouseMatches)
 
-    if (sameHouse.length > 0) {
-      // Pick the record with the most data and delete duplicates
-      const scored = sameHouse.map(p => ({
-        perfume: p,
-        score: calculateDataCompleteness({
-          description: p.description,
-          image: p.image,
-          openNotes: JSON.stringify(
-            p.perfumeNoteRelations.filter(r => r.noteType === "open").map(r => r.note.name),
-          ),
-          heartNotes: JSON.stringify(
-            p.perfumeNoteRelations.filter(r => r.noteType === "heart").map(r => r.note.name),
-          ),
-          baseNotes: JSON.stringify(
-            p.perfumeNoteRelations.filter(r => r.noteType === "base").map(r => r.note.name),
-          ),
-        }),
-      }))
-      const best = scored.reduce((a, b) => (b.score > a.score ? b : a))
-
-      for (const { perfume: p } of scored) {
-        if (p.id !== best.perfume.id) {
-          await prisma.perfume.delete({ where: { id: p.id } })
-        }
+    for (const p of sameHouseMatches) {
+      if (p.id !== best.id) {
+        await prisma.perfume.delete({ where: { id: p.id } })
       }
+    }
 
-      existingRelationsForPreserve = best.perfume.perfumeNoteRelations
-      const { description: parsedDescription } = parseDescription(data.description)
-      const existingImage = best.perfume.image
-      const shouldSetImage = overwriteImages || !existingImage
-      if (!shouldSetImage) imageWasUpdated = false
-      const updateData: {
-        description: string | null
-        image?: string | null
-        merchantNotesText?: string | null
-      } = { description: parsedDescription }
-      if (shouldSetImage) updateData.image = fixImageUrl(data.image)
-      const merchantText = merchantNotesTextForWrite(data)
-      if (merchantText) updateData.merchantNotesText = merchantText
-      perfume = await prisma.perfume.update({
-        where: { id: best.perfume.id },
-        data: updateData,
-      })
-    } else {
-      // Different house — append house name
-      const houseName = data.perfumeHouse?.trim() ?? "Unknown"
-      const newName = `${perfumeName} - ${houseName}`
-      const renamedExists = await prisma.perfume.findFirst({
-        where: { name: newName },
-        include: { perfumeNoteRelations: true },
-      })
+    existingRelationsForPreserve = best.perfumeNoteRelations
+    const { description: parsedDescription } = parseDescription(data.description)
+    const existingImage = best.image
+    const shouldSetImage = overwriteImages || !existingImage
+    if (!shouldSetImage) imageWasUpdated = false
+    const updateData: {
+      description: string | null
+      image?: string | null
+      merchantNotesText?: string | null
+    } = { description: parsedDescription }
+    // Keep existing display name (including "Name - HouseName" when shared across houses).
+    if (shouldSetImage) updateData.image = fixImageUrl(data.image)
+    const merchantText = merchantNotesTextForWrite(data)
+    if (merchantText) updateData.merchantNotesText = merchantText
+    perfume = await prisma.perfume.update({
+      where: { id: best.id },
+      data: updateData,
+    })
+  } else if (existingPerfumes.length > 0) {
+    // Plain name exists only under a different house — append house name
+    const newName = suffixName
+    const renamedExists = await prisma.perfume.findFirst({
+      where: { name: newName },
+      include: { perfumeNoteRelations: { include: { note: true } } },
+    })
 
-      if (renamedExists) {
-        if (renamedExists.perfumeHouseId === houseId) {
-          existingRelationsForPreserve = renamedExists.perfumeNoteRelations
-          const { description: parsedDescription } = parseDescription(data.description)
-          const shouldSetImage = overwriteImages || !renamedExists.image
-          if (!shouldSetImage) imageWasUpdated = false
-          const updateData: {
-            description: string | null
-            image?: string | null
-            merchantNotesText?: string | null
-          } = { description: parsedDescription }
-          if (shouldSetImage) updateData.image = fixImageUrl(data.image)
-          const merchantText = merchantNotesTextForWrite(data)
-          if (merchantText) updateData.merchantNotesText = merchantText
-          perfume = await prisma.perfume.update({
-            where: { id: renamedExists.id },
-            data: updateData,
-          })
-        } else {
-          throw new Error(`Perfume "${newName}" already exists under a different house; skipping`)
-        }
-      } else {
-        const base = createUrlSlug(newName)
-        let slug = base
-        let n = 1
-        while (await prisma.perfume.findUnique({ where: { slug } })) slug = `${base}-${n++}`
-
+    if (renamedExists) {
+      if (renamedExists.perfumeHouseId === houseId) {
+        existingRelationsForPreserve = renamedExists.perfumeNoteRelations
         const { description: parsedDescription } = parseDescription(data.description)
-        perfume = await prisma.perfume.create({
-          data: {
-            name: newName,
-            description: parsedDescription,
-            image: fixImageUrl(data.image),
-            perfumeHouseId: houseId,
-            slug,
-            merchantNotesText: merchantNotesTextForWrite(data),
-          },
+        const shouldSetImage = overwriteImages || !renamedExists.image
+        if (!shouldSetImage) imageWasUpdated = false
+        const updateData: {
+          description: string | null
+          image?: string | null
+          merchantNotesText?: string | null
+        } = { description: parsedDescription }
+        if (shouldSetImage) updateData.image = fixImageUrl(data.image)
+        const merchantText = merchantNotesTextForWrite(data)
+        if (merchantText) updateData.merchantNotesText = merchantText
+        perfume = await prisma.perfume.update({
+          where: { id: renamedExists.id },
+          data: updateData,
         })
-        created = true
+      } else {
+        throw new Error(`Perfume "${newName}" already exists under a different house; skipping`)
       }
+    } else {
+      const base = createUrlSlug(newName)
+      let slug = base
+      let n = 1
+      while (await prisma.perfume.findUnique({ where: { slug } })) slug = `${base}-${n++}`
+
+      const { description: parsedDescription } = parseDescription(data.description)
+      perfume = await prisma.perfume.create({
+        data: {
+          name: newName,
+          description: parsedDescription,
+          image: fixImageUrl(data.image),
+          perfumeHouseId: houseId,
+          slug,
+          merchantNotesText: merchantNotesTextForWrite(data),
+        },
+      })
+      created = true
     }
   } else {
     const base = createUrlSlug(perfumeName)

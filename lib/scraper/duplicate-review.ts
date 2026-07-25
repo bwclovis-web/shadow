@@ -75,7 +75,18 @@ export const assessDuplicateRisk = async (
           duplicateMatches: [{ name: p.name, similarity: 1 }],
         }
       }
-      const sim = similarity(norm, normalizeForMatch(p.name))
+
+      const pNorm = normalizeForMatch(p.name)
+      // Same perfume under this house after stripping " - HouseName" (intended upsert).
+      if (norm && pNorm && norm === pNorm) {
+        return {
+          ...record,
+          duplicateRisk: "none" as DuplicateRisk,
+          duplicateMatches: [{ name: p.name, similarity: 1 }],
+        }
+      }
+
+      const sim = similarity(norm, pNorm)
       if (sim >= FUZZY_THRESHOLD) {
         matches.push({ name: p.name, similarity: sim })
       }

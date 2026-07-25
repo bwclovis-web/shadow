@@ -110,4 +110,36 @@ describe("scrapedItemsNeedNodeRepair", () => {
       ]),
     ).toBe(true)
   })
+
+  it("flags empty layers when labeled notesText is present", () => {
+    expect(
+      scrapedItemsNeedNodeRepair([
+        {
+          name: "Agape",
+          openNotes: [],
+          heartNotes: [],
+          baseNotes: [],
+          notesText:
+            "Notes: Palo santo, blood orange, soft white florals, peach, copaiba balsam, cedar moss, vetiver, sandalwood",
+          detailURL: "https://damaskhaus.com/products/agape",
+        },
+      ]),
+    ).toBe(true)
+  })
+
+  it("flags empty layers so Node can recover notes from description", () => {
+    expect(
+      scrapedItemsNeedNodeRepair([
+        {
+          name: "Empty",
+          description:
+            "A short but complete product story about this scent on skin after a morning walk.",
+          openNotes: [],
+          heartNotes: [],
+          baseNotes: [],
+          detailURL: "https://example.com/products/empty-perfume",
+        },
+      ]),
+    ).toBe(true)
+  })
 })

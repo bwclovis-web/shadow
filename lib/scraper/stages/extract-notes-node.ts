@@ -590,12 +590,16 @@ const processSingleProductPhase1 = async (
   const pythonHasMerchantPyramid =
     opts.enrichOnly === true &&
     existingFromPython != null &&
-    existingFromPython.openNotes.length > 0 &&
-    existingFromPython.heartNotes.length > 0 &&
-    existingFromPython.baseNotes.length > 0 &&
-    noteLayerCount(existingFromPython) >= 6 &&
+    noteLayerCount(existingFromPython) >= 4 &&
     typeof item._noteSource === "string" &&
-    /text_regex_layered|html_(?:heading|strong)_layers/.test(item._noteSource)
+    (/text_regex_layered|html_(?:heading|strong)_layers/.test(item._noteSource)
+      ? existingFromPython.openNotes.length > 0 &&
+        existingFromPython.heartNotes.length > 0 &&
+        existingFromPython.baseNotes.length > 0 &&
+        noteLayerCount(existingFromPython) >= 6
+      : // Damask / Wix flat "Notes: a, b, c" — keep Python materials; don't re-LLM into empty/junk.
+        /(text_regex_flat|html_flat)/.test(item._noteSource) &&
+        existingFromPython.openNotes.length >= 4)
 
   try {
     let notes: NotesLayers
@@ -765,6 +769,37 @@ const processSingleProductPhase1 = async (
     notes = confirmNoteLayersAgainstSource(notes, notesSource, {
       merchantTrusted: merchantTrustedNotes,
     })
+
+    /**
+     * LLM-derived notes must be substantiated in the merchant's own labeled note block when one
+     * exists. Confirmation against notesSource alone is not enough: polluted DOM text ("Opens in
+     * a new window.") and description prose ("laced with vanilla") both live in notesSource, so
+     * junk like "window" / "laced" would be "confirmed" there. The labeled Head/Heart/Base (or
+     * MAIN NOTES / Notes:) block is the authority for what counts as a note.
+     */
+    const merchantLabeledBlock = item.merchantNotesText?.trim() || ""
+    if (
+      (usedDescPathLlm || usedNameOnlyPath) &&
+      merchantLabeledBlock &&
+      (/\b(?:head|top|opening|heart|middle|mid|core|base)\s*(?:notes?)?\s*:/i.test(merchantLabeledBlock) ||
+        /\b(?:main\s+)?notes?\s*:/i.test(merchantLabeledBlock))
+    ) {
+      const keepIfMerchantSubstantiated = (arr: string[]) =>
+        arr.filter(n => {
+          const lc = n.trim().toLowerCase()
+          if (merchantTrustedNotes.has(lc)) return true
+          return isNoteSubstantiatedInSource(n, "", merchantLabeledBlock)
+        })
+      const filtered = {
+        openNotes: keepIfMerchantSubstantiated(notes.openNotes),
+        heartNotes: keepIfMerchantSubstantiated(notes.heartNotes),
+        baseNotes: keepIfMerchantSubstantiated(notes.baseNotes),
+      }
+      // Only apply when something survives — an empty result means the merchant block and the
+      // LLM disagree entirely (e.g. translated notes) and dropping everything helps nobody.
+      if (noteLayerCount(filtered) > 0) notes = filtered
+    }
+
     merchantTrustedNotes = collectMerchantTrustedNotes(notes, notesSource)
     notes = {
       openNotes: filterNotesByTrust(notes.openNotes, merchantTrustedNotes),

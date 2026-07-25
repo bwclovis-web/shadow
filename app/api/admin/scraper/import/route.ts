@@ -11,6 +11,7 @@
  * Requires admin or editor role.
  */
 
+import { revalidatePath } from "next/cache"
 import { NextResponse, type NextRequest } from "next/server"
 
 import { prisma } from "@/lib/db"
@@ -25,6 +26,10 @@ import type {
   ScraperImportResponse,
 } from "@/types/scraper"
 import { CSRFError, requireCSRFForJsonBody } from "@/utils/server/csrf.server"
+import {
+  revalidateHouseDataCache,
+  revalidatePerfumeDataCache,
+} from "@/utils/server/revalidate-catalog-cache.server"
 import { requireAdminOrEditorApi } from "@/utils/server/requireAdminOrEditorApi.server"
 
 /** Allow long imports when R2 migration runs for many products (align with scraper run). */
@@ -178,6 +183,38 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           }
         }
       }
+    }
+  }
+
+  // Bust house/perfume data caches so existing-house pages show fresh imports.
+  if (importedCount > 0 || r2UploadCount > 0) {
+    revalidatePerfumeDataCache()
+    revalidateHouseDataCache()
+
+    const houseNames = [
+      ...new Set(
+        recordsToImport
+          .map(r => r.perfumeHouse?.trim())
+          .filter((n): n is string => Boolean(n)),
+      ),
+    ]
+    if (houseNames.length > 0) {
+      const houses = await prisma.perfumeHouse.findMany({
+        where: { name: { in: houseNames } },
+        select: { slug: true },
+      })
+      revalidatePath("/houses")
+      for (const { slug } of houses) {
+        if (slug) revalidatePath(`/houses/${slug}`)
+      }
+    }
+
+    const perfumeSlugs = await prisma.perfume.findMany({
+      where: { id: { in: summary.successful.map(r => r.id) } },
+      select: { slug: true },
+    })
+    for (const { slug } of perfumeSlugs) {
+      if (slug) revalidatePath(`/perfume/${slug}`)
     }
   }
 

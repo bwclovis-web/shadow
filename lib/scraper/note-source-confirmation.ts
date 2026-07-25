@@ -295,12 +295,22 @@ export const stripFragranceNoteProseLead = (note: string): string => {
   if (!s) return s
 
   const wrapped = s.match(
-    /^(?:infused\s+with|lifted\s+by|surrounded\s+by|wrapped\s+in|opens?\s+with|breaks?\s+the\s+unexpected\s+accord\s+of|unexpected\s+accord\s+of|accord\s+of)\s+(?:bright|aromatic|soft|warm|unexpected|the\s+)?(.+)$/i,
+    /^(?:infused\s+with|lifted\s+by|surrounded\s+by|wrapped\s+in|opens?\s+with|mixed\s+with|blended\s+with|layered\s+with|topped\s+with|finished\s+with|laced\s+with|paired\s+with|combined\s+with|swirled\s+with|entwined\s+with|breaks?\s+the\s+unexpected\s+accord\s+of|unexpected\s+accord\s+of|accord\s+of)\s+(?:bright|aromatic|soft|warm|unexpected|the\s+)?(.+)$/i,
   )
   if (wrapped?.[1]) return wrapped[1].trim()
 
-  const hint = s.match(/^(?:a\s+)?(?:hint|touch|whisper|thread|veil|wash|burst)\s+of\s+(.+)$/i)
+  const hint = s.match(
+    /^(?:a\s+|an\s+|the\s+)?(?:hint|touch|whisper|thread|veil|wash|burst|spray|splash|swirl|cloud)\s+of\s+(?:rich|soft|warm|bright|fresh|sweet)?,?\s*(.+)$/i,
+  )
   if (hint?.[1]) return hint[1].trim()
+
+  const overlay = s.match(
+    /^(?:luxuriously\s+|gently\s+|softly\s+)?(?:overlaying|resting\s+on|atop)\s+(?:a\s+base\s+of\s+)?(.+)$/i,
+  )
+  if (overlay?.[1]) return overlay[1].trim()
+
+  const marketingAdj = s.match(/^(?:the\s+)?(?:fabulous|luxurious|exquisite|decadent|glorious)\s+(.+)$/i)
+  if (marketingAdj?.[1]) return marketingAdj[1].trim()
 
   return s
 }
@@ -368,9 +378,17 @@ export const peelMarketingDescriptorTail = (note: string): string => {
 
 /** Normalize one extracted note candidate; return null when it is marketing/prose junk. */
 export const sanitizeExtractedNoteCandidate = (note: string): string | null => {
-  const raw = note.trim().replace(/\)+$/g, "").replace(/^\(+/g, "").trim()
+  const raw = note
+    .trim()
+    .replace(/[\u200b\u200c\u200d\ufeff]/g, "")
+    .replace(/\)+$/g, "")
+    .replace(/^\(+/g, "")
+    .trim()
   if (!raw) return null
-  if (/^(?:a|an|the)\s+[a-z]/i.test(raw)) return null
+  // AOE "A CHERRY ON TOP" → peel article from multi-word materials; keep rejecting "a sweet".
+  const articleMulti = raw.match(/^(?:a|an|the)\s+(\S+\s+\S[\s\S]*)$/i)
+  if (articleMulti?.[1]) return sanitizeExtractedNoteCandidate(articleMulti[1])
+  if (/^(?:a|an|the)\s+[a-z]+$/i.test(raw)) return null
   if (/^then\s+/i.test(raw)) return null
   if (/^(?:softened|becomes)\s+with\b/i.test(raw)) return null
   if (/^becomes\s+your\s+skins?\b/i.test(raw)) return null
@@ -432,6 +450,11 @@ export const isComplianceOrSourcingNote = (note: string): boolean => {
     return true
   }
   if (/^(?:sweet|main|featured|key)\s+notes?\s*$/i.test(n)) return true
+  // INCI / EU allergen list carriers (Damask Haus Ingredients: block) — not pyramid notes
+  if (/\bingredients?\s*:/i.test(n)) return true
+  if (/^(?:alcohol(?:\s*\(?\s*denat\.?\s*\)?)?|ethyl\s+alcohol|denat\.?)$/i.test(n)) return true
+  if (/^(?:water(?:\s*\(?\s*aqua\s*\)?)?|aqua)$/i.test(n)) return true
+  if (/^(?:fragrance(?:\s*\(?\s*parfum\s*\)?)?|\(?\s*parfum\s*\)?|parfum)$/i.test(n)) return true
   return false
 }
 

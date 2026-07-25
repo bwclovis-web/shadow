@@ -52,6 +52,20 @@ export const DOM_ARTIFACT_EXACT_TOKENS = new Set([
   "arrow key",
   "arrow keys",
   "close (esc)",
+  // Screen-reader link hints ("Opens in a new window.") and cart/page a11y announcements
+  "window",
+  "new window",
+  "opens in a new window",
+  "open in a new window",
+  "opens in new window",
+  "tab",
+  "new tab",
+  "opens in a new tab",
+  "opens external website",
+  "full page refresh",
+  "page refresh",
+  // Prose connective that LLM extraction occasionally promotes to a "note" ("laced with vanilla")
+  "laced",
 ])
 
 /** Kebab-case segment vocabulary — DOM/UI class name parts, not fragrance materials. */

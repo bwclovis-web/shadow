@@ -328,8 +328,8 @@
   },
   "allPerfumes": {
     "meta": {
-      "title": "El Archivo - perfumer's hollow",
-      "description": "Descubre todos los perfumes disponibles en nuestra base de datos."
+      "title": "El Archivo",
+      "description": "Explora el archivo de perfumes por letra — notas, casas de fragancias y valoraciones de la comunidad en perfumer's hollow."
     },
     "heading": "El Archivo",
     "subheading": "Cada fragancia lleva algo que merece ser recordado."
@@ -396,19 +396,31 @@
     "deleteConversationDeleting": "Eliminando…"
   },
   "subscribe": {
+    "title": "Suscribirse - perfumer's hollow",
+    "description": "Completa una suscripción de pago para unirte a perfumer's hollow tras el límite de early adopters.",
     "heading": "Suscribirse",
     "subheading": "Únete a perfumer's hollow con una suscripción de pago",
     "limitTitle": "Límite de 100 usuarios early adopter",
     "limitCopy": "Ofrecemos registro gratuito a nuestros primeros 100 miembros como early adopters. Ese límite ya se ha alcanzado.",
     "paymentRequired": "Para crear una cuenta ahora, se requiere una suscripción de pago. Completa el pago a continuación y podrás registrarte justo después.",
-    "cta": "Continuar al pago"
+    "emailHelp": "Usa el correo con el que te registrarás — lo rellenaremos tras el pago.",
+    "canceledNotice": "El pago se canceló. Puedes intentarlo de nuevo cuando quieras.",
+    "cta": "Continuar al pago",
+    "signIn": "Iniciar sesión"
   },
   "subscribeSuccess": {
+    "title": "Pago exitoso - perfumer's hollow",
+    "description": "Tu suscripción está activa. Continúa para crear tu cuenta.",
     "heading": "Pago exitoso",
     "subheading": "Tu suscripción está activa",
     "messageTitle": "Gracias",
     "messageBody": "Tu pago se realizó correctamente. Completa el registro a continuación para crear tu cuenta con el correo que usaste en el pago.",
-    "cta": "Continuar al registro"
+    "cta": "Continuar al registro",
+    "failedHeading": "Pago no confirmado",
+    "failedSubheading": "No pudimos verificar tu sesión de pago",
+    "failedTitle": "Algo salió mal",
+    "failedBody": "Tu pago puede seguir procesándose, o este enlace está incompleto. Vuelve a suscribirte e inténtalo de nuevo, o contacta soporte si se te cobró.",
+    "retryCta": "Volver a suscribirse"
   },
   "components": {
     "dataDisplaySection": {
@@ -601,8 +613,8 @@
   },
   "home": {
     "meta": {
-      "title": "perfumer's hollow - Base de Datos de Perfumes",
-      "description": "Explora una base de datos completa de perfumes y sus casas."
+      "title": "Archivo de perfumes, notas e intercambio entre traders",
+      "description": "Explora notas de perfume, casas de fragancias y valoraciones de la comunidad — luego intercambia y comparte frascos en el exchange de perfumer's hollow."
     },
     "radio": {
       "houses": "Casas de fragancias",

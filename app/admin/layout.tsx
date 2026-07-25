@@ -1,9 +1,15 @@
+import type { Metadata } from "next"
+
 import { requireAdminSession } from "@/utils/requireAdmin.server"
 
 import { ADMIN_PATH } from "@/constants/routes"
 
 type AdminLayoutProps = {
   children: React.ReactNode
+}
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
 }
 
 /**

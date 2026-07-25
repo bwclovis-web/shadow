@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache"
 import { NextResponse, type NextRequest } from "next/server"
 import { PrismaClient } from "@prisma/client"
 
@@ -9,6 +10,10 @@ import type {
   ScraperRetryR2Response,
 } from "@/types/scraper"
 import { CSRFError, requireCSRFForJsonBody } from "@/utils/server/csrf.server"
+import {
+  revalidateHouseDataCache,
+  revalidatePerfumeDataCache,
+} from "@/utils/server/revalidate-catalog-cache.server"
 import { requireAdminOrEditorApi } from "@/utils/server/requireAdminOrEditorApi.server"
 
 export const maxDuration = 300
@@ -166,6 +171,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
   } finally {
     await prisma.$disconnect()
+  }
+
+  if (uploadedCount > 0) {
+    revalidatePerfumeDataCache()
+    revalidateHouseDataCache()
+    revalidatePath("/houses")
   }
 
   return NextResponse.json({

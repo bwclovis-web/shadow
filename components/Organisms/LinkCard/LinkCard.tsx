@@ -44,7 +44,11 @@ const LinkCard = ({
   imageOverlay,
   enableSharedViewTransitions = true,
 }: LinkCardProps) => {
-  const alt = imageAlt ?? data.name
+  const alt =
+    imageAlt ??
+    (type === "perfume" && data.perfumeHouse?.name
+      ? `${data.name} by ${data.perfumeHouse.name}`
+      : data.name)
   const basePath = type === "house" ? HOUSE_DETAIL_PATH : PERFUME_PATH
   const cardImage = normalizeRemoteImageSrc(data.image)
   const href = selectedLetter

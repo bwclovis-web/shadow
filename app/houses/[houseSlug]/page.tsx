@@ -2,7 +2,10 @@ import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 
 import { getArticlesForHouseSlug } from "@/lib/sanity/articles.server"
-import { buildHouseOrganizationJsonLd } from "@/lib/seo/json-ld"
+import {
+  buildBreadcrumbListJsonLd,
+  buildHouseOrganizationJsonLd,
+} from "@/lib/seo/json-ld"
 import { buildPageMetadata } from "@/lib/seo/metadata"
 import { truncateDescription } from "@/lib/seo/truncate"
 import { getFollowStateForViewer } from "@/models/user-follow.server"
@@ -28,7 +31,10 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
     take: DEFAULT_PAGE_SIZE,
   })
   if (!perfumeHouse) {
-    return { title: "House not found" }
+    return {
+      title: "House not found",
+      robots: { index: false, follow: false },
+    }
   }
   const t = await getTranslations("houseDetail.meta")
   const title = t("title", { name: perfumeHouse.name })
@@ -80,11 +86,21 @@ export default async function HouseDetailPage({ params, searchParams }: Props) {
     website: perfumeHouse.website,
   })
 
+  const breadcrumbJsonLd = buildBreadcrumbListJsonLd([
+    { name: "Home", path: "/" },
+    { name: "Houses", path: "/houses" },
+    { name: perfumeHouse.name, path: `/houses/${perfumeHouse.slug}` },
+  ])
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <HouseDetailClient
         initialPerfumeHouse={perfumeHouse}

@@ -3,6 +3,7 @@ import { getCommunityStats } from "@/models/community-stats.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { getSeasonalTrendingPerfumes } from "@/models/seasonal-trending.server"
+import { buildPageMetadata } from "@/lib/seo/metadata"
 import { getTranslations } from "next-intl/server"
 import HomeClient from "./home-client"
 import type { Metadata } from "next"
@@ -10,10 +11,12 @@ import type { Metadata } from "next"
 export const revalidate = 3600
 
 export async function generateMetadata(): Promise<Metadata> {
-  return {
-    title: "perfumer's hollow",
-    description: "Discover and trade perfumes.",
-  }
+  const t = await getTranslations("home.meta")
+  return buildPageMetadata({
+    title: t("title"),
+    description: t("description"),
+    canonicalPath: "/",
+  })
 }
 
 const HomePage = async () => {

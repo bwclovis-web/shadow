@@ -328,8 +328,8 @@
   },
   "allPerfumes": {
     "meta": {
-      "title": "L'Archive - perfumer's hollow",
-      "description": "Découvrez tous les parfums disponibles dans notre base."
+      "title": "L'Archive",
+      "description": "Parcourez l'archive de parfums par lettre — notes, maisons de fragrances et avis de la communauté sur perfumer's hollow."
     },
     "heading": "L'Archive",
     "subheading": "Chaque parfum porte quelque chose qui mérite d'être retenu."
@@ -396,19 +396,31 @@
     "deleteConversationDeleting": "Suppression…"
   },
   "subscribe": {
+    "title": "S'abonner - perfumer's hollow",
+    "description": "Finalisez un abonnement payant pour rejoindre perfumer's hollow après la limite des early adopters.",
     "heading": "S'abonner",
     "subheading": "Rejoignez perfumer's hollow avec un abonnement payant",
     "limitTitle": "Limite de 100 premiers utilisateurs",
     "limitCopy": "Nous offrons 100 inscriptions gratuites aux premiers membres. Cette limite est atteinte.",
     "paymentRequired": "Pour créer un compte maintenant, un abonnement payant est requis. Finalisez le paiement ci-dessous.",
-    "cta": "Continuer vers le paiement"
+    "emailHelp": "Utilisez l'e-mail avec lequel vous vous inscrirez — nous le préremplirons après le paiement.",
+    "canceledNotice": "Le paiement a été annulé. Vous pouvez réessayer quand vous voulez.",
+    "cta": "Continuer vers le paiement",
+    "signIn": "Se connecter"
   },
   "subscribeSuccess": {
+    "title": "Paiement réussi - perfumer's hollow",
+    "description": "Votre abonnement est actif. Continuez pour créer votre compte.",
     "heading": "Paiement réussi",
     "subheading": "Votre abonnement est actif",
     "messageTitle": "Merci",
     "messageBody": "Votre paiement a réussi. Complétez l'inscription ci-dessous avec l'e-mail utilisé.",
-    "cta": "Continuer vers l'inscription"
+    "cta": "Continuer vers l'inscription",
+    "failedHeading": "Paiement non confirmé",
+    "failedSubheading": "Nous n'avons pas pu vérifier votre session de paiement",
+    "failedTitle": "Une erreur s'est produite",
+    "failedBody": "Votre paiement est peut-être encore en cours, ou ce lien est incomplet. Revenez à l'abonnement et réessayez, ou contactez le support si vous avez été débité.",
+    "retryCta": "Retour à l'abonnement"
   },
   "components": {
     "dataDisplaySection": {
@@ -601,8 +613,8 @@
   },
   "home": {
     "meta": {
-      "title": "perfumer's hollow - Base de parfums",
-      "description": "Explorez une base de parfums et de maisons."
+      "title": "Archives de parfums, notes et échange entre collectionneurs",
+      "description": "Explorez les notes de parfum, les maisons de fragrances et les avis de la communauté — puis échangez et partagez des flacons sur l'exchange de perfumer's hollow."
     },
     "radio": {
       "houses": "Maisons de parfum",

@@ -35,7 +35,6 @@ import {
   inferAndromedaAmarettoNotesFromProse,
   extractMatierePremiereMaterialsFromPlain,
   extractMatierePremiereExtraitMaterialsFromPlain,
-  hasEmbeddedLayerMarkers,
 } from "@/lib/scraper/stages/pdp-bootstrap"
 
 // ---------------------------------------------------------------------------
@@ -346,9 +345,76 @@ const expandParentheticalLayers = (notes: {
   baseNotes: expandParentheticalNoteParts(notes.baseNotes),
 })
 
+const NOTE_PROSE_CONNECTOR_RE =
+  /\s*(?:,\s*)?(?:mingling with|mixed with|blended with|layered with|infused with|laced with|paired with|combined with|together with|along with|with the essence of|with notes? of|with a (?:hint|whisper|touch|veil) of|on a bed of|resting on|over a base of|atop|overlaid with|finished with|and the essence of|plus)\s+/gi
+
+const NOTE_PROSE_FILLER = new Set([
+  "complex",
+  "fruity",
+  "rich",
+  "warm",
+  "soft",
+  "sweet",
+  "dark",
+  "bright",
+  "fresh",
+  "the",
+  "a",
+  "an",
+  "of",
+  "and",
+  "with",
+  "on",
+  "in",
+  "to",
+  "from",
+  "essence",
+  "notes",
+  "note",
+  "scent",
+  "aroma",
+  "perfume",
+  "fragrance",
+])
+
+/** Damask-style narrative Notes: sentence → comma list before splitting. */
+const proseNotesBodyToList = (body: string): string => {
+  let t = (body ?? "").trim()
+  if (!t) return ""
+  const partsPreview = t.split(/,(?![^()]*\))/).map(p => p.trim()).filter(Boolean)
+  const looksLikeList =
+    partsPreview.length >= 3 && partsPreview.every(p => p.split(/\s+/).filter(Boolean).length <= 5)
+  if (looksLikeList) return t
+  const words = t.split(/\s+/).filter(Boolean)
+  if (words.length <= 6 && (t.includes(",") || /\band\b/i.test(t))) return t
+  t = t.replace(NOTE_PROSE_CONNECTOR_RE, ", ")
+  t = t.replace(/\s+and\s+/gi, ", ")
+  t = t.replace(/\s+/g, " ").replace(/^[.,;\s]+|[.,;\s]+$/g, "")
+  const parts: string[] = []
+  for (const raw of t.split(/,(?![^()]*\))/)) {
+    let toks = raw.trim().split(/\s+/).filter(Boolean)
+    while (toks.length && NOTE_PROSE_FILLER.has(toks[0]!.toLowerCase().replace(/[.,;]+$/g, ""))) {
+      toks = toks.slice(1)
+    }
+    while (
+      toks.length &&
+      NOTE_PROSE_FILLER.has(toks[toks.length - 1]!.toLowerCase().replace(/[.,;]+$/g, ""))
+    ) {
+      toks = toks.slice(0, -1)
+    }
+    const cleaned = toks.join(" ").replace(/^[.,;\s]+|[.,;\s]+$/g, "")
+    if (cleaned.length >= 3) parts.push(cleaned)
+  }
+  return parts.length ? parts.join(", ") : body
+}
+
 function splitNoteList(text: string): string[] {
   if (!text?.trim()) return []
-  const normalized = stripEmbeddedHtmlMarkup(text)
+  let normalized = stripEmbeddedHtmlMarkup(text)
+  if (normalized.split(/\s+/).filter(Boolean).length > 6) {
+    normalized = proseNotesBodyToList(normalized)
+  }
+  normalized = normalized
     .replace(/\\\//g, "/")
     .replace(/\\u0026amp;/gi, "&")
     .replace(/\\u0026/gi, "&")
@@ -359,6 +425,15 @@ function splitNoteList(text: string): string[] {
     .replace(/&nbsp;/gi, " ")
     .replace(/\r/g, "\n")
     .replace(/[•·✧✦\u2726-\u2728\u2736\u2737\u2740]+/g, ",")
+
+  // AOE Celeste-style ALL-CAPS lists use ". " as a material separator.
+  const letters = [...normalized].filter(c => /[A-Za-z]/.test(c))
+  if (letters.length >= 8) {
+    const upperRatio = letters.filter(c => c === c.toUpperCase()).length / letters.length
+    if (upperRatio >= 0.65 && /\.\s+[A-Za-z]/.test(normalized)) {
+      normalized = normalized.replace(/\.\s+/g, ", ")
+    }
+  }
 
   const { masked, groups } = maskParenGroups(normalized)
   const splitReady = masked
@@ -492,11 +567,31 @@ const POLICY_STRIP_DEFER_BEFORE_FRAGRANCE_NOTES: RegExp[] = [
   /\bplease\s+text\s+if\s+you\b/i,
 ]
 
+/** Note pyramid after an INCI block (Laboratorio Olfattivo: Ingredients … Note di testa). */
+const NOTE_PYRAMID_AFTER_INGREDIENTS_RE =
+  /\b(?:note\s+di\s+(?:testa|cuore|fondo)|note\s+olfattive|top\s+notes?|heart\s+notes?|base\s+notes?|head\s+notes?|opening\s+notes?|notes?\s+de\s+(?:tête|tete|cœur|coeur|fond)|notas\s+de\s+(?:salida|coraz[oó]n|corazon|fondo)|fragrance\s+notes?)\b/i
+
+const INGREDIENTS_START_RE = /\bingredients?\s*:|\bingredienti\s*:/i
+
+/** Drop INCI blocks; keep a note pyramid that appears *after* Ingredients. */
+const exciseOrTruncateIngredients = (text: string): string => {
+  const m = INGREDIENTS_START_RE.exec(text)
+  if (!m) return text
+  const rest = text.slice(m.index + m[0].length)
+  const noteM = NOTE_PYRAMID_AFTER_INGREDIENTS_RE.exec(rest)
+  if (noteM) {
+    return `${text.slice(0, m.index)}\n${rest.slice(noteM.index)}`.trim()
+  }
+  return text.slice(0, m.index).replace(/\s+$/u, "").trim()
+}
+
 const stripAtEarliestPatterns = (text: string, patterns: RegExp[]): string => {
   if (!text?.trim()) return ""
   const fragranceNotesIdx = text.search(/\bfragrance\s+notes?\b/i)
   let cutoff = text.length
   for (const re of patterns) {
+    // Ingredients handled by exciseOrTruncateIngredients (post-INCI pyramids survive).
+    if (/ingredients\?/i.test(re.source)) continue
     const m = re.exec(text)
     if (!m || m.index >= cutoff) continue
     const deferEarlyStory =
@@ -510,7 +605,7 @@ const stripAtEarliestPatterns = (text: string, patterns: RegExp[]): string => {
 }
 
 const stripPolicyBoilerplate = (text: string): string =>
-  stripAtEarliestPatterns(text, POLICY_BOILERPLATE_START_PATTERNS)
+  stripAtEarliestPatterns(exciseOrTruncateIngredients(text), POLICY_BOILERPLATE_START_PATTERNS)
 
 /** Notes-source text after policy / ingredients / compliance blocks are removed. */
 const prepareMerchantNotesSource = (text: string): string =>
@@ -739,6 +834,26 @@ const isPolicyOnlyMerchantDescription = (raw: string | null | undefined): boolea
 const ETAT_LIBRE_BRAND_BOILERPLATE_START_RE =
   /^The Brand Etat Libre dOrange currently presents\b/i
 
+/** Damask Haus / indie Shopify "About the house" accordion bleed. */
+const HOUSE_ABOUT_BOILERPLATE_RE =
+  /^(?:About\s+Damask\s+Haus\b|About\s+[A-Z][\w'’-]+(?:\s+[A-Z][\w'’-]+){0,4}\s*:)/i
+
+const HOUSE_FOUNDED_BOILERPLATE_RE =
+  /\b(?:was\s+founded\s+in\s+\d{4}\b|handcrafted\s+and\s+made\s+in\s+small\s+batches\s+with\s+premium\b|The\s+Damask\s+Haus\s+process\b)/i
+
+const HOUSE_ABOUT_SECTION_RE =
+  /\bAbout\s+(?:Damask\s+Haus|[A-Z][\w'’-]+(?:\s+[A-Z][\w'’-]+){0,4})\s*:[\s\S]*$/i
+
+const isHouseAboutBoilerplate = (text: string): boolean => {
+  const t = (text ?? "").replace(/<!--[\s\S]*?-->/g, " ").trim()
+  if (!t) return false
+  if (HOUSE_ABOUT_BOILERPLATE_RE.test(t)) return true
+  if (HOUSE_FOUNDED_BOILERPLATE_RE.test(t) && (t.toLowerCase().startsWith("about ") || t.length > 500)) {
+    return true
+  }
+  return false
+}
+
 const ETAT_LIBRE_SAMPLE_PREFIX_RE =
   /^interested in trying a sample\?\s*(?:Try In a 4 Piece Sample Kit\s*)?(?:Sample\s*\$[\d.]+\s*)?/i
 
@@ -787,6 +902,7 @@ export const isUnusableMerchantDescription = (raw: string | null | undefined): b
   if (!t) return true
   if (isJunkScrapedDescription(t)) return true
   if (ETAT_LIBRE_BRAND_BOILERPLATE_START_RE.test(t.replace(/<!--[\s\S]*?-->/g, " ").trim())) return true
+  if (isHouseAboutBoilerplate(t)) return true
   const lower = t.toLowerCase()
   if (lower.startsWith("interested in trying a sample?")) return true
   if (/\btry in a 4 piece sample kit\b/i.test(lower) && t.length < 520) return true
@@ -813,17 +929,21 @@ export const normalizePdpDescription = (text: string): string => {
     return t.replace(/\.{2,}\s*$/, "").replace(/[ \t]+$/, "").trim()
   }
 
-  if (ETAT_LIBRE_BRAND_BOILERPLATE_START_RE.test(t)) {
+  if (ETAT_LIBRE_BRAND_BOILERPLATE_START_RE.test(t) || isHouseAboutBoilerplate(t)) {
     const cut = t.search(
       /(?:interested in trying a sample\?|S as in blood|\bFULL DESCRIPTION\b)/i,
     )
     if (cut >= 0) {
       t = t.slice(cut).trim()
       t = t.replace(/^\s*FULL DESCRIPTION\s+/i, "").trim()
-    } else {
+    } else if (isHouseAboutBoilerplate(t) && !HOUSE_ABOUT_SECTION_RE.test(t.slice(40))) {
       return ""
     }
   }
+
+  const aboutIdx = t.search(HOUSE_ABOUT_SECTION_RE)
+  if (aboutIdx > 40) t = t.slice(0, aboutIdx).trim()
+  else if (aboutIdx >= 0 && aboutIdx <= 40) return ""
 
   const end = t.search(GENERAL_PDP_SECTION_END_RE)
   if (end > 80) t = t.slice(0, end).trim()

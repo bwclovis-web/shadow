@@ -64,6 +64,20 @@ describe("detect-platform", () => {
     expect(htmlHasLabeledNotePyramid("<p>A lovely scent with bergamot.</p>")).toBe(false)
   })
 
+  it("detects Wix from HTML markers", () => {
+    expect(
+      detectPlatformFromSignals({
+        host: "www.aoeperfumery.com",
+        html: '<meta name="generator" content="Wix.com Website Builder"/><a href="/product-page/continue">',
+      }),
+    ).toBe("wix")
+  })
+
+  it("returns Wix selector pack for wix", () => {
+    const pack = selectorPackForPlatform("wix")
+    expect(pack.productLinkSelector).toContain("/product-page/")
+  })
+
   it("returns Woo selector pack for woocommerce", () => {
     const pack = selectorPackForPlatform("woocommerce")
     expect(pack.productLinkSelector).toContain("/product/")

@@ -517,8 +517,8 @@
   },
   "allPerfumes": {
     "meta": {
-      "title": "The Archive - perfumer's hollow",
-      "description": "Discover all the perfumes available in our database."
+      "title": "The Archive",
+      "description": "Browse the perfume archive by letter — notes, fragrance houses, and community ratings on perfumer's hollow."
     },
     "heading": "The Archive",
     "subheading": "Every fragrance carries something worth remembering."
@@ -585,19 +585,31 @@
     "deleteConversationDeleting": "Removing…"
   },
   "subscribe": {
+    "title": "Subscribe - perfumer's hollow",
+    "description": "Complete a paid subscription to join perfumer's hollow after the early adopter limit.",
     "heading": "Subscribe",
     "subheading": "Join perfumer's hollow with a paid subscription",
     "limitTitle": "100-user early adopter limit",
     "limitCopy": "We offer free signups to our first 100 members as early adopters. That limit has been reached.",
     "paymentRequired": "To create an account now, a paid subscription is required. Complete checkout below and you’ll be able to sign up right after.",
-    "cta": "Continue to payment"
+    "emailHelp": "Use the email you’ll sign up with — we’ll prefill it after payment.",
+    "canceledNotice": "Checkout was canceled. You can try again when you’re ready.",
+    "cta": "Continue to payment",
+    "signIn": "Sign in"
   },
   "subscribeSuccess": {
+    "title": "Payment successful - perfumer's hollow",
+    "description": "Your subscription is active. Continue to create your account.",
     "heading": "Payment successful",
     "subheading": "Your subscription is active",
     "messageTitle": "Thank you",
     "messageBody": "Your payment was successful. Complete sign up below to create your account with the email you used at checkout.",
-    "cta": "Continue to sign up"
+    "cta": "Continue to sign up",
+    "failedHeading": "Payment not confirmed",
+    "failedSubheading": "We couldn’t verify your checkout session",
+    "failedTitle": "Something went wrong",
+    "failedBody": "Your payment may still be processing, or this link is incomplete. Return to subscribe and try again, or contact support if you were charged.",
+    "retryCta": "Back to subscribe"
   },
   "components": {
     "dataDisplaySection": {
@@ -790,8 +802,8 @@
   },
   "home": {
     "meta": {
-      "title": "perfumer's hollow - Perfume Database",
-      "description": "Explore a comprehensive database of perfumes and their houses."
+      "title": "Perfume archive, notes & trader exchange",
+      "description": "Explore perfume notes, fragrance houses, and community ratings — then trade and share bottles on the perfumer's hollow exchange."
     },
     "radio": {
       "houses": "Fragrance Houses",

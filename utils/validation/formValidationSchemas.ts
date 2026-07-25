@@ -260,6 +260,10 @@ export const ForgotPasswordSchema = z.object({
   email: emailSchema,
 })
 
+export const SubscribeCheckoutSchema = z.object({
+  email: emailSchema,
+})
+
 export const ResetPasswordSchema = z
   .object({
     token: z.string().min(1, { message: V.resetTokenRequired }),
@@ -463,6 +467,7 @@ export const validationSchemas = {
   userLogin: UserLogInSchema,
   changePassword: ChangePasswordSchema,
   forgotPassword: ForgotPasswordSchema,
+  subscribeCheckout: SubscribeCheckoutSchema,
   resetPassword: ResetPasswordSchema,
   updateProfile: UpdateProfileSchema,
   perfumeSearch: PerfumeSearchSchema,

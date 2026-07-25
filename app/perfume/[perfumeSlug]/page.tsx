@@ -4,7 +4,10 @@ import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 
 import { getArticlesForPerfumeSlug } from "@/lib/sanity/articles.server"
-import { buildPerfumeProductJsonLd } from "@/lib/seo/json-ld"
+import {
+  buildBreadcrumbListJsonLd,
+  buildPerfumeProductJsonLd,
+} from "@/lib/seo/json-ld"
 import { buildPageMetadata } from "@/lib/seo/metadata"
 import { truncateDescription } from "@/lib/seo/truncate"
 import { getFollowStateForViewer } from "@/models/user-follow.server"
@@ -28,7 +31,10 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
   const { perfumeSlug } = await params
   const perfume = await getPerfumeBySlug(perfumeSlug)
   if (!perfume) {
-    return { title: "Perfume not found" }
+    return {
+      title: "Perfume not found",
+      robots: { index: false, follow: false },
+    }
   }
   const t = await getTranslations("singlePerfume.meta")
   const houseName = perfume.perfumeHouse?.name
@@ -45,6 +51,7 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
     title,
     description,
     canonicalPath: `/perfume/${perfumeSlug}`,
+    ogImage: perfume.image ?? undefined,
   })
 }
 
@@ -88,7 +95,9 @@ export default async function PerfumeDetailPage({
     getFollowStateForViewer(viewerId, "perfume", perfume.id),
   ])
 
-  const jsonLd = buildPerfumeProductJsonLd({
+  const overall = payload.averageRatings.overall
+  const ratingCount = payload.averageRatings.totalRatings
+  const productJsonLd = buildPerfumeProductJsonLd({
     name: perfume.name,
     slug: perfume.slug,
     description: perfume.description,
@@ -96,13 +105,48 @@ export default async function PerfumeDetailPage({
     perfumeHouse: perfume.perfumeHouse
       ? { name: perfume.perfumeHouse.name, slug: perfume.perfumeHouse.slug }
       : null,
+    openNotes: perfume.perfumeNotesOpen,
+    heartNotes: perfume.perfumeNotesHeart,
+    baseNotes: perfume.perfumeNotesClose,
+    aggregateRating:
+      overall != null && ratingCount >= 1
+        ? { ratingValue: overall, ratingCount }
+        : null,
   })
+
+  const house = perfume.perfumeHouse
+  const breadcrumbJsonLd = buildBreadcrumbListJsonLd(
+    house
+      ? [
+          { name: "Home", path: "/" },
+          { name: "Houses", path: "/houses" },
+          { name: house.name, path: `/houses/${house.slug}` },
+          { name: perfume.name, path: `/perfume/${perfume.slug}` },
+        ]
+      : [
+          { name: "Home", path: "/" },
+          { name: "The Archive", path: "/the-archive" },
+          ...(resolvedSearchParams.letter
+            ? [
+                {
+                  name: resolvedSearchParams.letter.toUpperCase(),
+                  path: `/the-archive/${resolvedSearchParams.letter.toUpperCase()}`,
+                },
+              ]
+            : []),
+          { name: perfume.name, path: `/perfume/${perfume.slug}` },
+        ],
+  )
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
       <PerfumeDetailClient
       initialPerfume={perfume}

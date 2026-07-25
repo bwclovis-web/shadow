@@ -375,6 +375,23 @@ Also listed elsewhere: Neroli E.O. among featured materials.
     expect(sanitizeExtractedNoteCandidate("ruby")).toBeNull()
   })
 
+  it("isComplianceOrSourcingNote rejects INCI carriers from Ingredients blocks", () => {
+    for (const junk of [
+      "alcohol (denat.)",
+      "alcohol denat",
+      "water (aqua)",
+      "aqua",
+      "fragrance (parfum)",
+      "(parfum)",
+      "parfum",
+      "fried dough. ingredients: alcohol (denat.)",
+    ]) {
+      expect(isComplianceOrSourcingNote(junk), junk).toBe(true)
+    }
+    expect(isComplianceOrSourcingNote("raspberry")).toBe(false)
+    expect(isComplianceOrSourcingNote("vanilla extract")).toBe(false)
+  })
+
   it("isComplianceOrSourcingNote rejects alcohol-ingredient and organic-farming boilerplate", () => {
     for (const junk of [
       "using uncut",
@@ -427,6 +444,12 @@ Also listed elsewhere: Neroli E.O. among featured materials.
       "arrow key",
       "arrow keys",
       "close (esc)",
+      "window",
+      "new window",
+      "opens in a new window",
+      "opens in a new tab",
+      "full page refresh",
+      "laced",
     ]) {
       expect(isThemeCssTokenNote(junk), junk).toBe(true)
       expect(isObviousNonMaterialNote(junk), junk).toBe(true)

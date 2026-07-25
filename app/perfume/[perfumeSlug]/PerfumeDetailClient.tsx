@@ -123,7 +123,11 @@ const PerfumeDetailClient = ({
       <HeroHeader
         title={perfume.name}
         image={perfume.image ?? undefined}
-        imageAlt={perfume.name}
+        imageAlt={
+          perfume.perfumeHouse?.name
+            ? `${perfume.name} by ${perfume.perfumeHouse.name}`
+            : `${perfume.name} perfume`
+        }
         transitionKey={perfume.id}
         viewTransitionName={perfumeImageTransitionName(perfume.id)}
       >

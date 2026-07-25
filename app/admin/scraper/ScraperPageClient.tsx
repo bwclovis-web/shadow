@@ -277,6 +277,7 @@ export const ScraperPageClient = () => {
     setDescriptionSelector(result.selectors.descriptionSelector)
     setImageSelector(result.selectors.imageSelector)
     if (result.notesSelector) setNotesSelector(result.notesSelector)
+    else if (result.platformHint === "wix" || result.platformHint === "shopify") setNotesSelector("")
     if (result.needsHeaded) setHeaded(true)
     if (result.needsEtsyHeaded) setEtsyHeaded(true)
     if (result.suggestedHouseName && !houseName.trim()) {
@@ -376,7 +377,7 @@ export const ScraperPageClient = () => {
     if (typeof c.externalNoteRescue === "boolean") setExternalNoteRescue(c.externalNoteRescue)
     if (typeof c.maxProducts === "number") setMaxProducts(String(c.maxProducts))
     const hint = (c.platformHint ?? preset.platformType ?? "") as DetectedPlatform | ""
-    if (hint === "shopify" || hint === "woocommerce" || hint === "etsy" || hint === "unknown") {
+    if (hint === "shopify" || hint === "woocommerce" || hint === "etsy" || hint === "wix" || hint === "unknown") {
       setPlatformHint(hint)
       setDetectSucceeded(true)
       setDetectSummary(`Loaded preset · platform: ${hint}`)

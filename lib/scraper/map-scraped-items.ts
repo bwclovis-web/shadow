@@ -236,7 +236,10 @@ export const scrapedItemsNeedNodeRepair = (items: ScrapedItem[]): boolean =>
       ...(item.baseNotes ?? []),
     ]
     if (allNotes.some(n => isThemeCssTokenNote(n))) return true
-    if (allNotes.length === 0) return false
+    // Empty layers → always let Node recover (LLM from description / notesText).
+    // Previously we only repaired when notesText had a label — Damask products like Bat Song
+    // have no Notes: block (lavender/cashmere only in teaser prose) and were exported empty.
+    if (allNotes.length === 0) return true
     const complianceCount = allNotes.filter(n => isComplianceOrSourcingNote(n)).length
     if (complianceCount >= 2 && complianceCount >= allNotes.length * 0.5) return true
     return allNotes.some(n => isComplianceOrSourcingNote(n))

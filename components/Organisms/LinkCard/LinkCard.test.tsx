@@ -79,7 +79,9 @@ describe("LinkCard", () => {
 
     it("renders image with correct src", async () => {
       renderLinkCard(<LinkCard data={mockPerfumeData} type="perfume" />)
-      const image = await waitFor(() => screen.getByRole("img", { name: "Test Perfume" }))
+      const image = await waitFor(() =>
+        screen.getByRole("img", { name: "Test Perfume by Test House" })
+      )
       expect(image).toHaveAttribute("src", "/images/test-perfume.jpg")
     })
 
@@ -142,13 +144,13 @@ describe("LinkCard", () => {
     it("renders image with correct alt text", async () => {
       renderLinkCard(<LinkCard data={mockPerfumeData} type="perfume" />)
       const image = await waitFor(() => screen.getByRole("img"))
-      expect(image).toHaveAttribute("alt", "Test Perfume")
+      expect(image).toHaveAttribute("alt", "Test Perfume by Test House")
     })
 
     it("applies correct image dimensions", async () => {
       renderLinkCard(<LinkCard data={mockPerfumeData} type="perfume" />)
       const image = await waitFor(() => screen.getByRole("img"))
-      expect(image).toHaveAttribute("height", "400")
+      expect(image).toHaveAttribute("height", "500")
       expect(image).toHaveAttribute("width", "400")
     })
 
@@ -373,7 +375,7 @@ describe("LinkCard", () => {
     it("provides descriptive alt text for image", async () => {
       renderLinkCard(<LinkCard data={mockPerfumeData} type="perfume" />)
       const image = await waitFor(() => screen.getByRole("img"))
-      expect(image).toHaveAttribute("alt", "Test Perfume")
+      expect(image).toHaveAttribute("alt", "Test Perfume by Test House")
     })
 
     it("uses semantic link element", () => {

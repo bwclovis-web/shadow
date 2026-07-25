@@ -5,7 +5,7 @@
 
 import type { DiscoveryMode } from "@/types/scraper"
 
-export type DetectedPlatform = "shopify" | "woocommerce" | "etsy" | "unknown"
+export type DetectedPlatform = "shopify" | "woocommerce" | "etsy" | "wix" | "unknown"
 
 export type SelectorPack = {
   productLinkSelector: string
@@ -39,10 +39,23 @@ export const ETSY_SELECTOR_PACK: SelectorPack = {
   imageSelector: "img[data-carousel-first-image], ul[data-carousel-pagination] img, img",
 }
 
+/** Wix Stores — /product-page/{slug}; notes often live in the product description text. */
+export const WIX_SELECTOR_PACK: SelectorPack = {
+  productLinkSelector: "a[href*='/product-page/']",
+  nameSelector: "h1, [data-hook='ProductTitle'], [data-hook='product-title']",
+  descriptionSelector:
+    "[data-hook='description'], [data-hook='product-description'], [data-hook='InfoSection.Description'], [data-hook='content-viewer']",
+  imageSelector:
+    "[data-hook='main-media-image'] img, [data-hook='product-image'] img, img[data-hook='wow-image'], .gallery-item img",
+  // Prefer description-scoped notes; body is gallery-prone on Wix.
+  notesSelector: undefined,
+}
+
 export const selectorPackForPlatform = (platform: DetectedPlatform): SelectorPack => {
   if (platform === "shopify") return SHOPIFY_SELECTOR_PACK
   if (platform === "woocommerce") return WOOCOMMERCE_SELECTOR_PACK
   if (platform === "etsy") return ETSY_SELECTOR_PACK
+  if (platform === "wix") return WIX_SELECTOR_PACK
   return SHOPIFY_SELECTOR_PACK
 }
 
@@ -50,6 +63,7 @@ export const discoveryModeForPlatform = (platform: DetectedPlatform): DiscoveryM
   if (platform === "shopify") return "shopify"
   if (platform === "woocommerce") return "woocommerce"
   if (platform === "etsy") return "auto"
+  if (platform === "wix") return "sitemap"
   return "auto"
 }
 
@@ -81,6 +95,17 @@ export const detectPlatformFromSignals = (opts: {
   if (opts.productsJsonOk) return "shopify"
   if (opts.wooStoreApiOk) return "woocommerce"
   const html = (opts.html ?? "").toLowerCase()
+  // Wix before Woo: "product" appears in /product-page/ and can confuse loose HTML checks.
+  if (
+    html.includes("wix.com website builder") ||
+    html.includes("static.wixstatic.com") ||
+    html.includes("static.parastorage.com") ||
+    html.includes("x-wix-request-id") ||
+    html.includes("/product-page/") ||
+    html.includes("wix-essential-viewer-model")
+  ) {
+    return "wix"
+  }
   if (
     html.includes("cdn.shopify.com") ||
     html.includes("shopify.theme") ||

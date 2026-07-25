@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db"
  * Maximum number of users who can sign up for free (early adopters).
  * After this limit, signups require payment via Stripe.
  */
-export const FREE_USER_LIMIT = 100
+export const FREE_USER_LIMIT = 2
 
 /**
  * Counts users who "count" toward the free signup limit. We use total user count

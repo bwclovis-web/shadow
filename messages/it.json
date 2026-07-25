@@ -328,8 +328,8 @@
   },
   "allPerfumes": {
     "meta": {
-      "title": "L'Archivio - perfumer's hollow",
-      "description": "Scopri tutti i profumi nel nostro database."
+      "title": "L'Archivio",
+      "description": "Sfoglia l'archivio di profumi per lettera — note, case di fragranze e valutazioni della community su perfumer's hollow."
     },
     "heading": "L'Archivio",
     "subheading": "Ogni fragranza porta qualcosa che merita di essere ricordato."
@@ -396,19 +396,31 @@
     "deleteConversationDeleting": "Eliminazione…"
   },
   "subscribe": {
+    "title": "Iscriviti - perfumer's hollow",
+    "description": "Completa un abbonamento a pagamento per unirti a perfumer's hollow dopo il limite early adopter.",
     "heading": "Iscriviti",
     "subheading": "Unisciti a perfumer's hollow con un abbonamento a pagamento",
     "limitTitle": "Limite 100 primi utenti",
     "limitCopy": "Offriamo 100 iscrizioni gratuite ai primi membri. Il limite è stato raggiunto.",
     "paymentRequired": "Per creare un account ora è richiesto un abbonamento. Completa il pagamento qui sotto.",
-    "cta": "Continua al pagamento"
+    "emailHelp": "Usa l'email con cui ti registrerai — la precompileremo dopo il pagamento.",
+    "canceledNotice": "Il pagamento è stato annullato. Puoi riprovare quando vuoi.",
+    "cta": "Continua al pagamento",
+    "signIn": "Accedi"
   },
   "subscribeSuccess": {
+    "title": "Pagamento riuscito - perfumer's hollow",
+    "description": "Il tuo abbonamento è attivo. Continua per creare il tuo account.",
     "heading": "Pagamento riuscito",
     "subheading": "Il tuo abbonamento è attivo",
     "messageTitle": "Grazie",
     "messageBody": "Il pagamento è andato a buon fine. Completa la registrazione con l'email usata.",
-    "cta": "Continua alla registrazione"
+    "cta": "Continua alla registrazione",
+    "failedHeading": "Pagamento non confermato",
+    "failedSubheading": "Non siamo riusciti a verificare la sessione di pagamento",
+    "failedTitle": "Qualcosa è andato storto",
+    "failedBody": "Il pagamento potrebbe essere ancora in elaborazione, oppure questo link è incompleto. Torna all'abbonamento e riprova, o contatta il supporto se sei stato addebitato.",
+    "retryCta": "Torna all'abbonamento"
   },
   "components": {
     "dataDisplaySection": {
@@ -601,8 +613,8 @@
   },
   "home": {
     "meta": {
-      "title": "perfumer's hollow - Database profumi",
-      "description": "Esplora un database di profumi e case."
+      "title": "Archivio di profumi, note e scambio tra trader",
+      "description": "Esplora note di profumo, case di fragranze e valutazioni della community — poi scambia e condividi flaconi sull'exchange di perfumer's hollow."
     },
     "radio": {
       "houses": "Case di fragranze",

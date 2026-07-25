@@ -38,8 +38,12 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
-  title: "perfumer's hollow",
-  description: 'Perfume trading platform',
+  title: {
+    default: "perfumer's hollow",
+    template: "%s | perfumer's hollow",
+  },
+  description:
+    "Explore perfume notes, fragrance houses, and community ratings — then trade and share bottles on the perfumer's hollow exchange.",
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
