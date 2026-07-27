@@ -7,7 +7,7 @@ import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { PerformanceAdminClient } from "./PerformanceAdminClient"
 
 export const generateMetadata = (): Metadata => ({
-  title: "Performance Admin - Voodoo Perfumes",
+  title: "Performance Admin",
   description:
     "Performance monitoring and management admin interface",
 })

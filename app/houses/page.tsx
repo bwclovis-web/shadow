@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
+import { buildItemListJsonLd } from "@/lib/seo/json-ld"
 import { buildPageMetadata } from "@/lib/seo/metadata"
 import { getHousesByLetterPaginated } from "@/models/house.server"
 import { isSanityConfigured } from "@/sanity/env"
@@ -46,14 +47,33 @@ const HousesPage = async ({ searchParams }: Props) => {
   }
 
   return (
-    <AllHousesClient
-      heading={t("heading")}
-      subheading={t("subheading")}
-      showBlogLink={isSanityConfigured}
-      initialLetter={normalizedLetter}
-      initialHouses={initialHouses}
-      initialHousesTotal={initialTotal}
-    />
+    <>
+      {normalizedLetter && initialHouses.length > 0 ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(
+              buildItemListJsonLd({
+                name: `Perfume houses starting with ${normalizedLetter}`,
+                path: `/houses?letter=${normalizedLetter}`,
+                items: initialHouses.map(h => ({
+                  name: h.name,
+                  path: `/houses/${h.slug}`,
+                })),
+              }),
+            ),
+          }}
+        />
+      ) : null}
+      <AllHousesClient
+        heading={t("heading")}
+        subheading={t("subheading")}
+        showBlogLink={isSanityConfigured}
+        initialLetter={normalizedLetter}
+        initialHouses={initialHouses}
+        initialHousesTotal={initialTotal}
+      />
+    </>
   )
 }
 

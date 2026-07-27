@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { deletePerfumeHouse } from "@/models/house.server"
-import { revalidateHouseDataCache } from "@/utils/server/revalidate-catalog-cache.server"
+import {
+  revalidateHouseDataCache,
+  revalidatePerfumeDataCache,
+} from "@/utils/server/revalidate-catalog-cache.server"
 import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 import { requireAdminOrEditorApi } from "@/utils/server/requireAdminOrEditorApi.server"
 
@@ -28,6 +31,7 @@ export async function DELETE(request: NextRequest) {
   try {
     await deletePerfumeHouse(id)
     revalidateHouseDataCache()
+    revalidatePerfumeDataCache()
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("[api/deleteHouse]", error)

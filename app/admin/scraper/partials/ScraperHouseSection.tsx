@@ -32,6 +32,9 @@ export type ScraperHouseSectionProps = {
   setDelayBetweenUrlsMs: (v: string) => void
   retryAttempts: string
   setRetryAttempts: (v: string) => void
+  /** When Smart Detect suggested a name with no DB match. */
+  createHouseHref?: string | null
+  createHouseLabel?: string | null
   /** When true, hide discovery/baseUrl/delay knobs (shown under Advanced). */
   simpleMode?: boolean
 }
@@ -62,6 +65,8 @@ export const ScraperHouseSection = ({
   setDelayBetweenUrlsMs,
   retryAttempts,
   setRetryAttempts,
+  createHouseHref = null,
+  createHouseLabel = null,
   simpleMode = false,
 }: ScraperHouseSectionProps) => (
   <section className={SECTION_CLASS}>
@@ -71,6 +76,19 @@ export const ScraperHouseSection = ({
 
     <Field label="House name *" hint="Search for an existing house or type a new one.">
       <HouseTypeahead name="_houseId" defaultName={houseName} onNameChange={setHouseName} />
+      {createHouseHref && createHouseLabel ? (
+        <p className="mt-1 text-xs text-muted-foreground">
+          No match in the database.{" "}
+          <a
+            href={createHouseHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-foreground"
+          >
+            Create house “{createHouseLabel}”
+          </a>
+        </p>
+      ) : null}
     </Field>
 
     {savedSources.length > 0 && (

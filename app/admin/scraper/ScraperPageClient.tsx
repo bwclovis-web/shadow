@@ -92,6 +92,9 @@ export const ScraperPageClient = () => {
   const [detectSummary, setDetectSummary] = useState<string | null>(null)
   const [detecting, setDetecting] = useState(false)
   const [detectError, setDetectError] = useState<string | null>(null)
+  /** When Smart Detect finds a suggested name with no matching house in the DB. */
+  const [createHouseHref, setCreateHouseHref] = useState<string | null>(null)
+  const [createHouseLabel, setCreateHouseLabel] = useState<string | null>(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [savedSources, setSavedSources] = useState<ScraperSourcePreset[]>([])
   const [previewFilter, setPreviewFilter] = useState<PreviewFilter>("all")
@@ -268,7 +271,12 @@ export const ScraperPageClient = () => {
     }
   }
 
-  const applyDetectResult = (result: ScraperDetectResult & { suggestedHouseName: string | null }) => {
+  const applyDetectResult = (
+    result: ScraperDetectResult & {
+      suggestedHouseName: string | null
+      houseMatched?: boolean
+    },
+  ) => {
     setPlatformHint(result.platformHint)
     setDiscoveryMode(result.discoveryMode)
     setBaseUrl(result.baseUrl)
@@ -283,11 +291,26 @@ export const ScraperPageClient = () => {
     if (result.suggestedHouseName && !houseName.trim()) {
       setHouseName(result.suggestedHouseName)
     }
+    const houseMatched = result.houseMatched === true
+    if (!houseMatched && result.suggestedHouseName?.trim()) {
+      const params = new URLSearchParams({ name: result.suggestedHouseName.trim() })
+      if (result.baseUrl?.trim()) params.set("website", result.baseUrl.trim())
+      setCreateHouseHref(`/admin/create-house?${params.toString()}`)
+      setCreateHouseLabel(result.suggestedHouseName.trim())
+    } else {
+      setCreateHouseHref(null)
+      setCreateHouseLabel(null)
+    }
     setDetectSucceeded(true)
     const parts = [
       `Platform: ${result.platform}`,
       result.needsHeaded ? "visible browser recommended" : null,
       result.captchaDetected ? "captcha detected" : null,
+      houseMatched
+        ? `house matched: ${result.suggestedHouseName}`
+        : result.suggestedHouseName
+          ? `no existing house for “${result.suggestedHouseName}”`
+          : null,
     ].filter(Boolean)
     setDetectSummary(parts.join(" · "))
     setDetectError(null)
@@ -304,6 +327,8 @@ export const ScraperPageClient = () => {
     }
     setDetecting(true)
     setDetectError(null)
+    setCreateHouseHref(null)
+    setCreateHouseLabel(null)
     try {
       const csrf = getTokenWithFallback()
       const res = await fetch("/api/admin/scraper/detect", {
@@ -317,7 +342,10 @@ export const ScraperPageClient = () => {
         }),
       })
       const data = (await res.json()) as
-        | (ScraperDetectResult & { suggestedHouseName: string | null })
+        | (ScraperDetectResult & {
+            suggestedHouseName: string | null
+            houseMatched?: boolean
+          })
         | { ok: false; error: string }
       if (!res.ok || !data.ok) {
         setDetectError("error" in data ? data.error : "Detect failed")
@@ -764,6 +792,20 @@ export const ScraperPageClient = () => {
               {detectSummary}
             </p>
           )}
+          {createHouseHref && createHouseLabel && (
+            <p className="rounded border border-noir-gold/40 bg-noir-gold/10 px-3 py-2 text-sm">
+              No matching house in the database.{" "}
+              <a
+                href={createHouseHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium underline underline-offset-2 hover:text-noir-gold"
+              >
+                Create house “{createHouseLabel}”
+              </a>{" "}
+              (name and website prefilled).
+            </p>
+          )}
           {detectError && (
             <p className="rounded border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">
               {detectError}
@@ -814,6 +856,8 @@ export const ScraperPageClient = () => {
           setDelayBetweenUrlsMs={setDelayBetweenUrlsMs}
           retryAttempts={retryAttempts}
           setRetryAttempts={setRetryAttempts}
+          createHouseHref={createHouseHref}
+          createHouseLabel={createHouseLabel}
           simpleMode={!showAdvanced}
         />
 

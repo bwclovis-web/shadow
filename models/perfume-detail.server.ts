@@ -2,7 +2,7 @@ import { unstable_cache } from "next/cache"
 import { cache } from "react"
 
 import { prisma } from "@/lib/db"
-import { deleteFromR2, getR2KeyFromPublicUrl } from "@/lib/r2"
+import { deletePerfumeWithRelatedData } from "@/models/perfume-delete.server"
 import { transformNotesForDisplay } from "@/models/perfume-notes-helpers"
 import { userPerfumeNestedPerfumeSelect } from "@/models/user-perfume-listing-fields"
 import { PERFUME_BY_SLUG_REVALIDATE } from "./perfume-list-fields.server"
@@ -86,24 +86,6 @@ export const getPerfumeById = async (id: string) => {
   return transformNotesForDisplay(perfume as any)
 }
 
-export const deletePerfume = async (id: string) => {
-  const perfume = await prisma.perfume.findUnique({
-    where: { id },
-    select: { image: true },
-  })
-  if (perfume?.image) {
-    const r2Key = getR2KeyFromPublicUrl(perfume.image)
-    if (r2Key) {
-      try {
-        await deleteFromR2(r2Key)
-      } catch (err) {
-        console.error("[deletePerfume] Failed to delete image from R2:", r2Key, err)
-        // Continue with DB delete; orphaned R2 object can be cleaned up later
-      }
-    }
-  }
-  const deleted = await prisma.perfume.delete({
-    where: { id },
-  })
-  return deleted
+export const deletePerfume = async (id: string): Promise<void> => {
+  await deletePerfumeWithRelatedData(id)
 }

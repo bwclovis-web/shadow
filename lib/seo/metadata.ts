@@ -3,6 +3,8 @@ import type { Metadata } from "next"
 import { absoluteUrl } from "@/lib/seo/site-url"
 import { truncateDescription } from "@/lib/seo/truncate"
 
+const SITE_NAME = "perfumer's hollow"
+
 type OgImageInput = string | { url: string; width?: number; height?: number; alt?: string }
 
 const toOgImages = (image: OgImageInput | undefined) => {
@@ -20,6 +22,14 @@ const toOgImages = (image: OgImageInput | undefined) => {
       alt: image.alt,
     },
   ]
+}
+
+/** Brand for OG/Twitter; document titles use the root layout `%s | perfumer's hollow` template. */
+export const brandPageTitle = (title: string): string => {
+  const trimmed = title.trim()
+  if (!trimmed || trimmed === SITE_NAME) return SITE_NAME
+  if (trimmed.toLowerCase().includes(SITE_NAME)) return trimmed
+  return `${trimmed} | ${SITE_NAME}`
 }
 
 type PageMetadataInput = {
@@ -40,6 +50,7 @@ export const buildPageMetadata = ({
   const desc = truncateDescription(description)
   const canonical = absoluteUrl(canonicalPath)
   const images = toOgImages(ogImage)
+  const socialTitle = brandPageTitle(title)
 
   return {
     title,
@@ -48,16 +59,16 @@ export const buildPageMetadata = ({
       canonical,
     },
     openGraph: {
-      title,
+      title: socialTitle,
       description: desc,
       url: canonical,
       type: ogType,
-      siteName: "perfumer's hollow",
+      siteName: SITE_NAME,
       ...(images ? { images } : {}),
     },
     twitter: {
       card: images ? "summary_large_image" : "summary",
-      title,
+      title: socialTitle,
       description: desc,
       ...(images ? { images: images.map((img) => img.url) } : {}),
     },

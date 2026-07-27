@@ -4,6 +4,7 @@ import { cache } from "react"
 
 import { prisma } from "@/lib/db"
 import { migrateHouseImageToR2 } from "@/lib/r2-migrate"
+import { deletePerfumeImageFromR2, deletePerfumeRelatedRecords } from "@/models/perfume-delete.server"
 import { calculateRelevanceScore } from "@/utils/calculateRelevanceScore"
 import { assertValid, validationError } from "@/utils/errorHandling.patterns"
 import {
@@ -574,11 +575,25 @@ export const createPendingPerfumeHousePlaceholder = async (
 }
 
 export const deletePerfumeHouse = async (id: string) => {
-  const deletedHouse = await prisma.perfumeHouse.delete({
-    where: {
-      id,
-    },
+  const perfumes = await prisma.perfume.findMany({
+    where: { perfumeHouseId: id },
+    select: { id: true, image: true },
   })
+
+  for (const perfume of perfumes) {
+    await deletePerfumeImageFromR2(perfume.image)
+  }
+
+  const deletedHouse = await prisma.$transaction(async tx => {
+    for (const perfume of perfumes) {
+      await deletePerfumeRelatedRecords(perfume.id, tx)
+    }
+
+    return tx.perfumeHouse.delete({
+      where: { id },
+    })
+  })
+
   return deletedHouse
 }
 

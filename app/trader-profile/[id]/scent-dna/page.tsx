@@ -5,6 +5,7 @@ import { notFound } from "next/navigation"
 
 import ScentDnaCard from "@/components/Containers/TraderProfile/ScentDnaCard/ScentDnaCard"
 import TitleBanner from "@/components/Organisms/TitleBanner"
+import { brandPageTitle } from "@/lib/seo/metadata"
 import { getScentDnaForUser } from "@/models/scent-dna.server"
 import { getTraderById } from "@/models/user.server"
 import { getTraderDisplayName } from "@/utils/user"
@@ -19,23 +20,27 @@ const BANNER_IMAGE = "/images/quiz.png"
 export const generateMetadata = async ({ params }: Props): Promise<Metadata> => {
   const { id } = await params
   const trader = await getTraderById(id)
-  if (!trader) return { title: "Scent DNA" }
+  if (!trader) return { title: "Scent DNA", robots: { index: false, follow: true } }
 
   const t = await getTranslations("traderProfile.scentDna.meta")
   const traderName = getTraderDisplayName(trader)
+  const title = t("title", { traderName })
+  const description = t("description", { traderName })
+  const socialTitle = brandPageTitle(title)
 
   return {
-    title: t("title", { traderName }),
-    description: t("description", { traderName }),
+    title,
+    description,
+    robots: { index: false, follow: true },
     openGraph: {
-      title: t("title", { traderName }),
-      description: t("description", { traderName }),
+      title: socialTitle,
+      description,
       type: "profile",
     },
     twitter: {
       card: "summary",
-      title: t("title", { traderName }),
-      description: t("description", { traderName }),
+      title: socialTitle,
+      description,
     },
   }
 }

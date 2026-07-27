@@ -27,15 +27,16 @@ type Props = {
 export const generateMetadata = async ({ params }: Props): Promise<Metadata> => {
   const { id } = await params
   const trader = await getTraderById(id)
-  if (!trader) return { title: "Trader" }
+  if (!trader) return { title: "Trader", robots: { index: false, follow: true } }
   const t = await getTranslations("traderProfile.meta")
   const traderName =
     [trader.firstName, trader.lastName].filter(Boolean).join(" ").trim() ||
     trader.username ||
     "Trader"
   return {
-    title: t("title"),
+    title: t("title", { traderName }),
     description: t("description", { traderName }),
+    robots: { index: false, follow: true },
   }
 }
 

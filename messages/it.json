@@ -32,7 +32,7 @@
   },
   "compare": {
     "meta": {
-      "title": "Confronta profumi - perfumer's hollow",
+      "title": "Confronta profumi",
       "description": "Confronta note, valutazioni, disponibilità sull’exchange e case profumi."
     },
     "trayAriaLabel": "Profumi selezionati per il confronto",
@@ -87,7 +87,7 @@
   },
   "myTrades": {
     "meta": {
-      "title": "I miei scambi - perfumer's hollow",
+      "title": "I miei scambi",
       "description": "I tuoi scambi attivi e la cronologia."
     },
     "heading": "I miei scambi",
@@ -107,7 +107,7 @@
   },
   "pendingSubmissions": {
     "meta": {
-      "title": "Invii in sospeso - Admin - perfumer's hollow",
+      "title": "Invii in sospeso - Admin",
       "description": "Esamina e approva le submission di profumi e case in sospeso."
     },
     "heading": "Invii in sospeso",
@@ -143,7 +143,7 @@
   },
   "aboutUs": {
     "meta": {
-      "title": "I Custodi - Perfumer's Hollow",
+      "title": "I Custodi",
       "description": "Scopri i collezionisti, i designer e i tecnologi dietro Perfumer's Hollow."
     },
     "heading": "I Custodi",
@@ -282,7 +282,7 @@
   },
   "behindTheBottle": {
     "meta": {
-      "title": "Dietro il flacone - perfumer's hollow",
+      "title": "Dietro il flacone",
       "description": "Storie dal mondo del profumo: case, flaconi e cultura olfattiva."
     },
     "eyebrow": "Editoriale",
@@ -300,8 +300,8 @@
   },
   "allHouses": {
     "meta": {
-      "title": "Dietro il flacone - perfumer's hollow",
-      "description": "Esplora tutte le case di profumeria nel nostro database."
+      "title": "Case di profumeria",
+      "description": "Sfoglia case di profumeria e marchi di fragranze — cataloghi, note e recensioni della community su perfumer's hollow."
     },
     "heading": "Dietro il flacone",
     "subheading": "Le case, i creatori e le identità che danno forma al mondo della fragranza.",
@@ -328,8 +328,8 @@
   },
   "allPerfumes": {
     "meta": {
-      "title": "L'Archivio",
-      "description": "Sfoglia l'archivio di profumi per lettera — note, case di fragranze e valutazioni della community su perfumer's hollow."
+      "title": "L'Archivio — Catalogo di profumi",
+      "description": "Sfoglia l'archivio di profumi per lettera — note, case di fragranze, recensioni e valutazioni della community su perfumer's hollow."
     },
     "heading": "L'Archivio",
     "subheading": "Ogni fragranza porta qualcosa che merita di essere ricordato."
@@ -351,12 +351,12 @@
       "different": "Diverso dalla password attuale"
     },
     "signIn": {
-      "title": "Accedi - perfumer's hollow",
+      "title": "Accedi",
       "description": "Accedi per gestire il profilo e la collezione.",
       "suspended": "Il tuo account è stato sospeso. Contatta il supporto se ritieni che si tratti di un errore."
     },
     "verify2fa": {
-      "title": "Verifica a due fattori - perfumer's hollow",
+      "title": "Verifica a due fattori",
       "description": "Inserisci il codice dall'app di autenticazione.",
       "heading": "Autenticazione a due fattori",
       "subheading": "Inserisci il codice a 6 cifre o un codice di backup.",
@@ -368,7 +368,7 @@
       "errorTitle": "Errore di verifica"
     },
     "signUp": {
-      "title": "Registrati - perfumer's hollow",
+      "title": "Registrati",
       "description": "Crea un account per gestire profilo e collezione.",
       "heading": "Unisciti al Hollow",
       "subheading": "Crea il tuo account per esplorare l'Archivio, catalogare la collezione e connetterti con altri collezionisti.",
@@ -378,11 +378,11 @@
   },
   "directMessages": {
     "meta": {
-      "title": "Conversazioni - perfumer's hollow",
+      "title": "Conversazioni",
       "description": "Visualizza e invia conversazioni dirette con gli altri membri.",
-      "threadTitle": "{name} — Conversazioni — perfumer's hollow",
+      "threadTitle": "{name} — Conversazioni",
       "threadDescription": "Conversazione diretta con {name}.",
-      "threadFallbackTitle": "Conversazioni — perfumer's hollow"
+      "threadFallbackTitle": "Conversazioni"
     },
     "threadBannerHeading": "Conversazione · {name}",
     "threadBannerSubheading": "Dettagli dello scambio, discussioni sulle fragranze e messaggi tra collezionisti.",
@@ -396,7 +396,7 @@
     "deleteConversationDeleting": "Eliminazione…"
   },
   "subscribe": {
-    "title": "Iscriviti - perfumer's hollow",
+    "title": "Iscriviti",
     "description": "Completa un abbonamento a pagamento per unirti a perfumer's hollow dopo il limite early adopter.",
     "heading": "Iscriviti",
     "subheading": "Unisciti a perfumer's hollow con un abbonamento a pagamento",
@@ -409,7 +409,7 @@
     "signIn": "Accedi"
   },
   "subscribeSuccess": {
-    "title": "Pagamento riuscito - perfumer's hollow",
+    "title": "Pagamento riuscito",
     "description": "Il tuo abbonamento è attivo. Continua per creare il tuo account.",
     "heading": "Pagamento riuscito",
     "subheading": "Il tuo abbonamento è attivo",
@@ -568,7 +568,7 @@
   },
   "createHouse": {
     "meta": {
-      "title": "Crea casa - perfumer's hollow",
+      "title": "Crea casa",
       "description": "Crea una nuova casa nel nostro database."
     },
     "heading": "Crea casa di profumeria",
@@ -583,7 +583,7 @@
   },
   "createPerfume": {
     "meta": {
-      "title": "Crea profumo - perfumer's hollow",
+      "title": "Crea profumo",
       "description": "Crea un nuovo profumo nel database."
     },
     "heading": "Crea profumo",
@@ -613,8 +613,8 @@
   },
   "home": {
     "meta": {
-      "title": "Archivio di profumi, note e scambio tra trader",
-      "description": "Esplora note di profumo, case di fragranze e valutazioni della community — poi scambia e condividi flaconi sull'exchange di perfumer's hollow."
+      "title": "Archivio di profumi, recensioni e scambio di decants",
+      "description": "Esplora note di profumo, case di fragranze e recensioni della community — poi scambia e condividi decants e campioni sull'exchange di perfumer's hollow."
     },
     "radio": {
       "houses": "Case di fragranze",
@@ -652,7 +652,7 @@
   },
   "howItWorks": {
     "meta": {
-      "title": "Come funziona - perfumer's hollow",
+      "title": "Come funziona",
       "description": "Scopri come funziona perfumer's hollow."
     },
     "heading": "Il gioco dei flaconi e della fiducia",
@@ -695,7 +695,7 @@
   },
   "contactUs": {
     "meta": {
-      "title": "Corrispondenza e FAQ - Perfumer's Hollow",
+      "title": "Corrispondenza e FAQ",
       "description": "Mettiti in contatto con perfumer's hollow o consulta le domande frequenti."
     },
     "heading": "Corrispondenza",
@@ -764,7 +764,7 @@
   },
   "myScents": {
     "meta": {
-      "title": "My Scents - perfumer's hollow",
+      "title": "My Scents",
       "description": "Gestisci la tua collezione di profumi."
     },
     "tabs": {
@@ -1283,7 +1283,7 @@
   },
   "quiz": {
     "meta": {
-      "title": "Quiz olfattivo - perfumer's hollow",
+      "title": "Quiz olfattivo",
       "description": "Raccontaci le tue preferenze per consigliarti profumi che ti piaceranno."
     },
     "banner": {
@@ -1372,7 +1372,7 @@
   },
   "singleHouse": {
     "meta": {
-      "title": "Dettagli casa - perfumer's hollow",
+      "title": "Dettagli casa",
       "description": "Esplora i dettagli di una casa."
     },
     "loadingPerfumes": "Caricamento profumi...",
@@ -1396,18 +1396,18 @@
   },
   "houseDetail": {
     "meta": {
-      "title": "{name} | perfumer's hollow",
+      "title": "{name}",
       "descriptionFallback": "Esplora {name}: catalogo profumi, profilo della casa e articoli editoriali su perfumer's hollow."
     }
   },
   "singlePerfume": {
     "meta": {
-      "title": "Dettagli profumo - perfumer's hollow",
+      "title": "Dettagli profumo",
       "description": "Scopri i dettagli di un profumo.",
-      "titleWithHouse": "{name} — {house} | perfumer's hollow",
-      "titleStandalone": "{name} | perfumer's hollow",
-      "descriptionWithHouse": "Esplora {name} di {house}: note, valutazioni e annunci della community su perfumer's hollow.",
-      "descriptionStandalone": "Esplora {name}: note, valutazioni e annunci della community su perfumer's hollow."
+      "titleWithHouse": "{name} di {house} — Recensioni e note",
+      "titleStandalone": "{name} — Recensioni e note",
+      "descriptionWithHouse": "Recensioni, note e valutazioni di {name} di {house} — più annunci della community per scambi e decants su perfumer's hollow.",
+      "descriptionStandalone": "Recensioni, note e valutazioni di {name} — più annunci della community per scambi e decants su perfumer's hollow."
     },
     "subheading": "Di: ",
     "backToLetter": "Torna a {selectedLetter}",
@@ -1532,7 +1532,7 @@
   },
   "termsAndConditions": {
     "meta": {
-      "title": "Termini e condizioni - perfumer's hollow",
+      "title": "Termini e condizioni",
       "description": "Termini di utilizzo, regole di scambio e politica sulla privacy di perfumer's hollow."
     },
     "heading": "Termini e condizioni",
@@ -1596,8 +1596,8 @@
   },
   "tradingPost": {
     "meta": {
-      "title": "Il mercato - perfumer's hollow",
-      "description": "Sfoglia i profumi in scambio dai membri."
+      "title": "L'Exchange — Scambia e condividi decants di profumo",
+      "description": "Sfoglia lo scambio di profumi per commerciare, scambiare e dividere decants e campioni con collezionisti su perfumer's hollow."
     },
     "heading": "Il mercato",
     "subheading": "Le fragranze rare trovano qui una nuova casa.",
@@ -1766,7 +1766,7 @@
   },
   "tradeDetail": {
     "meta": {
-      "title": "Dettagli scambio - perfumer's hollow",
+      "title": "Dettagli scambio",
       "description": "Visualizza e gestisci una proposta di scambio tra trader."
     },
     "heading": "Dettagli scambio",
@@ -1801,7 +1801,7 @@
   },
   "traderProfile": {
     "meta": {
-      "title": "Profilo collezionista - perfumer's hollow",
+      "title": "Collezionista {traderName}",
       "description": "Profilo collezionista di {traderName}"
     },
     "heading": "Collezionista {traderName}",
@@ -1986,7 +1986,7 @@
   },
   "userAdmin": {
     "meta": {
-      "title": "Admin utenti - perfumer's hollow",
+      "title": "Admin utenti",
       "description": "Gestisci account e utilizzo dati"
     },
     "heading": "Gestione utenti",
@@ -2053,7 +2053,7 @@
   },
   "wishlist": {
     "meta": {
-      "title": "Wishlist - perfumer's hollow",
+      "title": "Wishlist",
       "description": "Gestisci la tua wishlist di profumi."
     },
     "empty": {
@@ -2096,7 +2096,7 @@
     },
     "public": {
       "meta": {
-        "title": "Wishlist di {traderName} - perfumer's hollow",
+        "title": "Wishlist di {traderName}",
         "description": "Profumi cercati da {traderName} su perfumer's hollow."
       },
       "heading": "{traderName} cerca",
@@ -2348,7 +2348,7 @@
   },
   "myDisputes": {
     "meta": {
-      "title": "Le mie controversie - perfumer's hollow",
+      "title": "Le mie controversie",
       "description": "Tieni traccia delle controversie di scambio che hai aperto o a cui partecipi."
     },
     "heading": "Le mie controversie",
@@ -2381,7 +2381,7 @@
   },
   "adminDisputes": {
     "meta": {
-      "title": "Controversie - Admin - perfumer's hollow",
+      "title": "Controversie - Admin",
       "description": "Esamina controversie di scambio e segnalazioni profilo."
     },
     "heading": "Controversie e segnalazioni",
@@ -2433,7 +2433,7 @@
   },
   "adminReports": {
     "meta": {
-      "title": "Segnalazioni utenti - Admin - perfumer's hollow",
+      "title": "Segnalazioni utenti - Admin",
       "description": "Esamina le segnalazioni della community contro i trader."
     },
     "heading": "Segnalazioni utenti",
@@ -2474,7 +2474,7 @@
   },
   "myReports": {
     "meta": {
-      "title": "Le mie segnalazioni - perfumer's hollow",
+      "title": "Le mie segnalazioni",
       "description": "Segnalazioni che hai inviato contro altri trader."
     },
     "heading": "Le mie segnalazioni",
@@ -2499,7 +2499,7 @@
   },
   "communityPolicy": {
     "meta": {
-      "title": "Politica della community - perfumer's hollow",
+      "title": "Politica della community",
       "description": "Aspettative di spedizione, processo di controversia e regole della community per i trader."
     },
     "heading": "Politica della community",

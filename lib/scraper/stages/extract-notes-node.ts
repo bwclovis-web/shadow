@@ -592,14 +592,22 @@ const processSingleProductPhase1 = async (
     existingFromPython != null &&
     noteLayerCount(existingFromPython) >= 4 &&
     typeof item._noteSource === "string" &&
-    (/text_regex_layered|html_(?:heading|strong)_layers/.test(item._noteSource)
-      ? existingFromPython.openNotes.length > 0 &&
-        existingFromPython.heartNotes.length > 0 &&
-        existingFromPython.baseNotes.length > 0 &&
-        noteLayerCount(existingFromPython) >= 6
-      : // Damask / Wix flat "Notes: a, b, c" — keep Python materials; don't re-LLM into empty/junk.
-        /(text_regex_flat|html_flat)/.test(item._noteSource) &&
-        existingFromPython.openNotes.length >= 4)
+    (/html_(?:prestashop|shopify)_pyramid|html_dt_dd_layers/.test(item._noteSource)
+      ? // Theme pyramid DOM (PrestaShop Warehouse, Shopify pyramids, dt/dd) — merchant-authored
+        // layer markup; re-confirmation against notesText/description would wipe these.
+        [
+          existingFromPython.openNotes,
+          existingFromPython.heartNotes,
+          existingFromPython.baseNotes,
+        ].filter(layer => layer.length > 0).length >= 2
+      : /text_regex_layered|html_(?:heading|strong)_layers/.test(item._noteSource)
+        ? existingFromPython.openNotes.length > 0 &&
+          existingFromPython.heartNotes.length > 0 &&
+          existingFromPython.baseNotes.length > 0 &&
+          noteLayerCount(existingFromPython) >= 6
+        : // Damask / Wix flat "Notes: a, b, c" — keep Python materials; don't re-LLM into empty/junk.
+          /(text_regex_flat|html_flat)/.test(item._noteSource) &&
+          existingFromPython.openNotes.length >= 4)
 
   try {
     let notes: NotesLayers
@@ -870,6 +878,20 @@ const processSingleProductPhase1 = async (
 
     notes = rejectThemeJunkDominatedLayers(notes)
     notes = rejectComplianceDominatedLayers(notes)
+
+    // Trusted Python pyramids skip the mid-pipeline translate above — still localize here.
+    if (!allNotesEnglish(notes)) {
+      throwIfAborted(sig)
+      opts.onProgress?.(
+        `Notes pipeline ${index + 1}/${totalItems}: translating notes to English for ${(name || resolvedName || "product").slice(0, 48)}`,
+      )
+      notes = await translateNotesToEnglish(llm, notes)
+      for (const n of [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]) {
+        const lc = n.trim().toLowerCase()
+        if (lc) merchantTrustedNotes.add(lc)
+      }
+    }
+
     notes = finalizeNoteLayersForExport(notes, merchantTrustedNotes)
 
     const resolveNoteSource = (): ScraperNoteSource => {

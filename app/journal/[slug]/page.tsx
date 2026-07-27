@@ -10,6 +10,7 @@ import { JOURNAL_PATH } from "@/constants/routes"
 import { getArticleBySlug, getPublishedArticles } from "@/lib/sanity/articles.server"
 import { getArticleCoverUrl } from "@/lib/sanity/image"
 import { buildArticleJsonLd } from "@/lib/sanity/json-ld"
+import { brandPageTitle } from "@/lib/seo/metadata"
 import { isSanityConfigured } from "@/sanity/env"
 
 export const revalidate = 3600
@@ -32,11 +33,13 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
   }
 
   const ogImage = getArticleCoverUrl(article.coverImage)
+  const title = `${article.title} — Journal`
+  const socialTitle = brandPageTitle(title)
   return {
-    title: `${article.title} — Journal`,
+    title,
     description: article.excerpt ?? undefined,
     openGraph: {
-      title: article.title,
+      title: socialTitle,
       description: article.excerpt ?? undefined,
       type: "article",
       publishedTime: article.publishedAt,
@@ -45,7 +48,7 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
     },
     twitter: {
       card: ogImage ? "summary_large_image" : "summary",
-      title: article.title,
+      title: socialTitle,
       description: article.excerpt ?? undefined,
       ...(ogImage ? { images: [ogImage] } : {}),
     },

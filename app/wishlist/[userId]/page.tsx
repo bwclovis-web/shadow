@@ -3,6 +3,7 @@ import type React from "react"
 import { getTranslations } from "next-intl/server"
 import { notFound } from "next/navigation"
 
+import { brandPageTitle } from "@/lib/seo/metadata"
 import { getPublicWishlistForUser } from "@/models/wishlist.server"
 import { getTraderById } from "@/models/user.server"
 import { publicAssetUrl } from "@/utils/public-asset-url.server"
@@ -23,19 +24,22 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
 
   const t = await getTranslations("wishlist.public.meta")
   const traderName = getTraderDisplayName(trader)
+  const title = t("title", { traderName })
+  const description = t("description", { traderName })
+  const socialTitle = brandPageTitle(title)
 
   return {
-    title: t("title", { traderName }),
-    description: t("description", { traderName }),
+    title,
+    description,
     openGraph: {
-      title: t("title", { traderName }),
-      description: t("description", { traderName }),
+      title: socialTitle,
+      description,
       type: "profile",
     },
     twitter: {
       card: "summary",
-      title: t("title", { traderName }),
-      description: t("description", { traderName }),
+      title: socialTitle,
+      description,
     },
   }
 }

@@ -22,6 +22,10 @@ import { UserAlertsProvider } from '@/components/Molecules/UserAlertsProvider/Us
 import SiteFooter from '@/components/Organisms/SiteFooter/SiteFooter'
 import OnboardingBannerSlot from '@/components/Containers/Onboarding/OnboardingBannerSlot'
 import { getSiteUrl } from '@/lib/seo/site-url'
+import {
+  buildSiteOrganizationJsonLd,
+  buildWebSiteJsonLd,
+} from '@/lib/seo/json-ld'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -43,7 +47,16 @@ export const metadata: Metadata = {
     template: "%s | perfumer's hollow",
   },
   description:
-    "Explore perfume notes, fragrance houses, and community ratings — then trade and share bottles on the perfumer's hollow exchange.",
+    "Explore perfume notes, fragrance houses, and community reviews — then trade and swap decants and samples on the perfumer's hollow exchange.",
+  openGraph: {
+    siteName: "perfumer's hollow",
+    type: "website",
+    images: [{ url: "/images/new/home.webp" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/images/new/home.webp"],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -99,6 +112,18 @@ export default async function RootLayout({
   return (
     <html lang={locale} className={`${inter.variable} ${cormorantGaramond.variable}`}>
       <body className={`${inter.className} bg-noir-black`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(buildSiteOrganizationJsonLd()),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(buildWebSiteJsonLd()),
+          }}
+        />
         <ViewTransitionsWrapper>
           <NextIntlClientProvider locale={locale} messages={messages}>
             <UserAlertsProvider

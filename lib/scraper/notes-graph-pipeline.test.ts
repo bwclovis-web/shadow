@@ -3038,6 +3038,68 @@ Organically |
     expect(base).toEqual(expect.arrayContaining(["amber", "vanilla", "moss"]))
   })
 
+  it("Obvious Parfums: enrichOnly keeps Python PrestaShop pyramid notes when description was noir-wiped", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+    vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")
+
+    invokeMock.mockImplementation(() => {
+      throw new Error("LLM should not run for a trusted Python html_prestashop_pyramid extraction")
+    })
+
+    const items: ScrapedItem[] = [
+      {
+        // Scoville shape: 3/1/3 pyramid; Python wipes description once noir exists,
+        // and no notesText was emitted — the Node pass previously dropped every note.
+        name: "Scoville By Obvious",
+        description: "",
+        image: "",
+        detailURL:
+          "https://www.obviousparfums.com/en/eaux-de-parfum/162-scoville-by-obvious-50ml-eau-parfum.html",
+        perfumeHouse: "Obvious Parfums",
+        openNotes: ["red chili pepper", "sichuan pepper", "black pepper"],
+        heartNotes: ["priprioca"],
+        baseNotes: ["woody notes", "vanilla", "musk"],
+        _noteSource: "html_prestashop_pyramid",
+      },
+      {
+        // Une Vanille shape: 1/1/3 = 5 notes — fails the >=6 rule used for
+        // text_regex_layered but must still be trusted for theme pyramid DOM.
+        name: "Une Vanille",
+        description: "",
+        image: "",
+        detailURL: "https://www.obviousparfums.com/en/eaux-de-parfum/141-une-vanille.html",
+        perfumeHouse: "Obvious Parfums",
+        openNotes: ["tonka bean absolute from venezuela"],
+        heartNotes: ["black vanilla absolute from madagascar"],
+        baseNotes: ["globalide", "muscenone", "clean macrocyclic musk"],
+        _noteSource: "html_prestashop_pyramid",
+      },
+    ]
+
+    const { records } = await extractNotesForItems(items, "Obvious Parfums", {
+      generateNoirDescriptions: false,
+      enrichOnly: true,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    const scoville = records.find(r => r.name.includes("Scoville"))
+    const vanille = records.find(r => r.name.includes("Vanille"))
+    expect(scoville).toBeDefined()
+    expect(vanille).toBeDefined()
+
+    expect(JSON.parse(scoville!.openNotes)).toEqual(
+      expect.arrayContaining(["red chili pepper", "sichuan pepper", "black pepper"]),
+    )
+    expect(JSON.parse(scoville!.heartNotes)).toEqual(expect.arrayContaining(["priprioca"]))
+    expect(JSON.parse(scoville!.baseNotes)).toEqual(
+      expect.arrayContaining(["woody notes", "vanilla", "musk"]),
+    )
+
+    expect(JSON.parse(vanille!.openNotes).length).toBeGreaterThan(0)
+    expect(JSON.parse(vanille!.heartNotes).length).toBeGreaterThan(0)
+    expect(JSON.parse(vanille!.baseNotes).length).toBeGreaterThan(0)
+  })
+
   it("Andromedas Gioiosa: noir-only description rescues notes from PDP fetch", async () => {
     vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
     vi.stubEnv("NOTES_PIPELINE_VALIDATION", "off")

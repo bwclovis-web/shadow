@@ -5,6 +5,7 @@ import {
   isCsvImportSubmission,
 } from "@/lib/csv-import-pending-submission"
 import { prisma } from "@/lib/db"
+import { deletePerfumeWithRelatedData } from "@/models/perfume-delete.server"
 import type { PendingSubmission, PendingSubmissionStatus, PendingSubmissionType } from "@/types/database"
 import { createPerfumeHouse, getPerfumeHouseByName } from "./house.server"
 import { createPerfume } from "./perfume.server"
@@ -27,45 +28,7 @@ type PendingSubmissionRecord = PendingSubmission & {
 }
 
 const deletePendingPerfumeById = async (perfumeId: string): Promise<void> => {
-  await prisma.$transaction(async tx => {
-    const userPerfumeRows = await tx.userPerfume.findMany({
-      where: { perfumeId },
-      select: { id: true },
-    })
-    const userPerfumeIds = userPerfumeRows.map(row => row.id)
-
-    await tx.userAlert.updateMany({
-      where: { perfumeId },
-      data: { perfumeId: null },
-    })
-
-    await tx.wishlistNotification.deleteMany({ where: { perfumeId } })
-    await tx.userPerfumeWishlist.deleteMany({ where: { perfumeId } })
-    await tx.userPerfumeReview.deleteMany({ where: { perfumeId } })
-    await tx.userPerfumeSeasonVote.deleteMany({ where: { perfumeId } })
-    await tx.userPerfumeRating.deleteMany({ where: { perfumeId } })
-    await tx.userPerfumeComment.deleteMany({ where: { perfumeId } })
-
-    if (userPerfumeIds.length > 0) {
-      await tx.tradeLineItem.deleteMany({
-        where: { userPerfumeId: { in: userPerfumeIds } },
-      })
-
-      await tx.decantSplit.deleteMany({
-        where: {
-          OR: [
-            { sourceUserPerfumeId: { in: userPerfumeIds } },
-            { perfumeId },
-          ],
-        },
-      })
-    } else {
-      await tx.decantSplit.deleteMany({ where: { perfumeId } })
-    }
-
-    await tx.userPerfume.deleteMany({ where: { perfumeId } })
-    await tx.perfume.deleteMany({ where: { id: perfumeId } })
-  })
+  await deletePerfumeWithRelatedData(perfumeId)
 }
 
 const deletePendingHouseById = async (houseId: string): Promise<void> => {

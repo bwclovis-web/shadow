@@ -33,6 +33,7 @@ import {
   scrapedItemsNeedArtisticFragrancesRepair,
   scrapedItemsNeedEtatLibreEnrichment,
   scrapedItemsNeedNodeRepair,
+  scrapedItemsNeedNoteTranslation,
   scrapedItemsNeedPatternEtsyEnrichment,
 } from "@/lib/scraper/map-scraped-items"
 import { extractNotesForItems, type ScraperPipelineOptions } from "@/lib/scraper/notes-graph"
@@ -68,6 +69,14 @@ export const maxDuration = 300
 
 /** How often to send a keepalive '\n' to prevent browser idle-connection drops (ms). */
 const KEEPALIVE_INTERVAL_MS = 25_000
+
+/**
+ * If Python emits no stderr progress for this long, treat the scrape as hung
+ * (ChromeDriver wedged on a page) and kill the child so the UI stops looping
+ * "Scraper still running…" forever.
+ */
+const PROGRESS_STALL_MS = 4 * 60 * 1000
+const PROGRESS_WATCHDOG_INTERVAL_MS = 30_000
 
 const isAbortLike = (e: unknown): boolean =>
   (e instanceof DOMException && e.name === "AbortError") ||
@@ -454,7 +463,10 @@ export async function POST(request: NextRequest): Promise<Response> {
       let scrapeClientAborted = false
       let scrapeKillTimer: ReturnType<typeof setTimeout> | undefined
       let keepaliveTimer: ReturnType<typeof setInterval> | undefined
+      let progressWatchdogTimer: ReturnType<typeof setInterval> | undefined
       let keepalivePhase = "scraping"
+      let lastProgressAt = Date.now()
+      let stallKillIssued = false
 
       let stdout = ""
       let scraperLog = ""
@@ -476,9 +488,17 @@ export async function POST(request: NextRequest): Promise<Response> {
         }
       }
 
+      const clearProgressWatchdog = () => {
+        if (progressWatchdogTimer !== undefined) {
+          clearInterval(progressWatchdogTimer)
+          progressWatchdogTimer = undefined
+        }
+      }
+
       const clearScrapeTimers = () => {
         clearScrapeKillTimer()
         clearKeepalive()
+        clearProgressWatchdog()
       }
 
       const killPythonIfRunning = () => {
@@ -519,6 +539,29 @@ export async function POST(request: NextRequest): Promise<Response> {
         }
       }, KEEPALIVE_INTERVAL_MS)
 
+      progressWatchdogTimer = setInterval(() => {
+        if (stallKillIssued || scrapeClientAborted) return
+        const p = childRef.current
+        if (!p || p.exitCode !== null) return
+        const silentFor = Date.now() - lastProgressAt
+        if (silentFor < PROGRESS_STALL_MS) return
+        stallKillIssued = true
+        const silentSec = Math.round(silentFor / 1000)
+        try {
+          sendLine(controller, {
+            type: "log",
+            message: `Scraper hung — no progress for ${silentSec}s (likely ChromeDriver stuck on a page). Stopping scrape.`,
+          })
+        } catch {
+          // stream closed
+        }
+        try {
+          p.kill()
+        } catch {
+          // ignore
+        }
+      }, PROGRESS_WATCHDOG_INTERVAL_MS)
+
       const child = spawnScraperPythonProcess()
       childRef.current = child
       const childStdin = child.stdin
@@ -545,9 +588,11 @@ export async function POST(request: NextRequest): Promise<Response> {
       }
 
       childStdout.on("data", (chunk: Buffer) => {
+        lastProgressAt = Date.now()
         stdout += chunk.toString("utf8")
       })
       childStderr.on("data", (chunk: Buffer) => {
+        lastProgressAt = Date.now()
         const text = chunk.toString("utf8")
         scraperLog += text
         stderrBuffer += text
@@ -739,15 +784,17 @@ export async function POST(request: NextRequest): Promise<Response> {
           const needsNodeRepair = scrapedItemsNeedNodeRepair(scrapedItems)
           const needsEtatLibreEnrichment = scrapedItemsNeedEtatLibreEnrichment(scrapedItems)
           const needsArtisticFragrancesRepair = scrapedItemsNeedArtisticFragrancesRepair(scrapedItems)
+          const needsNoteTranslation = scrapedItemsNeedNoteTranslation(scrapedItems)
           const allArtisticMilano = scrapedItemsAreArtisticMilanoFragranzeHouse(scrapedItems)
           const skipNodeNotesPipeline =
-            (allArtisticMilano && hasCompleteMerchantNotes) ||
-            (hasPythonNotes && hasCompleteMerchantNotes && !needsArtisticFragrancesRepair) ||
-            (hasPythonNotes &&
-              !needsNodeEnrichment &&
-              !needsNodeRepair &&
-              !needsEtatLibreEnrichment &&
-              !needsArtisticFragrancesRepair)
+            !needsNoteTranslation &&
+            ((allArtisticMilano && hasCompleteMerchantNotes) ||
+              (hasPythonNotes && hasCompleteMerchantNotes && !needsArtisticFragrancesRepair) ||
+              (hasPythonNotes &&
+                !needsNodeEnrichment &&
+                !needsNodeRepair &&
+                !needsEtatLibreEnrichment &&
+                !needsArtisticFragrancesRepair))
 
           keepalivePhase = skipNodeNotesPipeline ? "finalize" : "notes"
 
@@ -757,9 +804,11 @@ export async function POST(request: NextRequest): Promise<Response> {
               message: skipNodeNotesPipeline
                 ? `Python notes pipeline complete — mapping ${scrapedItems.length} product(s) (skipping duplicate Node LLM pass).`
                 : hasPythonNotes
-                  ? needsNodeRepair
-                    ? `Python pipeline complete — Node repair pass for ${scrapedItems.length} product(s) (compliance/URL fixes; progress lines follow).`
-                    : `Python pipeline complete — Node enrichment for ${scrapedItems.length} product(s) (progress lines follow).`
+                  ? needsNoteTranslation
+                    ? `Python pipeline complete — Node translation pass for ${scrapedItems.length} product(s) (non-English notes detected; progress lines follow).`
+                    : needsNodeRepair
+                      ? `Python pipeline complete — Node repair pass for ${scrapedItems.length} product(s) (compliance/URL fixes; progress lines follow).`
+                      : `Python pipeline complete — Node enrichment for ${scrapedItems.length} product(s) (progress lines follow).`
                   : `Starting note extraction for ${scrapedItems.length} products (Node.js pipeline — progress lines follow).`,
             })
           } catch {

@@ -6,6 +6,7 @@ import { Link } from "next-view-transitions"
 
 import { ScentJourneyTimeline } from "@/components/Containers/TraderProfile/ScentJourneyTimeline"
 import TitleBanner from "@/components/Organisms/TitleBanner"
+import { brandPageTitle } from "@/lib/seo/metadata"
 import {
   getScentJourneyForUser,
   SCENT_JOURNEY_FULL_LIMIT,
@@ -25,23 +26,27 @@ const BANNER_IMAGE = "/images/trade.webp"
 export const generateMetadata = async ({ params }: Props): Promise<Metadata> => {
   const { id } = await params
   const trader = await getTraderById(id)
-  if (!trader) return { title: "Scent journey" }
+  if (!trader) return { title: "Scent journey", robots: { index: false, follow: true } }
 
   const t = await getTranslations("traderProfile.scentJourney.meta")
   const traderName = getTraderDisplayName(trader)
+  const title = t("title", { traderName })
+  const description = t("description", { traderName })
+  const socialTitle = brandPageTitle(title)
 
   return {
-    title: t("title", { traderName }),
-    description: t("description", { traderName }),
+    title,
+    description,
+    robots: { index: false, follow: true },
     openGraph: {
-      title: t("title", { traderName }),
-      description: t("description", { traderName }),
+      title: socialTitle,
+      description,
       type: "profile",
     },
     twitter: {
       card: "summary",
-      title: t("title", { traderName }),
-      description: t("description", { traderName }),
+      title: socialTitle,
+      description,
     },
   }
 }

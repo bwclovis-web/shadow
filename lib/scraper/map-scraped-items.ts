@@ -10,6 +10,7 @@ import {
   isPatternByEtsyProductUrl,
   isUnusableMerchantDescription,
 } from "@/lib/scraper/notes-graph"
+import { allNotesEnglish } from "@/lib/scraper/stages/note-translation"
 import type { PerfumeCsvRecord, ScrapedItem, ScraperNoteSource } from "@/types/scraper"
 
 const NON_PERFUME_ANDROMEDA_PRODUCT_URL_RE =
@@ -218,6 +219,20 @@ export const scrapedItemsNeedEtatLibreEnrichment = (items: ScrapedItem[]): boole
     ]
     if (allNotes.length === 0) return true
     return allNotes.some(hasProseJunkScrapedNote)
+  })
+
+/** True when Python left non-English note labels — Node must translate before export. */
+export const scrapedItemsNeedNoteTranslation = (items: ScrapedItem[]): boolean =>
+  items.some(item => {
+    const layers = {
+      openNotes: item.openNotes ?? [],
+      heartNotes: item.heartNotes ?? [],
+      baseNotes: item.baseNotes ?? [],
+    }
+    if (layers.openNotes.length + layers.heartNotes.length + layers.baseNotes.length === 0) {
+      return false
+    }
+    return !allNotesEnglish(layers)
   })
 
 /** Re-run Node enrichment when Python output still has compliance notes, junk URLs, or sampler bleed. */

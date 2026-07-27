@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server"
 
 import TheArchiveClient from "@/app/the-archive/TheArchiveClient"
 import { THE_ARCHIVE_PATH } from "@/constants/routes"
+import { buildItemListJsonLd } from "@/lib/seo/json-ld"
 import { buildPageMetadata } from "@/lib/seo/metadata"
 import { getPerfumesByLetterPaginated } from "@/models/perfume.server"
 
@@ -57,11 +58,30 @@ const TheArchiveLetterPage = async ({ params }: Props) => {
   }))
 
   return (
-    <TheArchiveClient
-      initialLetter={isValidLetter ? normalizedLetter : null}
-      initialPerfumes={perfumesForClient}
-      initialPerfumeTotal={initialTotal}
-    />
+    <>
+      {isValidLetter && initialPerfumes.length > 0 ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(
+              buildItemListJsonLd({
+                name: `Perfumes starting with ${normalizedLetter}`,
+                path: `${THE_ARCHIVE_PATH}/${normalizedLetter}`,
+                items: initialPerfumes.map(p => ({
+                  name: p.name,
+                  path: `/perfume/${p.slug}`,
+                })),
+              }),
+            ),
+          }}
+        />
+      ) : null}
+      <TheArchiveClient
+        initialLetter={isValidLetter ? normalizedLetter : null}
+        initialPerfumes={perfumesForClient}
+        initialPerfumeTotal={initialTotal}
+      />
+    </>
   )
 }
 

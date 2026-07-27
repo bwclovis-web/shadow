@@ -4,6 +4,7 @@ import {
   pythonMerchantNotesComplete,
   scrapedItemsNeedArtisticFragrancesRepair,
   scrapedItemsNeedNodeRepair,
+  scrapedItemsNeedNoteTranslation,
 } from "./map-scraped-items"
 import type { ScrapedItem } from "@/types/scraper"
 
@@ -73,6 +74,32 @@ describe("pythonMerchantNotesComplete", () => {
     expect(pythonMerchantNotesComplete([solidPyramid({ _noteSource: "llm_description" })])).toBe(
       false,
     )
+  })
+})
+
+describe("scrapedItemsNeedNoteTranslation", () => {
+  it("returns false for English merchant notes", () => {
+    expect(scrapedItemsNeedNoteTranslation([solidPyramid()])).toBe(false)
+  })
+
+  it("returns true for Italian layered notes from Python", () => {
+    expect(
+      scrapedItemsNeedNoteTranslation([
+        solidPyramid({
+          openNotes: ["zafferano", "foglie di rosa"],
+          heartNotes: ["essenza di rosa bulgara", "assoluta di rosa turca", "patchouli"],
+          baseNotes: ["oud", "cedro", "muschio"],
+        }),
+      ]),
+    ).toBe(true)
+  })
+
+  it("returns false when there are no notes", () => {
+    expect(
+      scrapedItemsNeedNoteTranslation([
+        solidPyramid({ openNotes: [], heartNotes: [], baseNotes: [] }),
+      ]),
+    ).toBe(false)
   })
 })
 

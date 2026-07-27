@@ -16,12 +16,23 @@ import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 const BANNER_IMAGE = "/images/createHouse.png"
 
-const CreateHouseClient = () => {
+type CreateHouseClientProps = {
+  /** Prefill from query (e.g. scraper Smart Detect → create house). */
+  initialName?: string
+  initialWebsite?: string
+}
+
+const CreateHouseClient = ({ initialName, initialWebsite }: CreateHouseClientProps) => {
   const t = useTranslations("createHouse")
   const [state, formAction] = useActionState(
     createHouseAction,
     null as CreateHouseActionState
   )
+
+  const prefill =
+    initialName || initialWebsite
+      ? { name: initialName, website: initialWebsite }
+      : undefined
 
   return (
     <main id="main-content">
@@ -35,6 +46,7 @@ const CreateHouseClient = () => {
         formType={FORM_TYPES.CREATE_HOUSE_FORM}
         lastResult={state as SubmissionResult | null}
         action={formAction}
+        data={prefill}
       />
       </PageWrapper>
     </main>

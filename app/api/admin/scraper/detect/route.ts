@@ -60,6 +60,9 @@ export const POST = async (request: NextRequest): Promise<NextResponse> => {
 
   return NextResponse.json({
     ...result,
+    /** Existing DB house name when matched; otherwise the site-derived suggestion. */
     suggestedHouseName: matchedHouseName ?? result.suggestedHouseName,
+    /** True when suggestedHouseName resolved to an existing perfume house. */
+    houseMatched: matchedHouseName != null,
   })
 }

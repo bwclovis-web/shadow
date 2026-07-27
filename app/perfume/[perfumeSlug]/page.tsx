@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 
 import { getArticlesForPerfumeSlug } from "@/lib/sanity/articles.server"
+import { prisma } from "@/lib/db"
 import {
   buildBreadcrumbListJsonLd,
   buildPerfumeProductJsonLd,
@@ -16,6 +17,7 @@ import { selectionFromVoteRow } from "@/models/perfumeSeasonVote.server"
 import { getPerfumeBySlug } from "@/models/perfume.server"
 import { rulesRecommendationService } from "@/services/recommendations"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+import { getTraderDisplayName } from "@/utils/user"
 
 import PerfumeDetailClient from "./PerfumeDetailClient"
 
@@ -97,6 +99,21 @@ export default async function PerfumeDetailPage({
 
   const overall = payload.averageRatings.overall
   const ratingCount = payload.averageRatings.totalRatings
+  const reviewSlice = payload.reviewsData.reviews.slice(0, 5)
+  const overallByUserId = new Map<string, number | null>()
+  if (reviewSlice.length > 0) {
+    const ratingRows = await prisma.userPerfumeRating.findMany({
+      where: {
+        perfumeId: perfume.id,
+        userId: { in: reviewSlice.map(r => r.userId) },
+      },
+      select: { userId: true, overall: true },
+    })
+    for (const row of ratingRows) {
+      overallByUserId.set(row.userId, row.overall)
+    }
+  }
+
   const productJsonLd = buildPerfumeProductJsonLd({
     name: perfume.name,
     slug: perfume.slug,
@@ -112,6 +129,15 @@ export default async function PerfumeDetailPage({
       overall != null && ratingCount >= 1
         ? { ratingValue: overall, ratingCount }
         : null,
+    reviews: reviewSlice.map(r => ({
+      author: getTraderDisplayName(r.user),
+      reviewBody: r.review
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim(),
+      datePublished: r.createdAt.toISOString(),
+      ratingValue: overallByUserId.get(r.userId) ?? null,
+    })),
   })
 
   const house = perfume.perfumeHouse

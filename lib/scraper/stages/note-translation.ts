@@ -20,7 +20,6 @@ const KNOWN_NON_ENGLISH_NOTE_WORDS = new Set([
   "santal",
   "feve",
   "fève",
-  "oud",
   "fleur",
   "violette",
   "trandafir",
@@ -39,6 +38,45 @@ const KNOWN_NON_ENGLISH_NOTE_WORDS = new Set([
   "sandalo",
   "legno",
   "cedro",
+  "zafferano",
+  "foglie",
+  "foglia",
+  "essenza",
+  "assoluta",
+  "estratto",
+  "bulgara",
+  "turca",
+  "bergamotto",
+  "limone",
+  "vaniglia",
+  "pepe",
+  "fiori",
+  "fiore",
+  "scorza",
+  "arancia",
+  "arancio",
+  "resina",
+  "legni",
+  "spezie",
+  "spezia",
+  "incenso",
+  "cuoio",
+  "muschi",
+  "fava",
+  "carota",
+  "rizomi",
+  "rizoma",
+  "spruzzi",
+  "marini",
+  "marino",
+  "italiano",
+  "italiana",
+  "bianchi",
+  "bianco",
+  "bianche",
+  "accordo",
+  "daim",
+  "violetta",
   // German (lowercase tokens)
   "moschus",
   "sandelholz",
@@ -52,6 +90,10 @@ const KNOWN_NON_ENGLISH_NOTE_WORDS = new Set([
   "almíscar",
 ])
 
+/** Italian / Romance phrasing that ASCII vocabulary alone often misses. */
+const NON_ENGLISH_NOTE_PHRASE_RE =
+  /\b(?:foglie|foglia|essenza|assoluta|estratto|olio|fiori|fiore|rizomi|rizoma|legno|legni)\s+di\b|\bdi\s+(?:rosa|limone|bergamotto|arancia|vaniglia|cedro|sandalo|patchouli|pepe|iris)\b|\b(?:rosa|limone|bergamotto)\s+(?:bulgara|turca|italiana|egiziana|italiano)\b|\b(?:fiori|muschi)\s+bianch[ie]\b|\bspruzzi\s+marin[io]\b|\bpepe\s+rosa\b|\blimone\s+italian[oa]\b/i
+
 function allNotesEnglish(notes: { openNotes: string[]; heartNotes: string[]; baseNotes: string[] }): boolean {
   const all = [...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes]
   if (all.length === 0) return true
@@ -59,6 +101,7 @@ function allNotesEnglish(notes: { openNotes: string[]; heartNotes: string[]; bas
     const trimmed = n.trim().toLowerCase()
     // Non-ASCII characters → definitely non-English
     if (/[^\x00-\x7f]/.test(trimmed)) return false
+    if (NON_ENGLISH_NOTE_PHRASE_RE.test(trimmed)) return false
     // Check each word against known non-English perfumery vocabulary
     return !trimmed.split(/\s+/).some(word => KNOWN_NON_ENGLISH_NOTE_WORDS.has(word))
   })

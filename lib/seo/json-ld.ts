@@ -1,6 +1,17 @@
 import { absoluteUrl } from "@/lib/seo/site-url"
 
+const SITE_NAME = "perfumer's hollow"
+const SITE_LOGO_PATH = "/images/new/logo-one.webp"
+const SITE_CONTACT_EMAIL = "contact@shadowandsillage.com"
+
 type NoteLike = { name?: string | null } | string
+
+export type PerfumeReviewForJsonLd = {
+  author: string
+  reviewBody: string
+  datePublished?: string | null
+  ratingValue?: number | null
+}
 
 type PerfumeForJsonLd = {
   name: string
@@ -15,6 +26,7 @@ type PerfumeForJsonLd = {
     ratingValue: number
     ratingCount: number
   } | null
+  reviews?: PerfumeReviewForJsonLd[] | null
 }
 
 type HouseForJsonLd = {
@@ -28,6 +40,16 @@ type HouseForJsonLd = {
 }
 
 type BreadcrumbItem = {
+  name: string
+  path: string
+}
+
+type FaqItem = {
+  question: string
+  answer: string
+}
+
+type ItemListEntry = {
   name: string
   path: string
 }
@@ -55,6 +77,38 @@ const buildNoteProperties = (perfume: PerfumeForJsonLd) => {
   return props.length > 0 ? props : undefined
 }
 
+const buildReviewNodes = (reviews: PerfumeReviewForJsonLd[] | null | undefined) => {
+  if (!reviews?.length) return undefined
+  const nodes = reviews
+    .map(review => {
+      const author = review.author.trim()
+      const body = review.reviewBody.trim()
+      if (!author || !body) return null
+      const rating =
+        review.ratingValue != null && Number.isFinite(review.ratingValue)
+          ? {
+              reviewRating: {
+                "@type": "Rating" as const,
+                ratingValue: review.ratingValue,
+                bestRating: 5,
+                worstRating: 1,
+              },
+            }
+          : {}
+      return {
+        "@type": "Review" as const,
+        author: { "@type": "Person" as const, name: author },
+        reviewBody: body,
+        ...(review.datePublished
+          ? { datePublished: review.datePublished }
+          : {}),
+        ...rating,
+      }
+    })
+    .filter((node): node is NonNullable<typeof node> => node != null)
+  return nodes.length > 0 ? nodes : undefined
+}
+
 export const buildPerfumeProductJsonLd = (perfume: PerfumeForJsonLd) => {
   const url = absoluteUrl(`/perfume/${perfume.slug}`)
   const brandName = perfume.perfumeHouse?.name
@@ -65,6 +119,7 @@ export const buildPerfumeProductJsonLd = (perfume: PerfumeForJsonLd) => {
     rating != null &&
     Number.isFinite(rating.ratingValue) &&
     rating.ratingCount >= 1
+  const review = buildReviewNodes(perfume.reviews)
 
   return {
     "@context": "https://schema.org",
@@ -94,6 +149,7 @@ export const buildPerfumeProductJsonLd = (perfume: PerfumeForJsonLd) => {
           },
         }
       : {}),
+    ...(review ? { review } : {}),
   }
 }
 
@@ -122,6 +178,85 @@ export const buildBreadcrumbListJsonLd = (items: BreadcrumbItem[]) => {
       position: index + 1,
       name: item.name,
       item: absoluteUrl(item.path),
+    })),
+  }
+}
+
+export const buildSiteOrganizationJsonLd = () => {
+  const url = absoluteUrl("/")
+  return {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE_NAME,
+    url,
+    logo: absoluteUrl(SITE_LOGO_PATH),
+    email: SITE_CONTACT_EMAIL,
+  }
+}
+
+export const buildWebSiteJsonLd = () => {
+  const url = absoluteUrl("/")
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_NAME,
+    url,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${absoluteUrl("/the-exchange")}?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  }
+}
+
+export const buildFaqPageJsonLd = (items: FaqItem[]) => {
+  const entities = items
+    .map(item => {
+      const question = item.question.trim()
+      const answer = item.answer.trim()
+      if (!question || !answer) return null
+      return {
+        "@type": "Question" as const,
+        name: question,
+        acceptedAnswer: {
+          "@type": "Answer" as const,
+          text: answer,
+        },
+      }
+    })
+    .filter((node): node is NonNullable<typeof node> => node != null)
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: entities,
+  }
+}
+
+export const buildItemListJsonLd = ({
+  name,
+  path,
+  items,
+}: {
+  name: string
+  path: string
+  items: ItemListEntry[]
+}) => {
+  const list = items.filter(item => item.name.trim() && item.path)
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: name.trim() || undefined,
+    url: absoluteUrl(path),
+    numberOfItems: list.length,
+    itemListElement: list.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      url: absoluteUrl(item.path),
     })),
   }
 }

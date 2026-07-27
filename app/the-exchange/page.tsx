@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
 import { buildPageMetadata } from "@/lib/seo/metadata"
+import { buildItemListJsonLd } from "@/lib/seo/json-ld"
 import { getPerfumeHouseSummaryById } from "@/models/house.server"
 import {
   getAvailablePerfumesForDecantingPaginated,
@@ -157,7 +158,25 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
   }, {})
 
   return (
-    <TheExchangeClient
+    <>
+      {availablePerfumes.length > 0 ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(
+              buildItemListJsonLd({
+                name: "Perfumes available on The Exchange",
+                path: "/the-exchange",
+                items: availablePerfumes.map(p => ({
+                  name: p.name,
+                  path: `/perfume/${p.slug}`,
+                })),
+              }),
+            ),
+          }}
+        />
+      ) : null}
+      <TheExchangeClient
       availablePerfumes={availablePerfumes}
       pagination={pagination}
       searchQuery={searchQuery}
@@ -172,6 +191,7 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
       viewerId={viewerId}
       openSplitChipsByPerfumeId={openSplitChipsByPerfumeId}
     />
+    </>
   )
 }
 
