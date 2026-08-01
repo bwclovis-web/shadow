@@ -6,7 +6,8 @@ import dynamic from "next/dynamic"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
-import { Button } from "@/components/Atoms/Button"
+import { Button, VooDooLink } from "@/components/Atoms/Button"
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { PaginationBar } from "@/components/Molecules/PaginationBar"
 import { FilterChipStrip } from "@/components/Molecules/FilterChipStrip"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
@@ -15,6 +16,11 @@ import { ExchangeOpenSplitChip } from "@/components/Molecules/ExchangeOpenSplitC
 import Modal from "@/components/Organisms/Modal"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { DESKTOP_MEDIA } from "@/constants/breakpoints"
+import {
+  SIGN_IN,
+  THE_ARCHIVE_PATH,
+  THE_COLLECTORS_GUIDE_PATH,
+} from "@/constants/routes"
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
 import { useGsapStagger } from "@/hooks/useGsapStagger"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
@@ -59,6 +65,8 @@ export type { ExchangePageData } from "./exchange-types"
 
 const ROUTE_PATH = "/the-exchange"
 const BANNER_IMAGE = "/images/new/exchange.webp"
+const SIGN_UP_PATH = "/sign-up"
+const SIGN_IN_WITH_RETURN = `${SIGN_IN}?redirect=${encodeURIComponent(ROUTE_PATH)}`
 const TheExchangeClient = ({
   availablePerfumes,
   pagination,
@@ -444,10 +452,28 @@ const TheExchangeClient = ({
 
       <PageWrapper>
       {isEmptyExchange ? (
-        <div className="text-center py-8 bg-noir-gray/80 rounded-md mt-8 border-2 border-noir-light">
+        <div className="text-center py-8 px-4 bg-noir-gray/80 rounded-md mt-8 border-2 border-noir-light space-y-4">
           <h2 className="text-noir-light font-black text-3xl text-shadow-md text-shadow-noir-dark">
             {t("empty")}
           </h2>
+          <p className="text-noir-gold/90 max-w-lg mx-auto">{t("emptyHint")}</p>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <VooDooLink url={THE_ARCHIVE_PATH} variant="primary" background="gold">
+              {t("emptyBrowseArchive")}
+            </VooDooLink>
+            <VooDooLink url={THE_COLLECTORS_GUIDE_PATH} variant="secondary">
+              {t("emptyCollectorsGuide")}
+            </VooDooLink>
+            <VooDooLink url={SIGN_IN_WITH_RETURN} variant="secondary">
+              {t("emptySignIn")}
+            </VooDooLink>
+            <PrefetchLink
+              href={SIGN_UP_PATH}
+              className="text-sm text-noir-gold underline-offset-4 hover:underline"
+            >
+              {t("emptySignUp")}
+            </PrefetchLink>
+          </div>
         </div>
       ) : (
         <>
@@ -535,7 +561,7 @@ const TheExchangeClient = ({
                       <li
                         key={perfume.id}
                         data-exchange-card
-                        className="relative opacity-0"
+                        className="relative"
                       >
                         <ExchangePerfumeCard perfume={perfume} viewerId={viewerId}>
                           <div className="rounded-md space-y-2">
@@ -573,6 +599,15 @@ const TheExchangeClient = ({
                               >
                                 {tTradeComposer(getCardOfferCtaKey(perfume))}
                               </Button>
+                            ) : !viewerId && perfume.userPerfume.length > 0 ? (
+                              <VooDooLink
+                                url={SIGN_IN_WITH_RETURN}
+                                variant="primary"
+                                background="gold"
+                                className="w-full max-w-full"
+                              >
+                                {t("signInToPropose")}
+                              </VooDooLink>
                             ) : null}
                           </div>
                         </ExchangePerfumeCard>

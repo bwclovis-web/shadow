@@ -34,7 +34,7 @@ const TitleBanner = ({
         width={1200}
         height={600}
         priority={true}
-        quality={90}
+        quality={70}
         unoptimized={isPublicStaticAsset}
         className={`w-full h-full object-cover ${imagePos} ${
           flipImage ? "scale-x-[-1]" : ""

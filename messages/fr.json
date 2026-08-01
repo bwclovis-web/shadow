@@ -337,7 +337,8 @@
     "subheading": "Chaque parfum porte quelque chose qui mérite d'être retenu.",
     "searchHeading": "Résultats pour « {query} »",
     "searchSubheading": "{count, plural, =0 {Aucune fragrance ne correspond à « {query} ».} one {# fragrance correspondant à « {query} ».} other {# fragrances correspondant à « {query} ».}}",
-    "searchEmpty": "Aucune fragrance ne correspond à cette recherche. Essayez un autre nom, ou parcourez par lettre ci-dessous."
+    "searchEmpty": "Aucune fragrance ne correspond à cette recherche. Essayez un autre nom, ou parcourez par lettre ci-dessous.",
+    "featuredHeading": "Ajouts récents"
   },
   "auth": {
     "heading": "Bon retour",
@@ -643,6 +644,12 @@
       "members": "{count, number} membres",
       "separator": "·",
       "ariaLabel": "{bottlesListed, number} flacons listés, {exchangesThisMonth, number} échanges terminés ce mois-ci, {members, number} membres"
+    },
+    "cta": {
+      "navLabel": "Explorer",
+      "archive": "Parcourir L'Archive",
+      "exchange": "Voir les annonces",
+      "guide": "Comment fonctionne l'échange"
     },
     "activityFeed": {
       "title": "Dernières annonces sur l'échange"
@@ -1176,7 +1183,9 @@
       "messages": "Messages",
       "profile": "Profil",
       "alerts": "Alertes",
-      "signIn": "Connexion"
+      "signIn": "Connexion",
+      "archive": "Archive",
+      "guide": "Guide"
     },
     "tradeAlertsUnread": "{count, plural, one {# mise à jour d’échange non lue} other {# mises à jour d’échange non lues}}"
   },
@@ -1358,7 +1367,8 @@
     "nav": {
       "back": "Retour",
       "next": "Suivant",
-      "save": "Enregistrer les préférences"
+      "save": "Enregistrer les préférences",
+      "signInToSave": "Connectez-vous pour enregistrer"
     },
     "errors": {
       "mustSignIn": "Connectez-vous pour enregistrer vos préférences olfactives.",
@@ -1617,6 +1627,12 @@
     "subheading": "Les parfums rares trouvent une nouvelle maison ici.",
     "count": "parfums actuellement disponibles",
     "empty": "Aucun parfum n'est actuellement disponible à l'échange.",
+    "emptyHint": "Explorez L'Archive pendant que L'Échange se remplit, ou découvrez comment fonctionne l'échange.",
+    "emptyBrowseArchive": "Parcourir L'Archive",
+    "emptyCollectorsGuide": "Guide du collectionneur",
+    "emptySignIn": "Connexion",
+    "emptySignUp": "Créer un compte",
+    "signInToPropose": "Connectez-vous pour proposer un échange",
     "availableFrom": "Disponible chez",
     "search": {
       "placeholder": "Rechercher des parfums disponibles...",

@@ -3,13 +3,17 @@
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { useDirectMessageUnreadCount } from "@/components/Molecules/UserAlertsProvider/UserAlertsProvider"
 import { useUserAlertsContext } from "@/components/Molecules/UserAlertsProvider/UserAlertsProvider"
-import { SIGN_IN } from "@/constants/routes"
+import {
+  SIGN_IN,
+  THE_ARCHIVE_PATH,
+  THE_COLLECTORS_GUIDE_PATH,
+} from "@/constants/routes"
 import { getProfilePathForUser } from "@/utils/user"
 import { styleMerge } from "@/utils/styleUtils"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { type FC, type HTMLProps, useEffect, useRef, useState } from "react"
-import { BsBell } from "react-icons/bs"
+import { BsBell, BsBook, BsCollection } from "react-icons/bs"
 import { FaExchangeAlt, FaUser } from "react-icons/fa"
 import { MdMail } from "react-icons/md"
 
@@ -31,6 +35,16 @@ const navItemClass = (active: boolean) =>
       ? "border border-noir-gold/35 bg-noir-gold/[0.12] text-noir-light shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
       : "border border-transparent text-noir-gold hover:bg-white/[0.04] hover:text-noir-light"
   )
+
+const ActiveBar = ({ active }: { active: boolean }) => (
+  <span
+    aria-hidden
+    className={styleMerge(
+      "pointer-events-none absolute inset-x-4 top-1 h-px rounded-full bg-noir-gold/40 transition-opacity duration-200",
+      active ? "opacity-100" : "opacity-0"
+    )}
+  />
+)
 
 const Badge = ({
   count,
@@ -67,6 +81,7 @@ const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
   const [animateAlertBadge, setAnimateAlertBadge] = useState(false)
   const previousMessageUnreadRef = useRef(messageUnread)
   const previousAlertUnreadRef = useRef(alertUnread)
+  const isSignedIn = Boolean(user?.id)
 
   const isActive = (href: string, exact?: boolean) => {
     if (exact) return pathname === href
@@ -149,73 +164,97 @@ const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
           aria-current={isActive(EXCHANGE_PATH) ? "page" : undefined}
         >
           <FaExchangeAlt size={22} aria-hidden focusable={false} />
-          <span
-            aria-hidden
-            className={styleMerge(
-              "pointer-events-none absolute inset-x-4 top-1 h-px rounded-full bg-noir-gold/40 transition-opacity duration-200",
-              isActive(EXCHANGE_PATH) ? "opacity-100" : "opacity-0"
-            )}
-          />
-          <span className="text-[11px] font-medium leading-tight">{tBottom("exchange")}</span>
-        </PrefetchLink>
-
-        <PrefetchLink
-          href={user?.id ? EXCHANGES_PATH : SIGN_IN}
-          className={navItemClass(user?.id ? isActive(EXCHANGES_PATH) : isActive(SIGN_IN, true))}
-          aria-current={user?.id && isActive(EXCHANGES_PATH) ? "page" : undefined}
-        >
-          <MdMail size={24} aria-hidden focusable={false} />
-          <Badge count={messageUnread} animate={animateMessageBadge} />
-          <span
-            aria-hidden
-            className={styleMerge(
-              "pointer-events-none absolute inset-x-4 top-1 h-px rounded-full bg-noir-gold/40 transition-opacity duration-200",
-              user?.id && isActive(EXCHANGES_PATH) ? "opacity-100" : "opacity-0"
-            )}
-          />
-          <span className="text-[11px] font-medium leading-tight">{tBottom("messages")}</span>
-        </PrefetchLink>
-
-        <PrefetchLink
-          href={profileHref}
-          className={navItemClass(
-            user?.id ? isActive(profileHref) : isActive(SIGN_IN, true)
-          )}
-          aria-current={
-            user?.id && isActive(profileHref) && !pathname.includes("#")
-              ? "page"
-              : undefined
-          }
-        >
-          <FaUser size={20} aria-hidden focusable={false} />
-          <span
-            aria-hidden
-            className={styleMerge(
-              "pointer-events-none absolute inset-x-4 top-1 h-px rounded-full bg-noir-gold/40 transition-opacity duration-200",
-              user?.id ? isActive(profileHref) && !isAlertsActive ? "opacity-100" : "opacity-0" : isActive(SIGN_IN, true) ? "opacity-100" : "opacity-0"
-            )}
-          />
+          <ActiveBar active={isActive(EXCHANGE_PATH)} />
           <span className="text-[11px] font-medium leading-tight">
-            {user?.id ? tBottom("profile") : tBottom("signIn")}
+            {tBottom("exchange")}
           </span>
         </PrefetchLink>
 
-        <PrefetchLink
-          href={alertsHref}
-          className={navItemClass(isAlertsActive)}
-          aria-current={isAlertsActive ? "page" : undefined}
-        >
-          <BsBell size={20} aria-hidden focusable={false} />
-          <Badge count={alertUnread} animate={animateAlertBadge} />
-          <span
-            aria-hidden
-            className={styleMerge(
-              "pointer-events-none absolute inset-x-4 top-1 h-px rounded-full bg-noir-gold/40 transition-opacity duration-200",
-              isAlertsActive ? "opacity-100" : "opacity-0"
+        {isSignedIn ? (
+          <PrefetchLink
+            href={EXCHANGES_PATH}
+            className={navItemClass(isActive(EXCHANGES_PATH))}
+            aria-current={isActive(EXCHANGES_PATH) ? "page" : undefined}
+          >
+            <MdMail size={24} aria-hidden focusable={false} />
+            <Badge count={messageUnread} animate={animateMessageBadge} />
+            <ActiveBar active={isActive(EXCHANGES_PATH)} />
+            <span className="text-[11px] font-medium leading-tight">
+              {tBottom("messages")}
+            </span>
+          </PrefetchLink>
+        ) : (
+          <PrefetchLink
+            href={THE_ARCHIVE_PATH}
+            className={navItemClass(isActive(THE_ARCHIVE_PATH))}
+            aria-current={isActive(THE_ARCHIVE_PATH) ? "page" : undefined}
+          >
+            <BsCollection size={22} aria-hidden focusable={false} />
+            <ActiveBar active={isActive(THE_ARCHIVE_PATH)} />
+            <span className="text-[11px] font-medium leading-tight">
+              {tBottom("archive")}
+            </span>
+          </PrefetchLink>
+        )}
+
+        {isSignedIn ? (
+          <PrefetchLink
+            href={profileHref}
+            className={navItemClass(
+              isActive(profileHref) && !isAlertsActive
             )}
-          />
-          <span className="text-[11px] font-medium leading-tight">{tBottom("alerts")}</span>
-        </PrefetchLink>
+            aria-current={
+              isActive(profileHref) && !isAlertsActive ? "page" : undefined
+            }
+          >
+            <FaUser size={20} aria-hidden focusable={false} />
+            <ActiveBar active={isActive(profileHref) && !isAlertsActive} />
+            <span className="text-[11px] font-medium leading-tight">
+              {tBottom("profile")}
+            </span>
+          </PrefetchLink>
+        ) : (
+          <PrefetchLink
+            href={THE_COLLECTORS_GUIDE_PATH}
+            className={navItemClass(isActive(THE_COLLECTORS_GUIDE_PATH))}
+            aria-current={
+              isActive(THE_COLLECTORS_GUIDE_PATH) ? "page" : undefined
+            }
+          >
+            <BsBook size={20} aria-hidden focusable={false} />
+            <ActiveBar active={isActive(THE_COLLECTORS_GUIDE_PATH)} />
+            <span className="text-[11px] font-medium leading-tight">
+              {tBottom("guide")}
+            </span>
+          </PrefetchLink>
+        )}
+
+        {isSignedIn ? (
+          <PrefetchLink
+            href={alertsHref}
+            className={navItemClass(isAlertsActive)}
+            aria-current={isAlertsActive ? "page" : undefined}
+          >
+            <BsBell size={20} aria-hidden focusable={false} />
+            <Badge count={alertUnread} animate={animateAlertBadge} />
+            <ActiveBar active={isAlertsActive} />
+            <span className="text-[11px] font-medium leading-tight">
+              {tBottom("alerts")}
+            </span>
+          </PrefetchLink>
+        ) : (
+          <PrefetchLink
+            href={SIGN_IN}
+            className={navItemClass(isActive(SIGN_IN, true))}
+            aria-current={isActive(SIGN_IN, true) ? "page" : undefined}
+          >
+            <FaUser size={20} aria-hidden focusable={false} />
+            <ActiveBar active={isActive(SIGN_IN, true)} />
+            <span className="text-[11px] font-medium leading-tight">
+              {tBottom("signIn")}
+            </span>
+          </PrefetchLink>
+        )}
       </nav>
     </div>
   )

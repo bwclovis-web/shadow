@@ -531,7 +531,8 @@
     "subheading": "Every fragrance carries something worth remembering.",
     "searchHeading": "Results for “{query}”",
     "searchSubheading": "{count, plural, =0 {No fragrances matched “{query}”.} one {# fragrance matching “{query}”.} other {# fragrances matching “{query}”.}}",
-    "searchEmpty": "No fragrances matched that search. Try another name, or browse by letter below."
+    "searchEmpty": "No fragrances matched that search. Try another name, or browse by letter below.",
+    "featuredHeading": "Recently added"
   },
   "auth": {
     "heading": "Enter the Hollow",
@@ -837,6 +838,12 @@
       "members": "{count, number} members",
       "separator": "·",
       "ariaLabel": "{bottlesListed, number} bottles listed, {exchangesThisMonth, number} exchanges completed this month, {members, number} members"
+    },
+    "cta": {
+      "navLabel": "Explore",
+      "archive": "Browse The Archive",
+      "exchange": "See what’s listed",
+      "guide": "How trading works"
     },
     "activityFeed": {
       "title": "Latest on the exchange"
@@ -1371,7 +1378,9 @@
       "messages": "Messages",
       "profile": "Profile",
       "alerts": "Alerts",
-      "signIn": "Sign in"
+      "signIn": "Sign in",
+      "archive": "Archive",
+      "guide": "Guide"
     }
   },
   "traderActivity": {
@@ -1552,7 +1561,8 @@
     "nav": {
       "back": "Back",
       "next": "Next",
-      "save": "Save Scent DNA"
+      "save": "Save Scent DNA",
+      "signInToSave": "Sign in to save"
     },
     "errors": {
       "mustSignIn": "Sign in to save your Scent DNA preferences.",
@@ -1888,6 +1898,12 @@
     "subheading": "Rare fragrances find new homes here.",
     "count": "fragrances currently available",
     "empty": "No fragrances are currently available for exchange.",
+    "emptyHint": "Explore the Archive while the Exchange fills, or learn how trading works.",
+    "emptyBrowseArchive": "Browse The Archive",
+    "emptyCollectorsGuide": "Collector’s Guide",
+    "emptySignIn": "Sign in",
+    "emptySignUp": "Create an account",
+    "signInToPropose": "Sign in to propose an exchange",
     "availableFrom": "Available from",
     "search": {
       "placeholder": "Search available fragrances...",

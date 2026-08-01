@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import type React from "react"
 import { getTranslations } from "next-intl/server"
-import { redirect } from "next/navigation"
 
 import { getCachedMaterialsForQuiz } from "@/models/tags.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
@@ -29,7 +28,7 @@ export const generateMetadata = async (): Promise<Metadata> => {
   }
 }
 
-function splitCsv(param: string | string[] | undefined): string[] {
+const splitCsv = (param: string | string[] | undefined): string[] => {
   if (param === undefined) return []
   const raw = Array.isArray(param) ? param[0] : param
   return raw?.split(",").filter(Boolean) ?? []
@@ -42,10 +41,6 @@ export default async function ScentQuizPage({
   const session = await getSessionFromCookieHeader(cookieHeader, {
     includeUser: true,
   })
-
-  if (!session?.user) {
-    redirect("/sign-in")
-  }
 
   const sp = await searchParams
   const rawStep = sp[Q.step]
@@ -83,6 +78,7 @@ export default async function ScentQuizPage({
       initialConcentration={readParam(Q.concentration)}
       initialHouseTier={readParam(Q.houseTier)}
       initialBrowsingStyle={readParam(Q.browsingStyle)}
+      isAuthenticated={Boolean(session?.user)}
     />
   )
 }

@@ -32,6 +32,8 @@ export type TheArchiveClientProps = {
   initialLetter?: string | null
   initialPerfumes?: PerfumeFromApi[]
   initialPerfumeTotal?: number
+  /** Recent bottles shown on the Archive landing when no letter is selected. */
+  initialFeaturedPerfumes?: PerfumeFromApi[]
   /** When set (from `?q=`), show name-search results instead of letter browse. */
   initialSearchQuery?: string | null
   initialSearchResults?: PerfumeFromApi[]
@@ -63,6 +65,7 @@ const TheArchiveClient = ({
   initialLetter = null,
   initialPerfumes = [],
   initialPerfumeTotal = 0,
+  initialFeaturedPerfumes = [],
   initialSearchQuery = null,
   initialSearchResults = [],
 }: TheArchiveClientProps = {}) => {
@@ -87,6 +90,7 @@ const TheArchiveClient = ({
   const searchQueryFromUrl = (searchParams.get("q") ?? "").trim()
   const activeSearchQuery = searchQueryFromUrl || initialSearchQuery || null
   const isSearchMode = Boolean(activeSearchQuery)
+  const isFeaturedMode = !isSearchMode && !letterFromUrl
 
   const useInitialData =
     !isSearchMode &&
@@ -106,7 +110,7 @@ const TheArchiveClient = ({
     fetchNextPage,
     error,
   } = useInfinitePerfumesByLetter({
-    letter: isSearchMode ? null : letterFromUrl,
+    letter: isSearchMode || isFeaturedMode ? null : letterFromUrl,
     houseType: "all",
     pageSize,
     initialData: useInitialData ? initialPerfumes : undefined,
@@ -135,8 +139,10 @@ const TheArchiveClient = ({
 
   const perfumes = isSearchMode
     ? searchPerfumes
-    : (letterPerfumes as PerfumeFromApi[])
-  const loading = isSearchMode ? false : letterLoading
+    : isFeaturedMode
+      ? initialFeaturedPerfumes
+      : (letterPerfumes as PerfumeFromApi[])
+  const loading = isSearchMode || isFeaturedMode ? false : letterLoading
   const searchPagination = {
     currentPage: 1,
     totalPages: 1,
@@ -144,7 +150,8 @@ const TheArchiveClient = ({
     hasNextPage: false,
     hasPrevPage: false,
   }
-  const paginationForUi = isSearchMode ? searchPagination : pagination
+  const paginationForUi =
+    isSearchMode || isFeaturedMode ? searchPagination : pagination
   const normalizedPerfumes = (perfumes as PerfumeFromApi[]).map((perfume) => ({
     ...perfume,
     createdAt: perfume.createdAt ?? perfume.updatedAt ?? new Date(0),
@@ -237,18 +244,18 @@ const TheArchiveClient = ({
     })
 
   const onPrefetchNext = useCallback(() => {
-    if (isSearchMode || !hasNextPage) return
+    if (isSearchMode || isFeaturedMode || !hasNextPage) return
     void fetchNextPage()
-  }, [fetchNextPage, hasNextPage, isSearchMode])
+  }, [fetchNextPage, hasNextPage, isSearchMode, isFeaturedMode])
 
   const onPrefetchPage = useCallback(
     (targetPage: number) => {
-      if (isSearchMode) return
+      if (isSearchMode || isFeaturedMode) return
       if (targetPage <= pagination.currentPage) return
       if (!hasNextPage) return
       void fetchNextPage()
     },
-    [fetchNextPage, hasNextPage, isSearchMode, pagination.currentPage]
+    [fetchNextPage, hasNextPage, isSearchMode, isFeaturedMode, pagination.currentPage]
   )
 
   if (error && !isSearchMode) {
@@ -291,7 +298,7 @@ const TheArchiveClient = ({
         />
 
         <AlphabeticalNav
-          selectedLetter={isSearchMode ? null : letterFromUrl}
+          selectedLetter={isSearchMode || isFeaturedMode ? null : letterFromUrl}
           onLetterSelect={handleLetterClick}
           prefetchType="perfumes"
           houseType="all"
@@ -299,9 +306,15 @@ const TheArchiveClient = ({
           className="mb-8"
         />
 
+        {isFeaturedMode && sortedPerfumes.length > 0 ? (
+          <h2 className="mb-4 text-center text-2xl font-semibold text-noir-gold">
+            {t("featuredHeading")}
+          </h2>
+        ) : null}
+
         {isSearchMode && sortedPerfumes.length === 0 ? (
           <p className="text-noir-light text-lg">{t("searchEmpty")}</p>
-        ) : isSearchMode ? (
+        ) : isSearchMode || isFeaturedMode ? (
           <DataDisplaySection
             containerRef={archiveGridRef}
             data={sortedPerfumes}

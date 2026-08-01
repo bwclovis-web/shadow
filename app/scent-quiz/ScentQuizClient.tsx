@@ -16,6 +16,7 @@ import { SeasonSelectionToggleRow } from "@/components/Containers/Perfume/Perfum
 import { CSRFToken } from "@/components/Molecules/CSRFToken"
 import TagSearch from "@/components/Organisms/TagSearch/TagSearch"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
+import { SIGN_IN } from "@/constants/routes"
 import type { Tag } from "@/lib/queries/tags"
 import { SEASON_KEYS, type SeasonSelection } from "@/types/perfume-season-vote"
 
@@ -61,6 +62,7 @@ export type ScentQuizClientProps = {
   initialConcentration: string
   initialHouseTier: string
   initialBrowsingStyle: string
+  isAuthenticated?: boolean
 }
 
 export default function ScentQuizClient({
@@ -73,6 +75,7 @@ export default function ScentQuizClient({
   initialConcentration,
   initialHouseTier,
   initialBrowsingStyle,
+  isAuthenticated = false,
 }: ScentQuizClientProps) {
   const t = useTranslations("quiz")
   const router = useRouter()
@@ -454,7 +457,13 @@ export default function ScentQuizClient({
         )}
 
         {step === "browsing-style" && (
-          <form action={formAction} className="mt-8">
+          <form
+            action={isAuthenticated ? formAction : undefined}
+            onSubmit={event => {
+              if (!isAuthenticated) event.preventDefault()
+            }}
+            className="mt-8"
+          >
             <CSRFToken />
             {quizHiddenFields}
 
@@ -488,14 +497,24 @@ export default function ScentQuizClient({
               <VooDooLink url={buildStepUrl("house-tier")} variant="secondary">
                 {t("nav.back")}
               </VooDooLink>
-              <Button
-                type="submit"
-                variant="primary"
-                background="gold"
-                disabled={isPending}
-              >
-                {t("nav.save")}
-              </Button>
+              {isAuthenticated ? (
+                <Button
+                  type="submit"
+                  variant="primary"
+                  background="gold"
+                  disabled={isPending}
+                >
+                  {t("nav.save")}
+                </Button>
+              ) : (
+                <VooDooLink
+                  url={`${SIGN_IN}?redirect=${encodeURIComponent(buildStepUrl("browsing-style"))}`}
+                  variant="primary"
+                  background="gold"
+                >
+                  {t("nav.signInToSave")}
+                </VooDooLink>
+              )}
             </div>
           </form>
         )}

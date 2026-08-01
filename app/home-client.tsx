@@ -5,16 +5,23 @@ import dynamic from "next/dynamic"
 import Image from "next/image"
 import { useTranslations } from "next-intl"
 
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import Select from "@/components/Atoms/Select"
 import CommunityStatsStrip from "@/components/Containers/Home/CommunityStatsStrip"
 import { DeferredBelowFold } from "@/components/Molecules/DeferredBelowFold/DeferredBelowFold"
 import SearchBar from "@/components/Organisms/SearchBar"
+import {
+  THE_ARCHIVE_PATH,
+  THE_COLLECTORS_GUIDE_PATH,
+} from "@/constants/routes"
 import type {
   ActivityFeedListingRow,
   FollowedActivityItem,
 } from "@/models/activity-feed.server"
 import type { CommunityStats } from "@/models/community-stats.server"
 import type { SeasonalTrendingResult } from "@/models/seasonal-trending.server"
+
+const THE_EXCHANGE_PATH = "/the-exchange"
 
 const ActivityFeedSection = dynamic(
   () => import("@/components/Containers/Exchange/ActivityFeedSection"),
@@ -161,6 +168,35 @@ export default function HomeClient({
             className="mt-2 md:mt-2 w-full backdrop-blur-sm bg-noir-black/10"
           />
         </div>
+        <nav
+          aria-label={tHome("cta.navLabel")}
+          className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm md:text-base max-w-4xl"
+        >
+          <PrefetchLink
+            href={THE_ARCHIVE_PATH}
+            className="text-noir-gold underline-offset-4 hover:underline hover:text-noir-light transition-colors"
+          >
+            {tHome("cta.archive")}
+          </PrefetchLink>
+          <span aria-hidden className="text-noir-gold/50">
+            ·
+          </span>
+          <PrefetchLink
+            href={THE_EXCHANGE_PATH}
+            className="text-noir-gold underline-offset-4 hover:underline hover:text-noir-light transition-colors"
+          >
+            {tHome("cta.exchange")}
+          </PrefetchLink>
+          <span aria-hidden className="text-noir-gold/50">
+            ·
+          </span>
+          <PrefetchLink
+            href={THE_COLLECTORS_GUIDE_PATH}
+            className="text-noir-gold underline-offset-4 hover:underline hover:text-noir-light transition-colors"
+          >
+            {tHome("cta.guide")}
+          </PrefetchLink>
+        </nav>
       </section>
 
       {showFeedSection ? (

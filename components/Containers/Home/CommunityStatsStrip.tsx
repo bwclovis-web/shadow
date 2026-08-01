@@ -10,8 +10,14 @@ type CommunityStatsStripProps = {
   className?: string
 }
 
+const MIN_BOTTLES_TO_SHOW = 25
+
 const CommunityStatsStrip = ({ stats, className }: CommunityStatsStripProps) => {
   const t = useTranslations("home.communityStats")
+
+  if (stats.bottlesListed < MIN_BOTTLES_TO_SHOW) {
+    return null
+  }
 
   const items = [
     t("bottlesListed", { count: stats.bottlesListed }),

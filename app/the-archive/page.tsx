@@ -5,10 +5,12 @@ import TheArchiveClient from "@/app/the-archive/TheArchiveClient"
 import { THE_ARCHIVE_PATH } from "@/constants/routes"
 import { buildItemListJsonLd } from "@/lib/seo/json-ld"
 import { buildPageMetadata } from "@/lib/seo/metadata"
+import { getAllPerfumesWithOptions } from "@/models/perfume-catalog.server"
 import { searchPerfumeByNameForViewer } from "@/models/perfume-search.server"
 
 const ARCHIVE_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
 const ARCHIVE_SEARCH_LIMIT = 40
+const ARCHIVE_FEATURED_LIMIT = 12
 
 type Props = {
   searchParams: Promise<{ q?: string }>
@@ -34,6 +36,24 @@ export const generateMetadata = async ({
   })
 }
 
+const mapPerfumeRow = (p: {
+  id: string
+  name: string
+  slug: string
+  createdAt: Date
+  updatedAt: Date
+  image: string | null
+  perfumeHouse: { name: string } | null
+}) => ({
+  id: p.id,
+  name: p.name,
+  slug: p.slug,
+  createdAt: p.createdAt,
+  updatedAt: p.updatedAt,
+  image: p.image ?? undefined,
+  perfumeHouse: p.perfumeHouse ? { name: p.perfumeHouse.name } : null,
+})
+
 const TheArchivePage = async ({ searchParams }: Props) => {
   const t = await getTranslations("allPerfumes")
   const resolved = await searchParams
@@ -41,6 +61,8 @@ const TheArchivePage = async ({ searchParams }: Props) => {
 
   let searchResults: Awaited<ReturnType<typeof searchPerfumeByNameForViewer>> =
     []
+  let featuredPerfumes: ReturnType<typeof mapPerfumeRow>[] = []
+
   if (q) {
     try {
       searchResults = await searchPerfumeByNameForViewer(q, {
@@ -49,6 +71,17 @@ const TheArchivePage = async ({ searchParams }: Props) => {
     } catch (error) {
       console.error("[the-archive] search failed:", error)
       searchResults = []
+    }
+  } else {
+    try {
+      const featured = await getAllPerfumesWithOptions({
+        sortBy: "created-desc",
+        take: ARCHIVE_FEATURED_LIMIT,
+      })
+      featuredPerfumes = featured.items.map(mapPerfumeRow)
+    } catch (error) {
+      console.error("[the-archive] featured load failed:", error)
+      featuredPerfumes = []
     }
   }
 
@@ -85,18 +118,9 @@ const TheArchivePage = async ({ searchParams }: Props) => {
         initialLetter={null}
         initialPerfumes={[]}
         initialPerfumeTotal={0}
+        initialFeaturedPerfumes={featuredPerfumes}
         initialSearchQuery={q || null}
-        initialSearchResults={searchResults.map(p => ({
-          id: p.id,
-          name: p.name,
-          slug: p.slug,
-          createdAt: p.createdAt,
-          updatedAt: p.updatedAt,
-          image: p.image ?? undefined,
-          perfumeHouse: p.perfumeHouse
-            ? { name: p.perfumeHouse.name }
-            : null,
-        }))}
+        initialSearchResults={searchResults.map(mapPerfumeRow)}
       />
     </>
   )
