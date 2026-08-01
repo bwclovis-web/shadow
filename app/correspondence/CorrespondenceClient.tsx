@@ -4,6 +4,7 @@ import { useRef } from "react"
 import { useTranslations } from "next-intl"
 
 import PendingSubmissionModal from "@/components/Containers/Forms/PendingSubmissionModal"
+import ContactUsForm from "@/components/Containers/Forms/ContactUsForm"
 import { Button } from "@/components/Atoms/Button/Button"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { useSessionStore } from "@/hooks/sessionStore"
@@ -41,33 +42,22 @@ const CorrespondenceClient = () => {
         <div className="max-w-4xl mx-auto md:px-4 md:max-w-full">
           <div className="max-w-none">
             <div className="flex flex-col lg:flex-row gap-6">
-              <section className="flex flex-col gap-6 border-b-4 lg:border-r-4 border-double border-noir-gold lg:px-6 pb-6 lg:pb-0 lg:border-b-0">
-                <h2>
-                  {t("contact.title")}
-                </h2>
-                <div className="flex flex-col gap-2 text-noir-light leading-relaxed text-lg">
+              <section className="flex flex-col gap-6 border-b-4 lg:border-r-4 border-double border-noir-gold lg:px-6 pb-6 lg:pb-0 lg:border-b-0 lg:w-[min(100%,24rem)] lg:shrink-0">
+                <h2>{t("contact.title")}</h2>
+                <div className="flex flex-col gap-4 text-noir-light leading-relaxed text-lg">
                   <p>{t("contact.description")}</p>
-                  <div className="flex flex-col gap-2">
-                    <p className="font-semibold text-noir-gold">
-                      {t("contact.emailLabel")}
-                    </p>
-                    <a
-                      href={`mailto:${t("contact.email")}`}
-                      className="text-noir-gold hover:text-noir-light transition-colors"
-                    >
-                      {t("contact.email")}
-                    </a>
-                  </div>
+                  <ContactUsForm />
                 </div>
               </section>
 
-              <section className="flex flex-col gap-6">
-                <h2>
-                  {t("faq.title")}
-                </h2>
+              <section className="flex flex-col gap-6 min-w-0 flex-1">
+                <h2>{t("faq.title")}</h2>
                 <div className="flex flex-col gap-8">
-                  {[1, 2, 3, 4, 5, 6].map((num) => (
-                    <div key={num} className="flex flex-col gap-3 border-b border-noir-gold/30 pb-6">
+                  {[1, 2, 3, 4, 5, 6].map(num => (
+                    <div
+                      key={num}
+                      className="flex flex-col gap-3 border-b border-noir-gold/30 pb-6"
+                    >
                       <h3 className="text-noir-gold text-xl font-semibold">
                         {t(`faq.question${num}`)}
                       </h3>

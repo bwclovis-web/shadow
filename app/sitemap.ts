@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db"
 import { getPublishedArticles } from "@/lib/sanity/articles.server"
 import { getSiteUrl } from "@/lib/seo/site-url"
 
+export const runtime = "nodejs"
 export const revalidate = 86400
 
 /**
@@ -41,18 +42,95 @@ const staticPriority = (path: string): number => {
 }
 
 const staticChangeFrequency = (
-  path: string,
+  path: string
 ): MetadataRoute.Sitemap[number]["changeFrequency"] => {
   if (path === "/" || HUB_PATHS.has(path)) return "daily"
   if (LEGAL_PATHS.has(path)) return "yearly"
   return "weekly"
 }
 
+/** Prefer a real Date; fall back to `fallback` when CMS/DB values are missing or invalid. */
+const safeLastModified = (
+  value: Date | string | null | undefined,
+  fallback: Date
+): Date => {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value
+  if (typeof value === "string" && value.trim()) {
+    const parsed = new Date(value)
+    if (!Number.isNaN(parsed.getTime())) return parsed
+  }
+  return fallback
+}
+
+const fetchPerfumeEntries = async (
+  baseUrl: string,
+  fallback: Date
+): Promise<MetadataRoute.Sitemap> => {
+  try {
+    const perfumes = await prisma.perfume.findMany({
+      select: { slug: true, updatedAt: true },
+    })
+    return perfumes
+      .filter(p => Boolean(p.slug?.trim()))
+      .map(p => ({
+        url: `${baseUrl}/perfume/${p.slug}`,
+        lastModified: safeLastModified(p.updatedAt, fallback),
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      }))
+  } catch (error) {
+    console.error("[sitemap] perfume query failed:", error)
+    return []
+  }
+}
+
+const fetchHouseEntries = async (
+  baseUrl: string,
+  fallback: Date
+): Promise<MetadataRoute.Sitemap> => {
+  try {
+    const houses = await prisma.perfumeHouse.findMany({
+      select: { slug: true, updatedAt: true },
+    })
+    return houses
+      .filter(h => Boolean(h.slug?.trim()))
+      .map(h => ({
+        url: `${baseUrl}/houses/${h.slug}`,
+        lastModified: safeLastModified(h.updatedAt, fallback),
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      }))
+  } catch (error) {
+    console.error("[sitemap] house query failed:", error)
+    return []
+  }
+}
+
+const fetchArticleEntries = async (
+  baseUrl: string,
+  fallback: Date
+): Promise<MetadataRoute.Sitemap> => {
+  try {
+    const articles = await getPublishedArticles()
+    return articles
+      .filter(article => Boolean(article.slug?.trim()))
+      .map(article => ({
+        url: `${baseUrl}/journal/${article.slug}`,
+        lastModified: safeLastModified(article.publishedAt, fallback),
+        changeFrequency: "monthly" as const,
+        priority: 0.6,
+      }))
+  } catch (error) {
+    console.error("[sitemap] Sanity articles query failed:", error)
+    return []
+  }
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getSiteUrl()
   const now = new Date()
 
-  const staticEntries: MetadataRoute.Sitemap = STATIC_PATHS.map((path) => ({
+  const staticEntries: MetadataRoute.Sitemap = STATIC_PATHS.map(path => ({
     url: `${baseUrl}${path}`,
     lastModified: now,
     changeFrequency: staticChangeFrequency(path),
@@ -61,51 +139,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const archiveLetterEntries: MetadataRoute.Sitemap = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     .split("")
-    .map((letter) => ({
+    .map(letter => ({
       url: `${baseUrl}/the-archive/${letter}`,
       lastModified: now,
       changeFrequency: "daily" as const,
       priority: 0.8,
     }))
 
-  let perfumeEntries: MetadataRoute.Sitemap = []
-  let houseEntries: MetadataRoute.Sitemap = []
-  let articleEntries: MetadataRoute.Sitemap = []
-
-  try {
-    const [perfumes, houses, articles] = await Promise.all([
-      prisma.perfume.findMany({ select: { slug: true, updatedAt: true } }),
-      prisma.perfumeHouse.findMany({ select: { slug: true, updatedAt: true } }),
-      getPublishedArticles(),
-    ])
-
-    perfumeEntries = perfumes
-      .filter((p) => Boolean(p.slug?.trim()))
-      .map((p) => ({
-        url: `${baseUrl}/perfume/${p.slug}`,
-        lastModified: p.updatedAt,
-        changeFrequency: "weekly" as const,
-        priority: 0.7,
-      }))
-
-    houseEntries = houses
-      .filter((h) => Boolean(h.slug?.trim()))
-      .map((h) => ({
-        url: `${baseUrl}/houses/${h.slug}`,
-        lastModified: h.updatedAt,
-        changeFrequency: "weekly" as const,
-        priority: 0.7,
-      }))
-
-    articleEntries = articles.map((article) => ({
-      url: `${baseUrl}/journal/${article.slug}`,
-      lastModified: article.publishedAt,
-      changeFrequency: "monthly" as const,
-      priority: 0.6,
-    }))
-  } catch {
-    // e.g. missing DATABASE_URL in local tooling — still serve static URLs
-  }
+  // Fetch independently so Prisma vs Sanity failures never blank the whole sitemap.
+  const [perfumeEntries, houseEntries, articleEntries] = await Promise.all([
+    fetchPerfumeEntries(baseUrl, now),
+    fetchHouseEntries(baseUrl, now),
+    fetchArticleEntries(baseUrl, now),
+  ])
 
   return [
     ...staticEntries,

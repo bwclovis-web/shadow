@@ -9,6 +9,8 @@ export const searchPerfumeByName = async (name: string) => {
 
 type PerfumeSearchViewerOptions = {
   viewerUserId?: string
+  /** Max results after ranking (default 10). */
+  limit?: number
 }
 
 const buildPerfumeVisibilityWhere = (viewerUserId?: string): Prisma.PerfumeWhereInput => {
@@ -32,6 +34,7 @@ export const searchPerfumeByNameForViewer = async (
 ) => {
   const searchTerm = name.trim()
   const visibilityWhere = buildPerfumeVisibilityWhere(options.viewerUserId)
+  const limit = Math.min(Math.max(options.limit ?? 10, 1), 50)
 
   if (!searchTerm) {
     return []
@@ -70,7 +73,7 @@ export const searchPerfumeByNameForViewer = async (
       },
     },
     orderBy: { name: "asc" },
-    take: 20,
+    take: Math.max(limit, 20),
   })
 
   // Then, try contains matches (lower priority)
@@ -103,7 +106,7 @@ export const searchPerfumeByNameForViewer = async (
       },
     },
     orderBy: { name: "asc" },
-    take: 20,
+    take: Math.max(limit, 20),
   })
 
   // Combine and rank results
@@ -116,7 +119,7 @@ export const searchPerfumeByNameForViewer = async (
       relevanceScore: calculateRelevanceScore(perfume.name, searchTerm),
     }))
     .sort((a, b) => b.relevanceScore - a.relevanceScore)
-    .slice(0, 10)
+    .slice(0, limit)
 
   return rankedResults
 }

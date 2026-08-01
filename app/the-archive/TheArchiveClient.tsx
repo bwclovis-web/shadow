@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useParams, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
@@ -32,6 +32,9 @@ export type TheArchiveClientProps = {
   initialLetter?: string | null
   initialPerfumes?: PerfumeFromApi[]
   initialPerfumeTotal?: number
+  /** When set (from `?q=`), show name-search results instead of letter browse. */
+  initialSearchQuery?: string | null
+  initialSearchResults?: PerfumeFromApi[]
 }
 
 type PerfumeFromApi = {
@@ -60,6 +63,8 @@ const TheArchiveClient = ({
   initialLetter = null,
   initialPerfumes = [],
   initialPerfumeTotal = 0,
+  initialSearchQuery = null,
+  initialSearchResults = [],
 }: TheArchiveClientProps = {}) => {
   const t = useTranslations("allPerfumes")
   const tSort = useTranslations("sortOptions")
@@ -79,8 +84,12 @@ const TheArchiveClient = ({
   const pageSize = useResponsivePageSize()
   const letterFromUrl = parseLetterFromParam(params?.letter)
   const pageFromUrl = Math.max(1, parseInt(searchParams.get("pg") ?? "1", 10))
+  const searchQueryFromUrl = (searchParams.get("q") ?? "").trim()
+  const activeSearchQuery = searchQueryFromUrl || initialSearchQuery || null
+  const isSearchMode = Boolean(activeSearchQuery)
 
   const useInitialData =
+    !isSearchMode &&
     letterFromUrl &&
     initialLetter &&
     letterFromUrl.toUpperCase() === initialLetter.toUpperCase()
@@ -97,37 +106,54 @@ const TheArchiveClient = ({
     fetchNextPage,
     error,
   } = useInfinitePerfumesByLetter({
-    letter: letterFromUrl,
+    letter: isSearchMode ? null : letterFromUrl,
     houseType: "all",
     pageSize,
     initialData: useInitialData ? initialPerfumes : undefined,
     initialTotalCount: useInitialData ? initialPerfumeTotal : undefined,
   })
 
-  const { items: perfumes, pagination, loading } = useInfinitePagination({
-    pages: data?.pages,
-    currentPage: pageFromUrl,
-    pageSize,
-    isLoading,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-    extractItems: (page: { perfumes?: unknown[] }) =>
-      page.perfumes ?? [],
-    extractTotalCount: (page?: { meta?: { totalCount?: number }; count?: number }) =>
-      page?.meta?.totalCount ?? page?.count,
-  })
+  const { items: letterPerfumes, pagination, loading: letterLoading } =
+    useInfinitePagination({
+      pages: data?.pages,
+      currentPage: pageFromUrl,
+      pageSize,
+      isLoading,
+      isFetchingNextPage,
+      hasNextPage,
+      fetchNextPage,
+      extractItems: (page: { perfumes?: unknown[] }) => page.perfumes ?? [],
+      extractTotalCount: (page?: {
+        meta?: { totalCount?: number }
+        count?: number
+      }) => page?.meta?.totalCount ?? page?.count,
+    })
 
+  const searchPerfumes: PerfumeFromApi[] = isSearchMode
+    ? initialSearchResults
+    : []
+
+  const perfumes = isSearchMode
+    ? searchPerfumes
+    : (letterPerfumes as PerfumeFromApi[])
+  const loading = isSearchMode ? false : letterLoading
+  const searchPagination = {
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: searchPerfumes.length,
+    hasNextPage: false,
+    hasPrevPage: false,
+  }
+  const paginationForUi = isSearchMode ? searchPagination : pagination
   const normalizedPerfumes = (perfumes as PerfumeFromApi[]).map((perfume) => ({
     ...perfume,
     createdAt: perfume.createdAt ?? perfume.updatedAt ?? new Date(0),
   }))
 
   const sortedPerfumes = sortItems(normalizedPerfumes, selectedSort)
-  const sortedPerfumeIds = useMemo(
-    () => sortedPerfumes.map(perfume => perfume.id).join(","),
-    [sortedPerfumes]
-  )
+  const sortedPerfumeIds = sortedPerfumes
+    .map(perfume => perfume.id)
+    .join(",")
 
   useEffect(() => {
     const nextSelection = { letter: letterFromUrl, page: pageFromUrl }
@@ -186,22 +212,16 @@ const TheArchiveClient = ({
     },
   })
 
-  const buildPath = useMemo(
-    () => (page: number) => {
-      const letterSegment = letterFromUrl
-        ? `/${letterFromUrl.toLowerCase()}`
-        : ""
-      const pageSuffix = page > 1 ? `?pg=${page}` : ""
-      return `${THE_ARCHIVE_PATH}${letterSegment}${pageSuffix}`
-    },
-    [letterFromUrl]
-  )
+  const buildPath = (page: number) => {
+    const letterSegment = letterFromUrl
+      ? `/${letterFromUrl.toLowerCase()}`
+      : ""
+    const pageSuffix = page > 1 ? `?pg=${page}` : ""
+    return `${THE_ARCHIVE_PATH}${letterSegment}${pageSuffix}`
+  }
 
-  const buildPathForLetter = useMemo(
-    () => (letter: string | null) =>
-      letter ? `${THE_ARCHIVE_PATH}/${letter.toLowerCase()}` : THE_ARCHIVE_PATH,
-    []
-  )
+  const buildPathForLetter = (letter: string | null) =>
+    letter ? `${THE_ARCHIVE_PATH}/${letter.toLowerCase()}` : THE_ARCHIVE_PATH
 
   const { handleLetterClick, goToPage } = useAlphabeticalBrowserState({
       letter: letterFromUrl,
@@ -211,26 +231,27 @@ const TheArchiveClient = ({
         : THE_ARCHIVE_PATH,
       buildPath,
       buildPathForLetter,
-      pagination,
+      pagination: paginationForUi,
       loading,
       itemCount: perfumes.length,
     })
 
   const onPrefetchNext = useCallback(() => {
-    if (!hasNextPage) return
+    if (isSearchMode || !hasNextPage) return
     void fetchNextPage()
-  }, [fetchNextPage, hasNextPage])
+  }, [fetchNextPage, hasNextPage, isSearchMode])
 
   const onPrefetchPage = useCallback(
     (targetPage: number) => {
+      if (isSearchMode) return
       if (targetPage <= pagination.currentPage) return
       if (!hasNextPage) return
       void fetchNextPage()
     },
-    [fetchNextPage, hasNextPage, pagination.currentPage]
+    [fetchNextPage, hasNextPage, isSearchMode, pagination.currentPage]
   )
 
-  if (error) {
+  if (error && !isSearchMode) {
     return (
       <div>
         Error loading perfumes:{" "}
@@ -243,8 +264,19 @@ const TheArchiveClient = ({
     <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
-        heading={t("heading")}
-        subheading={t("subheading")}
+        heading={
+          isSearchMode && activeSearchQuery
+            ? t("searchHeading", { query: activeSearchQuery })
+            : t("heading")
+        }
+        subheading={
+          isSearchMode && activeSearchQuery
+            ? t("searchSubheading", {
+                count: sortedPerfumes.length,
+                query: activeSearchQuery,
+              })
+            : t("subheading")
+        }
       />
 
       <PageWrapper>
@@ -259,7 +291,7 @@ const TheArchiveClient = ({
         />
 
         <AlphabeticalNav
-          selectedLetter={letterFromUrl}
+          selectedLetter={isSearchMode ? null : letterFromUrl}
           onLetterSelect={handleLetterClick}
           prefetchType="perfumes"
           houseType="all"
@@ -267,25 +299,29 @@ const TheArchiveClient = ({
           className="mb-8"
         />
 
-        <DataDisplaySection
-          containerRef={archiveGridRef}
-          data={sortedPerfumes}
-          isLoading={loading}
-          type="perfume"
-          selectedLetter={letterFromUrl}
-          sourcePage="archive"
-          transitionCueKey={
-            gridCueToken > 0
-              ? `archive-${gridCueToken}-${letterFromUrl ?? "all"}`
-              : undefined
-          }
-          transitionCueDirection={archiveRevealDirection}
-          transitionCueTone="archive"
-          pagination={pagination}
-          onPageChange={goToPage}
-          onPrefetchNext={onPrefetchNext}
-          onPrefetchPage={onPrefetchPage}
+        {isSearchMode && sortedPerfumes.length === 0 ? (
+          <p className="text-noir-light text-lg">{t("searchEmpty")}</p>
+        ) : (
+          <DataDisplaySection
+            containerRef={archiveGridRef}
+            data={sortedPerfumes}
+            isLoading={loading}
+            type="perfume"
+            selectedLetter={isSearchMode ? null : letterFromUrl}
+            sourcePage="archive"
+            transitionCueKey={
+              gridCueToken > 0
+                ? `archive-${gridCueToken}-${letterFromUrl ?? "all"}`
+                : undefined
+            }
+            transitionCueDirection={archiveRevealDirection}
+            transitionCueTone="archive"
+            pagination={isSearchMode ? undefined : pagination}
+            onPageChange={isSearchMode ? undefined : goToPage}
+            onPrefetchNext={isSearchMode ? undefined : onPrefetchNext}
+            onPrefetchPage={isSearchMode ? undefined : onPrefetchPage}
           />
+        )}
       </PageWrapper>
     </main>
   )

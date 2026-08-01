@@ -106,6 +106,21 @@ describe("sendTransactionalEmail", () => {
     )
   })
 
+  it("passes replyTo through to Resend when provided", async () => {
+    await sendTransactionalEmail({
+      to: "inbox@example.com",
+      subject: "Contact",
+      text: "Hello",
+      replyTo: "visitor@example.com",
+    })
+
+    expect(sendEmailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        replyTo: "visitor@example.com",
+      })
+    )
+  })
+
   it("passes attachments through to Resend when provided", async () => {
     await sendTransactionalEmail({
       to: "user@example.com",

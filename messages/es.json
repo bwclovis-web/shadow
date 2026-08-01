@@ -329,10 +329,15 @@
   "allPerfumes": {
     "meta": {
       "title": "El Archivo — Catálogo de perfumes",
-      "description": "Explora el archivo de perfumes por letra — notas, casas de fragancias, reseñas y valoraciones de la comunidad en perfumer's hollow."
+      "description": "Explora el archivo de perfumes por letra — notas, casas de fragancias, reseñas y valoraciones de la comunidad en perfumer's hollow.",
+      "searchTitle": "Buscar “{query}” — El Archivo",
+      "searchDescription": "Perfumes que coinciden con “{query}” en el archivo de perfumer's hollow — notas, casas y reseñas de la comunidad."
     },
     "heading": "El Archivo",
-    "subheading": "Cada fragancia lleva algo que merece ser recordado."
+    "subheading": "Cada fragancia lleva algo que merece ser recordado.",
+    "searchHeading": "Resultados para “{query}”",
+    "searchSubheading": "{count, plural, =0 {Ninguna fragancia coincidió con “{query}”.} one {# fragancia que coincide con “{query}”.} other {# fragancias que coinciden con “{query}”.}}",
+    "searchEmpty": "Ninguna fragancia coincidió con esa búsqueda. Prueba otro nombre o navega por letra abajo."
   },
   "auth": {
     "heading": "Bienvenido de Nuevo",
@@ -702,9 +707,18 @@
     "subheading": "Preguntas, consultas, soporte y respuestas desde El Archivo.",
     "contact": {
       "title": "Ponte en Contacto",
-      "description": "¿Tienes una pregunta sobre un perfume, quieres sugerir una botella faltante o solo quieres conectarte? Nos encantaría saber de ti. Contáctanos por correo electrónico y te responderemos lo antes posible.",
-      "emailLabel": "Correo electrónico:",
-      "email": "contact@shadowandsillage.com"
+      "description": "¿Tienes una pregunta sobre un perfume, quieres sugerir una botella faltante o solo quieres conectarte? Nos encantaría saber de ti. Envía un mensaje abajo y te responderemos lo antes posible.",
+      "nameLabel": "Nombre",
+      "namePlaceholder": "Tu nombre",
+      "emailFieldLabel": "Correo electrónico",
+      "emailPlaceholder": "tu@ejemplo.com",
+      "subjectLabel": "Asunto",
+      "subjectPlaceholder": "¿De qué se trata? (opcional)",
+      "messageLabel": "Mensaje",
+      "messagePlaceholder": "¿Cómo podemos ayudarte?",
+      "submitButton": "Enviar mensaje",
+      "sending": "Enviando…",
+      "success": "Gracias — tu mensaje ha sido enviado. Nos pondremos en contacto pronto."
     },
     "faq": {
       "title": "Preguntas Frecuentes",

@@ -9,7 +9,6 @@ import Select from "@/components/Atoms/Select"
 import CommunityStatsStrip from "@/components/Containers/Home/CommunityStatsStrip"
 import { DeferredBelowFold } from "@/components/Molecules/DeferredBelowFold/DeferredBelowFold"
 import SearchBar from "@/components/Organisms/SearchBar"
-import { useMounted } from "@/hooks/useMounted"
 import type {
   ActivityFeedListingRow,
   FollowedActivityItem,
@@ -59,7 +58,6 @@ export default function HomeClient({
   const container = useRef<HTMLDivElement>(null)
   const tHome = useTranslations("home")
   const tComponents = useTranslations("components.search")
-  const mounted = useMounted()
 
   useEffect(() => {
     const showHeroWithoutAnimation = () => {
@@ -113,13 +111,13 @@ export default function HomeClient({
   const data = [
     {
       id: "perfume-house",
-      name: mounted ? tHome("radio.houses") : "home.radio.houses",
-      label: mounted ? tHome("radio.houses") : "home.radio.houses",
+      name: tHome("radio.houses"),
+      label: tHome("radio.houses"),
     },
     {
       id: "perfume",
-      name: mounted ? tHome("radio.perfumes") : "home.radio.perfumes",
-      label: mounted ? tHome("radio.perfumes") : "home.radio.perfumes",
+      name: tHome("radio.perfumes"),
+      label: tHome("radio.perfumes"),
     },
   ]
 
@@ -155,9 +153,7 @@ export default function HomeClient({
             selectId="search-type"
             selectData={data}
             className="md:mt-0.5 w-full backdrop-blur-sm bg-noir-black/10"
-            ariaLabel={
-              mounted ? tComponents("ariaLabel") : "components.search.ariaLabel"
-            }
+            ariaLabel={tComponents("ariaLabel")}
           />
           <SearchBar
             searchType={searchType}

@@ -1,8 +1,8 @@
+import { getSiteContactEmail } from "@/lib/seo/site-contact"
 import { absoluteUrl } from "@/lib/seo/site-url"
 
 const SITE_NAME = "perfumer's hollow"
 const SITE_LOGO_PATH = "/images/new/logo-one.webp"
-const SITE_CONTACT_EMAIL = "contact@shadowandsillage.com"
 
 type NoteLike = { name?: string | null } | string
 
@@ -190,7 +190,7 @@ export const buildSiteOrganizationJsonLd = () => {
     name: SITE_NAME,
     url,
     logo: absoluteUrl(SITE_LOGO_PATH),
-    email: SITE_CONTACT_EMAIL,
+    email: getSiteContactEmail(),
   }
 }
 
@@ -205,7 +205,7 @@ export const buildWebSiteJsonLd = () => {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: `${absoluteUrl("/the-exchange")}?q={search_term_string}`,
+        urlTemplate: `${absoluteUrl("/the-archive")}?q={search_term_string}`,
       },
       "query-input": "required name=search_term_string",
     },

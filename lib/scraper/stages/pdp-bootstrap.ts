@@ -95,6 +95,17 @@ function nameFromProductUrl(detailURL: string): string | null {
 
 const normalizeNameKey = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]+/g, "")
 
+/** True when text has combining marks or precomposed accented Latin letters. */
+const hasDiacriticLetters = (text: string): boolean => {
+  if (/[\u0300-\u036f]/.test(text.normalize("NFD"))) return true
+  // Precomposed Latin-1 Supplement / Latin Extended-A accented letters
+  return /[À-ÖØ-öø-ÿĀ-ž]/.test(text)
+}
+
+/** Prefer merchant title when it carries accents the URL slug cannot. */
+const shouldPreferAccentedMerchantTitle = (raw: string, fromUrl: string): boolean =>
+  hasDiacriticLetters(raw) && !hasDiacriticLetters(fromUrl)
+
 /** Scraped Etsy titles often truncate before digits ("Burner Perfume No" vs slug `burner-perfume-no9b-…`). */
 const isLikelyTruncatedProductName = (name: string, detailURL: string): boolean => {
   const t = name.trim()
@@ -103,6 +114,7 @@ const isLikelyTruncatedProductName = (name: string, detailURL: string): boolean 
   if (/\bvol\.?\s*$/i.test(t)) return true
   const fromUrl = nameFromProductUrl(detailURL)
   if (!fromUrl) return false
+  if (shouldPreferAccentedMerchantTitle(t, fromUrl)) return false
   const nameKey = normalizeNameKey(t)
   const urlKey = normalizeNameKey(fromUrl)
   if (!nameKey || !urlKey || urlKey.length <= nameKey.length + 3) return false
@@ -114,7 +126,13 @@ function resolveProductName(item: ScrapedItem): string {
   const raw = item.name?.trim() ?? ""
   const fromUrl = nameFromProductUrl(item.detailURL ?? "")
   if (isLikelyHostnameOrEmpty(raw)) return fromUrl ?? raw
-  if (fromUrl && isLikelyTruncatedProductName(raw, item.detailURL ?? "")) return fromUrl
+  if (
+    fromUrl &&
+    isLikelyTruncatedProductName(raw, item.detailURL ?? "") &&
+    !shouldPreferAccentedMerchantTitle(raw, fromUrl)
+  ) {
+    return fromUrl
+  }
   return raw
 }
 

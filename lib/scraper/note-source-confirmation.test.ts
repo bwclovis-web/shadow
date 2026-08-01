@@ -357,6 +357,51 @@ Also listed elsewhere: Neroli E.O. among featured materials.
     expect(sanitizeExtractedNoteCandidate("creamy florals")).toBeNull()
     expect(sanitizeExtractedNoteCandidate("sandalwood fragrance")).toBe("sandalwood")
     expect(sanitizeExtractedNoteCandidate("pink pepper")).toBe("pink pepper")
+    expect(sanitizeExtractedNoteCandidate("sandalwood 80 reviews regular")).toBe("sandalwood")
+    expect(sanitizeExtractedNoteCandidate("patchouli reviews regular")).toBe("patchouli")
+    expect(isObviousNonMaterialNote("80 reviews regular")).toBe(true)
+  })
+
+  it("sanitizeExtractedNoteCandidate rejects Widian marketing slogans mistaken for notes", () => {
+    const junk = [
+      "this citrus-spice fusion radiates energy",
+      "confidence",
+      "golden spark on sun-warmed skin.",
+      "delicate warmth — indulgent",
+      "feminine",
+      "unforgettable.",
+      "where tradition meets rebellion",
+      "elegance blends with edge",
+      "deepen its soul",
+      "stays with you",
+      "where ancient rituals meet modern elegance",
+      "silent power of time",
+      "passion",
+      "andalusian soul.",
+      "zesty citrus",
+      "aromatic herbs",
+      "grounded with smoky wood",
+      "mineral warmth vibrant",
+      "layered",
+      "alive.",
+      "caramel in a radiant",
+      "juicy composition full of golden warmth.",
+      "bold",
+      "pure",
+      "comfort",
+      "clarity.",
+      "https://widian.com/en/collections/rose-arabia-collection",
+    ]
+    for (const note of junk) {
+      expect(sanitizeExtractedNoteCandidate(note), note).toBeNull()
+    }
+    // Real materials from the same Widian scrape must still pass.
+    expect(sanitizeExtractedNoteCandidate("patchouli")).toBe("patchouli")
+    expect(sanitizeExtractedNoteCandidate("labdanum abs")).toBe("labdanum abs")
+    expect(sanitizeExtractedNoteCandidate("lily-of-the-valley")).toBe("lily-of-the-valley")
+    expect(sanitizeExtractedNoteCandidate("dry amber")).toBe("dry amber")
+    expect(sanitizeExtractedNoteCandidate("pink peppercorn")).toBe("pink peppercorn")
+    expect(sanitizeExtractedNoteCandidate("tender floral musk")).toBe("tender floral musk")
   })
 
   it("peelMarketingDescriptorTail strips trailing Shopify copy", () => {

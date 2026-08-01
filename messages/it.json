@@ -329,10 +329,15 @@
   "allPerfumes": {
     "meta": {
       "title": "L'Archivio — Catalogo di profumi",
-      "description": "Sfoglia l'archivio di profumi per lettera — note, case di fragranze, recensioni e valutazioni della community su perfumer's hollow."
+      "description": "Sfoglia l'archivio di profumi per lettera — note, case di fragranze, recensioni e valutazioni della community su perfumer's hollow.",
+      "searchTitle": "Cerca “{query}” — L'Archivio",
+      "searchDescription": "Profumi corrispondenti a “{query}” nell'archivio di perfumer's hollow — note, case e recensioni della community."
     },
     "heading": "L'Archivio",
-    "subheading": "Ogni fragranza porta qualcosa che merita di essere ricordato."
+    "subheading": "Ogni fragranza porta qualcosa che merita di essere ricordato.",
+    "searchHeading": "Risultati per “{query}”",
+    "searchSubheading": "{count, plural, =0 {Nessuna fragranza corrisponde a “{query}”.} one {# fragranza corrispondente a “{query}”.} other {# fragranze corrispondenti a “{query}”.}}",
+    "searchEmpty": "Nessuna fragranza corrisponde a questa ricerca. Prova un altro nome oppure sfoglia per lettera qui sotto."
   },
   "auth": {
     "heading": "Bentornato",
@@ -702,9 +707,18 @@
     "subheading": "Domande, richieste, supporto e risposte dall'Archivio.",
     "contact": {
       "title": "Contattaci",
-      "description": "Hai una domanda su un profumo, vuoi segnalare un flacone mancante o semplicemente scriverci? Scrivici all'email qui sotto, ti risponderemo al più presto.",
-      "emailLabel": "Email:",
-      "email": "contact@shadowandsillage.com"
+      "description": "Hai una domanda su un profumo, vuoi segnalare un flacone mancante o semplicemente scriverci? Invia un messaggio qui sotto e ti risponderemo al più presto.",
+      "nameLabel": "Nome",
+      "namePlaceholder": "Il tuo nome",
+      "emailFieldLabel": "Email",
+      "emailPlaceholder": "tu@esempio.com",
+      "subjectLabel": "Oggetto",
+      "subjectPlaceholder": "Di cosa si tratta? (opzionale)",
+      "messageLabel": "Messaggio",
+      "messagePlaceholder": "Come possiamo aiutarti?",
+      "submitButton": "Invia messaggio",
+      "sending": "Invio…",
+      "success": "Grazie — il tuo messaggio è stato inviato. Ti risponderemo presto."
     },
     "faq": {
       "title": "Domande frequenti",

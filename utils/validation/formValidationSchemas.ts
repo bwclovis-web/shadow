@@ -451,6 +451,24 @@ export const ContactTraderSchema = z.object({
     .transform(sanitizeInput),
 })
 
+export const ContactUsSchema = z.object({
+  name: nameRequired,
+  email: emailSchema,
+  subject: z
+    .string()
+    .max(200, { message: V.subjectMax })
+    .optional()
+    .transform(val => {
+      const trimmed = val?.trim()
+      return trimmed ? sanitizeInput(trimmed) : undefined
+    }),
+  message: z
+    .string()
+    .min(10, { message: V.messageMin })
+    .max(5000, { message: V.messageMax })
+    .transform(sanitizeInput),
+})
+
 export const validationSchemas = {
   createPerfumeHouse: CreatePerfumeHouseSchema,
   updatePerfumeHouse: UpdatePerfumeHouseSchema,
@@ -474,6 +492,7 @@ export const validationSchemas = {
   adminUserForm: AdminUserFormSchema,
   dataQualityReport: DataQualityReportSchema,
   contactTrader: ContactTraderSchema,
+  contactUs: ContactUsSchema,
   followAction: FollowActionSchema,
   createTrade: CreateTradeSchema,
   tradeShipTransition: TradeShipTransitionSchema,

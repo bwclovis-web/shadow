@@ -213,6 +213,7 @@ describe("buildSiteOrganizationJsonLd", () => {
 
   it("builds site Organization with logo and contact email", () => {
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://shadow.example")
+    vi.stubEnv("CONTACT_INBOX_EMAIL", "contact@shadowandsillage.com")
 
     const jsonLd = buildSiteOrganizationJsonLd()
     expect(jsonLd).toEqual({
@@ -224,6 +225,14 @@ describe("buildSiteOrganizationJsonLd", () => {
       email: "contact@shadowandsillage.com",
     })
   })
+
+  it("uses CONTACT_INBOX_EMAIL env or default contact@perfumershollow.com", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://shadow.example")
+    delete process.env.CONTACT_INBOX_EMAIL
+
+    const jsonLd = buildSiteOrganizationJsonLd()
+    expect(jsonLd.email).toBe("contact@perfumershollow.com")
+  })
 })
 
 describe("buildWebSiteJsonLd", () => {
@@ -231,7 +240,7 @@ describe("buildWebSiteJsonLd", () => {
     vi.unstubAllEnvs()
   })
 
-  it("builds WebSite with SearchAction to the exchange", () => {
+  it("builds WebSite with SearchAction to the archive", () => {
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://shadow.example")
 
     const jsonLd = buildWebSiteJsonLd()
@@ -240,7 +249,7 @@ describe("buildWebSiteJsonLd", () => {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: "https://shadow.example/the-exchange?q={search_term_string}",
+        urlTemplate: "https://shadow.example/the-archive?q={search_term_string}",
       },
       "query-input": "required name=search_term_string",
     })

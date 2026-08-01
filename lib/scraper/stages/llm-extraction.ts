@@ -65,7 +65,9 @@ Rules (when not using a single authoritative list):
 - Notes must be lowercase and in ENGLISH. Translate any non-English note names: "santal" → "sandalwood", "musc" / "musc blanc" → "white musk", "vanille" → "vanilla", "ambre" → "amber", "bois" → "wood", "rose" → "rose", "fleur" → "flower", "tabac" → "tobacco", "encens" → "incense".
 - Remove duplicates within each array.
 - Adjectives that describe a note → keep as phrase ONLY when the core ingredient is a real scent material. "warm vanilla" ✓  "warm sandalwood" ✓  "glowing amber warmth" ✗ (warmth is not a material).
-- Omit pure marketing fluff that is not a note (e.g. "luscious", "irresistible", "seductive", "sensual", "confidence", "courage", "healing", "balance", "vitality" as standalone words).
+- Omit pure marketing fluff that is not a note (e.g. "luscious", "irresistible", "seductive", "sensual", "confidence", "courage", "healing", "balance", "vitality", "bold", "feminine", "unforgettable", "pure", "layered", "alive", "passion", "comfort", "clarity", "elegance" as standalone words).
+- NEVER output marketing slogans or sentence fragments as notes (e.g. "this citrus-spice fusion radiates energy", "golden spark on sun-warmed skin", "delicate warmth — indulgent", "where tradition meets rebellion", "elegance blends with edge", "deepen its soul", "stays with you", "silent power of time", "juicy composition full of golden warmth", "caramel in a radiant", "andalusian soul").
+- NEVER output URLs, collection paths, or storefront links as notes.
 - NEVER include crystals, gemstones, or minerals as notes (e.g. quartz, amethyst, herkimer diamond, topaz, tourmaline, moonstone, labradorite, gem magic, citrine, obsidian, selenite). These are not fragrance notes.
 - NEVER include carrier oils or base ingredients as notes (e.g. sunflower oil, jojoba oil, shea butter, coconut oil, sweet almond oil, argan oil). These are not fragrance notes.
 - NEVER treat storefront section headers or specs as notes (e.g. "Extra Info Below if You're Curious", "power source accord", battery/USB copy). These are not fragrance notes.
@@ -79,7 +81,7 @@ Rules (when not using a single authoritative list):
 - If the product is clearly NOT a fragrance (e.g. jewelry, necklace, candle, body scrub, hair product, supplement), return all empty arrays: {"openNotes":[],"heartNotes":[],"baseNotes":[]}.
 
 SELF-CHECK before returning: for each note in your arrays ask "Is this a named scent material — a botanical, natural extract, synthetic aroma molecule, or established accord name?" If no, remove it.
-  ✗ Remove: "a sweet", "glowing amber warmth", "effortlessly pretty", "romantic feel", "the center turns resinous", "airy aquatic notes", "modern opening", "warm sweetness", "skin scents", "adding softness", "woody through the heart", "soft swirls of vanilla", "moonlit character"
+  ✗ Remove: "a sweet", "glowing amber warmth", "effortlessly pretty", "romantic feel", "the center turns resinous", "airy aquatic notes", "modern opening", "warm sweetness", "skin scents", "adding softness", "woody through the heart", "soft swirls of vanilla", "moonlit character", "this citrus-spice fusion radiates energy", "confidence", "golden spark on sun-warmed skin", "delicate warmth — indulgent", "feminine", "unforgettable", "where tradition meets rebellion", "stays with you"
   ✓ Keep: "vanilla", "warm sandalwood", "bergamot", "orris butter", "tonka bean", "smoked leather", "peru balsam", "tahitian vanilla", "black currant", "marshmallow fluff", "whipped cream", "orris butter", "praline", "granny smith apple", "pitahaya", "soft musk", "powdery woods", "vanilla cream"
 
 Return only the JSON object — no explanation, no markdown fences.`

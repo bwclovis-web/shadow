@@ -523,10 +523,15 @@
   "allPerfumes": {
     "meta": {
       "title": "The Archive — Perfume Catalog",
-      "description": "Browse the perfume archive by letter — notes, fragrance houses, community reviews, and ratings on perfumer's hollow."
+      "description": "Browse the perfume archive by letter — notes, fragrance houses, community reviews, and ratings on perfumer's hollow.",
+      "searchTitle": "Search “{query}” — The Archive",
+      "searchDescription": "Perfumes matching “{query}” in the perfumer's hollow archive — notes, houses, and community reviews."
     },
     "heading": "The Archive",
-    "subheading": "Every fragrance carries something worth remembering."
+    "subheading": "Every fragrance carries something worth remembering.",
+    "searchHeading": "Results for “{query}”",
+    "searchSubheading": "{count, plural, =0 {No fragrances matched “{query}”.} one {# fragrance matching “{query}”.} other {# fragrances matching “{query}”.}}",
+    "searchEmpty": "No fragrances matched that search. Try another name, or browse by letter below."
   },
   "auth": {
     "heading": "Enter the Hollow",
@@ -896,9 +901,18 @@
     "subheading": "Questions, inquiries, support, and answers from within the Archive.",
     "contact": {
       "title": "Get In Touch",
-      "description": "Have a question about a perfume, want to suggest a missing bottle, or just want to connect? We'd love to hear from you. Reach out through the email below, and we'll get back to you as soon as we can.",
-      "emailLabel": "Email:",
-      "email": "contact@shadowandsillage.com"
+      "description": "Have a question about a perfume, want to suggest a missing bottle, or just want to connect? We'd love to hear from you. Send a message below and we'll get back to you as soon as we can.",
+      "nameLabel": "Name",
+      "namePlaceholder": "Your name",
+      "emailFieldLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "subjectLabel": "Subject",
+      "subjectPlaceholder": "What's this about? (optional)",
+      "messageLabel": "Message",
+      "messagePlaceholder": "How can we help?",
+      "submitButton": "Send message",
+      "sending": "Sending…",
+      "success": "Thanks — your message has been sent. We'll be in touch soon."
     },
     "faq": {
       "title": "Frequently Asked Questions",

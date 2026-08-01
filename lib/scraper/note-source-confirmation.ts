@@ -287,7 +287,7 @@ export const STANDALONE_COLOR_NOTE_RE =
 
 /** Main-accord / genre labels — not pyramid materials when standing alone. */
 export const STANDALONE_ACCORD_DESCRIPTOR_RE =
-  /^(?:powdery|woody|musky|mossy|fresh|sweet|floral|oriental|gourmands?|citrus|spicy|aromatic|green|aquatic|fruity|smoky|balsamic|earthy|intense|light|dark|lactonic|desserts?|white floral|creamy florals?|warm wood|second-skin|frosted-pastel|frosted|pastel|originally from byredo|originally from commodity|resort evenings|warm days|starry date evenings|date evenings|celestial hug|wear guide|delicate|intimate|cozy|celestial|flirtatious|glamorous|addictive|ruby|sexy|pretty|playful|warm|airy|joyfully|joyfully luminous|luminous|addictive|comforting|candy-drip|creamy|smooth|smoother|sugary|golden mist|warm sweetness|european elegance|elegant|opulent|refined|radiant|silky|sensual|seductive|rebellious|unforgettable|plush|magnetic|alluring|intoxicating|effortless|dreamy|rebellious|golden light|golden glow|fairy-kissed|sun-kissed|star-kissed)$/i
+  /^(?:powdery|woody|musky|mossy|fresh|sweet|floral|oriental|gourmands?|citrus|spicy|aromatic|green|aquatic|fruity|smoky|balsamic|earthy|intense|light|dark|lactonic|desserts?|white floral|creamy florals?|warm wood|second-skin|frosted-pastel|frosted|pastel|originally from byredo|originally from commodity|resort evenings|warm days|starry date evenings|date evenings|celestial hug|wear guide|delicate|intimate|cozy|celestial|flirtatious|glamorous|addictive|ruby|sexy|pretty|playful|warm|airy|joyfully|joyfully luminous|luminous|addictive|comforting|candy-drip|creamy|smooth|smoother|sugary|golden mist|warm sweetness|european elegance|elegant|opulent|refined|radiant|silky|sensual|seductive|rebellious|unforgettable|plush|magnetic|alluring|intoxicating|effortless|dreamy|rebellious|golden light|golden glow|fairy-kissed|sun-kissed|star-kissed|confidence|courage|vitality|balance|healing|bold|feminine|masculine|pure|layered|alive|passion|comfort|clarity|elegance|rebellion|energy|warmth|soul|edge|tradition|indulgent|spark|fusion|composition|power|zesty citrus|aromatic herbs)$/i
 
 /** Strip marketing lead-ins glued to a material ("infused with bright bergamot" → "bergamot"). */
 export const stripFragranceNoteProseLead = (note: string): string => {
@@ -359,8 +359,13 @@ export const peelMarketingDescriptorTail = (note: string): string => {
       .replace(/^\s*creamy\s+(?=santal)/i, "")
       .replace(/\s+(?:originally\s+from)(?:\s+[a-z][\w'-]*){1,4}\b.*$/i, "")
       .replace(/\s+(?:on\s+fabric|warm\s+days)\b.*$/i, "")
+      .replace(/\s+\d+\s+reviews?\b.*$/i, "")
+      .replace(/\s+reviews?\s+regular(?:\s+price)?\b.*$/i, "")
+      .replace(/\s+(?:regular|sale)\s+price\b.*$/i, "")
       .replace(/^\s*(?:soft|smooth)\s+(?=vanilla|tonka\b)/i, "")
-      .replace(/\s*[—–—-]\s*(?:smooth|creamy|aromatic|refined|delicate|opulent|radiant|silky)\b.*$/i, "")
+      .replace(/\s*[—–—-]\s*(?:smooth|creamy|aromatic|refined|delicate|opulent|radiant|silky|indulgent|feminine|unforgettable|never|never\s+syrupy)\b.*$/i, "")
+      // Generic em-dash marketing tail: "delicate warmth — indulgent", "sweetness — never syrupy".
+      .replace(/\s*[—–]\s+[a-z][\s\S]*$/i, "")
       .replace(/\s+european\s+elegance\b.*$/i, "")
       .replace(/\s+\bfragrance\b\s*$/i, "")
       .replace(/\s+(?:your\s+skins?|skin)\s+signature\b.*$/i, "")
@@ -376,20 +381,38 @@ export const peelMarketingDescriptorTail = (note: string): string => {
   return s
 }
 
+/** Strip trailing sentence punctuation without breaking material abbreviations (e.o., abs.). */
+const stripTrailingNotePunctuation = (s: string): string => {
+  const t = s.trim()
+  if (!t) return t
+  // Keep essential-oil / absolute abbreviations intact.
+  if (/\b(?:e\.o|abs|a\.o|h\.e)\.?$/i.test(t)) {
+    return t.replace(/[;:!?"'`]+$/g, "").trim()
+  }
+  return t.replace(/[.,;:!?"'`]+$/g, "").trim()
+}
+
 /** Normalize one extracted note candidate; return null when it is marketing/prose junk. */
 export const sanitizeExtractedNoteCandidate = (note: string): string | null => {
-  const raw = note
-    .trim()
-    .replace(/[\u200b\u200c\u200d\ufeff]/g, "")
-    .replace(/\)+$/g, "")
-    .replace(/^\(+/g, "")
-    .trim()
+  const raw = stripTrailingNotePunctuation(
+    note
+      .trim()
+      .replace(/[\u200b\u200c\u200d\ufeff]/g, "")
+      .replace(/\)+$/g, "")
+      .replace(/^\(+/g, "")
+      .replace(/^[.,;:!?"'`]+/g, "")
+      .trim(),
+  )
   if (!raw) return null
+  // Storefront / collection URLs bleed into pyramid arrays (Widian CSV).
+  if (/^https?:\/\//i.test(raw) || /https?:\/\//i.test(raw)) return null
+  if (/\b[\w-]+\.(?:com|net|org|io)(?:\/|\s|$)/i.test(raw) && !/\b(?:e\.o|abs)\b/i.test(raw)) return null
   // AOE "A CHERRY ON TOP" → peel article from multi-word materials; keep rejecting "a sweet".
   const articleMulti = raw.match(/^(?:a|an|the)\s+(\S+\s+\S[\s\S]*)$/i)
   if (articleMulti?.[1]) return sanitizeExtractedNoteCandidate(articleMulti[1])
   if (/^(?:a|an|the)\s+[a-z]+$/i.test(raw)) return null
   if (/^then\s+/i.test(raw)) return null
+  if (/^this\s+/i.test(raw)) return null
   if (/^(?:softened|becomes)\s+with\b/i.test(raw)) return null
   if (/^becomes\s+your\s+skins?\b/i.test(raw)) return null
   if (/\b\w+-kissed\b/i.test(raw)) return null
@@ -400,6 +423,20 @@ export const sanitizeExtractedNoteCandidate = (note: string): string | null => {
   if (/\b(?:top|heart|base|middle)\s*$/i.test(raw)) return null
   if (/\b(?:top|heart|base|middle)\b/i.test(raw) && raw.split(/\s+/).length >= 2) return null
   if (/\s+(?:the|from|with|of|into)\s*$/i.test(raw)) return null
+  // Incomplete marketing tails: "caramel in a radiant", "composition full of".
+  if (/\bin\s+a\s+\w+$/i.test(raw)) return null
+  if (/\bfull\s+of\b/i.test(raw)) return null
+  // Experience words mistaken for materials (Widian / boutique copy). Keep "amber warmth".
+  if (/\b(?:energy|confidence|elegance|rebellion|clarity|comfort)\b/i.test(raw)) return null
+  if (/\bwarmth\b/i.test(raw) && !/\bamber\s+warmth\b/i.test(raw)) return null
+  // Blend-prose fragments from "blend of two fragrances one being…".
+  if (
+    /^(?:two\s+fragrances|one\s+being|and\s+that'?s|why\s+there|issue|was\s+an\s+issue|black\s+tie)$/i.test(
+      raw,
+    )
+  ) {
+    return null
+  }
   // Milano Fragranze / WooCommerce: description prose glued after last base note ("Acquatic notes. Curved backs…").
   if (
     /\b(?:abs|accord|resinoid|essence|e\.o\.?|notes)\b/i.test(raw) &&
@@ -413,11 +450,18 @@ export const sanitizeExtractedNoteCandidate = (note: string): string | null => {
   let peeled = stripFragranceNoteProseLead(raw)
   peeled = peelMarketingDescriptorTail(peeled)
   if (!peeled) return null
+  // Em-dash marketing slogans: keep the material before the dash when present.
+  if (/[—–]/.test(peeled)) {
+    const beforeDash = peelMarketingDescriptorTail(peeled.split(/[—–]/)[0]?.trim() ?? "")
+    if (!beforeDash || beforeDash === peeled) return null
+    return sanitizeExtractedNoteCandidate(beforeDash)
+  }
   peeled = peelFragranceNoteOriginSuffix(peeled)
     .replace(/\s+pure\s+je$/i, "")
     .replace(/\s+siam\s+pure$/i, " siam")
     .replace(/[™®©]/g, "")
     .trim()
+  peeled = stripTrailingNotePunctuation(peeled)
   const lc = peeled.toLowerCase()
   if (LAYER_LABEL_TOKENS.has(lc)) return null
   if (STANDALONE_COLOR_NOTE_RE.test(lc)) return null
@@ -482,8 +526,12 @@ export const isThemeCssTokenNote = (note: string): boolean => {
 
 /** CSS / HTML / truncated prose tokens that must never become pyramid notes. */
 export const isObviousNonMaterialNote = (note: string): boolean => {
-  const n = note.trim().toLowerCase()
+  const n = note
+    .trim()
+    .toLowerCase()
+    .replace(/[.,;:!?"'`]+$/g, "")
   if (!n) return true
+  if (/^https?:\/\//i.test(n) || /https?:\/\//i.test(n)) return true
   if (isThemeCssTokenNote(n)) return true
   if (isComplianceOrSourcingNote(n)) return true
   if (/^[a-z]{1,2}$/i.test(n)) return true
@@ -495,7 +543,7 @@ export const isObviousNonMaterialNote = (note: string): boolean => {
   if (STANDALONE_ACCORD_DESCRIPTOR_RE.test(n)) return true
   if (/^(?:a|an|the)\s+[a-z]/i.test(n)) return true
   if (/\s+(?:the|from|with|of|into)\s*$/i.test(n)) return true
-  if (/^(?:top|heart|base|middle|style|projection|facets|strength|concentration|margi|trail|halo|fabric|nuances|enveloping|sparkle|originally|byredo|commodity|frosted|pastel|lactonic|clean|longer|summer|days|mug|reading|couch|bedtime|layering|addictive|intimate|quietly|drinkable|aura|hug)$/i.test(n))
+  if (/^(?:top|heart|base|middle|style|projection|facets|strength|concentration|margi|trail|halo|fabric|nuances|enveloping|sparkle|originally|byredo|commodity|frosted|pastel|lactonic|clean|longer|summer|days|mug|reading|couch|bedtime|layering|addictive|intimate|quietly|drinkable|aura|hug|confidence|bold|feminine|masculine|pure|layered|alive|passion|comfort|clarity|elegance|rebellion|energy|warmth|soul|edge|tradition|indulgent|spark|fusion|composition)$/i.test(n))
     return true
   if (/^(?:top|middle|base)\s+notes?$/i.test(n)) return true
   if (/^(?:top|middle|base)\s+notes?\s+(?:are|is|of)\b/i.test(n)) return true
@@ -518,6 +566,7 @@ export const isObviousNonMaterialNote = (note: string): boolean => {
   if (/\bwear\s+it(?:\s+on)?\b/i.test(n)) return true
   if (/^(?:radial-gradient|linear-gradient|repeating-linear-gradient|videos|romance|exotic sophistication)$/i.test(n))
     return true
+  if (/\b\d+\s+reviews?\b|\breviews?\s+regular\b|\b(?:regular|sale)\s+price\b/i.test(n)) return true
   if (/^(?:videos related products|ingredients captivate your senses|related products|product reviews)$/i.test(n))
     return true
   if (/\b(?:videos related products|ingredients captivate your senses|captivate your senses)\b/i.test(n)) return true
@@ -563,9 +612,26 @@ export const isObviousNonMaterialNote = (note: string): boolean => {
 
 /** Sentence tails from Pattern/Etsy prose cues — not pyramid materials even when they appear in source text. */
 export const looksLikeProseNotePhrase = (note: string): boolean => {
-  const n = note.trim().toLowerCase()
+  const n = note
+    .trim()
+    .toLowerCase()
+    .replace(/[.,;:!?"'`]+$/g, "")
   if (!n) return true
   if (isObviousNonMaterialNote(n)) return true
+  if (/^https?:\/\//i.test(n) || /https?:\/\//i.test(n)) return true
+  // Widian / boutique slogan fragments mistaken for pyramid notes.
+  if (
+    /\b(?:radiates?|meets?|blends?\s+with|deepen(?:s|ing)?|stays?\s+with|grounded\s+with|fusion|composition|full\s+of|sun-warmed|spark\s+on|silent\s+power|andalusian\s+soul|tradition\s+meets|elegance\s+blends|deepen\s+its\s+soul|stays\s+with\s+you|golden\s+spark|citrus-spice|mineral\s+warmth|juicy\s+composition|golden\s+warmth)\b/.test(
+      n,
+    )
+  ) {
+    return true
+  }
+  if (/^where\b/.test(n)) return true
+  // Remaining em-dash slogans after peel (both sides marketing).
+  if (/[—–]/.test(n)) return true
+  if (/^(?:this|that)\s+\w+/.test(n)) return true
+  if (/^(?:two\s+fragrances|one\s+being|and\s+that'?s|why\s+there|issue)$/i.test(n)) return true
   if (
     /\b(?:adds?\s+a|\badds\b|give\s+the\s+scent|giraffe-inspired|animalic-foral|perfume\s+with\s+notes|with\s+notes\s+of\s+bergamot|subtle\s+grass\s+note|office\s+wear|polished\s+office|originally\s+from|frosted-pastel|summer\s+warm\s+days|clean\s+halo|longer\s+on\s+fabric|cloud\s+cream|candy\s+air|a\s+mug|the\s+creamy|cacao\s+the|powdered\s+vanilla\s+style|then\s+deepens|deepens\s+into|fluffy\s+glow|as\s+the\s+night\s+deepens|starry\s+date\s+evenings|celestial\s+hug|wear\s+guide|flirtatious|glamorous|surrounds\s+you\s+in|european\s+elegance|touch\s+of\s+european|wrap\s+(?:yourself|your\s+senses)|float\s+into|if\s+you\s+love|pastel\s+dreams\s+with|creamy\s+softness\s+of|nostalgic\s+desserts|bottled\s+by|hand-?blended(?:\s+with\s+care)?|followed\s+by\s+a\s+heart\s+of|brings\s+effortless\s+sensuality|utterly\s+magnetic|(?:j|u)uicy\s+signature\s+scent|drenched\s+in|creating\s+an?\s+(?:unforgettable|experience)|rather\s+than|flanker\s+to|infused\s+cocktails?|elegant\s+rather|becomes\s+your\s+skins?|skins?\s+signature|softened\s+with|fairy-kissed|sun-kissed|star-kissed|\w+-kissed)\b/.test(
       n,
@@ -593,7 +659,7 @@ export const looksLikeProseNotePhrase = (note: string): boolean => {
   if (
     words.length >= 3 &&
     /\b(?:the|and|or|of|to|with|by|in|from|without|according|possibly|even|all|let|where|when|how)\b/.test(n) &&
-    /\b(?:ignite|liberate|seduce|devour|snatch|explain|issued|apotheosis|nostril|wreak|infused|lifted|breaks|unexpected|violence|philosopher|revolutionary|desire|drive|god|pirouette|clutching|whisper|hope|reality|bridge|symbolic|imagination|faceted|swirl|makes sense|outrageous|dictates|coitus|sécrétions|parties|mint)\b/.test(
+    /\b(?:ignite|liberate|seduce|devour|snatch|explain|issued|apotheosis|nostril|wreak|infused|lifted|breaks|unexpected|violence|philosopher|revolutionary|desire|drive|god|pirouette|clutching|whisper|hope|reality|bridge|symbolic|imagination|faceted|swirl|makes sense|outrageous|dictates|coitus|sécrétions|parties|mint|radiates?|meets?|blends?|deepen|stays?|grounded|fusion|composition|rebellion|elegance|confidence|warmth|soul)\b/.test(
       n,
     )
   ) {
@@ -603,8 +669,9 @@ export const looksLikeProseNotePhrase = (note: string): boolean => {
     return true
   }
   if (/\bcompletes\b/.test(n)) return true
-  if (words.length > 6) return true
-  if (words.length > 4 && /\b(?:adds?|inspired|composed|glow|mimics|follow|completes)\b/.test(n)) {
+  // Six+ tokens is almost never a single material (marketing sentence fragments).
+  if (words.length >= 6) return true
+  if (words.length > 4 && /\b(?:adds?|inspired|composed|glow|mimics|follow|completes|radiates?|meets?|blends?|deepen|stays?|grounded|fusion|composition)\b/.test(n)) {
     return true
   }
   return false
