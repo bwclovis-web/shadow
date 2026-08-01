@@ -301,13 +301,29 @@ const TheArchiveClient = ({
 
         {isSearchMode && sortedPerfumes.length === 0 ? (
           <p className="text-noir-light text-lg">{t("searchEmpty")}</p>
+        ) : isSearchMode ? (
+          <DataDisplaySection
+            containerRef={archiveGridRef}
+            data={sortedPerfumes}
+            isLoading={loading}
+            type="perfume"
+            selectedLetter={null}
+            sourcePage="archive"
+            transitionCueKey={
+              gridCueToken > 0
+                ? `archive-${gridCueToken}-all`
+                : undefined
+            }
+            transitionCueDirection={archiveRevealDirection}
+            transitionCueTone="archive"
+          />
         ) : (
           <DataDisplaySection
             containerRef={archiveGridRef}
             data={sortedPerfumes}
             isLoading={loading}
             type="perfume"
-            selectedLetter={isSearchMode ? null : letterFromUrl}
+            selectedLetter={letterFromUrl}
             sourcePage="archive"
             transitionCueKey={
               gridCueToken > 0
@@ -316,10 +332,10 @@ const TheArchiveClient = ({
             }
             transitionCueDirection={archiveRevealDirection}
             transitionCueTone="archive"
-            pagination={isSearchMode ? undefined : pagination}
-            onPageChange={isSearchMode ? undefined : goToPage}
-            onPrefetchNext={isSearchMode ? undefined : onPrefetchNext}
-            onPrefetchPage={isSearchMode ? undefined : onPrefetchPage}
+            pagination={pagination}
+            onPageChange={goToPage}
+            onPrefetchNext={onPrefetchNext}
+            onPrefetchPage={onPrefetchPage}
           />
         )}
       </PageWrapper>
