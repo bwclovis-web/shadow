@@ -19,6 +19,11 @@ export const DOM_ARTIFACT_EXACT_TOKENS = new Set([
   "rgba",
   "hsl",
   "hsla",
+  // CSS custom-property function peel: `--color-base: var(--x)` → token "var"
+  "var",
+  // GTM / analytics bleed (`dataLayer`)
+  "datalayer",
+  "data layer",
   "opacity",
   "transform",
   "webkit",
@@ -66,6 +71,13 @@ export const DOM_ARTIFACT_EXACT_TOKENS = new Set([
   "page refresh",
   // Prose connective that LLM extraction occasionally promotes to a "note" ("laced with vanilla")
   "laced",
+  // Shopify / theme class tokens that leak when a PDP has no real pyramid (Mochiglow leftovers)
+  "no-js",
+  "nojs",
+  "article",
+  "pagetransition",
+  "page-transition",
+  "page transition",
 ])
 
 /** Kebab-case segment vocabulary — DOM/UI class name parts, not fragrance materials. */

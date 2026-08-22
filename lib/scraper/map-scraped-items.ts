@@ -14,7 +14,7 @@ import { allNotesEnglish } from "@/lib/scraper/stages/note-translation"
 import type { PerfumeCsvRecord, ScrapedItem, ScraperNoteSource } from "@/types/scraper"
 
 const NON_PERFUME_ANDROMEDA_PRODUCT_URL_RE =
-  /\/products\/(?:fragrance-sampler|gift-card|sample-pack|coupon|wish-list|file-claim|join-our-newsletter)/i
+  /\/products\/(?:fragrance-sampler|sample-pack|coupon|wish-list|file-claim|join-our-newsletter)|\/products\/[^/]*(?:gift-?card|wax-warmers?|wax-melts?|oopsie)/i
 
 const isJunkScrapedDescriptionForRepair = (text: string | undefined): boolean => {
   const t = text?.trim() ?? ""

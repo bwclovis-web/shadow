@@ -12,7 +12,7 @@ import {
 
 /** Sections after note lists — not valid note sources. */
 const NOTE_REGION_END_RE =
-  /\b(?:when\s+to\s+wear|how\s+it\s+wears|main\s+accords?|available\s+sizes?|processing(?:\s*[:•|])|important\s+(?:order\s+)?policy|disclaimer|the\s+vibe|i\s+was\s+told|making\s+a\s+dupe|please\s+text|sizes?\s+\d+\s*ml|hand-blended|hand\s+filled|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|gentle\s+projection|extrait\s+de\s+parfum\s+strength)\b/i
+  /\b(?:when\s+to\s+wear|how\s+it\s+wears|how\s+to\s+use|scent\s+strength|return\s+policy|customer\s+reviews?|ingredients|available\s+sizes?|processing(?:\s*[:•|])|important\s+(?:order\s+)?policy|disclaimer|the\s+vibe|i\s+was\s+told|making\s+a\s+dupe|please\s+text|sizes?\s+\d+\s*ml|hand-blended|hand\s+filled|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|gentle\s+projection|extrait\s+de\s+parfum\s+strength|main\s+accords?)\b/i
 
 /** Marketing / ops copy that may appear before note blocks. */
 const PRE_NOTE_BOILERPLATE_END_RE =
@@ -100,7 +100,7 @@ export const parseMaterialFromFragranceNoteLine = (line: string): string[] => {
     const tm = canonicalizeNote("tree moss")
     if (tm) return [tm]
   }
-  for (const segment of trimmed.split(/\s*\/\s*/)) {
+  for (const segment of trimmed.split(/\s*[|/]\s*/)) {
     const head = segment.split(/[,—–\-]|(?=Soft|Smooth|Clean|Cool|Warm|Never|giving|elegant|refined)/i)[0]?.trim() ?? segment
     const deGlued = splitCamelCase(head).trim()
     if (!deGlued) continue
@@ -298,6 +298,9 @@ export const stripFragranceNoteProseLead = (note: string): string => {
     /^(?:infused\s+with|lifted\s+by|surrounded\s+by|wrapped\s+in|opens?\s+with|mixed\s+with|blended\s+with|layered\s+with|topped\s+with|finished\s+with|laced\s+with|paired\s+with|combined\s+with|swirled\s+with|entwined\s+with|breaks?\s+the\s+unexpected\s+accord\s+of|unexpected\s+accord\s+of|accord\s+of)\s+(?:bright|aromatic|soft|warm|unexpected|the\s+)?(.+)$/i,
   )
   if (wrapped?.[1]) return wrapped[1].trim()
+
+  const notesOf = s.match(/^(?:sweeter|sweet|rich|warm|soft)?\s*notes?\s+of\s+(.+)$/i)
+  if (notesOf?.[1]) return notesOf[1].trim()
 
   const hint = s.match(
     /^(?:a\s+|an\s+|the\s+)?(?:hint|touch|whisper|thread|veil|wash|burst|spray|splash|swirl|cloud)\s+of\s+(?:rich|soft|warm|bright|fresh|sweet)?,?\s*(.+)$/i,
@@ -535,6 +538,7 @@ export const isObviousNonMaterialNote = (note: string): boolean => {
   if (isThemeCssTokenNote(n)) return true
   if (isComplianceOrSourcingNote(n)) return true
   if (/^[a-z]{1,2}$/i.test(n)) return true
+  if (/^(?:which\s+is|which\s+are|that\s+is|this\s+is)$/i.test(n)) return true
   if (/^(?:top|heart|base|middle)\b\s+\w+/i.test(n)) return true
   if (/\b(?:top|heart|base|middle)\s*$/i.test(n)) return true
   if (/\b(?:top|heart|base|middle)\b/i.test(n) && n.split(/\s+/).length >= 2) return true
@@ -631,9 +635,13 @@ export const looksLikeProseNotePhrase = (note: string): boolean => {
   // Remaining em-dash slogans after peel (both sides marketing).
   if (/[—–]/.test(n)) return true
   if (/^(?:this|that)\s+\w+/.test(n)) return true
+  // Truncated PDP / meta copy fragments ("raspberry that sits a")
+  if (/\bthat\s+(?:sits|lingers|dances|leaves|beckels|blooms|beckckons|calls|wraps|pulses)\b/.test(n)) {
+    return true
+  }
   if (/^(?:two\s+fragrances|one\s+being|and\s+that'?s|why\s+there|issue)$/i.test(n)) return true
   if (
-    /\b(?:adds?\s+a|\badds\b|give\s+the\s+scent|giraffe-inspired|animalic-foral|perfume\s+with\s+notes|with\s+notes\s+of\s+bergamot|subtle\s+grass\s+note|office\s+wear|polished\s+office|originally\s+from|frosted-pastel|summer\s+warm\s+days|clean\s+halo|longer\s+on\s+fabric|cloud\s+cream|candy\s+air|a\s+mug|the\s+creamy|cacao\s+the|powdered\s+vanilla\s+style|then\s+deepens|deepens\s+into|fluffy\s+glow|as\s+the\s+night\s+deepens|starry\s+date\s+evenings|celestial\s+hug|wear\s+guide|flirtatious|glamorous|surrounds\s+you\s+in|european\s+elegance|touch\s+of\s+european|wrap\s+(?:yourself|your\s+senses)|float\s+into|if\s+you\s+love|pastel\s+dreams\s+with|creamy\s+softness\s+of|nostalgic\s+desserts|bottled\s+by|hand-?blended(?:\s+with\s+care)?|followed\s+by\s+a\s+heart\s+of|brings\s+effortless\s+sensuality|utterly\s+magnetic|(?:j|u)uicy\s+signature\s+scent|drenched\s+in|creating\s+an?\s+(?:unforgettable|experience)|rather\s+than|flanker\s+to|infused\s+cocktails?|elegant\s+rather|becomes\s+your\s+skins?|skins?\s+signature|softened\s+with|fairy-kissed|sun-kissed|star-kissed|\w+-kissed)\b/.test(
+    /\b(?:adds?\s+a|\badds\b|give\s+the\s+scent|giraffe-inspired|animalic-foral|perfume\s+with\s+notes|with\s+notes\s+of\s+bergamot|subtle\s+grass\s+note|office\s+wear|polished\s+office|originally\s+from|frosted-pastel|summer\s+warm\s+days|clean\s+halo|longer\s+on\s+fabric|cloud\s+cream|candy\s+air|a\s+mug|the\s+creamy|cacao\s+the|powdered\s+vanilla\s+style|then\s+deepens|deepens\s+into|fluffy\s+glow|as\s+the\s+night\s+deepens|starry\s+date\s+evenings|celestial\s+hug|wear\s+guide|flirtatious|glamorous|surrounds\s+you\s+in|european\s+elegance|touch\s+of\s+european|wrap\s+(?:yourself|your\s+senses)|float\s+into|if\s+you\s+love|pastel\s+dreams\s+with|creamy\s+softness\s+of|nostalgic\s+desserts|bottled\s+by|hand-?blended(?:\s+with\s+care)?|followed\s+by\s+a\s+heart\s+of|brings\s+effortless\s+sensuality|utterly\s+magnetic|(?:j|u)uicy\s+signature\s+scent|drenched\s+in|creating\s+an?\s+(?:unforgettable|experience)|rather\s+than|flanker\s+to|infused\s+cocktails?|elegant\s+rather|becomes\s+your\s+skins?|skins?\s+signature|softened\s+with|fairy-kissed|sun-kissed|star-kissed|intertwined\s+with|burst\s+with\s+fresh|unveil\s+deep\s+blends|everlasting\s+bequest|earthy\s+aroma\s+of|which\s+are\s+its\s+substance|delicate\s+floral\s+notes\s+of|invoke\s+sacredness|equated\s+by\s+the\s+robust|\w+-kissed)\b/.test(
       n,
     )
   ) {

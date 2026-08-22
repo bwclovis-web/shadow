@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest"
 
-import { resolveProductName } from "@/lib/scraper/stages/pdp-bootstrap"
+import {
+  isLikelyReviewWidgetTitle,
+  resolveProductName,
+} from "@/lib/scraper/stages/pdp-bootstrap"
 
 describe("resolveProductName", () => {
   it("keeps accented merchant title even when URL slug is longer ASCII", () => {
@@ -56,5 +59,19 @@ describe("resolveProductName", () => {
         detailURL: "https://example.com/products/new-york-intense",
       }),
     ).toBe("New York Intense")
+  })
+
+  it("falls back to URL slug when the title is a reviews widget dump", () => {
+    expect(
+      isLikelyReviewWidgetTitle(
+        "Customer Reviews Based On Reviews Write A Review % % % % % S Sophia Lewandowski",
+      ),
+    ).toBe(true)
+    expect(
+      resolveProductName({
+        name: "Customer Reviews Based On Reviews Write A Review % % % % % S Sophia Lewandowski Smells Just As Advertised",
+        detailURL: "https://www.mochiglow.com/products/perfume-cereal-milk",
+      }),
+    ).toBe("Perfume Cereal Milk")
   })
 })

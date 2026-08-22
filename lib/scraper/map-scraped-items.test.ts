@@ -154,6 +154,25 @@ describe("scrapedItemsNeedNodeRepair", () => {
     ).toBe(true)
   })
 
+  it("flags gift-card slugs that are prefixed by the house name", () => {
+    expect(
+      scrapedItemsNeedNodeRepair([
+        solidPyramid({
+          name: "Mochiglow Gift Card",
+          detailURL: "https://www.mochiglow.com/products/mochiglow-gift-card",
+        }),
+      ]),
+    ).toBe(true)
+    expect(
+      pythonMerchantNotesComplete([
+        solidPyramid({
+          name: "Mochiglow Gift Card",
+          detailURL: "https://www.mochiglow.com/products/mochiglow-gift-card",
+        }),
+      ]),
+    ).toBe(false)
+  })
+
   it("flags empty layers so Node can recover notes from description", () => {
     expect(
       scrapedItemsNeedNodeRepair([

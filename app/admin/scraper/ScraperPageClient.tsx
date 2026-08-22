@@ -62,7 +62,7 @@ export const ScraperPageClient = () => {
   const [notesSelector, setNotesSelector] = useState("")
   const [imageSelector, setImageSelector] = useState(SHOPIFY_DEFAULTS.imageSelector)
   const [skipKeywordsRaw, setSkipKeywordsRaw] = useState(
-    "set, sample, sampler, collection, collections",
+    "set, sample, sampler, collection, collections, gift card, wax warmer, wax melt, oopsie",
   )
   const [baseUrl, setBaseUrl] = useState("")
   const [titleDashSegment, setTitleDashSegment] = useState<TitleDashSegment>("before")

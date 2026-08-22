@@ -118,6 +118,14 @@ function omitWordsFromTitle(name: string, words: string[]): string {
   return out.replace(/\s+/g, " ").trim()
 }
 
+/** Strip catalog chrome "Perfume - Name" / "Name Perfume" so the scent name remains. */
+const stripCatalogPerfumeWord = (name: string): string =>
+  name
+    .replace(/^\s*perfume\s*[-–—:|]\s+/i, "")
+    .replace(/^\s*perfume\s+/i, "")
+    .replace(/\s+perfume\s*$/i, "")
+    .trim()
+
 function cleanTitle(
   name: string,
   opts: {
@@ -130,7 +138,7 @@ function cleanTitle(
     titleOmitWords?: string[]
   },
 ): string {
-  let out = name
+  let out = stripCatalogPerfumeWord(name)
   const seg = resolveTitleDashSegment(opts)
   if (seg === "before") out = takeBeforeDash(out)
   else if (seg === "after") out = takeAfterDash(out)
@@ -140,6 +148,7 @@ function cleanTitle(
   else if (opts.titleTakeAfterFirstComma) out = takeAfterFirstComma(out)
   if (opts.titleStripNumbers) out = stripNumbersFromTitle(out)
   if (opts.titleOmitWords?.length) out = omitWordsFromTitle(out, opts.titleOmitWords)
+  out = stripCatalogPerfumeWord(out)
   return out.replace(/\bthe\s+the\b/gi, "the").replace(/\s+/g, " ").trim() || name
 }
 
@@ -287,7 +296,11 @@ const splitParentheticalInnerNotes = (inner: string): string[] =>
 /**
  * Merchant accord lines use parentheses for materials ("Incense (Copal & Palo Santo)").
  * Expand to separate notes with no "(" — e.g. copal, palo santo — and repair dangling "(" from bad splits.
+ * Skip CSS functions (`var(--x)`, `rgb(...)`, …) so theme bleed never becomes notes.
  */
+const CSS_FUNCTION_PREFIX_RE =
+  /^(?:var|rgba?|hsla?|url|calc|env|clamp|min|max|attr|linear-gradient|radial-gradient)$/i
+
 const expandParentheticalNoteParts = (parts: string[]): string[] => {
   const out: string[] = []
   for (const raw of parts) {
@@ -300,6 +313,9 @@ const expandParentheticalNoteParts = (parts: string[]): string[] => {
     const closed = t.match(/^(.+?)\s*\(([^)]+)\)\s*(.*)$/i)
     if (closed) {
       const prefix = closed[1].trim()
+      if (CSS_FUNCTION_PREFIX_RE.test(prefix)) {
+        continue
+      }
       const innerParts = splitParentheticalInnerNotes(closed[2])
       const suffix = closed[3].trim()
       const prefixWithSuffix =
@@ -324,6 +340,9 @@ const expandParentheticalNoteParts = (parts: string[]): string[] => {
     const orphan = t.match(/^(.+?)\s*\(([^)]+)$/i)
     if (orphan) {
       const prefix = orphan[1].trim()
+      if (CSS_FUNCTION_PREFIX_RE.test(prefix)) {
+        continue
+      }
       const innerParts = splitParentheticalInnerNotes(orphan[2])
       if (prefix) out.push(prefix)
       out.push(...innerParts)
@@ -1002,7 +1021,7 @@ const normalizeImplicitLayerColons = (text: string): string => {
   let s = text
   // "Top Notes Granny Smith" (label + "Notes" + list — no colon, whitespace-collapsed H3)
   s = s.replace(
-    /\b(top|open(?:ing)?|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry[\s-]*down|drydown|end)\s+notes?\s+(?!(?:of|and|with|from|to|in|the|a|an|is|are)\b)(?=[A-Za-z])/gi,
+    /\b(top|open(?:ing)?|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry[\s-]*down|drydown|end)\s+notes?\s+(?!(?:of|and|with|from|to|in|the|a|an|is|are|burst|unveil|reflect|parallel|usher|spill|offering|formed|features|includes|evoke|capture|begin|starts|was|were|become|creates|leaves|marks|embody|equated|ingress|suggesting|embodying|paralleling|invoke|invites|selected|linger|wraps)\b)(?=[A-Za-z])/gi,
     "$1: ",
   )
   // "Top: " already handled; also catch bare label standing alone before a capitalised list
@@ -1569,7 +1588,7 @@ function extractInlineLayeredNotes(text: string): {
   if (!source) return empty
 
   const sectionRe =
-    /\b(top(?:\s+notes?)?|open(?:ing)?(?:\s+notes?)?|head(?:\s+notes?)?|heart(?:\s+notes?)?|middle(?:\s+notes?)?|mid(?:\s+notes?)?|core(?:\s+notes?)?|body(?:\s+notes?)?|cent(?:er|re)(?:\s+notes?)?|base(?:\s+notes?)?|bottom(?:\s+notes?)?|background(?:\s+notes?)?|foundation(?:\s+notes?)?|dry\s*down(?:\s+notes?)?|drydown(?:\s+notes?)?|dry(?:\s+notes?)?|end(?:\s+notes?)?|notes?\s+de\s+(?:tête|tete)|notes?\s+de\s+(?:cœur|coeur)|notes?\s+de\s+fond|note\s+di\s+(?:testa|cuore|fondo|olfattive)|notas\s+de\s+(?:salida|coraz[oó]n|corazon|fondo)|kopfnoten?|herznoten?|basisnoten?|duftnoten?|topnoten?|hartnoten?)\s*[:\-\u2013\u2014–—]\s*/gi
+    /(?<![a-z0-9-])(top(?:\s+notes?)?|open(?:ing)?(?:\s+notes?)?|head(?:\s+notes?)?|heart(?:\s+notes?)?|middle(?:\s+notes?)?|mid(?:\s+notes?)?|core(?:\s+notes?)?|body(?:\s+notes?)?|cent(?:er|re)(?:\s+notes?)?|base(?:\s+notes?)?|bottom(?:\s+notes?)?|background(?:\s+notes?)?|foundation(?:\s+notes?)?|dry\s*down(?:\s+notes?)?|drydown(?:\s+notes?)?|dry(?:\s+notes?)?|end(?:\s+notes?)?|notes?\s+de\s+(?:tête|tete)|notes?\s+de\s+(?:cœur|coeur)|notes?\s+de\s+fond|note\s+di\s+(?:testa|cuore|fondo|olfattive)|notas\s+de\s+(?:salida|coraz[oó]n|corazon|fondo)|kopfnoten?|herznoten?|basisnoten?|duftnoten?|topnoten?|hartnoten?)\s*[:\-\u2013\u2014–—]\s*/gi
   const matches = [...source.matchAll(sectionRe)]
   if (matches.length === 0) return empty
 

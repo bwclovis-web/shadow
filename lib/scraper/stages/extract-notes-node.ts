@@ -82,6 +82,12 @@ const isShopCollectionListingScrape = (item: ScrapedItem, name: string): boolean
   return false
 }
 
+const isNonPerfumeCatalogRow = (item: ScrapedItem, name: string): boolean => {
+  const url = item.detailURL ?? ""
+  if (NON_PERFUME_ANDROMEDA_PRODUCT_URL_RE.test(url)) return true
+  return /\b(?:gift\s*cards?|wax\s+warmers?|wax\s+melts?|oopsie)\b/i.test(name)
+}
+
 /** Same four "ingredients" the noir generator hammers — if that's all we extracted, PDP bootstrap likely failed first pass. */
 const NOIR_NOTE_CLICHE = new Set(["plum", "rose", "brown sugar", "golden honey"])
 
@@ -1162,6 +1168,12 @@ function buildGraph(
       if (isShopCollectionListingScrape(state.items[idx], p.record.name)) {
         opts.onProgress?.(
           `Notes pipeline: omitted shop/collection listing row "${p.record.name.slice(0, 48)}"`,
+        )
+        continue
+      }
+      if (isNonPerfumeCatalogRow(state.items[idx], p.record.name)) {
+        opts.onProgress?.(
+          `Notes pipeline: omitted non-perfume row "${p.record.name.slice(0, 48)}"`,
         )
         continue
       }

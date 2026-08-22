@@ -55,6 +55,22 @@ describe("note-source-confirmation", () => {
     )
   })
 
+  it("extractUnlabeledFragranceNotesBlock parses Mochiglow pipe-separated Fragrance Notes", () => {
+    const source = `
+Pandan is a leafy green plant native to South & Southeast Asia.
+Fragrance Notes
+pandan leaf | creamy coconut milk | sweet lemongrass
+Scent Strength
+How To Use
+Eau de parfum is a highly concentrated fragrance
+Customer Reviews
+Based on 9 reviews
+`
+    expect(extractUnlabeledFragranceNotesBlock(source)).toEqual(
+      expect.arrayContaining(["pandan leaf", "creamy coconut milk", "sweet lemongrass"]),
+    )
+  })
+
   it("extractUnlabeledFragranceNotesBlock parses glued Shopify Fragrance Notes (no newlines)", () => {
     expect(extractUnlabeledFragranceNotesBlock(GLUED_BLACK_TIE_SOURCE)).toEqual(
       expect.arrayContaining(["white orris", "iris", "vanilla", "cedarwood", "musk", "tree moss"]),
@@ -495,12 +511,18 @@ Also listed elsewhere: Neroli E.O. among featured materials.
       "opens in a new tab",
       "full page refresh",
       "laced",
+      "var",
+      "datalayer",
+      "no-js",
+      "article",
+      "pagetransition",
     ]) {
       expect(isThemeCssTokenNote(junk), junk).toBe(true)
       expect(isObviousNonMaterialNote(junk), junk).toBe(true)
     }
     expect(isThemeCssTokenNote("vetiver")).toBe(false)
     expect(isThemeCssTokenNote("iris")).toBe(false)
+    expect(isObviousNonMaterialNote("which is")).toBe(true)
   })
 
   it("isObviousNonMaterialNote rejects CSS bleed and truncated prose fragments", () => {

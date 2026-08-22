@@ -31,6 +31,17 @@ function isLikelyHostnameOrEmpty(name: string): boolean {
   return false
 }
 
+/** Judge.me / Shopify reviews widgets sometimes win the first `h1` and dump the whole widget as the title. */
+export const isLikelyReviewWidgetTitle = (name: string): boolean => {
+  const t = (name ?? "").replace(/\s+/g, " ").trim().toLowerCase()
+  if (!t) return false
+  if (/\bcustomer reviews?\b/.test(t)) return true
+  if (/\bwrite a review\b/.test(t)) return true
+  if (/\bbased on (?:\d+\s+)?reviews?\b/.test(t)) return true
+  if (/\breview\b/.test(t) && (/%/.test(t) || t.length > 80)) return true
+  return false
+}
+
 /** Etsy / Pattern listing slugs often trail SEO phrases after `-a-`, `-an-`, `-for-`, etc. */
 const ETSY_SLUG_TAIL_STARTERS = new Set([
   "a",
@@ -125,7 +136,7 @@ const isLikelyTruncatedProductName = (name: string, detailURL: string): boolean 
 function resolveProductName(item: ScrapedItem): string {
   const raw = item.name?.trim() ?? ""
   const fromUrl = nameFromProductUrl(item.detailURL ?? "")
-  if (isLikelyHostnameOrEmpty(raw)) return fromUrl ?? raw
+  if (isLikelyHostnameOrEmpty(raw) || isLikelyReviewWidgetTitle(raw)) return fromUrl ?? raw
   if (
     fromUrl &&
     isLikelyTruncatedProductName(raw, item.detailURL ?? "") &&
@@ -198,9 +209,9 @@ export const isPatternByEtsyProductUrl = (detailURL: string): boolean =>
 export const isAndromedaMoonProductUrl = (detailURL: string): boolean =>
   /andromedasmoon\.com/i.test(detailURL ?? "")
 
-/** Shopify paths that are not individual fragrance PDPs (sampler sets, gift cards, promos). */
+/** Shopify paths that are not individual fragrance PDPs (sampler sets, gift cards, merch, leftovers). */
 const NON_PERFUME_ANDROMEDA_PRODUCT_URL_RE =
-  /\/products\/(?:fragrance-sampler|gift-card|sample-pack|coupon|wish-list|file-claim|join-our-newsletter)/i
+  /\/products\/(?:fragrance-sampler|sample-pack|coupon|wish-list|file-claim|join-our-newsletter)|\/products\/[^/]*(?:gift-?card|wax-warmers?|wax-melts?|oopsie)/i
 
 const URL_MATCH_NAME_STOPWORDS = new Set([
   "eau",
@@ -1131,7 +1142,7 @@ const extractFeaturedFromRawHtmlQuotes = (html: string): string | null => {
 }
 
 const LAYERED_PYRAMID_LABEL_RE =
-  /\b(top|open|opening|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry\s*down|drydown|end)\s*(?:notes?)?\s*[:\-\u2013\u2014–—]\s*/gi
+  /(?<![a-z0-9-])(top|open|opening|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry\s*down|drydown|end)\s*(?:notes?)?\s*[:\-\u2013\u2014–—]\s*/gi
 
 const PYRAMID_LAYER_STOP_RE =
   /\s+(?:product\s+reviews?(?:\s*&\s*videos?)?|related\s+products|description\b|master\s+perfumer|olfactory\s+notes|shopping\s+cart|add to cart|you may also|customers also)\b/i
@@ -1217,6 +1228,120 @@ const extractDtDdPyramidFromHtml = (html: string): string | null => {
   return null
 }
 
+/**
+ * Kayali / Huda Beauty Shopify: real pyramid lives in `<ul class="notes-container">`.
+ * Two layouts:
+ *  A) Unlabeled comma lists: `<li><p>a, b, c</p></li>` × 3 (Top→Heart→Base by order)
+ *  B) Labeled chips: `<li><h5>Top Notes:</h5><… class="product-tag"><span>Matcha</span>…`
+ * Public product.json body_html is marketing-only.
+ */
+const extractKayaliNotesContainerFromHtml = (html: string): string | null => {
+  if (!html || !/notes-container/i.test(html)) return null
+
+  // Layout B — labeled Top / Middle|Heart / Dry|Base with product-tag chips
+  const labeledSegments: string[] = []
+  const labeledLiRe =
+    /<li\b[^>]*>[\s\S]*?<h[1-6][^>]*>\s*(Top|Open(?:ing)?|Head|Middle|Mid|Heart|Dry(?:\s*Down)?|Base|Bottom)\s*Notes?\s*:?\s*<\/h[1-6]>([\s\S]*?)<\/li>/gi
+  let labeledMatch: RegExpExecArray | null
+  while ((labeledMatch = labeledLiRe.exec(html)) !== null) {
+    const label = (labeledMatch[1] ?? "").trim().toLowerCase()
+    const block = labeledMatch[2] ?? ""
+    if (!/product-tag/i.test(block) && !/font-body-xs/i.test(block)) continue
+    const notes: string[] = []
+    const tagRe =
+      /<span\b[^>]*class="[^"]*font-body-xs[^"]*"[^>]*>([\s\S]*?)<\/span>/gi
+    let tagMatch: RegExpExecArray | null
+    while ((tagMatch = tagRe.exec(block)) !== null) {
+      const note = (tagMatch[1] ?? "")
+        .replace(/<[^>]+>/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+      if (note.length >= 2) notes.push(note)
+    }
+    if (notes.length === 0) continue
+    const layer =
+      /^(?:middle|mid|heart)$/.test(label)
+        ? "heart"
+        : /^(?:dry|dry\s*down|base|bottom)$/.test(label)
+          ? "base"
+          : "top"
+    labeledSegments.push(`${layer} notes: ${notes.join(", ")}`)
+  }
+  if (labeledSegments.length >= 2) {
+    return labeledSegments.join("\n").slice(0, 4000)
+  }
+
+  // Layout A — unlabeled <p> comma lists inside notes-container (no nested tag chips)
+  const layers = ["top", "heart", "base"] as const
+  const startRe = /<ul\b[^>]*\bnotes-container\b[^>]*>/gi
+  let startMatch: RegExpExecArray | null
+  while ((startMatch = startRe.exec(html)) !== null) {
+    const startIdx = startMatch.index + startMatch[0].length
+    let depth = 1
+    let i = startIdx
+    while (i < html.length && depth > 0) {
+      const nextOpen = html.toLowerCase().indexOf("<ul", i)
+      const nextClose = html.toLowerCase().indexOf("</ul>", i)
+      if (nextClose < 0) break
+      if (nextOpen >= 0 && nextOpen < nextClose) {
+        depth += 1
+        i = nextOpen + 3
+      } else {
+        depth -= 1
+        if (depth === 0) {
+          const listHtml = html.slice(startIdx, nextClose)
+          // Prefer direct li>p comma lists; ignore nested product-tag uls
+          if (/product-tag/i.test(listHtml) && /Top\s*Notes?/i.test(listHtml)) {
+            break
+          }
+          const liRe = /<li\b[^>]*>([\s\S]*?)<\/li>/gi
+          const layerBodies: Array<string | null> = []
+          let liMatch: RegExpExecArray | null
+          while ((liMatch = liRe.exec(listHtml)) !== null) {
+            if (layerBodies.length >= layers.length) break
+            const liBlock = liMatch[1] ?? ""
+            const pMatch = /<p\b[^>]*>([\s\S]*?)<\/p>/i.exec(liBlock)
+            if (!pMatch) {
+              layerBodies.push(null)
+              continue
+            }
+            const body = (pMatch[1] ?? "")
+              .replace(/<[^>]+>/g, " ")
+              .replace(/\s+/g, " ")
+              .trim()
+            if (body.length < 2) {
+              layerBodies.push(null)
+              continue
+            }
+            if (
+              /^(?:how to use|ingredients|shipping|returns?|size|add to|pre-?order)\b/i.test(
+                body,
+              )
+            ) {
+              layerBodies.push(null)
+              continue
+            }
+            layerBodies.push(body)
+          }
+          const filledLayers = layerBodies.filter(Boolean).length
+          if (filledLayers >= 2) {
+            const segments: string[] = []
+            for (let j = 0; j < Math.min(layerBodies.length, layers.length); j += 1) {
+              const body = layerBodies[j]
+              if (!body) continue
+              segments.push(`${layers[j]} notes: ${body}`)
+            }
+            return segments.join("\n").slice(0, 4000)
+          }
+          break
+        }
+        i = nextClose + 5
+      }
+    }
+  }
+  return null
+}
+
 /** Etat Libre d'Orange: <h3>MAIN NOTES</h3><p>iris, coconut, …</p> (often <h5><strong>MAIN NOTES</strong></h5>). */
 const extractEtatLibreMainNotesFromHtml = (html: string): string | null => {
   const re =
@@ -1242,6 +1367,11 @@ const extractEtatLibreMainNotesFromHtml = (html: string): string | null => {
  */
 const extractMerchantNoteBootstrapFromHtml = (html: string): string | null => {
   if (!html?.trim()) return null
+
+  // Kayali / Huda notes-container before meta — meta descriptions are often truncated
+  // mid-sentence ("raspberry that sits a") and must not beat the real pyramid.
+  const fromKayaliNotes = extractKayaliNotesContainerFromHtml(html)
+  if (fromKayaliNotes) return fromKayaliNotes
 
   const fromMeta = extractFromMetaDescriptionTag(html)
   if (fromMeta) return fromMeta
@@ -1457,4 +1587,10 @@ export {
   inferAndromedaAmarettoNotesFromProse,
   hasEmbeddedLayerMarkers,
   clearPdpCachesForTests,
+}
+
+// Test-only exports (Kayali / CSS bleed fixtures)
+export const __testOnly = {
+  extractKayaliNotesContainerFromHtml,
+  extractLayeredHeadingPyramidFromPlain,
 }

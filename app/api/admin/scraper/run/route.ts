@@ -127,7 +127,7 @@ const normalizePreviewDetailUrl = (value: string): string =>
     .replace(/\/+$/, "")
 
 const NON_PERFUME_PRODUCT_URL_RE =
-  /\/products\/(?:fragrance-sampler|gift-card|sample-pack|coupon|wish-list|file-claim)/i
+  /\/products\/(?:fragrance-sampler|sample-pack|coupon|wish-list|file-claim)|\/products\/[^/]*(?:gift-?card|wax-warmers?|wax-melts?|oopsie)/i
 
 const scorePreviewRecordCompleteness = (record: PerfumeCsvRecord): number => {
   const openCount = safeJsonArrayCount(record.openNotes)
@@ -230,14 +230,16 @@ const normalizeRecordNotes = (
   const heart = parseNoteJsonArray(record.heartNotes)
   const base = parseNoteJsonArray(record.baseNotes)
 
-  const seen = new Set<string>()
-  const dedupeLayer = (arr: string[]): string[] =>
-    arr.filter(note => {
+  /** Dedupe within each layer only — Kayali and others repeat notes across Heart/Base. */
+  const dedupeLayer = (arr: string[]): string[] => {
+    const seen = new Set<string>()
+    return arr.filter(note => {
       const key = note.toLowerCase()
       if (!key || seen.has(key)) return false
       seen.add(key)
       return true
     })
+  }
 
   const openDeduped = dedupeLayer(open)
   const heartDeduped = dedupeLayer(heart)
