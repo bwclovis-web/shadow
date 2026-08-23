@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from "next-intl"
+
 import { SavedSearchesManager } from "@/components/Molecules/SavedSearchesManager/SavedSearchesManager"
 
 type AlertsTabProps = {
@@ -8,13 +10,15 @@ type AlertsTabProps = {
 }
 
 export const AlertsTab = ({ signedIn, signInHref }: AlertsTabProps) => {
+  const t = useTranslations("savedSearches")
+
   if (!signedIn) {
     return (
       <p className="text-sm text-noir-gold-100">
         <a href={signInHref} className="underline text-noir-gold">
-          Sign in
+          {t("signInCta")}
         </a>{" "}
-        to manage Premium saved searches and alerts.
+        {t("signInSuffix")}
       </p>
     )
   }

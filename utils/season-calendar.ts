@@ -15,10 +15,10 @@ export const getCurrentSeasonKey = (date: Date = new Date()): SeasonKey => {
  * `/images/new/seasonal-planning-spring.webp`.
  */
 export const SEASONAL_PLANNING_BANNERS: Record<SeasonKey, string> = {
-  spring: "/images/new/vault.webp",
-  summer: "/images/new/vault.webp",
-  fall: "/images/new/vault.webp",
-  winter: "/images/new/vault.webp",
+  spring: "/images/new/seasonal-planning-spring.webp",
+  summer: "/images/new/seasonal-planning-summer.webp",
+  fall: "/images/new/seasonal-planning-fall.webp",
+  winter: "/images/new/seasonal-planning-winter.webp",
 }
 
 export const getSeasonalPlanningBanner = (

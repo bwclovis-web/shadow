@@ -1,8 +1,11 @@
 import { prisma } from "@/lib/db"
+import type { Prisma } from "@prisma/client"
 import {
+  isSavedSearchSnoozed,
   notifySavedSearchMatch,
   type SavedSearchQuery,
 } from "@/models/saved-search.server"
+import { getUserAlertPreferences } from "@/models/user-alerts.server"
 import { requireEntitlement } from "@/utils/membership/entitlements.server"
 import { isFeatureEnabled } from "@/utils/feature-flags"
 
@@ -39,17 +42,39 @@ export const runSavedSearchMatchPass = async (): Promise<{
       name: true,
       query: true,
       lastMatchedAt: true,
+      snoozedUntil: true,
     },
   })
 
   let notified = 0
   const now = Date.now()
+  const preferencesCache = new Map<
+    string,
+    Awaited<ReturnType<typeof getUserAlertPreferences>>
+  >()
+
+  const getPreferences = async (userId: string) => {
+    const cached = preferencesCache.get(userId)
+    if (cached) return cached
+    const prefs = await getUserAlertPreferences(userId)
+    preferencesCache.set(userId, prefs)
+    return prefs
+  }
 
   for (const search of searches) {
+    if (isSavedSearchSnoozed(search.snoozedUntil)) {
+      continue
+    }
+
     const entitlement = await requireEntitlement(search.userId, "instant_alerts")
     if (!entitlement.ok) {
       const saved = await requireEntitlement(search.userId, "saved_searches")
       if (!saved.ok) continue
+    }
+
+    const preferences = await getPreferences(search.userId)
+    if (preferences.savedSearchAlertsEnabled === false) {
+      continue
     }
 
     const query = parseQuery(search.query)
@@ -59,6 +84,26 @@ export const runSavedSearchMatchPass = async (): Promise<{
 
     const alertOnListing = query.alertOnNewListing !== false
     const alertOnCatalog = query.alertOnEditorial !== false
+    const delivery = preferences.savedSearchAlertFrequency ?? "instant"
+
+    const notifyMatch = async (params: {
+      title: string
+      message: string
+      payload: Record<string, unknown>
+    }) => {
+      const result = await notifySavedSearchMatch({
+        userId: search.userId,
+        savedSearchId: search.id,
+        title: params.title,
+        message: params.message,
+        payload: params.payload as Prisma.InputJsonValue,
+        preferences,
+        delivery,
+      })
+      if (result !== null || delivery === "daily") {
+        notified += 1
+      }
+    }
 
     if (alertOnListing) {
       const listings = await prisma.userPerfume.findMany({
@@ -93,7 +138,7 @@ export const runSavedSearchMatchPass = async (): Promise<{
                   perfumeNoteRelations: {
                     some: {
                       note: {
-                        OR: query.notes.map((n) => ({
+                        OR: query.notes.map(n => ({
                           name: { contains: n, mode: "insensitive" as const },
                         })),
                       },
@@ -123,9 +168,7 @@ export const runSavedSearchMatchPass = async (): Promise<{
         if (listing.userId === search.userId) continue
         const perfumeName = listing.perfume.name
         if (!textIncludes(perfumeName, query.perfumeName) && query.perfumeName) continue
-        await notifySavedSearchMatch({
-          userId: search.userId,
-          savedSearchId: search.id,
+        await notifyMatch({
           title: `Match: ${search.name}`,
           message: `${perfumeName} is available on The Exchange.`,
           payload: {
@@ -135,7 +178,6 @@ export const runSavedSearchMatchPass = async (): Promise<{
             kind: "exchange_listing",
           },
         })
-        notified += 1
         break
       }
     }
@@ -180,9 +222,7 @@ export const runSavedSearchMatchPass = async (): Promise<{
       })
 
       for (const perfume of perfumes) {
-        await notifySavedSearchMatch({
-          userId: search.userId,
-          savedSearchId: search.id,
+        await notifyMatch({
           title: `Catalog match: ${search.name}`,
           message: `${perfume.name} was added to The Archive.`,
           payload: {
@@ -191,7 +231,6 @@ export const runSavedSearchMatchPass = async (): Promise<{
             kind: "catalog_perfume",
           },
         })
-        notified += 1
         break
       }
     }

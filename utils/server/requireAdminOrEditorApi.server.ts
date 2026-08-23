@@ -17,7 +17,8 @@ const MUTATION_RESPONSE = { success: false, message: "Unauthorized" } as const
 export const requireAdminOrEditorApi = async (
   request: Request
 ): Promise<RequireAdminOrEditorResult> => {
-  const auth = await authenticateUser(request)
+  // Admin/editor role is the gate. Paid membership is not required for staff APIs.
+  const auth = await authenticateUser(request, { requireParticipation: false })
 
   if (!auth.success || !auth.user) {
     const status = auth.status ?? 401

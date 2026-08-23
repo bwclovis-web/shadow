@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl"
 import PendingSubmissionModal from "@/components/Containers/Forms/PendingSubmissionModal"
 import ContactUsForm from "@/components/Containers/Forms/ContactUsForm"
 import { Button } from "@/components/Atoms/Button/Button"
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { useSessionStore } from "@/hooks/sessionStore"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
@@ -64,6 +65,17 @@ const CorrespondenceClient = () => {
                       <p className="text-noir-light leading-relaxed text-lg">
                         {t(`faq.answer${num}`)}
                       </p>
+                      {num === 2 && (
+                        <p className="text-noir-light leading-relaxed text-lg">
+                          {t("faq.answer2GuideLink")}{" "}
+                          <PrefetchLink
+                            href="/the-collectors-guide"
+                            className="text-noir-gold underline underline-offset-4 hover:text-noir-light"
+                          >
+                            {t("faq.answer2GuideLinkCta")}
+                          </PrefetchLink>
+                        </p>
+                      )}
                       {num === 1 && (
                         <div className="flex flex-col sm:flex-row gap-3 mt-4">
                           <Button

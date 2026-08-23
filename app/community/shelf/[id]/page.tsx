@@ -26,7 +26,7 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
   }
 }
 
-const BANNER = "/images/new/community.webp"
+const BANNER = "/images/new/public-trays.webp"
 
 const PublicShelfDetailPage = async ({ params }: Props) => {
   const { id } = await params

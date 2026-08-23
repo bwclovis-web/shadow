@@ -22,6 +22,8 @@ type AlertPrefsSlice = Pick<
   | "emailSubmissionAlerts"
   | "securityAlertsEnabled"
   | "emailSecurityAlerts"
+  | "savedSearchAlertsEnabled"
+  | "emailSavedSearchAlerts"
 >
 
 type EditorialAlertVariant =
@@ -329,6 +331,71 @@ export const sendWishlistAlertEmail = async (params: {
     logEmailDebug(`Sent wishlist email to ${params.user.email} (id: ${result.id ?? "unknown"})`)
   } else {
     logEmailDebug(`Wishlist email not sent to ${params.user.email} (check RESEND_API_KEY / EMAIL_FROM)`)
+  }
+}
+
+const shouldSendSavedSearchEmail = (
+  preferences: AlertPrefsSlice | null | undefined
+) =>
+  preferences?.savedSearchAlertsEnabled !== false &&
+  preferences?.emailSavedSearchAlerts === true
+
+export const sendSavedSearchAlertEmail = async (params: {
+  user: RecipientUser
+  preferences: AlertPrefsSlice | null | undefined
+  title: string
+  message: string
+  targetUrl: string
+}): Promise<void> => {
+  if (!shouldSendSavedSearchEmail(params.preferences)) {
+    logEmailDebug(
+      `Skipped saved-search email for ${params.user.email}: savedSearchAlerts=${params.preferences?.savedSearchAlertsEnabled}, emailSavedSearch=${params.preferences?.emailSavedSearchAlerts}`
+    )
+    return
+  }
+  if (!isSendableRecipientEmail(params.user.email)) {
+    logEmailDebug(`Skipped saved-search email: invalid recipient ${params.user.email}`)
+    return
+  }
+
+  const baseUrl = getAppBaseUrl()
+  const displayName = getUserDisplayName(params.user)
+  const ctaUrl = params.targetUrl.startsWith("http")
+    ? params.targetUrl
+    : `${baseUrl}${params.targetUrl.startsWith("/") ? params.targetUrl : `/${params.targetUrl}`}`
+  const preferencesUrl = `${baseUrl}${getProfilePathForUser(params.user)}`
+  const subject = params.title || "Saved search match on perfumer's hollow"
+  const email = buildEditorialAlertEmail({
+    variant: "wishlist",
+    displayName,
+    title: params.title,
+    preheader: subject,
+    lead: params.message,
+    body: ["A saved search on The Archive or The Exchange found a new match."],
+    ctaLabel: "View the match",
+    ctaUrl,
+    secondaryLabel: "Manage alert preferences",
+    secondaryUrl: preferencesUrl,
+    spotlightLabel: "Alert",
+    spotlightValue: params.title,
+  })
+
+  const result = await sendTransactionalEmail({
+    to: params.user.email,
+    subject,
+    text: email.text,
+    html: email.html,
+    attachments: email.attachments,
+  })
+
+  if (result.sent) {
+    logEmailDebug(
+      `Sent saved-search email to ${params.user.email} (id: ${result.id ?? "unknown"})`
+    )
+  } else {
+    logEmailDebug(
+      `Saved-search email not sent to ${params.user.email} (check RESEND_API_KEY / EMAIL_FROM)`
+    )
   }
 }
 

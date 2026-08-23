@@ -16,6 +16,7 @@ type PushEditState = Pick<
   | "pushMessageAlerts"
   | "pushFollowAlerts"
   | "pushSubmissionAlerts"
+  | "pushSavedSearchAlerts"
 >
 
 type PushNotificationSectionProps = {
@@ -176,6 +177,10 @@ const PushViewMode = ({
       <span className="text-sm text-noir-gold-100">{t("pushSubmissionAlerts")}</span>
       <StatusBadge enabled={preferences.pushSubmissionAlerts && preferences.pushEnabled} />
     </div>
+    <div className="flex items-center justify-between">
+      <span className="text-sm text-noir-gold-100">{t("pushSavedSearchAlerts")}</span>
+      <StatusBadge enabled={preferences.pushSavedSearchAlerts && preferences.pushEnabled} />
+    </div>
   </div>
 )
 
@@ -230,6 +235,16 @@ const PushToggles = ({
       }
       labelChecked={t("pushSubmissionAlerts")}
       labelUnchecked={t("pushSubmissionAlerts")}
+    />
+    <VooDooCheck
+      id="push-saved-search-alerts"
+      checked={editState.pushSavedSearchAlerts}
+      disabled={!editState.pushEnabled || isSaving}
+      onChange={() =>
+        onEditStateChange({ pushSavedSearchAlerts: !editState.pushSavedSearchAlerts })
+      }
+      labelChecked={t("pushSavedSearchAlerts")}
+      labelUnchecked={t("pushSavedSearchAlerts")}
     />
   </div>
 )

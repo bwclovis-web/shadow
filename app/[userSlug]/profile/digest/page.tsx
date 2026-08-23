@@ -190,6 +190,32 @@ const DigestPage = async ({ params }: Props) => {
               ))}
             </ul>
           </section>
+
+          {digest.savedSearchMatches.length > 0 ? (
+            <section>
+              <h2 className="mb-4 text-lg uppercase tracking-wide text-noir-gold">
+                {t("savedSearchMatches")}
+              </h2>
+              <ul className="space-y-2 text-sm text-noir-gold-100">
+                {digest.savedSearchMatches.map(match => (
+                  <li
+                    key={`${match.searchName}-${match.createdAt}`}
+                    className="rounded border border-noir-gold-500/30 bg-noir-dark/40 px-4 py-3"
+                  >
+                    <Link
+                      href={match.targetUrl}
+                      className="font-medium text-noir-gold hover:underline"
+                    >
+                      {match.title}
+                    </Link>
+                    <p className="mt-1 text-xs text-noir-gold-500/80">
+                      {match.searchName} · {match.message}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
         </div>
       </PageWrapper>
     </main>

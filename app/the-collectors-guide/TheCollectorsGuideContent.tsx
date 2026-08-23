@@ -15,7 +15,7 @@ const IMAGES = {
 } as const
 
 const SECTION_IMG_CLASS =
-  "w-full mb-5 md:mb-10 lg:w-3/4 xl:w-1/2 max-w-4xl aspect-wide rounded-xl bg-transparent border-2 lg:border-8 border-noir-light shadow-lg shadow-black filter grayscale-[10%] contrast-[1] brightness-[0.9] sepia-[0.5] mix-blend-overlay"
+  "w-full mb-5 md:mb-10 lg:w-3/4 xl:w-1/2 max-w-4xl aspect-wide rounded-xl object-cover bg-transparent border-2 lg:border-8 border-noir-light shadow-lg shadow-black filter grayscale-[10%] contrast-[1] brightness-[0.9] sepia-[0.5] mix-blend-overlay"
 const IMAGE_SIZES =
   "(min-width: 1440px) 55vw, (min-width: 1024px) 65vw, 80vw"
 
@@ -84,7 +84,6 @@ const TheCollectorsGuideContent = async () => {
                 height={840}
                 className={SECTION_IMG_CLASS}
                 sizes={IMAGE_SIZES}
-                objectFit="cover"
               />
               <div className="flex flex-col gap-3 lg:w-1/2">
                 <h2>{t("section1.title")}</h2>
@@ -111,7 +110,6 @@ const TheCollectorsGuideContent = async () => {
                 height={840}
                 className={SECTION_IMG_CLASS}
                 sizes="(min-width: 1440px) 55vw, (min-width: 1024px) 65vw, 90vw"
-                objectFit="cover"
               />
               <div className="flex flex-col gap-3 lg:w-1/2">
                 <h2 className="md:mb-1">{t("section2.title")}</h2>
@@ -138,7 +136,6 @@ const TheCollectorsGuideContent = async () => {
                 height={840}
                 className={`${SECTION_IMG_CLASS} brightness-[1.1]`}
                 sizes="(min-width: 1440px) 55vw, (min-width: 1024px) 65vw, 90vw"
-                objectFit="cover"
               />
               <div className="flex flex-col gap-3 lg:w-1/2">
                 <h2 className="md:mb-1">{t("section3.title")}</h2>
@@ -162,7 +159,6 @@ const TheCollectorsGuideContent = async () => {
                 height={840}
                 className={SECTION_IMG_CLASS}
                 sizes="(min-width: 1440px) 55vw, (min-width: 1024px) 65vw, 90vw"
-                objectFit="cover"
               />
               <div className="flex flex-col gap-3 lg:w-1/2">
                 <h2 className="md:mb-1">{t("section4.title")}</h2>
@@ -189,7 +185,6 @@ const TheCollectorsGuideContent = async () => {
                 height={840}
                 className={`${SECTION_IMG_CLASS} sepia-[0.9]`}
                 sizes="(min-width: 1440px) 55vw, (min-width: 1024px) 65vw, 90vw"
-                objectFit="cover"
               />
               <div className="flex flex-col gap-3 lg:w-1/2">
                 <h2 className="md:mb-1">{t("section5.title")}</h2>

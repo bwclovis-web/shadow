@@ -23,6 +23,8 @@ const TRADE_PUSH_ALERT_TYPES: AlertType[] = [
 
 const MESSAGE_PUSH_ALERT_TYPES: AlertType[] = ["new_trader_message"]
 
+const SAVED_SEARCH_PUSH_ALERT_TYPES: AlertType[] = ["saved_search_match"]
+
 const FOLLOW_PUSH_ALERT_TYPES: AlertType[] = ["followed_activity"]
 
 const SPLIT_PUSH_ALERT_TYPES: AlertType[] = [
@@ -63,6 +65,16 @@ const buildNotificationUrl = (
 
   if (alertType === "followed_activity" && typeof metadata?.targetUrl === "string") {
     const path = metadata.targetUrl.startsWith("/") ? metadata.targetUrl : `/${metadata.targetUrl}`
+    return `${base}${path}`
+  }
+
+  if (
+    alertType === "saved_search_match" &&
+    typeof metadata?.targetUrl === "string"
+  ) {
+    const path = metadata.targetUrl.startsWith("/")
+      ? metadata.targetUrl
+      : `/${metadata.targetUrl}`
     return `${base}${path}`
   }
 
@@ -147,6 +159,10 @@ const shouldSendPushForAlert = async (
     return preferences.pushFollowAlerts
   }
 
+  if (SAVED_SEARCH_PUSH_ALERT_TYPES.includes(alertType)) {
+    return preferences.pushSavedSearchAlerts
+  }
+
   if (SPLIT_PUSH_ALERT_TYPES.includes(alertType)) {
     return preferences.decantAlertsEnabled && preferences.pushTradeAlerts
   }
@@ -171,6 +187,7 @@ export const sendPushForUserAlert = async (options: {
     !TRADE_PUSH_ALERT_TYPES.includes(alertType) &&
     !MESSAGE_PUSH_ALERT_TYPES.includes(alertType) &&
     !FOLLOW_PUSH_ALERT_TYPES.includes(alertType) &&
+    !SAVED_SEARCH_PUSH_ALERT_TYPES.includes(alertType) &&
     !SPLIT_PUSH_ALERT_TYPES.includes(alertType) &&
     !SUBMISSION_PUSH_ALERT_TYPES.includes(alertType)
   ) {

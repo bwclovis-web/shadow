@@ -28,6 +28,10 @@ const defaultAlertPreferences = {
   pushMessageAlerts: true,
   pushFollowAlerts: true,
   pushSubmissionAlerts: true,
+  savedSearchAlertsEnabled: true,
+  emailSavedSearchAlerts: false,
+  pushSavedSearchAlerts: true,
+  savedSearchAlertFrequency: "instant" as const,
   maxAlerts: 10,
 } as const
 
@@ -114,6 +118,11 @@ export const updateUserAlertPreferences = async (
       pushMessageAlerts: preferences.pushMessageAlerts ?? true,
       pushFollowAlerts: preferences.pushFollowAlerts ?? true,
       pushSubmissionAlerts: preferences.pushSubmissionAlerts ?? true,
+      savedSearchAlertsEnabled: preferences.savedSearchAlertsEnabled ?? true,
+      emailSavedSearchAlerts: preferences.emailSavedSearchAlerts ?? false,
+      pushSavedSearchAlerts: preferences.pushSavedSearchAlerts ?? true,
+      savedSearchAlertFrequency:
+        preferences.savedSearchAlertFrequency ?? "instant",
       maxAlerts: preferences.maxAlerts ?? 10,
     },
   })
@@ -186,6 +195,12 @@ export const createUserAlert = async (
     return null
   }
   if (alertType === "followed_activity" && preferences.followAlertsEnabled === false) {
+    return null
+  }
+  if (
+    alertType === "saved_search_match" &&
+    preferences.savedSearchAlertsEnabled === false
+  ) {
     return null
   }
 

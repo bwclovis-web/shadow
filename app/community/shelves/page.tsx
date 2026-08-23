@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   description: "Browse public collection trays from the community.",
 }
 
-const BANNER = "/images/new/community.webp"
+const BANNER = "/images/new/public-trays.webp"
 
 const PublicShelvesPage = async () => {
   const t = await getTranslations("publicShelves")

@@ -24,8 +24,8 @@ Save + matcher + Community Alerts manager already exist (`SavedSearch`, `SaveSea
 
 - [x] **CF-020** Save current search criteria (API + Archive/Exchange button + Community → Alerts list)
 - [ ] **CF-021** Alert rules for availability, price movement, and new matches (matcher covers new listing/catalog; price-movement rules not shipped)
-- [ ] **CF-022** Alert center with mute/snooze — mute exists on saved searches; snooze + merge into header `UserAlert` bell still open
-- [ ] **CF-023** Alert frequency settings (instant vs daily digest)
+- [x] **CF-022** Alert center with mute/snooze — Community → Alerts manages rules; snooze + unified header `UserAlert` bell inbox
+- [x] **CF-023** Alert frequency settings (instant vs daily digest)
 
 ## Tier B: Trust and Community
 
@@ -68,7 +68,7 @@ Save + matcher + Community Alerts manager already exist (`SavedSearch`, `SaveSea
 
 Sequencing, conflict map, and Collector’s Guide policy: [product-roadmap.md](./product-roadmap.md).
 
-- [ ] **CF-074** Unify saved-search, wishlist, trade, and follow notices onto the existing UserAlert bell + one preference sheet
+- [x] **CF-074** Unify saved-search, wishlist, trade, and follow notices onto the existing UserAlert bell + one preference sheet
 - [ ] **CF-075** Public looking-for via **wishlist** visibility + Exchange region filter (`User.region` / `same_region` already in trade-match). No ISO board.
 - [ ] **CF-076** Shared deal checklist on 1:1 trades (photos, tracking, shipped/received — same language as splits)
 - [ ] **CF-077** Sampling-queue UI on digest + My Scents (model + digest snippet exist)

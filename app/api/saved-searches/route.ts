@@ -5,6 +5,8 @@ import {
   deleteSavedSearch,
   listSavedSearches,
   setSavedSearchAlertEnabled,
+  snoozeSavedSearch,
+  clearSavedSearchSnooze,
   type SavedSearchQuery,
 } from "@/models/saved-search.server"
 import { requireEntitlement } from "@/utils/membership/entitlements.server"
@@ -67,6 +69,18 @@ export const POST = async (request: NextRequest) => {
     if (body?.intent === "toggle-alert") {
       const id = typeof body?.id === "string" ? body.id : ""
       await setSavedSearchAlertEnabled(auth.user!.id, id, Boolean(body?.alertEnabled))
+      return NextResponse.json({ success: true })
+    }
+
+    if (body?.intent === "snooze") {
+      const id = typeof body?.id === "string" ? body.id : ""
+      await snoozeSavedSearch(auth.user!.id, id)
+      return NextResponse.json({ success: true })
+    }
+
+    if (body?.intent === "unsnooze") {
+      const id = typeof body?.id === "string" ? body.id : ""
+      await clearSavedSearchSnooze(auth.user!.id, id)
       return NextResponse.json({ success: true })
     }
 

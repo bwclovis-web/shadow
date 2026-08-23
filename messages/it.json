@@ -219,6 +219,13 @@
     "pushSubscribeFailed": "Impossibile attivare le notifiche push. Riprova più tardi.",
     "followAlerts": "Attività seguita",
     "emailFollowAlerts": "Email — attività seguita",
+    "savedSearchAlerts": "Avvisi ricerche salvate",
+    "emailSavedSearchAlerts": "Email — corrispondenze ricerche salvate",
+    "savedSearchFrequency": "Consegna ricerche salvate",
+    "savedSearchFrequencyInstant": "Istantanea (campana)",
+    "savedSearchFrequencyDaily": "Digest giornaliero",
+    "savedSearchFrequencyDescription": "Gli avvisi istantanei compaiono nella campana. Le corrispondenze giornaliere sono raggruppate nel digest e via email.",
+    "pushSavedSearchAlerts": "Corrispondenze ricerche salvate",
     "securityAlerts": "Avvisi di sicurezza",
     "securityAlertsDescription": "Accesso insolito al tuo account",
     "emailSecurityAlerts": "Email — avvisi di sicurezza",
@@ -236,6 +243,7 @@
       "trade_cancelled": "Aggiornamento scambio",
       "suspicious_login": "Sicurezza",
       "followed_activity": "Seguiti",
+      "saved_search_match": "Ricerca salvata",
       "split_slot_claimed": "Posto prenotato",
       "split_shipped": "Divisione spedita",
       "split_completed": "Divisione completata",
@@ -261,6 +269,7 @@
       "viewTrade": "Vedi scambio",
       "viewSecurity": "Impostazioni sicurezza",
       "viewFollowedActivity": "Vedi attività",
+      "viewSavedSearchMatch": "Vedi corrispondenza",
       "viewPerfume": "Vedi profumo",
       "markRead": "Segna letto",
       "dismiss": "Ignora",
@@ -715,7 +724,8 @@
       "title": "Passo tre: wishlist e avvisi — non una seconda caccia",
       "content": "La wishlist sono flaconi precisi che vuoi. Quando qualcuno li elenca, possiamo avvisarti. Una wishlist pubblica è come gli altri vedono cosa cerchi: non c'è un bacheca ISO a parte.",
       "content2": "Le ricerche salvate (Premium) ricordano i filtri dell'Archivio o dello Scambio e ti avvisano quando qualcosa di nuovo corrisponde. Gestiscile in Community → Avvisi e nella campana del registro.",
-      "content3": "È la stessa caccia: flaconi nominati sulla wishlist, filtri su una ricerca salvata. Un solo vocabolario perché la Conca non cresca un secondo mercato."
+      "content3": "È la stessa caccia: flaconi nominati sulla wishlist, filtri su una ricerca salvata. Un solo vocabolario perché la Conca non cresca un secondo mercato.",
+      "content4": "Silenzia una ricerca, mettila in pausa per una settimana o passa alla consegna giornaliera nelle preferenze avvisi — le corrispondenze arrivano sempre nella campana o nel digest, non in una seconda inbox."
     },
     "section4": {
       "title": "Passo quattro: scrivi, accordati, poi registra lo scambio",
@@ -775,6 +785,8 @@
       "submitHouseButton": "Invia casa mancante",
       "question2": "Come funziona il sistema di scambio?",
       "answer2": "perfumer's hollow offre una piattaforma per collegare collezionisti e scambi. Non gestiamo transazioni né pagamenti — sono concordati tra voi e il partner. Forniamo lo spazio e gli strumenti per connessioni sicure e trasparenti.",
+      "answer2GuideLink": "Consulta La guida del collezionista per inventario, inserzioni, split di gruppo e avvisi.",
+      "answer2GuideLinkCta": "Apri La guida del collezionista",
       "question3": "I miei dati sono al sicuro?",
       "answer3": "Assolutamente. Prendiamo sul serio la privacy. Non vendiamo, scambiamo né condividiamo i tuoi dati. Restano tuoi.",
       "question4": "Come creo un account?",
@@ -2822,6 +2834,12 @@
     "lastMatch": "Ultima corrispondenza {date}",
     "mute": "Silenzia",
     "unmute": "Riattiva",
+    "snooze": "Pausa 7 giorni",
+    "unsnooze": "Riprendi avvisi",
+    "snoozedUntil": "In pausa fino al {date}",
+    "inboxHint": "Le corrispondenze compaiono nella campana del registro — non qui.",
+    "signInCta": "Accedi",
+    "signInSuffix": "per gestire ricerche salvate e avvisi Premium.",
     "delete": "Elimina"
   },
   "seasonalPlanning": {
@@ -2899,6 +2917,7 @@
     "wearSuggestions": "Cosa indossare",
     "houseRadar": "Dalle maison che segui",
     "fromHouse": "{house}",
-    "palateMatch": "Corrisponde al tuo DNA {family}"
+    "palateMatch": "Corrisponde al tuo DNA {family}",
+    "savedSearchMatches": "Corrispondenze ricerche salvate (ultime 24 h)"
   }
 }

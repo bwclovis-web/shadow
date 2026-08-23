@@ -219,6 +219,13 @@
     "pushSubscribeFailed": "No se pudieron activar las notificaciones push. Inténtalo más tarde.",
     "followAlerts": "Actividad seguida",
     "emailFollowAlerts": "Correo — actividad seguida",
+    "savedSearchAlerts": "Alertas de búsquedas guardadas",
+    "emailSavedSearchAlerts": "Correo — coincidencias de búsquedas guardadas",
+    "savedSearchFrequency": "Entrega de búsquedas guardadas",
+    "savedSearchFrequencyInstant": "Instantánea (campana)",
+    "savedSearchFrequencyDaily": "Resumen diario",
+    "savedSearchFrequencyDescription": "Las alertas instantáneas aparecen en la campana. Las coincidencias diarias se agrupan en tu digest y correo.",
+    "pushSavedSearchAlerts": "Coincidencias de búsquedas guardadas",
     "securityAlerts": "Alertas de seguridad",
     "securityAlertsDescription": "Actividad de inicio de sesión inusual en tu cuenta",
     "emailSecurityAlerts": "Correo — alertas de seguridad",
@@ -236,6 +243,7 @@
       "trade_cancelled": "Actualización de intercambio",
       "suspicious_login": "Seguridad",
       "followed_activity": "Seguidos",
+      "saved_search_match": "Búsqueda guardada",
       "split_slot_claimed": "Plaza reclamada",
       "split_shipped": "Reparto enviado",
       "split_completed": "Reparto completado",
@@ -261,6 +269,7 @@
       "viewTrade": "Ver intercambio",
       "viewSecurity": "Configuración de seguridad",
       "viewFollowedActivity": "Ver actividad",
+      "viewSavedSearchMatch": "Ver coincidencia",
       "viewPerfume": "Ver perfume",
       "markRead": "Marcar leído",
       "dismiss": "Descartar",
@@ -715,7 +724,8 @@
       "title": "Paso tres: lista de deseos y alertas — no una segunda caza",
       "content": "Tu lista de deseos son botellas concretas que quieres. Cuando alguien las anuncia, podemos avisarte. Una lista pública es cómo otros ven lo que buscas: no hay un tablón ISO aparte.",
       "content2": "Las búsquedas guardadas (Premium) recuerdan filtros de El Archivo o El Intercambio y te avisan cuando aparece algo nuevo. Géstionalas en Comunidad → Alertas y en la campana de tu libro.",
-      "content3": "Es la misma búsqueda: botellas con nombre en la lista de deseos, filtros en una búsqueda guardada. Un solo vocabulario para que la Hondonada no críe un segundo mercado."
+      "content3": "Es la misma búsqueda: botellas con nombre en la lista de deseos, filtros en una búsqueda guardada. Un solo vocabulario para que la Hondonada no críe un segundo mercado.",
+      "content4": "Silencia una búsqueda, pospónla una semana o cambia a entrega diaria en preferencias de alertas: las coincidencias llegan siempre a la campana o a tu digest, no a una segunda bandeja."
     },
     "section4": {
       "title": "Paso cuatro: escribe, acuerda y registra el intercambio",
@@ -775,6 +785,8 @@
       "submitHouseButton": "Enviar Casa de Perfumes Faltante",
       "question2": "¿Cómo funciona el sistema de intercambio?",
       "answer2": "perfumer's hollow proporciona una plataforma para que los coleccionistas se conecten e intercambien. No manejamos transacciones o pagos directamente; esos se organizan entre tú y tu pareja de intercambio. Simplemente proporcionamos el espacio y las herramientas para que esas conexiones ocurran de manera segura y transparente.",
+      "answer2GuideLink": "Consulta La guía del coleccionista para inventario, anuncios, splits en grupo y alertas.",
+      "answer2GuideLinkCta": "Abrir La guía del coleccionista",
       "question3": "¿Mi información personal está segura?",
       "answer3": "Absolutamente. Nos tomamos la privacidad en serio. No vendemos, intercambiamos ni compartimos tu información personal. Tus datos permanecen tuyos, y lo que sucede en las sombras permanece allí.",
       "question4": "¿Cómo creo una cuenta?",
@@ -2822,6 +2834,12 @@
     "lastMatch": "Ultima coincidencia {date}",
     "mute": "Silenciar",
     "unmute": "Reactivar",
+    "snooze": "Posponer 7 días",
+    "unsnooze": "Reanudar alertas",
+    "snoozedUntil": "Pospuesta hasta {date}",
+    "inboxHint": "Las coincidencias aparecen en la campana de tu libro — no aquí.",
+    "signInCta": "Inicia sesión",
+    "signInSuffix": "para gestionar búsquedas guardadas y alertas Premium.",
     "delete": "Eliminar"
   },
   "seasonalPlanning": {
@@ -2899,6 +2917,7 @@
     "wearSuggestions": "Qué ponerte",
     "houseRadar": "De las casas que sigues",
     "fromHouse": "{house}",
-    "palateMatch": "Coincide con tu ADN {family}"
+    "palateMatch": "Coincide con tu ADN {family}",
+    "savedSearchMatches": "Coincidencias de búsquedas guardadas (últimas 24 h)"
   }
 }

@@ -219,6 +219,13 @@
     "pushSubscribeFailed": "Impossible d'activer les notifications push. Réessayez plus tard.",
     "followAlerts": "Activité suivie",
     "emailFollowAlerts": "E-mail — activité suivie",
+    "savedSearchAlerts": "Alertes de recherches enregistrées",
+    "emailSavedSearchAlerts": "E-mail — correspondances de recherches enregistrées",
+    "savedSearchFrequency": "Livraison des recherches enregistrées",
+    "savedSearchFrequencyInstant": "Instantané (cloche)",
+    "savedSearchFrequencyDaily": "Récapitulatif quotidien",
+    "savedSearchFrequencyDescription": "Les alertes instantanées apparaissent dans la cloche. Les correspondances quotidiennes sont regroupées dans votre digest et par e-mail.",
+    "pushSavedSearchAlerts": "Correspondances de recherches enregistrées",
     "securityAlerts": "Alertes de sécurité",
     "securityAlertsDescription": "Activité de connexion inhabituelle sur votre compte",
     "emailSecurityAlerts": "E-mail — alertes de sécurité",
@@ -236,6 +243,7 @@
       "trade_cancelled": "Mise à jour d'échange",
       "suspicious_login": "Sécurité",
       "followed_activity": "Abonnements",
+      "saved_search_match": "Recherche enregistrée",
       "split_slot_claimed": "Part réclamée",
       "split_shipped": "Part expédiée",
       "split_completed": "Part terminée",
@@ -261,6 +269,7 @@
       "viewTrade": "Voir l'échange",
       "viewSecurity": "Paramètres de sécurité",
       "viewFollowedActivity": "Voir l'activité",
+      "viewSavedSearchMatch": "Voir la correspondance",
       "viewPerfume": "Voir le parfum",
       "markRead": "Marquer lu",
       "dismiss": "Ignorer",
@@ -715,7 +724,8 @@
       "title": "Étape trois : liste de souhaits et alertes — pas une seconde chasse",
       "content": "Votre liste de souhaits, ce sont des flacons précis que vous voulez. Quand quelqu'un les liste, nous pouvons vous prévenir. Une liste publique est la façon dont les autres voient ce que vous cherchez — il n'y a pas de tableau ISO à part.",
       "content2": "Les recherches enregistrées (Premium) mémorisent les filtres de L'Archive ou de L'Échange et vous préviennent quand quelque chose de nouveau correspond. Gérez-les sous Communauté → Alertes, et dans la cloche de votre grand livre.",
-      "content3": "C'est la même quête : des flacons nommés sur la liste, des filtres sur une recherche enregistrée. Un seul vocabulaire pour que le Creux ne devienne pas un second marché."
+      "content3": "C'est la même quête : des flacons nommés sur la liste, des filtres sur une recherche enregistrée. Un seul vocabulaire pour que le Creux ne devienne pas un second marché.",
+      "content4": "Coupez une recherche, mettez-la en pause une semaine ou passez à la livraison quotidienne dans les préférences d'alertes — les correspondances arrivent toujours dans la cloche ou votre digest, pas dans une seconde boîte."
     },
     "section4": {
       "title": "Étape quatre : écrivez, convenez, puis enregistrez l'échange",
@@ -775,6 +785,8 @@
       "submitHouseButton": "Soumettre une maison manquante",
       "question2": "Comment fonctionne l'échange ?",
       "answer2": "perfumer's hollow offre une plateforme pour que les collectionneurs se connectent et échangent. Nous ne gérons pas les transactions ni les paiements — ils se font entre vous et votre partenaire. Nous fournissons l'espace et les outils pour des échanges sûrs et transparents.",
+      "answer2GuideLink": "Consultez Le guide du collectionneur pour l'inventaire, les annonces, les splits de groupe et les alertes.",
+      "answer2GuideLinkCta": "Ouvrir Le guide du collectionneur",
       "question3": "Mes données sont-elles protégées ?",
       "answer3": "Absolument. Nous prenons la confidentialité au sérieux. Nous ne vendons, n'échangeons ni ne partageons vos données. Elles restent les vôtres.",
       "question4": "Comment créer un compte ?",
@@ -2822,6 +2834,12 @@
     "lastMatch": "Derniere correspondance {date}",
     "mute": "Couper",
     "unmute": "Reactiver",
+    "snooze": "Pause 7 jours",
+    "unsnooze": "Reprendre les alertes",
+    "snoozedUntil": "En pause jusqu'au {date}",
+    "inboxHint": "Les correspondances apparaissent dans la cloche de votre grand livre — pas ici.",
+    "signInCta": "Se connecter",
+    "signInSuffix": "pour gerer les recherches enregistrees et alertes Premium.",
     "delete": "Supprimer"
   },
   "seasonalPlanning": {
@@ -2899,6 +2917,7 @@
     "wearSuggestions": "Quoi porter",
     "houseRadar": "Des maisons que vous suivez",
     "fromHouse": "{house}",
-    "palateMatch": "Correspond à votre ADN {family}"
+    "palateMatch": "Correspond à votre ADN {family}",
+    "savedSearchMatches": "Correspondances de recherches enregistrées (24 dernières h)"
   }
 }

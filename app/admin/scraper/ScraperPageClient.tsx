@@ -343,14 +343,32 @@ export const ScraperPageClient = () => {
           ...(csrf ? { _csrf: csrf } : {}),
         }),
       })
-      const data = (await res.json()) as
+      const raw = await res.text()
+      let data:
         | (ScraperDetectResult & {
             suggestedHouseName: string | null
             houseMatched?: boolean
           })
-        | { ok: false; error: string }
-      if (!res.ok || !data.ok) {
-        setDetectError("error" in data ? data.error : "Detect failed")
+        | { ok: false; error?: string; message?: string }
+      try {
+        data = JSON.parse(raw) as typeof data
+      } catch {
+        setDetectError(
+          res.status === 404
+            ? "Smart Detect API returned a 404 page. Restart the Next.js dev server and try again."
+            : `Smart Detect failed: server returned HTML instead of JSON (${res.status}).`
+        )
+        setDetectSucceeded(false)
+        return
+      }
+      if (!res.ok || !("ok" in data) || !data.ok) {
+        const message =
+          "error" in data && data.error
+            ? data.error
+            : "message" in data && data.message
+              ? data.message
+              : `Detect failed (${res.status})`
+        setDetectError(message)
         setDetectSucceeded(false)
         return
       }

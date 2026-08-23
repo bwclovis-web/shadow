@@ -233,6 +233,10 @@ export interface UserAlertPreferences {
   pushMessageAlerts: boolean
   pushFollowAlerts: boolean
   pushSubmissionAlerts: boolean
+  savedSearchAlertsEnabled: boolean
+  emailSavedSearchAlerts: boolean
+  pushSavedSearchAlerts: boolean
+  savedSearchAlertFrequency: "instant" | "daily"
   maxAlerts: number
   user: User
 }

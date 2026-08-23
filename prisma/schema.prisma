@@ -505,6 +505,7 @@ model SavedSearch {
   name          String
   query         Json
   alertEnabled  Boolean             @default(true)
+  snoozedUntil  DateTime?
   lastMatchedAt DateTime?
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
@@ -739,6 +740,10 @@ model UserAlertPreferences {
   pushMessageAlerts     Boolean @default(true)
   pushFollowAlerts      Boolean @default(true)
   pushSubmissionAlerts  Boolean @default(true)
+  savedSearchAlertsEnabled   Boolean                    @default(true)
+  emailSavedSearchAlerts     Boolean                    @default(false)
+  pushSavedSearchAlerts      Boolean                    @default(true)
+  savedSearchAlertFrequency  SavedSearchAlertFrequency  @default(instant)
   maxAlerts             Int     @default(10)
   User                  User    @relation(fields: [userId], references: [id])
 }
@@ -1159,10 +1164,16 @@ enum AlertType {
   trade_cancelled
   suspicious_login
   followed_activity
+  saved_search_match
   split_slot_claimed
   split_shipped
   split_completed
   split_cancelled
+}
+
+enum SavedSearchAlertFrequency {
+  instant
+  daily
 }
 
 enum DecantSplitStatus {

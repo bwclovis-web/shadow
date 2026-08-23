@@ -22,6 +22,10 @@ const defaultPreferences = {
   pushMessageAlerts: true,
   pushFollowAlerts: true,
   pushSubmissionAlerts: true,
+  savedSearchAlertsEnabled: true,
+  emailSavedSearchAlerts: false,
+  pushSavedSearchAlerts: true,
+  savedSearchAlertFrequency: "instant" as const,
   maxAlerts: 10,
 }
 
@@ -98,6 +102,12 @@ async function updatePreferences(
   if (typeof body.pushFollowAlerts === "boolean") preferences.pushFollowAlerts = body.pushFollowAlerts
   if (typeof body.pushSubmissionAlerts === "boolean") preferences.pushSubmissionAlerts = body.pushSubmissionAlerts
   if (typeof body.emailSubmissionAlerts === "boolean") preferences.emailSubmissionAlerts = body.emailSubmissionAlerts
+  if (typeof body.savedSearchAlertsEnabled === "boolean") preferences.savedSearchAlertsEnabled = body.savedSearchAlertsEnabled
+  if (typeof body.emailSavedSearchAlerts === "boolean") preferences.emailSavedSearchAlerts = body.emailSavedSearchAlerts
+  if (typeof body.pushSavedSearchAlerts === "boolean") preferences.pushSavedSearchAlerts = body.pushSavedSearchAlerts
+  if (body.savedSearchAlertFrequency === "instant" || body.savedSearchAlertFrequency === "daily") {
+    preferences.savedSearchAlertFrequency = body.savedSearchAlertFrequency
+  }
 
   try {
     const updated = await updateUserAlertPreferences(userId, preferences)

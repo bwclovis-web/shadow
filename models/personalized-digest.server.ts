@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db"
 import { getPersonalizedRecommendations } from "@/services/recommendations"
 import { listSamplingQueue } from "@/models/sampling-queue.server"
+import { listRecentSavedSearchMatchesForDigest } from "@/models/saved-search.server"
+import { getUserAlertPreferences } from "@/models/user-alerts.server"
 import { requireEntitlement } from "@/utils/membership/entitlements.server"
 
 export type PersonalizedDigest = {
@@ -10,6 +12,13 @@ export type PersonalizedDigest = {
   samplingQueue: Array<{ perfumeName: string; status: string }>
   wardrobeHint: string
   collectionGaps: string[]
+  savedSearchMatches: Array<{
+    title: string
+    message: string
+    searchName: string
+    createdAt: string
+    targetUrl: string
+  }>
 }
 
 /**
@@ -21,7 +30,7 @@ export const buildPersonalizedDigest = async (
   const entitlement = await requireEntitlement(userId, "personalized_digests")
   if (!entitlement.ok) return null
 
-  const [recs, queue, ownedCount, profile, ownedNotes] = await Promise.all([
+  const [recs, queue, ownedCount, profile, ownedNotes, preferences] = await Promise.all([
     getPersonalizedRecommendations(userId, 5),
     listSamplingQueue(userId),
     prisma.userPerfume.count({ where: { userId } }),
@@ -43,7 +52,34 @@ export const buildPersonalizedDigest = async (
         },
       },
     }),
+    getUserAlertPreferences(userId),
   ])
+
+  const since = new Date()
+  since.setDate(since.getDate() - 1)
+  const rawMatches =
+    preferences.savedSearchAlertFrequency === "daily"
+      ? await listRecentSavedSearchMatchesForDigest(userId, since)
+      : []
+
+  const buildTargetUrl = (payload: unknown) => {
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      return "/the-exchange"
+    }
+    const obj = payload as Record<string, unknown>
+    if (typeof obj.perfumeSlug === "string") {
+      return `/perfume/${obj.perfumeSlug}`
+    }
+    return "/the-exchange"
+  }
+
+  const savedSearchMatches = rawMatches.map(row => ({
+    title: row.title,
+    message: row.message,
+    searchName: row.savedSearch.name,
+    createdAt: row.createdAt.toISOString(),
+    targetUrl: buildTargetUrl(row.payload),
+  }))
 
   const month = new Date().getMonth()
   const season =
@@ -103,5 +139,6 @@ export const buildPersonalizedDigest = async (
     })),
     wardrobeHint: `Rotate toward ${season} wear — soft transitions and complementary notes.`,
     collectionGaps,
+    savedSearchMatches,
   }
 }

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { BsBell, BsEnvelope, BsGear, BsX } from "react-icons/bs"
 
 import { Button } from "@/components/Atoms/Button/Button"
+import Select from "@/components/Atoms/Select/Select"
 import VooDooCheck from "@/components/Atoms/VooDooCheck"
 import VooDooDetails from "@/components/Atoms/VooDooDetails/VooDooDetails"
 import type { UserAlertPreferences } from "@/types/database"
@@ -64,6 +65,10 @@ export const AlertPreferences = ({
     emailSubmissionAlerts: preferences.emailSubmissionAlerts ?? false,
     pushFollowAlerts: preferences.pushFollowAlerts ?? true,
     pushSubmissionAlerts: preferences.pushSubmissionAlerts ?? true,
+    savedSearchAlertsEnabled: preferences.savedSearchAlertsEnabled ?? true,
+    emailSavedSearchAlerts: preferences.emailSavedSearchAlerts ?? false,
+    pushSavedSearchAlerts: preferences.pushSavedSearchAlerts ?? true,
+    savedSearchAlertFrequency: preferences.savedSearchAlertFrequency ?? "instant",
     maxAlerts: preferences.maxAlerts,
   })
 
@@ -85,6 +90,10 @@ export const AlertPreferences = ({
       emailSubmissionAlerts: preferences.emailSubmissionAlerts ?? false,
       pushFollowAlerts: preferences.pushFollowAlerts ?? true,
       pushSubmissionAlerts: preferences.pushSubmissionAlerts ?? true,
+      savedSearchAlertsEnabled: preferences.savedSearchAlertsEnabled ?? true,
+      emailSavedSearchAlerts: preferences.emailSavedSearchAlerts ?? false,
+      pushSavedSearchAlerts: preferences.pushSavedSearchAlerts ?? true,
+      savedSearchAlertFrequency: preferences.savedSearchAlertFrequency ?? "instant",
       maxAlerts: preferences.maxAlerts,
     })
     setIsEditing(true)
@@ -100,6 +109,9 @@ export const AlertPreferences = ({
     emailDecantAlerts: state.decantAlertsEnabled ? state.emailDecantAlerts : false,
     emailSecurityAlerts: state.securityAlertsEnabled ? state.emailSecurityAlerts : false,
     emailFollowAlerts: state.followAlertsEnabled ? state.emailFollowAlerts : false,
+    emailSavedSearchAlerts: state.savedSearchAlertsEnabled
+      ? state.emailSavedSearchAlerts
+      : false,
   })
 
   const handleSave = async () => {
@@ -150,6 +162,16 @@ export const AlertPreferences = ({
           emailFollowAlerts: followAlertsEnabled ? prev.emailFollowAlerts : false,
         }
       }
+      if (key === "savedSearchAlertsEnabled") {
+        const savedSearchAlertsEnabled = !prev.savedSearchAlertsEnabled
+        return {
+          ...prev,
+          savedSearchAlertsEnabled,
+          emailSavedSearchAlerts: savedSearchAlertsEnabled
+            ? prev.emailSavedSearchAlerts
+            : false,
+        }
+      }
       return {
         ...prev,
         [key]: !prev[key],
@@ -163,6 +185,11 @@ export const AlertPreferences = ({
       maxAlerts: value,
     }))
   }
+
+  const savedSearchFrequencyOptions = [
+    { id: "instant", name: "instant", label: t("savedSearchFrequencyInstant") },
+    { id: "daily", name: "daily", label: t("savedSearchFrequencyDaily") },
+  ]
 
   return (
     <VooDooDetails
@@ -214,6 +241,38 @@ export const AlertPreferences = ({
                   labelChecked={t("followAlerts")}
                   labelUnchecked={t("followAlerts")}
                 />
+
+                <VooDooCheck
+                  id="saved-search-alerts"
+                  checked={editState.savedSearchAlertsEnabled}
+                  onChange={() => togglePreference("savedSearchAlertsEnabled")}
+                  labelChecked={t("savedSearchAlerts")}
+                  labelUnchecked={t("savedSearchAlerts")}
+                />
+
+                {editState.savedSearchAlertsEnabled ? (
+                  <div className="ml-4">
+                    <Select
+                      selectId="saved-search-frequency"
+                      label={t("savedSearchFrequency")}
+                      selectData={savedSearchFrequencyOptions}
+                      value={editState.savedSearchAlertFrequency}
+                      action={e =>
+                        setEditState(prev => ({
+                          ...prev,
+                          savedSearchAlertFrequency: e.target.value as
+                            | "instant"
+                            | "daily",
+                        }))
+                      }
+                      className="w-full max-w-xs"
+                      disabled={isSaving}
+                    />
+                    <p className="mt-1 text-xs text-noir-gold-100/80">
+                      {t("savedSearchFrequencyDescription")}
+                    </p>
+                  </div>
+                ) : null}
               </div>
             </div>
 
@@ -271,6 +330,15 @@ export const AlertPreferences = ({
                 />
 
                 <VooDooCheck
+                  id="email-saved-search-alerts"
+                  checked={editState.emailSavedSearchAlerts}
+                  disabled={!editState.savedSearchAlertsEnabled}
+                  onChange={() => togglePreference("emailSavedSearchAlerts")}
+                  labelChecked={t("emailSavedSearchAlerts")}
+                  labelUnchecked={t("emailSavedSearchAlerts")}
+                />
+
+                <VooDooCheck
                   id="email-submission-alerts"
                   checked={editState.emailSubmissionAlerts}
                   onChange={() => togglePreference("emailSubmissionAlerts")}
@@ -290,6 +358,7 @@ export const AlertPreferences = ({
                 pushMessageAlerts: editState.pushMessageAlerts,
                 pushFollowAlerts: editState.pushFollowAlerts,
                 pushSubmissionAlerts: editState.pushSubmissionAlerts,
+                pushSavedSearchAlerts: editState.pushSavedSearchAlerts,
               }}
               onEditStateChange={patch => setEditState(prev => ({ ...prev, ...patch }))}
               onPreferencesChange={onPreferencesChange}
@@ -395,6 +464,28 @@ export const AlertPreferences = ({
                     </span>
                     <StatusBadge enabled={preferences.followAlertsEnabled ?? true} />
                   </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-noir-gold-100">
+                      {t("savedSearchAlerts")}
+                    </span>
+                    <StatusBadge
+                      enabled={preferences.savedSearchAlertsEnabled ?? true}
+                    />
+                  </div>
+
+                  {(preferences.savedSearchAlertsEnabled ?? true) ? (
+                    <div className="flex items-center justify-between pl-2">
+                      <span className="text-sm text-noir-gold-100">
+                        {t("savedSearchFrequency")}
+                      </span>
+                      <span className="text-xs text-noir-gold-500">
+                        {preferences.savedSearchAlertFrequency === "daily"
+                          ? t("savedSearchFrequencyDaily")
+                          : t("savedSearchFrequencyInstant")}
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
@@ -442,6 +533,13 @@ export const AlertPreferences = ({
 
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-noir-gold-100">
+                      {t("emailSavedSearchAlerts")}
+                    </span>
+                    <StatusBadge enabled={preferences.emailSavedSearchAlerts ?? false} />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-noir-gold-100">
                       {t("maxAlerts")}
                     </span>
                     <StatusBadge value={preferences.maxAlerts} />
@@ -460,6 +558,7 @@ export const AlertPreferences = ({
                 pushMessageAlerts: preferences.pushMessageAlerts ?? true,
                 pushFollowAlerts: preferences.pushFollowAlerts ?? true,
                 pushSubmissionAlerts: preferences.pushSubmissionAlerts ?? true,
+                pushSavedSearchAlerts: preferences.pushSavedSearchAlerts ?? true,
               }}
               onEditStateChange={() => {}}
               onPreferencesChange={async () => false}

@@ -387,6 +387,13 @@
     "emailSubmissionAlerts": "Email Archive submission updates",
     "followAlerts": "Followed Activity",
     "emailFollowAlerts": "Email followed activity",
+    "savedSearchAlerts": "Saved Search Alerts",
+    "emailSavedSearchAlerts": "Email saved search matches",
+    "savedSearchFrequency": "Saved search delivery",
+    "savedSearchFrequencyInstant": "Instant (bell)",
+    "savedSearchFrequencyDaily": "Daily digest",
+    "savedSearchFrequencyDescription": "Instant alerts appear in your bell. Daily matches are bundled in your digest and email.",
+    "pushSavedSearchAlerts": "Saved search matches",
     "securityAlerts": "Security Alerts",
     "securityAlertsDescription": "Unusual sign-in activity on your account",
     "emailSecurityAlerts": "Email Security Alerts",
@@ -430,6 +437,7 @@
       "trade_cancelled": "Exchange update",
       "suspicious_login": "Security",
       "followed_activity": "Following",
+      "saved_search_match": "Saved search",
       "split_slot_claimed": "Split claim",
       "split_shipped": "Split shipped",
       "split_completed": "Split completed",
@@ -455,6 +463,7 @@
       "viewTrade": "View exchange",
       "viewSecurity": "Security settings",
       "viewFollowedActivity": "View activity",
+      "viewSavedSearchMatch": "View match",
       "viewPerfume": "View perfume",
       "markRead": "Mark read",
       "dismiss": "Dismiss",
@@ -909,7 +918,8 @@
       "title": "Step three: Wishlist and alerts — not a second hunt",
       "content": "Your wishlist is specific bottles you want. When someone lists one, we can notify you. A public wishlist is how other collectors see what you are looking for — there is no separate ISO board.",
       "content2": "Saved searches (Premium) remember filters on the Archive or the Exchange and ping you when something new matches. Manage them under Community → Alerts, and in the bell on your ledger.",
-      "content3": "Both are the same chase: named bottles on the wishlist, filters on a saved search. Use one vocabulary so the Hollow does not grow a second marketplace."
+      "content3": "Both are the same chase: named bottles on the wishlist, filters on a saved search. Use one vocabulary so the Hollow does not grow a second marketplace.",
+      "content4": "Mute a search, snooze it for a week, or switch to daily delivery in alert preferences — matches always land in the bell or your digest, not a second inbox."
     },
     "section4": {
       "title": "Step four: Message, agree, then record the trade",
@@ -969,6 +979,8 @@
       "submitHouseButton": "Submit Missing Perfume House",
       "question2": "How does the trading system work?",
       "answer2": "perfumer's hollow provides a platform for collectors to connect and exchange. We don't handle transactions or payments directly — those are arranged between you and your trading partner. We simply provide the space and tools to make those connections happen safely and transparently.",
+      "answer2GuideLink": "See The Collector's Guide for inventory, listings, group splits, and alerts.",
+      "answer2GuideLinkCta": "Open The Collector's Guide",
       "question3": "Is my personal information safe?",
       "answer3": "Absolutely. We take privacy seriously. We don't sell, exchange, or share your personal information. Your data stays yours, and what happens in the shadows stays there.",
       "question4": "How do I create an account?",
@@ -2822,6 +2834,12 @@
     "lastMatch": "Last match {date}",
     "mute": "Mute",
     "unmute": "Unmute",
+    "snooze": "Snooze 7 days",
+    "unsnooze": "Resume alerts",
+    "snoozedUntil": "Snoozed until {date}",
+    "inboxHint": "Matches appear in the bell on your ledger — not here.",
+    "signInCta": "Sign in",
+    "signInSuffix": "to manage Premium saved searches and alerts.",
     "delete": "Delete"
   },
   "seasonalPlanning": {
@@ -2899,6 +2917,7 @@
     "wearSuggestions": "What to wear",
     "houseRadar": "From houses you follow",
     "fromHouse": "{house}",
-    "palateMatch": "Matches your {family} DNA"
+    "palateMatch": "Matches your {family} DNA",
+    "savedSearchMatches": "Saved search matches (last 24h)"
   }
 }

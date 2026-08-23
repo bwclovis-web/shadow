@@ -7,7 +7,7 @@ import { MEMBERSHIP_BENEFITS } from "@/utils/membership/benefits"
 import { membershipTierToCheckoutTier } from "@/utils/membership/stripe-prices"
 
 /** Placeholder hero — swap when a dedicated membership asset is ready. */
-const BANNER_IMAGE = "/images/new/catalogue.webp"
+const BANNER_IMAGE = "/images/new/membership.webp"
 
 export const metadata = {
   title: "Membership benefits | Shadow",

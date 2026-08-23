@@ -54,6 +54,8 @@ const getAlertIconClassName = (alertType: UserAlert["alertType"]) => {
       return "text-orange-600"
     case "followed_activity":
       return "text-noir-gold-500"
+    case "saved_search_match":
+      return "text-noir-gold-500"
     case "split_slot_claimed":
     case "split_shipped":
     case "split_completed":
@@ -115,6 +117,11 @@ const alertLink = (alert: UserAlert) => {
     if (targetUrl) return targetUrl.startsWith("/") ? targetUrl : `/${targetUrl}`
     return "/the-exchange"
   }
+  if ((alert.alertType as string) === "saved_search_match") {
+    const targetUrl = alert.metadata?.targetUrl as string | undefined
+    if (targetUrl) return targetUrl.startsWith("/") ? targetUrl : `/${targetUrl}`
+    return "/the-exchange"
+  }
   if ((alert.alertType as string).startsWith("split_")) {
     const splitId = alert.metadata?.splitId as string | undefined
     if (splitId) return `/splits/${splitId}`
@@ -148,6 +155,7 @@ const alertTypeKey = (alertType: UserAlert["alertType"]) => {
     "trade_cancelled",
     "suspicious_login",
     "followed_activity",
+    "saved_search_match",
     "split_slot_claimed",
     "split_shipped",
     "split_completed",
@@ -210,6 +218,9 @@ export const AlertItem = ({
     }
     if ((alert.alertType as string) === "followed_activity") {
       return t("actions.viewFollowedActivity")
+    }
+    if ((alert.alertType as string) === "saved_search_match") {
+      return t("actions.viewSavedSearchMatch")
     }
     return t("actions.viewPerfume")
   })()
