@@ -34,10 +34,10 @@ const main = async () => {
         console.log("   ✅ Remote schema has updatedAt column")
       } else {
         console.log("   ❌ Remote schema MISSING updatedAt column")
-        console.log("   👉 You need to push the schema first!")
-        console.log("      1. Edit .env and set DATABASE_URL to REMOTE_DATABASE_URL")
-        console.log("      2. Run: npx prisma db push")
-        console.log("      3. Restore DATABASE_URL to local")
+        console.log("   👉 Apply pending migrations first!")
+        console.log("      1. Ensure REMOTE_DATABASE_URL is set in .env")
+        console.log("      2. Run: npm run db:migrate:prod:dry")
+        console.log("      3. Run: npm run db:migrate:prod")
         console.log("")
       }
     } catch (error) {
@@ -123,7 +123,7 @@ const main = async () => {
       console.log("3. Foreign key constraint violations")
       console.log("4. Duplicate slug conflicts")
       console.log("\nTo fix:")
-      console.log("1. Push schema if updatedAt missing (see above)")
+      console.log("1. Apply pending schema migrations if needed (see above)")
       console.log("2. Run: node scripts/migrate-to-accelerate-fixed.js --full")
       console.log("3. Check logs for errors")
     } else {

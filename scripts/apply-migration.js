@@ -53,16 +53,16 @@ async function applyMigration() {
     console.log("Option 1: If you have direct PostgreSQL access:")
     console.log("  psql 'your-direct-postgres-url' < prisma/migrations/APPLY_TO_REMOTE_DB.sql")
     console.log("")
-    console.log("Option 2: Use Prisma push (will sync schema automatically):")
-    console.log("  DATABASE_URL=$REMOTE_DATABASE_URL npx prisma db push --schema=prisma/schema.prod.prisma --skip-generate")
+    console.log("Option 2: Apply pending Prisma migrations:")
+    console.log("  npm run db:migrate:prod:dry")
+    console.log("  npm run db:migrate:prod")
     console.log("")
     console.log("Option 3: Copy the SQL from prisma/migrations/APPLY_TO_REMOTE_DB.sql")
     console.log("  and paste it into a database management tool (pgAdmin, DBeaver, etc.)")
     console.log("")
     
-    // Try using prisma db push instead
-    console.log("🔄 Attempting to use Prisma DB Push instead...")
-    console.log("This will sync the schema without running raw SQL...")
+    // Prefer prisma migrate deploy (see npm run db:migrate:prod)
+    console.log("🔄 Use npm run db:migrate:prod to apply pending migrations from prisma/migrations/")
     console.log("")
     
   } catch (error) {

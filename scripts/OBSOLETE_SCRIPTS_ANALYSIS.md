@@ -39,13 +39,13 @@ These appear to be one-time use scripts for importing specific perfume brands. A
 ~~These scripts are referenced in `package.json` but don't exist in the scripts folder:~~
 - ~~`push_to_prisma_accelerate.js` (referenced in `db:migrate:accelerate`)~~ ✅ **REMOVED**
 - ~~`migrate_data_to_accelerate.js` (referenced in `db:migrate:accelerate` and `db:migrate:accelerate:data`)~~ ✅ **REMOVED**
-- ~~`push_local_to_remote_db.js` (referenced in `db:push:remote`)~~ ✅ **REMOVED**
-- ~~`push_local_to_remote_db_working.js` (referenced in `db:push:remote:env`)~~ ✅ **REMOVED**
+- ~~`push-prod-schema.js` (`db:push:prod`)~~ ✅ **REMOVED** — use `npm run db:migrate:prod`
+- ~~`push_local_to_remote_db_cli.js` (`db:push:remote:cli`)~~ ✅ **REMOVED** — use `npm run db:migrate:remote:cli`
 - ~~`import_s_and_s_complete.js` (referenced in `import:s&s`)~~ ✅ **REMOVED**
 
 ✅ **COMPLETED** - All broken references have been removed from `package.json`
 
-**Note:** `db:push:remote:cli` was kept because `push_local_to_remote_db_cli.js` exists.
+**Note:** Schema sync uses `scripts/migrate-prod.js` and `scripts/migrate-remote-db-cli.js`.
 
 ## Medium Confidence - Review Before Removing
 

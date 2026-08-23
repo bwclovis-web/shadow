@@ -12,7 +12,7 @@ This project syncs schema with **Prisma Migrate** and checked-in SQL under `pris
 1. Edit `prisma/schema.prisma`
 2. Create and apply a migration locally:
    ```bash
-   npx prisma migrate dev --name <descriptive_name>
+   npm run db:migrate:dev -- --name <descriptive_name>
    ```
 3. Regenerate the client if needed (migrate usually does this):
    ```bash
@@ -22,28 +22,37 @@ This project syncs schema with **Prisma Migrate** and checked-in SQL under `pris
 After pulling someone else's migrations:
 
 ```bash
-npx prisma migrate deploy
+npm run db:migrate
 npm run db:generate
 ```
 
+## npm scripts
+
+| Task | Command |
+|------|---------|
+| Apply pending (local / CI) | `npm run db:migrate` |
+| Author migration | `npm run db:migrate:dev -- --name <name>` |
+| Status | `npm run db:migrate:status` |
+| Prod preview | `npm run db:migrate:prod:dry` |
+| Prod apply | `npm run db:migrate:prod` |
+
 ## Do not run (unless user explicitly requests)
 
-- `prisma db push` / `npm run db:push`
-- `prisma migrate reset` / `db push --force-reset`
+- `prisma db push`
+- `prisma migrate reset`
 - Ad-hoc schema sync that skips migration files
 
 ## Production / remote
 
-Apply pending migrations only (no reset):
-
 ```bash
-npx prisma migrate deploy
+npm run db:migrate:prod:dry   # preview pending
+npm run db:migrate:prod       # apply via REMOTE_DATABASE_URL
 ```
 
-Use the production `DATABASE_URL` (or the team's documented deploy process). Review migration SQL before applying to shared databases.
+Review migration SQL before applying to shared databases.
 
 ## Safety
 
 - Schema changes should be **additive** when possible (no drops/truncates without explicit user approval)
 - See also: `no-database-deletion` rule — no destructive resets on production or shared data
-- Full guide: `docs/database-migrations.md`
+- Full guide: `docs/database.md`

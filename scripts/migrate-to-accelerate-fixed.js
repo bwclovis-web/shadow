@@ -143,7 +143,7 @@ const ensureMigrationStateTable = async () => {
       console.log("To fix this, push the schema to your remote database:")
       console.log("  1. Open your .env file")
       console.log("  2. Temporarily change DATABASE_URL to your REMOTE_DATABASE_URL value")
-      console.log("  3. Run: npx prisma db push")
+      console.log("  3. Run: npm run db:migrate:prod")
       console.log("  4. Change DATABASE_URL back to your local database URL")
       console.log("  5. Run this script again")
       console.log("")
