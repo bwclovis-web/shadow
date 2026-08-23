@@ -5,6 +5,8 @@
  * It includes error types, logging, user-friendly error messages, and error boundary utilities.
  */
 
+import { incrementCounter } from "@/utils/server/metrics.server"
+
 // Error Types
 export enum ErrorType {
   VALIDATION = "VALIDATION",
@@ -330,26 +332,28 @@ export class ErrorLogger {
     userId?: string,
     correlationId?: string
   ): void {
-    // NOTE: External logging service integration placeholder
-    //
-    // When implementing, integrate with your chosen service:
-    // - Sentry: Sentry.captureException(error, { user: { id: userId }, tags: { correlationId } })
-    // - LogRocket: LogRocket.captureException(error, { extra: { userId, correlationId } })
-    // - DataDog: DD.logger.error(error.message, { userId, correlationId, ...error.toJSON(false) })
-    // - Custom: await fetch('/api/logs', { method: 'POST', body: JSON.stringify(sanitizedLog) })
-    //
-    // Important: Always use sanitized context for external logging
-    // Never include sensitive data (passwords, tokens, PII) in logs
-
+    // Structured JSON for Vercel / platform log filters. No third-party APM.
     const sanitizedLog = {
-      ...error.toJSON(false), // Never include stack in production external logs
+      logType: "app_error",
+      ...error.toJSON(false),
       correlationId,
-      userId: userId,
+      userId,
       timestamp: new Date().toISOString(),
     }
 
-    // For now, log without stack trace in production
-    console.error("[Production Error]", sanitizedLog)
+    console.error(JSON.stringify(sanitizedLog))
+
+    if (error.type === ErrorType.AUTHENTICATION || error.type === ErrorType.AUTHORIZATION) {
+      incrementCounter("auth.failure", 1, { code: error.code })
+    }
+    if (
+      error.severity === ErrorSeverity.HIGH ||
+      error.severity === ErrorSeverity.CRITICAL ||
+      error.type === ErrorType.SERVER ||
+      error.type === ErrorType.DATABASE
+    ) {
+      incrementCounter("api.5xx", 1, { code: error.code, type: error.type })
+    }
   }
 
   getLogs(limit?: number): Array<{

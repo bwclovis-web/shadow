@@ -238,9 +238,19 @@ export default function ScentQuizClient({
           heading={t("success.heading")}
         />
         <p className="mt-6 text-lg text-noir-gold-500">{t("success.subheading")}</p>
-        <Button variant="primary" className="mt-8" background="gold" size="xl">
-          <Link href="/">{t("success.cta")}</Link>
-        </Button>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+          <Button variant="primary" background="gold" size="xl">
+            <Link href={`/trader-profile/${state.userId}/scent-dna`}>
+              {t("success.shareDna")}
+            </Link>
+          </Button>
+          <Button variant="primary" background="gold" size="lg">
+            <Link href="/">{t("success.homeCta")}</Link>
+          </Button>
+          <Button variant="primary" background="gold" size="lg">
+            <Link href="/the-archive">{t("success.cta")}</Link>
+          </Button>
+        </div>
       </div>
     )
   }

@@ -10,6 +10,7 @@ import Input from "@/components/Atoms/Input/Input"
 import { Button } from "@/components/Atoms/Button/Button"
 import ErrorDisplay from "@/components/Containers/ErrorDisplay/ErrorDisplay"
 import { CSRFToken } from "@/components/Molecules/CSRFToken/CSRFToken"
+import { TurnstileField } from "@/components/Molecules/Turnstile/TurnstileField"
 import { UserLogInSchema } from "@/utils/validation/formValidationSchemas"
 import { signInAction, type SignInActionState } from "@/app/(auth)/sign-in/actions"
 
@@ -51,6 +52,7 @@ const SignInClient = () => {
           inputType="password"
           action={password}
         />
+        <TurnstileField />
         {isSuspended && !state?.error && (
           <ErrorDisplay
             error={tAuth("suspended")}

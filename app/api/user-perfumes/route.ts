@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server"
-import { fetchAllPerfumesForCatalog } from "@/models/perfume.server"
 import {
   addPerfumeComment,
   addUserPerfume,
@@ -28,12 +27,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: authResult.error }, { status: authResult.status ?? 401 })
     }
     const userId = authResult.user!.id
-    const [userPerfumes, allPerfumes, inventoryStats] = await Promise.all([
+    const [userPerfumes, inventoryStats] = await Promise.all([
       getUserPerfumes(userId),
-      fetchAllPerfumesForCatalog(),
       getUserInventoryStats(userId),
     ])
-    return NextResponse.json({ success: true, userPerfumes, allPerfumes, inventoryStats })
+    return NextResponse.json({ success: true, userPerfumes, inventoryStats })
   } catch (error) {
     const appError = ErrorHandler.handle(error, { api: "user-perfumes", action: "loader" })
     return NextResponse.json({ success: false, error: appError.userMessage }, { status: 500 })

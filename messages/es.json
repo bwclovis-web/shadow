@@ -1166,6 +1166,9 @@
     "about": "La Hondonada",
     "aboutUs": "Los Guardianes",
     "journal": "Diario",
+    "community": "Comunidad",
+    "communityHub": "Estanterías y diario",
+    "membership": "Membresía",
     "howWeWork": "La guía del coleccionista",
     "contactUs": "Correspondencia",
     "home": "Inicio",
@@ -1274,6 +1277,7 @@
       "wishlist": "Mi Lista de Deseos",
       "myTrades": "Mis intercambios",
       "myScents": "Mis Aromas",
+      "communityHub": "Estanterías y diario",
       "accountSecurity": "Seguridad de la cuenta",
       "myReports": "Mis reportes",
       "myDisputes": "Mis disputas"
@@ -1281,7 +1285,7 @@
   },
   "twoFactor": {
     "title": "Seguridad de la cuenta",
-    "subheading": "Actualiza tu contraseña y gestiona la autenticación en dos pasos (opcional).",
+    "subheading": "Gestiona tu contrasena, sesiones y autenticacion en dos pasos opcional.",
     "twoFactorSectionTitle": "Autenticación en dos pasos",
     "adminRecommendation": "Se recomienda la autenticación en dos pasos para cuentas de administrador.",
     "disabledDescription": "Protege tu cuenta con una aplicación de autenticación. Es opcional.",
@@ -1302,7 +1306,13 @@
     "backupCodeLabel": "Código de respaldo",
     "useBackupCode": "Usar código de respaldo",
     "useAuthenticator": "Usar aplicación de autenticación",
-    "errorTitle": "Error"
+    "errorTitle": "Error",
+    "adminRequired": "Las cuentas de administrador y editor deben activar la autenticacion en dos pasos antes de acceder al area de administracion.",
+    "sessionsTitle": "Sesiones activas",
+    "sessionsDescription": "Dispositivos con sesion en tu cuenta. Revoca las que no reconozcas.",
+    "sessionsEmpty": "No hay sesiones de actualizacion activas.",
+    "revokeSession": "Revocar",
+    "signOutEverywhere": "Cerrar sesion en todas partes"
   },
   "quiz": {
     "meta": {
@@ -1378,7 +1388,9 @@
     "success": {
       "heading": "¡Listo!",
       "subheading": "Usaremos tus preferencias para recomendarte perfumes que te encantarán.",
-      "cta": "Ir al inicio"
+      "cta": "Ir al inicio",
+      "shareDna": "Ver y compartir tu Scent DNA",
+      "homeCta": "Volver al inicio"
     }
   },
   "recommendations": {
@@ -2590,5 +2602,109 @@
       "heading": "Una comunidad reflexiva",
       "subheading": "perfumer's hollow existe para apoyar a los coleccionistas, el descubrimiento y los intercambios respetuosos. Estos estándares ayudan a mantener el Hollow justo, confiable y acogedor para todos."
     }
+  },
+  "community": {
+    "title": "Comunidad",
+    "subtitle": "Estanterías, diarios de uso y retos de temporada: colección digital, sin ventas.",
+    "membershipCta": "Ver beneficios de membresía",
+    "tabs": {
+      "shelves": "Estanterías",
+      "journal": "Diario de uso",
+      "challenges": "Retos",
+      "alerts": "Busquedas guardadas"
+    },
+    "signInPrompt": "Inicia sesión para gestionar estanterías y tu diario de uso.",
+    "signIn": "Iniciar sesión",
+    "loading": "Cargando…",
+    "loadError": "No se pudieron cargar los datos de la comunidad.",
+    "saveError": "No se pudo guardar. Inténtalo de nuevo.",
+    "createShelfTitle": "Crear una estantería",
+    "shelfName": "Nombre de la estantería",
+    "shelfPublic": "Hacer pública esta estantería",
+    "createShelf": "Crear estantería",
+    "shelfCreated": "Estantería creada.",
+    "addToShelfTitle": "Añadir desde tu colección",
+    "shelf": "Estantería",
+    "perfume": "Perfume",
+    "addPerfume": "Añadir perfume",
+    "perfumeAdded": "Perfume añadido a la estantería.",
+    "yourShelves": "Tus estanterías",
+    "noShelves": "Aún no hay estanterías: crea una para organizar favoritos.",
+    "emptyShelf": "Aún no hay perfumes en esta estantería.",
+    "deleteShelf": "Eliminar",
+    "deleteShelfHeading": "¿Eliminar esta estantería?",
+    "deleteShelfDescription": "Se eliminará “{name}”. Los perfumes saldrán solo de la estantería, no de tu colección.",
+    "shelfDeleted": "Estantería eliminada.",
+    "public": "Pública",
+    "private": "Privada",
+    "logWearTitle": "¿Qué te pusiste hoy?",
+    "needCollection": "Añade fragancias a tu colección primero.",
+    "browseArchive": "Explorar el Archivo",
+    "rating": "Valoración (opcional)",
+    "notes": "Notas",
+    "saveWear": "Registrar uso",
+    "journalSaved": "Uso registrado.",
+    "wearHistory": "Usos recientes",
+    "noJournal": "Aún no hay registros de uso.",
+    "rated": "Valorado {rating}/5",
+    "liveChallenges": "Retos activos",
+    "fullChallengesPage": "Página completa",
+    "noChallenges": "No hay retos activos ahora: vuelve pronto.",
+    "challengeMeta": "{count, plural, one {# participación} other {# participaciones}} · termina {ends}",
+    "challengesPage": {
+      "heading": "Retos de la comunidad",
+      "subheading": "Retos y eventos de fragancias de temporada con otros coleccionistas.",
+      "intro": "Únete a eventos de temporada, comparte lo que llevas y descubre listas de otros coleccionistas.",
+      "journalLink": "Lee el Journal",
+      "introAfter": "para guías editoriales vinculadas a notas y casas.",
+      "empty": "No hay retos activos ahora: vuelve pronto, o crea una estantería pública desde"
+    },
+    "publicShelvesLink": "Explorar estanterias publicas",
+    "seasonalPlanningLink": "Planificacion estacional"
+  },
+  "membershipPage": {
+    "heading": "Membresía digital",
+    "subheading": "Desbloquea descubrimiento, personalización y herramientas de colección — solo digital.",
+    "intro": "Las membresías de Shadow desbloquean descubrimiento, personalización y herramientas de colección. No vendemos frascos, no procesamos pagos ni cobramos comisiones: el valor es solo digital.",
+    "communityLink": "Explorar Community",
+    "ctaFree": "Empezar",
+    "ctaSubscribe": "Suscribirse"
+  },
+  "savedSearches": {
+    "saveButton": "Guardar esta busqueda",
+    "saving": "Guardando…",
+    "saved": "Busqueda guardada",
+    "saveFailed": "No se pudo guardar la busqueda.",
+    "signInRequired": "Inicia sesion para guardar busquedas.",
+    "premiumRequired": "Las busquedas guardadas y las alertas instantaneas son un beneficio Premium.",
+    "upgradeCta": "Ver membresia",
+    "manageTitle": "Tus busquedas guardadas",
+    "loading": "Cargando busquedas guardadas…",
+    "loadFailed": "No se pudieron cargar las busquedas guardadas.",
+    "empty": "Aun no hay busquedas guardadas. Guarda filtros desde The Archive o The Exchange.",
+    "alertsOn": "Alertas activas",
+    "alertsOff": "Alertas silenciadas",
+    "lastMatch": "Ultima coincidencia {date}",
+    "mute": "Silenciar",
+    "unmute": "Reactivar",
+    "delete": "Eliminar"
+  },
+  "seasonalPlanning": {
+    "title": "Usalo esta temporada",
+    "subtitle": "Sugerencias de tu coleccion, diario de uso y tendencias estacionales.",
+    "premiumRequired": "La planificacion estacional es un beneficio Premium.",
+    "upgradeCta": "Ver membresia",
+    "empty": "Anade frascos a tu coleccion o registra usos para desbloquear sugerencias.",
+    "fromCollection": "De tu coleccion",
+    "trending": "Tendencia esta temporada",
+    "recentWear": "Usado recientemente"
+  },
+  "publicShelves": {
+    "browseTitle": "Estanterias publicas",
+    "browseSubtitle": "Descubre como los coleccionistas organizan sus frascos.",
+    "empty": "Aun no hay estanterias publicas.",
+    "viewShelf": "Abrir estanteria",
+    "byCollector": "por {name}",
+    "backToBrowse": "Todas las estanterias publicas"
   }
 }

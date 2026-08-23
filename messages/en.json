@@ -1361,6 +1361,9 @@
     "about": "The Hollow",
     "aboutUs": "The Keepers",
     "journal": "Journal",
+    "community": "Community",
+    "communityHub": "Shelves & Journal",
+    "membership": "Membership",
     "howWeWork": "The Collector’s Guide",
     "contactUs": "Correspondence",
     "home": "Home",
@@ -1470,14 +1473,21 @@
       "myDisputes": "Exchange Disputes",
       "myTrades": "My Exchanges",
       "myScents": "Collection",
+      "communityHub": "Shelves & Journal",
       "accountSecurity": "Account Security"
     }
   },
   "twoFactor": {
     "title": "Account Security",
-    "subheading": "Manage your password and optional two-factor authentication.",
+    "subheading": "Manage your password, sessions, and optional two-factor authentication.",
     "twoFactorSectionTitle": "Two-factor authentication",
     "adminRecommendation": "Two-factor authentication is recommended for admin and editor accounts.",
+    "adminRequired": "Admin and editor accounts must enable two-factor authentication before accessing the admin area.",
+    "sessionsTitle": "Active sessions",
+    "sessionsDescription": "Devices signed into your account. Revoke any you do not recognize.",
+    "sessionsEmpty": "No active refresh sessions found.",
+    "revokeSession": "Revoke",
+    "signOutEverywhere": "Sign out everywhere",
     "disabledDescription": "Add an extra layer of security to your account with an authenticator app.",
     "enableButton": "Enable Two-Factor Authentication",
     "scanQr": "Scan this QR code with your authenticator app, then enter the 6-digit code and your password to confirm.",
@@ -1572,7 +1582,9 @@
     "success": {
       "heading": "Your Scent DNA Has Taken Shape.",
       "subheading": "The Hollow now has a clearer sense of the fragrances, notes, and atmospheres that define your tastes..",
-      "cta": "Explore the Archive"
+      "cta": "Explore the Archive",
+      "shareDna": "View & share your Scent DNA",
+      "homeCta": "Back home"
     }
   },
   "recommendations": {
@@ -2590,5 +2602,109 @@
       "signInToClaim": "Sign in to claim a slot.",
       "actionFailed": "Action failed. Please try again."
     }
+  },
+  "community": {
+    "title": "Community",
+    "subtitle": "Shelves, wear journals, and seasonal challenges — digital collecting, no sales.",
+    "membershipCta": "See membership benefits",
+    "publicShelvesLink": "Browse public shelves",
+    "seasonalPlanningLink": "Seasonal planning",
+    "tabs": {
+      "shelves": "Shelves",
+      "journal": "Wear journal",
+      "challenges": "Challenges",
+      "alerts": "Saved searches"
+    },
+    "signInPrompt": "Sign in to manage shelves and your wear journal.",
+    "signIn": "Sign in",
+    "loading": "Loading…",
+    "loadError": "Could not load community data.",
+    "saveError": "Could not save. Try again.",
+    "createShelfTitle": "Create a shelf",
+    "shelfName": "Shelf name",
+    "shelfPublic": "Make this shelf public",
+    "createShelf": "Create shelf",
+    "shelfCreated": "Shelf created.",
+    "addToShelfTitle": "Add from your collection",
+    "shelf": "Shelf",
+    "perfume": "Perfume",
+    "addPerfume": "Add perfume",
+    "perfumeAdded": "Perfume added to shelf.",
+    "yourShelves": "Your shelves",
+    "noShelves": "No shelves yet — create one to organize favorites.",
+    "emptyShelf": "No perfumes on this shelf yet.",
+    "deleteShelf": "Delete",
+    "deleteShelfHeading": "Delete this shelf?",
+    "deleteShelfDescription": "“{name}” will be removed. Perfumes on it leave the shelf only — not your collection.",
+    "shelfDeleted": "Shelf deleted.",
+    "public": "Public",
+    "private": "Private",
+    "logWearTitle": "What did you wear today?",
+    "needCollection": "Add scents to your collection first.",
+    "browseArchive": "Browse the Archive",
+    "rating": "Rating (optional)",
+    "notes": "Notes",
+    "saveWear": "Log wear",
+    "journalSaved": "Wear logged.",
+    "wearHistory": "Recent wears",
+    "noJournal": "No wear entries yet.",
+    "rated": "Rated {rating}/5",
+    "liveChallenges": "Live challenges",
+    "fullChallengesPage": "Full page",
+    "noChallenges": "No live challenges right now — check back soon.",
+    "challengeMeta": "{count, plural, one {# entry} other {# entries}} · ends {ends}",
+    "challengesPage": {
+      "heading": "Community challenges",
+      "subheading": "Seasonal scent challenges and events with fellow collectors.",
+      "intro": "Join seasonal events, share what you're wearing, and discover lists from fellow collectors.",
+      "journalLink": "Read the Journal",
+      "introAfter": "for editorial guides linked to notes and houses.",
+      "empty": "No live challenges right now — check back soon, or start a public shelf from"
+    }
+  },
+  "membershipPage": {
+    "heading": "Digital membership",
+    "subheading": "Unlock discovery, personalization, and collection tools — digital only.",
+    "intro": "Shadow memberships unlock discovery, personalization, and collection tools. We do not sell bottles, process payouts, or charge transaction fees — value is digital only.",
+    "communityLink": "Explore Community",
+    "ctaFree": "Get started",
+    "ctaSubscribe": "Subscribe"
+  },
+  "savedSearches": {
+    "saveButton": "Save this search",
+    "saving": "Saving…",
+    "saved": "Search saved",
+    "saveFailed": "Could not save search.",
+    "signInRequired": "Sign in to save searches.",
+    "premiumRequired": "Saved searches and instant alerts are a Premium benefit.",
+    "upgradeCta": "View membership",
+    "manageTitle": "Your saved searches",
+    "loading": "Loading saved searches…",
+    "loadFailed": "Could not load saved searches.",
+    "empty": "No saved searches yet. Save filters from The Archive or The Exchange.",
+    "alertsOn": "Alerts on",
+    "alertsOff": "Alerts muted",
+    "lastMatch": "Last match {date}",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "delete": "Delete"
+  },
+  "seasonalPlanning": {
+    "title": "Wear this season",
+    "subtitle": "Suggestions from your collection, wear journal, and seasonal trends.",
+    "premiumRequired": "Seasonal planning is a Premium benefit.",
+    "upgradeCta": "View membership",
+    "empty": "Add bottles to your collection or log wears to unlock suggestions.",
+    "fromCollection": "From your collection",
+    "trending": "Trending this season",
+    "recentWear": "Recently worn"
+  },
+  "publicShelves": {
+    "browseTitle": "Public shelves",
+    "browseSubtitle": "Discover how collectors organize their bottles.",
+    "empty": "No public shelves yet.",
+    "viewShelf": "Open shelf",
+    "byCollector": "by {name}",
+    "backToBrowse": "All public shelves"
   }
 }

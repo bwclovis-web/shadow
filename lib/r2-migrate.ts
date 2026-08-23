@@ -58,43 +58,41 @@ function buildImageFetchHeaders(imageUrl: string): HeadersInit {
 }
 
 async function fetchImageWithBackoff(imageUrl: string, type: 'house' | 'perfume') {
+  const { safeFetchUrl } = await import("@/utils/server/safe-fetch-url.server")
   const headers = buildImageFetchHeaders(imageUrl)
   let lastStatus: number | null = null
 
   for (let attempt = 0; attempt < FETCH_BACKOFF_MS.length; attempt++) {
-    const res = await fetch(imageUrl.trim(), {
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      headers,
-      redirect: "follow",
-    })
-    if (res.ok) return { response: res, usePlaceholder: false }
-    if (type === 'house' && res.status === 404) return { response: null, usePlaceholder: true }
+    try {
+      const { response } = await safeFetchUrl(imageUrl.trim(), {
+        timeoutMs: FETCH_TIMEOUT_MS,
+        maxBytes: 8 * 1024 * 1024,
+        headers,
+      })
+      if (response.ok) return { response, usePlaceholder: false }
+      if (type === 'house' && response.status === 404) return { response: null, usePlaceholder: true }
 
-    lastStatus = res.status
-    if (!RETRYABLE_HTTP_STATUS.has(res.status) || attempt === FETCH_BACKOFF_MS.length - 1) {
-      throw new Error(`HTTP ${res.status}`)
+      lastStatus = response.status
+      if (!RETRYABLE_HTTP_STATUS.has(response.status) || attempt === FETCH_BACKOFF_MS.length - 1) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+    } catch (err) {
+      if (attempt === FETCH_BACKOFF_MS.length - 1) throw err
+      const msg = err instanceof Error ? err.message : ""
+      if (
+        msg.includes("Private") ||
+        msg.includes("Localhost") ||
+        msg.includes("Internal") ||
+        msg.includes("credentials") ||
+        msg.includes("Invalid URL") ||
+        msg.includes("http or https")
+      ) {
+        throw err
+      }
     }
     await sleep(FETCH_BACKOFF_MS[attempt]!)
   }
   throw new Error(`HTTP ${lastStatus ?? "unknown"}`)
-}
-
-function getExtensionFromUrl(url: string, contentType?: string | null): string {
-  const match = url.match(/\.(jpg|jpeg|png|webp|gif|avif)(\?|$)/i)
-  if (match) return match[1].toLowerCase()
-  if (contentType) {
-    const map: Record<string, string> = {
-      'image/jpeg': 'jpg',
-      'image/jpg': 'jpg',
-      'image/png': 'png',
-      'image/webp': 'webp',
-      'image/gif': 'gif',
-      'image/avif': 'avif',
-    }
-    const ext = map[contentType.split(';')[0].trim().toLowerCase()]
-    if (ext) return ext
-  }
-  return 'jpg'
 }
 
 function isValidFetchUrl(url: string): boolean {
@@ -105,6 +103,14 @@ function isValidFetchUrl(url: string): boolean {
   } catch {
     return false
   }
+}
+
+/** Sync protocol check; full SSRF validation runs at fetch time via safeFetchUrl. */
+async function assertSafeImageUrl(url: string): Promise<boolean> {
+  if (!isValidFetchUrl(url)) return false
+  const { validateSafeHttpUrl } = await import("@/utils/server/safe-fetch-url.server")
+  const result = await validateSafeHttpUrl(url)
+  return result.ok
 }
 
 export interface MigrateImageResult {
@@ -120,7 +126,7 @@ export interface MigrateImageResult {
  *
  * - If imageUrl already points to R2_PUBLIC_URL, returns ok=true (skipped).
  * - If imageUrl is invalid/404, sets the perfume image to the placeholder.
- * - Otherwise: fetches, uploads to `perfumes/{perfumeId}.{ext}`, updates DB.
+ * - Otherwise: fetches, converts to WebP, uploads to `perfumes/{perfumeId}.webp`, updates DB.
  *
  * @param perfumeId - Prisma Perfume.id
  * @param imageUrl  - Current image URL to migrate
@@ -186,14 +192,13 @@ async function _migrateRecord(
 
   const placeholder = type === 'house' ? HOUSE_PLACEHOLDER : PERFUME_PLACEHOLDER
 
-  if (!isValidFetchUrl(imageUrl)) {
+  if (!(await assertSafeImageUrl(imageUrl))) {
     if (dryRun) return { ok: true, skipped: true }
     await updateImage(prisma, type, id, placeholder)
     return { ok: true, newUrl: placeholder }
   }
 
   let buffer: ArrayBuffer
-  let contentType: string | null = null
 
   try {
     const fetchResult = await withRetry(() => fetchImageWithBackoff(imageUrl, type))
@@ -205,14 +210,16 @@ async function _migrateRecord(
     }
 
     const res = fetchResult.response!
-    contentType = res.headers.get('content-type')
     buffer = await res.arrayBuffer()
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
     const isParseErr =
       msg.includes('Failed to parse URL') ||
       msg.includes('Invalid URL') ||
-      msg.includes('fetch failed')
+      msg.includes('fetch failed') ||
+      msg.includes('Private') ||
+      msg.includes('Localhost') ||
+      msg.includes('not allowed')
     if (isParseErr) {
       if (!dryRun) await updateImage(prisma, type, id, placeholder)
       return { ok: true, newUrl: placeholder }
@@ -220,19 +227,19 @@ async function _migrateRecord(
     return { ok: false, error: `fetch: ${msg}` }
   }
 
-  const ext = getExtensionFromUrl(imageUrl, contentType)
-  const key = type === 'house' ? `houses/${id}.${ext}` : `perfumes/${id}.${ext}`
+  const key = type === 'house' ? `houses/${id}.webp` : `perfumes/${id}.webp`
 
   if (dryRun) return { ok: true, skipped: true }
 
+  let storedKey: string
   try {
-    await withRetry(() => uploadToR2(key, Buffer.from(buffer), contentType ?? undefined))
+    storedKey = await withRetry(() => uploadToR2(key, Buffer.from(buffer)))
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
     return { ok: false, error: `upload: ${msg}` }
   }
 
-  const newUrl = getR2PublicUrl(key)
+  const newUrl = getR2PublicUrl(storedKey)
 
   try {
     await updateImage(prisma, type, id, newUrl)

@@ -178,42 +178,29 @@ const fetchText = async (
   url: string,
   signal?: AbortSignal,
 ): Promise<{ status: number; text: string; ok: boolean }> => {
-  const ac = new AbortController()
-  const timer = setTimeout(() => ac.abort(), FETCH_TIMEOUT_MS)
-  const onAbort = () => ac.abort()
-  signal?.addEventListener("abort", onAbort)
-  try {
-    const res = await fetch(url, {
-      method: "GET",
-      redirect: "follow",
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (compatible; ShadowScraperDetect/1.0; +https://localhost)",
-        Accept: "text/html,application/json,*/*",
-      },
-      signal: ac.signal,
-    })
-    const text = await res.text()
-    return { status: res.status, text, ok: res.ok }
-  } finally {
-    clearTimeout(timer)
-    signal?.removeEventListener("abort", onAbort)
-  }
+  const { safeFetchText } = await import("@/utils/server/safe-fetch-url.server")
+  return safeFetchText(url, {
+    signal,
+    timeoutMs: FETCH_TIMEOUT_MS,
+    maxBytes: 2 * 1024 * 1024,
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (compatible; ShadowScraperDetect/1.0; +https://theshadow.club)",
+      Accept: "text/html,application/json,*/*",
+    },
+  })
 }
 
 export const detectScraperFromCollectionUrl = async (
   collectionUrl: string,
   options?: { sampleProductUrl?: string; signal?: AbortSignal },
 ): Promise<ScraperDetectResult | ScraperDetectError> => {
-  let parsed: URL
-  try {
-    parsed = new URL(collectionUrl.trim())
-  } catch {
-    return { ok: false, error: "Invalid collection URL" }
+  const { validateSafeHttpUrl } = await import("@/utils/server/safe-fetch-url.server")
+  const safeUrl = await validateSafeHttpUrl(collectionUrl)
+  if (!safeUrl.ok) {
+    return { ok: false, error: safeUrl.error }
   }
-  if (!/^https?:$/i.test(parsed.protocol)) {
-    return { ok: false, error: "URL must start with http:// or https://" }
-  }
+  const parsed = safeUrl.url
 
   const origin = parsed.origin
   const host = parsed.hostname

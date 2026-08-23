@@ -4,6 +4,7 @@ export const mainNavigation = [
   { id: "archive", path: "/the-archive", key: "perfumes", label: "The Archive" },
   { id: "houses", path: "/houses", key: "houses", label: "Houses" },
   { id: "journal", path: "/journal", key: "journal", label: "Journal" },
+  { id: "community", path: "/community", key: "community", label: "Community" },
   { id: "exchange", path: "/the-exchange", key: "theExchange", label: "The Exchange" },
 ] as const
 
@@ -28,6 +29,12 @@ export const profileNavigation = [
   { id: "6", label: "My Disputes", key: "myDisputes", path: "/profile/disputes" } as const,
   { id: "5", label: "My Trades", key: "myTrades", path: "/profile/trades" } as const,
   { id: "2", label: "My Scents", key: "myScents", path: "/profile/my-scents" } as const,
+  {
+    id: "community",
+    label: "Shelves & Journal",
+    key: "communityHub",
+    path: "/community",
+  } as const,
   { id: "7", label: "Account Security", key: "accountSecurity", path: "/profile/security" } as const,
 ] as const
 

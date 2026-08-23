@@ -86,18 +86,45 @@ export const useUserAlerts = ({
       void refresh()
     }
 
-    const interval = setInterval(refresh, pollIntervalMs)
-    const onVisibility = () => {
-      if (document.visibilityState === "visible") void refresh()
+    let intervalId: ReturnType<typeof setInterval> | null = null
+
+    const clearPoll = () => {
+      if (intervalId != null) {
+        clearInterval(intervalId)
+        intervalId = null
+      }
     }
 
+    const startPoll = (ms: number) => {
+      clearPoll()
+      intervalId = setInterval(refresh, ms)
+    }
+
+    const visibleInterval = pollIntervalMs
+    const hiddenInterval = Math.max(pollIntervalMs * 4, 120_000)
+
+    const syncPollToVisibility = () => {
+      if (typeof document === "undefined") {
+        startPoll(visibleInterval)
+        return
+      }
+      if (document.visibilityState === "visible") {
+        startPoll(visibleInterval)
+        void refresh()
+      } else {
+        startPoll(hiddenInterval)
+      }
+    }
+
+    syncPollToVisibility()
+
     window.addEventListener(USER_ALERTS_REFRESH_EVENT, onRefresh)
-    document.addEventListener("visibilitychange", onVisibility)
+    document.addEventListener("visibilitychange", syncPollToVisibility)
 
     return () => {
-      clearInterval(interval)
+      clearPoll()
       window.removeEventListener(USER_ALERTS_REFRESH_EVENT, onRefresh)
-      document.removeEventListener("visibilitychange", onVisibility)
+      document.removeEventListener("visibilitychange", syncPollToVisibility)
     }
   }, [userId, pollIntervalMs, refresh, disabled])
 

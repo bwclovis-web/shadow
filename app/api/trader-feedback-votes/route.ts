@@ -34,7 +34,7 @@ export const POST = async (request: NextRequest) => {
 
     const mutationLimits = getUserMutationRateLimits()
     try {
-      validateRateLimit(
+      await validateRateLimit(
         `feedback-votes:post:${authResult.user!.id}`,
         mutationLimits.feedbackVotesPost.max,
         mutationLimits.feedbackVotesPost.windowMs

@@ -47,7 +47,7 @@ export const POST = async (request: NextRequest) => {
     await requireCSRFForJsonBody(request, body)
 
     try {
-      validateRateLimit(
+      await validateRateLimit(
         `csv-import-match:user:${authResult.user!.id}`,
         CSV_MATCH_RATE_LIMIT_MAX,
         CSV_MATCH_RATE_LIMIT_WINDOW_MS

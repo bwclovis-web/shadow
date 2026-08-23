@@ -159,7 +159,73 @@ export const logAuditEvent = async (
     console.debug(formatAuditLog(auditLog))
   }
 
+  // Dual-write to durable SecurityAuditLog when possible
+  void persistAuditToDatabase(auditLog).catch(() => {
+    /* never block on audit persistence */
+  })
+
   return auditLog
+}
+
+const mapActionToSecurityAudit = (
+  action: string
+): import("@prisma/client").SecurityAuditAction => {
+  const upper = action.toUpperCase().replace(/[\s-]+/g, "_")
+  const known = new Set([
+    "LOGIN_SUCCESS",
+    "LOGIN_FAILED",
+    "LOGOUT",
+    "PASSWORD_CHANGE",
+    "PROFILE_UPDATE",
+    "ADMIN_ACCESS",
+    "DATA_ACCESS",
+    "DATA_MODIFICATION",
+    "DATA_DELETION",
+    "SUSPICIOUS_ACTIVITY",
+    "RATE_LIMIT_EXCEEDED",
+    "INVALID_TOKEN",
+    "UNAUTHORIZED_ACCESS",
+    "CSRF_VIOLATION",
+    "SQL_INJECTION_ATTEMPT",
+    "XSS_ATTEMPT",
+    "FILE_UPLOAD",
+    "API_ACCESS",
+    "SYSTEM_ERROR",
+    "SECURITY_SCAN",
+  ])
+  if (known.has(upper)) {
+    return upper as import("@prisma/client").SecurityAuditAction
+  }
+  return "API_ACCESS"
+}
+
+const mapLevelToSeverity = (
+  level: string
+): import("@prisma/client").SecurityAuditSeverity => {
+  if (level === AUDIT_LEVELS.CRITICAL) return "critical"
+  if (level === AUDIT_LEVELS.ERROR) return "error"
+  if (level === AUDIT_LEVELS.WARN) return "warning"
+  return "info"
+}
+
+const persistAuditToDatabase = async (entry: AuditLogEntry): Promise<void> => {
+  const { logSecurityAudit } = await import(
+    "@/utils/security/security-audit.server"
+  )
+  await logSecurityAudit({
+    userId: entry.userId,
+    action: mapActionToSecurityAudit(entry.action),
+    severity: mapLevelToSeverity(entry.level),
+    resource: entry.resource ?? entry.category,
+    ipAddress: entry.ipAddress,
+    userAgent: entry.userAgent,
+    details: {
+      outcome: entry.outcome,
+      category: entry.category,
+      ...(entry.details ?? {}),
+      ...(entry.correlationId ? { correlationId: entry.correlationId } : {}),
+    },
+  })
 }
 
 /**

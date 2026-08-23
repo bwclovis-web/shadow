@@ -4,9 +4,13 @@
 
 export interface CoreWebVitals {
   lcp: number
+  /** Legacy alias; prefer `inp` when available */
   fid: number
+  /** Interaction to Next Paint (replaces FID) */
+  inp: number
   cls: number
   fcp: number
+  ttfb: number
   tti: number
 }
 

@@ -7,36 +7,64 @@ import { transformNotesForDisplay } from "@/models/perfume-notes-helpers"
 import { userPerfumeNestedPerfumeSelect } from "@/models/user-perfume-listing-fields"
 import { PERFUME_BY_SLUG_REVALIDATE } from "./perfume-list-fields.server"
 
+const perfumeDetailSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  description: true,
+  image: true,
+  isPending: true,
+  perfumeHouseId: true,
+  createdAt: true,
+  updatedAt: true,
+  perfumeHouse: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      type: true,
+      country: true,
+      website: true,
+    },
+  },
+  perfumeNoteRelations: {
+    select: {
+      noteType: true,
+      note: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  },
+} as const
+
 export const getSingleUserPerfumeById = async (userPerfumeId: string, userId: string) => {
-  // Query by the actual userPerfume.id to get the specific destash entry
   const userPerfume = await prisma.userPerfume.findFirst({
-  where: { id: userPerfumeId, userId },
-  select: {
-    id: true,
-    perfumeId: true,
-    userId: true,
-    amount: true,
-    available: true,
-    type: true,
-    comments: {
-      select: {
-        id: true,
-        userId: true,
-        perfumeId: true,
-        userPerfumeId: true,
-        comment: true,
-        isPublic: true,
-        createdAt: true,
-        updatedAt: true,
+    where: { id: userPerfumeId, userId },
+    select: {
+      id: true,
+      perfumeId: true,
+      userId: true,
+      amount: true,
+      available: true,
+      type: true,
+      comments: {
+        select: {
+          id: true,
+          comment: true,
+          isPublic: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
       },
-      orderBy: {
-        createdAt: "desc",
+      price: true,
+      perfume: {
+        select: userPerfumeNestedPerfumeSelect,
       },
-    },
-    price: true,
-    perfume: { 
-      select: userPerfumeNestedPerfumeSelect,
-    },
     },
   })
   return userPerfume
@@ -47,14 +75,7 @@ export const getPerfumeBySlug = cache(async (slug: string) => {
     async () => {
       const perfume = await prisma.perfume.findUnique({
         where: { slug },
-        include: {
-          perfumeHouse: true,
-          perfumeNoteRelations: {
-            include: {
-              note: true,
-            },
-          },
-        },
+        select: perfumeDetailSelect,
       })
       if (!perfume) return null
       return transformNotesForDisplay(perfume as any)
@@ -67,22 +88,13 @@ export const getPerfumeBySlug = cache(async (slug: string) => {
 export const getPerfumeById = async (id: string) => {
   const perfume = await prisma.perfume.findUnique({
     where: { id },
-    include: {
-      perfumeHouse: true,
-      // Use junction table for notes
-      perfumeNoteRelations: {
-        include: {
-          note: true,
-        },
-      },
-    },
+    select: perfumeDetailSelect,
   })
-  
+
   if (!perfume) {
     return null
   }
-  
-  // Transform to backward-compatible format
+
   return transformNotesForDisplay(perfume as any)
 }
 

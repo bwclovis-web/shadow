@@ -340,6 +340,8 @@ export interface ScraperRunResponse {
   scraperLog?: string
   /** Post-run warnings (e.g. batch note uniformity / possible LLM drift). */
   batchWarnings?: string[]
+  /** Durable ScraperJob id for progress / cancel / recovery */
+  jobId?: string
 }
 
 // ---------------------------------------------------------------------------

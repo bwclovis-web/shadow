@@ -11,6 +11,7 @@ import {
   isUnusableMerchantDescription,
 } from "@/lib/scraper/notes-graph"
 import { allNotesEnglish } from "@/lib/scraper/stages/note-translation"
+import { resolveProductName } from "@/lib/scraper/stages/pdp-bootstrap"
 import type { PerfumeCsvRecord, ScrapedItem, ScraperNoteSource } from "@/types/scraper"
 
 const NON_PERFUME_ANDROMEDA_PRODUCT_URL_RE =
@@ -36,7 +37,7 @@ export const mapScrapedItemsToRecords = (
   houseName: string,
 ): PerfumeCsvRecord[] =>
   items.map(item => ({
-    name: item.name,
+    name: resolveProductName(item),
     description: item.noirDescription || item.description,
     image: item.image,
     perfumeHouse: item.perfumeHouse ?? houseName,

@@ -22,6 +22,10 @@ import {
   getPending2faCookieOptions,
 } from "@/utils/security/pending-2fa.server"
 import { createSession } from "@/utils/security/session-manager.server"
+import {
+  getTurnstileTokenFromFormData,
+  verifyTurnstileToken,
+} from "@/utils/security/turnstile.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { getClientIdentifierFromHeaders } from "@/utils/server/request.server"
 import { getProfilePathForUser } from "@/utils/user"
@@ -46,7 +50,7 @@ export const signInAction = async (
     const authLimits = getAuthRateLimits()
     const clientId = getClientIdentifierFromHeaders(await headers())
     try {
-      validateRateLimit(
+      await validateRateLimit(
         `auth:sign-in:${clientId}`,
         authLimits.signIn.max,
         authLimits.signIn.windowMs
@@ -58,6 +62,14 @@ export const signInAction = async (
         }
       }
       throw res
+    }
+
+    const turnstile = await verifyTurnstileToken(
+      getTurnstileTokenFromFormData(formData),
+      clientId
+    )
+    if (!turnstile.ok) {
+      return { error: turnstile.error }
     }
 
     const signInResult = await signInCustomer(formData)

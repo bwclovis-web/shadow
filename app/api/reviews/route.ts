@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     const mutationLimits = getUserMutationRateLimits()
     try {
-      validateRateLimit(
+      await validateRateLimit(
         `reviews:post:${auth.userId}`,
         mutationLimits.reviewsPost.max,
         mutationLimits.reviewsPost.windowMs

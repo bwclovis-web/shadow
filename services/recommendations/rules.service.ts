@@ -366,6 +366,18 @@ async function getPersonalizedForUser(
   limit: number
 ): Promise<RecommendationPerfume[]> {
   const excludeOwned = await getUserCollectionOrDestashPerfumeIds(userId)
+  const { getExcludedPerfumeIdsFromFeedback } = await import(
+    "@/models/recommendation-feedback.server"
+  )
+  const { getRecentSkippedOrDislikedPerfumeIds } = await import(
+    "@/models/taste-event.server"
+  )
+  const [feedbackExcluded, tasteExcluded] = await Promise.all([
+    getExcludedPerfumeIdsFromFeedback(userId),
+    getRecentSkippedOrDislikedPerfumeIds(userId),
+  ])
+  for (const id of feedbackExcluded) excludeOwned.add(id)
+  for (const id of tasteExcluded) excludeOwned.add(id)
 
   const profile = await getOrCreateScentProfile(userId)
   const index = await getNoteMaterialIndex()

@@ -40,12 +40,12 @@ export const POST = async (request: NextRequest) => {
 
     const limits = getTradeCreateRateLimits()
     try {
-      validateRateLimit(
+      await validateRateLimit(
         `trade-create:user:${userId}`,
         limits.perUser.max,
         limits.perUser.windowMs
       )
-      validateRateLimit(
+      await validateRateLimit(
         `trade-create:pair:${userId}:${counterpartyId}`,
         limits.perPair.max,
         limits.perPair.windowMs

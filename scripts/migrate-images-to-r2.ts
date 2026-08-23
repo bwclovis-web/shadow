@@ -24,26 +24,6 @@ const DELAY_MS = 100
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-const getExtensionFromUrl = (url: string, contentType?: string | null): string => {
-  const match = url.match(/\.(jpg|jpeg|png|webp|gif|avif)(\?|$)/i)
-  if (match) return match[1].toLowerCase()
-
-  if (contentType) {
-    const map: Record<string, string> = {
-      'image/jpeg': 'jpg',
-      'image/jpg': 'jpg',
-      'image/png': 'png',
-      'image/webp': 'webp',
-      'image/gif': 'gif',
-      'image/avif': 'avif',
-    }
-    const ext = map[contentType.split(';')[0].trim().toLowerCase()]
-    if (ext) return ext
-  }
-
-  return 'jpg'
-}
-
 const withRetry = async <T>(
   fn: () => Promise<T>,
   retries = MAX_RETRIES,
@@ -106,7 +86,6 @@ const migrateRecord = async (
   }
 
   let buffer: ArrayBuffer
-  let contentType: string | null = null
 
   try {
     const result = await withRetry(async () => {
@@ -133,7 +112,6 @@ const migrateRecord = async (
     }
 
     const res = result.response
-    contentType = res.headers.get('content-type')
     buffer = await res.arrayBuffer()
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
@@ -164,24 +142,22 @@ const migrateRecord = async (
     return { ok: false, error: `fetch: ${msg}` }
   }
 
-  const ext = getExtensionFromUrl(imageUrl, contentType)
-  const key = type === 'house' ? `houses/${id}.${ext}` : `perfumes/${id}.${ext}`
+  const key = type === 'house' ? `houses/${id}.webp` : `perfumes/${id}.webp`
 
   if (dryRun) {
     console.log(`[DRY-RUN] Would upload ${type} ${id} -> ${key}`)
     return { ok: true }
   }
 
+  let storedKey: string
   try {
-    await withRetry(() =>
-      uploadToR2(key, Buffer.from(buffer), contentType ?? undefined),
-    )
+    storedKey = await withRetry(() => uploadToR2(key, Buffer.from(buffer)))
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
     return { ok: false, error: `upload: ${msg}` }
   }
 
-  const newUrl = getR2PublicUrl(key)
+  const newUrl = getR2PublicUrl(storedKey)
 
   try {
     if (type === 'house') {

@@ -7,17 +7,21 @@ import { verifyWebhookPayload } from "@/utils/server/stripe.server"
 const STATUS_PAID = "paid" as const
 const STATUS_CANCELLED = "cancelled" as const
 
+const tierFromMetadata = (
+  meta: Stripe.Metadata | null | undefined
+): "premium" | "collector" => {
+  const raw = (meta?.membership_tier || meta?.tier || "").toLowerCase()
+  if (raw === "collector") return "collector"
+  return "premium"
+}
+
 export async function handleStripeWebhookEvent(
   event: Stripe.Event,
   deps: {
     getUserByEmail: (email: string) => Promise<{ id: string; email: string } | null>
     userUpdate: (args: {
       where: { id: string }
-      data: {
-        subscriptionStatus: typeof STATUS_PAID
-        subscriptionId: string
-        subscriptionStartDate: Date
-      }
+      data: Record<string, unknown>
     }) => Promise<unknown>
     userUpdateMany: (args: {
       where: { subscriptionId: string }
@@ -39,12 +43,14 @@ export async function handleStripeWebhookEvent(
       if (email && subscriptionId) {
         const user = await getUser(email)
         if (user) {
+          const tier = tierFromMetadata(session.metadata)
           await userUpdate({
             where: { id: user.id },
             data: {
               subscriptionStatus: STATUS_PAID,
               subscriptionId,
               subscriptionStartDate: new Date(),
+              membershipTier: tier,
             },
           })
         }
@@ -55,10 +61,12 @@ export async function handleStripeWebhookEvent(
       const subscription = event.data.object as Stripe.Subscription
       const isActive = subscription.status === "active" || subscription.status === "past_due"
       const status = isActive ? STATUS_PAID : STATUS_CANCELLED
+      const tier = isActive ? tierFromMetadata(subscription.metadata) : "free"
       await userUpdateMany({
         where: { subscriptionId: subscription.id },
         data: {
           subscriptionStatus: status,
+          membershipTier: tier,
           ...(status === STATUS_CANCELLED && { subscriptionStartDate: null }),
         },
       })
@@ -72,6 +80,7 @@ export async function handleStripeWebhookEvent(
           subscriptionStatus: STATUS_CANCELLED,
           subscriptionId: null,
           subscriptionStartDate: null,
+          membershipTier: "free",
         },
       })
       break

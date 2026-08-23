@@ -121,3 +121,36 @@ Admin scraper settings map to `lib/scraper/notes-graph.ts` after Python returns 
 Records may include `_noteSource` (`labeled_list`, `pdp_bootstrap`, `llm_description`, `llm_name_literal`, `llm_name_inferred`, `empty`). **Admin preview only** — stripped before DB import.
 
 `batchWarnings` surfaces batch-level uniformity (e.g. many products sharing the same notes); check before importing.
+
+---
+
+## Durable scraper jobs (worker)
+
+Scraper runs are persisted as `ScraperJob` rows. The browser creates a job and polls status; work continues in a worker even if the tab closes.
+
+### Local / long runs
+
+```bash
+npm run scraper:worker
+```
+
+Keep this process running for scrapes that can take tens of minutes (Selenium). Set `SCRAPER_INLINE_WORKER=false` to disable fire-and-forget inline execution from the API (recommended for production serverless).
+
+### Production (Vercel / serverless)
+
+**Do not** rely on the HTTP request lifetime for Selenium scrapes. On Vercel:
+
+1. Set `SCRAPER_INLINE_WORKER=false` in the production environment.
+2. Run `npm run scraper:worker` on a long-lived host (VM, container, or dedicated worker process) with the same `DATABASE_URL` and scraper env as the app.
+3. Headed Selenium browsers are not supported on Vercel — use the worker process only.
+
+`npm run validate:env` warns in production when `SCRAPER_INLINE_WORKER` is not `false`.
+
+### Behavior
+
+- **Claim** — Only one worker can move a job from `queued` → `running`.
+- **Heartbeat / stale recovery** — Abandoned `running` jobs are re-queued (or failed if max attempts exhausted).
+- **Cancel** — Sets `cancelRequested`; partial scraped items and records stay on the job.
+- **Retry** — Failed/cancelled jobs can be re-queued under `maxAttempts`.
+- **Import** — Still review-gated via Confirm & Import (`POST /api/admin/scraper/import`).
+

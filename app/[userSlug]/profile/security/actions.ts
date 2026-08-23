@@ -24,6 +24,11 @@ import {
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+import {
+  getUserActiveSessions,
+  invalidateAllUserSessions,
+  invalidateSession,
+} from "@/utils/security/session-manager.server"
 
 const requireSession = async () => {
   const cookieHeader = await getCookieHeader()
@@ -33,9 +38,9 @@ const requireSession = async () => {
   return session?.user ?? null
 }
 
-const rateLimitTwoFactor = (userId: string) => {
+const rateLimitTwoFactor = async (userId: string) => {
   const limits = getUserMutationRateLimits()
-  validateRateLimit(
+  await validateRateLimit(
     `two-factor:${userId}`,
     limits.twoFactor.max,
     limits.twoFactor.windowMs
@@ -63,7 +68,7 @@ export const startEnrollmentAction = async (
       return { success: false, error: "Authentication required" }
     }
     try {
-      rateLimitTwoFactor(user.id)
+      await rateLimitTwoFactor(user.id)
     } catch (e) {
       if (e instanceof Response) {
         return { success: false, error: "Too many attempts. Try again later." }
@@ -116,7 +121,7 @@ export const confirmEnrollmentAction = async (
       return { success: false, error: "Authentication required" }
     }
     try {
-      rateLimitTwoFactor(user.id)
+      await rateLimitTwoFactor(user.id)
     } catch (e) {
       if (e instanceof Response) {
         return { success: false, error: "Too many attempts. Try again later." }
@@ -178,7 +183,7 @@ export const disableTwoFactorAction = async (
       return { success: false, error: "Authentication required" }
     }
     try {
-      rateLimitTwoFactor(user.id)
+      await rateLimitTwoFactor(user.id)
     } catch (e) {
       if (e instanceof Response) {
         return { success: false, error: "Too many attempts. Try again later." }
@@ -234,7 +239,7 @@ export const changePasswordAction = async (
 
   const mutationLimits = getUserMutationRateLimits()
   try {
-    validateRateLimit(
+    await validateRateLimit(
       `change-password:${user.id}`,
       mutationLimits.changePassword.max,
       mutationLimits.changePassword.windowMs
@@ -297,7 +302,7 @@ export const regenerateBackupCodesAction = async (
       return { success: false, error: "Authentication required" }
     }
     try {
-      rateLimitTwoFactor(user.id)
+      await rateLimitTwoFactor(user.id)
     } catch (e) {
       if (e instanceof Response) {
         return { success: false, error: "Too many attempts. Try again later." }
@@ -312,6 +317,78 @@ export const regenerateBackupCodesAction = async (
       return { success: false, error: result.error }
     }
     return { success: true, backupCodes: result.backupCodes }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Something went wrong",
+    }
+  }
+}
+
+export type ActiveSessionRow = {
+  id: string
+  userAgent: string | null
+  ipAddress: string | null
+  createdAt: string
+  expiresAt: string
+}
+
+export const listActiveSessionsForUser = async (
+  userId: string
+): Promise<ActiveSessionRow[]> => {
+  const sessions = await getUserActiveSessions(userId)
+  return sessions.map((s) => ({
+    id: s.id,
+    userAgent: s.userAgent,
+    ipAddress: s.ipAddress,
+    createdAt: s.createdAt.toISOString(),
+    expiresAt: s.expiresAt.toISOString(),
+  }))
+}
+
+export type RevokeSessionState =
+  | { success: true }
+  | { success: false; error: string }
+  | null
+
+export const revokeSessionAction = async (
+  _prev: RevokeSessionState,
+  formData: FormData
+): Promise<RevokeSessionState> => {
+  const request = new Request("http://localhost", { method: "POST" })
+  try {
+    await requireCSRF(request, formData)
+    const user = await requireSession()
+    if (!user) return { success: false, error: "Authentication required" }
+
+    const sessionId = String(formData.get("sessionId") ?? "").trim()
+    if (!sessionId) return { success: false, error: "Session id required" }
+
+    const owned = await getUserActiveSessions(user.id)
+    if (!owned.some((s) => s.id === sessionId)) {
+      return { success: false, error: "Session not found" }
+    }
+    await invalidateSession(sessionId)
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Something went wrong",
+    }
+  }
+}
+
+export const revokeAllOtherSessionsAction = async (
+  _prev: RevokeSessionState,
+  formData: FormData
+): Promise<RevokeSessionState> => {
+  const request = new Request("http://localhost", { method: "POST" })
+  try {
+    await requireCSRF(request, formData)
+    const user = await requireSession()
+    if (!user) return { success: false, error: "Authentication required" }
+    await invalidateAllUserSessions(user.id)
+    return { success: true }
   } catch (error) {
     return {
       success: false,

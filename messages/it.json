@@ -1166,6 +1166,9 @@
     "about": "La Conca",
     "aboutUs": "I Custodi",
     "journal": "Journal",
+    "community": "Community",
+    "communityHub": "Scaffali e diario",
+    "membership": "Abbonamento",
     "howWeWork": "La guida del collezionista",
     "contactUs": "Corrispondenza",
     "home": "Home",
@@ -1274,6 +1277,7 @@
       "wishlist": "La mia wishlist",
       "myTrades": "I miei scambi",
       "myScents": "I miei profumi",
+      "communityHub": "Scaffali e diario",
       "accountSecurity": "Sicurezza account",
       "myReports": "Le mie segnalazioni",
       "myDisputes": "Le mie controversie"
@@ -1281,7 +1285,7 @@
   },
   "twoFactor": {
     "title": "Sicurezza account",
-    "subheading": "Aggiorna la password e gestisci l'autenticazione a due fattori (opzionale).",
+    "subheading": "Gestisci password, sessioni e autenticazione a due fattori opzionale.",
     "twoFactorSectionTitle": "Autenticazione a due fattori",
     "adminRecommendation": "L'autenticazione a due fattori è consigliata per gli account admin.",
     "disabledDescription": "Proteggi il tuo account con un'app di autenticazione. È opzionale.",
@@ -1302,7 +1306,13 @@
     "backupCodeLabel": "Codice di backup",
     "useBackupCode": "Usa codice di backup",
     "useAuthenticator": "Usa app di autenticazione",
-    "errorTitle": "Errore"
+    "errorTitle": "Errore",
+    "adminRequired": "Gli account admin ed editor devono abilitare l'autenticazione a due fattori prima di accedere all'area admin.",
+    "sessionsTitle": "Sessioni attive",
+    "sessionsDescription": "Dispositivi connessi al tuo account. Revoca quelli che non riconosci.",
+    "sessionsEmpty": "Nessuna sessione di refresh attiva.",
+    "revokeSession": "Revoca",
+    "signOutEverywhere": "Esci ovunque"
   },
   "quiz": {
     "meta": {
@@ -1378,7 +1388,9 @@
     "success": {
       "heading": "Fatto!",
       "subheading": "Useremo le tue preferenze per consigliarti profumi adatti a te.",
-      "cta": "Vai alla home"
+      "cta": "Vai alla home",
+      "shareDna": "Vedi e condividi il tuo Scent DNA",
+      "homeCta": "Torna alla home"
     }
   },
   "recommendations": {
@@ -2590,5 +2602,109 @@
       "heading": "Una comunità riflessiva",
       "subheading": "perfumer's hollow esiste per supportare i collezionisti, la scoperta e scambi rispettosi. Questi standard aiutano a mantenere il Hollow equo, affidabile e accogliente per tutti."
     }
+  },
+  "community": {
+    "title": "Community",
+    "subtitle": "Scaffali, diari di utilizzo e sfide stagionali — collezione digitale, senza vendite.",
+    "membershipCta": "Vedi i vantaggi dell’abbonamento",
+    "tabs": {
+      "shelves": "Scaffali",
+      "journal": "Diario di utilizzo",
+      "challenges": "Sfide",
+      "alerts": "Ricerche salvate"
+    },
+    "signInPrompt": "Accedi per gestire scaffali e diario di utilizzo.",
+    "signIn": "Accedi",
+    "loading": "Caricamento…",
+    "loadError": "Impossibile caricare i dati della community.",
+    "saveError": "Salvataggio non riuscito. Riprova.",
+    "createShelfTitle": "Crea uno scaffale",
+    "shelfName": "Nome dello scaffale",
+    "shelfPublic": "Rendi pubblico questo scaffale",
+    "createShelf": "Crea scaffale",
+    "shelfCreated": "Scaffale creato.",
+    "addToShelfTitle": "Aggiungi dalla collezione",
+    "shelf": "Scaffale",
+    "perfume": "Profumo",
+    "addPerfume": "Aggiungi profumo",
+    "perfumeAdded": "Profumo aggiunto allo scaffale.",
+    "yourShelves": "I tuoi scaffali",
+    "noShelves": "Nessuno scaffale ancora: creane uno per organizzare i preferiti.",
+    "emptyShelf": "Nessun profumo su questo scaffale.",
+    "deleteShelf": "Elimina",
+    "deleteShelfHeading": "Eliminare questo scaffale?",
+    "deleteShelfDescription": "“{name}” verrà rimosso. I profumi lasceranno solo lo scaffale, non la collezione.",
+    "shelfDeleted": "Scaffale eliminato.",
+    "public": "Pubblico",
+    "private": "Privato",
+    "logWearTitle": "Cosa hai indossato oggi?",
+    "needCollection": "Aggiungi prima delle fragranze alla collezione.",
+    "browseArchive": "Sfoglia l’Archivio",
+    "rating": "Valutazione (opzionale)",
+    "notes": "Note",
+    "saveWear": "Registra utilizzo",
+    "journalSaved": "Utilizzo registrato.",
+    "wearHistory": "Utilizzi recenti",
+    "noJournal": "Nessuna voce di utilizzo ancora.",
+    "rated": "Valutato {rating}/5",
+    "liveChallenges": "Sfide attive",
+    "fullChallengesPage": "Pagina completa",
+    "noChallenges": "Nessuna sfida attiva al momento: torna presto.",
+    "challengeMeta": "{count, plural, one {# partecipazione} other {# partecipazioni}} · termina {ends}",
+    "challengesPage": {
+      "heading": "Sfide della community",
+      "subheading": "Sfide ed eventi stagionali con altri collezionisti.",
+      "intro": "Partecipa agli eventi di stagione, condividi cosa indossi e scopri le liste di altri collezionisti.",
+      "journalLink": "Leggi il Journal",
+      "introAfter": "per guide editoriali collegate a note e case.",
+      "empty": "Nessuna sfida attiva al momento: torna presto, oppure crea uno scaffale pubblico da"
+    },
+    "publicShelvesLink": "Sfoglia le scaffalature pubbliche",
+    "seasonalPlanningLink": "Pianificazione stagionale"
+  },
+  "membershipPage": {
+    "heading": "Membership digitale",
+    "subheading": "Sblocca scoperta, personalizzazione e strumenti di collezione — solo digitale.",
+    "intro": "Le membership Shadow sbloccano scoperta, personalizzazione e strumenti di collezione. Non vendiamo flaconi, non elaboriamo pagamenti e non applichiamo commissioni: il valore è solo digitale.",
+    "communityLink": "Esplora Community",
+    "ctaFree": "Inizia",
+    "ctaSubscribe": "Abbonati"
+  },
+  "savedSearches": {
+    "saveButton": "Salva questa ricerca",
+    "saving": "Salvataggio…",
+    "saved": "Ricerca salvata",
+    "saveFailed": "Impossibile salvare la ricerca.",
+    "signInRequired": "Accedi per salvare le ricerche.",
+    "premiumRequired": "Ricerche salvate e avvisi istantanei sono un vantaggio Premium.",
+    "upgradeCta": "Vedi abbonamento",
+    "manageTitle": "Le tue ricerche salvate",
+    "loading": "Caricamento ricerche salvate…",
+    "loadFailed": "Impossibile caricare le ricerche salvate.",
+    "empty": "Nessuna ricerca salvata. Salva i filtri da The Archive o The Exchange.",
+    "alertsOn": "Avvisi attivi",
+    "alertsOff": "Avvisi silenziati",
+    "lastMatch": "Ultima corrispondenza {date}",
+    "mute": "Silenzia",
+    "unmute": "Riattiva",
+    "delete": "Elimina"
+  },
+  "seasonalPlanning": {
+    "title": "Indossa questa stagione",
+    "subtitle": "Suggerimenti dalla collezione, diario di uso e trend stagionali.",
+    "premiumRequired": "La pianificazione stagionale e un vantaggio Premium.",
+    "upgradeCta": "Vedi abbonamento",
+    "empty": "Aggiungi flaconi alla collezione o registra usi per sbloccare i suggerimenti.",
+    "fromCollection": "Dalla tua collezione",
+    "trending": "Di tendenza in questa stagione",
+    "recentWear": "Indossato di recente"
+  },
+  "publicShelves": {
+    "browseTitle": "Scaffalature pubbliche",
+    "browseSubtitle": "Scopri come i collezionisti organizzano i flaconi.",
+    "empty": "Nessuna scaffalatura pubblica ancora.",
+    "viewShelf": "Apri scaffalatura",
+    "byCollector": "di {name}",
+    "backToBrowse": "Tutte le scaffalature pubbliche"
   }
 }

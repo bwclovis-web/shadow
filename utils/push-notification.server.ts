@@ -91,13 +91,35 @@ export const buildPushAlertPayload = (
   title: string,
   message: string,
   metadata?: Record<string, unknown>
-): PushAlertPayload => ({
-  title,
-  body: message,
-  url: buildNotificationUrl(alertType, metadata),
-  tag: `${alertType}-${String(metadata?.tradeId ?? metadata?.splitId ?? metadata?.messageId ?? Date.now())}`,
-  alertType,
-})
+): PushAlertPayload => {
+  const kind =
+    typeof metadata?.kind === "string" ? metadata.kind : undefined
+
+  let resolvedTitle = title
+  let resolvedBody = message
+
+  if (kind === "saved_search_match") {
+    resolvedTitle = title || "Saved search match"
+    resolvedBody = message || "A perfume matching your saved search is available."
+  } else if (alertType === "new_trader_message") {
+    resolvedTitle = title || "New trade message"
+    resolvedBody = message || "You have a new message about a trade."
+  }
+
+  return {
+    title: resolvedTitle,
+    body: resolvedBody,
+    url: buildNotificationUrl(alertType, metadata),
+    tag: `${alertType}-${String(
+      metadata?.savedSearchId ??
+        metadata?.tradeId ??
+        metadata?.splitId ??
+        metadata?.messageId ??
+        Date.now()
+    )}`,
+    alertType,
+  }
+}
 
 const shouldSendPushForAlert = async (
   userId: string,

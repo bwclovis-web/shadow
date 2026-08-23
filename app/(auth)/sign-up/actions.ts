@@ -13,6 +13,10 @@ import { UserFormSchema } from "@/utils/validation/formValidationSchemas"
 import { getSignupSubscribeRateLimits } from "@/utils/rate-limit-config.server"
 import { getAuthCookieFlags } from "@/utils/security/auth-cookie.server"
 import { createSession } from "@/utils/security/session-manager.server"
+import {
+  getTurnstileTokenFromFormData,
+  verifyTurnstileToken,
+} from "@/utils/security/turnstile.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { getClientIdentifierFromHeaders } from "@/utils/server/request.server"
 import { getCheckoutSession } from "@/utils/server/stripe.server"
@@ -50,7 +54,7 @@ export const signUpAction = async (
   const rateLimits = getSignupSubscribeRateLimits()
   const clientId = getClientIdentifierFromHeaders(await headers())
   try {
-    validateRateLimit(
+    await validateRateLimit(
       `auth:signup:${clientId}`,
       rateLimits.signup.max,
       rateLimits.signup.windowMs
@@ -64,6 +68,14 @@ export const signUpAction = async (
       }
     }
     throw res
+  }
+
+  const turnstile = await verifyTurnstileToken(
+    getTurnstileTokenFromFormData(formData),
+    clientId
+  )
+  if (!turnstile.ok) {
+    return { error: turnstile.error, submission: undefined }
   }
 
   const sessionId = (formData.get("session_id") as string)?.trim() || null

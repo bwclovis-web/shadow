@@ -1,74 +1,101 @@
 #!/usr/bin/env node
-
 /**
  * Environment validation script
- * Run this script to validate your environment configuration
- * Usage: node scripts/validate-env.js
+ * Usage: npm run validate:env
+ *
+ * In production (NODE_ENV=production), missing required keys exit 1.
+ * In development, missing optional keys are warnings only.
  */
 
-// Suppress dotenv informational messages
 process.env.DOTENV_CONFIG_QUIET = "true"
 import "dotenv/config"
+import { randomBytes } from "crypto"
 
-import {
-  validateCoreSecurityEnv,
-  validateExtendedEnv,
-} from "../app/utils/security/env.server.js"
-import { generateSecureSecret } from "../app/utils/security/startup-validation.server.js"
+const isProd = process.env.NODE_ENV === "production"
 
-console.log("🔍 Voodoo Perfumes Environment Validation\n")
+const requiredAlways = ["DATABASE_URL", "JWT_SECRET"]
+const requiredProd = [
+  "DATABASE_URL",
+  "JWT_SECRET",
+  "NEXT_PUBLIC_APP_URL",
+]
+const optionalDocumented = [
+  "SESSION_SECRET",
+  "STRIPE_SECRET_KEY",
+  "STRIPE_WEBHOOK_SECRET",
+  "STRIPE_PRICE_ID",
+  "R2_ACCOUNT_ID",
+  "R2_ACCESS_KEY_ID",
+  "R2_SECRET_ACCESS_KEY",
+  "R2_BUCKET_NAME",
+  "R2_PUBLIC_URL",
+  "NEXT_PUBLIC_VAPID_PUBLIC_KEY",
+  "VAPID_PRIVATE_KEY",
+  "VAPID_SUBJECT",
+  "RESEND_API_KEY",
+  "EMAIL_FROM",
+  "NEXT_PUBLIC_SANITY_PROJECT_ID",
+  "NEXT_PUBLIC_SANITY_DATASET",
+  "TURNSTILE_SECRET_KEY",
+  "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
+  "SCRAPER_INLINE_WORKER",
+  "SCRAPER_PYTHON",
+]
 
-try {
-  // Validate core security variables
-  console.log("Validating core security variables...")
-  const coreEnv = validateCoreSecurityEnv()
-  console.log("✅ Core security environment variables are valid\n")
+const generateSecureSecret = (length = 64) =>
+  randomBytes(Math.ceil(length / 2))
+    .toString("hex")
+    .slice(0, length)
 
-  // Validate extended environment variables
-  console.log("Validating extended environment variables...")
-  const extendedEnv = validateExtendedEnv()
-  if (extendedEnv) {
-    console.log("✅ Extended environment variables are valid\n")
-  } else {
-    console.log("⚠️  Some optional environment variables may need attention\n")
-  }
+const missing = []
+const warnings = []
 
-  // Security recommendations
-  console.log("🔒 Security Recommendations:")
+const required = isProd ? requiredProd : requiredAlways
 
-  if (coreEnv.JWT_SECRET.length < 64) {
-    console.log("⚠️  Consider using a longer JWT_SECRET (64+ characters) for production")
-  } else {
-    console.log("✅ JWT_SECRET length is adequate")
-  }
+for (const key of required) {
+  const value = process.env[key]?.trim()
+  if (!value) missing.push(key)
+}
 
-  if (coreEnv.SESSION_SECRET.length < 64) {
-    console.log("⚠️  Consider using a longer SESSION_SECRET (64+ characters) for production")
-  } else {
-    console.log("✅ SESSION_SECRET length is adequate")
-  }
+const jwt = process.env.JWT_SECRET?.trim()
+if (jwt && jwt.length < 32) {
+  missing.push("JWT_SECRET (must be at least 32 characters)")
+} else if (jwt && jwt.length < 64 && isProd) {
+  warnings.push("JWT_SECRET is under 64 characters — consider a longer secret in production")
+}
 
-  if (
-    coreEnv.NODE_ENV === "production" &&
-    coreEnv.DATABASE_URL.includes("localhost")
-  ) {
-    console.log("⚠️  DATABASE_URL contains localhost in production - verify this is correct")
-  } else {
-    console.log("✅ DATABASE_URL configuration looks good")
-  }
+if (isProd && process.env.DATABASE_URL?.includes("localhost")) {
+  warnings.push("DATABASE_URL contains localhost in production — verify this is intentional")
+}
 
-  console.log("\n🎉 Environment validation completed successfully!")
-  console.log("Your application is ready to start.")
-} catch (error) {
-  console.error("❌ Environment validation failed:")
-  console.error(error.message)
-  console.log("\n💡 To fix this:")
-  console.log("1. Copy env_example.txt to .env")
-  console.log("2. Fill in your actual values")
-  console.log("3. Generate secure secrets if needed:")
-  console.log(`   JWT_SECRET=${generateSecureSecret(64)}`)
-  console.log(`   SESSION_SECRET=${generateSecureSecret(64)}`)
-  console.log("4. Run this script again to validate")
+if (isProd && process.env.SCRAPER_INLINE_WORKER !== "false") {
+  warnings.push(
+    'Set SCRAPER_INLINE_WORKER=false in production so long scrapes use `npm run scraper:worker`'
+  )
+}
 
+console.log("Environment validation\n")
+
+if (missing.length) {
+  console.error("Missing required environment variables:")
+  for (const key of missing) console.error(`  - ${key}`)
+  console.error("\nCopy .env.example to .env and fill in values.")
+  console.error(`Example JWT_SECRET=${generateSecureSecret(64)}`)
   process.exit(1)
 }
+
+console.log("Required variables present.")
+
+for (const key of optionalDocumented) {
+  if (!process.env[key]?.trim()) {
+    warnings.push(`Optional not set: ${key}`)
+  }
+}
+
+if (warnings.length) {
+  console.log("\nWarnings:")
+  for (const w of warnings) console.log(`  - ${w}`)
+}
+
+console.log("\nEnvironment validation completed.")
+process.exit(0)

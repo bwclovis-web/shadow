@@ -26,7 +26,7 @@ import {
 } from "./constants"
 
 export type ScentQuizActionState =
-  | { success: true }
+  | { success: true; userId: string }
   | { success?: false; error: string }
   | null
 
@@ -117,5 +117,16 @@ export const submitScentQuizAction = async (
   await updateScentProfileFromQuiz(session.user.id, quizData)
   await syncOnboardingCompletion(session.user.id)
 
-  return { success: true }
+  const { recordTasteEvent } = await import("@/models/taste-event.server")
+  await recordTasteEvent({
+    userId: session.user.id,
+    eventType: "quiz_answer",
+    metadata: {
+      materialCount: materialIds.length,
+      avoidCount: materialAvoidIds.length,
+      seasons: seasonHints,
+    },
+  })
+
+  return { success: true, userId: session.user.id }
 }

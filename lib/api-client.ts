@@ -81,6 +81,18 @@ export const uploadImage = async (
     file instanceof File ? file : new File([file], defaultFilename, { type: "image/jpeg" })
   formData.append("file", uploadFile)
 
+  try {
+    const { getTurnstileTokenForUpload } = await import(
+      "@/components/Molecules/Turnstile/TurnstileField"
+    )
+    const turnstileToken = await getTurnstileTokenForUpload()
+    if (turnstileToken) {
+      formData.append("cf-turnstile-response", turnstileToken)
+    }
+  } catch {
+    /* Turnstile optional when site key unset */
+  }
+
   const response = await fetch(endpoint, {
     method: "POST",
     headers: csrfHeaders,

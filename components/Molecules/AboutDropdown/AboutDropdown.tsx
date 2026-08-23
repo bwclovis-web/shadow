@@ -57,6 +57,11 @@ const AboutDropdown = ({
       path: "/the-collectors-guide",
     },
     {
+      id: "membership",
+      label: t("membership"),
+      path: "/membership",
+    },
+    {
       id: "correspondence",
       label: t("contactUs"),
       path: "/correspondence",

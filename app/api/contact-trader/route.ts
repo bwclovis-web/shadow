@@ -52,12 +52,12 @@ export async function POST(request: NextRequest) {
     const senderId = authResult.user!.id
     const limits = getContactMessageRateLimits()
     try {
-      validateRateLimit(
+      await validateRateLimit(
         `contact-trader:user:${senderId}`,
         limits.perUser.max,
         limits.perUser.windowMs
       )
-      validateRateLimit(
+      await validateRateLimit(
         `contact-trader:pair:${senderId}:${recipientId}`,
         limits.perPair.max,
         limits.perPair.windowMs

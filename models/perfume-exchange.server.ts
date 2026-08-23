@@ -24,7 +24,6 @@ const availableForDecantingUserPerfumeSelect = {
   id: true,
   perfumeId: true,
   available: true,
-  amount: true,
   price: true,
   tradePrice: true,
   tradePreference: true,
@@ -33,8 +32,6 @@ const availableForDecantingUserPerfumeSelect = {
   userId: true,
   images: true,
   condition: true,
-  decantFormat: true,
-  mlRemaining: true,
   user: {
     select: {
       id: true,
@@ -44,41 +41,18 @@ const availableForDecantingUserPerfumeSelect = {
       email: true,
     },
   },
-  comments: {
-    where: {
-      isPublic: true,
-    },
-    select: {
-      id: true,
-      userId: true,
-      perfumeId: true,
-      userPerfumeId: true,
-      comment: true,
-      isPublic: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  },
 } as const
 
 const availableForDecantingSelectBase = {
   id: true,
   name: true,
-  description: true,
   image: true,
   slug: true,
-  perfumeHouseId: true,
-  createdAt: true,
-  updatedAt: true,
   perfumeHouse: {
     select: {
       id: true,
       name: true,
       slug: true,
-      type: true,
     },
   },
   userPerfume: {

@@ -268,34 +268,16 @@ export const validateContentType = (
   return contentType
 }
 
-// Rate limiting validation (basic implementation)
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
-
-export const validateRateLimit = (
+// Rate limiting — durable Postgres-backed buckets with in-memory fallback
+export const validateRateLimit = async (
   identifier: string,
   maxRequests = 100,
   windowMs = 15 * 60 * 1000 // 15 minutes
-): void => {
-  const now = Date.now()
-  const current = rateLimitMap.get(identifier)
-
-  if (!current || now > current.resetTime) {
-    rateLimitMap.set(identifier, { count: 1, resetTime: now + windowMs })
-    return
-  }
-  if (current.count >= maxRequests) {
-    const retryAfter = Math.ceil((current.resetTime - now) / 1000)
-    throw createJsonResponse(
-      {
-        success: false,
-        error: "Rate limit exceeded",
-        retryAfter,
-      },
-      429,
-      { "Retry-After": String(retryAfter) }
-    )
-  }
-  current.count++
+): Promise<void> => {
+  const { enforceDurableRateLimit } = await import(
+    "@/utils/security/durable-rate-limit.server"
+  )
+  await enforceDurableRateLimit(identifier, maxRequests, windowMs)
 }
 
 // CSRF validation - delegates to csrf.server (timing-safe)

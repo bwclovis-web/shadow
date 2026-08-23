@@ -18,6 +18,7 @@ import { Button } from "@/components/Atoms/Button/Button"
 import FormField from "@/components/Atoms/FormField/FormField"
 import { FormInput } from "@/components/Atoms/Input"
 import { CSRFToken } from "@/components/Molecules/CSRFToken"
+import { TurnstileField } from "@/components/Molecules/Turnstile/TurnstileField"
 import { ContactUsSchema } from "@/utils/validation/formValidationSchemas"
 import { getTranslatedError } from "@/utils/validation/validationKeys"
 
@@ -168,14 +169,17 @@ const ContactUsForm = () => {
       )}
 
       {!successMessage && (
-        <Button
-          type="submit"
-          variant="primary"
-          disabled={isPending}
-          className="max-w-max"
-        >
-          {isPending ? t("sending") : t("submitButton")}
-        </Button>
+        <>
+          <TurnstileField />
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={isPending}
+            className="max-w-max"
+          >
+            {isPending ? t("sending") : t("submitButton")}
+          </Button>
+        </>
       )}
     </form>
   )

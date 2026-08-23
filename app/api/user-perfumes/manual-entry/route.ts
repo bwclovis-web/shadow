@@ -45,7 +45,7 @@ export const POST = async (request: NextRequest) => {
     await requireCSRF(request, formData)
 
     const clientId = getClientIdentifierFromHeaders(request.headers)
-    validateRateLimit(
+    await validateRateLimit(
       `manual-catalog-entry:${user.id}:${clientId}`,
       MANUAL_ENTRY_MAX_PER_HOUR,
       MANUAL_ENTRY_WINDOW_MS

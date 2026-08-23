@@ -5,6 +5,9 @@ import { prisma } from "@/lib/db"
 import { getUserTokenVersion } from "@/models/user.query"
 import { getSessionConfig } from "@/utils/security/session-config.server"
 
+const hashToken = (token: string): string =>
+  crypto.createHash("sha256").update(token).digest("hex")
+
 // Validate JWT secret
 function validateJwtSecret() {
   const jwtSecret = process.env.JWT_SECRET
@@ -20,8 +23,7 @@ function validateJwtSecret() {
 const JWT_SECRET = validateJwtSecret()
 const config = getSessionConfig()
 
-// Create access token (tokenVersion used for invalidation; callers pass 0 until session flow wires getUserTokenVersion)
-export function createAccessToken(userId: string, tokenVersion: number): string {
+export const createAccessToken = (userId: string, tokenVersion: number): string => {
   return jwt.sign(
     {
       userId,
@@ -34,8 +36,7 @@ export function createAccessToken(userId: string, tokenVersion: number): string 
   )
 }
 
-// Create refresh token (tokenVersion used for invalidation; callers pass 0 until session flow wires getUserTokenVersion)
-export function createRefreshToken(userId: string, tokenVersion: number): string {
+export const createRefreshToken = (userId: string, tokenVersion: number): string => {
   return jwt.sign(
     {
       userId,
@@ -48,8 +49,9 @@ export function createRefreshToken(userId: string, tokenVersion: number): string
   )
 }
 
-// Verify access token (async: checks payload.tokenVersion against current user.tokenVersion)
-export async function verifyAccessToken(token: string): Promise<{ userId: string } | null> {
+export const verifyAccessToken = async (
+  token: string
+): Promise<{ userId: string } | null> => {
   try {
     const payload = jwt.verify(token, JWT_SECRET) as {
       userId?: string
@@ -77,8 +79,9 @@ export async function verifyAccessToken(token: string): Promise<{ userId: string
   }
 }
 
-// Verify refresh token (async: checks payload.tokenVersion against current user.tokenVersion)
-export async function verifyRefreshToken(token: string): Promise<{ userId: string } | null> {
+export const verifyRefreshToken = async (
+  token: string
+): Promise<{ userId: string } | null> => {
   try {
     const payload = jwt.verify(token, JWT_SECRET) as {
       userId?: string
@@ -106,86 +109,196 @@ export async function verifyRefreshToken(token: string): Promise<{ userId: strin
   }
 }
 
-// Create new session (simplified - no database storage)
-export async function createSession(params: {
+export const createSession = async (params: {
   userId: string
   tokenVersion?: number
   userAgent?: string
   ipAddress?: string
-}) {
-  const { userId, tokenVersion: tokenVersionOpt } = params
+}) => {
+  const { userId, tokenVersion: tokenVersionOpt, userAgent, ipAddress } = params
   const tokenVersion =
     tokenVersionOpt !== undefined ? tokenVersionOpt : (await getUserTokenVersion(userId)) ?? 0
 
-  // Generate tokens (JWT refresh token for stateless verify in refreshAccessToken)
   const refreshToken = createRefreshToken(userId, tokenVersion)
   const accessToken = createAccessToken(userId, tokenVersion)
+  const familyId = crypto.randomUUID()
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+  const tokenHash = hashToken(refreshToken)
 
-  // Calculate expiration date
-  const expiresAt = new Date()
-  expiresAt.setTime(expiresAt.getTime() + 7 * 24 * 60 * 60 * 1000) // 7 days
+  const session = await prisma.refreshSession.create({
+    data: {
+      userId,
+      tokenHash,
+      familyId,
+      userAgent: userAgent ?? null,
+      ipAddress: ipAddress ?? null,
+      expiresAt,
+    },
+  })
 
-  // Return session data (no database storage)
   return {
     accessToken,
     refreshToken,
-    sessionId: crypto.randomUUID(), // Generate a unique session ID
+    sessionId: session.id,
     expiresAt,
   }
 }
 
-// Refresh access token using refresh token; issues new access (and new refresh) token with current tokenVersion
-export async function refreshAccessToken(refreshToken: string) {
+/**
+ * Rotate refresh token. Detects reuse of an already-rotated/revoked token
+ * and invalidates the entire session family.
+ */
+export const refreshAccessToken = async (refreshToken: string) => {
   const payload = await verifyRefreshToken(refreshToken)
   if (!payload) {
     throw new Error("Invalid refresh token")
   }
 
+  const tokenHash = hashToken(refreshToken)
+  const existing = await prisma.refreshSession.findUnique({
+    where: { tokenHash },
+  })
+
+  // Legacy tokens (pre-persistence): create a new tracked session family.
+  if (!existing) {
+    const currentVersion = (await getUserTokenVersion(payload.userId)) ?? 0
+    const accessToken = createAccessToken(payload.userId, currentVersion)
+    const newRefreshToken = createRefreshToken(payload.userId, currentVersion)
+    const familyId = crypto.randomUUID()
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    const session = await prisma.refreshSession.create({
+      data: {
+        userId: payload.userId,
+        tokenHash: hashToken(newRefreshToken),
+        familyId,
+        expiresAt,
+      },
+    })
+    return {
+      accessToken,
+      refreshToken: newRefreshToken,
+      userId: payload.userId,
+      sessionId: session.id,
+    }
+  }
+
+  if (existing.revokedAt || existing.replacedByHash) {
+    // Reuse detection — revoke entire family and bump tokenVersion.
+    await prisma.refreshSession.updateMany({
+      where: { familyId: existing.familyId, revokedAt: null },
+      data: { revokedAt: new Date(), reuseDetectedAt: new Date() },
+    })
+    await prisma.user.update({
+      where: { id: existing.userId },
+      data: { tokenVersion: { increment: 1 } },
+    })
+    throw new Error("Refresh token reuse detected")
+  }
+
+  if (existing.expiresAt.getTime() < Date.now()) {
+    await prisma.refreshSession.update({
+      where: { id: existing.id },
+      data: { revokedAt: new Date() },
+    })
+    throw new Error("Refresh token expired")
+  }
+
   const currentVersion = (await getUserTokenVersion(payload.userId)) ?? 0
   const accessToken = createAccessToken(payload.userId, currentVersion)
   const newRefreshToken = createRefreshToken(payload.userId, currentVersion)
+  const newHash = hashToken(newRefreshToken)
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+
+  await prisma.$transaction([
+    prisma.refreshSession.update({
+      where: { id: existing.id },
+      data: {
+        revokedAt: new Date(),
+        replacedByHash: newHash,
+      },
+    }),
+    prisma.refreshSession.create({
+      data: {
+        userId: payload.userId,
+        tokenHash: newHash,
+        familyId: existing.familyId,
+        userAgent: existing.userAgent,
+        ipAddress: existing.ipAddress,
+        expiresAt,
+      },
+    }),
+  ])
+
+  const newSession = await prisma.refreshSession.findUniqueOrThrow({
+    where: { tokenHash: newHash },
+  })
 
   return {
     accessToken,
     refreshToken: newRefreshToken,
     userId: payload.userId,
-    sessionId: crypto.randomUUID(),
+    sessionId: newSession.id,
   }
 }
 
-// Invalidate a single session by id. No-op: we do not store sessions server-side; only "invalidate all" per user is supported via invalidateAllUserSessions(userId).
-export async function invalidateSession(sessionId: string) {
-  void sessionId
-  // No database operation; call invalidateAllUserSessions(userId) to revoke all tokens for a user.
-}
-
-// Invalidate all user sessions by incrementing tokenVersion so existing JWTs fail verification
-export async function invalidateAllUserSessions(userId: string) {
-  await prisma.user.update({
-    where: { id: userId },
-    data: { tokenVersion: { increment: 1 } },
+export const invalidateSession = async (sessionId: string) => {
+  await prisma.refreshSession.updateMany({
+    where: { id: sessionId, revokedAt: null },
+    data: { revokedAt: new Date() },
   })
 }
 
-// Get active session (simplified - no database lookup)
-export async function getActiveSession(sessionId: string) {
-  void sessionId
-  // In a cookie-based system, we don't store sessions in the database
-  // Return null to indicate no database session
-  return null
+export const invalidateAllUserSessions = async (userId: string) => {
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: userId },
+      data: { tokenVersion: { increment: 1 } },
+    }),
+    prisma.refreshSession.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    }),
+  ])
 }
 
-// Clean up expired sessions (simplified - no database cleanup needed)
-export async function cleanupExpiredSessions() {
-  // In a cookie-based system, expired sessions are automatically invalid
-  // No database cleanup needed
-  return 0
+export const getActiveSession = async (sessionId: string) => {
+  const session = await prisma.refreshSession.findFirst({
+    where: {
+      id: sessionId,
+      revokedAt: null,
+      expiresAt: { gt: new Date() },
+    },
+  })
+  return session
 }
 
-// Get user's active sessions (simplified - no database lookup)
-export async function getUserActiveSessions(userId: string) {
-  void userId
-  // In a cookie-based system, we don't track sessions in the database
-  // Return empty array
-  return []
+export const cleanupExpiredSessions = async () => {
+  const result = await prisma.refreshSession.deleteMany({
+    where: {
+      OR: [
+        { expiresAt: { lt: new Date() } },
+        { revokedAt: { not: null } },
+      ],
+    },
+  })
+  return result.count
+}
+
+export const getUserActiveSessions = async (userId: string) => {
+  return prisma.refreshSession.findMany({
+    where: {
+      userId,
+      revokedAt: null,
+      expiresAt: { gt: new Date() },
+    },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      familyId: true,
+      userAgent: true,
+      ipAddress: true,
+      createdAt: true,
+      expiresAt: true,
+    },
+  })
 }

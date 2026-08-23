@@ -14,6 +14,10 @@ import { sendTransactionalEmail } from "@/utils/email.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getClientIdentifierFromHeaders } from "@/utils/server/request.server"
+import {
+  getTurnstileTokenFromFormData,
+  verifyTurnstileToken,
+} from "@/utils/security/turnstile.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import {
   ContactUsSchema,
@@ -47,7 +51,7 @@ const rateLimitOrFatal = async (
   const h = await headers()
   const clientId = getClientIdentifierFromHeaders(h)
   try {
-    validateRateLimit(`${keyPrefix}:${clientId}`, max, windowMs)
+    await validateRateLimit(`${keyPrefix}:${clientId}`, max, windowMs)
   } catch (e) {
     if (e instanceof Response) {
       const data = (await e.json().catch(() => ({}))) as { error?: string }
@@ -92,6 +96,15 @@ export const submitContactUsAction = async (
 
   const csrf = await csrfOrFatal(formData)
   if (csrf) return csrf
+
+  const clientId = getClientIdentifierFromHeaders(await headers())
+  const turnstile = await verifyTurnstileToken(
+    getTurnstileTokenFromFormData(formData),
+    clientId
+  )
+  if (!turnstile.ok) {
+    return { _fatal: true, message: turnstile.error }
+  }
 
   const submission = parseWithZod(formData, { schema: ContactUsSchema })
   if (submission.status !== "success") {

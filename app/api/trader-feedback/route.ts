@@ -29,15 +29,13 @@ export async function GET(request: NextRequest) {
     const includeComments = params.getBoolean("includeComments")
     const sortRaw = params.get("sort")?.trim().toLowerCase()
     const sort = sortRaw === "recent" ? "recent" : "top"
-    const viewerRaw = params.get("viewerId")
-    let viewerId: string | null = null
-    if (viewerRaw?.trim()) {
-      const v = viewerRaw.trim()
-      if (!isValidPrismaRecordId(v)) {
-        return NextResponse.json({ error: "Invalid viewer ID" }, { status: 400 })
-      }
-      viewerId = v
-    }
+
+    // Bind viewer to the authenticated session — never trust client-supplied viewerId.
+    const authResult = await authenticateUser(request)
+    const viewerId =
+      authResult.success && authResult.user?.id && authResult.user.id !== traderId
+        ? authResult.user.id
+        : null
 
     const {
       summary,
@@ -47,18 +45,14 @@ export async function GET(request: NextRequest) {
       contributorBadges,
       canLeaveFeedback,
       eligibleTradeId,
-    } = await getTraderFeedbackForProfile(
-      traderId,
-      viewerId && viewerId !== traderId ? viewerId : null,
-      {
-        includeList: includeComments,
-        sort,
-        ...(includeComments && {
-          listLimit: pagination.limit,
-          listOffset: pagination.skip,
-        }),
-      }
-    )
+    } = await getTraderFeedbackForProfile(traderId, viewerId, {
+      includeList: includeComments,
+      sort,
+      ...(includeComments && {
+        listLimit: pagination.limit,
+        listOffset: pagination.skip,
+      }),
+    })
 
     return NextResponse.json({
       success: true,

@@ -10,6 +10,7 @@ import { Button, VooDooLink } from "@/components/Atoms/Button"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { PaginationBar } from "@/components/Molecules/PaginationBar"
 import { FilterChipStrip } from "@/components/Molecules/FilterChipStrip"
+import { SaveSearchButton } from "@/components/Molecules/SaveSearchButton/SaveSearchButton"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import { ExchangePerfumeCard } from "@/components/Molecules/ExchangePerfumeCard"
 import { ExchangeOpenSplitChip } from "@/components/Molecules/ExchangeOpenSplitChip/ExchangeOpenSplitChip"
@@ -518,6 +519,30 @@ const TheExchangeClient = ({
                     className="rounded-md border border-noir-light/40 bg-noir-gray/40 p-3"
                   />
                 ) : null}
+                {(discoveryFiltersActive(discoveryFromUrl) ||
+                  Boolean(localSearchValue.trim())) && (
+                  <SaveSearchButton
+                    name={`Exchange: ${(
+                      localSearchValue.trim() ||
+                      discoveryFromUrl.perfumeId ||
+                      discoveryFromUrl.houseId ||
+                      "filters"
+                    )
+                      .toString()
+                      .slice(0, 60)}`}
+                    query={{
+                      q: localSearchValue.trim() || undefined,
+                      houseId: discoveryFromUrl.houseId ?? undefined,
+                      perfumeId: discoveryFromUrl.perfumeId ?? undefined,
+                      noteIds: discoveryFromUrl.noteIds.length
+                        ? discoveryFromUrl.noteIds
+                        : undefined,
+                      source: "exchange",
+                      alertOnNewListing: true,
+                      alertOnEditorial: false,
+                    }}
+                  />
+                )}
                 <div className="max-w-md mx-auto lg:mx-0 lg:max-w-none">
                   <SearchInput
                     id="exchange-search"

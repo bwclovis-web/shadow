@@ -69,6 +69,7 @@ export interface TraderFeedbackResponse {
 export interface TraderFeedbackQueryParams {
   traderId: string
   includeComments?: boolean
+  /** @deprecated Ignored — viewer is derived from the session cookie. */
   viewerId?: string | null
   sort?: TraderFeedbackSort
   signal?: AbortSignal
@@ -78,9 +79,9 @@ export const queryKeys = {
   traderFeedback: {
     detail: (
       traderId: string,
-      viewerId?: string | null,
+      _viewerId?: string | null,
       sort?: TraderFeedbackSort
-    ) => ["traderFeedback", traderId, viewerId ?? null, sort ?? "top"] as const,
+    ) => ["traderFeedback", traderId, sort ?? "top"] as const,
   },
 } as const
 
@@ -90,7 +91,6 @@ export const getTraderFeedback = async (
   const {
     traderId,
     includeComments = true,
-    viewerId,
     sort = "top",
     signal,
   } = params
@@ -100,10 +100,6 @@ export const getTraderFeedback = async (
     includeComments: String(includeComments),
     sort,
   })
-
-  if (viewerId) {
-    searchParams.append("viewerId", viewerId)
-  }
 
   const response = await fetch(`/api/trader-feedback?${searchParams.toString()}`, {
     credentials: "include",

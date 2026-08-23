@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   const authLimits = getAuthRateLimits()
   const clientId = getClientIdentifier(request)
   try {
-    validateRateLimit(
+    await validateRateLimit(
       `auth:refresh:${clientId}`,
       authLimits.refresh.max,
       authLimits.refresh.windowMs

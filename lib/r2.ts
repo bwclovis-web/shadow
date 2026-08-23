@@ -6,6 +6,12 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3'
 
+import {
+  normalizeR2ObjectKeyToWebp,
+  prepareImageBufferForR2,
+  R2_WEBP_CONTENT_TYPE,
+} from '@/lib/r2-webp'
+
 const getRequiredEnv = (key: string): string => {
   const raw = process.env[key]
   const value = typeof raw === 'string' ? raw.trim() : ''
@@ -129,22 +135,28 @@ export async function checkR2BucketExists(): Promise<{ ok: true } | { ok: false;
 }
 
 /**
- * Uploads a buffer to R2. Key should not include leading slash.
- * @param key - Object key (e.g. houses/123.jpg or perfumes/456.webp)
- * @param buffer - Raw file bytes
- * @param contentType - Optional MIME type (e.g. image/jpeg, image/webp)
+ * Uploads an image buffer to R2 as WebP.
+ * Key extension is normalized to `.webp`; JPEG/PNG/etc. are converted before upload.
+ * Already-WebP buffers are stored as-is (key still ends in `.webp`).
+ *
+ * @param key - Object key (e.g. houses/123.jpg or perfumes/456.webp) — extension rewritten to .webp
+ * @param buffer - Raw image bytes
+ * @param _contentType - Ignored; uploads always use image/webp (kept for call-site compatibility)
+ * @returns The object key that was written
  */
 export const uploadToR2 = async (
   key: string,
   buffer: Buffer,
-  contentType?: string,
-): Promise<void> => {
+  _contentType?: string,
+): Promise<string> => {
+  const webpKey = normalizeR2ObjectKeyToWebp(key)
+  const webpBuffer = await prepareImageBufferForR2(buffer)
   const bucket = bucketName()
   const command = new PutObjectCommand({
     Bucket: bucket,
-    Key: key,
-    Body: buffer,
-    ...(contentType && { ContentType: contentType }),
+    Key: webpKey,
+    Body: webpBuffer,
+    ContentType: R2_WEBP_CONTENT_TYPE,
   })
   try {
     await getR2Client().send(command)
@@ -160,6 +172,7 @@ export const uploadToR2 = async (
     }
     throw err
   }
+  return webpKey
 }
 
 /** Base URL of the R2 public bucket (no trailing slash). Used to detect "already on R2" and for next.config. */

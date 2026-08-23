@@ -47,7 +47,7 @@ export const verify2faAction = async (
     const authLimits = getAuthRateLimits()
     const clientId = getClientIdentifierFromHeaders(await headers())
     try {
-      validateRateLimit(
+      await validateRateLimit(
         `auth:verify-2fa:${clientId}`,
         authLimits.verify2fa.max,
         authLimits.verify2fa.windowMs

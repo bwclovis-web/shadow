@@ -38,7 +38,7 @@ export const subscribeAction = async (
   const rateLimits = getSignupSubscribeRateLimits()
   const clientId = getClientIdentifierFromHeaders(await headers())
   try {
-    validateRateLimit(
+    await validateRateLimit(
       `auth:subscribe:${clientId}`,
       rateLimits.subscribe.max,
       rateLimits.subscribe.windowMs

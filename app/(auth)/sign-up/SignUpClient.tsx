@@ -11,6 +11,7 @@ import { Button } from "@/components/Atoms/Button/Button"
 import { VooDooLink } from "@/components/Atoms/Button/VooDooLink"
 import CheckBox from "@/components/Atoms/CheckBox/CheckBox"
 import { CSRFToken } from "@/components/Molecules/CSRFToken"
+import { TurnstileField } from "@/components/Molecules/Turnstile/TurnstileField"
 import PasswordStrengthIndicator from "@/components/Organisms/PasswordStrengthIndicator"
 import { UserFormSchema } from "@/utils/validation/formValidationSchemas"
 import { signUpAction, type SignUpActionState } from "./actions"
@@ -140,6 +141,7 @@ const SignUpClient = ({ sessionId, prefillEmail }: SignUpClientProps) => {
         {state?.error && (
           <p className="text-red-600 mb-2">{state.error}</p>
         )}
+        <TurnstileField />
         <Button type="submit" variant="icon" background="gold" size="xl">
           {tForms("submit")}
         </Button>

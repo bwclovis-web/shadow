@@ -48,7 +48,7 @@ export const POST = async (request: NextRequest) => {
     const { action, targetType, targetId } = parsed.data
 
     try {
-      validateRateLimit(
+      await validateRateLimit(
         `follow:user:${followerId}`,
         FOLLOW_RATE_LIMIT.max,
         FOLLOW_RATE_LIMIT.windowMs

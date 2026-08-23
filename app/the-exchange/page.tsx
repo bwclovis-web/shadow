@@ -21,6 +21,7 @@ import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
 import TheExchangeClient from "./TheExchangeClient"
+import type { ExchangePageData } from "./exchange-types"
 
 export const revalidate = 60
 
@@ -177,7 +178,9 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
         />
       ) : null}
       <TheExchangeClient
-      availablePerfumes={availablePerfumes}
+      availablePerfumes={
+        availablePerfumes as unknown as ExchangePageData["availablePerfumes"]
+      }
       pagination={pagination}
       searchQuery={searchQuery}
       initialNoteTags={initialNoteTags}

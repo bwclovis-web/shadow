@@ -78,6 +78,16 @@ model User {
   decantSplitEvents         DecantSplitEvent[]   @relation("DecantSplitEventActor")
   submittedPerfumes         Perfume[]            @relation("PerfumeSubmittedByUser")
   submittedPerfumeHouses    PerfumeHouse[]       @relation("PerfumeHouseSubmittedByUser")
+  refreshSessions           RefreshSession[]
+  tasteEvents               TasteEvent[]
+  recommendationFeedback    RecommendationFeedback[]
+  savedSearches             SavedSearch[]
+  samplingQueueItems        SamplingQueueItem[]
+  collectionShelves         CollectionShelf[]
+  userLists                 UserList[]
+  wearJournalEntries        WearJournalEntry[]
+  communityChallengeEntries CommunityChallengeEntry[]
+  membershipTier            MembershipTier       @default(free)
 }
 
 model PerfumeHouse {
@@ -149,6 +159,13 @@ model Perfume {
   wishlistNotifications WishlistNotification[]
   followedBy            UserFollow[]
   decantSplits          DecantSplit[]
+  tasteEvents           TasteEvent[]
+  recommendationFeedback RecommendationFeedback[]
+  samplingQueueItems    SamplingQueueItem[]
+  collectionShelfItems  CollectionShelfItem[]
+  userListItems         UserListItem[]
+  wearJournalEntries    WearJournalEntry[]
+  communityChallengeEntries CommunityChallengeEntry[]
 
   @@index([slug], name: "idx_perfume_slug")
   @@index([perfumeHouseId, createdAt], name: "idx_perfume_house_created")
@@ -415,6 +432,253 @@ model SecurityAuditLog {
   metadata   Json?
   createdAt  DateTime              @default(now())
   User       User?                 @relation(fields: [userId], references: [id])
+}
+
+/// Durable sliding-window rate limit counters (shared across serverless instances).
+model RateLimitBucket {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  count     Int      @default(0)
+  resetAt   DateTime
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@index([resetAt])
+}
+
+/// Persisted refresh sessions (hashed token) for rotation + reuse detection.
+model RefreshSession {
+  id               String    @id @default(cuid())
+  userId           String
+  tokenHash        String    @unique
+  familyId         String
+  userAgent        String?
+  ipAddress        String?
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  replacedByHash   String?
+  reuseDetectedAt  DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([familyId])
+  @@index([expiresAt])
+}
+
+/// Unified preference / taste signals for recommendations and digests.
+model TasteEvent {
+  id          String         @id @default(cuid())
+  userId      String
+  perfumeId   String?
+  eventType   TasteEventType
+  weight      Float          @default(1)
+  metadata    Json?
+  createdAt   DateTime       @default(now())
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  perfume     Perfume?       @relation(fields: [perfumeId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([userId, eventType])
+  @@index([perfumeId])
+}
+
+model RecommendationFeedback {
+  id          String                       @id @default(cuid())
+  userId      String
+  perfumeId   String
+  action      RecommendationFeedbackAction
+  source      String?
+  createdAt   DateTime                     @default(now())
+  user        User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  perfume     Perfume                      @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, perfumeId, action])
+  @@index([userId, createdAt])
+  @@index([perfumeId])
+}
+
+model SavedSearch {
+  id            String              @id @default(cuid())
+  userId        String
+  name          String
+  query         Json
+  alertEnabled  Boolean             @default(true)
+  lastMatchedAt DateTime?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alerts        SavedSearchAlert[]
+
+  @@index([userId, alertEnabled])
+}
+
+model SavedSearchAlert {
+  id            String    @id @default(cuid())
+  savedSearchId String
+  title         String
+  message       String
+  payload       Json?
+  isRead        Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  savedSearch   SavedSearch @relation(fields: [savedSearchId], references: [id], onDelete: Cascade)
+
+  @@index([savedSearchId, isRead, createdAt])
+}
+
+model SamplingQueueItem {
+  id          String              @id @default(cuid())
+  userId      String
+  perfumeId   String
+  status      SamplingQueueStatus @default(queued)
+  notes       String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  perfume     Perfume             @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, perfumeId])
+  @@index([userId, status])
+}
+
+model CollectionShelf {
+  id          String                 @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  isPublic    Boolean                @default(false)
+  sortOrder   Int                    @default(0)
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       CollectionShelfItem[]
+
+  @@index([userId, sortOrder])
+}
+
+model CollectionShelfItem {
+  id        String          @id @default(cuid())
+  shelfId   String
+  perfumeId String
+  note      String?
+  sortOrder Int             @default(0)
+  createdAt DateTime        @default(now())
+  shelf     CollectionShelf @relation(fields: [shelfId], references: [id], onDelete: Cascade)
+  perfume   Perfume         @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+
+  @@unique([shelfId, perfumeId])
+  @@index([perfumeId])
+}
+
+model UserList {
+  id          String         @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  isPublic    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items       UserListItem[]
+
+  @@index([userId, createdAt])
+}
+
+model UserListItem {
+  id        String   @id @default(cuid())
+  listId    String
+  perfumeId String
+  note      String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  list      UserList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  perfume   Perfume  @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+
+  @@unique([listId, perfumeId])
+}
+
+model WearJournalEntry {
+  id          String   @id @default(cuid())
+  userId      String
+  perfumeId   String
+  wornOn      DateTime @db.Date
+  season      String?
+  rating      Int?
+  notes       String?
+  weather     String?
+  occasion    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  perfume     Perfume  @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+
+  @@index([userId, wornOn])
+  @@index([perfumeId])
+}
+
+model CommunityChallenge {
+  id          String                     @id @default(cuid())
+  slug        String                     @unique
+  title       String
+  description String?
+  startsAt    DateTime
+  endsAt      DateTime
+  isPublished Boolean                    @default(false)
+  createdAt   DateTime                   @default(now())
+  updatedAt   DateTime                   @updatedAt
+  entries     CommunityChallengeEntry[]
+}
+
+model CommunityChallengeEntry {
+  id          String             @id @default(cuid())
+  challengeId String
+  userId      String
+  perfumeId   String?
+  caption     String?
+  createdAt   DateTime           @default(now())
+  challenge   CommunityChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  perfume     Perfume?           @relation(fields: [perfumeId], references: [id], onDelete: SetNull)
+
+  @@unique([challengeId, userId])
+  @@index([userId])
+}
+
+/// Durable admin scraper jobs (progress, cancel, partial recovery).
+model ScraperJob {
+  id                 String           @id @default(cuid())
+  status             ScraperJobStatus @default(queued)
+  collectionUrl      String
+  houseName          String?
+  platform           String?
+  /// Full ScraperConfig JSON used to run/resume the job.
+  configJson         Json?
+  progressJson       Json?
+  resultJson         Json?
+  /// Partial scraped items (JSON array) preserved across restarts/cancel.
+  partialScrapedJson Json?
+  /// Partial extracted records (JSON array) preserved across restarts/cancel.
+  partialRecordsJson Json?
+  errorMessage       String?
+  createdByUserId    String?
+  startedAt          DateTime?
+  finishedAt         DateTime?
+  cancelRequested    Boolean          @default(false)
+  attemptCount       Int              @default(0)
+  maxAttempts        Int              @default(3)
+  lockedAt           DateTime?
+  lockedBy           String?
+  lastHeartbeatAt    DateTime?
+  /// Last successfully completed stage for resume (queued|scraping|normalizing|note_extraction|duplicate_analysis|ready_for_review).
+  resumeStage        String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([status, createdAt])
+  @@index([createdByUserId])
+  @@index([status, lockedAt])
+  @@index([lastHeartbeatAt])
 }
 
 model UserLoginEvent {
@@ -765,6 +1029,50 @@ enum UserRole {
 enum SubscriptionStatus {
   free
   paid
+  cancelled
+}
+
+enum MembershipTier {
+  free
+  premium
+  collector
+}
+
+enum TasteEventType {
+  quiz_answer
+  rating
+  dislike
+  skip_recommendation
+  owned
+  wishlist
+  sample_outcome
+  wear
+  season_pref
+  budget_pref
+  projection_pref
+  longevity_pref
+  compare
+}
+
+enum RecommendationFeedbackAction {
+  not_for_me
+  already_own
+  sampled
+  more_like_this
+}
+
+enum SamplingQueueStatus {
+  queued
+  sampling
+  completed
+  skipped
+}
+
+enum ScraperJobStatus {
+  queued
+  running
+  completed
+  failed
   cancelled
 }
 

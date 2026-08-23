@@ -20,6 +20,7 @@ import {
   type SortOption,
 } from "@/utils/sortUtils"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
+import { SaveSearchButton } from "@/components/Molecules/SaveSearchButton/SaveSearchButton"
 
 const BANNER_IMAGE = "/images/new/vault.webp"
 const SINGLE_LETTER_REGEX = /^[A-Za-z]$/
@@ -297,6 +298,20 @@ const TheArchiveClient = ({
           className="mb-8"
         />
 
+        {isSearchMode && activeSearchQuery ? (
+          <div className="mb-6">
+            <SaveSearchButton
+              name={`Archive: ${activeSearchQuery.slice(0, 80)}`}
+              query={{
+                q: activeSearchQuery,
+                perfumeName: activeSearchQuery,
+                source: "archive",
+                alertOnEditorial: true,
+                alertOnNewListing: true,
+              }}
+            />
+          </div>
+        ) : null}
         <AlphabeticalNav
           selectedLetter={isSearchMode || isFeaturedMode ? null : letterFromUrl}
           onLetterSelect={handleLetterClick}

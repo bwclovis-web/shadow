@@ -16,7 +16,7 @@ export const POST = async (request: NextRequest) => {
 
     const { userId, formData } = auth
 
-    validateRateLimit(`decant-split-create:user:${userId}`, 10, 60 * 60 * 1000)
+    await validateRateLimit(`decant-split-create:user:${userId}`, 10, 60 * 60 * 1000)
 
     const parsed = CreateDecantSplitSchema.safeParse({
       perfumeId: formData.get("perfumeId"),

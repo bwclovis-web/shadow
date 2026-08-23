@@ -63,16 +63,60 @@ const PerformanceDashboard = ({
     setIsCollecting(true)
 
     try {
-      // Collect Core Web Vitals
       const webVitals: CoreWebVitals = {
         lcp: 0,
         fid: 0,
+        inp: 0,
         cls: 0,
         fcp: 0,
+        ttfb: 0,
         tti: 0,
       }
 
-      // Collect navigation timing (entry can be missing in client-side nav)
+      // Paint timing → FCP
+      const paints = performance.getEntriesByType("paint") as PerformancePaintTiming[]
+      const fcpEntry = paints.find(e => e.name === "first-contentful-paint")
+      if (fcpEntry) webVitals.fcp = fcpEntry.startTime
+
+      // LCP from PerformanceObserver buffer
+      const lcpEntries = performance.getEntriesByType(
+        "largest-contentful-paint"
+      ) as PerformanceEntry[]
+      if (lcpEntries.length > 0) {
+        const last = lcpEntries[lcpEntries.length - 1] as PerformanceEntry & {
+          startTime: number
+        }
+        webVitals.lcp = last.startTime
+      }
+
+      // CLS from layout-shift entries
+      const shifts = performance.getEntriesByType("layout-shift") as Array<
+        PerformanceEntry & { value: number; hadRecentInput?: boolean }
+      >
+      webVitals.cls = shifts
+        .filter(s => !s.hadRecentInput)
+        .reduce((sum, s) => sum + (s.value || 0), 0)
+
+      // INP / FID from event / first-input
+      const firstInputs = performance.getEntriesByType("first-input") as Array<
+        PerformanceEntry & { processingStart: number; startTime: number }
+      >
+      if (firstInputs[0]) {
+        webVitals.fid = firstInputs[0].processingStart - firstInputs[0].startTime
+      }
+      const eventEntries = performance.getEntriesByType("event") as Array<
+        PerformanceEntry & { duration: number; name?: string }
+      >
+      if (eventEntries.length > 0) {
+        const durations = eventEntries.map(e => e.duration).sort((a, b) => a - b)
+        // Approximate INP as high-percentile interaction duration
+        const idx = Math.min(
+          durations.length - 1,
+          Math.floor(durations.length * 0.98)
+        )
+        webVitals.inp = durations[idx] ?? 0
+      }
+
       type NavTiming = PerformanceEntry & {
         domainLookupStart: number
         domainLookupEnd: number
@@ -83,6 +127,7 @@ const PerformanceDashboard = ({
         navigationStart: number
         domContentLoadedEventEnd: number
         loadEventEnd: number
+        domInteractive?: number
       }
       const navEntry = performance.getEntriesByType("navigation")[0] as NavTiming | undefined
       const navigationMetrics: PerformanceMetrics = {
@@ -96,8 +141,11 @@ const PerformanceDashboard = ({
           ? navEntry.loadEventEnd - navEntry.navigationStart
           : 0,
       }
+      webVitals.ttfb = navigationMetrics.ttfb
+      if (navEntry?.domInteractive != null) {
+        webVitals.tti = navEntry.domInteractive - navEntry.navigationStart
+      }
 
-      // Collect resource information (entries are PerformanceResourceTiming in practice)
       const resources = performance.getEntriesByType("resource") as PerformanceResourceTiming[]
       const resourceMetrics = {
         count: resources.length,
@@ -111,8 +159,15 @@ const PerformanceDashboard = ({
         ),
       }
 
-      // Collect memory information (Chrome-only API)
-      const perfMemory = (performance as Performance & { memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number } }).memory
+      const perfMemory = (
+        performance as Performance & {
+          memory?: {
+            usedJSHeapSize: number
+            totalJSHeapSize: number
+            jsHeapSizeLimit: number
+          }
+        }
+      ).memory
       const memory = perfMemory
         ? {
             used: perfMemory.usedJSHeapSize,
@@ -131,17 +186,64 @@ const PerformanceDashboard = ({
 
       setPerformanceData(data)
 
-      // Check for performance alerts
       const newAlerts: string[] = []
-      if (navigationMetrics.loadComplete > thresholds.lcp) {
-        newAlerts.push(`Page load time (${navigationMetrics.loadComplete.toFixed(0)}ms) exceeds LCP threshold (${thresholds.lcp}ms)`)
+      if (webVitals.lcp > 0 && webVitals.lcp > thresholds.lcp) {
+        newAlerts.push(
+          `LCP (${webVitals.lcp.toFixed(0)}ms) exceeds threshold (${thresholds.lcp}ms)`
+        )
+      }
+
+      // Track LCP samples for a rolling week; alert if p75 stays above 2.5s
+      if (webVitals.lcp > 0 && typeof window !== "undefined") {
+        try {
+          const key = "perf-lcp-week"
+          const weekMs = 7 * 24 * 60 * 60 * 1000
+          const now = Date.now()
+          const prev = JSON.parse(window.localStorage.getItem(key) ?? "[]") as Array<{
+            t: number
+            lcp: number
+          }>
+          const next = [
+            ...prev.filter((s) => now - s.t < weekMs),
+            { t: now, lcp: webVitals.lcp },
+          ].slice(-200)
+          window.localStorage.setItem(key, JSON.stringify(next))
+          if (next.length >= 8) {
+            const sorted = [...next].map((s) => s.lcp).sort((a, b) => a - b)
+            const p75 = sorted[Math.floor(sorted.length * 0.75)] ?? 0
+            if (p75 > thresholds.lcp) {
+              newAlerts.push(
+                `LCP p75 over the last week (${p75.toFixed(0)}ms) exceeds ${thresholds.lcp}ms`
+              )
+            }
+          }
+        } catch {
+          /* ignore storage errors */
+        }
+      }
+
+      if (webVitals.cls > thresholds.cls) {
+        newAlerts.push(
+          `CLS (${webVitals.cls.toFixed(3)}) exceeds threshold (${thresholds.cls})`
+        )
+      }
+      if (webVitals.inp > 0 && webVitals.inp > thresholds.fid) {
+        newAlerts.push(
+          `INP (${webVitals.inp.toFixed(0)}ms) exceeds threshold (${thresholds.fid}ms)`
+        )
+      }
+      if (webVitals.fcp > 0 && webVitals.fcp > thresholds.fcp) {
+        newAlerts.push(
+          `FCP (${webVitals.fcp.toFixed(0)}ms) exceeds threshold (${thresholds.fcp}ms)`
+        )
       }
       if (resourceMetrics.count > 50) {
         newAlerts.push(`High resource count: ${resourceMetrics.count} resources loaded`)
       }
       if (resourceMetrics.totalSize > 2 * 1024 * 1024) {
-        // 2MB
-        newAlerts.push(`Large bundle size: ${(resourceMetrics.totalSize / 1024 / 1024).toFixed(1)}MB`)
+        newAlerts.push(
+          `Large bundle size: ${(resourceMetrics.totalSize / 1024 / 1024).toFixed(1)}MB`
+        )
       }
 
       setAlerts(newAlerts)
@@ -151,6 +253,47 @@ const PerformanceDashboard = ({
       setIsCollecting(false)
     }
   }, [enabled, thresholds])
+
+  useEffect(() => {
+    if (!enabled || typeof window === "undefined") return
+
+    let lcpObserver: PerformanceObserver | undefined
+    let clsObserver: PerformanceObserver | undefined
+    let inpObserver: PerformanceObserver | undefined
+
+    try {
+      lcpObserver = new PerformanceObserver(() => {
+        collectPerformanceData()
+      })
+      lcpObserver.observe({ type: "largest-contentful-paint", buffered: true })
+    } catch {
+      /* unsupported */
+    }
+
+    try {
+      clsObserver = new PerformanceObserver(() => {
+        collectPerformanceData()
+      })
+      clsObserver.observe({ type: "layout-shift", buffered: true })
+    } catch {
+      /* unsupported */
+    }
+
+    try {
+      inpObserver = new PerformanceObserver(() => {
+        collectPerformanceData()
+      })
+      inpObserver.observe({ type: "event", buffered: true, durationThreshold: 16 } as PerformanceObserverInit)
+    } catch {
+      /* unsupported */
+    }
+
+    return () => {
+      lcpObserver?.disconnect()
+      clsObserver?.disconnect()
+      inpObserver?.disconnect()
+    }
+  }, [enabled, collectPerformanceData])
 
   useEffect(() => {
     if (!enabled) {
@@ -235,41 +378,41 @@ const PerformanceDashboard = ({
       {/* Core Web Vitals */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-700 mb-4">Core Web Vitals</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="text-sm text-gray-600 mb-1">
               Largest Contentful Paint
             </div>
             <div className="text-2xl font-bold text-gray-800">
-              {performanceData.navigation.loadComplete.toFixed(0)}ms
+              {performanceData.webVitals.lcp.toFixed(0)}ms
             </div>
             <div
               className={`text-sm ${getScoreColor(getPerformanceScore(
-                  performanceData.navigation.loadComplete,
+                  performanceData.webVitals.lcp,
                   thresholds.lcp
                 ))}`}
             >
               {getPerformanceScore(
-                performanceData.navigation.loadComplete,
+                performanceData.webVitals.lcp,
                 thresholds.lcp
               ).replace("-", " ")}
             </div>
           </div>
 
           <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="text-sm text-gray-600 mb-1">Time to Interactive</div>
+            <div className="text-sm text-gray-600 mb-1">INP</div>
             <div className="text-2xl font-bold text-gray-800">
-              {performanceData.navigation.domContentLoaded.toFixed(0)}ms
+              {performanceData.webVitals.inp.toFixed(0)}ms
             </div>
             <div
               className={`text-sm ${getScoreColor(getPerformanceScore(
-                  performanceData.navigation.domContentLoaded,
-                  thresholds.tti
+                  performanceData.webVitals.inp || performanceData.webVitals.fid,
+                  thresholds.fid
                 ))}`}
             >
               {getPerformanceScore(
-                performanceData.navigation.domContentLoaded,
-                thresholds.tti
+                performanceData.webVitals.inp || performanceData.webVitals.fid,
+                thresholds.fid
               ).replace("-", " ")}
             </div>
           </div>
@@ -277,16 +420,16 @@ const PerformanceDashboard = ({
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="text-sm text-gray-600 mb-1">First Contentful Paint</div>
             <div className="text-2xl font-bold text-gray-800">
-              {performanceData.navigation.domContentLoaded.toFixed(0)}ms
+              {performanceData.webVitals.fcp.toFixed(0)}ms
             </div>
             <div
               className={`text-sm ${getScoreColor(getPerformanceScore(
-                  performanceData.navigation.domContentLoaded,
+                  performanceData.webVitals.fcp,
                   thresholds.fcp
                 ))}`}
             >
               {getPerformanceScore(
-                performanceData.navigation.domContentLoaded,
+                performanceData.webVitals.fcp,
                 thresholds.fcp
               ).replace("-", " ")}
             </div>
@@ -309,6 +452,20 @@ const PerformanceDashboard = ({
                 thresholds.cls,
                 true
               ).replace("-", " ")}
+            </div>
+          </div>
+
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="text-sm text-gray-600 mb-1">TTFB</div>
+            <div className="text-2xl font-bold text-gray-800">
+              {performanceData.webVitals.ttfb.toFixed(0)}ms
+            </div>
+          </div>
+
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <div className="text-sm text-gray-600 mb-1">DOM Interactive</div>
+            <div className="text-2xl font-bold text-gray-800">
+              {performanceData.webVitals.tti.toFixed(0)}ms
             </div>
           </div>
         </div>

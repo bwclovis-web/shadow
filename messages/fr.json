@@ -1166,6 +1166,9 @@
     "about": "Le Creux",
     "aboutUs": "Les Gardiens",
     "journal": "Journal",
+    "community": "Communauté",
+    "communityHub": "Étagères et journal",
+    "membership": "Abonnement",
     "howWeWork": "Le guide du collectionneur",
     "contactUs": "Correspondance",
     "home": "Accueil",
@@ -1274,6 +1277,7 @@
       "wishlist": "Ma liste de souhaits",
       "myTrades": "Mes échanges",
       "myScents": "Mes parfums",
+      "communityHub": "Étagères et journal",
       "accountSecurity": "Sécurité du compte",
       "myReports": "Mes signalements",
       "myDisputes": "Mes litiges"
@@ -1281,7 +1285,7 @@
   },
   "twoFactor": {
     "title": "Sécurité du compte",
-    "subheading": "Mettez à jour votre mot de passe et gérez l'authentification à deux facteurs (optionnel).",
+    "subheading": "Gerez votre mot de passe, vos sessions et l'authentification a deux facteurs.",
     "twoFactorSectionTitle": "Authentification à deux facteurs",
     "adminRecommendation": "L'authentification à deux facteurs est recommandée pour les comptes admin.",
     "disabledDescription": "Protégez votre compte avec une application d'authentification. C'est optionnel.",
@@ -1302,7 +1306,13 @@
     "backupCodeLabel": "Code de secours",
     "useBackupCode": "Utiliser un code de secours",
     "useAuthenticator": "Utiliser l'application d'authentification",
-    "errorTitle": "Erreur"
+    "errorTitle": "Erreur",
+    "adminRequired": "Les comptes admin et editeur doivent activer l'authentification a deux facteurs avant d'acceder a l'espace d'administration.",
+    "sessionsTitle": "Sessions actives",
+    "sessionsDescription": "Appareils connectes a votre compte. Revoquez ceux que vous ne reconnaissez pas.",
+    "sessionsEmpty": "Aucune session de rafraichissement active.",
+    "revokeSession": "Revoquer",
+    "signOutEverywhere": "Se deconnecter partout"
   },
   "quiz": {
     "meta": {
@@ -1378,7 +1388,9 @@
     "success": {
       "heading": "C'est noté !",
       "subheading": "Nous utiliserons vos préférences pour vous recommander des parfums.",
-      "cta": "Accueil"
+      "cta": "Accueil",
+      "shareDna": "Voir et partager votre Scent DNA",
+      "homeCta": "Retour a l'accueil"
     }
   },
   "recommendations": {
@@ -2590,5 +2602,109 @@
       "heading": "Une communauté attentionnée",
       "subheading": "perfumer's hollow existe pour soutenir les collectionneurs, la découverte et des échanges respectueux. Ces normes contribuent à garder le Hollow équitable, digne de confiance et accueillant pour tous."
     }
+  },
+  "community": {
+    "title": "Communauté",
+    "subtitle": "Étagères, journaux de port et défis saisonniers — collection numérique, sans ventes.",
+    "membershipCta": "Voir les avantages d’abonnement",
+    "tabs": {
+      "shelves": "Étagères",
+      "journal": "Journal de port",
+      "challenges": "Défis",
+      "alerts": "Recherches enregistrees"
+    },
+    "signInPrompt": "Connectez-vous pour gérer vos étagères et votre journal de port.",
+    "signIn": "Se connecter",
+    "loading": "Chargement…",
+    "loadError": "Impossible de charger les données de la communauté.",
+    "saveError": "Enregistrement impossible. Réessayez.",
+    "createShelfTitle": "Créer une étagère",
+    "shelfName": "Nom de l’étagère",
+    "shelfPublic": "Rendre cette étagère publique",
+    "createShelf": "Créer l’étagère",
+    "shelfCreated": "Étagère créée.",
+    "addToShelfTitle": "Ajouter depuis votre collection",
+    "shelf": "Étagère",
+    "perfume": "Parfum",
+    "addPerfume": "Ajouter le parfum",
+    "perfumeAdded": "Parfum ajouté à l’étagère.",
+    "yourShelves": "Vos étagères",
+    "noShelves": "Pas encore d’étagère — créez-en une pour organiser vos favoris.",
+    "emptyShelf": "Pas encore de parfums sur cette étagère.",
+    "deleteShelf": "Supprimer",
+    "deleteShelfHeading": "Supprimer cette étagère ?",
+    "deleteShelfDescription": "« {name} » sera supprimée. Les parfums quitteront seulement l’étagère, pas votre collection.",
+    "shelfDeleted": "Étagère supprimée.",
+    "public": "Publique",
+    "private": "Privée",
+    "logWearTitle": "Qu’avez-vous porté aujourd’hui ?",
+    "needCollection": "Ajoutez d’abord des parfums à votre collection.",
+    "browseArchive": "Parcourir les Archives",
+    "rating": "Note (facultatif)",
+    "notes": "Notes",
+    "saveWear": "Enregistrer le port",
+    "journalSaved": "Port enregistré.",
+    "wearHistory": "Ports récents",
+    "noJournal": "Aucune entrée de port pour l’instant.",
+    "rated": "Noté {rating}/5",
+    "liveChallenges": "Défis en cours",
+    "fullChallengesPage": "Page complète",
+    "noChallenges": "Aucun défi en cours pour le moment — revenez bientôt.",
+    "challengeMeta": "{count, plural, one {# participation} other {# participations}} · se termine le {ends}",
+    "challengesPage": {
+      "heading": "Défis communautaires",
+      "subheading": "Défis et événements saisonniers avec d’autres collectionneurs.",
+      "intro": "Rejoignez les événements de saison, partagez ce que vous portez et découvrez les listes d’autres collectionneurs.",
+      "journalLink": "Lire le Journal",
+      "introAfter": "pour des guides éditoriaux liés aux notes et aux maisons.",
+      "empty": "Aucun défi en cours pour le moment — revenez bientôt, ou créez une étagère publique depuis"
+    },
+    "publicShelvesLink": "Parcourir les etageres publiques",
+    "seasonalPlanningLink": "Planification saisonniere"
+  },
+  "membershipPage": {
+    "heading": "Abonnement numérique",
+    "subheading": "Débloquez découverte, personnalisation et outils de collection — uniquement numérique.",
+    "intro": "Les abonnements Shadow débloquent découverte, personnalisation et outils de collection. Nous ne vendons pas de flacons, ne traitons pas de paiements et ne facturons pas de frais de transaction — la valeur est uniquement numérique.",
+    "communityLink": "Explorer Community",
+    "ctaFree": "Commencer",
+    "ctaSubscribe": "S’abonner"
+  },
+  "savedSearches": {
+    "saveButton": "Enregistrer cette recherche",
+    "saving": "Enregistrement…",
+    "saved": "Recherche enregistree",
+    "saveFailed": "Impossible d'enregistrer la recherche.",
+    "signInRequired": "Connectez-vous pour enregistrer des recherches.",
+    "premiumRequired": "Les recherches enregistrees et alertes instantanees sont un avantage Premium.",
+    "upgradeCta": "Voir l'abonnement",
+    "manageTitle": "Vos recherches enregistrees",
+    "loading": "Chargement des recherches…",
+    "loadFailed": "Impossible de charger les recherches enregistrees.",
+    "empty": "Aucune recherche enregistree. Enregistrez des filtres depuis The Archive ou The Exchange.",
+    "alertsOn": "Alertes activees",
+    "alertsOff": "Alertes en sourdine",
+    "lastMatch": "Derniere correspondance {date}",
+    "mute": "Couper",
+    "unmute": "Reactiver",
+    "delete": "Supprimer"
+  },
+  "seasonalPlanning": {
+    "title": "Porter cette saison",
+    "subtitle": "Suggestions depuis votre collection, journal de port et tendances saisonnieres.",
+    "premiumRequired": "La planification saisonniere est un avantage Premium.",
+    "upgradeCta": "Voir l'abonnement",
+    "empty": "Ajoutez des flacons a votre collection ou notez des ports pour debloquer des suggestions.",
+    "fromCollection": "Depuis votre collection",
+    "trending": "Tendance cette saison",
+    "recentWear": "Porte recemment"
+  },
+  "publicShelves": {
+    "browseTitle": "Etageres publiques",
+    "browseSubtitle": "Decouvrez comment les collectionneurs organisent leurs flacons.",
+    "empty": "Pas encore d'etageres publiques.",
+    "viewShelf": "Ouvrir l'etagere",
+    "byCollector": "par {name}",
+    "backToBrowse": "Toutes les etageres publiques"
   }
 }

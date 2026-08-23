@@ -111,6 +111,8 @@ export const ScraperPageClient = () => {
   const scrapeAbortRef = useRef<AbortController | null>(null)
   const scrapeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const userCancelledScrapeRef = useRef(false)
+  const activeJobIdRef = useRef<string | null>(null)
+  const [activeJobId, setActiveJobId] = useState<string | null>(null)
 
   useEffect(() => {
     const saved = loadScrapeResultFromStorage()
@@ -428,6 +430,9 @@ export const ScraperPageClient = () => {
     setImportConfirmed(false)
     setRetryR2Result(null)
     setRetryR2Error(null)
+    setScrapeProgressLog([])
+    setActiveJobId(null)
+    activeJobIdRef.current = null
 
     const body = buildScraperRunRequest()
     if (body.collectionUrls.length === 0) {
@@ -446,7 +451,7 @@ export const ScraperPageClient = () => {
 
     try {
       const csrf = getTokenWithFallback()
-      const res = await fetch("/api/admin/scraper/run", {
+      const createRes = await fetch("/api/admin/scraper/jobs", {
         method: "POST",
         headers: addToHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({
@@ -456,72 +461,142 @@ export const ScraperPageClient = () => {
         credentials: "include",
         signal: ac.signal,
       })
-      if (scrapeTimeoutRef.current != null) {
-        clearTimeout(scrapeTimeoutRef.current)
-        scrapeTimeoutRef.current = null
+
+      const created = (await createRes.json().catch(() => ({}))) as {
+        ok?: boolean
+        jobId?: string
+        error?: string
+        inlineWorker?: boolean
       }
 
-      if (!res.ok || !res.body) {
-        const data = (await res.json().catch(() => ({}))) as ScraperRunResponse
-        setScrapeError(data?.errors?.join("\n") ?? `Server error ${res.status}`)
+      if (!createRes.ok || !created.ok || !created.jobId) {
+        setScrapeError(created.error ?? `Server error ${createRes.status}`)
         return
       }
 
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ""
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split("\n")
-        buffer = lines.pop() ?? ""
-        for (const line of lines) {
-          const trimmed = line.trim()
-          if (!trimmed) continue
-          try {
-            const obj = JSON.parse(trimmed) as {
-              type: string
-              message?: string
-              data?: ScraperRunResponse
-            }
-            if (obj.type === "log" && typeof obj.message === "string") {
-              setScrapeProgressLog(prev => [...prev, obj.message!])
-            } else if (obj.type === "result" && obj.data) {
-              const data = obj.data
-              if (!data.ok) {
-                setScrapeError(data.errors?.join("\n") ?? "Unknown error")
-              } else {
-                setScrapeResult(data)
-                saveScrapeResultToStorage(data)
-                setSavedScrapeResult(null)
-              }
-              return
-            }
-          } catch {
-            // skip malformed lines
+      const jobId = created.jobId
+      activeJobIdRef.current = jobId
+      setActiveJobId(jobId)
+      setScrapeProgressLog(prev => [
+        ...prev,
+        `Durable job ${jobId} created.`,
+        created.inlineWorker === false
+          ? "Inline worker disabled — run `npm run scraper:worker` (or enable SCRAPER_INLINE_WORKER)."
+          : "Worker started (inline). Polling job status…",
+      ])
+
+      let lastStage = ""
+      while (!ac.signal.aborted) {
+        if (userCancelledScrapeRef.current) break
+
+        const statusRes = await fetch(`/api/admin/scraper/jobs/${jobId}`, {
+          credentials: "include",
+          signal: ac.signal,
+        })
+        const statusData = (await statusRes.json().catch(() => ({}))) as {
+          ok?: boolean
+          job?: {
+            status?: string
+            progress?: { stage?: string; percent?: number; message?: string }
+            errorMessage?: string | null
+            cancelRequested?: boolean
           }
+          error?: string
         }
-      }
-      if (buffer.trim()) {
-        try {
-          const obj = JSON.parse(buffer.trim()) as { type: string; data?: ScraperRunResponse }
-          if (obj.type === "result" && obj.data) {
-            const data = obj.data
-            if (!data.ok) setScrapeError(data.errors?.join("\n") ?? "Unknown error")
-            else {
-              setScrapeResult(data)
-              saveScrapeResultToStorage(data)
-              setSavedScrapeResult(null)
-            }
+
+        if (!statusRes.ok || !statusData.ok || !statusData.job) {
+          setScrapeError(statusData.error ?? `Failed to poll job ${jobId}`)
+          return
+        }
+
+        const job = statusData.job
+        const stage = job.progress?.stage ?? job.status ?? ""
+        const percent = job.progress?.percent
+        const message = job.progress?.message
+        const stageLine = [
+          stage,
+          typeof percent === "number" ? `${percent}%` : null,
+          message,
+        ]
+          .filter(Boolean)
+          .join(" · ")
+
+        if (stageLine && stageLine !== lastStage) {
+          lastStage = stageLine
+          setScrapeProgressLog(prev => [...prev, stageLine])
+        }
+
+        if (job.status === "completed") {
+          const resultsRes = await fetch(
+            `/api/admin/scraper/jobs/${jobId}?results=1`,
+            { credentials: "include", signal: ac.signal }
+          )
+          const resultsData = (await resultsRes.json().catch(() => ({}))) as {
+            ok?: boolean
+            results?: ScraperRunResponse
+            error?: string
+          }
+          if (!resultsRes.ok || !resultsData.results) {
+            setScrapeError(resultsData.error ?? "Job completed but results missing")
+            return
+          }
+          const data = resultsData.results
+          if (!data.ok && (!data.records || data.records.length === 0)) {
+            setScrapeError(data.errors?.join("\n") ?? "Unknown error")
           } else {
-            setScrapeError("Stream ended without a result")
+            setScrapeResult({ ...data, jobId })
+            saveScrapeResultToStorage({ ...data, jobId })
+            setSavedScrapeResult(null)
           }
-        } catch {
-          setScrapeError("Incomplete response from server")
+          return
         }
+
+        if (job.status === "failed") {
+          setScrapeError(job.errorMessage ?? "Scraper job failed")
+          return
+        }
+
+        if (job.status === "cancelled") {
+          const resultsRes = await fetch(
+            `/api/admin/scraper/jobs/${jobId}?results=1`,
+            { credentials: "include", signal: ac.signal }
+          )
+          const resultsData = (await resultsRes.json().catch(() => ({}))) as {
+            results?: ScraperRunResponse
+          }
+          if (resultsData.results?.records?.length) {
+            setScrapeResult({ ...resultsData.results, jobId })
+            setScrapeError(
+              "Scrape cancelled. Partial results were preserved for review when available."
+            )
+          } else {
+            setScrapeError(
+              "Scrape cancelled. Your form settings are unchanged. Partial work was preserved on the job record."
+            )
+          }
+          return
+        }
+
+        await new Promise<void>((resolve, reject) => {
+          const timer = setTimeout(resolve, 2000)
+          const onAbort = () => {
+            clearTimeout(timer)
+            reject(new DOMException("Aborted", "AbortError"))
+          }
+          if (ac.signal.aborted) {
+            onAbort()
+            return
+          }
+          ac.signal.addEventListener("abort", onAbort, { once: true })
+        })
+      }
+
+      if (userCancelledScrapeRef.current) {
+        setScrapeError(
+          "Scrape cancel requested. The worker will stop between products and preserve partial results."
+        )
       } else {
-        setScrapeError("Stream ended without a result")
+        setScrapeError("Polling stopped before the job finished")
       }
     } catch (err) {
       const raw = err instanceof Error ? err.message : "Unknown error"
@@ -531,15 +606,14 @@ export const ScraperPageClient = () => {
 
       if (userCancelled && isAborted) {
         setScrapeError(
-          "Scrape cancelled. Your form settings are unchanged. The dev server keeps running; the Python scraper and note-extraction step for this run were stopped.",
+          "Scrape cancelled. Your form settings are unchanged. Partial results remain on the durable job if any were saved."
         )
       } else if (raw === "Failed to fetch" || isAborted) {
         setScrapeError(
           (isAborted ? "Request timed out (90 min).\n\n" : "Failed to fetch\n\n") +
-            "This usually means the run took too long and the connection was closed (browser, proxy, or server timeout).\n\n" +
+            "For long runs, keep `npm run scraper:worker` running so jobs continue after the browser disconnects.\n\n" +
             "• Use 1–2 collection URLs first to confirm the scraper works.\n" +
-            "• Then run in smaller batches so each run finishes in a few minutes.\n" +
-            "• Keep this tab in the foreground and don’t close it until the run completes.",
+            "• Then run in smaller batches so each run finishes in a few minutes."
         )
       } else {
         setScrapeError(raw)
@@ -550,6 +624,8 @@ export const ScraperPageClient = () => {
         scrapeTimeoutRef.current = null
       }
       scrapeAbortRef.current = null
+      activeJobIdRef.current = null
+      setActiveJobId(null)
       setScraping(false)
     }
   }
@@ -561,8 +637,18 @@ export const ScraperPageClient = () => {
       clearTimeout(scrapeTimeoutRef.current)
       scrapeTimeoutRef.current = null
     }
+    const jobId = activeJobIdRef.current
+    if (jobId) {
+      const csrf = getTokenWithFallback()
+      void fetch(`/api/admin/scraper/jobs/${jobId}`, {
+        method: "DELETE",
+        headers: addToHeaders({ "Content-Type": "application/json" }),
+        body: JSON.stringify(csrf ? { _csrf: csrf } : {}),
+        credentials: "include",
+      }).catch(() => undefined)
+    }
     scrapeAbortRef.current?.abort()
-    setScrapeProgressLog(prev => [...prev, "— Cancelled by user —"])
+    setScrapeProgressLog(prev => [...prev, "— Cancel requested —"])
   }
 
   const handleImport = async () => {
@@ -924,6 +1010,7 @@ export const ScraperPageClient = () => {
           scrapeElapsedSeconds={scrapeElapsedSeconds}
           scrapeProgressLog={scrapeProgressLog}
           onCancelScrape={handleCancelScrape}
+          jobId={activeJobId}
         />
       )}
 

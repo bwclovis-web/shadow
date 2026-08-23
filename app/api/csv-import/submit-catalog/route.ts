@@ -36,12 +36,12 @@ export const POST = async (request: NextRequest) => {
     await requireCSRFForJsonBody(request, body)
 
     try {
-      validateRateLimit(
+      await validateRateLimit(
         `csv-import-submit-catalog:user:${user.id}`,
         CSV_SUBMIT_CATALOG_RATE_LIMIT_MAX,
         CSV_SUBMIT_CATALOG_RATE_LIMIT_WINDOW_MS
       )
-      validateRateLimit(
+      await validateRateLimit(
         `pending-submission:user:${user.id}`,
         PENDING_SUBMISSION_MAX_PER_HOUR,
         PENDING_SUBMISSION_WINDOW_MS
