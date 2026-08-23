@@ -6,14 +6,14 @@ import { getTranslations } from "next-intl/server"
 
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { PortableTextContent } from "@/components/Containers/Blog/PortableTextContent"
-import { JOURNAL_PATH } from "@/constants/routes"
-import { getArticleBySlug, getPublishedArticles } from "@/lib/sanity/articles.server"
+import { HOUSE_DETAIL_PATH, JOURNAL_PATH, PERFUME_PATH } from "@/constants/routes"
+import { getArticleBySlug, getAllPublishedArticles } from "@/lib/sanity/articles.server"
 import { getArticleCoverUrl } from "@/lib/sanity/image"
 import { buildArticleJsonLd } from "@/lib/sanity/json-ld"
-import { brandPageTitle } from "@/lib/seo/metadata"
+import { buildPageMetadata } from "@/lib/seo/metadata"
 import { isSanityConfigured } from "@/sanity/env"
 
-export const revalidate = 3600
+export const revalidate = 60
 
 type Props = {
   params: Promise<{ slug: string }>
@@ -21,36 +21,41 @@ type Props = {
 
 export const generateStaticParams = async () => {
   if (!isSanityConfigured) return []
-  const articles = await getPublishedArticles()
-  return articles.map((article) => ({ slug: article.slug }))
+  const articles = await getAllPublishedArticles()
+  const seen = new Set<string>()
+  return articles.flatMap(article => {
+    if (!article.slug || seen.has(article.slug)) return []
+    seen.add(article.slug)
+    return [{ slug: article.slug }]
+  })
 }
 
 export const generateMetadata = async ({ params }: Props): Promise<Metadata> => {
   const { slug } = await params
   const article = await getArticleBySlug(slug)
   if (!article) {
-    return { title: "Article not found" }
+    return { title: "Article not found", robots: { index: false, follow: false } }
   }
 
   const ogImage = getArticleCoverUrl(article.coverImage)
   const title = `${article.title} — Journal`
-  const socialTitle = brandPageTitle(title)
-  return {
+  const base = buildPageMetadata({
     title,
     description: article.excerpt ?? undefined,
+    canonicalPath: `/journal/${slug}`,
+    ogImage: ogImage
+      ? { url: ogImage, width: 1200, height: 630, alt: article.title }
+      : undefined,
+    ogType: "article",
+  })
+
+  return {
+    ...base,
     openGraph: {
-      title: socialTitle,
-      description: article.excerpt ?? undefined,
+      ...base.openGraph,
       type: "article",
       publishedTime: article.publishedAt,
       authors: [article.author],
-      ...(ogImage ? { images: [{ url: ogImage, width: 1200, height: 630, alt: article.title }] } : {}),
-    },
-    twitter: {
-      card: ogImage ? "summary_large_image" : "summary",
-      title: socialTitle,
-      description: article.excerpt ?? undefined,
-      ...(ogImage ? { images: [ogImage] } : {}),
     },
   }
 }
@@ -122,6 +127,50 @@ const ArticleDetailPage = async ({ params }: Props) => {
       ) : null}
 
       <PortableTextContent value={article.body} />
+
+      {(article.houseRefs && article.houseRefs.length > 0) ||
+      (article.perfumeRefs && article.perfumeRefs.length > 0) ? (
+        <aside className="max-w-3xl mx-auto mt-12 pt-10 border-t border-noir-gold/40 space-y-8">
+          {article.houseRefs && article.houseRefs.length > 0 ? (
+            <section>
+              <h2 className="font-headline text-2xl text-noir-gold mb-4">
+                {t("exploreHouses")}
+              </h2>
+              <ul className="flex flex-wrap gap-3">
+                {article.houseRefs.map(houseSlug => (
+                  <li key={houseSlug}>
+                    <PrefetchLink
+                      href={`${HOUSE_DETAIL_PATH}/${houseSlug}`}
+                      className="text-blue-200 underline hover:text-noir-gold"
+                    >
+                      {houseSlug.replace(/-/g, " ")}
+                    </PrefetchLink>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+          {article.perfumeRefs && article.perfumeRefs.length > 0 ? (
+            <section>
+              <h2 className="font-headline text-2xl text-noir-gold mb-4">
+                {t("explorePerfumes")}
+              </h2>
+              <ul className="flex flex-wrap gap-3">
+                {article.perfumeRefs.map(perfumeSlug => (
+                  <li key={perfumeSlug}>
+                    <PrefetchLink
+                      href={`${PERFUME_PATH}/${perfumeSlug}`}
+                      className="text-blue-200 underline hover:text-noir-gold"
+                    >
+                      {perfumeSlug.replace(/-/g, " ")}
+                    </PrefetchLink>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+        </aside>
+      ) : null}
     </article>
   )
 }

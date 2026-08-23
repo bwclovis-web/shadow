@@ -74,7 +74,21 @@ If these keys are missing from the JSON, use sensible defaults (e.g. no delay, 1
 
 ---
 
-## Missing notes (description inside tab containers)
+## Squarespace collection scrape returns 0 products (e.g. Immortal Perfumes)
+
+**Symptom:** The same collection URL that previously returned dozens of products completes in a few minutes with `0 products found`. Job `discoveredUrls` is empty. Python discovery logs `sitemap.xml → 406`.
+
+**Cause:** Squarespace `sitemap.xml` returns **406 Not Acceptable** when the HTTP client sends an HTML-only `Accept` header (`text/html,application/xhtml+xml`). Discovery then falls back to the collection page with the default Shopify selector `a[href*='/products/']`, which does **not** match Squarespace PDPs (`/{collection}/p/{slug}`). A timeout on that selector used to return immediately and skip other fallbacks.
+
+**Fix (in code):** Discovery retries 406 with a broader `Accept` (xml + `*/*`). Collection-page crawl no longer returns on selector timeout; it also looks for `a[href*='/p/']`.
+
+**What to do if it happens again:**
+
+1. Confirm the catalog is still live (the collection page should list products in a normal browser).
+2. Re-run with **Open visible browser** so collection-page fallbacks can run if HTTP discovery is blocked.
+3. If the house uses Squarespace, product URLs look like `/perfumes/p/…` — not Shopify `/products/…`. Auto discovery should pick those up from the sitemap once Accept is correct.
+
+---
 
 **Symptom:** The scraper finds the product but note extraction returns few or no notes; the notes are in a tab (e.g. “Ingredients”, “Details”) that isn’t the default visible one.
 

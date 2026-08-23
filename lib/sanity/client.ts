@@ -11,7 +11,8 @@ const getSanityClient = (): SanityClient | null => {
       projectId,
       dataset,
       apiVersion,
-      useCdn: true,
+      // CDN can lag briefly after publish; skip in local so Studio → /journal is snappy.
+      useCdn: process.env.NODE_ENV === "production",
       perspective: "published",
     })
   }
@@ -21,7 +22,7 @@ const getSanityClient = (): SanityClient | null => {
 export const sanityFetch = async <T>({
   query,
   params = {},
-  revalidate = 3600,
+  revalidate = 60,
   tags = [],
 }: {
   query: string
@@ -33,9 +34,11 @@ export const sanityFetch = async <T>({
   if (!client) {
     return [] as T
   }
+  // Keep time-based revalidation even when tags are set. Tags alone with
+  // `revalidate: false` freeze an empty journal until a webhook fires.
   return client.fetch<T>(query, params, {
     next: {
-      revalidate: tags.length > 0 ? false : revalidate,
+      revalidate,
       ...(tags.length > 0 ? { tags } : {}),
     },
   })

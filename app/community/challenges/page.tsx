@@ -5,15 +5,19 @@ import { getTranslations } from "next-intl/server"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 import TitleBanner from "@/components/Organisms/TitleBanner"
+import { buildPageMetadata } from "@/lib/seo/metadata"
 import { listPublishedChallenges } from "@/models/community.server"
 
 /** Placeholder hero — swap when a dedicated challenges asset is ready. */
 const BANNER_IMAGE = "/images/new/quiz.webp"
 
-export const metadata: Metadata = {
-  title: "Community challenges | Shadow",
-  description: "Seasonal scent challenges and community events.",
-}
+export const generateMetadata = async (): Promise<Metadata> =>
+  buildPageMetadata({
+    title: "Community challenges",
+    description: "Seasonal scent challenges and community events.",
+    canonicalPath: "/community/challenges",
+    ogImage: BANNER_IMAGE,
+  })
 
 const CommunityChallengesPage = async () => {
   const t = await getTranslations("community")

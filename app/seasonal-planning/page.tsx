@@ -15,6 +15,7 @@ import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 export const metadata: Metadata = {
   title: "Seasonal planning",
   description: "Wear this season suggestions from your collection and journal.",
+  robots: { index: false, follow: false },
 }
 
 const SeasonalPlanningPage = async () => {

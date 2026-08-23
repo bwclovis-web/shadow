@@ -244,13 +244,22 @@ const significantNameTokensForUrlMatch = (name: string): string[] => {
 }
 
 /** True when the scraped PDP URL plausibly belongs to this product name. */
+/** Squarespace Commerce default PDP slugs (`/p/template-xxxxx`) are opaque IDs, not name slugs. */
+const isOpaqueSquarespaceProductSlug = (pathname: string): boolean => {
+  const lastSeg = pathname.split("/").filter(Boolean).pop() ?? ""
+  return /^template-[a-z0-9-]+$/i.test(lastSeg)
+}
+
 export const detailUrlAlignsWithProductName = (name: string, detailURL: string): boolean => {
   if (!name?.trim() || !detailURL?.trim()) return true
   if (NON_PERFUME_ANDROMEDA_PRODUCT_URL_RE.test(detailURL)) return false
   try {
     const tokens = significantNameTokensForUrlMatch(name)
     if (tokens.length === 0) return true
-    const slug = new URL(detailURL).pathname.toLowerCase().replace(/-/g, " ")
+    const pathname = new URL(detailURL).pathname.toLowerCase()
+    // Opaque platform IDs cannot be validated against the product name — do not treat as mismatch.
+    if (isOpaqueSquarespaceProductSlug(pathname)) return true
+    const slug = pathname.replace(/-/g, " ")
     return tokens.some(t => slug.includes(t))
   } catch {
     return true

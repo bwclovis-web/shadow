@@ -99,6 +99,8 @@ export const DOM_ARTIFACT_EXACT_TOKENS = new Set([
   "bottom-bun",
   "burger",
   "hamburger",
+  "squarespace",
+  "made with squarespace",
 ])
 
 /** Kebab-case segment vocabulary — DOM/UI class name parts, not fragrance materials. */

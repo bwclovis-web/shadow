@@ -577,6 +577,7 @@ const POLICY_BOILERPLATE_START_PATTERNS: RegExp[] = [
   /\bindependent\s+interpretation\s+inspired\b/i,
   /\ball\s+perfumes?\s+are\s+hand[-\s]?(?:filled|poured)\s+to\s+order\b/i,
   /\bhttps?:\/\//i,
+  /\bmade\s+with\s+squarespace\b/i,
 ]
 
 /** Story copy before Fragrance Notes — must not truncate note extraction source. */
@@ -831,6 +832,7 @@ export const sanitizeCopyForNotePipeline = (text: string): string => {
   s = s.replace(/\n{3,}/g, "\n\n").trim()
   s = s.replace(/\bI\s+cone\b/gi, "I come")
   s = s.replace(/\bcone\s+to\b/gi, "come to")
+  s = s.replace(/\bMade\s+with\s+Squarespace\b/gi, " ")
   return s.trim()
 }
 
@@ -1038,7 +1040,7 @@ const normalizeImplicitLayerColons = (text: string): string => {
 /** Stop last layer chunk before Pattern/Etsy listing meta (avoids ':' in tokens → junk filter drops all base notes). */
 const truncateAtShopMetaLabels = (s: string): string => {
   const m = s.match(
-    /\s+(?:series|perfume\s+family|unisex|contains\s+true\s+animalics|scent\s+strength|extra info|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|original\s+manufacturers|vibe\s*&\s*wear|vibe\b|wear\s*&\s*performance|wear\s+guide\b|good\s+to\s+know\b|season\s*:|projection\s*:|longevity\s*:|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b|description|product\s+reviews?(?:\s*&\s*videos?)?|related\s+products|shopping\s+cart)\b/i,
+    /\s+(?:series|perfume\s+family|unisex|contains\s+true\s+animalics|scent\s+strength|extra info|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|original\s+manufacturers|vibe\s*&\s*wear|vibe\b|wear\s*&\s*performance|wear\s+guide\b|good\s+to\s+know\b|season\s*:|projection\s*:|longevity\s*:|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b|description|product\s+reviews?(?:\s*&\s*videos?)?|related\s+products|shopping\s+cart|made\s+with\s+squarespace)\b/i,
   )
   if (m?.index != null) return s.slice(0, m.index).trim()
   return s.trim()
@@ -1074,7 +1076,7 @@ const truncateChunkAtProseStart = (chunk: string): string => {
 
   // Marketing paragraph starters that signal the end of the note list and begin prose
   const PROSE_STARTS =
-    /(?:\b(?:perfect|ideal|great|wonderful|excellent)\s+(?:for|choice|option)\b|\ba\s+(?:great|perfect|beautiful|wonderful|stunning|luxurious|gorgeous|rich|dark|warm|sensual|cozy)\s+choice\b|\b(?:this\s+(?:fragrance|scent|perfume|inspired|is)|the\s+(?:opening|drydown|dry\s+down|base\s+(?:lingers|settles|brings))|inspired\s+by|perfect\s+for\s+anyone|opens?\s+with\s+(?:a|the)|think\s+(?:crisp|fresh|warm|cool|dark|soft)|vibe\b|scent\s+story\b|how\s+it\s+wears|wear\s*&\s*performance\b|wear\s+guide\b|good\s+to\s+know\b|whether\s+you(?:'|'|&#39;)re\b|surrounds\s+you\s+in\b|sweet,\s*glamorous\b|glamorous\s*&\s*addictive\b|season\s*:|projection\s*:|longevity\s*:|available\s+sizes?|important\s+(?:information|shop|order)|all\s+perfumes?\s+are\s+hand|this\s+is\s+(?:a|an|the)\s+kind|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b|original\s+manufacturers\b|wrap\s+(?:yourself|your\s+senses)|float\s+into|if\s+you\s+love)\b|description\s*:|(?:\s|^)description\b|like\s+(?:a|an)\b|each\s+(?:spray|spritz)\b)/i
+    /(?:\b(?:perfect|ideal|great|wonderful|excellent)\s+(?:for|choice|option)\b|\ba\s+(?:great|perfect|beautiful|wonderful|stunning|luxurious|gorgeous|rich|dark|warm|sensual|cozy)\s+choice\b|\b(?:this\s+(?:fragrance|scent|perfume|inspired|is)|the\s+(?:opening|drydown|dry\s+down|base\s+(?:lingers|settles|brings))|inspired\s+by|perfect\s+for\s+anyone|opens?\s+with\s+(?:a|the)|think\s+(?:crisp|fresh|warm|cool|dark|soft)|vibe\b|scent\s+story\b|how\s+it\s+wears|wear\s*&\s*performance\b|wear\s+guide\b|good\s+to\s+know\b|whether\s+you(?:'|'|&#39;)re\b|surrounds\s+you\s+in\b|sweet,\s*glamorous\b|glamorous\s*&\s*addictive\b|season\s*:|projection\s*:|longevity\s*:|available\s+sizes?|important\s+(?:information|shop|order)|all\s+perfumes?\s+are\s+hand|this\s+is\s+(?:a|an|the)\s+kind|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b|original\s+manufacturers\b|wrap\s+(?:yourself|your\s+senses)|float\s+into|if\s+you\s+love|with\s+a\s+love\b|the\s+girls\s+came\b|i\s+cannot\s+live\b|read\s+(?:more|the\s+history)\s+below\b|perfumer['']?s?\s+note\b|this\s+perfume\s+smells\b|let\s+them\s+eat\b|inspiration\s+for\s+when\b|dab\s+of\s+this\b|when\s+constructing\b|became\s+a\s+prominent\b)\b|description\s*:|(?:\s|^)description\b|like\s+(?:a|an)\b|each\s+(?:spray|spritz)\b)/i
 
   const sentenceBoundary = /[.!]\s+[A-Z]/
 
@@ -1649,10 +1651,13 @@ const FLAT_NOTE_PROSE_BOUNDARY_RES: RegExp[] = [
   /\s+(?:Description\s*:|Like\s+(?:a|an)\b|Each\s+(?:spray|spritz)\b)/i,
   /\s+(?:Wrap\s+(?:yourself|your\s+senses)|Float\s+into|If\s+you\s+love|This\s+perfume\s+is)\b/i,
   /\s+(?:I was told|Making a dupe|Please text if you)\b/i,
+  /\s+Made\s+with\s+Squarespace\b/i,
   // Encoded HTML pasted after note pyramids (Andromeda Shopify template bleed)
   /\s+(?:&lt;|<)\/?(?:head|meta|body|html|script|style)\b/i,
   // Note set followed immediately by marketing paragraph openers (whitespace-collapsed)
   /\s+(?:Think\s+(?:crisp|fresh|warm|cool|dark|soft|juicy|lush)|Opens?\s+(?:with|on)|A\s+(?:crisp|juicy|dark|warm|rich|soft|bright|clean|bold|lush|fresh|dreamy|radiant|sleek|daring)\b|\bSparkling\b|\bThis\s+inspired\b)/i,
+  // Immortal Perfumes: literary blurb / PDP chrome glued after flat "Notes: a, b, and c"
+  /\s+(?:With\s+a\s+love\b|The\s+girls\s+came\b|I\s+cannot\s+live\b|Read\s+(?:more|the\s+history)\s+below\b|Perfumer['']?s?\s+note\b|This\s+perfume\s+smells\b|Let\s+them\s+eat\b|Inspiration\s+for\s+when\b|Dab\s+of\s+this\b|When\s+constructing\b|Became\s+a\s+prominent\b|Each\s+is\s+one-of-a-kind\b|Generally\s+about\s+a\s+week\b|Use\s+the\s+drop-?down\b|Part\s+newspaper\b|History\s+mingles\b)/i,
 ]
 
 const MIN_FLAT_CHUNK_BEFORE_TRUNCATE = 8
@@ -1663,6 +1668,14 @@ const MIN_FLAT_CHUNK_BEFORE_EM_DASH = 3
 const truncateFlatNotesChunk = (chunk: string): string => {
   let s = chunk.trim().replace(/\*+\s*$/, "").trim()
   if (!s) return s
+  // Collection / literary PDPs: "Notes:" body is marketing copy, not materials.
+  if (
+    /^(?:each\s+is|the\s+girls\s+came|generally\s+about|use\s+the\s+drop|part\s+newspaper|history\s+mingles|with\s+a\s+love|i\s+cannot|one-of-a-kind|features\s+from\s+fragrance)/i.test(
+      s,
+    )
+  ) {
+    return ""
+  }
   let earliest = s.length
   for (const re of FLAT_NOTE_PROSE_BOUNDARY_RES) {
     const m = s.match(re)
@@ -1701,7 +1714,7 @@ const looksLikeMainAccordsDescriptorList = (notes: string[]): boolean => {
 
 const countInlineLayerLabels = (source: string): number => {
   const re =
-    /\b(?:top(?:\s+notes?)?|open(?:ing)?(?:\s+notes?)?|head(?:\s+notes?)?|heart(?:\s+notes?)?|middle(?:\s+notes?)?|mid(?:\s+notes?)?|core(?:\s+notes?)?|body(?:\s+notes?)?|cent(?:er|re)(?:\s+notes?)?|base(?:\s+notes?)?|bottom(?:\s+notes?)?|background(?:\s+notes?)?|foundation(?:\s+notes?)?|dry\s*down(?:\s+notes?)?|drydown(?:\s+notes?)?|notes?\s+de\s+(?:tête|tete|cœur|coeur|fond)|note\s+di\s+(?:testa|cuore|fondo|olfattive)|notas\s+de\s+(?:salida|coraz[oó]n|corazon|fondo)|kopfnoten?|herznoten?|basisnoten?|topnoten?|hartnoten?)\s*:/gi
+    /\b(?:top(?:\s+notes?)?|open(?:ing)?(?:\s+notes?)?|head(?:\s+notes?)?|heart(?:\s+notes?)?|middle(?:\s+notes?)?|mid(?:\s+notes?)?|core(?:\s+notes?)?|body(?:\s+notes?)?|cent(?:er|re)(?:\s+notes?)?|base(?:\s+notes?)?|bottom(?:\s+notes?)?|background(?:\s+notes?)?|foundation(?:\s+notes?)?|dry\s*down(?:\s+notes?)?|drydown(?:\s+notes?)?|notes?\s+de\s+(?:tête|tete|cœur|coeur|fond)|note\s+di\s+(?:testa|cuore|fondo|olfattive)|notas\s+de\s+(?:salida|coraz[oó]n|corazon|fondo)|kopfnoten?|herznoten?|basisnoten?|topnoten?|hartnoten?)\s*[:\-\u2013\u2014–—]/gi
   return [...source.matchAll(re)].length
 }
 
@@ -1716,7 +1729,7 @@ const isThinLayeredPyramidScrape = (text: string): boolean => {
   if (labelCount < 2) return false
 
   const layerBodyRe =
-    /\b(?:top|open|opening|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry\s*down|drydown|end)\s*(?:notes?)?\s*:\s*([\s\S]*?)(?=\s+\b(?:top|open|opening|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry\s*down|drydown|end)\s*(?:notes?)?\s*:|$)/gi
+    /\b(?:top|open|opening|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry\s*down|drydown|end)\s*(?:notes?)?\s*[:\-\u2013\u2014–—]\s*([\s\S]*?)(?=\s+\b(?:top|open|opening|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry\s*down|drydown|end)\s*(?:notes?)?\s*[:\-\u2013\u2014–—]|$)/gi
   let match: RegExpExecArray | null
   let layersWithMaterial = 0
   while ((match = layerBodyRe.exec(collapsed)) !== null) {
@@ -2154,7 +2167,13 @@ function extractNotesFromStructuredText(
   }
 
   if (layeredResult.openNotes.length || layeredResult.heartNotes.length || layeredResult.baseNotes.length) {
-    if (unlabeledMaterials.length > 0) {
+    const populatedLayers = [
+      layeredResult.openNotes.length > 0,
+      layeredResult.heartNotes.length > 0,
+      layeredResult.baseNotes.length > 0,
+    ].filter(Boolean).length
+    // A real 2+ layer pyramid already lists materials. Do not dump marketing-prose extras into open.
+    if (unlabeledMaterials.length > 0 && populatedLayers < 2) {
       const already = new Set(
         [...layeredResult.openNotes, ...layeredResult.heartNotes, ...layeredResult.baseNotes].map(n =>
           n.trim().toLowerCase(),

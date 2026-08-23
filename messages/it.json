@@ -303,9 +303,19 @@
     "subheading": "Note dalla Conca.",
     "browseHouses": "Sfoglia tutte le case di profumeria →",
     "empty": "Nessun articolo pubblicato. Torna presto.",
+    "emptyEditorial": "Le storie stanno arrivando. Nel frattempo, esplora le case che danno forma alla fragranza indie.",
     "notConfigured": "Il blog editoriale non è ancora collegato. Aggiungi le variabili Sanity per abilitare gli articoli.",
+    "featured": "In evidenza",
+    "latest": "Ultime storie",
+    "filterByTag": "Filtra per tag",
+    "filterAll": "Tutti",
+    "ctaHouse": "Esplora Sorce →",
+    "ctaArchive": "Sfoglia L'Archivio →",
+    "ctaNavLabel": "Continua a esplorare",
     "article": {
-      "backToIndex": "← Tutti gli articoli"
+      "backToIndex": "← Tutti gli articoli",
+      "exploreHouses": "Esplora le case",
+      "explorePerfumes": "Esplora i profumi"
     },
     "related": {
       "heading": "Dal blog"
@@ -2703,6 +2713,9 @@
     "addToShelfTitle": "Aggiungi dalla collezione",
     "shelf": "Vassoio",
     "perfume": "Profumo",
+    "basePerfume": "Base",
+    "layerPerfume": "Strato (facoltativo)",
+    "layeredWith": "stratificato con",
     "addPerfume": "Aggiungi profumo",
     "perfumeAdded": "Profumo aggiunto al vassoio.",
     "yourShelves": "I tuoi vassoi",
@@ -2784,6 +2797,9 @@
     "communityLink": "Esplora Community",
     "ctaFree": "Inizia",
     "ctaSubscribe": "Abbonati",
+    "currentPlanBadge": "Il tuo piano",
+    "currentPlanCta": "Piano attuale",
+    "currentPlanMessage": "Hai già questa membership.",
     "pricePerYear": "${price}/anno",
     "tiers": {
       "member": {

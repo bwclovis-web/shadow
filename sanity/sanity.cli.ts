@@ -22,12 +22,17 @@ const apiVersion =
 export default defineCliConfig({
   api: { projectId, dataset },
   studioHost: "shadow-and-sillage",
-  autoUpdates: true,
+  deployment: {
+    appId: "gocobgzw1v8vtozbcko8ysib",
+    autoUpdates: true,
+  },
   vite: {
     define: {
       "process.env.NEXT_PUBLIC_SANITY_PROJECT_ID": JSON.stringify(projectId),
       "process.env.NEXT_PUBLIC_SANITY_DATASET": JSON.stringify(dataset),
       "process.env.NEXT_PUBLIC_SANITY_API_VERSION": JSON.stringify(apiVersion),
+      // Hosted / `sanity dev` serve Studio at `/`; Next embeds it at `/studio`.
+      "process.env.SANITY_STUDIO_BASE_PATH": JSON.stringify("/"),
     },
   },
 })

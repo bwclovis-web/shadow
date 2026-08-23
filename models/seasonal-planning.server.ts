@@ -61,6 +61,9 @@ export const getSeasonalPlanningSuggestions = async (
         perfume: {
           select: { id: true, name: true, slug: true, image: true },
         },
+        oilPerfume: {
+          select: { id: true, name: true, slug: true, image: true },
+        },
       },
     }),
     getSeasonalTrendingPerfumes(6, season),
@@ -91,7 +94,10 @@ export const getSeasonalPlanningSuggestions = async (
     })
   }
 
-  for (const row of recentWears) push(row.perfume, "recent_wear")
+  for (const row of recentWears) {
+    push(row.perfume, "recent_wear")
+    if (row.oilPerfume) push(row.oilPerfume, "recent_wear")
+  }
 
   for (const row of collection) {
     const noteNames = row.perfume.perfumeNoteRelations.map(r => r.note.name)

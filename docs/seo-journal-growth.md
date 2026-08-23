@@ -10,7 +10,7 @@ Ranking needs **published** Sanity articles linked into the catalog — not more
    - `/perfume/{slug}`
    - and/or `/houses/{slug}`
 4. Prefer topics that match **long-tail** coverage you actually have in the Archive (obscure indie bottles/houses), not Fragrantica head terms.
-5. Publish in Sanity → confirm the post appears on `/journal` and in `/sitemap.xml`.
+5. Publish in Sanity → confirm the post appears on `/journal` and in `/sitemap/static.xml` (via `/sitemap-index.xml`).
 6. In Search Console, request indexing for the new `/journal/{slug}` URL.
 
 ## Suggested first batch (examples)

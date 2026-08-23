@@ -164,7 +164,8 @@ model Perfume {
   samplingQueueItems    SamplingQueueItem[]
   collectionShelfItems  CollectionShelfItem[]
   userListItems         UserListItem[]
-  wearJournalEntries    WearJournalEntry[]
+  wearJournalEntries    WearJournalEntry[] @relation("WearJournalPrimary")
+  wearJournalOilEntries WearJournalEntry[] @relation("WearJournalOil")
   communityChallengeEntries CommunityChallengeEntry[]
 
   @@index([slug], name: "idx_perfume_slug")
@@ -603,22 +604,26 @@ model UserListItem {
 }
 
 model WearJournalEntry {
-  id          String   @id @default(cuid())
-  userId      String
-  perfumeId   String
-  wornOn      DateTime @db.Date
-  season      String?
-  rating      Int?
-  notes       String?
-  weather     String?
-  occasion    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  perfume     Perfume  @relation(fields: [perfumeId], references: [id], onDelete: Cascade)
+  id            String   @id @default(cuid())
+  userId        String
+  perfumeId     String
+  /// Optional oil layered with the primary spray/perfume for this wear.
+  oilPerfumeId  String?
+  wornOn        DateTime @db.Date
+  season        String?
+  rating        Int?
+  notes         String?
+  weather       String?
+  occasion      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  perfume       Perfume  @relation("WearJournalPrimary", fields: [perfumeId], references: [id], onDelete: Cascade)
+  oilPerfume    Perfume? @relation("WearJournalOil", fields: [oilPerfumeId], references: [id], onDelete: SetNull)
 
   @@index([userId, wornOn])
   @@index([perfumeId])
+  @@index([oilPerfumeId])
 }
 
 model CommunityChallenge {

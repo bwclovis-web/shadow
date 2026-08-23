@@ -60,3 +60,4 @@ next-env.d.ts
 /venv-csv_noir
 /venv-reports
 /venv-backups
+/dist/

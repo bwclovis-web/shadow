@@ -1,40 +1,72 @@
 import { defineArrayMember, defineField, defineType } from "sanity"
 
+import {
+  JOURNAL_LOCALE_LABELS,
+  JOURNAL_LOCALES,
+  type JournalLocale,
+} from "../../lib/sanity/locales"
+
 export const article = defineType({
   name: "article",
   title: "Article",
   type: "document",
   fields: [
     defineField({
+      name: "language",
+      title: "Language",
+      type: "string",
+      description:
+        "Create one article document per language. Prefer the same slug across translations of the same story.",
+      options: {
+        list: JOURNAL_LOCALES.map(id => ({
+          title: JOURNAL_LOCALE_LABELS[id],
+          value: id,
+        })),
+        layout: "radio",
+      },
+      initialValue: "en",
+      validation: rule => rule.required(),
+    }),
+    defineField({
       name: "title",
       title: "Title",
       type: "string",
-      validation: (rule) => rule.required(),
+      validation: rule => rule.required(),
     }),
     defineField({
       name: "slug",
       title: "Slug",
       type: "slug",
       options: { source: "title", maxLength: 96 },
-      validation: (rule) => rule.required(),
+      validation: rule => rule.required(),
+      description:
+        "URL path under /journal/[slug]. Reuse the same slug for each language version of a story.",
     }),
     defineField({
       name: "publishedAt",
       title: "Published at",
       type: "datetime",
-      validation: (rule) => rule.required(),
+      validation: rule => rule.required(),
     }),
     defineField({
       name: "author",
       title: "Author",
       type: "string",
-      validation: (rule) => rule.required(),
+      validation: rule => rule.required(),
     }),
     defineField({
       name: "excerpt",
       title: "Excerpt",
       type: "text",
       rows: 3,
+    }),
+    defineField({
+      name: "featured",
+      title: "Featured",
+      type: "boolean",
+      description:
+        "Show this article in the featured slot on /journal for this language. Prefer only one featured article per language.",
+      initialValue: false,
     }),
     defineField({
       name: "coverImage",
@@ -77,7 +109,7 @@ export const article = defineType({
                     name: "href",
                     type: "url",
                     title: "URL",
-                    validation: (rule) =>
+                    validation: rule =>
                       rule.uri({ allowRelative: true, scheme: ["http", "https", "mailto"] }),
                   }),
                 ],
@@ -128,11 +160,17 @@ export const article = defineType({
     },
   ],
   preview: {
-    select: { title: "title", author: "author", media: "coverImage" },
-    prepare: ({ title, author, media }) => ({
-      title,
-      subtitle: author,
-      media,
-    }),
+    select: { title: "title", author: "author", language: "language", media: "coverImage" },
+    prepare: ({ title, author, language, media }) => {
+      const langLabel =
+        language && language in JOURNAL_LOCALE_LABELS
+          ? JOURNAL_LOCALE_LABELS[language as JournalLocale]
+          : language || "English"
+      return {
+        title,
+        subtitle: [langLabel, author].filter(Boolean).join(" · "),
+        media,
+      }
+    },
   },
 })

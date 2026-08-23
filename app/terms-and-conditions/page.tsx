@@ -3,13 +3,15 @@ import { getTranslations } from "next-intl/server"
 
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
+import { buildPageMetadata } from "@/lib/seo/metadata"
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("termsAndConditions.meta")
-  return {
+  return buildPageMetadata({
     title: t("title"),
     description: t("description"),
-  }
+    canonicalPath: "/terms-and-conditions",
+  })
 }
 
 const TermsAndConditionsPage = async () => {

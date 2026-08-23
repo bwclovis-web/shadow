@@ -35,6 +35,21 @@ describe("scraper job progress types", () => {
     expect(res.jobId).toBe("job_1")
     expect(res.ok).toBe(true)
   })
+
+  it("includes scraper log on empty-result response", () => {
+    const res = toScraperRunResponse({
+      ok: true,
+      scrapedCount: 0,
+      records: [],
+      csvContent: "",
+      errors: ["Scraper ran successfully but found 0 products. Check your collection URLs and selectors."],
+      scraperLog: "Discovery HTTP sitemap.xml → 406",
+      jobId: "job_empty",
+    })
+    expect(res.scrapedCount).toBe(0)
+    expect(res.scraperLog).toContain("406")
+    expect(res.errors[0]).toContain("0 products")
+  })
 })
 
 describe("preview normalize helpers", () => {

@@ -89,10 +89,11 @@ export const getCollectionInsights = async (
     (
       await prisma.wearJournalEntry.findMany({
         where: { userId },
-        select: { perfumeId: true },
-        distinct: ["perfumeId"],
+        select: { perfumeId: true, oilPerfumeId: true },
       })
-    ).map(r => r.perfumeId)
+    ).flatMap(r =>
+      [r.perfumeId, r.oilPerfumeId].filter((id): id is string => Boolean(id))
+    )
   )
 
   const now = Date.now()
@@ -185,6 +186,7 @@ export const exportCollectionCsv = async (userId: string): Promise<string | null
         rating: true,
         notes: true,
         perfume: { select: { name: true, slug: true } },
+        oilPerfume: { select: { name: true, slug: true } },
       },
       orderBy: { wornOn: "desc" },
       take: 5000,
@@ -215,13 +217,15 @@ export const exportCollectionCsv = async (userId: string): Promise<string | null
   ]
 
   const wearLines = [
-    "type,perfume,slug,wornOn,season,weather,occasion,rating,notes",
+    "type,perfume,slug,oilPerfume,oilSlug,wornOn,season,weather,occasion,rating,notes",
     ...wears.map(
       w =>
         [
           "wear",
           esc(w.perfume.name),
           esc(w.perfume.slug),
+          esc(w.oilPerfume?.name),
+          esc(w.oilPerfume?.slug),
           esc(w.wornOn.toISOString().slice(0, 10)),
           esc(w.season),
           esc(w.weather),

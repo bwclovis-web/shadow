@@ -175,10 +175,21 @@ export const POST = async (request: NextRequest) => {
       if (!isValidPrismaRecordId(perfumeId)) {
         return NextResponse.json({ error: "Invalid perfumeId" }, { status: 400 })
       }
+      const oilPerfumeIdRaw =
+        typeof body?.oilPerfumeId === "string" ? body.oilPerfumeId : ""
+      const oilPerfumeId = oilPerfumeIdRaw
+        ? isValidPrismaRecordId(oilPerfumeIdRaw)
+          ? oilPerfumeIdRaw
+          : null
+        : null
+      if (oilPerfumeIdRaw && !oilPerfumeId) {
+        return NextResponse.json({ error: "Invalid oilPerfumeId" }, { status: 400 })
+      }
       const wornOn = body?.wornOn ? new Date(body.wornOn) : new Date()
       const entry = await createWearJournalEntry({
         userId: auth.user!.id,
         perfumeId,
+        oilPerfumeId,
         wornOn,
         season: typeof body?.season === "string" ? body.season : null,
         rating: typeof body?.rating === "number" ? body.rating : null,
@@ -202,6 +213,13 @@ export const POST = async (request: NextRequest) => {
             typeof body?.perfumeId === "string" && isValidPrismaRecordId(body.perfumeId)
               ? body.perfumeId
               : undefined,
+          oilPerfumeId:
+            body?.oilPerfumeId === null
+              ? null
+              : typeof body?.oilPerfumeId === "string" &&
+                  isValidPrismaRecordId(body.oilPerfumeId)
+                ? body.oilPerfumeId
+                : undefined,
           wornOn: body?.wornOn ? new Date(body.wornOn) : undefined,
           season: typeof body?.season === "string" ? body.season : body?.season === null ? null : undefined,
           rating: typeof body?.rating === "number" ? body.rating : body?.rating === null ? null : undefined,

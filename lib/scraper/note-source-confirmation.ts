@@ -283,7 +283,7 @@ export const LAYER_LABEL_TOKENS = new Set([
 
 /** Single-word color/marketing labels — not pyramid materials (e.g. "pink" from "fairy-kissed pink"). */
 export const STANDALONE_COLOR_NOTE_RE =
-  /^(?:pink|red|blue|green|yellow|purple|blush|nude|fuchsia|magenta|turquoise|navy|teal|grey|gray|brown|beige|tan|taupe|crimson|scarlet|azure|ivory|bronze|silver|gold)$/i
+  /^(?:pink|red|blue|green|yellow|purple|blush|nude|fuchsia|magenta|turquoise|navy|teal|grey|gray|brown|beige|tan|taupe|crimson|scarlet|azure|ivory|bronze|silver|gold|black|white)$/i
 
 /** Main-accord / genre labels — not pyramid materials when standing alone. */
 export const STANDALONE_ACCORD_DESCRIPTOR_RE =
@@ -379,6 +379,16 @@ export const peelMarketingDescriptorTail = (note: string): string => {
         /\s+(?:curved\s+backs|folk\s+songs|bookmakers|busy\s+calculating|the\s+hustle|at\s+night|paintings|echoed|whispered|whistle|departs|ladies)\b.*$/i,
         "",
       )
+      // Immortal / Squarespace: literary blurb or "read more" chrome glued to last material
+      .replace(/\s+with\s+a\s+love\b.*$/i, "")
+      .replace(/\s+read\s+(?:more|the\s+history)\s+below\b.*$/i, "")
+      .replace(/\s+perfumer['']?s?\s+note\b.*$/i, "")
+      .replace(/\s+this\s+perfume\s+smells\b.*$/i, "")
+      .replace(/\s+let\s+them\s+eat\b.*$/i, "")
+      .replace(/\s+inspiration\s+for\s+when\b.*$/i, "")
+      .replace(/\s+dab\s+of\s+this\b.*$/i, "")
+      .replace(/\s+made\s+with\s+squarespace\b.*$/i, "")
+      .replace(/\s+(?:heavy|sublimated)\s*$/i, "")
       .trim()
   }
   return s
@@ -560,8 +570,9 @@ export const isObviousNonMaterialNote = (note: string): boolean => {
   if (/^(?:llowed\s+by\s+a\s+heart\s+of|ss\s+brings\s+effortless\s+sensuality|tterly\s+magnetic|uicy\s+signature\s+scent)\b/i.test(n))
     return true
   if (/^(?:intention|care|inspected)$/i.test(n)) return true
-  if (/^(?:touch|then|fabric|rgba|margin|h[1-6]|body|html|div|span|img|svg|iframe|picture|figure|button|burger|hamburger|bun|sans-serif|serif|monospace|system-ui|-apple-system|blinkmacsystemfont|roboto|inter|helvetica|arial|ui-sans-serif|ui-serif|ui-monospace|segoe ui|noto sans)$/i.test(n))
+  if (/^(?:touch|then|fabric|rgba|margin|h[1-6]|body|html|div|span|img|svg|iframe|picture|figure|button|burger|hamburger|bun|squarespace|sans-serif|serif|monospace|system-ui|-apple-system|blinkmacsystemfont|roboto|inter|helvetica|arial|ui-sans-serif|ui-serif|ui-monospace|segoe ui|noto sans)$/i.test(n))
     return true
+  if (/\bmade\s+with\s+squarespace\b/i.test(n)) return true
   // First-person / leftover `<i>` fragments ("i my illustrious lordship", "i wear")
   if (/^i\s+\S/i.test(n)) return true
   if (/^\/(?:head|body|html|script|style|meta|link|title)$/i.test(n)) return true
@@ -599,11 +610,23 @@ export const isObviousNonMaterialNote = (note: string): boolean => {
   if (/^(?:like|comes|comes a hint|fluid|flexible)$/i.test(n)) return true
   if (/^(?:hear her|touch her|smell her|see her)$/i.test(n)) return true
   if (/^(?:one thrilling night|there are forbidden pleasures)$/i.test(n)) return true
-  if (/^(?:she|her|he|him|they|them|you|we|it|me|us)$/i.test(n)) return true
+  if (/^(?:she|her|he|him|his|hers|they|them|you|we|it|me|us|mine|yours|ours|theirs)$/i.test(n)) return true
   if (/^(?:she replies|he replies|notes swirl|like a faceted|to the imagination|or what)$/i.test(n)) return true
   if (/^(?:dance|swirl|faceted|imagination|replies|powdered|essence|others|white|silk|clutching|mystical|enchanting|thus|asleep|sudden|direct|sky|there|suddenly|issued|seduces|lulls|dominates|delectable|let|where|devour|liberate|revolutionary|philosopher|beauty|snatch|how)$/i.test(n))
     return true
   if (/^absolute$/i.test(n)) return true
+  // HTML entity leftovers / legal / UI chrome mistaken for notes (Immortal Squarespace)
+  if (/^(?:egrave|icirc|agrave|eacute|uuml|amp|nbsp|quot|llc|copy|spritz|smells|experts|memory|history|intrigue|magic|sexuality|mathematician|seattle|race|rub|prickly|dried|sea|snow|beautiful|tractable|resinoids)$/i.test(n))
+    return true
+  if (
+    /^(?:one-of-a-kind|when one is gone|each is listed below|use the drop-?down|generally about a week|part newspaper|history mingles with mystery|features from fragrance lovers|interactive elements|history buff|dreamy smell|you shall be mine|girls came|went like moths|wild as the moors|heathcliff|clara bow|georgiana cavendish|eloquent tongue|her seminal work|bell jar|gothic romance|well kept gents|boats against the current|they always look familiar|throw over your shoulder|sorrow for the lost|long lost|dead writers|tre du myst|dab of this cologne featuring lime|became a prominent adviser)$/i.test(
+      n,
+    )
+  ) {
+    return true
+  }
+  if (/\b(?:read\s+(?:more|the\s+history)\s+below|drop-?down|interactive\s+elements|history\s+buff|mingles\s+with\s+mystery|one-of-a-kind|wild\s+as\s+the\s+moors|went\s+like\s+moths|girls\s+came|boats\s+against\s+the\s+current|eloquent\s+tongue|seminal\s+work|well\s+kept\s+gents|this\s+perfume\s+smells|let\s+them\s+eat|perfumer['']?s?\s+note)\b/i.test(n))
+    return true
   if (
     /^(?:when the hope|becomes reality|at last|everything makes sense|we whisper|penetrating dream|she pirouettes|to the poet rumi|there is a bridge|symbolic bridge|what a pretty word|peculiarly parisian|joins another bank|returns by following its|like something|thanks to you|clear-cut formula|instead of an apple|beyond light|gravity newton|dear god|to drive|to desire|to wreak havoc|or possibly|even violence|ignite the world|marquis de sade|without explaining too much|according to lacan|more vast|more true|more sincere|without apotheosis|all nostrils out|infused with bright bergamot|lifted by aromatic incense|breaks the unexpected accord of coffee|cleansed of dictates|to hold|i wrote in mint|weve given you outrageous|true olfactory coitus|to sécrétions|canon powder accord okay|stock for late-night parties)$/i.test(
       n,
@@ -637,6 +660,14 @@ export const looksLikeProseNotePhrase = (note: string): boolean => {
   // Remaining em-dash slogans after peel (both sides marketing).
   if (/[—–]/.test(n)) return true
   if (/^(?:this|that)\s+\w+/.test(n)) return true
+  // Immortal literary blurbs / collection-page chrome mistaken for note tokens
+  if (
+    /\b(?:with\s+a\s+love|wild\s+as\s+the\s+moors|girls\s+came|went\s+like\s+moths|one-of-a-kind|when\s+one\s+is\s+gone|you\s+shall\s+be\s+mine|boats\s+against\s+the\s+current|throw\s+over\s+your\s+shoulder|they\s+always\s+look\s+familiar|sorrow\s+for\s+the\s+lost|history\s+mingles|interactive\s+elements|history\s+buff|features\s+from\s+fragrance|use\s+the\s+drop-?down|generally\s+about\s+a\s+week|each\s+is\s+listed|dreamy\s+smell|eloquent\s+tongue|well\s+kept\s+gents|her\s+seminal\s+work|gothic\s+romance|part\s+newspaper|read\s+(?:more|the\s+history)\s+below|this\s+perfume\s+smells|let\s+them\s+eat|dab\s+of\s+this|became\s+a\s+prominent|inspiration\s+for\s+when)\b/.test(
+      n,
+    )
+  ) {
+    return true
+  }
   // Truncated PDP / meta copy fragments ("raspberry that sits a")
   if (/\bthat\s+(?:sits|lingers|dances|leaves|beckels|blooms|beckckons|calls|wraps|pulses)\b/.test(n)) {
     return true

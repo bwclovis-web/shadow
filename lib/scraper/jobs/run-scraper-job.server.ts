@@ -339,6 +339,7 @@ export const runScraperJob = async (
           scrapedCount: 0,
           recordCount: 0,
           errors: empty.errors,
+          scraperLogTail: scraperLog.trim().slice(-4000) || undefined,
         },
         partialRecordsJson: [],
       })

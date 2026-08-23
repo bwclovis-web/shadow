@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import type React from "react"
 import { getTranslations } from "next-intl/server"
 
+import { buildPageMetadata } from "@/lib/seo/metadata"
 import { getCachedMaterialsForQuiz } from "@/models/tags.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
@@ -22,10 +23,12 @@ type Props = {
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("quiz.meta")
-  return {
+  return buildPageMetadata({
     title: t("title"),
     description: t("description"),
-  }
+    canonicalPath: "/scent-quiz",
+    ogImage: "/images/new/quiz.webp",
+  })
 }
 
 const splitCsv = (param: string | string[] | undefined): string[] => {

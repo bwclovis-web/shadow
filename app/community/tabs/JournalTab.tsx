@@ -31,6 +31,7 @@ export const JournalTab = ({
   const [perfumeOptions, setPerfumeOptions] = useState<PerfumeOption[]>([])
   const [loading, setLoading] = useState(true)
   const [journalPerfumeId, setJournalPerfumeId] = useState(initialPerfumeId ?? "")
+  const [journalOilPerfumeId, setJournalOilPerfumeId] = useState("")
   const [journalNotes, setJournalNotes] = useState("")
   const [journalRating, setJournalRating] = useState("")
   const [journalSeason, setJournalSeason] = useState("")
@@ -46,6 +47,16 @@ export const JournalTab = ({
     name: p.perfumeId,
     label: p.name,
   }))
+  const oilSelectData = [
+    blankOption,
+    ...perfumeOptions
+      .filter(p => p.perfumeId !== journalPerfumeId)
+      .map(p => ({
+        id: p.perfumeId,
+        name: p.perfumeId,
+        label: p.name,
+      })),
+  ]
   const seasonSelectData = [
     blankOption,
     ...SEASONS.map(s => ({ id: s, name: s, label: t(`seasons.${s}`) })),
@@ -99,6 +110,7 @@ export const JournalTab = ({
       await postCommunity({
         intent: "wear-journal",
         perfumeId: journalPerfumeId,
+        oilPerfumeId: journalOilPerfumeId || null,
         notes: journalNotes || null,
         rating: journalRating ? Number(journalRating) : null,
         season: journalSeason || null,
@@ -108,6 +120,7 @@ export const JournalTab = ({
           ? new Date(`${journalWornOn}T12:00:00`).toISOString()
           : new Date().toISOString(),
       })
+      setJournalOilPerfumeId("")
       setJournalNotes("")
       setJournalRating("")
       setJournalSeason("")
@@ -151,10 +164,22 @@ export const JournalTab = ({
           <form onSubmit={addJournalEntry} className="space-y-3">
             <Select
               selectId="wear-journal-perfume"
-              label={t("perfume")}
+              label={t("basePerfume")}
               selectData={perfumeSelectData}
               value={journalPerfumeId}
-              action={e => setJournalPerfumeId(e.target.value)}
+              action={e => {
+                const next = e.target.value
+                setJournalPerfumeId(next)
+                if (journalOilPerfumeId === next) setJournalOilPerfumeId("")
+              }}
+              className="w-full max-w-none md:w-full"
+            />
+            <Select
+              selectId="wear-journal-layer"
+              label={t("layerPerfume")}
+              selectData={oilSelectData}
+              value={journalOilPerfumeId}
+              action={e => setJournalOilPerfumeId(e.target.value)}
               className="w-full max-w-none md:w-full"
             />
             <label className="block text-sm">
@@ -232,13 +257,28 @@ export const JournalTab = ({
             {entries.map(entry => (
               <li key={entry.id} className="noir-border rounded-lg p-3 text-sm">
                 <div className="flex justify-between gap-2">
-                  <PrefetchLink
-                    href={`/perfume/${entry.perfume.slug}`}
-                    className="text-noir-gold-500 hover:underline"
-                  >
-                    {entry.perfume.name}
-                  </PrefetchLink>
-                  <span className="opacity-60 text-xs">{entry.wornOn.slice(0, 10)}</span>
+                  <div className="min-w-0">
+                    <PrefetchLink
+                      href={`/perfume/${entry.perfume.slug}`}
+                      className="text-noir-gold-500 hover:underline"
+                    >
+                      {entry.perfume.name}
+                    </PrefetchLink>
+                    {entry.oilPerfume && (
+                      <p className="opacity-80 mt-0.5">
+                        <span className="opacity-60">{t("layeredWith")} </span>
+                        <PrefetchLink
+                          href={`/perfume/${entry.oilPerfume.slug}`}
+                          className="text-noir-gold-500 hover:underline"
+                        >
+                          {entry.oilPerfume.name}
+                        </PrefetchLink>
+                      </p>
+                    )}
+                  </div>
+                  <span className="opacity-60 text-xs shrink-0">
+                    {entry.wornOn.slice(0, 10)}
+                  </span>
                 </div>
                 {entry.rating != null && (
                   <p className="opacity-80 mt-1">{t("rated", { rating: entry.rating })}</p>

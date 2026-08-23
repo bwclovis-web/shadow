@@ -303,9 +303,19 @@
     "subheading": "Notes du Creux.",
     "browseHouses": "Voir toutes les maisons de parfum →",
     "empty": "Aucun article publié pour le moment. Revenez bientôt.",
+    "emptyEditorial": "Les récits arrivent bientôt. En attendant, explorez les maisons qui façonnent la parfumerie indie.",
     "notConfigured": "Le blog éditorial n'est pas encore connecté. Ajoutez les variables Sanity pour activer les articles.",
+    "featured": "À la une",
+    "latest": "Dernières histoires",
+    "filterByTag": "Filtrer par tag",
+    "filterAll": "Tous",
+    "ctaHouse": "Explorer Sorce →",
+    "ctaArchive": "Parcourir L'Archive →",
+    "ctaNavLabel": "Continuer l'exploration",
     "article": {
-      "backToIndex": "← Tous les articles"
+      "backToIndex": "← Tous les articles",
+      "exploreHouses": "Explorer les maisons",
+      "explorePerfumes": "Explorer les parfums"
     },
     "related": {
       "heading": "Sur le blog"
@@ -2703,6 +2713,9 @@
     "addToShelfTitle": "Ajouter depuis votre collection",
     "shelf": "Plateau",
     "perfume": "Parfum",
+    "basePerfume": "Base",
+    "layerPerfume": "Couche (facultatif)",
+    "layeredWith": "superposé avec",
     "addPerfume": "Ajouter le parfum",
     "perfumeAdded": "Parfum ajouté au plateau.",
     "yourShelves": "Vos plateaux",
@@ -2784,6 +2797,9 @@
     "communityLink": "Explorer Community",
     "ctaFree": "Commencer",
     "ctaSubscribe": "S’abonner",
+    "currentPlanBadge": "Votre plan",
+    "currentPlanCta": "Plan actuel",
+    "currentPlanMessage": "Vous avez déjà cette adhésion.",
     "pricePerYear": "${price}/an",
     "tiers": {
       "member": {

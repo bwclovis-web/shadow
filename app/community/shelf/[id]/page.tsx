@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server"
 
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 import TitleBanner from "@/components/Organisms/TitleBanner"
+import { buildPageMetadata } from "@/lib/seo/metadata"
 import { getPublicShelfById } from "@/models/community.server"
 import { isFeatureEnabled } from "@/utils/feature-flags"
 import { getTraderDisplayName } from "@/utils/user"
@@ -14,19 +15,24 @@ type Props = {
   params: Promise<{ id: string }>
 }
 
+const BANNER = "/images/new/public-trays.webp"
+
 export const generateMetadata = async ({ params }: Props): Promise<Metadata> => {
   const { id } = await params
   if (!isValidPrismaRecordId(id) || !isFeatureEnabled("communityShelves")) {
-    return { title: "Tray" }
+    return { title: "Tray", robots: { index: false, follow: false } }
   }
   const shelf = await getPublicShelfById(id)
-  return {
-    title: shelf?.name ?? "Tray",
-    description: shelf?.description ?? "Public collection tray",
+  if (!shelf) {
+    return { title: "Tray", robots: { index: false, follow: false } }
   }
+  return buildPageMetadata({
+    title: shelf.name,
+    description: shelf.description ?? "Public collection tray",
+    canonicalPath: `/community/shelf/${id}`,
+    ogImage: BANNER,
+  })
 }
-
-const BANNER = "/images/new/public-trays.webp"
 
 const PublicShelfDetailPage = async ({ params }: Props) => {
   const { id } = await params

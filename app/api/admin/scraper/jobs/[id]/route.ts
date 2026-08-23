@@ -68,19 +68,28 @@ export const GET = async (
   }
 
   if (includeResults) {
+    const resultSummary = job.resultJson as {
+      scrapedCount?: number
+      errors?: string[]
+      batchWarnings?: string[]
+      scraperLogTail?: string
+    } | null
     const records = parseRecordsJson(job.partialRecordsJson)
+    const errors = [
+      ...(job.errorMessage ? [job.errorMessage] : []),
+      ...((resultSummary?.errors ?? []).filter(msg => msg !== job.errorMessage)),
+    ]
     payload.results = toScraperRunResponse({
       ok: job.status === "completed" || records.length > 0,
       scrapedCount:
-        typeof (job.resultJson as { scrapedCount?: number } | null)?.scrapedCount ===
-        "number"
-          ? (job.resultJson as { scrapedCount: number }).scrapedCount
+        typeof resultSummary?.scrapedCount === "number"
+          ? resultSummary.scrapedCount
           : records.length,
       records,
       csvContent: recordsToCsv(records),
-      errors: job.errorMessage ? [job.errorMessage] : [],
-      batchWarnings:
-        (job.resultJson as { batchWarnings?: string[] } | null)?.batchWarnings,
+      errors,
+      scraperLog: resultSummary?.scraperLogTail,
+      batchWarnings: resultSummary?.batchWarnings,
       jobId: job.id,
     })
   }

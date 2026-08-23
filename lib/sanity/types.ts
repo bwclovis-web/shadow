@@ -13,6 +13,8 @@ export type ArticleListItem = {
   publishedAt: string
   author: string
   excerpt?: string | null
+  featured?: boolean | null
+  language?: string | null
   coverImage?: SanityImageAsset | null
   tags?: string[] | null
   perfumeRefs?: string[] | null

@@ -497,9 +497,19 @@
     "subheading": "Notes from the Hollow.",
     "browseHouses": "Browse all perfume houses →",
     "empty": "No articles published yet. Check back soon.",
+    "emptyEditorial": "Stories are on the way. Meanwhile, explore the houses shaping indie fragrance.",
     "notConfigured": "The editorial blog is not connected yet. Add Sanity environment variables to enable articles.",
+    "featured": "Featured",
+    "latest": "Latest stories",
+    "filterByTag": "Filter by tag",
+    "filterAll": "All",
+    "ctaHouse": "Explore Sorce →",
+    "ctaArchive": "Browse The Archive →",
+    "ctaNavLabel": "Continue exploring",
     "article": {
-      "backToIndex": "← All articles"
+      "backToIndex": "← All articles",
+      "exploreHouses": "Explore houses",
+      "explorePerfumes": "Explore perfumes"
     },
     "related": {
       "heading": "From the blog"
@@ -2710,6 +2720,9 @@
     "addToShelfTitle": "Add from your collection",
     "shelf": "Tray",
     "perfume": "Perfume",
+    "basePerfume": "Base",
+    "layerPerfume": "Layer (optional)",
+    "layeredWith": "layered with",
     "addPerfume": "Add perfume",
     "perfumeAdded": "Perfume added to tray.",
     "yourShelves": "Your trays",
@@ -2784,6 +2797,9 @@
     "communityLink": "Explore Community",
     "ctaFree": "Get started",
     "ctaSubscribe": "Subscribe",
+    "currentPlanBadge": "Your plan",
+    "currentPlanCta": "Current plan",
+    "currentPlanMessage": "You're already on this membership.",
     "pricePerYear": "${price}/year",
     "tiers": {
       "member": {

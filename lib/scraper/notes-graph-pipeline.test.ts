@@ -49,6 +49,26 @@ describe("sanitizeCopyForNotePipeline", () => {
   })
 })
 
+describe("extractNotesFromStructuredText", () => {
+  it("Juliet Rose hyphen pyramid keeps layers and drops Squarespace footer extras", () => {
+    const text = `Super warm comforting vanilla patchouli with amber, musk and sandalwood.
+
+Top notes - Orange, Mandarin,
+Middle notes - Cardamom, Tonka, Geranium
+Base notes - Amber, Sandalwood, Vanilla, Patchouli
+
+Made with Squarespace`
+    const notes = extractNotesFromStructuredText(text)
+    expect(notes.openNotes).toEqual(expect.arrayContaining(["orange", "mandarin"]))
+    for (const extra of ["amber", "sandalwood", "vanilla", "patchouli", "musk"]) {
+      expect(notes.openNotes).not.toContain(extra)
+    }
+    expect(notes.heartNotes).toEqual(expect.arrayContaining(["cardamom", "tonka", "geranium"]))
+    expect(notes.baseNotes).toEqual(expect.arrayContaining(["amber", "sandalwood", "vanilla", "patchouli"]))
+    expect([...notes.openNotes, ...notes.heartNotes, ...notes.baseNotes].join(" ")).not.toMatch(/squarespace/)
+  })
+})
+
 describe("explodeSpaceSeparatedNoteBlob", () => {
   it("splits space-joined single-word materials (Amaterasu base)", () => {
     expect(explodeSpaceSeparatedNoteBlob("vanilla caramel coffee litchi incense praline")).toEqual([
@@ -344,6 +364,56 @@ describe("notes pipeline (parallel phase 1 + sequential noir)", () => {
 
     expect(noirCalls).toBe(1)
     expect(records[0].description).toContain("Neon rain")
+  })
+
+  it("Squarespace template-* PDP URL: hyphen pyramid stays layered and noir still runs", async () => {
+    vi.stubEnv("NOTES_PIPELINE_CONCURRENCY", "1")
+
+    const items: ScrapedItem[] = [
+      {
+        name: "Vanilla Amber Patchouli",
+        description: `Super warm comforting vanilla patchouli with amber, musk and sandalwood.
+
+Top notes - Orange, Mandarin,
+Middle notes - Cardamom, Tonka, Geranium
+Base notes - Amber, Sandalwood, Vanilla, Patchouli
+
+Made with Squarespace`,
+        image: "",
+        detailURL: "https://www.julietrose.online/store-AbxoL/p/template-t22ln-stxwc-kxg36-hjby8",
+        perfumeHouse: "Juliet Rose",
+      },
+    ]
+
+    let noirCalls = 0
+    invokeMock.mockImplementation(async (messages: unknown) => {
+      const msgs = messages as { role: string; content: string }[]
+      const sys = msgs.find(m => m.role === "system")?.content ?? ""
+      if (sys.includes("film noir")) {
+        noirCalls++
+        return { content: "Orange peel snaps in a dim corridor; patchouli waits at the far end." }
+      }
+      throw new Error("LLM must not extract notes when a hyphen pyramid is present")
+    })
+
+    const { records } = await extractNotesForItems(items, "Juliet Rose", {
+      generateNoirDescriptions: true,
+      fetchPdpNoteBootstrap: false,
+    })
+
+    expect(JSON.parse(records[0].openNotes)).toEqual(expect.arrayContaining(["orange", "mandarin"]))
+    expect(JSON.parse(records[0].heartNotes)).toEqual(
+      expect.arrayContaining(["cardamom", "tonka", "geranium"]),
+    )
+    expect(JSON.parse(records[0].baseNotes)).toEqual(
+      expect.arrayContaining(["amber", "sandalwood", "vanilla", "patchouli"]),
+    )
+    expect(JSON.parse(records[0].openNotes)).not.toContain("amber")
+    expect([...JSON.parse(records[0].openNotes), ...JSON.parse(records[0].heartNotes), ...JSON.parse(records[0].baseNotes)].join(" ")).not.toMatch(
+      /squarespace/,
+    )
+    expect(noirCalls).toBe(1)
+    expect(records[0].description).toContain("Orange peel snaps")
   })
 
   it("pure metaphor with no materials: NOTE_SYSTEM returns empty, name+house fallback runs and provides notes", async () => {
@@ -1596,6 +1666,18 @@ Organically |
       detailUrlAlignsWithProductName(
         "Vanille Diabolique Renoir",
         "https://www.andromedasmoon.com/products/andromeda-s-inspired-by-vanille-diabolique-eau-de-parfum-gucci",
+      ),
+    ).toBe(true)
+    expect(
+      detailUrlAlignsWithProductName(
+        "Vanilla Amber Patchouli",
+        "https://www.julietrose.online/store-AbxoL/p/template-t22ln-stxwc-kxg36-hjby8",
+      ),
+    ).toBe(true)
+    expect(
+      detailUrlAlignsWithProductName(
+        "Single Note Vanilla",
+        "https://www.julietrose.online/store-AbxoL/p/single-note-vanilla",
       ),
     ).toBe(true)
   })

@@ -15,7 +15,7 @@ const IMAGES = {
 } as const
 
 const SECTION_IMG_CLASS =
-  "w-full mb-5 md:mb-10 lg:w-3/4 xl:w-1/2 max-w-4xl aspect-wide rounded-xl object-cover bg-transparent border-2 lg:border-8 border-noir-light shadow-lg shadow-black filter grayscale-[10%] contrast-[1] brightness-[0.9] sepia-[0.5] mix-blend-overlay"
+  "w-full mb-5 md:mb-10 lg:w-3/4 xl:w-1/2 max-w-4xl aspect-wide rounded-xl object-cover bg-transparent border-2 lg:border-8 border-noir-light shadow-lg shadow-black filter grayscale-[10%] contrast-[1] brightness-[0.9] sepia-[0.5]"
 const IMAGE_SIZES =
   "(min-width: 1440px) 55vw, (min-width: 1024px) 65vw, 80vw"
 

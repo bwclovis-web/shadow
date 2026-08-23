@@ -4,16 +4,20 @@ import { getTranslations } from "next-intl/server"
 
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 import TitleBanner from "@/components/Organisms/TitleBanner"
+import { buildPageMetadata } from "@/lib/seo/metadata"
 import { listPublicShelves } from "@/models/community.server"
 import { isFeatureEnabled } from "@/utils/feature-flags"
 import { getTraderDisplayName } from "@/utils/user"
 
-export const metadata: Metadata = {
-  title: "Public trays",
-  description: "Browse public collection trays from the community.",
-}
-
 const BANNER = "/images/new/public-trays.webp"
+
+export const generateMetadata = async (): Promise<Metadata> =>
+  buildPageMetadata({
+    title: "Public trays",
+    description: "Browse public collection trays from the community.",
+    canonicalPath: "/community/shelves",
+    ogImage: BANNER,
+  })
 
 const PublicShelvesPage = async () => {
   const t = await getTranslations("publicShelves")

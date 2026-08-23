@@ -1,8 +1,10 @@
 import { Suspense } from "react"
+import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 import TitleBanner from "@/components/Organisms/TitleBanner"
+import { buildPageMetadata } from "@/lib/seo/metadata"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
@@ -12,11 +14,14 @@ import CommunityPageNav from "./CommunityPageNav"
 /** Placeholder hero — swap when a dedicated community asset is ready. */
 const BANNER_IMAGE = "/images/new/community.webp"
 
-export const metadata = {
-  title: "Community | Shadow",
-  description:
-    "Collection trays, wear journal, and community challenges — digital collecting only.",
-}
+export const generateMetadata = async (): Promise<Metadata> =>
+  buildPageMetadata({
+    title: "Community",
+    description:
+      "Collection trays, wear journal, and community challenges — digital collecting only.",
+    canonicalPath: "/community",
+    ogImage: BANNER_IMAGE,
+  })
 
 const CommunityPage = async () => {
   const t = await getTranslations("community")

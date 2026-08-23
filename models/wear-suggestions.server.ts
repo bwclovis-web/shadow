@@ -64,7 +64,7 @@ export const getWearSuggestions = async (
       where: { userId },
       take: 20,
       orderBy: { wornOn: "desc" },
-      select: { perfumeId: true, wornOn: true },
+      select: { perfumeId: true, oilPerfumeId: true, wornOn: true },
     }),
     prisma.userPerfumeSeasonVote.findMany({
       where: { userId },
@@ -85,11 +85,17 @@ export const getWearSuggestions = async (
 
   const topFamilies = new Set(dna.topFamilies.slice(0, 3).map(f => f.family))
   const voteByPerfume = new Map(seasonVotes.map(v => [v.perfumeId, v]))
-  const recentlyWorn = new Set(recentWears.slice(0, 5).map(w => w.perfumeId))
+  const recentlyWorn = new Set(
+    recentWears.slice(0, 5).flatMap(w =>
+      [w.perfumeId, w.oilPerfumeId].filter((id): id is string => Boolean(id))
+    )
+  )
   const wornInLast7 = new Set(
     recentWears
       .filter(w => Date.now() - w.wornOn.getTime() < 7 * 24 * 60 * 60 * 1000)
-      .map(w => w.perfumeId)
+      .flatMap(w =>
+        [w.perfumeId, w.oilPerfumeId].filter((id): id is string => Boolean(id))
+      )
   )
 
   type Scored = {

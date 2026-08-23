@@ -437,6 +437,68 @@ Also listed elsewhere: Neroli E.O. among featured materials.
     expect(sanitizeExtractedNoteCandidate("tender floral musk")).toBe("tender floral musk")
   })
 
+  it("sanitizeExtractedNoteCandidate rejects Immortal literary/UI chrome mistaken for notes", () => {
+    const junk = [
+      "wild as the moors",
+      "heathcliff",
+      "girls came",
+      "went like moths",
+      "one-of-a-kind",
+      "when one is gone",
+      "each is listed below",
+      "use the drop-down",
+      "generally about a week",
+      "part newspaper",
+      "history mingles with mystery",
+      "interactive elements",
+      "history buff",
+      "experts",
+      "memory",
+      "his",
+      "mine",
+      "smells",
+      "dreamy smell",
+      "you shall be mine",
+      "clara bow",
+      "georgiana cavendish",
+      "eloquent tongue",
+      "tractable",
+      "her seminal work",
+      "bell jar",
+      "seattle",
+      "egrave",
+      "icirc",
+      "llc",
+      "beautiful",
+      "dried",
+      "black",
+      "sea",
+      "snow",
+      "copy",
+      "spritz",
+      "boats against the current",
+      "well kept gents",
+    ]
+    for (const note of junk) {
+      expect(sanitizeExtractedNoteCandidate(note), note).toBeNull()
+    }
+    // Glued literary/UI tails peel down to the material.
+    expect(sanitizeExtractedNoteCandidate("chocolate with a love as tumultuous")).toBe("chocolate")
+    expect(sanitizeExtractedNoteCandidate("grapefruit read more below")).toBe("grapefruit")
+    expect(sanitizeExtractedNoteCandidate("orchid read the history below")).toBe("orchid")
+    expect(sanitizeExtractedNoteCandidate("jasmine let them eat cake")).toBe("jasmine")
+    expect(sanitizeExtractedNoteCandidate("cassis this perfume smells like bottled poetry")).toBe("cassis")
+    // Real Immortal materials must still pass.
+    expect(sanitizeExtractedNoteCandidate("amber")).toBe("amber")
+    expect(sanitizeExtractedNoteCandidate("labdanum")).toBe("labdanum")
+    expect(sanitizeExtractedNoteCandidate("white patchouli")).toBe("white patchouli")
+    expect(sanitizeExtractedNoteCandidate("black jasmine")).toBe("black jasmine")
+    expect(sanitizeExtractedNoteCandidate("sea moss")).toBe("sea moss")
+    expect(sanitizeExtractedNoteCandidate("feathers")).toBe("feathers")
+    expect(sanitizeExtractedNoteCandidate("almond heavy")).toBe("almond")
+    expect(sanitizeExtractedNoteCandidate("camellia sublimated")).toBe("camellia")
+  })
+
   it("peelMarketingDescriptorTail strips trailing Shopify copy", () => {
     expect(peelMarketingDescriptorTail("cotton candy air")).toBe("cotton candy")
     expect(peelMarketingDescriptorTail("vanilla cloud cream")).toBe("vanilla")
@@ -444,6 +506,9 @@ Also listed elsewhere: Neroli E.O. among featured materials.
     expect(peelMarketingDescriptorTail("fresh watermelon hit first")).toBe("fresh watermelon")
     expect(peelMarketingDescriptorTail("sea breeze wrap you in a haze")).toBe("sea breeze")
     expect(peelMarketingDescriptorTail("musk melt into skin")).toBe("musk")
+    expect(peelMarketingDescriptorTail("patchouli made with squarespace")).toBe("patchouli")
+    expect(sanitizeExtractedNoteCandidate("patchouli made with squarespace")).toBe("patchouli")
+    expect(sanitizeExtractedNoteCandidate("made with squarespace")).toBeNull()
     expect(sanitizeExtractedNoteCandidate("resort evenings")).toBeNull()
     expect(sanitizeExtractedNoteCandidate("warm days")).toBeNull()
     expect(sanitizeExtractedNoteCandidate("cedar wear guide")).toBe("cedar")
@@ -565,6 +630,8 @@ Also listed elsewhere: Neroli E.O. among featured materials.
     expect(isObviousNonMaterialNote("cinnamon bun")).toBe(false)
     expect(isObviousNonMaterialNote("img")).toBe(true)
     expect(isObviousNonMaterialNote("bun")).toBe(true)
+    expect(isObviousNonMaterialNote("squarespace")).toBe(true)
+    expect(isObviousNonMaterialNote("made with squarespace")).toBe(true)
     expect(isObviousNonMaterialNote("i my illustrious lordship")).toBe(true)
     expect(isObviousNonMaterialNote("i wear")).toBe(true)
   })

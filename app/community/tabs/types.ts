@@ -28,6 +28,7 @@ export type JournalEntry = {
   rating: number | null
   notes: string | null
   perfume: { id: string; name: string; slug: string; image: string | null }
+  oilPerfume?: { id: string; name: string; slug: string; image: string | null } | null
 }
 
 export type Challenge = {

@@ -4,26 +4,22 @@ import { redirect } from "next/navigation"
 
 import JournalIndexClient from "@/app/journal/JournalIndexClient"
 import TitleBanner from "@/components/Organisms/TitleBanner"
-import { brandPageTitle } from "@/lib/seo/metadata"
+import { buildPageMetadata } from "@/lib/seo/metadata"
 import { getPublishedArticles } from "@/lib/sanity/articles.server"
 import { isSanityConfigured } from "@/sanity/env"
 
-export const revalidate = 3600
+export const revalidate = 60
 
 const BANNER_IMAGE = "/images/new/blog.webp"
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("behindTheBottle.meta")
-  const title = t("title")
-  const description = t("description")
-  return {
-    title,
-    description,
-    openGraph: {
-      title: brandPageTitle(title),
-      description,
-    },
-  }
+  return buildPageMetadata({
+    title: t("title"),
+    description: t("description"),
+    canonicalPath: "/journal",
+    ogImage: BANNER_IMAGE,
+  })
 }
 
 const JournalPage = async () => {
@@ -37,7 +33,11 @@ const JournalPage = async () => {
   return (
     <section>
       <TitleBanner image={BANNER_IMAGE} heading={t("heading")} subheading={t("subheading")} />
-      <JournalIndexClient articles={articles} sanityConfigured={isSanityConfigured} />
+      <JournalIndexClient
+        articles={articles}
+        sanityConfigured={isSanityConfigured}
+        spotlightHouseSlug="sorce"
+      />
     </section>
   )
 }

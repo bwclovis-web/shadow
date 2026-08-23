@@ -12,7 +12,7 @@ import { getPersonalizedRecommendations } from "@/services/recommendations"
 import { publicAssetUrl } from "@/utils/public-asset-url.server"
 import { requireOwnedProfileSession } from "@/utils/server/require-profile-session.server"
 
-const BANNER_IMAGE = publicAssetUrl("/images/new/vault.webp")
+const BANNER_IMAGE = publicAssetUrl("/images/new/digest.webp")
 
 type Props = {
   params: Promise<{ userSlug: string }>

@@ -26,6 +26,7 @@ Root [README.md](../README.md) stays short: product blurb + common commands + li
 | [scraper-troubleshooting.md](./scraper-troubleshooting.md) | Scraper connection resets, delays, headed mode |
 | [seo-post-deploy.md](./seo-post-deploy.md) | robots/sitemap/Search Console after deploy |
 | [seo-journal-growth.md](./seo-journal-growth.md) | Editorial checklist for journal SEO |
+| [journal-sorce-launch.md](./journal-sorce-launch.md) | Sorce-first journal launch brief + Studio checklist |
 | [live-testing.md](./live-testing.md) | Resend / transactional email smoke paths |
 | [testing-web-push.md](./testing-web-push.md) | VAPID + browser push manual QA |
 | [smoke-test-decant-splits.md](./smoke-test-decant-splits.md) | Short decant-split smoke checklist |

@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
@@ -5,6 +6,7 @@ import { getTranslations } from "next-intl/server"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 import TitleBanner from "@/components/Organisms/TitleBanner"
+import { buildPageMetadata } from "@/lib/seo/metadata"
 import { getChallengeBySlug } from "@/models/community.server"
 import { getTraderDisplayName, getProfilePathForUser } from "@/utils/user"
 
@@ -14,14 +16,20 @@ type Props = {
   params: Promise<{ slug: string }>
 }
 
-export const generateMetadata = async ({ params }: Props) => {
+export const generateMetadata = async ({
+  params,
+}: Props): Promise<Metadata> => {
   const { slug } = await params
   const challenge = await getChallengeBySlug(slug)
-  if (!challenge) return { title: "Challenge" }
-  return {
-    title: `${challenge.title} | Community challenges`,
-    description: challenge.description ?? undefined,
+  if (!challenge || !challenge.isPublished) {
+    return { title: "Challenge", robots: { index: false, follow: false } }
   }
+  return buildPageMetadata({
+    title: challenge.title,
+    description: challenge.description ?? "Community scent challenge",
+    canonicalPath: `/community/challenges/${slug}`,
+    ogImage: BANNER_IMAGE,
+  })
 }
 
 const ChallengeDetailPage = async ({ params }: Props) => {

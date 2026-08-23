@@ -11,9 +11,10 @@ import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 export const metadata: Metadata = {
   title: "What should I wear?",
   description: "Three picks from your collection for today.",
+  robots: { index: false, follow: false },
 }
 
-const BANNER = "/images/new/vault.webp"
+const BANNER = "/images/new/what-to-wear.webp"
 
 const WearSuggestionsPage = async () => {
   const t = await getTranslations("wearSuggestions")

@@ -181,6 +181,7 @@ export const addPerfumeToList = async (params: {
 export const createWearJournalEntry = async (params: {
   userId: string
   perfumeId: string
+  oilPerfumeId?: string | null
   wornOn: Date
   season?: string | null
   rating?: number | null
@@ -188,11 +189,16 @@ export const createWearJournalEntry = async (params: {
   weather?: string | null
   occasion?: string | null
 }) => {
+  const oilPerfumeId =
+    params.oilPerfumeId && params.oilPerfumeId !== params.perfumeId
+      ? params.oilPerfumeId
+      : null
   const { recordTasteEvent } = await import("@/models/taste-event.server")
   const entry = await prisma.wearJournalEntry.create({
     data: {
       userId: params.userId,
       perfumeId: params.perfumeId,
+      oilPerfumeId,
       wornOn: params.wornOn,
       season: params.season ?? null,
       rating: params.rating ?? null,
@@ -201,19 +207,32 @@ export const createWearJournalEntry = async (params: {
       occasion: params.occasion ?? null,
     },
   })
+  const wearWeight =
+    params.rating != null ? Math.min(2, Math.max(0.5, params.rating / 3)) : 1
+  const wearMeta = {
+    from: "wear_journal" as const,
+    entryId: entry.id,
+    season: params.season ?? null,
+    weather: params.weather ?? null,
+    occasion: params.occasion ?? null,
+    layered: Boolean(oilPerfumeId),
+  }
   await recordTasteEvent({
     userId: params.userId,
     perfumeId: params.perfumeId,
     eventType: "wear",
-    weight: params.rating != null ? Math.min(2, Math.max(0.5, params.rating / 3)) : 1,
-    metadata: {
-      from: "wear_journal",
-      entryId: entry.id,
-      season: params.season ?? null,
-      weather: params.weather ?? null,
-      occasion: params.occasion ?? null,
-    },
+    weight: wearWeight,
+    metadata: wearMeta,
   })
+  if (oilPerfumeId) {
+    await recordTasteEvent({
+      userId: params.userId,
+      perfumeId: oilPerfumeId,
+      eventType: "wear",
+      weight: wearWeight,
+      metadata: { ...wearMeta, role: "oil" },
+    })
+  }
   return entry
 }
 
@@ -221,6 +240,7 @@ export const updateWearJournalEntry = async (params: {
   userId: string
   entryId: string
   perfumeId?: string
+  oilPerfumeId?: string | null
   wornOn?: Date
   season?: string | null
   rating?: number | null
@@ -230,13 +250,21 @@ export const updateWearJournalEntry = async (params: {
 }) => {
   const existing = await prisma.wearJournalEntry.findFirst({
     where: { id: params.entryId, userId: params.userId },
-    select: { id: true },
+    select: { id: true, perfumeId: true },
   })
   if (!existing) throw new Error("Entry not found")
+  const nextPerfumeId = params.perfumeId ?? existing.perfumeId
+  const oilPerfumeId =
+    params.oilPerfumeId === undefined
+      ? undefined
+      : params.oilPerfumeId && params.oilPerfumeId !== nextPerfumeId
+        ? params.oilPerfumeId
+        : null
   return prisma.wearJournalEntry.update({
     where: { id: params.entryId },
     data: {
       ...(params.perfumeId !== undefined ? { perfumeId: params.perfumeId } : {}),
+      ...(oilPerfumeId !== undefined ? { oilPerfumeId } : {}),
       ...(params.wornOn !== undefined ? { wornOn: params.wornOn } : {}),
       ...(params.season !== undefined ? { season: params.season } : {}),
       ...(params.rating !== undefined ? { rating: params.rating } : {}),
@@ -266,6 +294,9 @@ export const listWearJournal = async (userId: string, limit = 30) => {
     take: limit,
     include: {
       perfume: {
+        select: { id: true, name: true, slug: true, image: true },
+      },
+      oilPerfume: {
         select: { id: true, name: true, slug: true, image: true },
       },
     },
