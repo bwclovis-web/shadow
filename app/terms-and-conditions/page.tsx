@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
+import { Link } from "next-view-transitions"
 
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
@@ -78,9 +79,9 @@ const TermsAndConditionsPage = async () => {
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("privacy.contentOne")}</p>
           <p>
-            <a href="/privacy" className="text-noir-gold underline underline-offset-4">
+            <Link href="/privacy" className="text-noir-gold underline underline-offset-4">
               Read the full Privacy policy
-            </a>
+            </Link>
           </p>
         </div>
       </section>
