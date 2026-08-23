@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
@@ -19,15 +20,29 @@ interface CommunityHubClientProps {
 }
 
 const PANEL_FADE_MS = 280
+const TAB_IDS: CommunityTabId[] = ["shelves", "journal", "challenges", "alerts"]
 
 const CommunityHubClient = ({ signedIn, signInHref }: CommunityHubClientProps) => {
   const t = useTranslations("community")
-  const [tab, setTab] = useState<CommunityTabId>("shelves")
-  const [visibleTab, setVisibleTab] = useState<CommunityTabId>("shelves")
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get("tab")
+  const perfumeParam = searchParams.get("perfumeId") ?? undefined
+  const initialTab: CommunityTabId =
+    tabParam && TAB_IDS.includes(tabParam as CommunityTabId)
+      ? (tabParam as CommunityTabId)
+      : "shelves"
+  const [tab, setTab] = useState<CommunityTabId>(initialTab)
+  const [visibleTab, setVisibleTab] = useState<CommunityTabId>(initialTab)
   const [panelVisible, setPanelVisible] = useState(true)
-  const [mountedTabs, setMountedTabs] = useState<CommunityTabId[]>(["shelves"])
+  const [mountedTabs, setMountedTabs] = useState<CommunityTabId[]>([initialTab])
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (tabParam && TAB_IDS.includes(tabParam as CommunityTabId)) {
+      setTab(tabParam as CommunityTabId)
+    }
+  }, [tabParam])
 
   const onMessage = useCallback((next: string | null) => {
     setMessage(next)
@@ -126,12 +141,20 @@ const CommunityHubClient = ({ signedIn, signInHref }: CommunityHubClientProps) =
         ) : null}
         {mountedTabs.includes("journal") && signedIn ? (
           <div hidden={visibleTab !== "journal"}>
-            <JournalTab onMessage={onMessage} onError={onError} />
+            <JournalTab
+              onMessage={onMessage}
+              onError={onError}
+              initialPerfumeId={perfumeParam}
+            />
           </div>
         ) : null}
         {mountedTabs.includes("challenges") ? (
           <div hidden={visibleTab !== "challenges"}>
-            <ChallengesTab onError={onError} />
+            <ChallengesTab
+              onError={onError}
+              onMessage={onMessage}
+              signedIn={signedIn}
+            />
           </div>
         ) : null}
         {mountedTabs.includes("alerts") ? (

@@ -67,7 +67,13 @@ const SignInClient = () => {
             title="Sign-in Error"
           />
         )}
-        <Button type="submit" variant="icon" background="gold" size="xl">
+        <Button
+          type="submit"
+          variant="icon"
+          background="gold"
+          size="xl"
+          data-testid="sign-in-submit"
+        >
           {t("submit")}
         </Button>
       </form>

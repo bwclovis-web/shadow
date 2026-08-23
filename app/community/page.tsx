@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { getTranslations } from "next-intl/server"
 
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
@@ -14,7 +15,7 @@ const BANNER_IMAGE = "/images/new/community.webp"
 export const metadata = {
   title: "Community | Shadow",
   description:
-    "Collection shelves, wear journal, and community challenges — digital collecting only.",
+    "Collection trays, wear journal, and community challenges — digital collecting only.",
 }
 
 const CommunityPage = async () => {
@@ -48,13 +49,27 @@ const CommunityPage = async () => {
             {t("seasonalPlanningLink")}
           </PrefetchLink>
           <PrefetchLink
+            href="/wear-suggestions"
+            className="text-sm uppercase tracking-wide border border-noir-gold/40 px-3 py-2 rounded hover:bg-white/5 text-noir-gold-100"
+          >
+            {t("wearSuggestionsLink")}
+          </PrefetchLink>
+          <PrefetchLink
+            href="/digest"
+            className="text-sm uppercase tracking-wide border border-noir-gold/40 px-3 py-2 rounded hover:bg-white/5 text-noir-gold-100"
+          >
+            {t("digestLink")}
+          </PrefetchLink>
+          <PrefetchLink
             href="/membership"
             className="text-sm uppercase tracking-wide border border-noir-gold/40 px-3 py-2 rounded hover:bg-white/5 text-noir-gold-100"
           >
             {t("membershipCta")}
           </PrefetchLink>
         </div>
-        <CommunityHubClient signedIn={signedIn} signInHref={signInHref} />
+        <Suspense fallback={null}>
+          <CommunityHubClient signedIn={signedIn} signInHref={signInHref} />
+        </Suspense>
       </PageWrapper>
     </main>
   )

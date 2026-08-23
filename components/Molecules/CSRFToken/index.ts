@@ -1,2 +1,7 @@
 export { CSRFToken } from "./CSRFToken"
-export { CSRFTokenProvider, useCSRFToken } from "./CSRFTokenProvider"
+export {
+  CSRFTokenProvider,
+  useCSRFToken,
+  CSRFTokenContext,
+} from "./CSRFTokenProvider"
+

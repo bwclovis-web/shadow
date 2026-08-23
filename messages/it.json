@@ -1167,7 +1167,7 @@
     "aboutUs": "I Custodi",
     "journal": "Journal",
     "community": "Community",
-    "communityHub": "Scaffali e diario",
+    "communityHub": "Vassoi e diario",
     "membership": "Abbonamento",
     "howWeWork": "La guida del collezionista",
     "contactUs": "Corrispondenza",
@@ -1277,7 +1277,7 @@
       "wishlist": "La mia wishlist",
       "myTrades": "I miei scambi",
       "myScents": "I miei profumi",
-      "communityHub": "Scaffali e diario",
+      "communityHub": "Vassoi e diario",
       "accountSecurity": "Sicurezza account",
       "myReports": "Le mie segnalazioni",
       "myDisputes": "Le mie controversie"
@@ -1293,6 +1293,7 @@
     "scanQr": "Scansiona il QR code e conferma con il codice a 6 cifre e la password.",
     "qrAlt": "QR code autenticatore",
     "manualKey": "Chiave manuale",
+    "rescanButton": "Genera un nuovo codice QR",
     "currentPassword": "Password attuale",
     "verificationCode": "Codice a 6 cifre",
     "confirmEnable": "Conferma e attiva",
@@ -2066,6 +2067,7 @@
     "table": {
       "user": "Utente",
       "role": "Ruolo",
+      "membership": "Abbonamento",
       "strikes": "Strikes",
       "dataRecords": "Record dati",
       "joined": "Iscritto il",
@@ -2079,12 +2081,18 @@
       "admin": "Admin",
       "deleted": "Eliminato",
       "changeRole": "Cambia ruolo utente",
+      "changeMembership": "Cambia livello di abbonamento",
       "strikesLabel": "{count, plural, =0 {Nessuno strike} one {# strike} other {# strikes}}",
       "bannedBadge": "BANNATO",
       "roles": {
         "user": "Utente",
         "editor": "Editore",
         "admin": "Admin"
+      },
+      "membershipTiers": {
+        "free": "Gratuito",
+        "premium": "Premium",
+        "collector": "Collector"
       }
     }
   },
@@ -2605,36 +2613,36 @@
   },
   "community": {
     "title": "Community",
-    "subtitle": "Scaffali, diari di utilizzo e sfide stagionali — collezione digitale, senza vendite.",
+    "subtitle": "Vassoi, diari di utilizzo e sfide stagionali — collezione digitale, senza vendite.",
     "membershipCta": "Vedi i vantaggi dell’abbonamento",
     "tabs": {
-      "shelves": "Scaffali",
+      "shelves": "Vassoi",
       "journal": "Diario di utilizzo",
       "challenges": "Sfide",
       "alerts": "Ricerche salvate"
     },
-    "signInPrompt": "Accedi per gestire scaffali e diario di utilizzo.",
+    "signInPrompt": "Accedi per gestire vassoi e diario di utilizzo.",
     "signIn": "Accedi",
     "loading": "Caricamento…",
     "loadError": "Impossibile caricare i dati della community.",
     "saveError": "Salvataggio non riuscito. Riprova.",
-    "createShelfTitle": "Crea uno scaffale",
-    "shelfName": "Nome dello scaffale",
-    "shelfPublic": "Rendi pubblico questo scaffale",
-    "createShelf": "Crea scaffale",
-    "shelfCreated": "Scaffale creato.",
+    "createShelfTitle": "Crea un vassoio",
+    "shelfName": "Nome del vassoio",
+    "shelfPublic": "Rendi pubblico questo vassoio",
+    "createShelf": "Crea vassoio",
+    "shelfCreated": "Vassoio creato.",
     "addToShelfTitle": "Aggiungi dalla collezione",
-    "shelf": "Scaffale",
+    "shelf": "Vassoio",
     "perfume": "Profumo",
     "addPerfume": "Aggiungi profumo",
-    "perfumeAdded": "Profumo aggiunto allo scaffale.",
-    "yourShelves": "I tuoi scaffali",
-    "noShelves": "Nessuno scaffale ancora: creane uno per organizzare i preferiti.",
-    "emptyShelf": "Nessun profumo su questo scaffale.",
+    "perfumeAdded": "Profumo aggiunto al vassoio.",
+    "yourShelves": "I tuoi vassoi",
+    "noShelves": "Nessun vassoio ancora: creane uno per organizzare i preferiti.",
+    "emptyShelf": "Nessun profumo su questo vassoio.",
     "deleteShelf": "Elimina",
-    "deleteShelfHeading": "Eliminare questo scaffale?",
-    "deleteShelfDescription": "“{name}” verrà rimosso. I profumi lasceranno solo lo scaffale, non la collezione.",
-    "shelfDeleted": "Scaffale eliminato.",
+    "deleteShelfHeading": "Eliminare questo vassoio?",
+    "deleteShelfDescription": "“{name}” verrà rimosso. I profumi lasceranno solo il vassoio, non la collezione.",
+    "shelfDeleted": "Vassoio eliminato.",
     "public": "Pubblico",
     "private": "Privato",
     "logWearTitle": "Cosa hai indossato oggi?",
@@ -2657,9 +2665,9 @@
       "intro": "Partecipa agli eventi di stagione, condividi cosa indossi e scopri le liste di altri collezionisti.",
       "journalLink": "Leggi il Journal",
       "introAfter": "per guide editoriali collegate a note e case.",
-      "empty": "Nessuna sfida attiva al momento: torna presto, oppure crea uno scaffale pubblico da"
+      "empty": "Nessuna sfida attiva al momento: torna presto, oppure crea un vassoio pubblico da"
     },
-    "publicShelvesLink": "Sfoglia le scaffalature pubbliche",
+    "publicShelvesLink": "Sfoglia i vassoi pubblici",
     "seasonalPlanningLink": "Pianificazione stagionale"
   },
   "membershipPage": {
@@ -2700,11 +2708,11 @@
     "recentWear": "Indossato di recente"
   },
   "publicShelves": {
-    "browseTitle": "Scaffalature pubbliche",
+    "browseTitle": "Vassoi pubblici",
     "browseSubtitle": "Scopri come i collezionisti organizzano i flaconi.",
-    "empty": "Nessuna scaffalatura pubblica ancora.",
-    "viewShelf": "Apri scaffalatura",
+    "empty": "Nessun vassoio pubblico ancora.",
+    "viewShelf": "Apri vassoio",
     "byCollector": "di {name}",
-    "backToBrowse": "Tutte le scaffalature pubbliche"
+    "backToBrowse": "Tutti i vassoi pubblici"
   }
 }

@@ -262,6 +262,30 @@ function ComparePageInner({
 
   const orderedIds = useMemo(() => items.map((i) => i.id), [items])
 
+  const compareTasteKeyRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (orderedIds.length < 2) return
+    const key = orderedIds.slice().sort().join("|")
+    if (compareTasteKeyRef.current === key) return
+    compareTasteKeyRef.current = key
+    void (async () => {
+      try {
+        const { apiFetch } = await import("@/lib/api-client")
+        await apiFetch("/api/taste-events", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            eventType: "compare",
+            perfumeId: orderedIds[0],
+            metadata: { perfumeIds: orderedIds, from: "compare_page" },
+          }),
+        })
+      } catch {
+        /* optional signal when signed out */
+      }
+    })()
+  }, [orderedIds])
+
   useEffect(() => {
     if (pathname !== "/compare") return
     if (urlSyncBlockRef.current) return
@@ -383,9 +407,26 @@ function ComparePageInner({
                 <span className="text-sm text-noir-gold-500">{t("linkCopied")}</span>
               ) : null}
               {copyState === "error" ? (
-                <span className="text-sm text-red-300/90">{t("copyLinkError")}</span>
+                <span className="text-sm text-red-400">{t("linkCopyFailed")}</span>
               ) : null}
             </div>
+            {(sharedNoteIds.size > 0 || winnerNoteList) && (
+              <div className="w-full noir-border rounded-lg p-3 text-sm text-noir-gold-100/90">
+                <p className="text-xs uppercase tracking-wide text-noir-gold-500 mb-1">
+                  {t("shareSummaryTitle")}
+                </p>
+                {sharedNoteIds.size > 0 && (
+                  <p>
+                    {t("shareSummarySharedNotes", { count: sharedNoteIds.size })}
+                  </p>
+                )}
+                {winnerNoteList ? (
+                  <p className="mt-1 opacity-80">
+                    {t("shareSummaryBestForYou", { notes: winnerNoteList })}
+                  </p>
+                ) : null}
+              </div>
+            )}
           </div>
         ) : null}
 

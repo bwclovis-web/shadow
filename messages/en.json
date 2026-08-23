@@ -58,7 +58,11 @@
     "findTradersOnExchange": "Find traders who have this",
     "copyShareLink": "Copy compare link",
     "linkCopied": "Link copied",
+    "linkCopyFailed": "Could not copy — try copying the address bar.",
     "copyLinkError": "Could not copy — try copying the address bar.",
+    "shareSummaryTitle": "Share summary",
+    "shareSummarySharedNotes": "{count, plural, one {# shared note family across these bottles} other {# shared notes across these bottles}}",
+    "shareSummaryBestForYou": "Best for you leans on: {notes}.",
     "invalidCompareUrl": "This compare link lists too many perfumes. You can compare up to three at a time.",
     "personalizeHint": "Sign in to see which perfume best matches your scent profile.",
     "bestForYouTitle": "Best for you",
@@ -1362,7 +1366,7 @@
     "aboutUs": "The Keepers",
     "journal": "Journal",
     "community": "Community",
-    "communityHub": "Shelves & Journal",
+    "communityHub": "Trays & Journal",
     "membership": "Membership",
     "howWeWork": "The Collector’s Guide",
     "contactUs": "Correspondence",
@@ -1473,7 +1477,9 @@
       "myDisputes": "Exchange Disputes",
       "myTrades": "My Exchanges",
       "myScents": "Collection",
-      "communityHub": "Shelves & Journal",
+      "collectionInsights": "Collection Insights",
+      "weeklyDigest": "Weekly Digest",
+      "communityHub": "Trays & Journal",
       "accountSecurity": "Account Security"
     }
   },
@@ -1493,6 +1499,7 @@
     "scanQr": "Scan this QR code with your authenticator app, then enter the 6-digit code and your password to confirm.",
     "qrAlt": "Authenticator QR code",
     "manualKey": "Manual entry key",
+    "rescanButton": "Generate a new QR code",
     "currentPassword": "Current password",
     "verificationCode": "6-digit code",
     "confirmEnable": "Confirm and enable",
@@ -1597,7 +1604,12 @@
       "profileMatchFallback": "Aligned with your Scent DNA.",
       "popular": "Frequently explored by collectors across the Hollow.",
       "recent": "Recently surfaced in the Archive.",
-      "sameHouse": "From the same fragrance house as this discovery."
+      "sameHouse": "From the same fragrance house as this discovery.",
+      "boostPrefix": "Also fits your {details}.",
+      "boostSeason": "season preference",
+      "boostPrice": "budget range",
+      "boostHouseTier": "house style",
+      "boostConcentration": "concentration preference"
     }
   },
   "singleHouse": {
@@ -1974,6 +1986,16 @@
       "title": "Matches for you",
       "description": "Fragrances aligned with your tastes, collection, and recent discoveries."
     },
+    "palateRecommendations": {
+      "title": "Recommended for your palate",
+      "description": "Listings that match your Scent DNA — even if they are not on your wishlist yet."
+    },
+    "mutualSwaps": {
+      "title": "Mutual swap ideas",
+      "description": "Collectors who have what you want and want something you list.",
+      "youWant": "You want",
+      "theyWant": "They want"
+    },
     "matchReason": {
       "triggerLabel": "Why this swap fits",
       "whyAriaLabel": "Why this swap fits — full details",
@@ -2324,6 +2346,7 @@
     "table": {
       "user": "User",
       "role": "Role",
+      "membership": "Membership",
       "strikes": "Strikes",
       "dataRecords": "Data Records",
       "joined": "Joined",
@@ -2337,12 +2360,18 @@
       "admin": "Admin",
       "deleted": "Deleted",
       "changeRole": "Change user role",
+      "changeMembership": "Change membership tier",
       "strikesLabel": "{count, plural, =0 {No strikes} one {# strike} other {# strikes}}",
       "bannedBadge": "BANNED",
       "roles": {
         "user": "User",
         "editor": "Editor",
         "admin": "Admin"
+      },
+      "membershipTiers": {
+        "free": "Free",
+        "premium": "Premium",
+        "collector": "Collector"
       }
     }
   },
@@ -2605,38 +2634,40 @@
   },
   "community": {
     "title": "Community",
-    "subtitle": "Shelves, wear journals, and seasonal challenges — digital collecting, no sales.",
+    "subtitle": "Trays, wear journals, and seasonal challenges — digital collecting, no sales.",
     "membershipCta": "See membership benefits",
-    "publicShelvesLink": "Browse public shelves",
+    "publicShelvesLink": "Browse public trays",
     "seasonalPlanningLink": "Seasonal planning",
+    "wearSuggestionsLink": "What to wear",
+    "digestLink": "Weekly digest",
     "tabs": {
-      "shelves": "Shelves",
+      "shelves": "Trays",
       "journal": "Wear journal",
       "challenges": "Challenges",
       "alerts": "Saved searches"
     },
-    "signInPrompt": "Sign in to manage shelves and your wear journal.",
+    "signInPrompt": "Sign in to manage trays and your wear journal.",
     "signIn": "Sign in",
     "loading": "Loading…",
     "loadError": "Could not load community data.",
     "saveError": "Could not save. Try again.",
-    "createShelfTitle": "Create a shelf",
-    "shelfName": "Shelf name",
-    "shelfPublic": "Make this shelf public",
-    "createShelf": "Create shelf",
-    "shelfCreated": "Shelf created.",
+    "createShelfTitle": "Create a tray",
+    "shelfName": "Tray name",
+    "shelfPublic": "Make this tray public",
+    "createShelf": "Create tray",
+    "shelfCreated": "Tray created.",
     "addToShelfTitle": "Add from your collection",
-    "shelf": "Shelf",
+    "shelf": "Tray",
     "perfume": "Perfume",
     "addPerfume": "Add perfume",
-    "perfumeAdded": "Perfume added to shelf.",
-    "yourShelves": "Your shelves",
-    "noShelves": "No shelves yet — create one to organize favorites.",
-    "emptyShelf": "No perfumes on this shelf yet.",
+    "perfumeAdded": "Perfume added to tray.",
+    "yourShelves": "Your trays",
+    "noShelves": "No trays yet — create one to organize favorites.",
+    "emptyShelf": "No perfumes on this tray yet.",
     "deleteShelf": "Delete",
-    "deleteShelfHeading": "Delete this shelf?",
-    "deleteShelfDescription": "“{name}” will be removed. Perfumes on it leave the shelf only — not your collection.",
-    "shelfDeleted": "Shelf deleted.",
+    "deleteShelfHeading": "Delete this tray?",
+    "deleteShelfDescription": "“{name}” will be removed. Perfumes on it leave the tray only — not your collection.",
+    "shelfDeleted": "Tray deleted.",
     "public": "Public",
     "private": "Private",
     "logWearTitle": "What did you wear today?",
@@ -2644,11 +2675,44 @@
     "browseArchive": "Browse the Archive",
     "rating": "Rating (optional)",
     "notes": "Notes",
+    "wornOn": "Date worn",
+    "season": "Season",
+    "weather": "Weather",
+    "occasion": "Occasion",
+    "optionalBlank": "—",
+    "seasons": {
+      "winter": "Winter",
+      "spring": "Spring",
+      "summer": "Summer",
+      "fall": "Fall"
+    },
+    "weathers": {
+      "cold": "Cold",
+      "mild": "Mild",
+      "warm": "Warm",
+      "humid": "Humid"
+    },
+    "occasions": {
+      "everyday": "Everyday",
+      "work": "Work",
+      "evening": "Evening",
+      "special": "Special"
+    },
     "saveWear": "Log wear",
+    "deleteWear": "Delete",
     "journalSaved": "Wear logged.",
+    "journalDeleted": "Wear entry deleted.",
     "wearHistory": "Recent wears",
     "noJournal": "No wear entries yet.",
     "rated": "Rated {rating}/5",
+    "joinChallenge": "Join challenge",
+    "challengeCaption": "Caption (optional)",
+    "challengeJoined": "You're in the challenge.",
+    "buildChallengeTray": "Build a challenge tray",
+    "logWearFromTray": "Log a wear",
+    "challengeEntries": "Entries",
+    "noChallengeEntries": "No entries yet — be the first.",
+    "viewChallenge": "View challenge",
     "liveChallenges": "Live challenges",
     "fullChallengesPage": "Full page",
     "noChallenges": "No live challenges right now — check back soon.",
@@ -2659,7 +2723,7 @@
       "intro": "Join seasonal events, share what you're wearing, and discover lists from fellow collectors.",
       "journalLink": "Read the Journal",
       "introAfter": "for editorial guides linked to notes and houses.",
-      "empty": "No live challenges right now — check back soon, or start a public shelf from"
+      "empty": "No live challenges right now — check back soon, or start a public tray from"
     }
   },
   "membershipPage": {
@@ -2697,14 +2761,73 @@
     "empty": "Add bottles to your collection or log wears to unlock suggestions.",
     "fromCollection": "From your collection",
     "trending": "Trending this season",
-    "recentWear": "Recently worn"
+    "recentWear": "Recently worn",
+    "scentDna": "Matches your Scent DNA",
+    "quizPref": "Matches your scent quiz"
   },
   "publicShelves": {
-    "browseTitle": "Public shelves",
+    "browseTitle": "Public trays",
     "browseSubtitle": "Discover how collectors organize their bottles.",
-    "empty": "No public shelves yet.",
-    "viewShelf": "Open shelf",
+    "empty": "No public trays yet.",
+    "viewShelf": "Open tray",
     "byCollector": "by {name}",
-    "backToBrowse": "All public shelves"
+    "backToBrowse": "All public trays"
+  },
+  "collectionInsights": {
+    "meta": {
+      "title": "Collection Insights",
+      "description": "Understand rotation, neglected bottles, and season coverage."
+    },
+    "heading": "Collection Insights",
+    "subheading": "How you live with your bottles — not just what you own.",
+    "bottles": "Bottles",
+    "houses": "Houses",
+    "recentWears": "Wears (30d)",
+    "tradedValue": "Traded value",
+    "topFamilies": "Top note families",
+    "premiumTitle": "Premium analytics",
+    "premiumRequired": "Rotation score, neglected bottles, and season coverage unlock with Premium.",
+    "upgradeCta": "View membership",
+    "rotationLabel": "Rotation score",
+    "rotationHelp": "Share of owned scents you have logged at least once.",
+    "seasonCoverage": "Season coverage (logged wears)",
+    "neglected": "Neglected bottles (90+ days, never worn)",
+    "ownedDays": "{days} days owned",
+    "exportCsv": "Export collection & wears (CSV)",
+    "exportCollectorOnly": "CSV export is available on the Collector plan.",
+    "declaredVsActual": "Quiz vs shelf",
+    "redundancy": "Possible redundancy",
+    "gaps": "Taste gaps on your shelf",
+    "decantMix": "Decant vs bottle mix",
+    "decantMixCounts": "{full} full bottles · {decants} decants · {unknown} unmarked"
+  },
+  "wearSuggestions": {
+    "title": "What should I wear?",
+    "subtitle": "Three picks from your collection for today.",
+    "premiumRequired": "Wear suggestions are a Premium benefit.",
+    "upgradeCta": "View membership",
+    "empty": "Add bottles or log wears to unlock suggestions.",
+    "fromCollection": "In your collection",
+    "recentWear": "Recently worn",
+    "seasonFit": "Fits your season",
+    "profileFit": "Matches your Scent DNA"
+  },
+  "digestPage": {
+    "meta": {
+      "title": "Weekly Digest",
+      "description": "Your personalized weekly scent digest."
+    },
+    "heading": "Your weekly digest",
+    "subheading": "Recommendations, sampling queue, and collection gaps.",
+    "premiumRequired": "Personalized digests are a Premium benefit.",
+    "upgradeCta": "View membership",
+    "empty": "No digest available yet — complete the scent quiz and build your collection.",
+    "recommendations": "Suggested for you",
+    "gaps": "Collection gaps",
+    "sampling": "Sampling queue",
+    "wearSuggestions": "What to wear",
+    "houseRadar": "From houses you follow",
+    "fromHouse": "{house}",
+    "palateMatch": "Matches your {family} DNA"
   }
 }

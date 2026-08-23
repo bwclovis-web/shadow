@@ -13,10 +13,12 @@ import type { UserWithCounts } from "@/models/admin.server"
 import {
   deleteUserAction,
   updateUserRoleAction,
+  updateUserMembershipAction,
   issueStrikeAction,
   resetTwoFactorAction,
   type DeleteUserActionState,
   type UpdateRoleActionState,
+  type UpdateMembershipActionState,
   type IssueStrikeActionState,
   type ResetTwoFactorActionState,
 } from "./actions"
@@ -47,6 +49,10 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
   const [roleState, roleFormAction] = useActionState(
     updateUserRoleAction,
     null as UpdateRoleActionState
+  )
+  const [membershipState, membershipFormAction] = useActionState(
+    updateUserMembershipAction,
+    null as UpdateMembershipActionState
   )
   const [strikeState, strikeFormAction] = useActionState(
     issueStrikeAction,
@@ -105,7 +111,13 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
     if (roleState?.success) {
       router.refresh()
     }
-  }, [roleState?.success, router])
+  }, [roleState, router])
+
+  useEffect(() => {
+    if (membershipState?.success) {
+      router.refresh()
+    }
+  }, [membershipState, router])
 
   useEffect(() => {
     if (strikeState?.success) {
@@ -113,13 +125,13 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
       setSelectedUserId(null)
       router.refresh()
     }
-  }, [strikeState?.success, router])
+  }, [strikeState, router])
 
   useEffect(() => {
     if (reset2faState?.success) {
       router.refresh()
     }
-  }, [reset2faState?.success, router])
+  }, [reset2faState, router])
 
   const pendingAction = isSubmitting && selectedUserId ? deleteType : null
   const pendingUserId = isSubmitting ? selectedUserId : null
@@ -152,6 +164,24 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
           {state && !state.success && (
             <div className="mb-6 rounded-md border border-red-400 bg-red-100 p-4 text-red-700">
               {state.message}
+            </div>
+          )}
+
+          {membershipState && !membershipState.success && (
+            <div className="mb-6 rounded-md border border-red-400 bg-red-100 p-4 text-red-700">
+              {membershipState.message}
+            </div>
+          )}
+
+          {membershipState?.success && (
+            <div className="mb-6 rounded-md border border-green-500/50 bg-green-900/20 p-4 text-green-300">
+              {membershipState.message}
+            </div>
+          )}
+
+          {roleState && !roleState.success && (
+            <div className="mb-6 rounded-md border border-red-400 bg-red-100 p-4 text-red-700">
+              {roleState.message}
             </div>
           )}
 
@@ -240,6 +270,7 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
                   <tr className="text-left text-xs font-medium uppercase tracking-wider text-noir-gold-100">
                     <th className="px-6 py-3">{t("table.user")}</th>
                     <th className="px-6 py-3">{t("table.role")}</th>
+                    <th className="px-6 py-3">{t("table.membership")}</th>
                     <th className="px-6 py-3">{t("table.strikes")}</th>
                     <th className="px-6 py-3">{t("table.dataRecords")}</th>
                     <th className="px-6 py-3">{t("table.joined")}</th>
@@ -258,6 +289,7 @@ const UsersClient = ({ users, currentUserId }: UsersClientProps) => {
                       pendingAction={pendingAction}
                       pendingUserId={pendingUserId}
                       roleFormAction={roleFormAction}
+                      membershipFormAction={membershipFormAction}
                       resetTwoFactorFormAction={reset2faFormAction}
                     />
                   ))}

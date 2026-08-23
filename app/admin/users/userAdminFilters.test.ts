@@ -11,6 +11,8 @@ const baseUser = (overrides: Partial<UserWithCounts>): UserWithCounts => ({
   lastName: "Smith",
   username: "alice",
   role: "user",
+  membershipTier: "free",
+  subscriptionStatus: "free",
   strikeCount: 0,
   isBanned: false,
   twoFactorEnabledAt: null,

@@ -11,8 +11,8 @@ import { logTwoFactorAudit } from "@/utils/security/two-factor-audit.server"
 
 const APP_NAME = "Shadows"
 const BACKUP_CODE_COUNT = 10
-/** ±30s (one TOTP period) for clock skew */
-const TOTP_EPOCH_TOLERANCE = 30
+/** ±60s clock skew (seconds; otplib epochTolerance unit) */
+const TOTP_EPOCH_TOLERANCE = 60
 
 export type TwoFactorUserSnapshot = {
   id: string
@@ -147,15 +147,44 @@ export const confirmTwoFactorEnrollment = async (
     return { success: false, error: "Current password is incorrect" }
   }
 
-  const codeValid = await verifyTotpWithSecret(secret, code)
+  const normalizedCode = normalizeTotpCode(code)
+  if (!normalizedCode) {
+    return {
+      success: false,
+      error: "Enter the 6-digit code from your authenticator app",
+    }
+  }
+  if (!/^\d{6}$/.test(normalizedCode)) {
+    return {
+      success: false,
+      error: "Verification code must be exactly 6 digits",
+    }
+  }
+
+  const codeValid = await verifyTotpWithSecret(secret, normalizedCode)
   if (!codeValid) {
-    return { success: false, error: "Invalid verification code" }
+    return {
+      success: false,
+      error:
+        "Invalid verification code. Remove any older authenticator entry for this site, scan the QR shown here, and enter the newest code.",
+    }
   }
 
   const backupCodes = Array.from({ length: BACKUP_CODE_COUNT }, () =>
     generateBackupCodePlaintext()
   )
-  const encryptedSecret = encryptField(secret)
+
+  let encryptedSecret: string
+  try {
+    encryptedSecret = encryptField(secret)
+  } catch (error) {
+    console.error("Failed to encrypt TOTP secret:", error)
+    return {
+      success: false,
+      error:
+        "Two-factor setup is unavailable: TOTP_ENCRYPTION_KEY is missing or invalid. Add a 32-byte key to your environment and restart the server.",
+    }
+  }
 
   await prisma.$transaction(async (tx) => {
     await tx.user.update({

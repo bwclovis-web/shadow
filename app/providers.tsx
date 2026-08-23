@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { useState } from 'react'
 
 import ModalRouteCleanup from '@/components/Molecules/ModalRouteCleanup/ModalRouteCleanup'
+import { CompareLimitBootstrap } from '@/components/Molecules/CompareLimitBootstrap/CompareLimitBootstrap'
 import { useCompareStore } from '@/hooks/compareStore'
 import { useTokenRefresh } from '@/hooks/useTokenRefresh'
 
@@ -44,6 +45,7 @@ export function Providers({
   return (
     <QueryClientProvider client={queryClient}>
       <ModalRouteCleanup />
+      <CompareLimitBootstrap />
       {children}
       <LazyCompareTray />
       {process.env.NODE_ENV === 'development' && (

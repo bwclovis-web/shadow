@@ -10,6 +10,8 @@ import {
 } from "@/models/perfume.server"
 import { getFollowedActivity, getRecentlyListedActivity } from "@/models/activity-feed.server"
 import { getSeasonalTrendingPerfumes } from "@/models/seasonal-trending.server"
+import { getExchangePalateRecommendations } from "@/models/exchange-palate.server"
+import { getMutualTradeSuggestions } from "@/models/mutual-trade-suggestions.server"
 import { getWishlistExchangeMatches } from "@/models/wishlist-matching.server"
 import { getPerfumeNotesByIds } from "@/models/tags.server"
 import { loadTraderReputationsForUserIds } from "@/services/reputation/loadReputationInputs.server"
@@ -67,6 +69,8 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
     recentListings,
     followedActivity,
     seasonalTrending,
+    palateRecommendations,
+    mutualSwapSuggestions,
   ] = await Promise.all([
       getAvailablePerfumesForDecantingPaginated({
         skip: initialSkip,
@@ -91,6 +95,8 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
       getRecentlyListedActivity(12),
       viewerId ? getFollowedActivity(viewerId, 12) : Promise.resolve([]),
       getSeasonalTrendingPerfumes(10),
+      viewerId ? getExchangePalateRecommendations(viewerId) : Promise.resolve([]),
+      viewerId ? getMutualTradeSuggestions(viewerId) : Promise.resolve([]),
     ])
 
   let { perfumes: availablePerfumes, meta: pagination } = perfumePage
@@ -127,9 +133,13 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
 
   const traderIds = [
     ...new Set(
-      [...availablePerfumes, ...wishlistMatches].flatMap(p =>
-        p.userPerfume.map(up => up.userId)
-      )
+      [
+        ...availablePerfumes,
+        ...wishlistMatches,
+        ...palateRecommendations.map(m => ({
+          userPerfume: [{ userId: m.counterpartyId }],
+        })),
+      ].flatMap(p => p.userPerfume.map(up => up.userId))
     ),
   ]
   const reputationMap =
@@ -193,6 +203,8 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
       traderReputationByUserId={traderReputationByUserId}
       viewerId={viewerId}
       openSplitChipsByPerfumeId={openSplitChipsByPerfumeId}
+      palateRecommendations={palateRecommendations}
+      mutualSwapSuggestions={mutualSwapSuggestions}
     />
     </>
   )

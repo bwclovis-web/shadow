@@ -13,6 +13,9 @@ export function normalizeCompareIds(ids: string[]): string[] {
   return out
 }
 
-export function compareIdsExceedMax(ids: string[]): boolean {
-  return ids.length > COMPARE_MAX_ITEMS
+export function compareIdsExceedMax(
+  ids: string[],
+  max: number = COMPARE_MAX_ITEMS
+): boolean {
+  return ids.length > max
 }

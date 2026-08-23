@@ -9,8 +9,8 @@ import { isFeatureEnabled } from "@/utils/feature-flags"
 import { getTraderDisplayName } from "@/utils/user"
 
 export const metadata: Metadata = {
-  title: "Public shelves",
-  description: "Browse public collection shelves from the community.",
+  title: "Public trays",
+  description: "Browse public collection trays from the community.",
 }
 
 const BANNER = "/images/new/community.webp"

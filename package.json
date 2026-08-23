@@ -40,6 +40,9 @@
     "test:watch": "vitest",
     "validate": "npm run typecheck && npm run test && npm run knip",
     "validate:env": "node scripts/validate-env.js",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:seed": "npx tsx scripts/e2e-seed.ts",
     "i18n:diff": "node scripts/sync-translations-diff.js",
     "i18n:sync": "node scripts/sync-translations-apply.js",
     "pwa:icons": "node scripts/generate-pwa-icons.mjs",
@@ -101,6 +104,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",
     "@tanstack/react-query-devtools": "^5.91.3",
     "@testing-library/jest-dom": "^6.9.1",

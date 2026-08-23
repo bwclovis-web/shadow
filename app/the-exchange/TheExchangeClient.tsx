@@ -56,6 +56,8 @@ import {
   type PerfumeDiscoveryFilters,
 } from "@/utils/discovery-filters"
 import ActivityFeedSection from "@/components/Containers/Exchange/ActivityFeedSection"
+import MutualSwapsSection from "@/components/Containers/Exchange/MutualSwapsSection"
+import PalateRecommendationsSection from "@/components/Containers/Exchange/PalateRecommendationsSection"
 import SeasonalTrendingSection from "@/components/Containers/Exchange/SeasonalTrendingSection"
 import WishlistMatchesSection from "@/components/Containers/Exchange/WishlistMatchesSection"
 import { buildExchangeDiscoveryChipItems } from "./buildExchangeDiscoveryChipItems"
@@ -76,6 +78,8 @@ const TheExchangeClient = ({
   initialHouse,
   initialPerfume = null,
   wishlistMatches = [],
+  palateRecommendations = [],
+  mutualSwapSuggestions = [],
   recentListings = [],
   followedActivity = [],
   seasonalTrending = { season: "spring", perfumes: [] },
@@ -87,6 +91,7 @@ const TheExchangeClient = ({
   const tListings = useTranslations("tradingPost.listings")
   const tSplits = useTranslations("decantSplits.exchange")
   const tTradeComposer = useTranslations("tradeComposer")
+  const tRep = useTranslations("tradingPost.reputation")
   const tf = useTranslations("tradingPost.filters")
   const tSeason = useTranslations("singlePerfume.seasonVote.season")
   const tTraderPrefs = useTranslations("traderProfile.preferences")
@@ -568,6 +573,16 @@ const TheExchangeClient = ({
                     traderReputationByUserId={traderReputationByUserId}
                   />
                 ) : null}
+                {viewerId && mutualSwapSuggestions.length > 0 ? (
+                  <MutualSwapsSection suggestions={mutualSwapSuggestions} />
+                ) : null}
+                {viewerId && palateRecommendations.length > 0 ? (
+                  <PalateRecommendationsSection
+                    matches={palateRecommendations}
+                    viewerId={viewerId}
+                    traderReputationByUserId={traderReputationByUserId}
+                  />
+                ) : null}
                 {availablePerfumes.length === 0 ? (
                   <div className="text-center py-8 bg-noir-dark/80 rounded-md border-2 border-noir-gold animate-fade-in">
                     <h2>
@@ -605,6 +620,21 @@ const TheExchangeClient = ({
                                 count: perfume.userPerfume.length,
                               })}
                             </p>
+                            {(() => {
+                              const otherListings = perfume.userPerfume.filter(
+                                up => up.userId !== viewerId
+                              )
+                              const scores = otherListings
+                                .map(up => traderReputationByUserId[up.userId]?.score)
+                                .filter((s): s is number => s != null)
+                              if (scores.length === 0) return null
+                              const best = Math.max(...scores)
+                              return (
+                                <p className="text-xs text-noir-gold-500/80">
+                                  {tRep("exchangeTrust", { score: best })}
+                                </p>
+                              )
+                            })()}
                             {viewerId &&
                             perfume.userPerfume.some(
                               up => up.userId !== viewerId

@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server"
 
-import { COMPARE_MAX_ITEMS } from "@/constants/compare"
+import { getCompareMaxForEntitlements } from "@/constants/compare"
 import { getComparePersonalization } from "@/models/compare-personalize.server"
 import { authenticateUser } from "@/utils/server/auth.server"
+import { entitlementsForTier, resolveMembershipTier } from "@/utils/membership/entitlements.server"
 import { compareIdsExceedMax, normalizeCompareIds } from "@/utils/compare-ids"
+import { prisma } from "@/lib/db"
 
 export const dynamic = "force-dynamic"
 
 function parseIdsFromRequest(request: NextRequest): string[] {
   const { searchParams } = request.nextUrl
-  const repeated = searchParams.getAll("ids").flatMap((s) => s.split(","))
+  const repeated = searchParams.getAll("ids").flatMap(s => s.split(","))
   const single = searchParams.get("ids")
   const raw = repeated.length > 0 ? repeated : single ? single.split(",") : []
   return normalizeCompareIds(raw)
@@ -33,9 +35,16 @@ export const GET = async (request: NextRequest) => {
     })
   }
 
-  if (compareIdsExceedMax(ids)) {
+  const user = await prisma.user.findUnique({
+    where: { id: auth.user.id },
+    select: { membershipTier: true, subscriptionStatus: true },
+  })
+  const tier = resolveMembershipTier(user ?? { membershipTier: "free" })
+  const max = getCompareMaxForEntitlements(entitlementsForTier(tier))
+
+  if (compareIdsExceedMax(ids, max)) {
     return NextResponse.json(
-      { error: `At most ${COMPARE_MAX_ITEMS} perfumes can be compared` },
+      { error: `At most ${max} perfumes can be compared` },
       { status: 400 }
     )
   }

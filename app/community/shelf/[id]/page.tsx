@@ -17,12 +17,12 @@ type Props = {
 export const generateMetadata = async ({ params }: Props): Promise<Metadata> => {
   const { id } = await params
   if (!isValidPrismaRecordId(id) || !isFeatureEnabled("communityShelves")) {
-    return { title: "Shelf" }
+    return { title: "Tray" }
   }
   const shelf = await getPublicShelfById(id)
   return {
-    title: shelf?.name ?? "Shelf",
-    description: shelf?.description ?? "Public collection shelf",
+    title: shelf?.name ?? "Tray",
+    description: shelf?.description ?? "Public collection tray",
   }
 }
 

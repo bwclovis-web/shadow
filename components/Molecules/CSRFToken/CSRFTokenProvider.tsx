@@ -14,7 +14,7 @@ interface CSRFTokenContextType {
   ) => Promise<Response>
 }
 
-const CSRFTokenContext = createContext<CSRFTokenContextType | null>(null)
+export const CSRFTokenContext = createContext<CSRFTokenContextType | null>(null)
 
 interface CSRFTokenProviderProps {
   children: ReactNode

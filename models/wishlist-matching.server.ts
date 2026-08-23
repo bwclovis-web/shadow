@@ -117,15 +117,57 @@ const TRADERS_WANTING_LISTINGS_LIMIT = 24
 type RankableListing = {
   type: string | null
   price: string | null
+  decantFormat?: "atomizer" | "vial" | "original" | null
+  mlRemaining?: number | null
+  available?: string
+}
+
+/** Score how well a listing matches wishlist bottlePreference (sample/partial/full). */
+export const scoreBottlePreferenceFit = (
+  preference: "sample" | "partial" | "full" | "any" | null | undefined,
+  listing: {
+    available?: string | null
+    decantFormat?: "atomizer" | "vial" | "original" | null
+    mlRemaining?: number | null
+  }
+): number => {
+  if (!preference || preference === "any") return 0
+  const ml =
+    listing.mlRemaining ??
+    (listing.available ? Number.parseFloat(listing.available) : NaN)
+  const isDecant =
+    listing.decantFormat === "atomizer" || listing.decantFormat === "vial"
+  const isOriginal = listing.decantFormat === "original" || listing.decantFormat == null
+
+  if (preference === "sample") {
+    if (isDecant) return 3
+    if (Number.isFinite(ml) && ml > 0 && ml <= 5) return 2
+    return 0
+  }
+  if (preference === "partial") {
+    if (isDecant) return 2
+    if (Number.isFinite(ml) && ml > 5 && ml < 50) return 3
+    if (Number.isFinite(ml) && ml >= 50) return 1
+    return 1
+  }
+  // full bottle
+  if (isOriginal && (!Number.isFinite(ml) || ml >= 30)) return 3
+  if (!isDecant) return 2
+  return 0
 }
 
 const sortListingsByScentProfile = <T extends RankableListing>(
   listings: T[],
   perfumeHouseType: string | null | undefined,
-  signals: ReturnType<typeof signalsFromScentProfileFields>
+  signals: ReturnType<typeof signalsFromScentProfileFields>,
+  bottlePreference?: "sample" | "partial" | "full" | "any" | null
 ): T[] =>
-  [...listings].sort(
-    (a, b) =>
+  [...listings].sort((a, b) => {
+    const bottleDelta =
+      scoreBottlePreferenceFit(bottlePreference, b) -
+      scoreBottlePreferenceFit(bottlePreference, a)
+    if (bottleDelta !== 0) return bottleDelta
+    return (
       scoreListingPreferenceAlignment(
         { price: b.price, type: b.type, perfumeHouseType },
         signals
@@ -134,24 +176,27 @@ const sortListingsByScentProfile = <T extends RankableListing>(
         { price: a.price, type: a.type, perfumeHouseType },
         signals
       )
-  )
+    )
+  })
 
 const bestListingAlignmentScore = (
   listings: RankableListing[],
   perfumeHouseType: string | null | undefined,
-  signals: ReturnType<typeof signalsFromScentProfileFields>
+  signals: ReturnType<typeof signalsFromScentProfileFields>,
+  bottlePreference?: "sample" | "partial" | "full" | "any" | null
 ): number => {
   if (listings.length === 0) return 0
   return Math.max(
-    ...listings.map(l =>
-      scoreListingPreferenceAlignment(
-        {
-          price: l.price,
-          type: l.type,
-          perfumeHouseType,
-        },
-        signals
-      )
+    ...listings.map(
+      l =>
+        scoreListingPreferenceAlignment(
+          {
+            price: l.price,
+            type: l.type,
+            perfumeHouseType,
+          },
+          signals
+        ) + scoreBottlePreferenceFit(bottlePreference, l)
     )
   )
 }
@@ -168,10 +213,14 @@ export const getWishlistExchangeMatches = async (
 
   const wishlistRows = await prisma.userPerfumeWishlist.findMany({
     where: { userId: viewerId },
-    select: { perfumeId: true },
+    select: { perfumeId: true, bottlePreference: true },
   })
   const perfumeIds = [...new Set(wishlistRows.map(row => row.perfumeId))]
   if (perfumeIds.length === 0) return []
+
+  const preferenceByPerfumeId = new Map(
+    wishlistRows.map(row => [row.perfumeId, row.bottlePreference] as const)
+  )
 
   const perfumes = await prisma.perfume.findMany({
     where: {
@@ -204,14 +253,24 @@ export const getWishlistExchangeMatches = async (
       userPerfume: sortListingsByScentProfile(
         p.userPerfume,
         p.perfumeHouse?.type,
-        preferenceSignals
+        preferenceSignals,
+        preferenceByPerfumeId.get(p.id)
       ),
     }))
     .sort(
       (a, b) =>
-        bestListingAlignmentScore(b.userPerfume, b.perfumeHouse?.type, preferenceSignals) -
-        bestListingAlignmentScore(a.userPerfume, a.perfumeHouse?.type, preferenceSignals) ||
-        a.name.localeCompare(b.name)
+        bestListingAlignmentScore(
+          b.userPerfume,
+          b.perfumeHouse?.type,
+          preferenceSignals,
+          preferenceByPerfumeId.get(b.id)
+        ) -
+          bestListingAlignmentScore(
+            a.userPerfume,
+            a.perfumeHouse?.type,
+            preferenceSignals,
+            preferenceByPerfumeId.get(a.id)
+          ) || a.name.localeCompare(b.name)
     )
     .slice(0, limit)
 }

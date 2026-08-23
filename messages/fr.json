@@ -1167,7 +1167,7 @@
     "aboutUs": "Les Gardiens",
     "journal": "Journal",
     "community": "Communauté",
-    "communityHub": "Étagères et journal",
+    "communityHub": "Plateaux et journal",
     "membership": "Abonnement",
     "howWeWork": "Le guide du collectionneur",
     "contactUs": "Correspondance",
@@ -1277,7 +1277,7 @@
       "wishlist": "Ma liste de souhaits",
       "myTrades": "Mes échanges",
       "myScents": "Mes parfums",
-      "communityHub": "Étagères et journal",
+      "communityHub": "Plateaux et journal",
       "accountSecurity": "Sécurité du compte",
       "myReports": "Mes signalements",
       "myDisputes": "Mes litiges"
@@ -1293,6 +1293,7 @@
     "scanQr": "Scannez le QR code, puis confirmez avec le code à 6 chiffres et votre mot de passe.",
     "qrAlt": "QR code authentificateur",
     "manualKey": "Clé manuelle",
+    "rescanButton": "Générer un nouveau QR code",
     "currentPassword": "Mot de passe actuel",
     "verificationCode": "Code à 6 chiffres",
     "confirmEnable": "Confirmer et activer",
@@ -2066,6 +2067,7 @@
     "table": {
       "user": "Utilisateur",
       "role": "Rôle",
+      "membership": "Abonnement",
       "strikes": "Strikes",
       "dataRecords": "Enregistrements",
       "joined": "Inscrit le",
@@ -2079,12 +2081,18 @@
       "admin": "Admin",
       "deleted": "Supprimé",
       "changeRole": "Changer le rôle de l'utilisateur",
+      "changeMembership": "Changer le niveau d'abonnement",
       "strikesLabel": "{count, plural, =0 {Aucun strike} one {# strike} other {# strikes}}",
       "bannedBadge": "BANNI",
       "roles": {
         "user": "Utilisateur",
         "editor": "Éditeur",
         "admin": "Admin"
+      },
+      "membershipTiers": {
+        "free": "Gratuit",
+        "premium": "Premium",
+        "collector": "Collector"
       }
     }
   },
@@ -2605,36 +2613,36 @@
   },
   "community": {
     "title": "Communauté",
-    "subtitle": "Étagères, journaux de port et défis saisonniers — collection numérique, sans ventes.",
+    "subtitle": "Plateaux, journaux de port et défis saisonniers — collection numérique, sans ventes.",
     "membershipCta": "Voir les avantages d’abonnement",
     "tabs": {
-      "shelves": "Étagères",
+      "shelves": "Plateaux",
       "journal": "Journal de port",
       "challenges": "Défis",
       "alerts": "Recherches enregistrees"
     },
-    "signInPrompt": "Connectez-vous pour gérer vos étagères et votre journal de port.",
+    "signInPrompt": "Connectez-vous pour gérer vos plateaux et votre journal de port.",
     "signIn": "Se connecter",
     "loading": "Chargement…",
     "loadError": "Impossible de charger les données de la communauté.",
     "saveError": "Enregistrement impossible. Réessayez.",
-    "createShelfTitle": "Créer une étagère",
-    "shelfName": "Nom de l’étagère",
-    "shelfPublic": "Rendre cette étagère publique",
-    "createShelf": "Créer l’étagère",
-    "shelfCreated": "Étagère créée.",
+    "createShelfTitle": "Créer un plateau",
+    "shelfName": "Nom du plateau",
+    "shelfPublic": "Rendre ce plateau public",
+    "createShelf": "Créer le plateau",
+    "shelfCreated": "Plateau créé.",
     "addToShelfTitle": "Ajouter depuis votre collection",
-    "shelf": "Étagère",
+    "shelf": "Plateau",
     "perfume": "Parfum",
     "addPerfume": "Ajouter le parfum",
-    "perfumeAdded": "Parfum ajouté à l’étagère.",
-    "yourShelves": "Vos étagères",
-    "noShelves": "Pas encore d’étagère — créez-en une pour organiser vos favoris.",
-    "emptyShelf": "Pas encore de parfums sur cette étagère.",
+    "perfumeAdded": "Parfum ajouté au plateau.",
+    "yourShelves": "Vos plateaux",
+    "noShelves": "Pas encore de plateau — créez-en un pour organiser vos favoris.",
+    "emptyShelf": "Pas encore de parfums sur ce plateau.",
     "deleteShelf": "Supprimer",
-    "deleteShelfHeading": "Supprimer cette étagère ?",
-    "deleteShelfDescription": "« {name} » sera supprimée. Les parfums quitteront seulement l’étagère, pas votre collection.",
-    "shelfDeleted": "Étagère supprimée.",
+    "deleteShelfHeading": "Supprimer ce plateau ?",
+    "deleteShelfDescription": "« {name} » sera supprimé. Les parfums quitteront seulement le plateau, pas votre collection.",
+    "shelfDeleted": "Plateau supprimé.",
     "public": "Publique",
     "private": "Privée",
     "logWearTitle": "Qu’avez-vous porté aujourd’hui ?",
@@ -2657,9 +2665,9 @@
       "intro": "Rejoignez les événements de saison, partagez ce que vous portez et découvrez les listes d’autres collectionneurs.",
       "journalLink": "Lire le Journal",
       "introAfter": "pour des guides éditoriaux liés aux notes et aux maisons.",
-      "empty": "Aucun défi en cours pour le moment — revenez bientôt, ou créez une étagère publique depuis"
+      "empty": "Aucun défi en cours pour le moment — revenez bientôt, ou créez un plateau public depuis"
     },
-    "publicShelvesLink": "Parcourir les etageres publiques",
+    "publicShelvesLink": "Parcourir les plateaux publics",
     "seasonalPlanningLink": "Planification saisonniere"
   },
   "membershipPage": {
@@ -2700,11 +2708,11 @@
     "recentWear": "Porte recemment"
   },
   "publicShelves": {
-    "browseTitle": "Etageres publiques",
+    "browseTitle": "Plateaux publics",
     "browseSubtitle": "Decouvrez comment les collectionneurs organisent leurs flacons.",
-    "empty": "Pas encore d'etageres publiques.",
-    "viewShelf": "Ouvrir l'etagere",
+    "empty": "Pas encore de plateaux publics.",
+    "viewShelf": "Ouvrir le plateau",
     "byCollector": "par {name}",
-    "backToBrowse": "Toutes les etageres publiques"
+    "backToBrowse": "Tous les plateaux publics"
   }
 }

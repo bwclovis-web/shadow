@@ -6,20 +6,29 @@ export const DEFAULT_RECOMMENDATIONS_LIMIT = 6
 /**
  * Why a perfume was recommended (rules-based); optional for forward-compatible callers.
  */
+export type RecommendationBoostFlags = {
+  seasonAligned?: boolean
+  priceAligned?: boolean
+  houseTierAligned?: boolean
+  concentrationAligned?: boolean
+}
+
 export type RecommendationReason =
   | {
       kind: "similar_notes"
       sharedNoteNames: string[]
       sharedCount: number
+      boosts?: RecommendationBoostFlags
     }
   | {
       kind: "profile_match"
       matchedNoteNames: string[]
+      boosts?: RecommendationBoostFlags
     }
-  | { kind: "popular" }
-  | { kind: "recent" }
+  | { kind: "popular"; boosts?: RecommendationBoostFlags }
+  | { kind: "recent"; boosts?: RecommendationBoostFlags }
   /** Shown when note overlap is missing but picks are from the same house. */
-  | { kind: "same_house" }
+  | { kind: "same_house"; boosts?: RecommendationBoostFlags }
 
 /**
  * Minimal perfume shape returned by recommendation services.

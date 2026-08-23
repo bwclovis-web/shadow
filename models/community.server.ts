@@ -5,6 +5,7 @@ export const createCollectionShelf = async (params: {
   name: string
   description?: string | null
   isPublic?: boolean
+  challengeId?: string | null
 }) => {
   return prisma.collectionShelf.create({
     data: {
@@ -12,6 +13,7 @@ export const createCollectionShelf = async (params: {
       name: params.name.trim().slice(0, 80),
       description: params.description ?? null,
       isPublic: params.isPublic ?? false,
+      challengeId: params.challengeId ?? null,
     },
   })
 }
@@ -186,7 +188,8 @@ export const createWearJournalEntry = async (params: {
   weather?: string | null
   occasion?: string | null
 }) => {
-  return prisma.wearJournalEntry.create({
+  const { recordTasteEvent } = await import("@/models/taste-event.server")
+  const entry = await prisma.wearJournalEntry.create({
     data: {
       userId: params.userId,
       perfumeId: params.perfumeId,
@@ -198,6 +201,62 @@ export const createWearJournalEntry = async (params: {
       occasion: params.occasion ?? null,
     },
   })
+  await recordTasteEvent({
+    userId: params.userId,
+    perfumeId: params.perfumeId,
+    eventType: "wear",
+    weight: params.rating != null ? Math.min(2, Math.max(0.5, params.rating / 3)) : 1,
+    metadata: {
+      from: "wear_journal",
+      entryId: entry.id,
+      season: params.season ?? null,
+      weather: params.weather ?? null,
+      occasion: params.occasion ?? null,
+    },
+  })
+  return entry
+}
+
+export const updateWearJournalEntry = async (params: {
+  userId: string
+  entryId: string
+  perfumeId?: string
+  wornOn?: Date
+  season?: string | null
+  rating?: number | null
+  notes?: string | null
+  weather?: string | null
+  occasion?: string | null
+}) => {
+  const existing = await prisma.wearJournalEntry.findFirst({
+    where: { id: params.entryId, userId: params.userId },
+    select: { id: true },
+  })
+  if (!existing) throw new Error("Entry not found")
+  return prisma.wearJournalEntry.update({
+    where: { id: params.entryId },
+    data: {
+      ...(params.perfumeId !== undefined ? { perfumeId: params.perfumeId } : {}),
+      ...(params.wornOn !== undefined ? { wornOn: params.wornOn } : {}),
+      ...(params.season !== undefined ? { season: params.season } : {}),
+      ...(params.rating !== undefined ? { rating: params.rating } : {}),
+      ...(params.notes !== undefined ? { notes: params.notes } : {}),
+      ...(params.weather !== undefined ? { weather: params.weather } : {}),
+      ...(params.occasion !== undefined ? { occasion: params.occasion } : {}),
+    },
+  })
+}
+
+export const deleteWearJournalEntry = async (params: {
+  userId: string
+  entryId: string
+}) => {
+  const existing = await prisma.wearJournalEntry.findFirst({
+    where: { id: params.entryId, userId: params.userId },
+    select: { id: true },
+  })
+  if (!existing) throw new Error("Entry not found")
+  return prisma.wearJournalEntry.delete({ where: { id: params.entryId } })
 }
 
 export const listWearJournal = async (userId: string, limit = 30) => {
@@ -224,6 +283,53 @@ export const listPublishedChallenges = async () => {
     orderBy: { endsAt: "asc" },
     include: {
       _count: { select: { entries: true } },
+    },
+  })
+}
+
+export const getChallengeBySlug = async (slug: string) => {
+  return prisma.communityChallenge.findUnique({
+    where: { slug },
+    include: {
+      _count: { select: { entries: true } },
+      entries: {
+        orderBy: { createdAt: "desc" },
+        take: 50,
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              firstName: true,
+              lastName: true,
+              profileSlug: true,
+            },
+          },
+          perfume: {
+            select: { id: true, name: true, slug: true, image: true },
+          },
+        },
+      },
+    },
+  })
+}
+
+export const createCommunityChallenge = async (params: {
+  slug: string
+  title: string
+  description?: string | null
+  startsAt: Date
+  endsAt: Date
+  isPublished?: boolean
+}) => {
+  return prisma.communityChallenge.create({
+    data: {
+      slug: params.slug,
+      title: params.title,
+      description: params.description ?? null,
+      startsAt: params.startsAt,
+      endsAt: params.endsAt,
+      isPublished: params.isPublished ?? false,
     },
   })
 }

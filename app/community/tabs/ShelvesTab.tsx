@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import { useTranslations } from "next-intl"
 
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
+import Select from "@/components/Atoms/Select"
 import DangerModal from "@/components/Organisms/DangerModal"
 import Modal from "@/components/Organisms/Modal"
 import { apiFetch } from "@/lib/api-client"
@@ -165,34 +166,30 @@ export const ShelvesTab = ({ onMessage, onError }: ShelvesTabProps) => {
           {shelves.length > 0 && perfumeOptions.length > 0 && (
             <form onSubmit={addToShelf} className="space-y-3 pt-4 border-t border-noir-gold/15">
               <h3 className="text-sm text-noir-gold-500">{t("addToShelfTitle")}</h3>
-              <label className="block text-sm">
-                <span className="opacity-80">{t("shelf")}</span>
-                <select
-                  value={addShelfId || shelves[0]?.id || ""}
-                  onChange={e => setAddShelfId(e.target.value)}
-                  className="mt-1 w-full bg-black/30 border border-noir-gold/30 rounded px-3 py-2"
-                >
-                  {shelves.map(s => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block text-sm">
-                <span className="opacity-80">{t("perfume")}</span>
-                <select
-                  value={addPerfumeId}
-                  onChange={e => setAddPerfumeId(e.target.value)}
-                  className="mt-1 w-full bg-black/30 border border-noir-gold/30 rounded px-3 py-2"
-                >
-                  {perfumeOptions.map(p => (
-                    <option key={p.perfumeId} value={p.perfumeId}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <Select
+                selectId="community-tray-shelf"
+                label={t("shelf")}
+                selectData={shelves.map(s => ({
+                  id: s.id,
+                  name: s.id,
+                  label: s.name,
+                }))}
+                value={addShelfId || shelves[0]?.id || ""}
+                action={e => setAddShelfId(e.target.value)}
+                className="w-full max-w-none md:w-full"
+              />
+              <Select
+                selectId="community-tray-perfume"
+                label={t("perfume")}
+                selectData={perfumeOptions.map(p => ({
+                  id: p.perfumeId,
+                  name: p.perfumeId,
+                  label: p.name,
+                }))}
+                value={addPerfumeId}
+                action={e => setAddPerfumeId(e.target.value)}
+                className="w-full max-w-none md:w-full"
+              />
               <button
                 type="submit"
                 className="text-sm uppercase tracking-wide border border-noir-gold/40 px-3 py-2 rounded hover:bg-white/5"
@@ -239,12 +236,18 @@ export const ShelvesTab = ({ onMessage, onError }: ShelvesTabProps) => {
                       <li className="opacity-60">{t("emptyShelf")}</li>
                     ) : (
                       shelf.items.map(item => (
-                        <li key={item.id}>
+                        <li key={item.id} className="flex flex-wrap items-center gap-2">
                           <PrefetchLink
                             href={`/perfume/${item.perfume.slug}`}
                             className="hover:underline text-noir-gold-100"
                           >
                             {item.perfume.name}
+                          </PrefetchLink>
+                          <PrefetchLink
+                            href={`/community?tab=journal&perfumeId=${item.perfumeId}`}
+                            className="text-xs underline text-noir-gold-500/80"
+                          >
+                            {t("logWearFromTray")}
                           </PrefetchLink>
                         </li>
                       ))

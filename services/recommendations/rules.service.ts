@@ -653,9 +653,17 @@ async function getPersonalizedForUser(
       const matchedNoteNames = topMaterialIds
         .map((mid) => materialIdToName.get(mid))
         .filter((n): n is string => !!n)
+      const boosts = {
+        seasonAligned: seasonBoostFor(id) > 0,
+        priceAligned: priceBoostFor(id) > 0,
+        houseTierAligned: houseTierBoostFor(metaById.get(id)?.perfumeHouse?.type) > 0,
+        concentrationAligned: concentrationBoostFor(id) > 0,
+      }
+      const hasBoost = Object.values(boosts).some(Boolean)
       const reason: RecommendationReason = {
         kind: "profile_match",
         matchedNoteNames,
+        ...(hasBoost ? { boosts } : {}),
       }
       return { ...toRecommendationPerfume(p), reason }
     })

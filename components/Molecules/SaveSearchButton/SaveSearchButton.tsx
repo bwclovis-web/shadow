@@ -63,11 +63,12 @@ export const SaveSearchButton = ({
 
   if (status === "upgrade") {
     return (
-      <div className={className}>
+      <div className={className} data-testid="save-search-upgrade">
         <p className="text-sm text-noir-gold-100 mb-2">{t("premiumRequired")}</p>
         <Link
           href="/membership"
           className="text-sm text-noir-gold underline hover:text-noir-light"
+          data-testid="save-search-upgrade-cta"
         >
           {t("upgradeCta")}
         </Link>
@@ -76,7 +77,7 @@ export const SaveSearchButton = ({
   }
 
   return (
-    <div className={className}>
+    <div className={className} data-testid="save-search">
       <Button
         type="button"
         variant="icon"
@@ -84,10 +85,15 @@ export const SaveSearchButton = ({
         size="sm"
         disabled={status === "saving" || status === "saved"}
         onClick={() => void onSave()}
+        data-testid="save-search-button"
       >
         {status === "saved" ? t("saved") : status === "saving" ? t("saving") : t("saveButton")}
       </Button>
-      {error && <p className="mt-1 text-xs text-red-400">{error}</p>}
+      {error && (
+        <p className="mt-1 text-xs text-red-400" data-testid="save-search-error">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

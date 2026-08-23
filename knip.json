@@ -4,6 +4,8 @@
   "ignoreFiles": ["prisma/seed.ts", ".sanity/**"],
   "ignore": [
     "scripts/**",
+    "e2e/**",
+    "playwright.config.ts",
     "public/sw.js",
     "prisma/docs/**",
     "prisma/schema.prod.temp.prisma"

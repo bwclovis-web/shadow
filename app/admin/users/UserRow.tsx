@@ -2,14 +2,15 @@
 
 import { useFormStatus } from "react-dom"
 import { useTranslations } from "next-intl"
-import type { UserRole } from "@prisma/client"
+import type { MembershipTier, UserRole } from "@prisma/client"
 import type { UserWithCounts } from "@/models/admin.server"
-import { CSRFToken } from "@/components/Molecules/CSRFToken"
+import { CSRFToken, useCSRFToken } from "@/components/Molecules/CSRFToken"
 
 import StrikeIndicators from "./StrikeIndicators"
 import { getUserDisplayName } from "./userAdminFilters"
 
 const ROLES: UserRole[] = ["user", "editor", "admin"]
+const MEMBERSHIP_TIERS: MembershipTier[] = ["free", "premium", "collector"]
 
 const formatDate = (date: Date | string) =>
   new Date(date).toLocaleDateString(undefined, {
@@ -28,22 +29,56 @@ const totalDataRecords = (user: UserWithCounts) =>
   user._count.UserAlert +
   user._count.SecurityAuditLog
 
-function RoleSelectControl({ user }: { user: UserWithCounts }) {
+const RoleSelectControl = ({ user }: { user: UserWithCounts }) => {
   const { pending } = useFormStatus()
+  const { csrfToken, isLoading } = useCSRFToken()
   const t = useTranslations("userAdmin.table")
+  const csrfReady = !isLoading && !!csrfToken
 
   return (
     <select
+      key={user.role}
       name="newRole"
       defaultValue={user.role}
-      disabled={pending}
-      onChange={(e) => e.currentTarget.form?.requestSubmit()}
+      disabled={pending || !csrfReady}
+      onChange={(e) => {
+        if (!csrfReady) return
+        e.currentTarget.form?.requestSubmit()
+      }}
       className="min-w-[6rem] rounded border border-noir-gold-500/50 bg-noir-black px-2 py-1 text-sm text-noir-gold-100 focus:border-noir-gold focus:outline-none focus:ring-1 focus:ring-noir-gold disabled:opacity-50"
       aria-label={t("changeRole")}
     >
       {ROLES.map((role) => (
         <option key={role} value={role}>
           {t(`roles.${role}`)}
+        </option>
+      ))}
+    </select>
+  )
+}
+
+const MembershipSelectControl = ({ user }: { user: UserWithCounts }) => {
+  const { pending } = useFormStatus()
+  const { csrfToken, isLoading } = useCSRFToken()
+  const t = useTranslations("userAdmin.table")
+  const csrfReady = !isLoading && !!csrfToken
+
+  return (
+    <select
+      key={user.membershipTier}
+      name="newMembershipTier"
+      defaultValue={user.membershipTier}
+      disabled={pending || !csrfReady}
+      onChange={(e) => {
+        if (!csrfReady) return
+        e.currentTarget.form?.requestSubmit()
+      }}
+      className="min-w-[7rem] rounded border border-noir-gold-500/50 bg-noir-black px-2 py-1 text-sm text-noir-gold-100 focus:border-noir-gold focus:outline-none focus:ring-1 focus:ring-noir-gold disabled:opacity-50"
+      aria-label={t("changeMembership")}
+    >
+      {MEMBERSHIP_TIERS.map((tier) => (
+        <option key={tier} value={tier}>
+          {t(`membershipTiers.${tier}`)}
         </option>
       ))}
     </select>
@@ -59,6 +94,7 @@ const UserRow = ({
   pendingAction,
   pendingUserId,
   roleFormAction,
+  membershipFormAction,
   resetTwoFactorFormAction,
 }: {
   user: UserWithCounts
@@ -69,6 +105,7 @@ const UserRow = ({
   pendingAction: string | null
   pendingUserId: string | null
   roleFormAction?: (formData: FormData) => void
+  membershipFormAction?: (formData: FormData) => void
   resetTwoFactorFormAction?: (formData: FormData) => void
 }) => {
   const t = useTranslations("userAdmin.table")
@@ -77,8 +114,8 @@ const UserRow = ({
     (pendingAction === "delete" || pendingAction === "soft-delete") &&
     pendingUserId === user.id
   const isDeleted = user.email.startsWith("deleted_")
-  const canChangeRole =
-    roleFormAction && !isCurrentUser && !isDeleted
+  const canChangeRole = roleFormAction && !isCurrentUser && !isDeleted
+  const canChangeMembership = membershipFormAction && !isDeleted
 
   const displayName = getUserDisplayName(user)
   const canIssueStrike = !isCurrentUser && !isDeleted && !user.isBanned
@@ -113,6 +150,19 @@ const UserRow = ({
         )}
       </td>
       <td className="whitespace-nowrap px-6 py-4 text-sm text-noir-gold-100">
+        {isDeleted ? (
+          t(`membershipTiers.${user.membershipTier}`)
+        ) : canChangeMembership ? (
+          <form action={membershipFormAction}>
+            <CSRFToken />
+            <input type="hidden" name="userId" value={user.id} />
+            <MembershipSelectControl user={user} />
+          </form>
+        ) : (
+          t(`membershipTiers.${user.membershipTier}`)
+        )}
+      </td>
+      <td className="whitespace-nowrap px-6 py-4 text-sm text-noir-gold-100">
         <StrikeIndicators strikeCount={user.strikeCount} isBanned={user.isBanned} />
       </td>
       <td className="whitespace-nowrap px-6 py-4 text-sm text-noir-gold-100">
@@ -130,9 +180,7 @@ const UserRow = ({
               <form
                 action={resetTwoFactorFormAction}
                 onSubmit={(e) => {
-                  if (
-                    !window.confirm(t("reset2faConfirm"))
-                  ) {
+                  if (!window.confirm(t("reset2faConfirm"))) {
                     e.preventDefault()
                   }
                 }}

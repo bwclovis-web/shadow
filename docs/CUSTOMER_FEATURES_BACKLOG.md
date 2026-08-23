@@ -48,8 +48,19 @@ Customer-facing roadmap focused on discovery quality, trust, and retention loops
 ## Tier C: Delight and Retention
 
 - [x] **CF-060** "Scent journey" timeline of user activity
-- [ ] **CF-061** Seasonal collection suggestions personalized by profile
+- [x] **CF-061** Seasonal collection suggestions personalized by profile (Scent DNA + quiz prefs + wear journal)
 - [ ] **CF-062** Re-engagement nudges for abandoned watchlists
+- [x] **CF-063** Wear journal → taste graph flywheel + structured wear context
+- [x] **CF-064** Collection Intelligence Hub (Premium analytics + Collector CSV)
+- [x] **CF-065** What-to-wear suggestions from owned bottles
+- [x] **CF-066** In-app personalized digest page (+ email deep-link)
+- [x] **CF-067** Community challenges (join, detail, tray loop, seed)
+- [x] **CF-068** Taste-based Exchange discovery + mutual swap suggestions
+- [x] **CF-069** Declared (quiz) vs actual (shelf) Scent DNA
+- [x] **CF-070** Advanced collection intelligence (redundancy, gaps, decant mix)
+- [x] **CF-071** Premium compare limit (`unlimited_comparisons`)
+- [x] **CF-072** House / indie radar from followed houses
+- [ ] **CF-073** Structured decant circles (deferred — later Phase 4.5)
 
 ## UX Guardrails
 

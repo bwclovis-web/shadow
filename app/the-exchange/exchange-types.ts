@@ -5,6 +5,8 @@ import type {
 } from "@/models/activity-feed.server"
 import type { SeasonalTrendingResult } from "@/models/seasonal-trending.server"
 import type { WishlistExchangeMatchEnriched } from "@/services/trade-match"
+import type { OnboardingTraderMatchEnriched } from "@/services/trade-match"
+import type { MutualTradeSuggestion } from "@/models/mutual-trade-suggestions.server"
 import type { TraderReputationV1 } from "@/services/reputation/types"
 import type { OpenSplitChip } from "@/types/decant-split"
 
@@ -57,6 +59,8 @@ export type ExchangePageData = {
   initialHouse: { id: string; name: string } | null
   initialPerfume: { id: string; name: string } | null
   wishlistMatches?: WishlistExchangeMatchEnriched[]
+  palateRecommendations?: OnboardingTraderMatchEnriched[]
+  mutualSwapSuggestions?: MutualTradeSuggestion[]
   recentListings?: ActivityFeedListingRow[]
   followedActivity?: FollowedActivityItem[]
   seasonalTrending?: SeasonalTrendingResult

@@ -1,4 +1,4 @@
-import { LISTING_PUBLISH_ERROR_CODES } from "@/models/listing-metadata.server"
+import { LISTING_PUBLISH_ERROR_CODES } from "@/lib/listing-publish-errors"
 
 type ListingApiErrorPayload = {
   error?: string

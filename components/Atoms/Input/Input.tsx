@@ -106,7 +106,6 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const inputElement = (
       <input
         ref={setRef}
-        name={action?.name}
         aria-invalid={actionData?.errors?.[action?.name ?? ""] ? true : undefined}
         className={styleMerge(
           inputVariants({ shading }),
@@ -117,6 +116,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {...(restInputProps as Omit<HTMLProps<HTMLInputElement>, "value" | "defaultValue">)}
         {...valueProps}
         {...props}
+        name={action?.name ?? (props as { name?: string }).name}
       />
     )
 

@@ -30,8 +30,20 @@ export const profileNavigation = [
   { id: "5", label: "My Trades", key: "myTrades", path: "/profile/trades" } as const,
   { id: "2", label: "My Scents", key: "myScents", path: "/profile/my-scents" } as const,
   {
+    id: "insights",
+    label: "Collection Insights",
+    key: "collectionInsights",
+    path: "/profile/collection-insights",
+  } as const,
+  {
+    id: "digest",
+    label: "Weekly Digest",
+    key: "weeklyDigest",
+    path: "/profile/digest",
+  } as const,
+  {
     id: "community",
-    label: "Shelves & Journal",
+    label: "Trays & Journal",
     key: "communityHub",
     path: "/community",
   } as const,

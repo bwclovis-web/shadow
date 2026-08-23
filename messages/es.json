@@ -1167,7 +1167,7 @@
     "aboutUs": "Los Guardianes",
     "journal": "Diario",
     "community": "Comunidad",
-    "communityHub": "Estanterías y diario",
+    "communityHub": "Bandejas y diario",
     "membership": "Membresía",
     "howWeWork": "La guía del coleccionista",
     "contactUs": "Correspondencia",
@@ -1277,7 +1277,7 @@
       "wishlist": "Mi Lista de Deseos",
       "myTrades": "Mis intercambios",
       "myScents": "Mis Aromas",
-      "communityHub": "Estanterías y diario",
+      "communityHub": "Bandejas y diario",
       "accountSecurity": "Seguridad de la cuenta",
       "myReports": "Mis reportes",
       "myDisputes": "Mis disputas"
@@ -1293,6 +1293,7 @@
     "scanQr": "Escanea el código QR y confirma con el código de 6 dígitos y tu contraseña.",
     "qrAlt": "Código QR del autenticador",
     "manualKey": "Clave manual",
+    "rescanButton": "Generar un nuevo código QR",
     "currentPassword": "Contraseña actual",
     "verificationCode": "Código de 6 dígitos",
     "confirmEnable": "Confirmar y activar",
@@ -2066,6 +2067,7 @@
     "table": {
       "user": "Usuario",
       "role": "Rol",
+      "membership": "Membresía",
       "strikes": "Strikes",
       "dataRecords": "Registros de Datos",
       "joined": "Se Unió",
@@ -2079,12 +2081,18 @@
       "admin": "Administrador",
       "deleted": "Eliminado",
       "changeRole": "Cambiar rol del usuario",
+      "changeMembership": "Cambiar nivel de membresía",
       "strikesLabel": "{count, plural, =0 {Sin strikes} one {# strike} other {# strikes}}",
       "bannedBadge": "BANEADO",
       "roles": {
         "user": "Usuario",
         "editor": "Editor",
         "admin": "Administrador"
+      },
+      "membershipTiers": {
+        "free": "Gratis",
+        "premium": "Premium",
+        "collector": "Collector"
       }
     }
   },
@@ -2605,36 +2613,36 @@
   },
   "community": {
     "title": "Comunidad",
-    "subtitle": "Estanterías, diarios de uso y retos de temporada: colección digital, sin ventas.",
+    "subtitle": "Bandejas, diarios de uso y retos de temporada: colección digital, sin ventas.",
     "membershipCta": "Ver beneficios de membresía",
     "tabs": {
-      "shelves": "Estanterías",
+      "shelves": "Bandejas",
       "journal": "Diario de uso",
       "challenges": "Retos",
       "alerts": "Busquedas guardadas"
     },
-    "signInPrompt": "Inicia sesión para gestionar estanterías y tu diario de uso.",
+    "signInPrompt": "Inicia sesión para gestionar bandejas y tu diario de uso.",
     "signIn": "Iniciar sesión",
     "loading": "Cargando…",
     "loadError": "No se pudieron cargar los datos de la comunidad.",
     "saveError": "No se pudo guardar. Inténtalo de nuevo.",
-    "createShelfTitle": "Crear una estantería",
-    "shelfName": "Nombre de la estantería",
-    "shelfPublic": "Hacer pública esta estantería",
-    "createShelf": "Crear estantería",
-    "shelfCreated": "Estantería creada.",
+    "createShelfTitle": "Crear una bandeja",
+    "shelfName": "Nombre de la bandeja",
+    "shelfPublic": "Hacer pública esta bandeja",
+    "createShelf": "Crear bandeja",
+    "shelfCreated": "Bandeja creada.",
     "addToShelfTitle": "Añadir desde tu colección",
-    "shelf": "Estantería",
+    "shelf": "Bandeja",
     "perfume": "Perfume",
     "addPerfume": "Añadir perfume",
-    "perfumeAdded": "Perfume añadido a la estantería.",
-    "yourShelves": "Tus estanterías",
-    "noShelves": "Aún no hay estanterías: crea una para organizar favoritos.",
-    "emptyShelf": "Aún no hay perfumes en esta estantería.",
+    "perfumeAdded": "Perfume añadido a la bandeja.",
+    "yourShelves": "Tus bandejas",
+    "noShelves": "Aún no hay bandejas: crea una para organizar favoritos.",
+    "emptyShelf": "Aún no hay perfumes en esta bandeja.",
     "deleteShelf": "Eliminar",
-    "deleteShelfHeading": "¿Eliminar esta estantería?",
-    "deleteShelfDescription": "Se eliminará “{name}”. Los perfumes saldrán solo de la estantería, no de tu colección.",
-    "shelfDeleted": "Estantería eliminada.",
+    "deleteShelfHeading": "¿Eliminar esta bandeja?",
+    "deleteShelfDescription": "Se eliminará “{name}”. Los perfumes saldrán solo de la bandeja, no de tu colección.",
+    "shelfDeleted": "Bandeja eliminada.",
     "public": "Pública",
     "private": "Privada",
     "logWearTitle": "¿Qué te pusiste hoy?",
@@ -2657,9 +2665,9 @@
       "intro": "Únete a eventos de temporada, comparte lo que llevas y descubre listas de otros coleccionistas.",
       "journalLink": "Lee el Journal",
       "introAfter": "para guías editoriales vinculadas a notas y casas.",
-      "empty": "No hay retos activos ahora: vuelve pronto, o crea una estantería pública desde"
+      "empty": "No hay retos activos ahora: vuelve pronto, o crea una bandeja pública desde"
     },
-    "publicShelvesLink": "Explorar estanterias publicas",
+    "publicShelvesLink": "Explorar bandejas públicas",
     "seasonalPlanningLink": "Planificacion estacional"
   },
   "membershipPage": {
@@ -2700,11 +2708,11 @@
     "recentWear": "Usado recientemente"
   },
   "publicShelves": {
-    "browseTitle": "Estanterias publicas",
+    "browseTitle": "Bandejas públicas",
     "browseSubtitle": "Descubre como los coleccionistas organizan sus frascos.",
-    "empty": "Aun no hay estanterias publicas.",
-    "viewShelf": "Abrir estanteria",
+    "empty": "Aún no hay bandejas públicas.",
+    "viewShelf": "Abrir bandeja",
     "byCollector": "por {name}",
-    "backToBrowse": "Todas las estanterias publicas"
+    "backToBrowse": "Todas las bandejas públicas"
   }
 }

@@ -57,6 +57,8 @@ const SeasonalPlanningPage = async () => {
   const reasonLabel = (reason: string) => {
     if (reason === "collection") return t("fromCollection")
     if (reason === "recent_wear") return t("recentWear")
+    if (reason === "scent_dna") return t("scentDna")
+    if (reason === "quiz_pref") return t("quizPref")
     return t("trending")
   }
 
@@ -84,6 +86,9 @@ const SeasonalPlanningPage = async () => {
                   {s.name}
                 </Link>
                 <p className="mt-1 text-xs text-noir-gold-100">{reasonLabel(s.reason)}</p>
+                {s.noteFamilyRationale ? (
+                  <p className="mt-1 text-xs text-noir-gold-500/80">{s.noteFamilyRationale}</p>
+                ) : null}
               </li>
             ))}
           </ul>

@@ -1,0 +1,52 @@
+---
+description: Prefer existing UI atoms/molecules over one-off native controls
+globs: **/*.{tsx,jsx}
+alwaysApply: true
+---
+
+# Reuse Existing UI Components
+
+When building or editing UI, use shared components from `components/Atoms` and `components/Molecules` instead of raw HTML controls with one-off styles.
+
+## Prefer these first
+
+| Need | Use |
+| --- | --- |
+| Dropdown / `<select>` | `@/components/Atoms/Select` |
+| Text / number / date inputs | `@/components/Atoms/Input` |
+| Buttons | `@/components/Atoms/Button` |
+| Radio groups | `@/components/Atoms/RadioSelect` |
+| Search fields | `@/components/Molecules/SearchInput` (or existing search patterns) |
+
+## Examples
+
+```tsx
+// ❌ BAD — native select with ad-hoc classes
+<select
+  value={season}
+  onChange={e => setSeason(e.target.value)}
+  className="mt-1 w-full bg-black/30 border border-noir-gold/30 rounded px-3 py-2"
+>
+  {options.map(o => (
+    <option key={o.id} value={o.id}>{o.label}</option>
+  ))}
+</select>
+
+// ✅ GOOD — shared Select atom
+<Select
+  selectId="wear-journal-season"
+  label={t("season")}
+  selectData={options}
+  value={season}
+  action={e => setSeason(e.target.value)}
+  className="w-full max-w-none md:w-full"
+/>
+```
+
+## Guidelines
+
+- Before adding a new control, check `components/Atoms` and nearby feature usage for an existing pattern
+- Match props used elsewhere (`selectData` with `{ id, name, label }`, `action` + `value` for controlled selects)
+- Do not invent a parallel styled `<select>`, `<button>`, or `<input>` when an atom already exists
+- Only use a raw element when no shared component covers the need (e.g. `textarea` if there is no Textarea atom yet) — keep styling aligned with existing atoms when possible
+- If a shared component is missing a needed variant, extend that component rather than forking styles in the page

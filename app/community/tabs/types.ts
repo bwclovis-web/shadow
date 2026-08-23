@@ -23,6 +23,8 @@ export type JournalEntry = {
   id: string
   wornOn: string
   season: string | null
+  weather?: string | null
+  occasion?: string | null
   rating: number | null
   notes: string | null
   perfume: { id: string; name: string; slug: string; image: string | null }
@@ -30,6 +32,7 @@ export type JournalEntry = {
 
 export type Challenge = {
   id: string
+  slug?: string
   title: string
   description: string | null
   endsAt: string

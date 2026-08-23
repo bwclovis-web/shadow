@@ -8,7 +8,7 @@ import IconPopover from "@/components/Molecules/IconPopover"
 import type { RecommendationReason } from "@/services/recommendations"
 import { styleMerge } from "@/utils/styleUtils"
 
-function formatNoteList(names: string[], locale: string) {
+const formatNoteList = (names: string[], locale: string) => {
   if (names.length === 0) return ""
   return new Intl.ListFormat(locale, { style: "short", type: "conjunction" }).format(
     names
@@ -31,46 +31,70 @@ type RecommendationReasonLineProps = {
   contentClassName?: string
 }
 
+const boostParts = (
+  boosts: NonNullable<RecommendationReason["boosts"]> | undefined,
+  tReason: ReturnType<typeof useTranslations<"recommendations.reason">>
+): string[] => {
+  if (!boosts) return []
+  const parts: string[] = []
+  if (boosts.seasonAligned) parts.push(tReason("boostSeason"))
+  if (boosts.priceAligned) parts.push(tReason("boostPrice"))
+  if (boosts.houseTierAligned) parts.push(tReason("boostHouseTier"))
+  if (boosts.concentrationAligned) parts.push(tReason("boostConcentration"))
+  return parts
+}
+
 /**
  * Short explainability line for rules-based picks (CF-013), shown in a click-to-open popover.
  */
-export function RecommendationReasonLine({
+export const RecommendationReasonLine = ({
   reason,
   className,
   panelClassName,
   buttonClassName,
   contentClassName,
-}: RecommendationReasonLineProps) {
+}: RecommendationReasonLineProps) => {
   const tReason = useTranslations("recommendations.reason")
   const tRec = useTranslations("recommendations")
   const locale = useLocale()
 
   const text = useMemo(() => {
     if (!reason) return null
+    let base: string | null = null
     switch (reason.kind) {
       case "similar_notes": {
         if (reason.sharedNoteNames.length === 0) {
-          return tReason("similarNotesFallback")
+          base = tReason("similarNotesFallback")
+        } else {
+          const notes = formatNoteList(reason.sharedNoteNames, locale)
+          base = tReason("similarNotes", { notes })
         }
-        const notes = formatNoteList(reason.sharedNoteNames, locale)
-        return tReason("similarNotes", { notes })
+        break
       }
       case "profile_match": {
         if (reason.matchedNoteNames.length === 0) {
-          return tReason("profileMatchFallback")
+          base = tReason("profileMatchFallback")
+        } else {
+          const notes = formatNoteList(reason.matchedNoteNames, locale)
+          base = tReason("profileMatch", { notes })
         }
-        const notes = formatNoteList(reason.matchedNoteNames, locale)
-        return tReason("profileMatch", { notes })
+        break
       }
       case "popular":
-        return tReason("popular")
+        base = tReason("popular")
+        break
       case "recent":
-        return tReason("recent")
+        base = tReason("recent")
+        break
       case "same_house":
-        return tReason("sameHouse")
+        base = tReason("sameHouse")
+        break
       default:
         return null
     }
+    const extras = boostParts(reason.boosts, tReason)
+    if (extras.length === 0) return base
+    return `${base} ${tReason("boostPrefix", { details: extras.join(", ") })}`
   }, [reason, locale, tReason])
 
   if (!text) return null

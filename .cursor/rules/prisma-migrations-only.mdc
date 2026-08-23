@@ -1,36 +1,49 @@
 ---
-description: Schema changes use prisma db push — not migrate dev/deploy
+description: Schema changes use Prisma Migrate — not db push
 alwaysApply: true
 ---
 
-# Prisma: `db push` (Not Migrate)
+# Prisma: Migrate Only (Not `db push`)
 
-This project syncs schema with **`prisma db push`** (or `npm run db:push`). Do **not** use `prisma migrate dev` / `migrate deploy` for routine schema work unless the user explicitly asks for migrations.
+This project syncs schema with **Prisma Migrate** and checked-in SQL under `prisma/migrations/`. Do **not** use `prisma db push` for schema changes unless the user explicitly asks for it.
 
 ## Standard workflow
 
 1. Edit `prisma/schema.prisma`
-2. Push schema to the database:
+2. Create and apply a migration locally:
    ```bash
-   npm run db:push
+   npx prisma migrate dev --name <descriptive_name>
    ```
-3. Regenerate the client (restart dev server if the client was cached):
+3. Regenerate the client if needed (migrate usually does this):
    ```bash
    npm run db:generate
    ```
 
+After pulling someone else's migrations:
+
+```bash
+npx prisma migrate deploy
+npm run db:generate
+```
+
 ## Do not run (unless user explicitly requests)
 
-- `npx prisma migrate dev`
-- `npx prisma migrate deploy`
-- `prisma migrate reset`
-- Creating new folders under `prisma/migrations/` for routine schema changes
+- `prisma db push` / `npm run db:push`
+- `prisma migrate reset` / `db push --force-reset`
+- Ad-hoc schema sync that skips migration files
 
 ## Production / remote
 
-Use the project's existing push scripts when deploying schema (e.g. `npm run db:push:prod` / `push-prod-schema.js`) per user direction — not `migrate deploy`.
+Apply pending migrations only (no reset):
+
+```bash
+npx prisma migrate deploy
+```
+
+Use the production `DATABASE_URL` (or the team's documented deploy process). Review migration SQL before applying to shared databases.
 
 ## Safety
 
 - Schema changes should be **additive** when possible (no drops/truncates without explicit user approval)
 - See also: `no-database-deletion` rule — no destructive resets on production or shared data
+- Full guide: `docs/database-migrations.md`

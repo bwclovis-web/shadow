@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 
@@ -9,7 +10,7 @@ import { listPublishedChallenges } from "@/models/community.server"
 /** Placeholder hero — swap when a dedicated challenges asset is ready. */
 const BANNER_IMAGE = "/images/new/quiz.webp"
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Community challenges | Shadow",
   description: "Seasonal scent challenges and community events.",
 }
@@ -50,7 +51,14 @@ const CommunityChallengesPage = async () => {
           <ul className="space-y-4">
             {challenges.map(c => (
               <li key={c.id} className="noir-border rounded-lg p-4 text-noir-gold-100">
-                <h2 className="text-lg text-noir-gold-500">{c.title}</h2>
+                <h2 className="text-lg text-noir-gold-500">
+                  <Link
+                    href={`/community/challenges/${c.slug}`}
+                    className="hover:underline"
+                  >
+                    {c.title}
+                  </Link>
+                </h2>
                 {c.description && (
                   <p className="text-sm mt-1 opacity-80">{c.description}</p>
                 )}

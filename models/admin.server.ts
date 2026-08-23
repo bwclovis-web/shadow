@@ -1,6 +1,7 @@
-import type { UserRole } from "@prisma/client"
+import type { MembershipTier, SubscriptionStatus, UserRole } from "@prisma/client"
 
 import { prisma } from "@/lib/db"
+import { resolveMembershipTier } from "@/utils/membership/entitlements.server"
 
 export interface UserWithCounts {
   id: string
@@ -9,6 +10,8 @@ export interface UserWithCounts {
   lastName: string | null
   username: string | null
   role: UserRole
+  membershipTier: MembershipTier
+  subscriptionStatus: SubscriptionStatus
   strikeCount: number
   isBanned: boolean
   twoFactorEnabledAt: Date | null
@@ -38,6 +41,8 @@ export async function getAllUsersWithCounts(): Promise<UserWithCounts[]> {
         lastName: true,
         username: true,
         role: true,
+        membershipTier: true,
+        subscriptionStatus: true,
         strikeCount: true,
         isBanned: true,
         twoFactorEnabledAt: true,
@@ -79,6 +84,8 @@ export async function getUserWithCounts(userId: string): Promise<UserWithCounts 
         lastName: true,
         username: true,
         role: true,
+        membershipTier: true,
+        subscriptionStatus: true,
         strikeCount: true,
         isBanned: true,
         twoFactorEnabledAt: true,
@@ -97,6 +104,8 @@ export async function getUserWithCounts(userId: string): Promise<UserWithCounts 
         },
       },
     })
+
+    if (!user) return null
 
     return user
   } catch (error) {
@@ -379,6 +388,118 @@ export async function updateUserRole(
     return {
       success: false,
       message: "Failed to update user role. Please try again.",
+    }
+  }
+}
+
+const subscriptionStatusForTier = (
+  tier: MembershipTier
+): SubscriptionStatus => (tier === "free" ? "free" : "paid")
+
+/**
+ * Update a user's membership tier (admin override).
+ * Keeps subscriptionStatus aligned so entitlement resolution stays consistent.
+ */
+export const updateUserMembershipTier = async (
+  userId: string,
+  newTier: MembershipTier,
+  adminId: string
+): Promise<{
+  success: boolean
+  message: string
+  membershipTier?: MembershipTier
+}> => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        membershipTier: true,
+        subscriptionStatus: true,
+      },
+    })
+
+    if (!user) {
+      return { success: false, message: "User not found" }
+    }
+
+    if (user.email.startsWith("deleted_")) {
+      return {
+        success: false,
+        message: "Cannot change membership for a deleted user",
+      }
+    }
+
+    const previousTier = resolveMembershipTier(user)
+    const subscriptionStatus = subscriptionStatusForTier(newTier)
+
+    if (
+      previousTier === newTier &&
+      user.membershipTier === newTier &&
+      user.subscriptionStatus === subscriptionStatus
+    ) {
+      return {
+        success: true,
+        message: `User ${user.email} already has ${newTier} membership`,
+        membershipTier: newTier,
+      }
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        membershipTier: newTier,
+        subscriptionStatus,
+      },
+    })
+
+    await prisma.securityAuditLog.create({
+      data: {
+        id: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        userId: adminId,
+        action: "DATA_MODIFICATION",
+        severity: "info",
+        resource: "User",
+        resourceId: userId,
+        details: {
+          previousTier,
+          previousSubscriptionStatus: user.subscriptionStatus,
+          newTier,
+          newSubscriptionStatus: subscriptionStatus,
+          targetUserEmail: user.email,
+          action: "User membership tier changed by admin",
+        },
+      },
+    })
+
+    return {
+      success: true,
+      message: `User ${user.email} membership updated to ${newTier}`,
+      membershipTier: newTier,
+    }
+  } catch (error) {
+    console.error("Error updating user membership tier:", error)
+
+    await prisma.securityAuditLog.create({
+      data: {
+        id: `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        userId: adminId,
+        action: "DATA_MODIFICATION",
+        severity: "error",
+        resource: "User",
+        resourceId: userId,
+        details: {
+          attemptedTier: newTier,
+          error: error instanceof Error ? error.message : "Unknown error",
+          action: "Failed user membership tier update attempt",
+        },
+      },
+    })
+
+    return {
+      success: false,
+      message: "Failed to update membership tier. Please try again.",
     }
   }
 }

@@ -5,7 +5,6 @@ import { LuGitCompareArrows } from "react-icons/lu"
 
 import { Button } from "@/components/Atoms/Button/Button"
 import {
-  COMPARE_MAX_ITEMS,
   type CompareItem,
   useCompareStore,
 } from "@/hooks/compareStore"
@@ -22,14 +21,15 @@ export interface PerfumeCompareToggleProps {
 export function PerfumeCompareToggle({ item }: PerfumeCompareToggleProps) {
   const t = useTranslations("compare")
   const items = useCompareStore((s) => s.items)
+  const maxItems = useCompareStore((s) => s.maxItems)
   const toggle = useCompareStore((s) => s.toggle)
 
   const selected = items.some((i) => i.id === item.id)
-  const atMax = items.length >= COMPARE_MAX_ITEMS
+  const atMax = items.length >= maxItems
   const disabled = !selected && atMax
 
   const label = disabled
-    ? t("maxReached", { max: COMPARE_MAX_ITEMS })
+    ? t("maxReached", { max: maxItems })
     : selected
       ? t("toggleRemove")
       : t("toggleAdd")

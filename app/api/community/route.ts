@@ -7,12 +7,14 @@ import {
   createUserList,
   createWearJournalEntry,
   deleteCollectionShelf,
+  deleteWearJournalEntry,
   getPublicShelfById,
   joinCommunityChallenge,
   listCollectionShelves,
   listPublicShelves,
   listPublishedChallenges,
   listWearJournal,
+  updateWearJournalEntry,
 } from "@/models/community.server"
 import { authenticateUser } from "@/utils/server/auth.server"
 import { CSRFError, requireCSRFForJsonBody } from "@/utils/server/csrf.server"
@@ -92,11 +94,16 @@ export const POST = async (request: NextRequest) => {
     if (intent === "create-shelf") {
       const name = typeof body?.name === "string" ? body.name.trim() : ""
       if (!name) return NextResponse.json({ error: "name required" }, { status: 400 })
+      const challengeId =
+        typeof body?.challengeId === "string" && isValidPrismaRecordId(body.challengeId)
+          ? body.challengeId
+          : null
       const shelf = await createCollectionShelf({
         userId: auth.user!.id,
         name,
         description: typeof body?.description === "string" ? body.description : null,
         isPublic: Boolean(body?.isPublic),
+        challengeId,
       })
       return NextResponse.json({ success: true, shelf })
     }
@@ -180,6 +187,56 @@ export const POST = async (request: NextRequest) => {
         occasion: typeof body?.occasion === "string" ? body.occasion : null,
       })
       return NextResponse.json({ success: true, entry })
+    }
+
+    if (intent === "update-wear-journal") {
+      const entryId = typeof body?.entryId === "string" ? body.entryId : ""
+      if (!isValidPrismaRecordId(entryId)) {
+        return NextResponse.json({ error: "Invalid entryId" }, { status: 400 })
+      }
+      try {
+        const entry = await updateWearJournalEntry({
+          userId: auth.user!.id,
+          entryId,
+          perfumeId:
+            typeof body?.perfumeId === "string" && isValidPrismaRecordId(body.perfumeId)
+              ? body.perfumeId
+              : undefined,
+          wornOn: body?.wornOn ? new Date(body.wornOn) : undefined,
+          season: typeof body?.season === "string" ? body.season : body?.season === null ? null : undefined,
+          rating: typeof body?.rating === "number" ? body.rating : body?.rating === null ? null : undefined,
+          notes: typeof body?.notes === "string" ? body.notes : body?.notes === null ? null : undefined,
+          weather: typeof body?.weather === "string" ? body.weather : body?.weather === null ? null : undefined,
+          occasion: typeof body?.occasion === "string" ? body.occasion : body?.occasion === null ? null : undefined,
+        })
+        return NextResponse.json({ success: true, entry })
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Failed"
+        if (msg === "Entry not found") {
+          return NextResponse.json({ error: msg }, { status: 404 })
+        }
+        throw err
+      }
+    }
+
+    if (intent === "delete-wear-journal") {
+      const entryId = typeof body?.entryId === "string" ? body.entryId : ""
+      if (!isValidPrismaRecordId(entryId)) {
+        return NextResponse.json({ error: "Invalid entryId" }, { status: 400 })
+      }
+      try {
+        const deleted = await deleteWearJournalEntry({
+          userId: auth.user!.id,
+          entryId,
+        })
+        return NextResponse.json({ success: true, deleted })
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Failed"
+        if (msg === "Entry not found") {
+          return NextResponse.json({ error: msg }, { status: 404 })
+        }
+        throw err
+      }
     }
 
     if (intent === "join-challenge") {

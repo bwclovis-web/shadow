@@ -28,11 +28,16 @@ export const submitRecommendationFeedback = async (params: {
     },
   })
 
-  const tasteMap: Partial<Record<RecommendationFeedbackAction, "dislike" | "skip_recommendation" | "owned" | "sample_outcome">> = {
+  const tasteMap: Partial<
+    Record<
+      RecommendationFeedbackAction,
+      "dislike" | "skip_recommendation" | "owned" | "sample_outcome" | "rating"
+    >
+  > = {
     not_for_me: "dislike",
     already_own: "owned",
     sampled: "sample_outcome",
-    more_like_this: undefined,
+    more_like_this: "rating",
   }
   const eventType = tasteMap[params.action]
   if (eventType) {
@@ -40,6 +45,7 @@ export const submitRecommendationFeedback = async (params: {
       userId: params.userId,
       perfumeId: params.perfumeId,
       eventType,
+      weight: params.action === "more_like_this" ? 1.5 : 1,
       metadata: { from: "recommendation_feedback", action: params.action },
     })
   }

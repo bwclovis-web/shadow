@@ -9,7 +9,7 @@ import { buttonVariants } from "@/components/Atoms/Button/button-variants"
 import { Button } from "@/components/Atoms/Button/Button"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { COMPARE_TRAY_PAD_VAR } from "@/constants/compare"
-import { COMPARE_MAX_ITEMS, useCompareStore } from "@/hooks/compareStore"
+import { useCompareStore } from "@/hooks/compareStore"
 import { normalizeRemoteImageSrc, styleMerge, validImageRegex } from "@/utils/styleUtils"
 
 function CompareThumb({ image, alt }: { image?: string; alt: string }) {
@@ -35,6 +35,7 @@ function CompareThumb({ image, alt }: { image?: string; alt: string }) {
 export function CompareTray() {
   const t = useTranslations("compare")
   const items = useCompareStore((s) => s.items)
+  const maxItems = useCompareStore((s) => s.maxItems)
   const remove = useCompareStore((s) => s.remove)
   const clear = useCompareStore((s) => s.clear)
   const trayRef = useRef<HTMLDivElement>(null)
@@ -81,7 +82,7 @@ export function CompareTray() {
           <p className="text-sm font-semibold text-noir-gold">
             {t("trayTitle", {
               count: items.length,
-              max: COMPARE_MAX_ITEMS,
+              max: maxItems,
             })}
           </p>
           <div className="flex flex-wrap items-center gap-2">

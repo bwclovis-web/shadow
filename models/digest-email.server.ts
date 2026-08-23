@@ -52,7 +52,7 @@ export const sendWeeklyDigests = async (): Promise<{
       `Collection notes:`,
       ...digest.collectionGaps.map((g) => `- ${g}`),
       ``,
-      `Open your digest anytime: ${base}/membership`,
+      `Open your digest anytime: ${base}/digest`,
       `Manage alerts: ${base}/community`,
     ].join("\n")
 
@@ -73,7 +73,7 @@ export const sendWeeklyDigests = async (): Promise<{
       </ul>
       <h3>Collection notes</h3>
       <ul>${digest.collectionGaps.map((g) => `<li>${g}</li>`).join("")}</ul>
-      <p><a href="${base}/community">Manage saved searches &amp; community</a></p>
+      <p><a href="${base}/digest">Open your full digest</a> · <a href="${base}/community">Manage saved searches &amp; community</a></p>
     `
 
     const result = await sendTransactionalEmail({

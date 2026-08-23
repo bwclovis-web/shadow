@@ -224,6 +224,7 @@ const SecurityPageClient = ({
                     label={t("currentPassword")}
                     inputType="password"
                     name="password"
+                    autoComplete="current-password"
                   />
                   <Input
                     shading
@@ -231,6 +232,10 @@ const SecurityPageClient = ({
                     label={t("verificationCode")}
                     inputType="text"
                     name="code"
+                    autoComplete="one-time-code"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={6}
                   />
                   {confirmState?.success === false && (
                     <ErrorDisplay
@@ -241,6 +246,12 @@ const SecurityPageClient = ({
                   )}
                   <Button type="submit" variant="icon" background="gold" size="md">
                     {t("confirmEnable")}
+                  </Button>
+                </form>
+                <form action={startFormAction}>
+                  <CSRFToken />
+                  <Button type="submit" variant="icon" background="gold" size="sm">
+                    {t("rescanButton")}
                   </Button>
                 </form>
               </div>
