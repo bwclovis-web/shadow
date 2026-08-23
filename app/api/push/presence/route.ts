@@ -19,7 +19,7 @@ export const POST = async (request: NextRequest) => {
     throw error
   }
 
-  const authResult = await authenticateUser(request)
+  const authResult = await authenticateUser(request, { requireParticipation: false })
   if (!authResult.success) {
     return NextResponse.json(
       { error: authResult.error },

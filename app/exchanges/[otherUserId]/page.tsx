@@ -8,6 +8,7 @@ import { getActiveDisputeTradeIds } from "@/models/trade-dispute.server"
 import { getActiveTradesForThread } from "@/models/trade.server"
 import { prisma } from "@/lib/db"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
+import { redirectUnlessCanParticipate } from "@/utils/server/require-participation.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { getTraderDisplayName } from "@/utils/user"
 
@@ -51,6 +52,11 @@ export default async function ThreadPage({
   if (!session?.user) {
     redirect("/sign-in")
   }
+
+  await redirectUnlessCanParticipate(
+    session.user.id,
+    `/exchanges/${otherUserId}`
+  )
 
   if (otherUserId === session.user.id) {
     notFound()

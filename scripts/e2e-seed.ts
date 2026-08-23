@@ -39,6 +39,8 @@ const upsertUser = async (opts: {
         membershipTier: opts.membershipTier,
         role: opts.role,
         isBanned: false,
+        // Paid participation required for Model A APIs; tier still controls entitlements.
+        subscriptionStatus: "paid",
       },
     })
   }
@@ -53,7 +55,7 @@ const upsertUser = async (opts: {
       profileSlug,
       membershipTier: opts.membershipTier,
       role: opts.role,
-      subscriptionStatus: "free",
+      subscriptionStatus: "paid",
       firstName: "E2E",
       lastName: opts.username,
     },

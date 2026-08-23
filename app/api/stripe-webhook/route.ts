@@ -2,18 +2,11 @@ import type Stripe from "stripe"
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { getUserByEmail } from "@/models/user.query"
+import { membershipTierFromStripeMetadata } from "@/utils/membership/stripe-prices"
 import { verifyWebhookPayload } from "@/utils/server/stripe.server"
 
 const STATUS_PAID = "paid" as const
 const STATUS_CANCELLED = "cancelled" as const
-
-const tierFromMetadata = (
-  meta: Stripe.Metadata | null | undefined
-): "premium" | "collector" => {
-  const raw = (meta?.membership_tier || meta?.tier || "").toLowerCase()
-  if (raw === "collector") return "collector"
-  return "premium"
-}
 
 export async function handleStripeWebhookEvent(
   event: Stripe.Event,
@@ -43,7 +36,7 @@ export async function handleStripeWebhookEvent(
       if (email && subscriptionId) {
         const user = await getUser(email)
         if (user) {
-          const tier = tierFromMetadata(session.metadata)
+          const tier = membershipTierFromStripeMetadata(session.metadata)
           await userUpdate({
             where: { id: user.id },
             data: {
@@ -61,7 +54,9 @@ export async function handleStripeWebhookEvent(
       const subscription = event.data.object as Stripe.Subscription
       const isActive = subscription.status === "active" || subscription.status === "past_due"
       const status = isActive ? STATUS_PAID : STATUS_CANCELLED
-      const tier = isActive ? tierFromMetadata(subscription.metadata) : "free"
+      const tier = isActive
+        ? membershipTierFromStripeMetadata(subscription.metadata)
+        : "free"
       await userUpdateMany({
         where: { subscriptionId: subscription.id },
         data: {

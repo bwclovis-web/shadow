@@ -6,7 +6,7 @@ import { authenticateUser } from "@/utils/server/auth.server"
 import { prisma } from "@/lib/db"
 
 export const GET = async (request: NextRequest) => {
-  const auth = await authenticateUser(request)
+  const auth = await authenticateUser(request, { requireParticipation: false })
   if (!auth.success) {
     return NextResponse.json({
       success: true,

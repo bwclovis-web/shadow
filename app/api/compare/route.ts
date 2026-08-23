@@ -18,7 +18,7 @@ function parseIdsFromRequest(request: NextRequest): string[] {
 }
 
 const resolveCompareMax = async (request: NextRequest): Promise<number> => {
-  const auth = await authenticateUser(request)
+  const auth = await authenticateUser(request, { requireParticipation: false })
   if (!auth.success || !auth.user) {
     return getCompareMaxForEntitlements([])
   }

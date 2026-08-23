@@ -262,6 +262,10 @@ export const ForgotPasswordSchema = z.object({
 
 export const SubscribeCheckoutSchema = z.object({
   email: emailSchema,
+  tier: z
+    .enum(["member", "premium", "collector"])
+    .optional()
+    .default("member"),
 })
 
 export const ResetPasswordSchema = z

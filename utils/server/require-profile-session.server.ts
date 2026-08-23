@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation"
 
+import { prisma } from "@/lib/db"
+import { canParticipate } from "@/utils/membership/entitlements.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import type { SessionFromRequest, SessionUser } from "@/utils/session-from-request.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
@@ -20,6 +22,11 @@ const buildProfileRedirect = (slug: string, subPath?: string): string => {
   return subPath ? `${base}/${subPath}` : base
 }
 
+const subscribeRedirectForPath = (slug: string, subPath?: string): string => {
+  const path = buildProfileRedirect(slug, subPath)
+  return `/subscribe?tier=member&redirect=${encodeURIComponent(path)}`
+}
+
 export const requireOwnedProfileSession = async (
   userSlug: string,
   options: RequireOwnedProfileSessionOptions = {}
@@ -36,6 +43,14 @@ export const requireOwnedProfileSession = async (
   const slug = getProfileSlug(session.user)
   if (slug !== userSlug) {
     redirect(buildProfileRedirect(slug, options.subPath))
+  }
+
+  const billing = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { isEarlyAdopter: true, subscriptionStatus: true },
+  })
+  if (!billing || !canParticipate(billing)) {
+    redirect(subscribeRedirectForPath(slug, options.subPath))
   }
 
   return {

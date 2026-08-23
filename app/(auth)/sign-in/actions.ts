@@ -7,6 +7,7 @@ import { isTwoFactorEnabled } from "@/models/two-factor.server"
 import { updateUser } from "@/models/user.query"
 import { touchUserLastActive } from "@/models/user-activity.server"
 import { signInCustomer } from "@/models/user.server"
+import { canParticipate } from "@/utils/membership/entitlements.server"
 import { validateRateLimit } from "@/utils/api-validation.server"
 import { getAuthRateLimits } from "@/utils/rate-limit-config.server"
 import { setSessionCookies } from "@/utils/security/auth-session-cookies.server"
@@ -148,6 +149,18 @@ export const signInAction = async (
     })
     await setSessionCookies(accessToken, refreshToken)
     await touchUserLastActive(user.id)
+
+    if (
+      !canParticipate({
+        isEarlyAdopter: user.isEarlyAdopter,
+        subscriptionStatus: user.subscriptionStatus,
+      })
+    ) {
+      redirect(
+        `/subscribe?tier=member&redirect=${encodeURIComponent(getProfilePathForUser(user))}`
+      )
+    }
+
     redirect(getProfilePathForUser(user))
   } catch (error) {
     if (isRedirectError(error)) {

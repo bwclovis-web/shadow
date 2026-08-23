@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 
 import { getSiteUrl } from "@/lib/seo/site-url"
 import { validateRateLimit } from "@/utils/api-validation.server"
+import { parseCheckoutTier } from "@/utils/membership/stripe-prices"
 import { getSignupSubscribeRateLimits } from "@/utils/rate-limit-config.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { getClientIdentifierFromHeaders } from "@/utils/server/request.server"
@@ -66,21 +67,26 @@ export const subscribeAction = async (
   }
 
   const email = submission.value.email.trim().toLowerCase()
+  const checkoutTier = parseCheckoutTier(
+    submission.value.tier ?? (formData.get("tier") as string | null)
+  )
   const redirectPath = sanitizeRedirectPath(
     (formData.get("redirect") as string)?.trim() || null
   )
   const baseUrl = getSiteUrl()
   const successUrl = `${baseUrl}/subscribe/success?session_id={CHECKOUT_SESSION_ID}&redirect=${encodeURIComponent(redirectPath)}`
-  const cancelUrl = `${baseUrl}/subscribe?redirect=${encodeURIComponent(redirectPath)}&canceled=1`
+  const cancelUrl = `${baseUrl}/subscribe?tier=${checkoutTier}&redirect=${encodeURIComponent(redirectPath)}&canceled=1`
 
   try {
     const session = await createCheckoutSession({
       successUrl,
       cancelUrl,
+      checkoutTier,
       customerEmail: email,
       metadata: {
         redirect: redirectPath,
         signup_email: email,
+        membership_tier: checkoutTier,
       },
     })
 

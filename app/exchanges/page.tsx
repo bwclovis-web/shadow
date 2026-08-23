@@ -5,6 +5,7 @@ import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { redirect } from "next/navigation"
 
 import { getConversations } from "@/models/contactMessage.server"
+import { redirectUnlessCanParticipate } from "@/utils/server/require-participation.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
 import MessagesClient from "./MessagesClient"
@@ -26,6 +27,8 @@ export default async function MessagesPage(): Promise<React.ReactElement> {
   if (!session?.user) {
     redirect("/sign-in")
   }
+
+  await redirectUnlessCanParticipate(session.user.id, "/exchanges")
 
   let conversations: Awaited<ReturnType<typeof getConversations>> = []
   try {

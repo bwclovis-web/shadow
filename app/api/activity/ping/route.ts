@@ -6,7 +6,9 @@ import { CSRFError, requireCSRF } from "@/utils/server/csrf.server"
 
 export const POST = async (request: NextRequest) => {
   try {
-    const authResult = await authenticateUser(request)
+    const authResult = await authenticateUser(request, {
+      requireParticipation: false,
+    })
     if (!authResult.success || !authResult.user) {
       return NextResponse.json(
         { success: false, error: authResult.error ?? "Unauthorized" },

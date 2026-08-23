@@ -1,16 +1,16 @@
 /**
  * Stripe server utilities for subscription checkout and status.
  *
- * Required environment variables (see env.server.ts and .env.example):
- * - STRIPE_SECRET_KEY: Stripe secret key (sk_test_... or sk_live_...). Required for all Stripe API calls.
- * - STRIPE_PUBLISHABLE_KEY: Publishable key for frontend (pk_test_... or pk_live_...).
- * - STRIPE_WEBHOOK_SECRET: Webhook signing secret (whsec_...) for verifying webhook events.
- *
- * Optional for createCheckoutSession (subscription):
- * - STRIPE_PRICE_ID: Stripe Price ID for the subscription (price_...). Can be passed as param instead.
+ * Required environment variables (see .env.example):
+ * - STRIPE_SECRET_KEY
+ * - STRIPE_WEBHOOK_SECRET
+ * - STRIPE_PRICE_ID_MEMBER / STRIPE_PRICE_ID_PREMIUM / STRIPE_PRICE_ID_COLLECTOR
  */
 
 import Stripe from "stripe"
+
+import type { CheckoutTierKey } from "@/utils/membership/stripe-prices"
+import { tierToPriceId } from "@/utils/membership/stripe-prices.server"
 
 let _stripe: Stripe | null = null
 
@@ -40,7 +40,9 @@ export interface CreateCheckoutSessionParams {
   successUrl: string
   /** URL to redirect to if the customer cancels. */
   cancelUrl: string
-  /** Optional Stripe Price ID for the subscription (price_...). Falls back to STRIPE_PRICE_ID env. */
+  /** Checkout tier — resolves Stripe Price ID from env. */
+  checkoutTier?: CheckoutTierKey
+  /** Optional Stripe Price ID override. Falls back to tier env / STRIPE_PRICE_ID. */
   priceId?: string
   /** Optional customer email to prefill on Checkout. */
   customerEmail?: string
@@ -50,19 +52,19 @@ export interface CreateCheckoutSessionParams {
 
 /**
  * Creates a Stripe Checkout Session for subscription signup.
- * Uses STRIPE_PRICE_ID from env if priceId is not provided.
- *
- * @returns The created session (includes .url for redirecting the customer to Checkout).
+ * Sets membership_tier on both session and subscription metadata.
  */
 export async function createCheckoutSession(
   params: CreateCheckoutSessionParams
 ): Promise<Stripe.Checkout.Session> {
   const stripe = getStripe()
-  const priceId = params.priceId ?? process.env.STRIPE_PRICE_ID
-  if (!priceId || priceId.trim() === "") {
-    throw new Error(
-      "Subscription price ID is required. Set STRIPE_PRICE_ID in env or pass priceId to createCheckoutSession."
-    )
+  const checkoutTier = params.checkoutTier ?? "member"
+  const priceId = params.priceId?.trim() || tierToPriceId(checkoutTier)
+
+  const membershipTier = checkoutTier
+  const sessionMetadata: Record<string, string> = {
+    membership_tier: membershipTier,
+    ...(params.metadata ?? {}),
   }
 
   const session = await stripe.checkout.sessions.create({
@@ -75,8 +77,13 @@ export async function createCheckoutSession(
         quantity: 1,
       },
     ],
+    metadata: sessionMetadata,
+    subscription_data: {
+      metadata: {
+        membership_tier: membershipTier,
+      },
+    },
     ...(params.customerEmail && { customer_email: params.customerEmail }),
-    ...(params.metadata && Object.keys(params.metadata).length > 0 && { metadata: params.metadata }),
   })
 
   return session

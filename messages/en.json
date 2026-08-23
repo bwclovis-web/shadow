@@ -573,11 +573,12 @@
     },
     "signUp": {
       "title": "Sign Up",
-      "description": "Create an account to access your profile and manage your collection.",
+      "description": "Complete checkout, then create your account to manage your collection.",
       "heading": "Begin Your Collection",
-      "subheading": "Create an account to track discoveries, build your collection, and connect with fellow fragrance collectors.",
+      "subheading": "After checkout, create your account to track discoveries, build your collection, and connect with fellow fragrance collectors.",
       "alreadyHere": "Already in the Hollow?",
-      "signIn": "Return to Sign In"
+      "signIn": "Return to Sign In",
+      "needCheckout": "Membership is required to create an account. Choose a plan to continue."
     }
   },
   "directMessages": {
@@ -601,16 +602,23 @@
   },
   "subscribe": {
     "title": "Subscribe",
-    "description": "Complete a paid subscription to join perfumer's hollow after the early adopter limit.",
+    "description": "Choose a digital membership to participate in perfumer's hollow — browse stays free.",
     "heading": "Subscribe",
-    "subheading": "Join perfumer's hollow with a paid subscription",
-    "limitTitle": "100-user early adopter limit",
-    "limitCopy": "We offer free signups to our first 100 members as early adopters. That limit has been reached.",
-    "paymentRequired": "To create an account now, a paid subscription is required. Complete checkout below and you’ll be able to sign up right after.",
+    "subheading": "Join perfumer's hollow with an annual membership",
+    "participateCopy": "The Archive and Houses remain free to browse. Collection, Exchange, and community tools require a paid plan.",
+    "paymentRequired": "Complete checkout below. You’ll create your account right after payment.",
     "emailHelp": "Use the email you’ll sign up with — we’ll prefill it after payment.",
     "canceledNotice": "Checkout was canceled. You can try again when you’re ready.",
     "cta": "Continue to payment",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "tierPrice": "${price}/year",
+    "tiers": {
+      "member": "Member",
+      "premium": "Premium",
+      "collector": "Collector"
+    },
+    "participationRequired": "An active membership is required to participate.",
+    "subscribeToParticipate": "Subscribe to continue"
   },
   "subscribeSuccess": {
     "title": "Payment successful",
@@ -871,7 +879,7 @@
       "title": "Step One: Light Your Match — Create an Account",
       "content": "Creating an account opens the door to Perfumer’s Hollow — a hidden network where collectors, archivists, and fragrance enthusiasts gather to explore, review, exchange, and document the scents worth remembering.",
       "content2": "Visitors may still wander the Archive freely, but participation belongs to those who choose to step deeper into the Hollow.",
-      "content3": "The first 100 memberships are complimentary — a quiet acknowledgment of the early collectors who discovered the Hollow before the lights came on.",
+      "content3": "Annual memberships start at $5 — Member, Premium, and Collector unlock deeper participation while browsing the Archive stays free.",
       "content4": "And your information remains yours. Never sold. Never traded. Never shared beyond the Hollow."
     },
     "section2": {
@@ -936,9 +944,9 @@
       "question3": "Is my personal information safe?",
       "answer3": "Absolutely. We take privacy seriously. We don't sell, exchange, or share your personal information. Your data stays yours, and what happens in the shadows stays there.",
       "question4": "How do I create an account?",
-      "answer4": "Creating an account is free and easy. Simply click the 'Sign In' button in the navigation, then choose 'Sign Up' to create your account. Accounts are free for the first 100 members, and we keep it that way to honor our early supporters.",
+      "answer4": "Browse the Archive freely, then choose a membership on the Membership page. Complete checkout, then create your account with the same email. Annual plans start at $5 (Member), $7 (Premium), and $10 (Collector).",
       "question5": "Can I review perfumes without an account?",
-      "answer5": "You can browse and search the site without an account, but to rate, review, list decants, or build your wishlist, you'll need to create an account. It's free and gives you access to the full perfumer's hollow experience.",
+      "answer5": "You can browse and search the site without an account, but to rate, review, list decants, or build your wishlist, you'll need a paid membership. Early supporters who joined before paid membership may retain access.",
       "question6": "What if I find an error in the database?",
       "answer6": "We appreciate your attention to detail! If you spot an error — whether it's a misspelling, incorrect information, or a duplicate entry — please let us know via email. We'll review it and make corrections as needed."
     },
@@ -1872,7 +1880,7 @@
     },
     "accountsAndConduct": {
       "heading": "ACCOUNTS AND COMMUNITY CONDUCT",
-      "contentOne": "An account is required to participate in Exchanges, reviews, discussions, and collector features. Browsing the Archive and Houses remains publicly accessible.",
+      "contentOne": "A paid membership is required to participate in Exchanges, reviews, discussions, and collector features. Browsing the Archive and Houses remains publicly accessible.",
       "contentTwo": "Members are expected to interact respectfully and responsibly. Harassment, spam, illegal activity, and unrelated political or religious debates are prohibited.",
       "contentThree": "Perfumer’s Hollow exists to support fragrance discussion and collector discovery. Treat fellow collectors with the same respect you would expect in a trusted boutique or private fragrance gathering."
     },
@@ -2369,7 +2377,7 @@
         "admin": "Admin"
       },
       "membershipTiers": {
-        "free": "Free",
+        "free": "Member",
         "premium": "Premium",
         "collector": "Collector"
       }
@@ -2729,10 +2737,11 @@
   "membershipPage": {
     "heading": "Digital membership",
     "subheading": "Unlock discovery, personalization, and collection tools — digital only.",
-    "intro": "Shadow memberships unlock discovery, personalization, and collection tools. We do not sell bottles, process payouts, or charge transaction fees — value is digital only.",
+    "intro": "Shadow memberships unlock discovery, personalization, and collection tools. Browse the catalog free; participation requires an annual plan. We do not sell bottles, process payouts, or charge transaction fees.",
     "communityLink": "Explore Community",
     "ctaFree": "Get started",
-    "ctaSubscribe": "Subscribe"
+    "ctaSubscribe": "Subscribe",
+    "pricePerYear": "${price}/year"
   },
   "savedSearches": {
     "saveButton": "Save this search",

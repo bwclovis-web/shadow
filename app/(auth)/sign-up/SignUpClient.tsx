@@ -27,6 +27,7 @@ const SignUpClient = ({ sessionId, prefillEmail }: SignUpClientProps) => {
   const [passwordValue, setPasswordValue] = useState("")
   const tForms = useTranslations("forms")
   const tAuth = useTranslations("auth")
+  const tSignUp = useTranslations("auth.signUp")
 
   const [signupForm, { email, password, confirmPassword, acceptTerms }] = useForm({
     lastResult: state?.submission,
@@ -36,6 +37,25 @@ const SignUpClient = ({ sessionId, prefillEmail }: SignUpClientProps) => {
     shouldValidate: "onBlur",
     shouldRevalidate: "onInput",
   })
+
+  if (!sessionId) {
+    return (
+      <main id="main-content" className="w-full">
+        <div className="relative mx-auto flex w-full max-w-md flex-col gap-4 noir-border bg-noir-dark/30 p-4 backdrop-blur-sm md:p-6">
+          <p className="text-noir-gold-100 text-sm">{tSignUp("needCheckout")}</p>
+          <VooDooLink
+            url="/subscribe?tier=member&redirect=/sign-up"
+            variant="primary"
+            background="gold"
+            size="sm"
+            prefetch
+          >
+            {tSignUp("title")}
+          </VooDooLink>
+        </div>
+      </main>
+    )
+  }
 
   return (
     <main id="main-content" className="w-full">

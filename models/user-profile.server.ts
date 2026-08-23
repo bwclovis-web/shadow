@@ -1,4 +1,4 @@
-import { SubscriptionStatus } from "@prisma/client"
+import { MembershipTier, SubscriptionStatus } from "@prisma/client"
 import { cache } from "react"
 import { prisma } from "@/lib/db"
 import { invalidateAllSessions } from "@/models/session.server"
@@ -9,16 +9,12 @@ import {
   validatePasswordComplexity,
   verifyPassword,
 } from "@/utils/security/password-security.server"
-import {
-  FREE_USER_LIMIT,
-  canSignupForFree,
-} from "@/utils/server/user-limit.server"
 import { allocateUniqueProfileSlug } from "@/utils/profile-slug.server"
 import { generateUniqueUsername } from "@/utils/username-generator.server"
 import { userPerfumeListingSelect } from "./user-perfume-listing-fields"
 import { getUserByEmail } from "./user.query"
 
-/** Thrown when free signup limit is reached during atomic create (race condition). */
+/** @deprecated Free signup is closed; kept for tests that expect the error type. */
 export class FreeSignupLimitReachedError extends Error {
   override name = "FreeSignupLimitReachedError"
 }
@@ -26,7 +22,9 @@ export class FreeSignupLimitReachedError extends Error {
 export interface CreateUserOptions {
   /** Subscription status for the new user. Defaults to 'free'. */
   subscriptionStatus?: SubscriptionStatus
-  /** If true, user counts toward the free signup limit. If omitted, derived from count (free) or set false (paid). */
+  /** Paid tier for new subscribers. Defaults to free (Member entitlements). */
+  membershipTier?: MembershipTier
+  /** Grandfathered early adopters only; new paid signups should pass false. */
   isEarlyAdopter?: boolean
 }
 
@@ -52,42 +50,12 @@ export const createUser = async (
   }
 
   const subscriptionStatus = options?.subscriptionStatus ?? SubscriptionStatus.free
-  let isEarlyAdopter: boolean
-  if (options?.isEarlyAdopter !== undefined) {
-    isEarlyAdopter = options.isEarlyAdopter
-  } else if (subscriptionStatus === SubscriptionStatus.paid) {
-    isEarlyAdopter = false
-  } else {
-    isEarlyAdopter = await canSignupForFree()
-  }
+  const membershipTier = options?.membershipTier ?? MembershipTier.free
+  const isEarlyAdopter = options?.isEarlyAdopter ?? false
 
   const email = data.get("email") as string
   const hashedPassword = await hashPassword(password)
   const username = await generateUniqueUsername()
-
-  if (
-    subscriptionStatus === SubscriptionStatus.free &&
-    isEarlyAdopter === true
-  ) {
-    const user = await prisma.$transaction(async (tx) => {
-      const count = await tx.user.count()
-      if (count >= FREE_USER_LIMIT) {
-        throw new FreeSignupLimitReachedError()
-      }
-      const profileSlug = await allocateUniqueProfileSlug(tx, username, null)
-      return tx.user.create({
-        data: {
-          email,
-          password: hashedPassword,
-          username,
-          profileSlug,
-          subscriptionStatus,
-          isEarlyAdopter,
-        },
-      })
-    })
-    return user
-  }
 
   const profileSlug = await allocateUniqueProfileSlug(prisma, username, null)
   return prisma.user.create({
@@ -97,6 +65,7 @@ export const createUser = async (
       username,
       profileSlug,
       subscriptionStatus,
+      membershipTier,
       isEarlyAdopter,
     },
   })

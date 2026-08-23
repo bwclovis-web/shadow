@@ -10,7 +10,12 @@ import { prisma } from "@/lib/db"
 
 export const NOTE_MATERIALS_CACHE_TAG = "note-materials-index" as const
 
-const loadNoteMaterialIndexFromDb = async (): Promise<NoteMaterialIndex> => {
+type NoteMaterialIndexPayload = {
+  materials: ReadonlyArray<{ id: string; slug: string; name: string }>
+  aliases: ReadonlyArray<{ materialId: string; noteId: string }>
+}
+
+const loadNoteMaterialIndexPayload = async (): Promise<NoteMaterialIndexPayload> => {
   const [materials, aliases] = await Promise.all([
     prisma.noteMaterial.findMany({
       select: { id: true, slug: true, name: true },
@@ -20,17 +25,26 @@ const loadNoteMaterialIndexFromDb = async (): Promise<NoteMaterialIndex> => {
       select: { materialId: true, noteId: true },
     }),
   ])
-  return buildNoteMaterialIndex({ materials, aliases })
+  return { materials, aliases }
 }
 
-export const getCachedNoteMaterialIndex = unstable_cache(
-  loadNoteMaterialIndexFromDb,
-  ["note-materials-index"],
+/**
+ * Cache serializable arrays only. `unstable_cache` JSON-roundtrips values, so
+ * caching Maps/Sets (as in `NoteMaterialIndex`) yields empty objects and
+ * `.get is not a function` on cache hits in production.
+ */
+const getCachedNoteMaterialIndexPayload = unstable_cache(
+  loadNoteMaterialIndexPayload,
+  ["note-materials-index-payload"],
   { revalidate: 300, tags: [NOTE_MATERIALS_CACHE_TAG] }
 )
 
-export const getNoteMaterialIndex = (): Promise<NoteMaterialIndex> =>
-  getCachedNoteMaterialIndex()
+export const getNoteMaterialIndex = async (): Promise<NoteMaterialIndex> => {
+  const payload = await getCachedNoteMaterialIndexPayload()
+  return buildNoteMaterialIndex(payload)
+}
+
+export const getCachedNoteMaterialIndex = getNoteMaterialIndex
 
 /**
  * Persist a rule-derived alias when none exists. Never overwrites manual aliases.

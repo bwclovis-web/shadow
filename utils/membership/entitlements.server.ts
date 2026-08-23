@@ -20,6 +20,11 @@ export const entitlementsForTier = (
   return FREE_ENTITLEMENTS
 }
 
+/**
+ * Resolve effective membership tier.
+ * Trusts explicit membershipTier for paid users (Member = free, Premium, Collector).
+ * Does not auto-upgrade paid Member accounts to Premium.
+ */
 export const resolveMembershipTier = (user: {
   membershipTier?: MembershipTier | null
   subscriptionStatus?: string | null
@@ -27,8 +32,36 @@ export const resolveMembershipTier = (user: {
   if (user.membershipTier === "collector" || user.membershipTier === "premium") {
     return user.membershipTier
   }
+  if (user.membershipTier === "free") {
+    return "free"
+  }
+  // Legacy rows: paid with null/missing tier → treat as premium once
   if (user.subscriptionStatus === "paid") return "premium"
   return "free"
+}
+
+export type ParticipationUser = {
+  isEarlyAdopter?: boolean | null
+  subscriptionStatus?: string | null
+}
+
+/** Paid subscriber or grandfathered early adopter may participate. */
+export const canParticipate = (user: ParticipationUser): boolean =>
+  user.isEarlyAdopter === true || user.subscriptionStatus === "paid"
+
+export const requireParticipation = async (
+  userId: string
+): Promise<{ ok: true } | { ok: false; reason: "unpaid" | "not_found" }> => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      isEarlyAdopter: true,
+      subscriptionStatus: true,
+    },
+  })
+  if (!user) return { ok: false, reason: "not_found" }
+  if (!canParticipate(user)) return { ok: false, reason: "unpaid" }
+  return { ok: true }
 }
 
 export const userHasEntitlement = async (
@@ -69,7 +102,7 @@ export const syncMembershipTierFromSubscription = async (params: {
 }) => {
   const tier: MembershipTier =
     params.desiredTier ??
-    (params.subscriptionStatus === "paid" ? "premium" : "free")
+    (params.subscriptionStatus === "paid" ? "free" : "free")
   return prisma.user.update({
     where: { id: params.userId },
     data: { membershipTier: tier },

@@ -5,10 +5,10 @@ import { redirect } from "next/navigation"
 
 import {
   createUser,
-  FreeSignupLimitReachedError,
   getUserByEmail,
 } from "@/models/user.server"
 import { validateRateLimit } from "@/utils/api-validation.server"
+import { membershipTierFromStripeMetadata } from "@/utils/membership/stripe-prices"
 import { UserFormSchema } from "@/utils/validation/formValidationSchemas"
 import { getSignupSubscribeRateLimits } from "@/utils/rate-limit-config.server"
 import { getAuthCookieFlags } from "@/utils/security/auth-cookie.server"
@@ -20,7 +20,6 @@ import {
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { getClientIdentifierFromHeaders } from "@/utils/server/request.server"
 import { getCheckoutSession } from "@/utils/server/stripe.server"
-import { canSignupForFree } from "@/utils/server/user-limit.server"
 import { getProfilePathForUser } from "@/utils/user"
 import { parseWithZod } from "@conform-to/zod"
 
@@ -80,10 +79,7 @@ export const signUpAction = async (
 
   const sessionId = (formData.get("session_id") as string)?.trim() || null
   if (!sessionId) {
-    const allowed = await canSignupForFree()
-    if (!allowed) {
-      redirect("/subscribe?redirect=/sign-up")
-    }
+    redirect("/subscribe?tier=member&redirect=/sign-up")
   }
 
   const submission = parseWithZod(formData, { schema: UserFormSchema })
@@ -100,49 +96,31 @@ export const signUpAction = async (
     return { error: "Email already taken", submission: undefined }
   }
 
-  if (sessionId) {
-    const session = await getCheckoutSession(sessionId)
-    const formEmail = (formData.get("email") as string)?.toLowerCase()
-    const sessionEmail = (
-      (session?.customer_details?.email as string) ||
-      (session?.customer_email as string)
-    )?.toLowerCase()
-    if (
-      session?.status === "complete" &&
-      sessionEmail &&
-      formEmail &&
-      sessionEmail === formEmail
-    ) {
-      const user = await createUser(formData, {
-        subscriptionStatus: "paid",
-        isEarlyAdopter: false,
-      })
-      const { accessToken, refreshToken } = await createSession({
-        userId: user.id,
-        tokenVersion: user.tokenVersion ?? 0,
-      })
-      await setSessionCookies(accessToken, refreshToken)
-      redirect(getProfilePathForUser(user))
-    }
+  const session = await getCheckoutSession(sessionId)
+  const formEmail = (formData.get("email") as string)?.toLowerCase()
+  const sessionEmail = (
+    (session?.customer_details?.email as string) ||
+    (session?.customer_email as string)
+  )?.toLowerCase()
+  if (
+    session?.status !== "complete" ||
+    !sessionEmail ||
+    !formEmail ||
+    sessionEmail !== formEmail
+  ) {
+    redirect("/subscribe?tier=member&redirect=/sign-up")
   }
 
-  const allowed = await canSignupForFree()
-  if (!allowed) {
-    redirect("/subscribe?redirect=/sign-up")
-  }
-
-  try {
-    const user = await createUser(formData)
-    const { accessToken, refreshToken } = await createSession({
-      userId: user.id,
-      tokenVersion: user.tokenVersion ?? 0,
-    })
-    await setSessionCookies(accessToken, refreshToken)
-    redirect(getProfilePathForUser(user))
-  } catch (err) {
-    if (err instanceof FreeSignupLimitReachedError) {
-      redirect("/subscribe?redirect=/sign-up")
-    }
-    throw err
-  }
+  const membershipTier = membershipTierFromStripeMetadata(session.metadata)
+  const user = await createUser(formData, {
+    subscriptionStatus: "paid",
+    membershipTier,
+    isEarlyAdopter: false,
+  })
+  const { accessToken, refreshToken } = await createSession({
+    userId: user.id,
+    tokenVersion: user.tokenVersion ?? 0,
+  })
+  await setSessionCookies(accessToken, refreshToken)
+  redirect(getProfilePathForUser(user))
 }

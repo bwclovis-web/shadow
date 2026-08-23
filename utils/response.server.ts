@@ -18,13 +18,19 @@ export const createJsonResponse = <T = unknown>(
 
 export const createErrorResponse = (
   error: string | AppError,
-  status = 400
+  status = 400,
+  extras: Record<string, unknown> = {}
 ): Response => {
   if (error instanceof AppError) {
     return createAppErrorResponse(error, status)
   }
-  return createJsonResponse({ success: false, error }, status)
+  return createJsonResponse({ success: false, error, ...extras }, status)
 }
+
+export const createSubscriptionRequiredResponse = (): Response =>
+  createErrorResponse("Active membership required to participate", 403, {
+    code: "subscription_required",
+  })
 
 export const createSuccessResponse = <T = Record<string, unknown>>(
   data?: T

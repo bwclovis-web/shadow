@@ -392,9 +392,10 @@ export async function updateUserRole(
   }
 }
 
+/** Admin-assigned tiers grant participation (paid). DB Member = MembershipTier.free. */
 const subscriptionStatusForTier = (
-  tier: MembershipTier
-): SubscriptionStatus => (tier === "free" ? "free" : "paid")
+  _tier: MembershipTier
+): SubscriptionStatus => "paid"
 
 /**
  * Update a user's membership tier (admin override).

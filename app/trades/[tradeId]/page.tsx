@@ -6,6 +6,7 @@ import { notFound, redirect } from "next/navigation"
 import { getActiveDisputeForTrade } from "@/models/trade-dispute.server"
 import { getTradeByIdForViewer } from "@/models/trade.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
+import { redirectUnlessCanParticipate } from "@/utils/server/require-participation.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { publicAssetUrl } from "@/utils/public-asset-url.server"
 import { getProfileSlug } from "@/utils/user"
@@ -41,6 +42,8 @@ export default async function TradeDetailPage({
   if (!session?.user) {
     redirect(`/sign-in?redirect=${encodeURIComponent(`/trades/${tradeId}`)}`)
   }
+
+  await redirectUnlessCanParticipate(session.user.id, `/trades/${tradeId}`)
 
   const trade = await getTradeByIdForViewer(tradeId, session.user.id, {
     viewerRole: session.user.role,

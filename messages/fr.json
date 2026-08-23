@@ -83,6 +83,11 @@
     },
     "perfumeHouse": {
       "sectionHeading": "Administration"
+    },
+    "users": {
+      "membershipTiers": {
+        "free": "Member"
+      }
     }
   },
   "myTrades": {
@@ -375,11 +380,12 @@
     },
     "signUp": {
       "title": "S'inscrire",
-      "description": "Créez un compte pour accéder à votre profil et gérer votre collection.",
+      "description": "Finalisez le paiement, puis creez votre compte pour gerer votre collection.",
       "heading": "Rejoignez le Hollow",
-      "subheading": "Créez votre compte pour explorer les Archives, cataloguer votre collection et échanger avec d'autres collectionneurs.",
+      "subheading": "Apres le paiement, creez votre compte pour suivre vos decouvertes, batir votre collection et echanger avec d'autres collectionneurs.",
       "alreadyHere": "Déjà dans le Hollow ?",
-      "signIn": "Retour à la connexion"
+      "signIn": "Retour à la connexion",
+      "needCheckout": "Une adhesion est requise pour creer un compte. Choisissez une offre pour continuer."
     }
   },
   "directMessages": {
@@ -403,16 +409,25 @@
   },
   "subscribe": {
     "title": "S'abonner",
-    "description": "Finalisez un abonnement payant pour rejoindre perfumer's hollow après la limite des early adopters.",
+    "description": "Choisissez une adhesion numerique pour participer a perfumer's hollow — la consultation reste gratuite.",
     "heading": "S'abonner",
-    "subheading": "Rejoignez perfumer's hollow avec un abonnement payant",
+    "subheading": "Rejoignez perfumer's hollow avec une adhesion annuelle",
     "limitTitle": "Limite de 100 premiers utilisateurs",
     "limitCopy": "Nous offrons 100 inscriptions gratuites aux premiers membres. Cette limite est atteinte.",
-    "paymentRequired": "Pour créer un compte maintenant, un abonnement payant est requis. Finalisez le paiement ci-dessous.",
+    "paymentRequired": "Finalisez le paiement ci-dessous. Vous creerez votre compte juste apres.",
     "emailHelp": "Utilisez l'e-mail avec lequel vous vous inscrirez — nous le préremplirons après le paiement.",
     "canceledNotice": "Le paiement a été annulé. Vous pouvez réessayer quand vous voulez.",
     "cta": "Continuer vers le paiement",
-    "signIn": "Se connecter"
+    "signIn": "Se connecter",
+    "participateCopy": "The Archive et Houses restent gratuits a consulter. Collection, Exchange et outils communautaires necessitent un abonnement.",
+    "tierPrice": "${price}/an",
+    "tiers": {
+      "member": "Member",
+      "premium": "Premium",
+      "collector": "Collector"
+    },
+    "participationRequired": "Une adhesion active est requise pour participer.",
+    "subscribeToParticipate": "S'abonner pour continuer"
   },
   "subscribeSuccess": {
     "title": "Paiement réussi",
@@ -673,7 +688,7 @@
       "title": "Étape un : allumez la mèche — Créez un compte",
       "content": "Créer un compte ouvre la porte de Perfumer's Hollow — un réseau discret où collectionneurs, archivistes et passionnés de parfum se réunissent pour explorer, critiquer, échanger et documenter les senteurs qui méritent d'être retenues.",
       "content2": "Les visiteurs peuvent encore parcourir L'Archive en libre accès, mais la participation appartient à ceux qui choisissent de s'enfoncer plus profondément dans le Creux.",
-      "content3": "Les 100 premières adhésions sont offertes — une discrète reconnaissance aux premiers collectionneurs qui ont découvert le Creux avant que les lumières ne s'allument.",
+      "content3": "Les adhesions annuelles commencent a $5 — Member, Premium et Collector debloquent une participation plus profonde, tandis que The Archive reste librement consultable.",
       "content4": "Et vos informations restent les vôtres. Jamais vendues. Jamais échangées. Jamais partagées au-delà du Creux."
     },
     "section2": {
@@ -738,9 +753,9 @@
       "question3": "Mes données sont-elles protégées ?",
       "answer3": "Absolument. Nous prenons la confidentialité au sérieux. Nous ne vendons, n'échangeons ni ne partageons vos données. Elles restent les vôtres.",
       "question4": "Comment créer un compte ?",
-      "answer4": "Créer un compte est gratuit et simple. Cliquez sur « Connexion » dans la navigation, puis « S'inscrire ». Les 100 premiers membres ont l'inscription gratuite.",
+      "answer4": "Parcourez The Archive librement, puis choisissez une adhesion sur la page Membership. Finalisez le paiement, puis creez votre compte avec le meme e-mail. Les forfaits annuels commencent a $5 (Member), $7 (Premium) et $10 (Collector).",
       "question5": "Puis-je noter des parfums sans compte ?",
-      "answer5": "Vous pouvez parcourir et chercher sans compte, mais pour noter, recenser, lister des décants ou gérer votre liste, un compte est nécessaire. C'est gratuit et donne accès à toute l'expérience perfumer's hollow.",
+      "answer5": "Vous pouvez parcourir et chercher sans compte, mais pour noter, commenter, lister des decants ou creer une wishlist, une adhesion payante est necessaire. Les early supporters peuvent conserver l'acces.",
       "question6": "Que faire si je trouve une erreur dans la base ?",
       "answer6": "Nous apprécions votre vigilance ! Si vous repérez une erreur — faute, information incorrecte ou doublon — signalez-la par e-mail. Nous corrigerons."
     },
@@ -1590,7 +1605,7 @@
     },
     "accountsAndConduct": {
       "heading": "COMPTES ET CONDUITE",
-      "contentOne": "Un compte est nécessaire pour publier avis, notes ou annonces. La navigation et la recherche sont ouvertes à tous.",
+      "contentOne": "Une adhesion payante est requise pour participer aux Exchanges, avis, discussions et fonctions collectionneur. The Archive et Houses restent accessibles au public.",
       "contentTwo": "Restez courtois : pas de harcèlement, spam, débats politiques ou religieux, ni contenu illégal.",
       "contentThree": "C'est une communauté de parfum, pas une tribune ni un champ de bataille. Traitez les autres avec le respect d'une boutique de parfums de luxe."
     },
@@ -2673,10 +2688,11 @@
   "membershipPage": {
     "heading": "Abonnement numérique",
     "subheading": "Débloquez découverte, personnalisation et outils de collection — uniquement numérique.",
-    "intro": "Les abonnements Shadow débloquent découverte, personnalisation et outils de collection. Nous ne vendons pas de flacons, ne traitons pas de paiements et ne facturons pas de frais de transaction — la valeur est uniquement numérique.",
+    "intro": "Les adhesions Shadow debloquent decouverte, personnalisation et outils de collection. Consultez le catalogue gratuitement ; participer necessite un forfait annuel. Nous ne vendons pas de flacons ni ne traitons de paiements entre collectionneurs.",
     "communityLink": "Explorer Community",
     "ctaFree": "Commencer",
-    "ctaSubscribe": "S’abonner"
+    "ctaSubscribe": "S’abonner",
+    "pricePerYear": "${price}/an"
   },
   "savedSearches": {
     "saveButton": "Enregistrer cette recherche",

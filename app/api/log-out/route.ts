@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Revoke all refresh/access tokens for this user before clearing cookies.
-  const authResult = await authenticateUser(request)
+  const authResult = await authenticateUser(request, { requireParticipation: false })
   if (authResult.success && authResult.user?.id) {
     try {
       await invalidateAllUserSessions(authResult.user.id)

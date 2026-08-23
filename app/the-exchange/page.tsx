@@ -95,7 +95,12 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
       getRecentlyListedActivity(12),
       viewerId ? getFollowedActivity(viewerId, 12) : Promise.resolve([]),
       getSeasonalTrendingPerfumes(10),
-      viewerId ? getExchangePalateRecommendations(viewerId) : Promise.resolve([]),
+      viewerId
+        ? getExchangePalateRecommendations(viewerId).catch(error => {
+            console.error("[the-exchange] palate recommendations failed", error)
+            return []
+          })
+        : Promise.resolve([]),
       viewerId ? getMutualTradeSuggestions(viewerId) : Promise.resolve([]),
     ])
 

@@ -8,7 +8,10 @@ import type { NextRequest } from "next/server"
 import type { AuthUser } from "@/utils/server/auth.server"
 import { authenticateUser } from "@/utils/server/auth.server"
 import { ErrorHandler } from "@/utils/errorHandling"
-import { createErrorResponse, createSuccessResponse } from "@/utils/response.server"
+import {
+  createErrorResponse,
+  createSuccessResponse,
+} from "@/utils/response.server"
 
 // ==================== Types ====================
 
@@ -170,7 +173,8 @@ export const withAuthenticatedApiHandler = <T = unknown>(
       if (!authResult.success) {
         return createErrorResponse(
           authResult.error ?? "Unauthorized",
-          authResult.status ?? 401
+          authResult.status ?? 401,
+          authResult.code ? { code: authResult.code } : {}
         )
       }
 
@@ -191,6 +195,17 @@ export const withAuthenticatedApiHandler = <T = unknown>(
       return createErrorResponse(appError.userMessage, 500)
     }
   }
+}
+
+/**
+ * Authenticated + paid participation (or grandfathered early adopter).
+ * Returns 403 with code subscription_required when unpaid.
+ */
+export const withParticipatingApiHandler = <T = unknown>(
+  handler: AuthenticatedApiHandler<T>,
+  options: { context?: Record<string, unknown> } = {}
+) => {
+  return withAuthenticatedApiHandler(handler, options)
 }
 
 // ==================== Validation Helpers ====================

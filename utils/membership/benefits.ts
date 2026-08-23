@@ -18,7 +18,9 @@ export type DigitalEntitlement =
 
 export const MEMBERSHIP_BENEFITS = {
   free: {
-    label: "Free",
+    label: "Member",
+    priceUsd: 5,
+    pricePeriod: "year" as const,
     bullets: [
       "Browse the full catalog",
       "Basic collection management",
@@ -28,6 +30,8 @@ export const MEMBERSHIP_BENEFITS = {
   },
   premium: {
     label: "Premium",
+    priceUsd: 7,
+    pricePeriod: "year" as const,
     bullets: [
       "Advanced taste graph",
       "Unlimited comparisons",
@@ -38,6 +42,8 @@ export const MEMBERSHIP_BENEFITS = {
   },
   collector: {
     label: "Collector",
+    priceUsd: 10,
+    pricePeriod: "year" as const,
     bullets: [
       "Everything in Premium",
       "Private collection analytics & export",

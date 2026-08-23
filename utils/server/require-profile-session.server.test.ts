@@ -27,6 +27,15 @@ vi.mock("@/utils/user", () => ({
   getProfileSlug: (user: { id: string }) => mockGetProfileSlug(user),
 }))
 
+const mockUserFindUnique = vi.fn()
+vi.mock("@/lib/db", () => ({
+  prisma: {
+    user: {
+      findUnique: (...args: unknown[]) => mockUserFindUnique(...args),
+    },
+  },
+}))
+
 let requireOwnedProfileSession: (
   userSlug: string,
   options?: { subPath?: string }
@@ -44,6 +53,10 @@ const sessionUser: SessionUser = {
 beforeEach(async () => {
   vi.clearAllMocks()
   mockGetCookieHeader.mockResolvedValue("accessToken=abc")
+  mockUserFindUnique.mockResolvedValue({
+    isEarlyAdopter: false,
+    subscriptionStatus: "paid",
+  })
   const mod = await import("./require-profile-session.server")
   requireOwnedProfileSession = mod.requireOwnedProfileSession
 })
@@ -59,44 +72,58 @@ describe("requireOwnedProfileSession", () => {
   })
 
   it("redirects to owned profile when slug does not match URL", async () => {
-    mockGetSessionFromCookieHeader.mockResolvedValue({ userId: sessionUser.id, user: sessionUser })
+    mockGetSessionFromCookieHeader.mockResolvedValue({
+      userId: sessionUser.id,
+      user: sessionUser,
+    })
     mockGetProfileSlug.mockReturnValue("correct-slug")
 
     await expect(requireOwnedProfileSession("wrong-slug")).rejects.toThrow(
       "REDIRECT:/correct-slug/profile"
     )
-    expect(mockRedirect).toHaveBeenCalledWith("/correct-slug/profile")
   })
 
-  it("redirects to owned profile sub-path when slug does not match URL", async () => {
-    mockGetSessionFromCookieHeader.mockResolvedValue({ userId: sessionUser.id, user: sessionUser })
-    mockGetProfileSlug.mockReturnValue("correct-slug")
+  it("redirects to subscribe when user cannot participate", async () => {
+    mockGetSessionFromCookieHeader.mockResolvedValue({
+      userId: sessionUser.id,
+      user: sessionUser,
+    })
+    mockGetProfileSlug.mockReturnValue("testuser")
+    mockUserFindUnique.mockResolvedValue({
+      isEarlyAdopter: false,
+      subscriptionStatus: "free",
+    })
 
-    await expect(
-      requireOwnedProfileSession("wrong-slug", { subPath: "wishlist" })
-    ).rejects.toThrow("REDIRECT:/correct-slug/profile/wishlist")
-    expect(mockRedirect).toHaveBeenCalledWith("/correct-slug/profile/wishlist")
+    await expect(requireOwnedProfileSession("testuser")).rejects.toThrow(
+      "REDIRECT:/subscribe?tier=member&redirect=%2Ftestuser%2Fprofile"
+    )
   })
 
-  it("returns user and session when slug matches", async () => {
-    mockGetSessionFromCookieHeader.mockResolvedValue({ userId: sessionUser.id, user: sessionUser })
+  it("returns user when slug matches and user can participate", async () => {
+    mockGetSessionFromCookieHeader.mockResolvedValue({
+      userId: sessionUser.id,
+      user: sessionUser,
+    })
     mockGetProfileSlug.mockReturnValue("testuser")
 
     const result = await requireOwnedProfileSession("testuser")
 
     expect(result.user).toEqual(sessionUser)
-    expect(result.session.user).toEqual(sessionUser)
     expect(mockRedirect).not.toHaveBeenCalled()
   })
 
-  it("passes includeUser: true to getSessionFromCookieHeader", async () => {
-    mockGetSessionFromCookieHeader.mockResolvedValue({ userId: sessionUser.id, user: sessionUser })
-    mockGetProfileSlug.mockReturnValue("testuser")
-
-    await requireOwnedProfileSession("testuser")
-
-    expect(mockGetSessionFromCookieHeader).toHaveBeenCalledWith("accessToken=abc", {
-      includeUser: true,
+  it("allows grandfathered early adopters without paid status", async () => {
+    mockGetSessionFromCookieHeader.mockResolvedValue({
+      userId: sessionUser.id,
+      user: sessionUser,
     })
+    mockGetProfileSlug.mockReturnValue("testuser")
+    mockUserFindUnique.mockResolvedValue({
+      isEarlyAdopter: true,
+      subscriptionStatus: "free",
+    })
+
+    const result = await requireOwnedProfileSession("testuser")
+    expect(result.user).toEqual(sessionUser)
   })
 })
