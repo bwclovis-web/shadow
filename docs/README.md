@@ -37,6 +37,7 @@ Root [README.md](../README.md) stays short: product blurb + common commands + li
 | Doc | Purpose |
 |-----|---------|
 | [CUSTOMER_FEATURES_BACKLOG.md](./CUSTOMER_FEATURES_BACKLOG.md) | Customer-facing backlog (open items first) |
+| [product-roadmap.md](./product-roadmap.md) | Next loops: IA freeze, conflict map, phased plan, Guide policy |
 | [MONETIZATION_PLAYBOOK.md](./MONETIZATION_PLAYBOOK.md) | Subscription / revenue experiments |
 | [user-guide-decants.md](./user-guide-decants.md) | Decants / inventory / splits (copy for Help/FAQ) |
 

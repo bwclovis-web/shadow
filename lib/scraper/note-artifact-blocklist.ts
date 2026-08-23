@@ -78,6 +78,27 @@ export const DOM_ARTIFACT_EXACT_TOKENS = new Set([
   "pagetransition",
   "page-transition",
   "page transition",
+  // HTML tag names that leak when PDP markup is fed to note extraction
+  "img",
+  "image",
+  "svg",
+  "iframe",
+  "picture",
+  "figure",
+  "figcaption",
+  "source",
+  "src",
+  "alt",
+  "href",
+  // Squarespace 7.1 hamburger (`.top-bun` / `.bottom-bun`); "top" peels as a
+  // layer label and leaves the token "bun" on every product.
+  "bun",
+  "top bun",
+  "bottom bun",
+  "top-bun",
+  "bottom-bun",
+  "burger",
+  "hamburger",
 ])
 
 /** Kebab-case segment vocabulary — DOM/UI class name parts, not fragrance materials. */
@@ -113,6 +134,10 @@ export const KEBAB_UI_VOCAB_SEGMENTS = new Set([
   "cookie",
   "gdpr",
   "chatbot",
+  "bun",
+  "burger",
+  "hamburger",
+  "img",
 ])
 
 /** Kebab-case tokens where every segment is UI vocabulary (e.g. color-badge, payment-terms). */

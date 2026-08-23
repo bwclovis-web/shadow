@@ -871,44 +871,72 @@
   "howItWorks": {
     "meta": {
       "title": "The Collector’s Guide",
-      "description": "Learn how perfumer's hollow works."
+      "description": "How to use perfumer's hollow: Archive, Exchange, Community, and your ledger. We never take payment."
     },
     "heading": "The Game of Bottles and Trust",
-    "subheading": "Your guide to the Archive and Exchange.",
+    "subheading": "Four places. One hunt. We never take payment.",
+    "map": {
+      "title": "A map of the Hollow",
+      "intro": "Almost everything lives in these rooms. After you sign in, inventory, wishlist, trades, and insights sit under your Collectors Ledger.",
+      "archive": "The Archive",
+      "archiveHint": "The catalog — houses, notes, reviews, and compare.",
+      "exchange": "The Exchange",
+      "exchangeHint": "Listings, group splits, and people to trade with.",
+      "community": "Community",
+      "communityHint": "Public trays, wear journal, challenges, and saved-search alerts.",
+      "journal": "Journal",
+      "journalHint": "Editorial stories from the Hollow.",
+      "membership": "Membership",
+      "membershipHint": "Member $5, Premium $7, Collector $10 per year. Wandering the Archive stays free.",
+      "policy": "Collector Standards",
+      "policyHint": "Shipping, disputes, and how we stay a marketplace of people — not a shop."
+    },
     "section1": {
-      "title": "Step One: Light Your Match — Create an Account",
-      "content": "Creating an account opens the door to Perfumer’s Hollow — a hidden network where collectors, archivists, and fragrance enthusiasts gather to explore, review, exchange, and document the scents worth remembering.",
-      "content2": "Visitors may still wander the Archive freely, but participation belongs to those who choose to step deeper into the Hollow.",
-      "content3": "Annual memberships start at $5 — Member, Premium, and Collector unlock deeper participation while browsing the Archive stays free.",
-      "content4": "And your information remains yours. Never sold. Never traded. Never shared beyond the Hollow."
+      "title": "Step one: Light your match — create an account",
+      "content": "Creating an account opens the door to perfumer's hollow — a hidden network where collectors, archivists, and fragrance enthusiasts gather to explore, review, exchange, and document the scents worth remembering.",
+      "content2": "Visitors may still wander the Archive freely, but listing, messaging, and trading belong to those who step deeper into the Hollow.",
+      "content3": "Yearly plans are $5 Member, $7 Premium, and $10 Collector. Browsing the Archive stays free.",
+      "content4": "Your information remains yours. Never sold. Never traded. Never shared beyond the Hollow."
     },
     "section2": {
-      "title": "Step Two: List Your Decants — Share the Scent",
-      "content": "Some fragrances are too good to remain undiscovered.",
-      "content2": "Listing your decants allows other collectors to experience the bottles that shaped your journey — from rare finds and discontinued favorites to everyday signatures worth revisiting.",
-      "content3": "Describe the fragrance, document its character, and share what made it memorable to you. Every listing adds something new to the Archive and helps fellow collectors uncover scents they may never have encountered otherwise.",
-      "content4": "Perfumer’s Hollow provides the space for these exchanges to happen openly and transparently. While we do not handle exchanges or payments directly, we help collectors connect through a trusted and community-driven platform."
+      "title": "Step two: Inventory, listings, and splits",
+      "content": "My Scents is your private inventory — the bottles and millilitres you actually own. CSV import and bulk add land here first.",
+      "content2": "A listing is millilitres you offer on The Exchange. It is not a new catalog page. The Archive is the encyclopedia; The Exchange is the table.",
+      "content3": "A group split is one pour with numbered slots. Start it from a bottle in My Scents; others claim slots from The Exchange. Payment stays between you.",
+      "content4": "You may list the same perfume more than once (different sizes or prices). Listed plus reserved split millilitres cannot exceed what you own."
     },
     "section3": {
-      "title": "Step Three: Build Your Wishlist — Chase the One That Got Away",
-      "content": "Every collector remembers certain fragrances — the discontinued favorite, the impossible-to-find bottle, the scent that never fully left memory.",
-      "content2": "Your wishlist keeps those discoveries close.",
-      "content3": "Save the fragrances you’ve been searching for and receive notifications when they appear within the Hollow. Over time, your wishlist becomes more than a collection of bottles — it becomes a record of personal taste, memories, and the scents still waiting to be rediscovered."
+      "title": "Step three: Wishlist and alerts — not a second hunt",
+      "content": "Your wishlist is specific bottles you want. When someone lists one, we can notify you. A public wishlist is how other collectors see what you are looking for — there is no separate ISO board.",
+      "content2": "Saved searches (Premium) remember filters on the Archive or the Exchange and ping you when something new matches. Manage them under Community → Alerts, and in the bell on your ledger.",
+      "content3": "Both are the same chase: named bottles on the wishlist, filters on a saved search. Use one vocabulary so the Hollow does not grow a second marketplace."
     },
     "section4": {
-      "title": "Step Four: Make the Exchange — The Quiet Exchange",
-      "content": "Every exchange begins with discovery.",
-      "content2": "When collectors connect through the Hollow, they arrange exchanges directly — discussing details, making offers, and building trust through a shared appreciation for fragrance.",
-      "content3": "Perfumer’s Hollow does not process transactions or handle payments. We simply provide the platform where collectors can connect, communicate, and arrange exchanges transparently.",
-      "content4": "What happens next belongs entirely to the collectors involved."
+      "title": "Step four: Message, agree, then record the trade",
+      "content": "Every exchange begins with discovery on The Exchange, a split slot, or a match from your shelf.",
+      "content2": "Talk in messages, agree terms, then save it as a trade so both of you have a trail. Group splits already track claimed, paid, shipped, and received — 1:1 swaps should feel the same.",
+      "content3": "perfumer's hollow does not process payments or ship bottles. Reputation, reviews, and Collector Standards help you choose who to deal with.",
+      "content4": "If something goes wrong, report the profile or open a dispute from the trade. Price fields are hints, not checkout."
     },
     "section5": {
-      "title": "The Sillage We Leave Behind",
-      "content": "Perfumer’s Hollow exists for collectors who understand that fragrance is never just fragrance.",
+      "title": "The sillage we leave behind",
+      "content": "perfumer's hollow exists for collectors who understand that fragrance is never just fragrance.",
       "content2": "It is memory. Atmosphere. Discovery. A fleeting moment that somehow stays with you long after it disappears.",
-      "content3": "Every review, exchange, and saved bottle adds another layer to the growing Archive and the community shaping it.",
+      "content3": "Every review, wear logged, exchange, and saved bottle adds another layer to the Archive and the community shaping it.",
       "content4": "We value curiosity over trends, privacy over noise, and genuine passion over performance.",
       "content5": "In the end, the fragrance fades. What remains is the connection it created."
+    },
+    "tools": {
+      "title": "Collector tools — optional, not another market",
+      "intro": "These sharpen taste. They live on Community or your ledger. They do not replace The Exchange.",
+      "quiz": "Scent quiz and DNA",
+      "compare": "Compare bottles",
+      "wearJournal": "Wear journal",
+      "wearNow": "What to wear",
+      "seasonal": "Seasonal planning",
+      "insights": "Collection insights",
+      "digest": "Weekly digest",
+      "alerts": "Saved-search alerts"
     }
   },
   "contactUs": {
@@ -2648,6 +2676,9 @@
     "seasonalPlanningLink": "Seasonal planning",
     "wearSuggestionsLink": "What to wear",
     "digestLink": "Weekly digest",
+    "navSelectPlaceholder": "Related pages…",
+    "navSelectLabel": "Community related pages",
+    "tabsSelectLabel": "Community section",
     "tabs": {
       "shelves": "Trays",
       "journal": "Wear journal",
@@ -2741,7 +2772,38 @@
     "communityLink": "Explore Community",
     "ctaFree": "Get started",
     "ctaSubscribe": "Subscribe",
-    "pricePerYear": "${price}/year"
+    "pricePerYear": "${price}/year",
+    "tiers": {
+      "member": {
+        "label": "Member",
+        "bullets": {
+          "browseCatalog": "Browse the full catalog",
+          "basicCollection": "Basic collection management",
+          "scentQuiz": "Scent quiz",
+          "recommendationExplanations": "Recommendation explanations (always included)"
+        }
+      },
+      "premium": {
+        "label": "Premium",
+        "bullets": {
+          "advancedTasteGraph": "Advanced taste graph",
+          "unlimitedComparisons": "Unlimited comparisons",
+          "savedSearchesAlerts": "Saved searches & instant match alerts",
+          "collectionAnalyticsPlanning": "Collection analytics & seasonal planning",
+          "personalizedDigests": "Personalized weekly digests"
+        }
+      },
+      "collector": {
+        "label": "Collector",
+        "bullets": {
+          "everythingInPremium": "Everything in Premium",
+          "privateAnalyticsExport": "Private collection analytics & export",
+          "advancedOrganization": "Advanced organization tools",
+          "earlyEditorialEvents": "Early editorial & community events",
+          "enhancedProfile": "Enhanced profile customization"
+        }
+      }
+    }
   },
   "savedSearches": {
     "saveButton": "Save this search",

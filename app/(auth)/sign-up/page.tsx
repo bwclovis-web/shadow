@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
+import { canSignupForFree } from "@/utils/server/user-limit.server"
+
 import SignUpClient from "./SignUpClient"
 import SignUpIntro from "./SignUpIntro"
 
@@ -20,6 +22,7 @@ const SignUpPage = async ({ searchParams }: PageProps) => {
   const params = await searchParams
   const sessionId = params.session_id ?? null
   const email = params.email ?? null
+  const freeSignupAvailable = await canSignupForFree()
 
   return (
     <section
@@ -28,7 +31,11 @@ const SignUpPage = async ({ searchParams }: PageProps) => {
     >
       <SignUpIntro />
       <div className="w-full min-w-0">
-        <SignUpClient sessionId={sessionId} prefillEmail={email} />
+        <SignUpClient
+          freeSignupAvailable={freeSignupAvailable}
+          sessionId={sessionId}
+          prefillEmail={email}
+        />
       </div>
     </section>
   )

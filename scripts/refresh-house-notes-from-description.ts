@@ -10,14 +10,16 @@
  *   npm run refresh:house-notes -- "Milano Fragranze"
  *   npm run refresh:house-notes -- --dry-run
  *   npm run refresh:house-notes -- --no-noir
- *   npm run refresh:house-notes -- --force-notes   (re-extract even when description is noir-only; may thin notes)
+ *   npm run refresh:house-notes -- --preserve-notes   (skip re-extract when description is noir-only)
+ *   npm run refresh:house-notes -- --force-notes   (re-extract Milano even when DB pyramid is complete)
  *   npm run refresh:house-notes -- --validate   (optional: bulk LLM note validation, same as admin scraper)
  *
- * **Milano Fragranze / Artistic Fragrances:** stored descriptions are often noir prose only
- * (no Head/Heart/Base pyramid). By default this script **preserves existing DB note layers** and only
- * refreshes noir copy. Note re-extraction runs only when the stored description already contains
- * Head/Heart/Base lines, or when you pass `--force-notes` (not recommended for Milano — noir prose
- * cannot recover materials like Lavandin E.O.). For full pyramids, re-scrape with visible browser first.
+ * **Default:** re-extract notes from each perfume's stored description (including noir prose).
+ *
+ * **Milano Fragranze / Artistic Fragrances:** when the DB already has a complete merchant pyramid and
+ * the stored description is noir-only, notes are preserved automatically (noir prose cannot recover
+ * materials like Lavandin E.O.). Pass `--force-notes` to re-extract anyway, or re-scrape with visible
+ * browser for full pyramids. Use `--preserve-notes` to preserve DB notes for any house with noir-only copy.
  *
  * By default, bulk LLM note validation is **off** for this script — it runs on the whole house at once
  * and can drop legitimate materials from stored descriptions. Pass `--validate` to enable it.
@@ -96,6 +98,7 @@ const parseArgv = (): {
   houseNameFromArg: string | null
   dryRun: boolean
   noNoir: boolean
+  preserveNotes: boolean
   forceNotes: boolean
   validateNotes: boolean
 } => {
@@ -103,12 +106,14 @@ const parseArgv = (): {
   const positional: string[] = []
   let dryRun = false
   let noNoir = false
+  let preserveNotes = false
   let forceNotes = false
   let validateNotes = false
 
   for (const arg of args) {
     if (arg === "--dry-run") dryRun = true
     else if (arg === "--no-noir") noNoir = true
+    else if (arg === "--preserve-notes") preserveNotes = true
     else if (arg === "--force-notes") forceNotes = true
     else if (arg === "--validate") validateNotes = true
     else if (!arg.startsWith("--") && arg.trim()) {
@@ -117,7 +122,7 @@ const parseArgv = (): {
   }
 
   const houseNameFromArg = positional.length > 0 ? positional.join(" ") : null
-  return { houseNameFromArg, dryRun, noNoir, forceNotes, validateNotes }
+  return { houseNameFromArg, dryRun, noNoir, preserveNotes, forceNotes, validateNotes }
 }
 
 const promptHouseName = (defaultName: string): Promise<string> => {
@@ -139,7 +144,7 @@ const promptHouseName = (defaultName: string): Promise<string> => {
 // ---------------------------------------------------------------------------
 
 const main = async () => {
-  const { houseNameFromArg, dryRun, noNoir, forceNotes, validateNotes } = parseArgv()
+  const { houseNameFromArg, dryRun, noNoir, preserveNotes, forceNotes, validateNotes } = parseArgv()
 
   const houseName = houseNameFromArg ?? (await promptHouseName(DEFAULT_HOUSE_NAME))
   if (!houseName) {
@@ -206,6 +211,20 @@ type PreparedPerfume = {
   rawDesc: string
   descHasPyramid: boolean
   item: ScrapedItem
+}
+
+const shouldPreserveDbNotes = (
+  prepared: PreparedPerfume,
+  houseName: string,
+  preserveNotes: boolean,
+  forceNotes: boolean,
+): boolean => {
+  if (forceNotes || prepared.descHasPyramid) return false
+  if (preserveNotes) return true
+  return (
+    isMilanoFragranzeHouse(houseName) &&
+    dbPyramidComplete(prepared.open, prepared.heart, prepared.base)
+  )
 }
 
 const buildPreparedPerfume = (p: DbPerfumeRow, houseName: string): PreparedPerfume => {
@@ -303,17 +322,22 @@ const buildPreserveRecord = async (
   for (const p of prepared) {
     if (p.descHasPyramid) continue
     const dbComplete = dbPyramidComplete(p.open, p.heart, p.base)
+    const preserving = shouldPreserveDbNotes(p, house.name, preserveNotes, forceNotes)
     if (!p.rawDesc && p.open.length + p.heart.length + p.base.length === 0) {
       prepWarnings.push(`${p.perfume.name}: no description and no stored notes`)
-    } else if (!forceNotes) {
+    } else if (preserving) {
       prepWarnings.push(
-        dbComplete
-          ? `${p.perfume.name}: noir-only description — DB notes will be preserved (only noir may refresh)`
-          : `${p.perfume.name}: stored description has no Head/Heart/Base pyramid — DB notes preserved; re-scrape with visible browser or paste merchant pyramid into description, then run without --force-notes`,
+        preserveNotes
+          ? `${p.perfume.name}: --preserve-notes — DB notes kept (only noir may refresh)`
+          : `${p.perfume.name}: Milano Fragranze with complete DB pyramid — notes preserved (only noir may refresh; use --force-notes to re-extract)`,
       )
-    } else {
+    } else if (forceNotes && isMilanoFragranzeHouse(house.name) && dbComplete) {
       prepWarnings.push(
-        `${p.perfume.name}: --force-notes enabled — re-extracting from noir + any stored note layers (may thin notes)`,
+        `${p.perfume.name}: --force-notes enabled — re-extracting from noir + stored note layers (may thin notes)`,
+      )
+    } else if (!p.rawDesc && dbComplete) {
+      prepWarnings.push(
+        `${p.perfume.name}: no stored description — re-extracting from DB note layers only`,
       )
     }
   }
@@ -324,8 +348,8 @@ const buildPreserveRecord = async (
     console.log("")
   }
 
-  const toExtract = prepared.filter(p => p.descHasPyramid || forceNotes)
-  const toPreserve = prepared.filter(p => !p.descHasPyramid && !forceNotes)
+  const toPreserve = prepared.filter(p => shouldPreserveDbNotes(p, house.name, preserveNotes, forceNotes))
+  const toExtract = prepared.filter(p => !shouldPreserveDbNotes(p, house.name, preserveNotes, forceNotes))
 
   const emptyDesc = prepared.filter(
     p => !p.item.description?.trim() && !p.item.notesText?.trim(),

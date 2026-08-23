@@ -35,17 +35,16 @@ describe("digital membership entitlements", () => {
   it("adds collector-only digital benefits without sales flows", () => {
     expect(COLLECTOR_ENTITLEMENTS).toContain("export_history")
     expect(COLLECTOR_ENTITLEMENTS).toContain("early_editorial_access")
-    const allBullets = Object.values(MEMBERSHIP_BENEFITS).flatMap(b => b.bullets)
-    expect(allBullets.join(" ").toLowerCase()).not.toMatch(
-      /checkout|payout|shipping|escrow/
-    )
+    const collectorBullets = MEMBERSHIP_BENEFITS.collector.bullets.join(" ")
+    expect(collectorBullets).not.toMatch(/checkout|payout|shipping|escrow/)
   })
 
-  it("labels Member tier with annual price", () => {
-    expect(MEMBERSHIP_BENEFITS.free.label).toBe("Member")
+  it("uses translation keys for tier pricing metadata", () => {
+    expect(MEMBERSHIP_BENEFITS.free.translationKey).toBe("member")
     expect(MEMBERSHIP_BENEFITS.free.priceUsd).toBe(5)
     expect(MEMBERSHIP_BENEFITS.premium.priceUsd).toBe(7)
     expect(MEMBERSHIP_BENEFITS.collector.priceUsd).toBe(10)
+    expect(MEMBERSHIP_BENEFITS.collector.bullets).toContain("enhancedProfile")
   })
 })
 

@@ -249,9 +249,23 @@ Also listed elsewhere: Neroli E.O. among featured materials.
       "left arrow key",
       "right arrow key",
       "ndash",
+      "bun",
+      "img",
+      "i wear",
     ])
     const kept = filterNotesByTrust(
-      ["phthalate-free", "--tw-shadow", "esc", "left arrow key", "right arrow key", "ndash", "bergamot"],
+      [
+        "phthalate-free",
+        "--tw-shadow",
+        "esc",
+        "left arrow key",
+        "right arrow key",
+        "ndash",
+        "bun",
+        "img",
+        "i wear",
+        "bergamot",
+      ],
       trusted,
     )
     expect(kept).not.toContain("phthalate-free")
@@ -260,6 +274,9 @@ Also listed elsewhere: Neroli E.O. among featured materials.
     expect(kept).not.toContain("left arrow key")
     expect(kept).not.toContain("right arrow key")
     expect(kept).not.toContain("ndash")
+    expect(kept).not.toContain("bun")
+    expect(kept).not.toContain("img")
+    expect(kept).not.toContain("i wear")
     expect(kept).toContain("bergamot")
   })
 
@@ -516,6 +533,11 @@ Also listed elsewhere: Neroli E.O. among featured materials.
       "no-js",
       "article",
       "pagetransition",
+      "img",
+      "bun",
+      "top bun",
+      "bottom bun",
+      "burger",
     ]) {
       expect(isThemeCssTokenNote(junk), junk).toBe(true)
       expect(isObviousNonMaterialNote(junk), junk).toBe(true)
@@ -540,5 +562,10 @@ Also listed elsewhere: Neroli E.O. among featured materials.
     expect(isObviousNonMaterialNote("a soft golden sweetness")).toBe(true)
     expect(isObviousNonMaterialNote("sandalwood")).toBe(false)
     expect(isObviousNonMaterialNote("orange blossom")).toBe(false)
+    expect(isObviousNonMaterialNote("cinnamon bun")).toBe(false)
+    expect(isObviousNonMaterialNote("img")).toBe(true)
+    expect(isObviousNonMaterialNote("bun")).toBe(true)
+    expect(isObviousNonMaterialNote("i my illustrious lordship")).toBe(true)
+    expect(isObviousNonMaterialNote("i wear")).toBe(true)
   })
 })

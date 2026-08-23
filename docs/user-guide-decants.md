@@ -132,6 +132,8 @@ No. Claimants only appear on the split as slot holders.
 
 ## Related docs
 
+- Customer how-to: [The Collector’s Guide](/the-collectors-guide) — keep split copy on that page in sync when this file changes
+- Sequencing: [product-roadmap.md](./product-roadmap.md) (circles = splits, not a new product)
 - [Contributor badges — decantHost](./contributor-badges-spec.md)
 - [Smoke test — decant splits](./smoke-test-decant-splits.md)
 - Hub: [README.md](./README.md)

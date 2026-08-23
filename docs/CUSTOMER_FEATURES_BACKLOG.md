@@ -20,10 +20,12 @@ Customer-facing roadmap focused on discovery quality, trust, and retention loops
 
 ### Saved Searches and Alerts
 
-- [ ] **CF-020** Save current search criteria
-- [ ] **CF-021** Alert rules for availability, price movement, and new matches
-- [ ] **CF-022** Alert center with mute/snooze controls
-- [ ] **CF-023** Alert frequency settings (instant/daily digest)
+Save + matcher + Community Alerts manager already exist (`SavedSearch`, `SaveSearchButton` on Archive/Exchange, cron match pass, Premium entitlements). Remaining work is **one inbox** and clearer rules — see [product-roadmap.md](./product-roadmap.md) Phase 1. Do not add a second Alerts hub.
+
+- [x] **CF-020** Save current search criteria (API + Archive/Exchange button + Community → Alerts list)
+- [ ] **CF-021** Alert rules for availability, price movement, and new matches (matcher covers new listing/catalog; price-movement rules not shipped)
+- [ ] **CF-022** Alert center with mute/snooze — mute exists on saved searches; snooze + merge into header `UserAlert` bell still open
+- [ ] **CF-023** Alert frequency settings (instant vs daily digest)
 
 ## Tier B: Trust and Community
 
@@ -60,7 +62,17 @@ Customer-facing roadmap focused on discovery quality, trust, and retention loops
 - [x] **CF-070** Advanced collection intelligence (redundancy, gaps, decant mix)
 - [x] **CF-071** Premium compare limit (`unlimited_comparisons`)
 - [x] **CF-072** House / indie radar from followed houses
-- [ ] **CF-073** Structured decant circles (deferred — later Phase 4.5)
+- [ ] **CF-073** Structured decant circles (deferred — implement as invite-only / recurring **group splits**, not a new noun; roadmap Phase 6)
+
+### Next loops (no new hubs)
+
+Sequencing, conflict map, and Collector’s Guide policy: [product-roadmap.md](./product-roadmap.md).
+
+- [ ] **CF-074** Unify saved-search, wishlist, trade, and follow notices onto the existing UserAlert bell + one preference sheet
+- [ ] **CF-075** Public looking-for via **wishlist** visibility + Exchange region filter (`User.region` / `same_region` already in trade-match). No ISO board.
+- [ ] **CF-076** Shared deal checklist on 1:1 trades (photos, tracking, shipped/received — same language as splits)
+- [ ] **CF-077** Sampling-queue UI on digest + My Scents (model + digest snippet exist)
+- [ ] **CF-078** Note/material pages under the Archive (`NoteMaterial` already powers scoring) — not a nav item until content exists
 
 ## UX Guardrails
 

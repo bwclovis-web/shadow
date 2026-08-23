@@ -1,6 +1,7 @@
 import Image from "next/image"
 import { getTranslations } from "next-intl/server"
 
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
@@ -18,6 +19,29 @@ const SECTION_IMG_CLASS =
 const IMAGE_SIZES =
   "(min-width: 1440px) 55vw, (min-width: 1024px) 65vw, 80vw"
 
+const MAP_LINKS = [
+  { href: "/the-archive", labelKey: "map.archive", hintKey: "map.archiveHint" },
+  { href: "/the-exchange", labelKey: "map.exchange", hintKey: "map.exchangeHint" },
+  { href: "/community", labelKey: "map.community", hintKey: "map.communityHint" },
+  { href: "/journal", labelKey: "map.journal", hintKey: "map.journalHint" },
+  { href: "/membership", labelKey: "map.membership", hintKey: "map.membershipHint" },
+  {
+    href: "/community-policy",
+    labelKey: "map.policy",
+    hintKey: "map.policyHint",
+  },
+] as const
+
+const TOOL_LINKS = [
+  { href: "/scent-quiz", labelKey: "tools.quiz" },
+  { href: "/compare", labelKey: "tools.compare" },
+  { href: "/community?tab=journal", labelKey: "tools.wearJournal" },
+  { href: "/wear-suggestions", labelKey: "tools.wearNow" },
+  { href: "/seasonal-planning", labelKey: "tools.seasonal" },
+  { href: "/digest", labelKey: "tools.digest" },
+  { href: "/community?tab=alerts", labelKey: "tools.alerts" },
+] as const
+
 const TheCollectorsGuideContent = async () => {
   const t = await getTranslations("howItWorks")
 
@@ -32,6 +56,26 @@ const TheCollectorsGuideContent = async () => {
       <PageWrapper>
         <article className="mx-auto">
           <div className="prose prose-lg prose-invert gap-10 flex flex-col">
+            <section className="flex flex-col gap-4 border-b border-noir-gold pb-10">
+              <h2>{t("map.title")}</h2>
+              <p className="text-noir-light text-lg leading-relaxed">
+                {t("map.intro")}
+              </p>
+              <ul className="flex flex-col gap-3 list-none p-0 m-0">
+                {MAP_LINKS.map(item => (
+                  <li key={item.href} className="text-lg leading-relaxed">
+                    <PrefetchLink
+                      href={item.href}
+                      className="text-noir-gold underline underline-offset-4 hover:text-noir-light"
+                    >
+                      {t(item.labelKey)}
+                    </PrefetchLink>
+                    <span className="text-noir-light"> — {t(item.hintKey)}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
             <section className="gap-6 flex flex-col lg:flex-row border-b border-noir-gold pb-10 items-center">
               <Image
                 src={IMAGES.match}
@@ -137,7 +181,7 @@ const TheCollectorsGuideContent = async () => {
               </div>
             </section>
 
-            <section className="gap-6 flex flex-col lg:flex-row border-b border-noir-gold lg:pb-10 pb-4  items-center">
+            <section className="gap-6 flex flex-col lg:flex-row border-b border-noir-gold lg:pb-10 pb-4 items-center">
               <Image
                 src={IMAGES.leftBehind}
                 alt=""
@@ -149,7 +193,7 @@ const TheCollectorsGuideContent = async () => {
               />
               <div className="flex flex-col gap-3 lg:w-1/2">
                 <h2 className="md:mb-1">{t("section5.title")}</h2>
-                  <p className="text-noir-light text-lg leading-relaxed">
+                <p className="text-noir-light text-lg leading-relaxed">
                   {t("section5.content")}
                 </p>
                 <p className="text-noir-light text-lg leading-relaxed">
@@ -165,6 +209,25 @@ const TheCollectorsGuideContent = async () => {
                   {t("section5.content5")}
                 </p>
               </div>
+            </section>
+
+            <section className="flex flex-col gap-4 pb-4">
+              <h2>{t("tools.title")}</h2>
+              <p className="text-noir-light text-lg leading-relaxed">
+                {t("tools.intro")}
+              </p>
+              <ul className="flex flex-col gap-2 list-none p-0 m-0">
+                {TOOL_LINKS.map(item => (
+                  <li key={item.href}>
+                    <PrefetchLink
+                      href={item.href}
+                      className="text-noir-gold underline underline-offset-4 hover:text-noir-light text-lg"
+                    >
+                      {t(item.labelKey)}
+                    </PrefetchLink>
+                  </li>
+                ))}
+              </ul>
             </section>
           </div>
         </article>

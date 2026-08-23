@@ -13,6 +13,7 @@
 
 import { type PerfumeNoteType, PrismaClient } from "@prisma/client"
 
+import { isObviousNonMaterialNote } from "@/lib/scraper/note-source-confirmation"
 import { createUrlSlug } from "@/utils/slug"
 import type { PerfumeCsvRecord } from "@/types/scraper"
 
@@ -47,14 +48,15 @@ export function parseNotes(notesString: string): string[] {
   if (!notesString || notesString.trim() === "" || notesString === "[]") {
     return []
   }
+  const keep = (n: string) => Boolean(n) && !isObviousNonMaterialNote(n)
   try {
     const parsed = JSON.parse(notesString)
-    return Array.isArray(parsed) ? (parsed as unknown[]).map(String).filter(Boolean) : []
+    return Array.isArray(parsed) ? (parsed as unknown[]).map(String).map(s => s.trim()).filter(keep) : []
   } catch {
     return notesString
       .split(",")
       .map(n => n.trim().replace(/^["']|["']$/g, ""))
-      .filter(n => n.length > 0)
+      .filter(keep)
   }
 }
 
@@ -74,7 +76,7 @@ export function parseDescription(raw: string | null | undefined): {
       return {
         description: parsed.cleaned_description?.trim() ?? null,
         extractedNotes: Array.isArray(parsed.extracted_notes)
-          ? (parsed.extracted_notes as unknown[]).map(String)
+          ? (parsed.extracted_notes as unknown[]).map(String).filter(n => n && !isObviousNonMaterialNote(n))
           : [],
       }
     } catch {

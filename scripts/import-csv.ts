@@ -21,6 +21,7 @@ import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
 
+import { isObviousNonMaterialNote } from "@/lib/scraper/note-source-confirmation"
 import { createUrlSlug } from "~/utils/slug"
 
 const prisma = new PrismaClient()
@@ -52,15 +53,17 @@ function parseNotes(notesString: string): string[] {
     return []
   }
 
+  const keep = (note: string) => Boolean(note) && !isObviousNonMaterialNote(note)
+
   try {
     const parsed = JSON.parse(notesString)
-    return Array.isArray(parsed) ? parsed : []
+    return Array.isArray(parsed) ? parsed.map(String).map((n: string) => n.trim()).filter(keep) : []
   } catch {
     // If JSON parsing fails, try comma-separated
     return notesString
       .split(",")
       .map(note => note.trim().replace(/^["']|["']$/g, ""))
-      .filter(note => note.length > 0)
+      .filter(keep)
   }
 }
 

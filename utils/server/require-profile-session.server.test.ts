@@ -28,12 +28,19 @@ vi.mock("@/utils/user", () => ({
 }))
 
 const mockUserFindUnique = vi.fn()
+const mockUserFindMany = vi.fn()
 vi.mock("@/lib/db", () => ({
   prisma: {
     user: {
       findUnique: (...args: unknown[]) => mockUserFindUnique(...args),
+      findMany: (...args: unknown[]) => mockUserFindMany(...args),
     },
   },
+}))
+
+const mockCanSignupForFree = vi.fn()
+vi.mock("@/utils/server/user-limit.server", () => ({
+  canSignupForFree: (...args: unknown[]) => mockCanSignupForFree(...args),
 }))
 
 let requireOwnedProfileSession: (
@@ -53,10 +60,12 @@ const sessionUser: SessionUser = {
 beforeEach(async () => {
   vi.clearAllMocks()
   mockGetCookieHeader.mockResolvedValue("accessToken=abc")
+  mockCanSignupForFree.mockResolvedValue(false)
   mockUserFindUnique.mockResolvedValue({
     isEarlyAdopter: false,
     subscriptionStatus: "paid",
   })
+  mockUserFindMany.mockResolvedValue(Array.from({ length: 100 }, (_, i) => ({ id: `u-${i}` })))
   const mod = await import("./require-profile-session.server")
   requireOwnedProfileSession = mod.requireOwnedProfileSession
 })
@@ -97,6 +106,24 @@ describe("requireOwnedProfileSession", () => {
     await expect(requireOwnedProfileSession("testuser")).rejects.toThrow(
       "REDIRECT:/subscribe?tier=member&redirect=%2Ftestuser%2Fprofile"
     )
+  })
+
+  it("allows unpaid users while free signup quota remains", async () => {
+    mockGetSessionFromCookieHeader.mockResolvedValue({
+      userId: sessionUser.id,
+      user: sessionUser,
+    })
+    mockGetProfileSlug.mockReturnValue("testuser")
+    mockUserFindUnique.mockResolvedValue({
+      isEarlyAdopter: false,
+      subscriptionStatus: "free",
+    })
+    mockCanSignupForFree.mockResolvedValue(true)
+
+    const result = await requireOwnedProfileSession("testuser")
+
+    expect(result.user).toEqual(sessionUser)
+    expect(mockRedirect).not.toHaveBeenCalled()
   })
 
   it("returns user when slug matches and user can participate", async () => {

@@ -48,16 +48,24 @@ vi.mock("@/utils/rate-limit-config.server", () => ({
 vi.mock("@/utils/security/auth-cookie.server", () => ({
   getAuthCookieFlags: vi.fn().mockReturnValue({ httpOnly: true, path: "/" }),
 }))
+vi.mock("@/utils/server/user-limit.server", () => ({
+  canSignupForFree: vi.fn().mockResolvedValue(false),
+}))
+
 vi.mock("@/utils/user", () => ({
   getProfilePathForUser: vi.fn().mockReturnValue("/testuser/profile"),
 }))
 
+import { canSignupForFree } from "@/utils/server/user-limit.server"
 import { createUser, getUserByEmail } from "@/models/user.server"
 import { signUpAction } from "./actions"
+
+const mockCanSignupForFree = vi.mocked(canSignupForFree)
 
 describe("signUpAction", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockCanSignupForFree.mockResolvedValue(false)
     mockCreateSession.mockResolvedValue({
       accessToken: "access",
       refreshToken: "refresh",
@@ -74,7 +82,7 @@ describe("signUpAction", () => {
     vi.clearAllMocks()
   })
 
-  it("redirects to subscribe when session_id is missing", async () => {
+  it("redirects to subscribe when session_id is missing and free signup is closed", async () => {
     const formData = new FormData()
     formData.set("email", "new@example.com")
     formData.set("password", "ValidPassword1!")
@@ -138,5 +146,25 @@ describe("signUpAction", () => {
       userId: "user-new-id",
       tokenVersion: 0,
     })
+  })
+
+  it("creates early adopter user when free signup is available and no checkout session", async () => {
+    mockCanSignupForFree.mockResolvedValue(true)
+    const formData = new FormData()
+    formData.set("email", "free@example.com")
+    formData.set("password", "ValidPassword1!")
+    formData.set("confirmPassword", "ValidPassword1!")
+    formData.set("acceptTerms", "on")
+
+    await expect(signUpAction(null, formData)).rejects.toThrow("NEXT_REDIRECT")
+
+    expect(createUser).toHaveBeenCalledWith(
+      formData,
+      expect.objectContaining({
+        subscriptionStatus: "free",
+        isEarlyAdopter: true,
+      })
+    )
+    expect(mockGetCheckoutSession).not.toHaveBeenCalled()
   })
 })

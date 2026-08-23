@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
+import Select from "@/components/Atoms/Select"
 
 import {
   AlertsTab,
@@ -59,6 +60,12 @@ const CommunityHubClient = ({ signedIn, signInHref }: CommunityHubClientProps) =
     { id: "alerts", label: t("tabs.alerts") },
   ]
 
+  const tabSelectData = tabs.map(item => ({
+    id: item.id,
+    name: item.id,
+    label: item.label,
+  }))
+
   useEffect(() => {
     setMountedTabs(prev => (prev.includes(tab) ? prev : [...prev, tab]))
   }, [tab])
@@ -88,25 +95,43 @@ const CommunityHubClient = ({ signedIn, signInHref }: CommunityHubClientProps) =
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap gap-2 border-b border-noir-gold/20 pb-3">
-        {tabs.map(item => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => {
-              setTab(item.id)
+      <div className="border-b border-noir-gold/20 pb-3">
+        <div className="md:hidden">
+          <Select
+            selectId="community-tab-nav"
+            ariaLabel={t("tabsSelectLabel")}
+            selectData={tabSelectData}
+            value={tab}
+            size="compact"
+            className="w-full max-w-none"
+            action={evt => {
+              const nextTab = evt.target.value as CommunityTabId
+              setTab(nextTab)
               setError(null)
               setMessage(null)
             }}
-            className={`px-3 py-1.5 text-sm uppercase tracking-wide rounded border transition-[color,background-color,border-color] duration-300 ease-out motion-reduce:transition-none ${
-              tab === item.id
-                ? "border-noir-gold/60 text-noir-gold-500 bg-white/5"
-                : "border-transparent text-noir-gold-500/70 hover:text-noir-gold-500"
-            }`}
-          >
-            {item.label}
-          </button>
-        ))}
+          />
+        </div>
+        <div className="hidden md:flex flex-wrap gap-2">
+          {tabs.map(item => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => {
+                setTab(item.id)
+                setError(null)
+                setMessage(null)
+              }}
+              className={`px-3 py-1.5 text-sm uppercase tracking-wide rounded border transition-[color,background-color,border-color] duration-300 ease-out motion-reduce:transition-none ${
+                tab === item.id
+                  ? "border-noir-gold/60 text-noir-gold-500 bg-white/5"
+                  : "border-transparent text-noir-gold-500/70 hover:text-noir-gold-500"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {error && (

@@ -5,6 +5,10 @@ import { getTranslations } from "next-intl/server"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { getSeasonalPlanningSuggestions } from "@/models/seasonal-planning.server"
+import {
+  getCurrentSeasonKey,
+  getSeasonalPlanningBanner,
+} from "@/utils/season-calendar"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
@@ -13,10 +17,10 @@ export const metadata: Metadata = {
   description: "Wear this season suggestions from your collection and journal.",
 }
 
-const BANNER = "/images/new/vault.webp"
-
 const SeasonalPlanningPage = async () => {
   const t = await getTranslations("seasonalPlanning")
+  const season = getCurrentSeasonKey()
+  const banner = getSeasonalPlanningBanner(season)
   const cookieHeader = await getCookieHeader()
   const session = await getSessionFromCookieHeader(cookieHeader, {
     includeUser: false,
@@ -25,7 +29,7 @@ const SeasonalPlanningPage = async () => {
   if (!session?.userId) {
     return (
       <main id="main-content">
-        <TitleBanner image={BANNER} heading={t("title")} subheading={t("subtitle")} />
+        <TitleBanner image={banner} heading={t("title")} subheading={t("subtitle")} />
         <PageWrapper>
           <p className="text-noir-gold-100">
             <Link href="/sign-in?redirect=/seasonal-planning" className="underline text-noir-gold">
@@ -43,7 +47,7 @@ const SeasonalPlanningPage = async () => {
   if (!result.ok) {
     return (
       <main id="main-content">
-        <TitleBanner image={BANNER} heading={t("title")} subheading={t("subtitle")} />
+        <TitleBanner image={banner} heading={t("title")} subheading={t("subtitle")} />
         <PageWrapper>
           <p className="text-noir-gold-100 mb-3">{t("premiumRequired")}</p>
           <Link href="/membership" className="text-noir-gold underline">
@@ -65,7 +69,7 @@ const SeasonalPlanningPage = async () => {
   return (
     <main id="main-content">
       <TitleBanner
-        image={BANNER}
+        image={banner}
         heading={t("title")}
         subheading={`${t("subtitle")} (${result.season})`}
       />

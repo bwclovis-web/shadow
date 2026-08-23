@@ -62,7 +62,11 @@
     "invalidCompareUrl": "Questo link confronta troppi profumi. Puoi confrontarne al massimo tre.",
     "personalizeHint": "Accedi per vedere quale profumo si adatta meglio al tuo profilo olfattivo.",
     "bestForYouTitle": "Il più adatto a te",
-    "bestForYouBody": "In linea con il tuo profilo (quiz e attività). Note di tuo interesse: {noteList}."
+    "bestForYouBody": "In linea con il tuo profilo (quiz e attività). Note di tuo interesse: {noteList}.",
+    "linkCopyFailed": "Impossibile copiare: prova a copiare la barra degli indirizzi.",
+    "shareSummaryTitle": "Riepilogo da condividere",
+    "shareSummarySharedNotes": "{count, plural, one {# famiglia di note condivisa tra questi flaconi} other {# note condivise tra questi flaconi}}",
+    "shareSummaryBestForYou": "Il più adatto a te si basa su: {notes}."
   },
   "admin": {
     "navigation": {
@@ -83,11 +87,6 @@
     },
     "perfumeHouse": {
       "sectionHeading": "Amministrazione"
-    },
-    "users": {
-      "membershipTiers": {
-        "free": "Member"
-      }
     }
   },
   "myTrades": {
@@ -412,8 +411,6 @@
     "description": "Scegli un'iscrizione digitale per partecipare a perfumer's hollow — la consultazione resta gratuita.",
     "heading": "Abbonati",
     "subheading": "Entra in perfumer's hollow con un'iscrizione annuale",
-    "limitTitle": "Limite 100 primi utenti",
-    "limitCopy": "Offriamo 100 iscrizioni gratuite ai primi membri. Il limite è stato raggiunto.",
     "paymentRequired": "Completa il pagamento qui sotto. Creerai l'account subito dopo.",
     "emailHelp": "Usa l'email con cui ti registrerai — la precompileremo dopo il pagamento.",
     "canceledNotice": "Il pagamento è stato annullato. Puoi riprovare quando vuoi.",
@@ -679,45 +676,73 @@
   },
   "howItWorks": {
     "meta": {
-      "title": "Come funziona",
-      "description": "Scopri come funziona perfumer's hollow."
+      "title": "La guida del collezionista",
+      "description": "Come usare perfumer's hollow: l'Archivio, lo Scambio, la Community e il tuo registro. Non incassiamo mai il pagamento."
     },
     "heading": "Il gioco dei flaconi e della fiducia",
-    "subheading": "La tua guida all'Archivio e al mercato.",
+    "subheading": "Quattro luoghi. Una caccia. Non incassiamo mai il pagamento.",
+    "map": {
+      "title": "Una mappa della Conca",
+      "intro": "Quasi tutto vive in queste stanze. Dopo l'accesso, inventario, wishlist, scambi e insight stanno sotto il tuo Registro del collezionista.",
+      "archive": "L'Archivio",
+      "archiveHint": "Il catalogo — case, note, recensioni e confronto.",
+      "exchange": "Lo Scambio",
+      "exchangeHint": "Annunci, split di gruppo e persone con cui scambiare.",
+      "community": "Community",
+      "communityHint": "Vassoi pubblici, diario di utilizzo, sfide e avvisi delle ricerche salvate.",
+      "journal": "Diario",
+      "journalHint": "Storie editoriali dalla Conca.",
+      "membership": "Iscrizione",
+      "membershipHint": "Member 5 $, Premium 7 $, Collector 10 $ all'anno. Sfogliare l'Archivio resta gratuito.",
+      "policy": "Standard del collezionista",
+      "policyHint": "Spedizioni, controversie e come restiamo un mercato di persone, non un negozio."
+    },
     "section1": {
-      "title": "Passo uno: accendi la miccia — Crea un account",
-      "content": "Creare un account apre la porta di Perfumer's Hollow — una rete nascosta dove collezionisti, archivisti e appassionati di fragranze si riuniscono per esplorare, recensire, scambiare e documentare gli aromi che meritano di essere ricordati.",
-      "content2": "I visitatori possono ancora vagare liberamente nell'Archivio, ma la partecipazione spetta a chi sceglie di addentrarsi più a fondo nella Conca.",
-      "content3": "Le iscrizioni annuali partono da $5 — Member, Premium e Collector sbloccano una partecipazione piu profonda, mentre The Archive resta gratuito da sfogliare.",
-      "content4": "E le tue informazioni restano tue. Mai vendute. Mai scambiate. Mai condivise oltre la Conca."
+      "title": "Passo uno: accendi la miccia — crea un account",
+      "content": "Creare un account apre la porta di perfumer's hollow — una rete nascosta dove collezionisti, archivisti e appassionati si riuniscono per esplorare, recensire, scambiare e documentare gli aromi che meritano di essere ricordati.",
+      "content2": "I visitatori possono ancora vagare liberamente nell'Archivio, ma elencare, scrivere e scambiare spetta a chi si addentra nella Conca.",
+      "content3": "I piani annuali sono 5 $ Member, 7 $ Premium e 10 $ Collector. Consultare l'Archivio resta gratuito.",
+      "content4": "Le tue informazioni restano tue. Mai vendute. Mai scambiate. Mai condivise oltre la Conca."
     },
     "section2": {
-      "title": "Passo due: elenca i decant — condividi il profumo",
-      "content": "Alcune fragranze sono troppo preziose per restare inosservate.",
-      "content2": "Elencare i tuoi decant permette ad altri collezionisti di scoprire i flaconi che hanno segnato il tuo percorso — dalle rarità e preferiti fuori produzione alle firme quotidiane che meritano di essere riviste.",
-      "content3": "Descrivi la fragranza, documenta il suo carattere e condividi cosa l'ha resa memorabile per te. Ogni annuncio arricchisce l'Archivio e aiuta altri collezionisti a scoprire aromi che forse non avrebbero mai incontrato.",
-      "content4": "Perfumer's Hollow offre lo spazio affinché questi scambi avvengano in modo aperto e trasparente. Non gestiamo scambi o pagamenti direttamente, ma aiutiamo i collezionisti a connettersi attraverso una piattaforma affidabile guidata dalla community."
+      "title": "Passo due: inventario, annunci e split",
+      "content": "I miei profumi è il tuo inventario privato — i flaconi e i millilitri che possiedi davvero. Import CSV e aggiunta in blocco arrivano prima qui.",
+      "content2": "Un annuncio sono millilitri che offri sullo Scambio. Non è una nuova scheda del catalogo. L'Archivio è l'enciclopedia; lo Scambio è il tavolo.",
+      "content3": "Uno split di gruppo è un solo versamento con posti numerati. avvialo da un flacone in I miei profumi; gli altri reclamano i posti dallo Scambio. Il pagamento resta tra voi.",
+      "content4": "Puoi elencare lo stesso profumo più di una volta (taglie o prezzi diversi). I millilitri elencati più quelli riservati negli split non possono superare ciò che possiedi."
     },
     "section3": {
-      "title": "Passo tre: costruisci la wishlist — insegui quello che ti è sfuggito",
-      "content": "Ogni collezionista ricorda certe fragranze — il preferito fuori produzione, il flacone impossibile da trovare, l'aroma che non ha mai lasciato del tutto la memoria.",
-      "content2": "La tua wishlist tiene vicini quei ritrovamenti.",
-      "content3": "Salva le fragranze che stai cercando e ricevi notifiche quando compaiono nella Conca. Col tempo, la tua wishlist diventa più di una collezione di flaconi — diventa un diario di gusti personali, ricordi e aromi ancora in attesa di essere riscoperti."
+      "title": "Passo tre: wishlist e avvisi — non una seconda caccia",
+      "content": "La wishlist sono flaconi precisi che vuoi. Quando qualcuno li elenca, possiamo avvisarti. Una wishlist pubblica è come gli altri vedono cosa cerchi: non c'è un bacheca ISO a parte.",
+      "content2": "Le ricerche salvate (Premium) ricordano i filtri dell'Archivio o dello Scambio e ti avvisano quando qualcosa di nuovo corrisponde. Gestiscile in Community → Avvisi e nella campana del registro.",
+      "content3": "È la stessa caccia: flaconi nominati sulla wishlist, filtri su una ricerca salvata. Un solo vocabolario perché la Conca non cresca un secondo mercato."
     },
     "section4": {
-      "title": "Passo quattro: fai lo scambio — lo scambio silenzioso",
-      "content": "Ogni scambio inizia con la scoperta.",
-      "content2": "Quando i collezionisti si incontrano attraverso la Conca, organizzano gli scambi direttamente — discutendo i dettagli, facendo offerte e costruendo fiducia attraverso una passione condivisa per la fragranza.",
-      "content3": "Perfumer's Hollow non elabora transazioni né gestisce pagamenti. Offriamo semplicemente la piattaforma in cui i collezionisti possono connettersi, comunicare e organizzare scambi in modo trasparente.",
-      "content4": "Ciò che accade dopo appartiene interamente ai collezionisti coinvolti."
+      "title": "Passo quattro: scrivi, accordati, poi registra lo scambio",
+      "content": "Ogni scambio inizia con una scoperta sullo Scambio, un posto nello split o un match dallo scaffale.",
+      "content2": "Parlate nei messaggi, accordate i termini, poi salvatelo come scambio così entrambi avete una traccia. Gli split di gruppo già tracciano reclamato, pagato, spedito e ricevuto — uno scambio 1:1 dovrebbe sembrare lo stesso.",
+      "content3": "perfumer's hollow non elabora pagamenti né spedisce flaconi. Reputazione, recensioni e Standard del collezionista aiutano a scegliere con chi trattare.",
+      "content4": "Se qualcosa va storto, segnala il profilo o apri una controversia dallo scambio. I prezzi sono suggerimenti, non un checkout."
     },
     "section5": {
       "title": "La scia che lasciamo",
-      "content": "Perfumer's Hollow esiste per collezionisti che capiscono che la fragranza non è mai solo fragranza.",
+      "content": "perfumer's hollow esiste per collezionisti che capiscono che la fragranza non è mai solo fragranza.",
       "content2": "È memoria. Atmosfera. Scoperta. Un attimo fugace che, in qualche modo, resta con te molto dopo che è svanito.",
-      "content3": "Ogni recensione, scambio e flacone salvato aggiunge un altro strato all'Archivio in crescita e alla community che lo plasma.",
+      "content3": "Ogni recensione, utilizzo annotato, scambio e flacone salvato aggiunge un altro strato all'Archivio e alla community che lo plasma.",
       "content4": "Valutiamo la curiosità più delle tendenze, la privacy più del rumore e la passione autentica più della performance.",
       "content5": "Alla fine, la fragranza svanisce. Ciò che resta è il legame che ha creato."
+    },
+    "tools": {
+      "title": "Strumenti del collezionista — opzionali, non un altro mercato",
+      "intro": "Affinano il gusto. Vivono in Community o nel registro. Non sostituiscono lo Scambio.",
+      "quiz": "Quiz olfattivo e DNA",
+      "compare": "Confronta flaconi",
+      "wearJournal": "Diario di utilizzo",
+      "wearNow": "Cosa indossare",
+      "seasonal": "Pianificazione stagionale",
+      "insights": "Insight di collezione",
+      "digest": "Digest settimanale",
+      "alerts": "Avvisi delle ricerche salvate"
     }
   },
   "contactUs": {
@@ -1295,7 +1320,9 @@
       "communityHub": "Vassoi e diario",
       "accountSecurity": "Sicurezza account",
       "myReports": "Le mie segnalazioni",
-      "myDisputes": "Le mie controversie"
+      "myDisputes": "Le mie controversie",
+      "collectionInsights": "Analisi della collezione",
+      "weeklyDigest": "Digest settimanale"
     }
   },
   "twoFactor": {
@@ -1419,7 +1446,12 @@
       "profileMatchFallback": "Mostrato perché si adatta al tuo profilo olfattivo.",
       "popular": "Mostrati perché queste scelte sono popolari nella community.",
       "recent": "Mostrati perché sono stati aggiunti di recente al catalogo.",
-      "sameHouse": "Mostrati perché appartengono alla stessa casa profumiera di questa fragranza."
+      "sameHouse": "Mostrati perché appartengono alla stessa casa profumiera di questa fragranza.",
+      "boostPrefix": "Si adatta anche al tuo {details}.",
+      "boostSeason": "preferenza stagionale",
+      "boostPrice": "fascia di budget",
+      "boostHouseTier": "stile della maison",
+      "boostConcentration": "preferenza di concentrazione"
     }
   },
   "singleHouse": {
@@ -1774,6 +1806,16 @@
       "openListingPhoto": "Apri foto di {collector}, immagine {index}",
       "multiLightboxTitle": "Foto annunci",
       "photoIndex": "Foto {current} di {total}"
+    },
+    "palateRecommendations": {
+      "title": "Consigliato per il tuo palato",
+      "description": "Annunci che corrispondono al tuo DNA olfattivo, anche se non sono ancora nella wishlist."
+    },
+    "mutualSwaps": {
+      "title": "Idee di scambio reciproco",
+      "description": "Collezionisti che hanno ciò che cerchi e vogliono qualcosa che offri.",
+      "youWant": "Tu vuoi",
+      "theyWant": "Loro vogliono"
     }
   },
   "tradeComposer": {
@@ -2683,7 +2725,45 @@
       "empty": "Nessuna sfida attiva al momento: torna presto, oppure crea un vassoio pubblico da"
     },
     "publicShelvesLink": "Sfoglia i vassoi pubblici",
-    "seasonalPlanningLink": "Pianificazione stagionale"
+    "seasonalPlanningLink": "Pianificazione stagionale",
+    "wearSuggestionsLink": "Cosa indossare",
+    "digestLink": "Digest settimanale",
+    "navSelectPlaceholder": "Pagine correlate…",
+    "navSelectLabel": "Pagine correlate alla community",
+    "tabsSelectLabel": "Sezione community",
+    "wornOn": "Data di utilizzo",
+    "season": "Stagione",
+    "weather": "Meteo",
+    "occasion": "Occasione",
+    "optionalBlank": "—",
+    "seasons": {
+      "winter": "Inverno",
+      "spring": "Primavera",
+      "summer": "Estate",
+      "fall": "Autunno"
+    },
+    "weathers": {
+      "cold": "Freddo",
+      "mild": "Mite",
+      "warm": "Caldo",
+      "humid": "Umido"
+    },
+    "occasions": {
+      "everyday": "Quotidiano",
+      "work": "Lavoro",
+      "evening": "Sera",
+      "special": "Speciale"
+    },
+    "deleteWear": "Elimina",
+    "journalDeleted": "Utilizzo eliminato.",
+    "joinChallenge": "Unisciti alla sfida",
+    "challengeCaption": "Didascalia (opzionale)",
+    "challengeJoined": "Sei nella sfida.",
+    "buildChallengeTray": "Crea un vassoio della sfida",
+    "logWearFromTray": "Registra un utilizzo",
+    "challengeEntries": "Partecipazioni",
+    "noChallengeEntries": "Nessuna partecipazione ancora: sii il primo.",
+    "viewChallenge": "Vedi sfida"
   },
   "membershipPage": {
     "heading": "Membership digitale",
@@ -2692,7 +2772,38 @@
     "communityLink": "Esplora Community",
     "ctaFree": "Inizia",
     "ctaSubscribe": "Abbonati",
-    "pricePerYear": "${price}/anno"
+    "pricePerYear": "${price}/anno",
+    "tiers": {
+      "member": {
+        "label": "Membro",
+        "bullets": {
+          "browseCatalog": "Sfoglia il catalogo completo",
+          "basicCollection": "Gestione base della collezione",
+          "scentQuiz": "Quiz olfattivo",
+          "recommendationExplanations": "Spiegazioni delle raccomandazioni (sempre incluse)"
+        }
+      },
+      "premium": {
+        "label": "Premium",
+        "bullets": {
+          "advancedTasteGraph": "Grafo dei gusti avanzato",
+          "unlimitedComparisons": "Confronti illimitati",
+          "savedSearchesAlerts": "Ricerche salvate e avvisi istantanei",
+          "collectionAnalyticsPlanning": "Analisi della collezione e pianificazione stagionale",
+          "personalizedDigests": "Digest settimanali personalizzati"
+        }
+      },
+      "collector": {
+        "label": "Collezionista",
+        "bullets": {
+          "everythingInPremium": "Tutto ciò che è incluso in Premium",
+          "privateAnalyticsExport": "Analisi privata della collezione ed export",
+          "advancedOrganization": "Strumenti avanzati di organizzazione",
+          "earlyEditorialEvents": "Accesso anticipato a contenuti editoriali ed eventi della community",
+          "enhancedProfile": "Personalizzazione avanzata del profilo"
+        }
+      }
+    }
   },
   "savedSearches": {
     "saveButton": "Salva questa ricerca",
@@ -2721,7 +2832,9 @@
     "empty": "Aggiungi flaconi alla collezione o registra usi per sbloccare i suggerimenti.",
     "fromCollection": "Dalla tua collezione",
     "trending": "Di tendenza in questa stagione",
-    "recentWear": "Indossato di recente"
+    "recentWear": "Indossato di recente",
+    "scentDna": "Corrisponde al tuo DNA olfattivo",
+    "quizPref": "Corrisponde al tuo quiz olfattivo"
   },
   "publicShelves": {
     "browseTitle": "Vassoi pubblici",
@@ -2730,5 +2843,62 @@
     "viewShelf": "Apri vassoio",
     "byCollector": "di {name}",
     "backToBrowse": "Tutti i vassoi pubblici"
+  },
+  "collectionInsights": {
+    "meta": {
+      "title": "Analisi della collezione",
+      "description": "Comprendi rotazione, flaconi trascurati e copertura stagionale."
+    },
+    "heading": "Analisi della collezione",
+    "subheading": "Come vivi con i tuoi flaconi, non solo ciò che possiedi.",
+    "bottles": "Flaconi",
+    "houses": "Maison",
+    "recentWears": "Utilizzi (30 g)",
+    "tradedValue": "Valore scambiato",
+    "topFamilies": "Famiglie di note principali",
+    "premiumTitle": "Analisi Premium",
+    "premiumRequired": "Punteggio di rotazione, flaconi trascurati e copertura stagionale si sbloccano con Premium.",
+    "upgradeCta": "Vedi l'abbonamento",
+    "rotationLabel": "Punteggio di rotazione",
+    "rotationHelp": "Quota di fragranze possedute che hai registrato almeno una volta.",
+    "seasonCoverage": "Copertura stagionale (utilizzi registrati)",
+    "neglected": "Flaconi trascurati (90+ giorni, mai indossati)",
+    "ownedDays": "{days} giorni in collezione",
+    "exportCsv": "Esporta collezione e utilizzi (CSV)",
+    "exportCollectorOnly": "L'esportazione CSV è disponibile nel piano Collector.",
+    "declaredVsActual": "Quiz vs scaffale",
+    "redundancy": "Possibile ridondanza",
+    "gaps": "Lacune di gusto sullo scaffale",
+    "decantMix": "Mix decant e flaconi",
+    "decantMixCounts": "{full} flaconi interi · {decants} decant · {unknown} non contrassegnati"
+  },
+  "wearSuggestions": {
+    "title": "Cosa dovrei indossare?",
+    "subtitle": "Tre scelte dalla tua collezione per oggi.",
+    "premiumRequired": "I suggerimenti di utilizzo sono un vantaggio Premium.",
+    "upgradeCta": "Vedi l'abbonamento",
+    "empty": "Aggiungi flaconi o registra utilizzi per sbloccare i suggerimenti.",
+    "fromCollection": "Nella tua collezione",
+    "recentWear": "Indossato di recente",
+    "seasonFit": "Si adatta alla tua stagione",
+    "profileFit": "Corrisponde al tuo DNA olfattivo"
+  },
+  "digestPage": {
+    "meta": {
+      "title": "Digest settimanale",
+      "description": "Il tuo digest olfattivo settimanale personalizzato."
+    },
+    "heading": "Il tuo digest settimanale",
+    "subheading": "Consigli, coda di campionature e lacune della collezione.",
+    "premiumRequired": "I digest personalizzati sono un vantaggio Premium.",
+    "upgradeCta": "Vedi l'abbonamento",
+    "empty": "Nessun digest ancora: completa il quiz olfattivo e costruisci la collezione.",
+    "recommendations": "Consigliato per te",
+    "gaps": "Lacune della collezione",
+    "sampling": "Coda di campionature",
+    "wearSuggestions": "Cosa indossare",
+    "houseRadar": "Dalle maison che segui",
+    "fromHouse": "{house}",
+    "palateMatch": "Corrisponde al tuo DNA {family}"
   }
 }

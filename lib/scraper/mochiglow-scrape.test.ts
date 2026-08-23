@@ -58,5 +58,7 @@ Scent Strength`
     expect(isThemeCssTokenNote("no-js")).toBe(true)
     expect(isThemeCssTokenNote("article")).toBe(true)
     expect(isThemeCssTokenNote("pagetransition")).toBe(true)
+    expect(isThemeCssTokenNote("img")).toBe(true)
+    expect(isThemeCssTokenNote("bun")).toBe(true)
   })
 })

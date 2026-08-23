@@ -1,6 +1,7 @@
 import type { MembershipTier } from "@prisma/client"
 
 import { prisma } from "@/lib/db"
+import { canSignupForFree } from "@/utils/server/user-limit.server"
 import {
   COLLECTOR_ENTITLEMENTS,
   FREE_ENTITLEMENTS,
@@ -49,6 +50,14 @@ export type ParticipationUser = {
 export const canParticipate = (user: ParticipationUser): boolean =>
   user.isEarlyAdopter === true || user.subscriptionStatus === "paid"
 
+/** True while total users are under FREE_USER_LIMIT (platform-wide free window). */
+export const canUserParticipateNow = async (
+  user: ParticipationUser
+): Promise<boolean> => {
+  if (canParticipate(user)) return true
+  return canSignupForFree()
+}
+
 export const requireParticipation = async (
   userId: string
 ): Promise<{ ok: true } | { ok: false; reason: "unpaid" | "not_found" }> => {
@@ -60,7 +69,9 @@ export const requireParticipation = async (
     },
   })
   if (!user) return { ok: false, reason: "not_found" }
-  if (!canParticipate(user)) return { ok: false, reason: "unpaid" }
+  if (!(await canUserParticipateNow(user))) {
+    return { ok: false, reason: "unpaid" }
+  }
   return { ok: true }
 }
 

@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation"
 
-import { prisma } from "@/lib/db"
-import { canParticipate } from "@/utils/membership/entitlements.server"
+import { requireParticipation } from "@/utils/membership/entitlements.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import type { SessionFromRequest, SessionUser } from "@/utils/session-from-request.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
@@ -45,11 +44,8 @@ export const requireOwnedProfileSession = async (
     redirect(buildProfileRedirect(slug, options.subPath))
   }
 
-  const billing = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { isEarlyAdopter: true, subscriptionStatus: true },
-  })
-  if (!billing || !canParticipate(billing)) {
+  const participation = await requireParticipation(session.user.id)
+  if (!participation.ok) {
     redirect(subscribeRedirectForPath(slug, options.subPath))
   }
 

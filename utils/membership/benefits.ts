@@ -16,41 +16,64 @@ export type DigitalEntitlement =
   | "early_editorial_access"
   | "enhanced_profile"
 
+export type MembershipTierKey = "member" | "premium" | "collector"
+
+export type MembershipBenefitBulletKey =
+  | "browseCatalog"
+  | "basicCollection"
+  | "scentQuiz"
+  | "recommendationExplanations"
+  | "advancedTasteGraph"
+  | "unlimitedComparisons"
+  | "savedSearchesAlerts"
+  | "collectionAnalyticsPlanning"
+  | "personalizedDigests"
+  | "everythingInPremium"
+  | "privateAnalyticsExport"
+  | "advancedOrganization"
+  | "earlyEditorialEvents"
+  | "enhancedProfile"
+
+/** DB tier key → i18n tier key (Member stored as MembershipTier.free). */
+export const membershipTierToTranslationKey = (
+  tier: "free" | "premium" | "collector"
+): MembershipTierKey => (tier === "free" ? "member" : tier)
+
 export const MEMBERSHIP_BENEFITS = {
   free: {
-    label: "Member",
+    translationKey: "member" as const,
     priceUsd: 5,
     pricePeriod: "year" as const,
     bullets: [
-      "Browse the full catalog",
-      "Basic collection management",
-      "Scent quiz",
-      "Recommendation explanations (always included)",
-    ],
+      "browseCatalog",
+      "basicCollection",
+      "scentQuiz",
+      "recommendationExplanations",
+    ] as const satisfies readonly MembershipBenefitBulletKey[],
   },
   premium: {
-    label: "Premium",
+    translationKey: "premium" as const,
     priceUsd: 7,
     pricePeriod: "year" as const,
     bullets: [
-      "Advanced taste graph",
-      "Unlimited comparisons",
-      "Saved searches & instant match alerts",
-      "Collection analytics & seasonal planning",
-      "Personalized weekly digests",
-    ],
+      "advancedTasteGraph",
+      "unlimitedComparisons",
+      "savedSearchesAlerts",
+      "collectionAnalyticsPlanning",
+      "personalizedDigests",
+    ] as const satisfies readonly MembershipBenefitBulletKey[],
   },
   collector: {
-    label: "Collector",
+    translationKey: "collector" as const,
     priceUsd: 10,
     pricePeriod: "year" as const,
     bullets: [
-      "Everything in Premium",
-      "Private collection analytics & export",
-      "Advanced organization tools",
-      "Early editorial & community events",
-      "Enhanced profile customization",
-    ],
+      "everythingInPremium",
+      "privateAnalyticsExport",
+      "advancedOrganization",
+      "earlyEditorialEvents",
+      "enhancedProfile",
+    ] as const satisfies readonly MembershipBenefitBulletKey[],
   },
 } as const
 

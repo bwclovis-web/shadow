@@ -47,15 +47,19 @@ const MembershipBenefitsPage = async () => {
                 key={key}
                 className="noir-border rounded-lg p-5 flex flex-col bg-black/20 text-noir-gold-100"
               >
-                <h2 className="text-xl text-noir-gold-500 mb-1">{benefit.label}</h2>
+                <h2 className="text-xl text-noir-gold-500 mb-1">
+                  {t(`tiers.${benefit.translationKey}.label`)}
+                </h2>
                 <p className="text-sm text-noir-gold-500/90 mb-3">
                   {t("pricePerYear", { price: benefit.priceUsd })}
                 </p>
                 <ul className="space-y-2 text-sm flex-1 mb-6">
-                  {benefit.bullets.map(b => (
-                    <li key={b} className="flex gap-2">
+                  {benefit.bullets.map(bulletKey => (
+                    <li key={bulletKey} className="flex gap-2">
                       <span aria-hidden>•</span>
-                      <span>{b}</span>
+                      <span>
+                        {t(`tiers.${benefit.translationKey}.bullets.${bulletKey}`)}
+                      </span>
                     </li>
                   ))}
                 </ul>

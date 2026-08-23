@@ -17,11 +17,16 @@ import { UserFormSchema } from "@/utils/validation/formValidationSchemas"
 import { signUpAction, type SignUpActionState } from "./actions"
 
 interface SignUpClientProps {
+  freeSignupAvailable: boolean
   sessionId?: string | null
   prefillEmail?: string | null
 }
 
-const SignUpClient = ({ sessionId, prefillEmail }: SignUpClientProps) => {
+const SignUpClient = ({
+  freeSignupAvailable,
+  sessionId,
+  prefillEmail,
+}: SignUpClientProps) => {
   const [state, formAction] = useActionState(signUpAction, null as SignUpActionState)
   const inputRef = useRef<HTMLInputElement | null>(null)
   const [passwordValue, setPasswordValue] = useState("")
@@ -38,7 +43,7 @@ const SignUpClient = ({ sessionId, prefillEmail }: SignUpClientProps) => {
     shouldRevalidate: "onInput",
   })
 
-  if (!sessionId) {
+  if (!freeSignupAvailable && !sessionId) {
     return (
       <main id="main-content" className="w-full">
         <div className="relative mx-auto flex w-full max-w-md flex-col gap-4 noir-border bg-noir-dark/30 p-4 backdrop-blur-sm md:p-6">

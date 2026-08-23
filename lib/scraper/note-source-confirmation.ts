@@ -560,8 +560,10 @@ export const isObviousNonMaterialNote = (note: string): boolean => {
   if (/^(?:llowed\s+by\s+a\s+heart\s+of|ss\s+brings\s+effortless\s+sensuality|tterly\s+magnetic|uicy\s+signature\s+scent)\b/i.test(n))
     return true
   if (/^(?:intention|care|inspected)$/i.test(n)) return true
-  if (/^(?:touch|then|fabric|rgba|margin|h[1-6]|body|html|div|span|sans-serif|serif|monospace|system-ui|-apple-system|blinkmacsystemfont|roboto|inter|helvetica|arial|ui-sans-serif|ui-serif|ui-monospace|segoe ui|noto sans)$/i.test(n))
+  if (/^(?:touch|then|fabric|rgba|margin|h[1-6]|body|html|div|span|img|svg|iframe|picture|figure|button|burger|hamburger|bun|sans-serif|serif|monospace|system-ui|-apple-system|blinkmacsystemfont|roboto|inter|helvetica|arial|ui-sans-serif|ui-serif|ui-monospace|segoe ui|noto sans)$/i.test(n))
     return true
+  // First-person / leftover `<i>` fragments ("i my illustrious lordship", "i wear")
+  if (/^i\s+\S/i.test(n)) return true
   if (/^\/(?:head|body|html|script|style|meta|link|title)$/i.test(n)) return true
   if (/^<\/?(?:head|body|html|script|style|meta|link|title)$/i.test(n)) return true
   if (/^(?:lt|gt|charset|utf-8|description)$/i.test(n)) return true

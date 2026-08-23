@@ -1,13 +1,13 @@
 import { Suspense } from "react"
 import { getTranslations } from "next-intl/server"
 
-import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
 import CommunityHubClient from "./CommunityHubClient"
+import CommunityPageNav from "./CommunityPageNav"
 
 /** Placeholder hero — swap when a dedicated community asset is ready. */
 const BANNER_IMAGE = "/images/new/community.webp"
@@ -35,38 +35,7 @@ const CommunityPage = async () => {
         subheading={t("subtitle")}
       />
       <PageWrapper>
-        <div className="mb-8 flex flex-wrap justify-end gap-3">
-          <PrefetchLink
-            href="/community/shelves"
-            className="text-sm uppercase tracking-wide border border-noir-gold/40 px-3 py-2 rounded hover:bg-white/5 text-noir-gold-100"
-          >
-            {t("publicShelvesLink")}
-          </PrefetchLink>
-          <PrefetchLink
-            href="/seasonal-planning"
-            className="text-sm uppercase tracking-wide border border-noir-gold/40 px-3 py-2 rounded hover:bg-white/5 text-noir-gold-100"
-          >
-            {t("seasonalPlanningLink")}
-          </PrefetchLink>
-          <PrefetchLink
-            href="/wear-suggestions"
-            className="text-sm uppercase tracking-wide border border-noir-gold/40 px-3 py-2 rounded hover:bg-white/5 text-noir-gold-100"
-          >
-            {t("wearSuggestionsLink")}
-          </PrefetchLink>
-          <PrefetchLink
-            href="/digest"
-            className="text-sm uppercase tracking-wide border border-noir-gold/40 px-3 py-2 rounded hover:bg-white/5 text-noir-gold-100"
-          >
-            {t("digestLink")}
-          </PrefetchLink>
-          <PrefetchLink
-            href="/membership"
-            className="text-sm uppercase tracking-wide border border-noir-gold/40 px-3 py-2 rounded hover:bg-white/5 text-noir-gold-100"
-          >
-            {t("membershipCta")}
-          </PrefetchLink>
-        </div>
+        <CommunityPageNav />
         <Suspense fallback={null}>
           <CommunityHubClient signedIn={signedIn} signInHref={signInHref} />
         </Suspense>

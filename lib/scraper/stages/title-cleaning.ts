@@ -1412,6 +1412,8 @@ const filterNotesByTrust = (arr: string[], trusted: Set<string>): string[] =>
     const lc = n.trim().toLowerCase()
     if (!lc) return false
     if (isComplianceOrSourcingNote(n) || isThemeCssTokenNote(n)) return false
+    // First-person / leftover <i> fragments are never materials, even when they appear in PDP copy.
+    if (/^i\s+\S/i.test(lc)) return false
     if (trusted.has(lc)) return true
     return isScraperKeptNote(n) && !looksLikeProseNotePhrase(n)
   })

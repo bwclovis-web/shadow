@@ -62,7 +62,11 @@
     "invalidCompareUrl": "Ce lien compare trop de parfums. Vous pouvez en comparer trois au maximum.",
     "personalizeHint": "Connectez-vous pour voir le parfum qui correspond le mieux à votre profil olfactif.",
     "bestForYouTitle": "Le plus pour vous",
-    "bestForYouBody": "Correspond à votre profil (questionnaire et activité). Notes qui vous intéressent : {noteList}."
+    "bestForYouBody": "Correspond à votre profil (questionnaire et activité). Notes qui vous intéressent : {noteList}.",
+    "linkCopyFailed": "Impossible de copier — essayez de copier la barre d’adresse.",
+    "shareSummaryTitle": "Résumé à partager",
+    "shareSummarySharedNotes": "{count, plural, one {# famille de notes partagée parmi ces flacons} other {# notes partagées parmi ces flacons}}",
+    "shareSummaryBestForYou": "Le meilleur pour vous s’appuie sur : {notes}."
   },
   "admin": {
     "navigation": {
@@ -83,11 +87,6 @@
     },
     "perfumeHouse": {
       "sectionHeading": "Administration"
-    },
-    "users": {
-      "membershipTiers": {
-        "free": "Member"
-      }
     }
   },
   "myTrades": {
@@ -412,8 +411,6 @@
     "description": "Choisissez une adhesion numerique pour participer a perfumer's hollow — la consultation reste gratuite.",
     "heading": "S'abonner",
     "subheading": "Rejoignez perfumer's hollow avec une adhesion annuelle",
-    "limitTitle": "Limite de 100 premiers utilisateurs",
-    "limitCopy": "Nous offrons 100 inscriptions gratuites aux premiers membres. Cette limite est atteinte.",
     "paymentRequired": "Finalisez le paiement ci-dessous. Vous creerez votre compte juste apres.",
     "emailHelp": "Utilisez l'e-mail avec lequel vous vous inscrirez — nous le préremplirons après le paiement.",
     "canceledNotice": "Le paiement a été annulé. Vous pouvez réessayer quand vous voulez.",
@@ -679,45 +676,73 @@
   },
   "howItWorks": {
     "meta": {
-      "title": "Comment ça marche",
-      "description": "Découvrez comment fonctionne perfumer's hollow."
+      "title": "Le guide du collectionneur",
+      "description": "Comment utiliser perfumer's hollow : L'Archive, L'Échange, la Communauté et votre grand livre. Nous n'encaissons jamais le paiement."
     },
     "heading": "Le jeu des flacons et de la confiance",
-    "subheading": "Votre guide de L'Archive et de la bourse d'échange.",
+    "subheading": "Quatre lieux. Une quête. Nous n'encaissons jamais le paiement.",
+    "map": {
+      "title": "Une carte du Creux",
+      "intro": "Presque tout vit dans ces salles. Une fois connecté, l'inventaire, la liste de souhaits, les échanges et les analyses se trouvent sous votre Grand livre du collectionneur.",
+      "archive": "L'Archive",
+      "archiveHint": "Le catalogue — maisons, notes, avis et comparaison.",
+      "exchange": "L'Échange",
+      "exchangeHint": "Annonces, splits de groupe et personnes avec qui échanger.",
+      "community": "Communauté",
+      "communityHint": "Plateaux publics, journal de port, défis et alertes de recherches enregistrées.",
+      "journal": "Journal",
+      "journalHint": "Récits éditoriaux du Creux.",
+      "membership": "Adhésion",
+      "membershipHint": "Member 5 $, Premium 7 $, Collector 10 $ par an. Parcourir L'Archive reste libre.",
+      "policy": "Standards du collectionneur",
+      "policyHint": "Livraison, litiges, et comment nous restons un marché de personnes — pas une boutique."
+    },
     "section1": {
-      "title": "Étape un : allumez la mèche — Créez un compte",
-      "content": "Créer un compte ouvre la porte de Perfumer's Hollow — un réseau discret où collectionneurs, archivistes et passionnés de parfum se réunissent pour explorer, critiquer, échanger et documenter les senteurs qui méritent d'être retenues.",
-      "content2": "Les visiteurs peuvent encore parcourir L'Archive en libre accès, mais la participation appartient à ceux qui choisissent de s'enfoncer plus profondément dans le Creux.",
-      "content3": "Les adhesions annuelles commencent a $5 — Member, Premium et Collector debloquent une participation plus profonde, tandis que The Archive reste librement consultable.",
-      "content4": "Et vos informations restent les vôtres. Jamais vendues. Jamais échangées. Jamais partagées au-delà du Creux."
+      "title": "Étape un : allumez la mèche — créez un compte",
+      "content": "Créer un compte ouvre la porte de perfumer's hollow — un réseau discret où collectionneurs, archivistes et passionnés se réunissent pour explorer, critiquer, échanger et documenter les senteurs qui méritent d'être retenues.",
+      "content2": "Les visiteurs peuvent encore parcourir L'Archive librement, mais lister, écrire et échanger appartiennent à ceux qui s'enfoncent dans le Creux.",
+      "content3": "Les formules annuelles sont 5 $ Member, 7 $ Premium et 10 $ Collector. Consulter L'Archive reste gratuit.",
+      "content4": "Vos informations restent les vôtres. Jamais vendues. Jamais échangées. Jamais partagées hors du Creux."
     },
     "section2": {
-      "title": "Étape deux : listez vos décants — partagez le parfum",
-      "content": "Certains parfums sont trop précieux pour rester inconnus.",
-      "content2": "Lister vos décants permet à d'autres collectionneurs de découvrir les flacons qui ont marqué votre parcours — des trouvailles rares et favoris discontinués aux signatures du quotidien qui méritent d'être revisitées.",
-      "content3": "Décrivez le parfum, documentez son caractère et partagez ce qui vous a marqué. Chaque annonce enrichit L'Archive et aide d'autres collectionneurs à découvrir des senteurs qu'ils n'auraient peut-être jamais rencontrées.",
-      "content4": "Perfumer's Hollow offre l'espace pour que ces échanges se fassent ouvertement et en toute transparence. Nous ne gérons pas les échanges ni les paiements directement, mais nous aidons les collectionneurs à se connecter via une plateforme de confiance portée par la communauté."
+      "title": "Étape deux : inventaire, annonces et splits",
+      "content": "Mes senteurs est votre inventaire privé — les flacons et millilitres que vous possédez vraiment. L'import CSV et l'ajout en masse arrivent d'abord ici.",
+      "content2": "Une annonce, ce sont des millilitres proposés sur L'Échange. Ce n'est pas une nouvelle fiche catalogue. L'Archive est l'encyclopédie ; L'Échange, la table.",
+      "content3": "Un split de groupe est un seul versement avec des places numérotées. Lancez-le depuis un flacon dans Mes senteurs ; les autres prennent une place sur L'Échange. Le paiement reste entre vous.",
+      "content4": "Vous pouvez lister le même parfum plus d'une fois (tailles ou prix différents). Les millilitres listés plus ceux réservés en split ne peuvent pas dépasser ce que vous possédez."
     },
     "section3": {
-      "title": "Étape trois : construisez votre liste — poursuivez celui qui vous a échappé",
-      "content": "Chaque collectionneur se souvient de certains parfums — le favori discontinué, le flacon introuvable, la senteur qui n'a jamais tout à fait quitté la mémoire.",
-      "content2": "Votre liste de souhaits garde ces découvertes à portée de main.",
-      "content3": "Enregistrez les parfums que vous recherchez et recevez une notification lorsqu'ils apparaissent dans le Creux. Avec le temps, votre liste de souhaits devient plus qu'une collection de flacons — elle devient le témoignage de vos goûts, de vos souvenirs et des senteurs qui attendent encore d'être redécouvertes."
+      "title": "Étape trois : liste de souhaits et alertes — pas une seconde chasse",
+      "content": "Votre liste de souhaits, ce sont des flacons précis que vous voulez. Quand quelqu'un les liste, nous pouvons vous prévenir. Une liste publique est la façon dont les autres voient ce que vous cherchez — il n'y a pas de tableau ISO à part.",
+      "content2": "Les recherches enregistrées (Premium) mémorisent les filtres de L'Archive ou de L'Échange et vous préviennent quand quelque chose de nouveau correspond. Gérez-les sous Communauté → Alertes, et dans la cloche de votre grand livre.",
+      "content3": "C'est la même quête : des flacons nommés sur la liste, des filtres sur une recherche enregistrée. Un seul vocabulaire pour que le Creux ne devienne pas un second marché."
     },
     "section4": {
-      "title": "Étape quatre : faites l'échange — l'échange discret",
-      "content": "Chaque échange commence par la découverte.",
-      "content2": "Lorsque les collectionneurs se connectent par le Creux, ils organisent leurs échanges directement — en discutant des détails, en faisant des offres et en bâtissant la confiance autour d'une passion commune pour le parfum.",
-      "content3": "Perfumer's Hollow ne traite pas les transactions ni les paiements. Nous fournissons simplement la plateforme où les collectionneurs peuvent se connecter, communiquer et organiser des échanges en toute transparence.",
-      "content4": "La suite appartient entièrement aux collectionneurs concernés."
+      "title": "Étape quatre : écrivez, convenez, puis enregistrez l'échange",
+      "content": "Chaque échange commence par une découverte sur L'Échange, une place de split, ou une correspondance depuis votre étagère.",
+      "content2": "Parlez en messages, convenez des termes, puis enregistrez-le comme échange pour avoir une trace. Les splits de groupe suivent déjà réclamé, payé, expédié et reçu — un échange 1:1 devrait donner la même impression.",
+      "content3": "perfumer's hollow n'encaisse pas les paiements et n'expédie pas les flacons. La réputation, les avis et les Standards du collectionneur aident à choisir avec qui traiter.",
+      "content4": "Si quelque chose tourne mal, signalez le profil ou ouvrez un litige depuis l'échange. Les prix sont des indications, pas un paiement en ligne."
     },
     "section5": {
       "title": "Le sillage que nous laissons",
-      "content": "Perfumer's Hollow existe pour les collectionneurs qui comprennent que le parfum n'est jamais qu'un parfum.",
-      "content2": "C'est un souvenir. Une atmosphère. Une découverte. Un instant fugace qui vous accompagne encore longtemps après avoir disparu.",
-      "content3": "Chaque avis, échange et flacon sauvegardé ajoute une couche à L'Archive grandissante et à la communauté qui la façonne.",
+      "content": "perfumer's hollow existe pour les collectionneurs qui comprennent que le parfum n'est jamais qu'un parfum.",
+      "content2": "C'est un souvenir. Une atmosphère. Une découverte. Un instant fugace qui, d'une façon ou d'une autre, reste longtemps après avoir disparu.",
+      "content3": "Chaque avis, port noté, échange et flacon enregistré ajoute une couche à L'Archive et à la communauté qui la façonne.",
       "content4": "Nous privilégions la curiosité aux tendances, la confidentialité au bruit, et la passion sincère à la performance.",
       "content5": "À la fin, le parfum s'évanouit. Ce qui demeure, c'est le lien qu'il a créé."
+    },
+    "tools": {
+      "title": "Outils du collectionneur — optionnels, pas un autre marché",
+      "intro": "Ils affinent le goût. Ils vivent dans la Communauté ou votre grand livre. Ils ne remplacent pas L'Échange.",
+      "quiz": "Quiz olfactif et ADN",
+      "compare": "Comparer des flacons",
+      "wearJournal": "Journal de port",
+      "wearNow": "Quoi porter",
+      "seasonal": "Planification saisonnière",
+      "insights": "Analyses de collection",
+      "digest": "Digest hebdomadaire",
+      "alerts": "Alertes de recherches enregistrées"
     }
   },
   "contactUs": {
@@ -1295,7 +1320,9 @@
       "communityHub": "Plateaux et journal",
       "accountSecurity": "Sécurité du compte",
       "myReports": "Mes signalements",
-      "myDisputes": "Mes litiges"
+      "myDisputes": "Mes litiges",
+      "collectionInsights": "Analyse de collection",
+      "weeklyDigest": "Digest hebdomadaire"
     }
   },
   "twoFactor": {
@@ -1419,7 +1446,12 @@
       "profileMatchFallback": "Affiché parce qu'il correspond à votre profil olfactif.",
       "popular": "Affichés parce que ces choix sont populaires auprès de la communauté.",
       "recent": "Affichés parce qu'ils ont été récemment ajoutés au catalogue.",
-      "sameHouse": "Affichés parce qu'ils proviennent de la même maison de parfum que cette fragrance."
+      "sameHouse": "Affichés parce qu'ils proviennent de la même maison de parfum que cette fragrance.",
+      "boostPrefix": "Correspond aussi à votre {details}.",
+      "boostSeason": "préférence de saison",
+      "boostPrice": "fourchette de budget",
+      "boostHouseTier": "style de maison",
+      "boostConcentration": "préférence de concentration"
     }
   },
   "singleHouse": {
@@ -1774,6 +1806,16 @@
       "openListingPhoto": "Ouvrir la photo de {collector}, image {index}",
       "multiLightboxTitle": "Photos des annonces",
       "photoIndex": "Photo {current} sur {total}"
+    },
+    "palateRecommendations": {
+      "title": "Recommandé pour votre palais",
+      "description": "Annonces qui correspondent à votre ADN olfactif — même si elles ne sont pas encore sur votre liste de souhaits."
+    },
+    "mutualSwaps": {
+      "title": "Idées d’échange mutuel",
+      "description": "Collectionneurs qui ont ce que vous cherchez et veulent quelque chose que vous proposez.",
+      "youWant": "Vous voulez",
+      "theyWant": "Ils veulent"
     }
   },
   "tradeComposer": {
@@ -2683,7 +2725,45 @@
       "empty": "Aucun défi en cours pour le moment — revenez bientôt, ou créez un plateau public depuis"
     },
     "publicShelvesLink": "Parcourir les plateaux publics",
-    "seasonalPlanningLink": "Planification saisonniere"
+    "seasonalPlanningLink": "Planification saisonniere",
+    "wearSuggestionsLink": "Quoi porter",
+    "digestLink": "Digest hebdomadaire",
+    "navSelectPlaceholder": "Pages associées…",
+    "navSelectLabel": "Pages associées à la communauté",
+    "tabsSelectLabel": "Section communauté",
+    "wornOn": "Date de port",
+    "season": "Saison",
+    "weather": "Météo",
+    "occasion": "Occasion",
+    "optionalBlank": "—",
+    "seasons": {
+      "winter": "Hiver",
+      "spring": "Printemps",
+      "summer": "Été",
+      "fall": "Automne"
+    },
+    "weathers": {
+      "cold": "Froid",
+      "mild": "Doux",
+      "warm": "Chaud",
+      "humid": "Humide"
+    },
+    "occasions": {
+      "everyday": "Quotidien",
+      "work": "Travail",
+      "evening": "Soirée",
+      "special": "Spécial"
+    },
+    "deleteWear": "Supprimer",
+    "journalDeleted": "Entrée de port supprimée.",
+    "joinChallenge": "Rejoindre le défi",
+    "challengeCaption": "Légende (facultatif)",
+    "challengeJoined": "Vous participez au défi.",
+    "buildChallengeTray": "Créer un plateau de défi",
+    "logWearFromTray": "Enregistrer un port",
+    "challengeEntries": "Participations",
+    "noChallengeEntries": "Aucune participation pour l’instant — soyez le premier.",
+    "viewChallenge": "Voir le défi"
   },
   "membershipPage": {
     "heading": "Abonnement numérique",
@@ -2692,7 +2772,38 @@
     "communityLink": "Explorer Community",
     "ctaFree": "Commencer",
     "ctaSubscribe": "S’abonner",
-    "pricePerYear": "${price}/an"
+    "pricePerYear": "${price}/an",
+    "tiers": {
+      "member": {
+        "label": "Membre",
+        "bullets": {
+          "browseCatalog": "Parcourir le catalogue complet",
+          "basicCollection": "Gestion de base de la collection",
+          "scentQuiz": "Quiz olfactif",
+          "recommendationExplanations": "Explications des recommandations (toujours incluses)"
+        }
+      },
+      "premium": {
+        "label": "Premium",
+        "bullets": {
+          "advancedTasteGraph": "Graphe de gouts avance",
+          "unlimitedComparisons": "Comparaisons illimitees",
+          "savedSearchesAlerts": "Recherches enregistrees et alertes instantanees",
+          "collectionAnalyticsPlanning": "Analytique de collection et planification saisonniere",
+          "personalizedDigests": "Recapitulatifs hebdomadaires personnalises"
+        }
+      },
+      "collector": {
+        "label": "Collectionneur",
+        "bullets": {
+          "everythingInPremium": "Tout ce qui est inclus dans Premium",
+          "privateAnalyticsExport": "Analytique privee de collection et export",
+          "advancedOrganization": "Outils d'organisation avances",
+          "earlyEditorialEvents": "Acces anticipe au contenu editorial et aux evenements communautaires",
+          "enhancedProfile": "Personnalisation avancee du profil"
+        }
+      }
+    }
   },
   "savedSearches": {
     "saveButton": "Enregistrer cette recherche",
@@ -2721,7 +2832,9 @@
     "empty": "Ajoutez des flacons a votre collection ou notez des ports pour debloquer des suggestions.",
     "fromCollection": "Depuis votre collection",
     "trending": "Tendance cette saison",
-    "recentWear": "Porte recemment"
+    "recentWear": "Porte recemment",
+    "scentDna": "Correspond à votre ADN olfactif",
+    "quizPref": "Correspond à votre quiz olfactif"
   },
   "publicShelves": {
     "browseTitle": "Plateaux publics",
@@ -2730,5 +2843,62 @@
     "viewShelf": "Ouvrir le plateau",
     "byCollector": "par {name}",
     "backToBrowse": "Tous les plateaux publics"
+  },
+  "collectionInsights": {
+    "meta": {
+      "title": "Analyse de collection",
+      "description": "Comprenez la rotation, les flacons négligés et la couverture saisonnière."
+    },
+    "heading": "Analyse de collection",
+    "subheading": "Comment vous vivez avec vos flacons — pas seulement ce que vous possédez.",
+    "bottles": "Flacons",
+    "houses": "Maisons",
+    "recentWears": "Ports (30 j)",
+    "tradedValue": "Valeur échangée",
+    "topFamilies": "Familles de notes principales",
+    "premiumTitle": "Analytique Premium",
+    "premiumRequired": "Le score de rotation, les flacons négligés et la couverture saisonnière se débloquent avec Premium.",
+    "upgradeCta": "Voir l’abonnement",
+    "rotationLabel": "Score de rotation",
+    "rotationHelp": "Part des parfums possédés que vous avez enregistrés au moins une fois.",
+    "seasonCoverage": "Couverture saisonnière (ports enregistrés)",
+    "neglected": "Flacons négligés (90+ jours, jamais portés)",
+    "ownedDays": "{days} jours en collection",
+    "exportCsv": "Exporter collection et ports (CSV)",
+    "exportCollectorOnly": "L’export CSV est disponible avec le forfait Collector.",
+    "declaredVsActual": "Quiz vs étagère",
+    "redundancy": "Redondance possible",
+    "gaps": "Lacunes de goût sur votre étagère",
+    "decantMix": "Mélange décants et flacons",
+    "decantMixCounts": "{full} flacons complets · {decants} décants · {unknown} non marqués"
+  },
+  "wearSuggestions": {
+    "title": "Que porter aujourd’hui ?",
+    "subtitle": "Trois choix de votre collection pour aujourd’hui.",
+    "premiumRequired": "Les suggestions de port sont un avantage Premium.",
+    "upgradeCta": "Voir l’abonnement",
+    "empty": "Ajoutez des flacons ou enregistrez des ports pour débloquer les suggestions.",
+    "fromCollection": "Dans votre collection",
+    "recentWear": "Porté récemment",
+    "seasonFit": "Convient à votre saison",
+    "profileFit": "Correspond à votre ADN olfactif"
+  },
+  "digestPage": {
+    "meta": {
+      "title": "Digest hebdomadaire",
+      "description": "Votre digest olfactif hebdomadaire personnalisé."
+    },
+    "heading": "Votre digest hebdomadaire",
+    "subheading": "Recommandations, file d’échantillons et lacunes de collection.",
+    "premiumRequired": "Les digests personnalisés sont un avantage Premium.",
+    "upgradeCta": "Voir l’abonnement",
+    "empty": "Aucun digest pour l’instant — terminez le quiz olfactif et constituez votre collection.",
+    "recommendations": "Suggéré pour vous",
+    "gaps": "Lacunes de collection",
+    "sampling": "File d’échantillons",
+    "wearSuggestions": "Quoi porter",
+    "houseRadar": "Des maisons que vous suivez",
+    "fromHouse": "{house}",
+    "palateMatch": "Correspond à votre ADN {family}"
   }
 }
