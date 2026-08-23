@@ -30,7 +30,7 @@ function CompareThumb({ image, alt }: { image?: string; alt: string }) {
 
 /**
  * Fixed compare tray; mounted from `app/providers.tsx`.
- * @see docs/compare-client.md
+ * Compare tray — see docs/README.md (product backlog CF-001).
  */
 export function CompareTray() {
   const t = useTranslations("compare")

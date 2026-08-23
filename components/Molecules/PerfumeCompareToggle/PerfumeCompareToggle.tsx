@@ -16,7 +16,7 @@ export interface PerfumeCompareToggleProps {
 
 /**
  * Card compare control; must stay a sibling of `PrefetchLink`, not nested inside it.
- * @see docs/compare-client.md
+ * Compare toggle — see docs/README.md (product backlog CF-001).
  */
 export function PerfumeCompareToggle({ item }: PerfumeCompareToggleProps) {
   const t = useTranslations("compare")

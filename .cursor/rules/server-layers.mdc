@@ -1,0 +1,19 @@
+---
+description: Server layer boundaries — models vs services vs utils vs client queries
+globs: "{models,services,utils,lib/queries,lib/mutations,app/api}/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Server layer boundaries
+
+Full guide: `docs/architecture.md`.
+
+| Layer | Put here |
+|-------|----------|
+| `models/*.server.ts` | Prisma + domain rules for a bounded context |
+| `services/` | Pure computation / scoring (no direct DB I/O) |
+| `utils/**/*.server.ts` | Auth, CSRF, email, sanitization, infra |
+| `lib/queries/` + `lib/mutations/` | Browser fetch + TanStack Query keys |
+| `app/api/**` | Auth → validate → delegate to models/services → HTTP map |
+
+API routes should stay thin. Do not import `models/*.server.ts` from client query modules.

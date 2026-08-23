@@ -108,8 +108,8 @@ jobs:
       - name: Prisma generate
         run: npx prisma generate
 
-      - name: Push schema
-        run: npx prisma db push --accept-data-loss
+      - name: Apply migrations
+        run: npx prisma migrate deploy
 
       - name: Seed E2E data
         run: npm run test:e2e:seed

@@ -18,4 +18,4 @@ The note-extraction LangGraph pipeline is split across `../notes-graph.ts` (faca
 | `extract-notes-node.ts` | `extractNotes` graph node, `buildGraph`, `extractNotesForItems` |
 | `notes-graph.ts` | Public API re-exports only |
 
-See [docs/server-layers.md](../../../docs/server-layers.md) for how scraper code fits the server layer model.
+See [docs/architecture.md](../../../docs/architecture.md) for how scraper code fits the server layer model.

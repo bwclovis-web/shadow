@@ -5,8 +5,9 @@ Canonical scent materials (e.g. bergamot, patchouli) sit in `NoteMaterial` with 
 ## Commands
 
 ```bash
-# Push schema (adds NoteMaterial tables + ScentProfile material fields)
-npm run db:push
+# Apply schema (NoteMaterial tables + ScentProfile material fields)
+npx prisma migrate deploy
+# or when authoring: npx prisma migrate dev --name <name>
 npm run db:generate
 
 # Seed materials and aliases (safe to re-run)

@@ -1,6 +1,6 @@
 # Playwright E2E
 
-Chromium smoke + quality-gate journeys. Unit Vitest stays separate (`npm run test`).
+Chromium smoke + quality-gate journeys. Unit Vitest stays separate (`npm run test`). Hub: [quality.md](./quality.md).
 
 ## Prerequisites
 
@@ -12,7 +12,8 @@ Chromium smoke + quality-gate journeys. Unit Vitest stays separate (`npm run tes
 ## One-time / after schema changes
 
 ```bash
-npm run db:push
+npx prisma migrate deploy
+npm run db:generate
 npm run test:e2e:seed
 npx playwright install chromium
 ```

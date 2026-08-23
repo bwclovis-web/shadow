@@ -1,4 +1,4 @@
-/** Barrel re-exports — prefer domain modules for new code. See docs/server-layers.md */
+/** Barrel re-exports — prefer domain modules for new code. See docs/architecture.md */
 export type { PerfumeListRow, PerfumeListPage } from "./perfume-catalog.server"
 export {
   getAllPerfumes,

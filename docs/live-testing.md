@@ -9,7 +9,7 @@ Manual steps to verify Resend and all email alert paths in perfumer's hollow. Au
    - `EMAIL_FROM` — verified sender, e.g. `perfumer's hollow <alerts@yourdomain.com>` or `alerts@yourdomain.com`
    - `NEXT_PUBLIC_APP_URL` — base URL for links in emails (e.g. `http://localhost:3000` locally)
 
-2. **Database migration** (after pulling trade-email changes):
+2. **Database migration** (after pulling schema changes) — see [database.md](./database.md):
    ```bash
    npx prisma migrate deploy
    npm run db:generate
@@ -151,6 +151,7 @@ Verify the new toggle persists:
 
 ## Related docs
 
-- Web push (separate channel): `docs/testing-web-push.md`
-- Env setup: `docs/new computer set up.md` (Resend section)
-- Improvements backlog: IMP-063 shipped — see Wave A3 in `docs/improvements-v2.md`
+- Web push (separate channel): [testing-web-push.md](./testing-web-push.md)
+- Env setup: [getting-started.md](./getting-started.md)
+- Database: [database.md](./database.md)
+- Hub: [README.md](./README.md)

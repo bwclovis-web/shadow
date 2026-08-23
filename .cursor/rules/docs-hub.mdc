@@ -1,0 +1,22 @@
+---
+description: Prefer the docs hub; no one-off completion notes under docs/
+alwaysApply: true
+---
+
+# Documentation hub
+
+Canonical entry: `docs/README.md`.
+
+## Do
+
+- Update living docs linked from the hub (`getting-started`, `database`, `architecture`, `quality`, ops/product/domain pages)
+- Put dated decisions in `context/` when they are not runbooks
+- Move superseded plans to `docs/archive/` and point the hub/archive README at replacements
+
+## Do not
+
+- Add `COMPLETION_SUMMARY`, `REFACTORING_SUMMARY`, `CHART_FIX`, or similar one-off notes under `docs/`
+- Invent a parallel process doc that contradicts `docs/database.md` or `.cursor/rules/prisma-migrations-only.mdc`
+- Document `db push` as the default schema apply step (Prisma Migrate only)
+
+When unsure where something belongs, add a short link from `docs/README.md` rather than a new top-level plan file.

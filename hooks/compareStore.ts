@@ -2,7 +2,7 @@
  * Client-side compare list for perfume cards (CF-001). Persists to `localStorage`.
  * CF-003: URL `?ids=` hydrates via `setItems`; tray stays in sync with `localStorage`.
  *
- * @see docs/compare-client.md
+ * Compare tray / store — see docs/README.md (product backlog CF-001).
  */
 import {
   COMPARE_MAX_ITEMS_FREE,

@@ -15,11 +15,13 @@ Push needs tables from `prisma/schema.prisma` (`UserPushSubscription`, `UserConv
 If you have not migrated yet:
 
 ```bash
-npx prisma migrate dev --name add_web_push_subscriptions
+npx prisma migrate deploy
+# or when authoring a new migration:
+# npx prisma migrate dev --name add_web_push_subscriptions
 npm run db:generate
 ```
 
-See `docs/database-migrations.md` — this project uses **migrate only**, not `db push`.
+See [database.md](./database.md) — this project uses **Prisma Migrate only**, not `db push`.
 
 ### 2. VAPID keys
 

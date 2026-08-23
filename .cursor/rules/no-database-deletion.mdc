@@ -10,8 +10,8 @@ Do not take any action that would delete the database or any data already stored
 ## Prohibited Actions
 
 - Do not run commands or migrations that drop the database, reset the schema, or truncate/delete tables
-- Do not suggest or execute `prisma migrate reset`, `prisma db push`, `db push --force-reset`, or equivalent destructive operations on production or shared data
-- Schema changes use Prisma Migrate only — see `prisma-migrations-only` rule and `docs/database-migrations.md`
+- Do not suggest or execute `prisma migrate reset`, `prisma db push --force-reset`, or equivalent destructive operations on production or shared data
+- Schema changes use **Prisma Migrate only** — see `prisma-migrations-only` rule and `docs/database.md`
 - Do not write or run code that deletes, truncates, or clears existing records unless the user explicitly requests data removal for a specific purpose
 - Do not remove or alter migrations or schema in ways that would require wiping and recreating the database
 
