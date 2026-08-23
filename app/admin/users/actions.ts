@@ -125,6 +125,8 @@ export const updateUserRoleAction = async (
     return { success: false, message: "Unauthorized" }
   }
 
+  const adminId = session.user.id
+
   return withCsrf(formData, async () => {
     const userId = formData.get("userId")
     const newRole = formData.get("newRole")
@@ -137,7 +139,7 @@ export const updateUserRoleAction = async (
       return { success: false, message: "Invalid role" }
     }
 
-    return updateUserRole(userId, newRole as UserRole, session.user.id)
+    return updateUserRole(userId, newRole as UserRole, adminId)
   })
 }
 
@@ -158,6 +160,8 @@ export const updateUserMembershipAction = async (
     return { success: false, message: "Unauthorized" }
   }
 
+  const adminId = session.user.id
+
   return withCsrf(formData, async () => {
     const userId = formData.get("userId")
     const newTier = formData.get("newMembershipTier")
@@ -173,7 +177,7 @@ export const updateUserMembershipAction = async (
     const result = await updateUserMembershipTier(
       userId,
       newTier as MembershipTier,
-      session.user.id
+      adminId
     )
 
     if (result.success) {
