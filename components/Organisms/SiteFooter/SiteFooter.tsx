@@ -26,6 +26,12 @@ const SiteFooter = async () => {
           >
             {t("terms")}
           </Link>
+          <Link
+            href="/privacy"
+            className="text-noir-gold hover:text-noir-light transition-colors"
+          >
+            {t("privacy")}
+          </Link>
         </nav>
       </div>
     </footer>

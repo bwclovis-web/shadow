@@ -77,14 +77,12 @@ const TermsAndConditionsPage = async () => {
         <h2 className="mb-4 uppercase">7. {t("privacy.heading")}</h2>
         <div className="flex flex-col gap-4 text-noir-gold-100 text-lg">
           <p>{t("privacy.contentOne")}</p>
+          <p>
+            <a href="/privacy" className="text-noir-gold underline underline-offset-4">
+              Read the full Privacy policy
+            </a>
+          </p>
         </div>
-        <ul className="list-disc list-inside text-noir-gold-100 text-lg">
-          <li>{t("privacy.contentList.one")}</li>
-          <li>{t("privacy.contentList.two")}</li>
-          <li>{t("privacy.contentList.three")}</li>
-          <li>{t("privacy.contentList.four")}</li>
-          <li>{t("privacy.contentList.five")}</li>
-        </ul>
       </section>
       <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold">
         <h2 className="mb-4 uppercase">8. {t("changes.heading")}</h2>

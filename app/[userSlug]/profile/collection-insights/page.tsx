@@ -40,7 +40,11 @@ const CollectionInsightsPage = async ({ params }: Props) => {
         subheading={t("subheading")}
       />
       <PageWrapper>
-        <CollectionInsightsClient insights={insights} membershipHref="/membership" />
+        <CollectionInsightsClient
+          insights={insights}
+          membershipHref="/membership"
+          userSlug={userSlug}
+        />
       </PageWrapper>
     </main>
   )

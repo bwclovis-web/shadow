@@ -30,6 +30,8 @@ Root [README.md](../README.md) stays short: product blurb + common commands + li
 | [live-testing.md](./live-testing.md) | Resend / transactional email smoke paths |
 | [testing-web-push.md](./testing-web-push.md) | VAPID + browser push manual QA |
 | [smoke-test-decant-splits.md](./smoke-test-decant-splits.md) | Short decant-split smoke checklist |
+| [incident-response.md](./incident-response.md) | Severity matrix, scraper pause, backup/restore, Stripe |
+| [invite-beta-ops.md](./invite-beta-ops.md) | Manual invite-beta ops gates (Sentry, Stripe, SEO, Journal) |
 
 ---
 
@@ -38,7 +40,7 @@ Root [README.md](../README.md) stays short: product blurb + common commands + li
 | Doc | Purpose |
 |-----|---------|
 | [CUSTOMER_FEATURES_BACKLOG.md](./CUSTOMER_FEATURES_BACKLOG.md) | Customer-facing backlog (open items first) |
-| [product-roadmap.md](./product-roadmap.md) | Next loops: IA freeze, conflict map, phased plan, Guide policy |
+| [product-roadmap.md](./product-roadmap.md) | Next loops: IA freeze, conflict map, phased plan, Guide policy, **invite-beta launch sequence (A–E)** |
 | [MONETIZATION_PLAYBOOK.md](./MONETIZATION_PLAYBOOK.md) | Subscription / revenue experiments |
 | [user-guide-decants.md](./user-guide-decants.md) | Decants / inventory / splits (copy for Help/FAQ) |
 

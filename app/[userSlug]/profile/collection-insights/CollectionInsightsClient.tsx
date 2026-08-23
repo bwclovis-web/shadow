@@ -10,11 +10,13 @@ import { apiFetch } from "@/lib/api-client"
 type CollectionInsightsClientProps = {
   insights: CollectionInsights
   membershipHref: string
+  userSlug: string
 }
 
 export const CollectionInsightsClient = ({
   insights,
   membershipHref,
+  userSlug,
 }: CollectionInsightsClientProps) => {
   const t = useTranslations("collectionInsights")
 
@@ -109,18 +111,26 @@ export const CollectionInsightsClient = ({
               <ul className="space-y-2">
                 {insights.neglectedBottles.map(b => (
                   <li
-                    key={b.perfumeId}
-                    className="flex justify-between gap-2 noir-border rounded p-3 text-sm"
+                    key={b.userPerfumeId}
+                    className="flex flex-wrap justify-between items-center gap-2 noir-border rounded p-3 text-sm"
                   >
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <PrefetchLink
+                        href={`/perfume/${b.slug}`}
+                        className="text-noir-gold-500 hover:underline"
+                      >
+                        {b.name}
+                      </PrefetchLink>
+                      <span className="opacity-60 text-xs">
+                        {t("ownedDays", { days: b.ownedDays })}
+                      </span>
+                    </div>
                     <PrefetchLink
-                      href={`/perfume/${b.slug}`}
-                      className="text-noir-gold-500 hover:underline"
+                      href={`/${userSlug}/profile/my-scents/${b.userPerfumeId}?list=1`}
+                      className="shrink-0 text-xs uppercase tracking-wide text-noir-dark bg-noir-gold px-3 py-1.5 rounded hover:bg-noir-gold-100"
                     >
-                      {b.name}
+                      {t("listOnExchange")}
                     </PrefetchLink>
-                    <span className="opacity-60 text-xs">
-                      {t("ownedDays", { days: b.ownedDays })}
-                    </span>
                   </li>
                 ))}
               </ul>

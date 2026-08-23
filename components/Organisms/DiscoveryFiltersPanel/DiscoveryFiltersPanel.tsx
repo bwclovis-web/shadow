@@ -17,11 +17,13 @@ import TagSearch from "@/components/Organisms/TagSearch/TagSearch"
 import type { Tag } from "@/lib/queries/tags"
 import {
   DISCOVERY_LISTING_CONDITIONS,
+  DISCOVERY_MIN_REP_OPTIONS,
   DISCOVERY_TRADE_PREFERENCES,
   EXCHANGE_BOTTLE_TYPES,
   EXCHANGE_REGION_BUCKETS,
   emptyDiscoveryFilters,
   type DiscoveryListingCondition,
+  type DiscoveryMinRep,
   type DiscoveryTradePreference,
   type ExchangeBottleType,
   type ExchangeRegionBucket,
@@ -73,6 +75,10 @@ export type DiscoveryFiltersPanelLabels = {
   hasPhotosLabel: string
   hasPhotosDescription: string
   hasPhotosToggle: string
+  minRepTitle: string
+  minRepDescription: string
+  minRepLabel: string
+  minRepAll: string
   clearAll: string
 }
 
@@ -320,6 +326,38 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
             {EXCHANGE_REGION_BUCKETS.map(bucket => (
               <option key={bucket} value={bucket} className="bg-noir-dark">
                 {regionLabelFor(bucket)}
+              </option>
+            ))}
+          </select>
+        </div>
+      </FilterPanelSection>
+
+      <FilterPanelSection title={labels.minRepTitle} description={labels.minRepDescription}>
+        <div className={selectShell}>
+          <label
+            className="mb-1 block text-sm text-noir-gold-500"
+            htmlFor={`${regionSelectId}-min-rep`}
+          >
+            {labels.minRepLabel}
+          </label>
+          <select
+            id={`${regionSelectId}-min-rep`}
+            value={value.minRep ?? ""}
+            onChange={e => {
+              const raw = e.target.value
+              onChange({
+                ...value,
+                minRep: raw ? (Number(raw) as DiscoveryMinRep) : null,
+              })
+            }}
+            className={selectClass}
+          >
+            <option value="" className="bg-noir-dark">
+              {labels.minRepAll}
+            </option>
+            {DISCOVERY_MIN_REP_OPTIONS.map(score => (
+              <option key={score} value={score} className="bg-noir-dark">
+                {score}+
               </option>
             ))}
           </select>

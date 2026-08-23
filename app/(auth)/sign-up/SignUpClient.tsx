@@ -142,6 +142,17 @@ const SignUpClient = ({
                 >
                   {tAuth("termsAndConditionsLink")}
                 </VooDooLink>
+                {" · "}
+                <VooDooLink
+                  url="/privacy"
+                  variant="link"
+                  size="sm"
+                  prefetch
+                  transitionVariant="detail-to-list"
+                  className="text-noir-gold hover:text-noir-light"
+                >
+                  {tAuth("privacyLink")}
+                </VooDooLink>
               </>
             }
             labelSize="sm"

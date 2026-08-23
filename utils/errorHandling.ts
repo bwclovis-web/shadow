@@ -332,7 +332,7 @@ export class ErrorLogger {
     userId?: string,
     correlationId?: string
   ): void {
-    // Structured JSON for Vercel / platform log filters. No third-party APM.
+    // Structured JSON for Vercel / platform log filters.
     const sanitizedLog = {
       logType: "app_error",
       ...error.toJSON(false),
@@ -342,6 +342,31 @@ export class ErrorLogger {
     }
 
     console.error(JSON.stringify(sanitizedLog))
+
+    if (process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN) {
+      void import("@sentry/nextjs")
+        .then(Sentry => {
+          Sentry.withScope(scope => {
+            if (correlationId) scope.setTag("correlationId", correlationId)
+            if (userId) scope.setUser({ id: userId })
+            scope.setLevel(
+              error.severity === ErrorSeverity.CRITICAL ||
+                error.severity === ErrorSeverity.HIGH
+                ? "error"
+                : "warning"
+            )
+            scope.setContext("appError", {
+              type: error.type,
+              code: error.code,
+              severity: error.severity,
+            })
+            Sentry.captureException(error)
+          })
+        })
+        .catch(() => {
+          /* Sentry optional when DSN unset or package unavailable */
+        })
+    }
 
     if (error.type === ErrorType.AUTHENTICATION || error.type === ErrorType.AUTHORIZATION) {
       incrementCounter("auth.failure", 1, { code: error.code })

@@ -404,7 +404,8 @@
       "alreadyHere": "¿Ya estás en el Hollow?",
       "signIn": "Volver a iniciar sesión",
       "needCheckout": "Se requiere una membresia para crear una cuenta. Elige un plan para continuar."
-    }
+    },
+    "privacyLink": "Privacidad"
   },
   "directMessages": {
     "meta": {
@@ -714,7 +715,9 @@
       "membership": "Membresía",
       "membershipHint": "Member 5 $, Premium 7 $, Collector 10 $ al año. Recorrer El Archivo sigue siendo gratis.",
       "policy": "Normas del coleccionista",
-      "policyHint": "Envíos, disputas y cómo seguimos siendo un mercado de personas, no una tienda."
+      "policyHint": "Envíos, disputas y cómo seguimos siendo un mercado de personas, no una tienda.",
+      "privacy": "Privacidad",
+      "privacyHint": "Qué recopilamos, qué no vendemos y cómo tu libro mayor sigue siendo tuyo."
     },
     "section1": {
       "title": "Paso uno: enciende la cerilla — crea una cuenta",
@@ -804,7 +807,8 @@
       "question5": "¿Puedo revisar perfumes sin una cuenta?",
       "answer5": "Puedes navegar y buscar sin cuenta, pero para valorar, reseñar, listar decants o crear tu wishlist necesitas una membresia de pago. Los early supporters que se unieron antes pueden conservar el acceso.",
       "question6": "¿Qué pasa si encuentro un error en la base de datos?",
-      "answer6": "¡Apreciamos tu atención al detalle! Si encuentras un error, ya sea una falta de ortografía, información incorrecta o una entrada duplicada, por favor avísanos por correo electrónico. Lo revisaremos y haremos las correcciones necesarias."
+      "answer6": "¡Apreciamos tu atención al detalle! Si encuentras un error, ya sea una falta de ortografía, información incorrecta o una entrada duplicada, por favor avísanos por correo electrónico. Lo revisaremos y haremos las correcciones necesarias.",
+      "answer3PrivacyLink": "Leer la política de privacidad"
     },
     "modal": {
       "perfume": {
@@ -917,7 +921,10 @@
       "itemsCount": "{{count}} artículos en tu colección",
       "empty": {
         "heading": "Tu colección está vacía.",
-        "subheading": "¡Comienza a agregar perfumes a tu colección!"
+        "subheading": "¡Comienza a agregar perfumes a tu colección!",
+        "browseArchive": "Explorar The Archive",
+        "takeQuiz": "Hacer el cuestionario de aromas",
+        "collectorsGuide": "Guía del coleccionista"
       }
     },
     "wishlistDemand": {
@@ -1767,7 +1774,12 @@
       "hasPhotosLabel": "Fotos del anuncio",
       "hasPhotosDescription": "Mostrar solo listados con fotos.",
       "hasPhotosChip": "Con fotos",
-      "hasPhotosToggle": "Solo listados con fotos"
+      "hasPhotosToggle": "Solo listados con fotos",
+      "minRepTitle": "Reputación del comerciante",
+      "minRepDescription": "Mostrar anuncios de coleccionistas con esta puntuación o superior.",
+      "minRepLabel": "Puntuación mínima",
+      "minRepAll": "Cualquier reputación",
+      "minRepChip": "Reputación {score}+"
     },
     "wishlistMatches": {
       "title": "Coincidencias para ti",
@@ -1878,7 +1890,8 @@
       "perfumes": "{count, number} perfumes",
       "separator": "·",
       "ariaLabel": "{users, number} usuarios, {houses, number} casas, {perfumes, number} perfumes"
-    }
+    },
+    "privacy": "Privacidad"
   },
   "shareLinks": {
     "copyLink": "Copiar enlace",
@@ -1919,7 +1932,14 @@
       "declined": "Rechazado",
       "cancelled": "Cancelado"
     },
-    "communityPolicyLink": "Envíos, disputas y normas de la comunidad"
+    "communityPolicyLink": "Envíos, disputas y normas de la comunidad",
+    "confirmPhotos": "Confirmar fotos compartidas",
+    "checklistAria": "Lista de pasos del trato",
+    "checklistPhotos": "Fotos compartidas (si se ofrecieron)",
+    "checklistTracking": "Seguimiento",
+    "checklistTrackingWithNumber": "Seguimiento: {tracking}",
+    "checklistShipped": "Enviado",
+    "checklistReceived": "Recibido"
   },
   "traderProfile": {
     "meta": {
@@ -2187,7 +2207,9 @@
     },
     "empty": {
       "heading": "Tu lista de deseos está vacía.",
-      "subheading": "¡Comienza a agregar perfumes a tu lista de deseos!"
+      "subheading": "¡Comienza a agregar perfumes a tu lista de deseos!",
+      "browseArchive": "Explorar The Archive",
+      "collectorsGuide": "Guía del coleccionista"
     },
     "heading": "Mi Lista de Deseos",
     "subheading": "Administra tu lista de deseos de perfumes.",
@@ -2232,7 +2254,9 @@
       "subheading": "Lista de deseos pública en perfumer's hollow",
       "itemCount": "{count, plural, one {# perfume} other {# perfumes}}",
       "empty": "Aún no hay artículos públicos en la lista.",
-      "viewProfile": "Ver perfil del comerciante"
+      "viewProfile": "Ver perfil del comerciante",
+      "regionHint": "Región del coleccionista: {region}",
+      "regionUnknown": "Región no indicada"
     }
   },
   "validation": {
@@ -2450,7 +2474,12 @@
       "harassment": "Acoso",
       "noShip": "No envió",
       "other": "Otro"
-    }
+    },
+    "blockHeading": "O bloquea a este coleccionista",
+    "blockHint": "Bloquear detiene los mensajes en ambos sentidos. Aún puedes denunciarlo.",
+    "block": "Bloquear coleccionista",
+    "blocking": "Bloqueando…",
+    "blockSuccess": "Coleccionista bloqueado. Ya no puede enviarte mensajes."
   },
   "dispute": {
     "button": "Abrir disputa",
@@ -2904,7 +2933,8 @@
     "redundancy": "Posible redundancia",
     "gaps": "Lagunas de gusto en tu estantería",
     "decantMix": "Mezcla de decants y botellas",
-    "decantMixCounts": "{full} botellas completas · {decants} decants · {unknown} sin marcar"
+    "decantMixCounts": "{full} botellas completas · {decants} decants · {unknown} sin marcar",
+    "listOnExchange": "Publicar en The Exchange"
   },
   "wearSuggestions": {
     "title": "¿Qué me pongo?",
@@ -2934,6 +2964,43 @@
     "houseRadar": "De las casas que sigues",
     "fromHouse": "{house}",
     "palateMatch": "Coincide con tu ADN {family}",
-    "savedSearchMatches": "Coincidencias de búsquedas guardadas (últimas 24 h)"
+    "savedSearchMatches": "Coincidencias de búsquedas guardadas (últimas 24 h)",
+    "emptyTakeQuiz": "Hacer el cuestionario de aromas",
+    "emptyBrowseMyScents": "Abrir My Scents",
+    "samplingEmpty": "Nada en cola aún. Añade frascos desde recomendaciones o My Scents.",
+    "samplingBrowseArchive": "Explorar The Archive",
+    "staleWishlist": "Aún en tu wishlist",
+    "staleWishlistHint": "Sin coincidencia reciente — explora The Archive o The Exchange.",
+    "staleWishlistAdded": "Añadido {date}"
+  },
+  "samplingQueue": {
+    "heading": "Probar después",
+    "empty": "Nada en cola aún. Añade frascos desde The Archive o el feedback de recomendaciones.",
+    "browseArchive": "Explorar The Archive",
+    "loading": "Cargando cola de probar después…",
+    "loadError": "No se pudo cargar la cola de muestreo.",
+    "updateError": "No se pudo actualizar el elemento.",
+    "statusLabel": "Estado",
+    "statusQueued": "En cola",
+    "statusSampling": "Probando",
+    "statusCompleted": "Completado",
+    "statusSkipped": "Omitido",
+    "remove": "Quitar"
+  },
+  "privacyPage": {
+    "meta": {
+      "title": "Privacidad",
+      "description": "Cómo perfumer's hollow trata tus datos de cuenta. Nunca vendemos información personal."
+    },
+    "heading": "Privacidad",
+    "subheading": "Qué recopilamos, qué no vendemos y cómo tu libro mayor sigue siendo tuyo.",
+    "contactLine": "Contacto: Para preguntas, solicitudes de datos o reportar actividad sospechosa, usa Correspondence o escribe a contact@perfumershollow.com.",
+    "offPlatform": {
+      "heading": "Pagos y envíos quedan fuera de la plataforma",
+      "contentOne": "perfumer's hollow no procesa pagos, no retiene fondos ni envía frascos. Los precios son orientativos. Los acuerdos son entre coleccionistas.",
+      "contentTwo": "Podemos guardar datos de cuenta, anuncios, mensajes y estado de trueques necesarios para el Hollow. No operamos checkout de productos.",
+      "termsPrefix": "Consulta también nuestros",
+      "termsLink": "Términos de uso"
+    }
   }
 }

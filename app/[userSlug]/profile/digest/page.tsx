@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server"
 
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 import { RecommendationReasonLine } from "@/components/Containers/Recommendations/RecommendationReasonLine"
+import { SamplingQueuePanel } from "@/components/Containers/MyScents/SamplingQueuePanel"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import { buildPersonalizedDigest } from "@/models/personalized-digest.server"
 import { getHouseRadarItems } from "@/models/house-radar.server"
@@ -51,10 +52,14 @@ const DigestPage = async ({ params }: Props) => {
           subheading={t("subheading")}
         />
         <PageWrapper>
-          <p className="text-noir-gold-100 mb-3">{t("premiumRequired")}</p>
-          <Link href="/membership" className="text-noir-gold underline">
-            {t("upgradeCta")}
-          </Link>
+          <div className="text-center py-8 px-4 bg-noir-gray/80 rounded-md border-2 border-noir-light space-y-4 max-w-lg mx-auto">
+            <p className="text-noir-gold-100">{t("premiumRequired")}</p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Link href="/membership" className="text-noir-gold underline">
+                {t("upgradeCta")}
+              </Link>
+            </div>
+          </div>
         </PageWrapper>
       </main>
     )
@@ -83,7 +88,20 @@ const DigestPage = async ({ params }: Props) => {
               {t("recommendations")}
             </h2>
             {recs.length === 0 ? (
-              <p className="text-sm text-noir-gold-100">{t("empty")}</p>
+              <div className="rounded border border-noir-gold-500/30 bg-noir-dark/40 px-4 py-4 space-y-3">
+                <p className="text-sm text-noir-gold-100">{t("empty")}</p>
+                <div className="flex flex-wrap gap-3">
+                  <Link href="/scent-quiz" className="text-noir-gold underline text-sm">
+                    {t("emptyTakeQuiz")}
+                  </Link>
+                  <Link
+                    href={`/${userSlug}/profile/my-scents`}
+                    className="text-noir-gold underline text-sm"
+                  >
+                    {t("emptyBrowseMyScents")}
+                  </Link>
+                </div>
+              </div>
             ) : (
               <ul className="space-y-3">
                 {recs.map(r => (
@@ -166,18 +184,16 @@ const DigestPage = async ({ params }: Props) => {
             <h2 className="mb-4 text-lg uppercase tracking-wide text-noir-gold">
               {t("sampling")}
             </h2>
-            {digest.samplingQueue.length === 0 ? (
-              <p className="text-sm text-noir-gold-100">—</p>
-            ) : (
-              <ul className="space-y-2 text-sm text-noir-gold-100">
-                {digest.samplingQueue.map((q, i) => (
-                  <li key={`${q.perfumeName}-${i}`}>
-                    {q.perfumeName}{" "}
-                    <span className="text-noir-gold-500/70">({q.status})</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <SamplingQueuePanel
+              compact
+              initialItems={digest.samplingQueue.map(q => ({
+                id: q.id,
+                status: q.status,
+                perfumeName: q.perfumeName,
+                perfumeSlug: q.perfumeSlug,
+                houseName: q.houseName,
+              }))}
+            />
           </section>
 
           <section>
@@ -190,6 +206,35 @@ const DigestPage = async ({ params }: Props) => {
               ))}
             </ul>
           </section>
+
+          {digest.staleWishlist.length > 0 ? (
+            <section>
+              <h2 className="mb-4 text-lg uppercase tracking-wide text-noir-gold">
+                {t("staleWishlist")}
+              </h2>
+              <p className="mb-3 text-sm text-noir-gold-100">{t("staleWishlistHint")}</p>
+              <ul className="space-y-2 text-sm text-noir-gold-100">
+                {digest.staleWishlist.map(item => (
+                  <li
+                    key={item.perfumeSlug}
+                    className="rounded border border-noir-gold-500/30 bg-noir-dark/40 px-4 py-3 flex flex-wrap justify-between gap-2"
+                  >
+                    <Link
+                      href={`/perfume/${item.perfumeSlug}`}
+                      className="font-medium text-noir-gold hover:underline"
+                    >
+                      {item.perfumeName}
+                    </Link>
+                    <span className="text-xs opacity-70">
+                      {t("staleWishlistAdded", {
+                        date: new Date(item.addedAt).toLocaleDateString(),
+                      })}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
           {digest.savedSearchMatches.length > 0 ? (
             <section>

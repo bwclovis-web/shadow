@@ -1,7 +1,8 @@
 import Image from "next/image"
+import { Link } from "next-view-transitions"
+import { useTranslations } from "next-intl"
 
 import { normalizeRemoteImageSrc } from "@/utils/styleUtils"
-import { useTranslations } from "next-intl"
 
 interface WishlistItem {
   id: string
@@ -18,6 +19,7 @@ interface WishlistItem {
   perfume: {
     id: string
     name: string
+    slug?: string
     image?: string
     perfumeHouse?: {
       id: string
@@ -37,9 +39,7 @@ const ItemsSearchingFor = ({ wishlistItems }: ItemsSearchingForProps) => {
   if (wishlistItems.length === 0) {
     return (
       <div className="mt-6 px-2">
-        <p className="text-noir-gold-100 italic">
-          {t("noItemsSearchingFor")}
-        </p>
+        <p className="text-noir-gold-100 italic">{t("noItemsSearchingFor")}</p>
       </div>
     )
   }
@@ -49,6 +49,12 @@ const ItemsSearchingFor = ({ wishlistItems }: ItemsSearchingForProps) => {
       <ul className="space-y-4">
         {wishlistItems.map(item => {
           const thumb = normalizeRemoteImageSrc(item.perfume.image)
+          const href = item.perfume.slug
+            ? `/perfume/${item.perfume.slug}`
+            : undefined
+          const name = (
+            <h3 className="font-medium text-noir-gold">{item.perfume.name}</h3>
+          )
           return (
             <li
               key={item.id}
@@ -67,8 +73,17 @@ const ItemsSearchingFor = ({ wishlistItems }: ItemsSearchingForProps) => {
                   />
                 )}
               </div>
-              <div className="flex-1">
-                <h3 className="font-medium text-noir-gold">{item.perfume.name}</h3>
+              <div className="flex-1 min-w-0">
+                {href ? (
+                  <Link
+                    href={href}
+                    className="hover:underline underline-offset-2"
+                  >
+                    {name}
+                  </Link>
+                ) : (
+                  name
+                )}
                 {item.perfume.perfumeHouse && (
                   <p className="text-sm text-noir-gold-100">
                     by {item.perfume.perfumeHouse.name}

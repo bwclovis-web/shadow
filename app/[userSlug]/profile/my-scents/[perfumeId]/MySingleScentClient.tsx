@@ -49,12 +49,14 @@ type MySingleScentClientProps = {
   userPerfume: SerializedUserPerfume
   allUserPerfumes: SerializedUserPerfume[]
   userSlug: string
+  openListingFlow?: boolean
 }
 
 const MySingleScentClient = ({
   userPerfume: initialUserPerfume,
   allUserPerfumes: initialAllUserPerfumes,
   userSlug,
+  openListingFlow = false,
 }: MySingleScentClientProps) => {
   const router = useRouter()
   const t = useTranslations("myScents.listItem")
@@ -351,6 +353,7 @@ const MySingleScentClient = ({
           summary={t("manageDestashes")}
           className="text-start text-noir-dark font-bold py-3 mt-3 bg-noir-gold px-2 rounded noir-border-dk relative open:bg-noir-gold-100"
           name="inner-details"
+          defaultOpen={openListingFlow}
         >
           <div id="destash">
           <DestashManager
@@ -359,6 +362,7 @@ const MySingleScentClient = ({
             setUserPerfumes={setUserPerfumesListState}
             apiBasePath={USER_PERFUMES_API}
             currentBottleId={finalPerfume.id}
+            autoStartCreate={openListingFlow}
           />
           </div>
         </VooDooDetails>

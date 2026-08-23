@@ -23,6 +23,7 @@ const STATIC_PATHS = [
   "/the-collectors-guide",
   "/terms-and-conditions",
   "/community-policy",
+  "/privacy",
   "/the-exchange",
   "/the-archive",
   "/houses",
@@ -38,7 +39,7 @@ const HUB_PATHS = new Set([
   "/journal",
 ])
 
-const LEGAL_PATHS = new Set(["/terms-and-conditions", "/community-policy"])
+const LEGAL_PATHS = new Set(["/terms-and-conditions", "/community-policy", "/privacy"])
 
 const staticPriority = (path: string): number => {
   if (path === "/") return 1

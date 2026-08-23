@@ -17,6 +17,7 @@ import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
 import { useResponsivePageSize } from "@/hooks/useMediaQuery"
 import { useDataWithFilters } from "@/hooks/useDataWithFilters"
 import WishlistDemandSection from "@/components/Containers/MyScents/WishlistDemandSection"
+import { SamplingQueuePanel } from "@/components/Containers/MyScents/SamplingQueuePanel"
 import {
   getActiveListings,
   getBottleEntries,
@@ -138,6 +139,7 @@ const MyScentsPageClient = ({
   const t = useTranslations("myScents")
   const tSort = useTranslations("sortOptions")
   const tTabs = useTranslations("myScents.tabs")
+  const tSampling = useTranslations("samplingQueue")
 
   const liveInventoryStats = useMemo((): UserInventoryStats => {
     const { bottleCount, houseCount } = computeCollectionCounts(userPerfumes)
@@ -360,6 +362,12 @@ const MyScentsPageClient = ({
         />
       )}
       <WishlistDemandSection demand={wishlistDemand} />
+      <section className="mb-8 space-y-3">
+        <h2 className="text-lg uppercase tracking-wide text-noir-gold">
+          {tSampling("heading")}
+        </h2>
+        <SamplingQueuePanel />
+      </section>
       <div>
         <MyScentsViewTabs
           activeView={activeView}

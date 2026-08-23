@@ -11,6 +11,7 @@ import MySingleScentClient, { type SerializedUserPerfume } from "./MySingleScent
 
 type Props = {
   params: Promise<{ userSlug: string; perfumeId: string }>
+  searchParams: Promise<{ list?: string }>
 }
 
 export const generateMetadata = async ({ params }: Props): Promise<Metadata> => {
@@ -45,8 +46,11 @@ const serializeUserPerfume = (up: {
 
 export default async function MySingleScentPage({
   params,
+  searchParams,
 }: Props): Promise<React.ReactElement> {
   const { userSlug, perfumeId } = await params
+  const { list } = await searchParams
+  const openListingFlow = list === "1"
   const { user } = await requireOwnedProfileSession(userSlug, { subPath: "my-scents" })
 
   const [userPerfume, allUserPerfumes] = await Promise.all([
@@ -81,6 +85,7 @@ export default async function MySingleScentPage({
       userPerfume={serializedUserPerfume as SerializedUserPerfume}
       allUserPerfumes={serializedAll}
       userSlug={userSlug}
+      openListingFlow={openListingFlow}
     />
   )
 }

@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { sendWeeklyDigests } from "@/models/digest-email.server"
+import { prisma } from "@/lib/db"
+import { createWishlistReengagementAlerts } from "@/models/wishlist-reengagement.server"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
 
 /**
- * Sends Premium weekly digests via Resend.
+ * Sends Premium weekly digests via Resend + wishlist re-engagement nudges.
  * Authorization: Bearer CRON_SECRET
  */
 export const GET = async (request: NextRequest) => {
@@ -27,8 +29,20 @@ export const GET = async (request: NextRequest) => {
   }
 
   try {
+    const users = await prisma.user.findMany({
+      where: {
+        UserPerfumeWishlist: { some: {} },
+      },
+      select: { id: true },
+      take: 500,
+    })
+    let reengagementAlerts = 0
+    for (const user of users) {
+      reengagementAlerts += await createWishlistReengagementAlerts(user.id)
+    }
+
     const result = await sendWeeklyDigests()
-    return NextResponse.json({ success: true, ...result })
+    return NextResponse.json({ success: true, reengagementAlerts, ...result })
   } catch (error) {
     console.error("Weekly digest cron failed:", error)
     return NextResponse.json({ error: "Digest send failed" }, { status: 500 })

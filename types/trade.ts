@@ -111,6 +111,13 @@ export type TradeForClient = {
     lastName: string | null
     avatarImage: string | null
   }
+  /** Shared deal checklist derived from TradeEvents (same language as splits). */
+  dealChecklist: {
+    photosConfirmed: boolean
+    trackingNumber: string | null
+    shipped: boolean
+    received: boolean
+  }
 }
 
 export const isCashOnlyListing = (

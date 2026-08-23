@@ -40,6 +40,13 @@ const tradeInclude = {
       },
     },
   },
+  events: {
+    orderBy: { createdAt: "asc" as const },
+    select: {
+      type: true,
+      metadata: true,
+    },
+  },
   initiator: {
     select: {
       id: true,
@@ -71,6 +78,32 @@ const parseMlSnapshot = (
   return Number.isFinite(n) ? n : null
 }
 
+const buildDealChecklist = (
+  trade: TradeWithRelations
+): TradeForClient["dealChecklist"] => {
+  let photosConfirmed = false
+  let trackingNumber: string | null = null
+  for (const event of trade.events) {
+    if (event.type === "photos_confirmed" || event.type === "confirm_photos") {
+      photosConfirmed = true
+    }
+    if (event.type === "shipped" && event.metadata && typeof event.metadata === "object") {
+      const meta = event.metadata as { trackingNumber?: unknown }
+      if (typeof meta.trackingNumber === "string" && meta.trackingNumber.trim()) {
+        trackingNumber = meta.trackingNumber.trim()
+      }
+    }
+  }
+  const shippedStatuses = ["shipped", "received", "completed"]
+  const receivedStatuses = ["received", "completed"]
+  return {
+    photosConfirmed,
+    trackingNumber,
+    shipped: shippedStatuses.includes(trade.status),
+    received: receivedStatuses.includes(trade.status),
+  }
+}
+
 const serializeTrade = (trade: TradeWithRelations): TradeForClient => ({
   id: trade.id,
   initiatorId: trade.initiatorId,
@@ -92,6 +125,7 @@ const serializeTrade = (trade: TradeWithRelations): TradeForClient => ({
   })),
   initiator: trade.initiator,
   counterparty: trade.counterparty,
+  dealChecklist: buildDealChecklist(trade),
 })
 
 const TRANSITION_MAP: Record<
@@ -499,6 +533,47 @@ export const transitionTrade = async (
   void touchUserLastActive(actorUserId)
 
   return serializeTrade(updated)
+}
+
+/** Mark that listing photos were shared off-platform (does not change TradeStatus). */
+export const confirmTradePhotos = async (
+  tradeId: string,
+  actorUserId: string
+): Promise<TradeForClient> => {
+  const trade = await prisma.trade.findUnique({
+    where: { id: tradeId },
+    include: tradeInclude,
+  })
+  if (!trade) throw new Error("Trade not found")
+
+  const isParticipant =
+    actorUserId === trade.initiatorId || actorUserId === trade.counterpartyId
+  if (!isParticipant) throw new Error("Not authorized for this trade")
+
+  if (!["accepted", "shipped", "received"].includes(trade.status)) {
+    throw new Error("Photos can be confirmed after the offer is accepted")
+  }
+
+  const already = trade.events.some(
+    e => e.type === "photos_confirmed" || e.type === "confirm_photos"
+  )
+  if (already) return serializeTrade(trade)
+
+  await prisma.tradeEvent.create({
+    data: {
+      tradeId,
+      type: "photos_confirmed",
+      actorUserId,
+      metadata: {},
+    },
+  })
+
+  const refreshed = await prisma.trade.findUnique({
+    where: { id: tradeId },
+    include: tradeInclude,
+  })
+  if (!refreshed) throw new Error("Trade not found")
+  return serializeTrade(refreshed)
 }
 
 const ADMIN_VOIDABLE_STATUSES: TradeStatus[] = [

@@ -181,14 +181,33 @@ Skip or stop if a phase does not move its metric (below). Do not start Phase 6 w
 
 ---
 
+## Invite-beta launch sequence (A–E)
+
+Execution overlay for invite beta. Maps to Phases 0–4 above; ops run in parallel. **Locked decisions:** defer CF-021 price-movement (no listing price history); ship standalone `/privacy`; Community → Alerts = rules, header bell = inbox.
+
+| Launch phase | Roadmap | Work |
+|--------------|---------|------|
+| **A Clarify** (Week 1) | Phase 0 | Guide pass; FAQ trim → Guide links; empty-state CTAs; onboarding nouns |
+| **B Liquidity** (Weeks 2–3) | Phases 2 + 4 | Looking-for polish + region hint (CF-075); region filter copy; destash CTA on neglected insights; sampling-queue UI (CF-077) |
+| **C Trade safety** (Weeks 3–4) | Phase 3 | Deal checklist photos/tracking/shipped/received (CF-076); reputation min filter; block/mute; `/privacy` |
+| **D Retention** (Week 4) | Phase 1 remainder | Alert vocabulary pass; wishlist re-engagement (CF-062); CF-021 deferred in backlog |
+| **E Ops** (parallel) | — | Sentry; Stripe live smoke; early-adopter backfill; SEO Console; Sorce journal; email/push smoke; incident one-pager; CSP stays Report-Only |
+| **F After invite** | Phases 5–6 | Note pages, split circles, boosts/affiliates — do not start while A–E open |
+
+**Invite-beta acceptance:** Guide + empty states pass four-sentence test; public wishlist + region E2E; destash opens listing draft; sampling queue on digest + My Scents; trade checklist uses split language; `/privacy` linked; Sentry test event; Stripe live verified; early adopters backfilled; sitemap in Search Console; one featured Journal story; email/push smoke green.
+
+**Ship rules:** one phase theme per PR series; Guide update in same PR as user-visible loops; check CF IDs in backlog; Prisma Migrate only (additive); Premium accelerates — never gates messaging/listings/splits/trades.
+
+---
+
 ## Metrics
 
 | Phase | Primary signal |
 |-------|----------------|
-| 1 | Alert click-through; return visits within 7 days |
-| 2 | Wishlist → conversation; region-filtered Exchange sessions that message |
-| 3 | Trade completion rate; dispute rate |
-| 4 | Sampling-queue → listing or wear; neglected-bottle list rate |
+| 1 / D | Alert click-through; return visits within 7 days |
+| 2 / B | Wishlist → conversation; region-filtered Exchange sessions that message |
+| 3 / C | Trade completion rate; dispute rate |
+| 4 / B | Sampling-queue → listing or wear; neglected-bottle list rate |
 | 5 | Note-page search impressions; new-catalog rail CTR |
 | 6 | Boost complaints; affiliate CTR with **no** drop in Exchange trust |
 

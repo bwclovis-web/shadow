@@ -13,7 +13,11 @@ export const DISCOVERY_QUERY = {
   condition: "condition",
   region: "region",
   hasPhotos: "hasPhotos",
+  minRep: "minRep",
 } as const
+
+export const DISCOVERY_MIN_REP_OPTIONS = [50, 70, 80] as const
+export type DiscoveryMinRep = (typeof DISCOVERY_MIN_REP_OPTIONS)[number]
 
 export const DISCOVERY_TRADE_PREFERENCES = ["cash", "trade", "both"] as const
 export type DiscoveryTradePreference = (typeof DISCOVERY_TRADE_PREFERENCES)[number]
@@ -45,6 +49,7 @@ export type PerfumeDiscoveryFilters = {
   conditions: DiscoveryListingCondition[]
   region: ExchangeRegionBucket | null
   hasPhotos: boolean
+  minRep: DiscoveryMinRep | null
 }
 
 export const emptyDiscoveryFilters = (): PerfumeDiscoveryFilters => ({
@@ -59,6 +64,7 @@ export const emptyDiscoveryFilters = (): PerfumeDiscoveryFilters => ({
   conditions: [],
   region: null,
   hasPhotos: false,
+  minRep: null,
 })
 
 /** CUID / Prisma id: alphanumeric, typical length 20–32. */
@@ -208,6 +214,12 @@ export const parseDiscoveryFiltersFromSearchParams = (
 
   const region = parseRegionToken(get(DISCOVERY_QUERY.region))
   const hasPhotos = parseHasPhotosFlag(get(DISCOVERY_QUERY.hasPhotos))
+  const minRepRaw = parseOptionalNonNegativeNumber(get(DISCOVERY_QUERY.minRep))
+  const minRep =
+    minRepRaw != null &&
+    (DISCOVERY_MIN_REP_OPTIONS as readonly number[]).includes(minRepRaw)
+      ? (minRepRaw as DiscoveryMinRep)
+      : null
 
   return {
     noteIds,
@@ -221,6 +233,7 @@ export const parseDiscoveryFiltersFromSearchParams = (
     conditions,
     region,
     hasPhotos,
+    minRep,
   }
 }
 
@@ -272,6 +285,9 @@ export const discoveryFiltersToSearchParams = (
   if (filters.hasPhotos) {
     out.set(DISCOVERY_QUERY.hasPhotos, "1")
   }
+  if (filters.minRep != null) {
+    out.set(DISCOVERY_QUERY.minRep, String(filters.minRep))
+  }
 
   return out
 }
@@ -287,7 +303,8 @@ export const discoveryFiltersActive = (filters: PerfumeDiscoveryFilters): boolea
   filters.bottleTypes.length > 0 ||
   filters.conditions.length > 0 ||
   filters.region != null ||
-  filters.hasPhotos
+  filters.hasPhotos ||
+  filters.minRep != null
 
 export const removeDiscoveryNoteId = (
   filters: PerfumeDiscoveryFilters,
@@ -348,6 +365,10 @@ export const clearDiscoveryRegion = (
 export const clearDiscoveryHasPhotos = (
   filters: PerfumeDiscoveryFilters
 ): PerfumeDiscoveryFilters => ({ ...filters, hasPhotos: false })
+
+export const clearDiscoveryMinRep = (
+  filters: PerfumeDiscoveryFilters
+): PerfumeDiscoveryFilters => ({ ...filters, minRep: null })
 
 /** Map URL season multi-select to `SeasonSelection` for `SeasonSelectionToggleRow`. */
 export const seasonsArrayToSelection = (seasons: SeasonKey[]) => {

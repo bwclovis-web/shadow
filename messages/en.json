@@ -101,6 +101,11 @@
     "photosHint": "Up to 3 images to help our team review your report.",
     "submit": "Submit report",
     "submitting": "Submitting…",
+    "blockHeading": "Or block this collector",
+    "blockHint": "Blocking stops messages both ways. You can still report them.",
+    "block": "Block collector",
+    "blocking": "Blocking…",
+    "blockSuccess": "Collector blocked. They can no longer message you.",
     "categories": {
       "scam": "Scam or fraud",
       "fakeItem": "Fake or misrepresented item",
@@ -375,19 +380,19 @@
     "viewTradingPost": "View Exchange",
     "noAlerts": "The Hollow is quiet for now.",
     "noAlertsDescription": "You’ll receive updates when fragrances from your Seeking list surface or when collectors show interest in your Exchange listings.",
-    "alertPreferences": "Alert Preferences",
-    "alertPreferencesDescription": "Choose how the Hollow keeps you informed.",
-    "alertTypes": "Alert Types",
-    "wishlistAlerts": "Wishlist Alerts",
-    "decantAlerts": "Decant Alerts",
-    "emailNotifications": "Email Notifications",
-    "emailWishlistAlerts": "Email Wishlist Alerts",
-    "emailDecantAlerts": "Email Decant Alerts",
-    "emailTradeAlerts": "Email Exchange Updates",
+    "alertPreferences": "Alert preferences",
+    "alertPreferencesDescription": "One preference sheet for the bell inbox, email, and push. Community → Alerts manages saved-search rules — not a second inbox.",
+    "alertTypes": "What reaches the bell",
+    "wishlistAlerts": "Wishlist matches (named bottles)",
+    "decantAlerts": "Someone wants a bottle you list",
+    "emailNotifications": "Email",
+    "emailWishlistAlerts": "Email wishlist matches",
+    "emailDecantAlerts": "Email listing interest",
+    "emailTradeAlerts": "Email trade updates",
     "emailSubmissionAlerts": "Email Archive submission updates",
-    "followAlerts": "Followed Activity",
+    "followAlerts": "Followed activity",
     "emailFollowAlerts": "Email followed activity",
-    "savedSearchAlerts": "Saved Search Alerts",
+    "savedSearchAlerts": "Saved search matches (filters)",
     "emailSavedSearchAlerts": "Email saved search matches",
     "savedSearchFrequency": "Saved search delivery",
     "savedSearchFrequencyInstant": "Instant (bell)",
@@ -565,6 +570,7 @@
     "passwordRequirements": "Password Requirements:",
     "termsAndConditions": "I accept the: ",
     "termsAndConditionsLink": "Terms of Use",
+    "privacyLink": "Privacy",
     "passwordRequirementsList": {
       "8characters": "At least 8 characters long",
       "uppercase": "Contains uppercase and lowercase letters",
@@ -908,7 +914,9 @@
       "membership": "Membership",
       "membershipHint": "Member $5, Premium $7, Collector $10 per year. Wandering the Archive stays free.",
       "policy": "Collector Standards",
-      "policyHint": "Shipping, disputes, and how we stay a marketplace of people — not a shop."
+      "policyHint": "Shipping, disputes, and how we stay a marketplace of people — not a shop.",
+      "privacy": "Privacy",
+      "privacyHint": "What we collect, what we do not sell, and how your ledger stays yours."
     },
     "section1": {
       "title": "Step one: Light your match — create an account",
@@ -929,7 +937,7 @@
       "content": "Your wishlist is specific bottles you want. When someone lists one, we can notify you. A public wishlist is how other collectors see what you are looking for — there is no separate ISO board.",
       "content2": "Saved searches (Premium) remember filters on the Archive or the Exchange and ping you when something new matches. Manage them under Community → Alerts, and in the bell on your ledger.",
       "content3": "Both are the same chase: named bottles on the wishlist, filters on a saved search. Use one vocabulary so the Hollow does not grow a second marketplace.",
-      "content4": "Mute a search, snooze it for a week, or switch to daily delivery in alert preferences — matches always land in the bell or your digest, not a second inbox."
+      "content4": "Mute a search, snooze it for a week, or switch to daily delivery in alert preferences — matches always land in the bell or your digest, not a second inbox. Your public wishlist is how others see what you want. Try next lives on your digest and My Scents."
     },
     "section4": {
       "title": "Step four: Message, agree, then record the trade",
@@ -987,18 +995,19 @@
       "answer1": "If you notice a perfume or perfume house missing from our database, you can submit it using the buttons below. Your submission will be reviewed by an admin before being added to the database. We're always looking to expand our collection and appreciate your help in making perfumer's hollow more complete.",
       "submitPerfumeButton": "Submit Missing Perfume",
       "submitHouseButton": "Submit Missing Perfume House",
-      "question2": "How does the trading system work?",
-      "answer2": "perfumer's hollow provides a platform for collectors to connect and exchange. We don't handle transactions or payments directly — those are arranged between you and your trading partner. We simply provide the space and tools to make those connections happen safely and transparently.",
-      "answer2GuideLink": "See The Collector's Guide for inventory, listings, group splits, and alerts.",
+      "question2": "How does trading work?",
+      "answer2": "Message, agree off-platform, then record the trade. We never take payment or ship bottles.",
+      "answer2GuideLink": "Full walkthrough: inventory vs listings vs splits, wishlist vs saved search, and deal steps.",
       "answer2GuideLinkCta": "Open The Collector's Guide",
       "question3": "Is my personal information safe?",
-      "answer3": "Absolutely. We take privacy seriously. We don't sell, exchange, or share your personal information. Your data stays yours, and what happens in the shadows stays there.",
+      "answer3": "We do not sell or share your personal data. See our Privacy page for details.",
+      "answer3PrivacyLink": "Read the Privacy policy",
       "question4": "How do I create an account?",
-      "answer4": "Browse the Archive freely, then choose a membership on the Membership page. Complete checkout, then create your account with the same email. Annual plans start at $5 (Member), $7 (Premium), and $10 (Collector).",
+      "answer4": "Browse the Archive free. To list or message, pick a membership, checkout, then sign up with the same email. Member $5 / Premium $7 / Collector $10 per year.",
       "question5": "Can I review perfumes without an account?",
-      "answer5": "You can browse and search the site without an account, but to rate, review, list decants, or build your wishlist, you'll need a paid membership. Early supporters who joined before paid membership may retain access.",
-      "question6": "What if I find an error in the database?",
-      "answer6": "We appreciate your attention to detail! If you spot an error — whether it's a misspelling, incorrect information, or a duplicate entry — please let us know via email. We'll review it and make corrections as needed."
+      "answer5": "Browsing stays free. Rating, reviewing, listing, and wishlist need membership (or early-adopter access).",
+      "question6": "What if I find an error in the Archive?",
+      "answer6": "Email us with the perfume or house and what looks wrong. We will review and correct."
     },
     "modal": {
       "perfume": {
@@ -1111,7 +1120,10 @@
       "itemsCount": "{{count}} items in your collection",
       "empty": {
         "heading": "Your collection is empty.",
-        "subheading": "Start adding perfumes to your collection!"
+        "subheading": "Add bottles from the Archive, or take the scent quiz to find a place to start.",
+        "browseArchive": "Browse The Archive",
+        "takeQuiz": "Take the scent quiz",
+        "collectorsGuide": "Collector’s Guide"
       }
     },
     "wishlistDemand": {
@@ -1835,6 +1847,7 @@
     "navAria": "Site links",
     "communityPolicy": "Collector Standards",
     "terms": "Terms of Use",
+    "privacy": "Privacy",
     "catalogStats": {
       "users": "{count, number} users",
       "houses": "{count, number} houses",
@@ -1958,7 +1971,7 @@
         "two": "Use of Data: Data is used internally only — for recommendations, feature improvements, and fraud prevention. It is never sold, never shared with advertisers, and never used for resale or marketing beyond this site.",
         "three": "Cookies: Like many websites, we use cookies to remember your session and keep you logged in.",
         "four": "Security: We take reasonable steps to protect your data, but no system is impenetrable. Handle your account credentials as carefully as you’d handle your favorite perfume bottle.",
-        "five": "Contact: For questions, data requests, or to report suspicious activity, reach us at [INSERT CONTACT EMAIL HERE]."
+        "five": "Contact: For questions, data requests, or to report suspicious activity, use Correspondence or email contact@perfumershollow.com."
       }
     },
     "changes": {
@@ -2026,15 +2039,20 @@
       "conditionTitle": "Condition",
       "conditionDescription": "Filter listings by bottle condition.",
       "conditionAria": "Condition filters",
-      "regionTitle": "Collector region",
-      "regionDescription": "Filter listings by collector location.",
-      "regionLabel": "Region",
+      "regionTitle": "Seller region",
+      "regionDescription": "Show listings from collectors in this region (ships from).",
+      "regionLabel": "Seller region",
       "regionAll": "Any region",
       "regionUS": "United States",
       "regionUK": "United Kingdom",
       "regionAU": "Australia",
       "regionEU": "Europe",
       "regionOther": "Other",
+      "minRepTitle": "Trader reputation",
+      "minRepDescription": "Show listings from collectors at or above this reputation score.",
+      "minRepLabel": "Minimum score",
+      "minRepAll": "Any reputation",
+      "minRepChip": "Reputation {score}+",
       "hasPhotosLabel": "Listing photos",
       "hasPhotosDescription": "Show only listings with photos.",
       "hasPhotosChip": "Has photos",
@@ -2165,6 +2183,13 @@
     "complete": "Complete exchange",
     "cancel": "Cancel exchange",
     "trackingOptional": "Tracking (optional)",
+    "confirmPhotos": "Confirm photos shared",
+    "checklistAria": "Deal checklist",
+    "checklistPhotos": "Photos shared (if offered)",
+    "checklistTracking": "Tracking",
+    "checklistTrackingWithNumber": "Tracking: {tracking}",
+    "checklistShipped": "Shipped",
+    "checklistReceived": "Received",
     "error": "Something went wrong.",
     "communityPolicyLink": "Shipping, disputes & community rules",
     "timelineAria": "Exchange progress",
@@ -2445,7 +2470,9 @@
     },
     "empty": {
       "heading": "Nothing is being sought yet.",
-      "subheading": "Start adding perfumes to your wishlist!"
+      "subheading": "Add specific bottles from the Archive. A public wishlist is how other collectors see what you want.",
+      "browseArchive": "Browse The Archive",
+      "collectorsGuide": "Collector’s Guide"
     },
     "heading": "Seeking",
     "subheading": "Fragrances still waiting to be discovered.",
@@ -2487,8 +2514,10 @@
         "description": "Perfumes {traderName} is looking for on perfumer's hollow."
       },
       "heading": "{traderName} is looking for",
-      "subheading": "Public wishlist on perfumer's hollow",
+      "subheading": "Public wishlist — how other collectors see what they want. No separate looking-for board.",
       "itemCount": "{count, plural, one {# perfume} other {# perfumes}}",
+      "regionHint": "Collector region: {region}",
+      "regionUnknown": "Region not set",
       "empty": "No public wishlist items yet.",
       "viewProfile": "View trader profile"
     }
@@ -2616,17 +2645,17 @@
   },
   "onboarding": {
     "bannerLabel": "Getting started",
-    "title": "Begin Your Collector Journey",
-    "subtitle": "A few quick steps to personalize your collector experience.",
+    "title": "Three steps into the Hollow",
+    "subtitle": "Quiz for taste, add a bottle to My Scents, then meet someone on The Exchange.",
     "skip": "Skip for now",
     "done": "Done",
     "steps": {
       "quiz": "Take the scent quiz",
-      "bottle": "Start Your Collection",
-      "matches": "Explore the Exchange"
+      "bottle": "Add a bottle to My Scents",
+      "matches": "Find a match on The Exchange"
     },
     "matches": {
-      "empty": "No exchange listings match your profile yet. Check back after more traders list bottles, or browse the exchange."
+      "empty": "No Exchange listings match your profile yet. Browse The Exchange or keep building My Scents."
     },
     "errors": {
       "mustSignIn": "You must be signed in."
@@ -2898,6 +2927,7 @@
     "seasonCoverage": "Season coverage (logged wears)",
     "neglected": "Neglected bottles (90+ days, never worn)",
     "ownedDays": "{days} days owned",
+    "listOnExchange": "List on The Exchange",
     "exportCsv": "Export collection & wears (CSV)",
     "exportCollectorOnly": "CSV export is available on the Collector plan.",
     "declaredVsActual": "Quiz vs shelf",
@@ -2927,13 +2957,50 @@
     "premiumRequired": "Personalized digests are a Premium benefit.",
     "upgradeCta": "View membership",
     "empty": "No digest available yet — complete the scent quiz and build your collection.",
+    "emptyTakeQuiz": "Take the scent quiz",
+    "emptyBrowseMyScents": "Open My Scents",
     "recommendations": "Suggested for you",
     "gaps": "Collection gaps",
-    "sampling": "Sampling queue",
+    "sampling": "Try next",
+    "samplingEmpty": "Nothing queued yet. Add bottles from recommendations or My Scents.",
+    "samplingBrowseArchive": "Browse The Archive",
     "wearSuggestions": "What to wear",
     "houseRadar": "From houses you follow",
     "fromHouse": "{house}",
     "palateMatch": "Matches your {family} DNA",
-    "savedSearchMatches": "Saved search matches (last 24h)"
+    "savedSearchMatches": "Saved search matches (last 24h)",
+    "staleWishlist": "Still on your wishlist",
+    "staleWishlistHint": "No recent listing match — browse The Archive or The Exchange.",
+    "staleWishlistAdded": "Added {date}"
+  },
+  "samplingQueue": {
+    "heading": "Try next",
+    "empty": "Nothing queued yet. Add bottles from the Archive or recommendation feedback.",
+    "browseArchive": "Browse The Archive",
+    "loading": "Loading try-next queue…",
+    "loadError": "Could not load sampling queue.",
+    "updateError": "Could not update queue item.",
+    "statusLabel": "Status",
+    "statusQueued": "Queued",
+    "statusSampling": "Sampling",
+    "statusCompleted": "Completed",
+    "statusSkipped": "Skipped",
+    "remove": "Remove"
+  },
+  "privacyPage": {
+    "meta": {
+      "title": "Privacy",
+      "description": "How perfumer's hollow handles your account data. We never sell personal information."
+    },
+    "heading": "Privacy",
+    "subheading": "What we collect, what we do not sell, and how your ledger stays yours.",
+    "contactLine": "Contact: For questions, data requests, or to report suspicious activity, use Correspondence or email contact@perfumershollow.com.",
+    "offPlatform": {
+      "heading": "Payments and shipping stay off-platform",
+      "contentOne": "perfumer's hollow does not process payments, hold funds, or ship bottles. Price fields are hints. Arrangements happen between collectors.",
+      "contentTwo": "We may store account, listing, message, and trade-status data needed to run the Hollow. We do not run checkout for goods.",
+      "termsPrefix": "Also see our",
+      "termsLink": "Terms of Use"
+    }
   }
 }

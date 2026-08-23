@@ -3,13 +3,20 @@ import { getPersonalizedRecommendations } from "@/services/recommendations"
 import { listSamplingQueue } from "@/models/sampling-queue.server"
 import { listRecentSavedSearchMatchesForDigest } from "@/models/saved-search.server"
 import { getUserAlertPreferences } from "@/models/user-alerts.server"
+import { getStaleWishlistItemsForUser } from "@/models/wishlist-reengagement.server"
 import { requireEntitlement } from "@/utils/membership/entitlements.server"
 
 export type PersonalizedDigest = {
   userId: string
   weekOf: string
   recommendations: Array<{ id: string; name: string; slug: string; reason?: string }>
-  samplingQueue: Array<{ perfumeName: string; status: string }>
+  samplingQueue: Array<{
+    id: string
+    perfumeName: string
+    perfumeSlug: string
+    houseName?: string | null
+    status: string
+  }>
   wardrobeHint: string
   collectionGaps: string[]
   savedSearchMatches: Array<{
@@ -18,6 +25,11 @@ export type PersonalizedDigest = {
     searchName: string
     createdAt: string
     targetUrl: string
+  }>
+  staleWishlist: Array<{
+    perfumeName: string
+    perfumeSlug: string
+    addedAt: string
   }>
 }
 
@@ -30,7 +42,8 @@ export const buildPersonalizedDigest = async (
   const entitlement = await requireEntitlement(userId, "personalized_digests")
   if (!entitlement.ok) return null
 
-  const [recs, queue, ownedCount, profile, ownedNotes, preferences] = await Promise.all([
+  const [recs, queue, ownedCount, profile, ownedNotes, preferences, staleWishlistRaw] =
+    await Promise.all([
     getPersonalizedRecommendations(userId, 5),
     listSamplingQueue(userId),
     prisma.userPerfume.count({ where: { userId } }),
@@ -53,6 +66,7 @@ export const buildPersonalizedDigest = async (
       },
     }),
     getUserAlertPreferences(userId),
+    getStaleWishlistItemsForUser(userId),
   ])
 
   const since = new Date()
@@ -134,11 +148,19 @@ export const buildPersonalizedDigest = async (
       reason: r.reason?.kind,
     })),
     samplingQueue: queue.slice(0, 5).map(q => ({
+      id: q.id,
       perfumeName: q.perfume.name,
+      perfumeSlug: q.perfume.slug,
+      houseName: q.perfume.perfumeHouse?.name ?? null,
       status: q.status,
     })),
     wardrobeHint: `Rotate toward ${season} wear — soft transitions and complementary notes.`,
     collectionGaps,
     savedSearchMatches,
+    staleWishlist: staleWishlistRaw.map(item => ({
+      perfumeName: item.perfumeName,
+      perfumeSlug: item.perfumeSlug,
+      addedAt: item.addedAt,
+    })),
   }
 }

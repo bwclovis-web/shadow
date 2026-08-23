@@ -76,6 +76,16 @@ const CorrespondenceClient = () => {
                           </PrefetchLink>
                         </p>
                       )}
+                      {num === 3 && (
+                        <p className="text-noir-light leading-relaxed text-lg">
+                          <PrefetchLink
+                            href="/privacy"
+                            className="text-noir-gold underline underline-offset-4 hover:text-noir-light"
+                          >
+                            {t("faq.answer3PrivacyLink")}
+                          </PrefetchLink>
+                        </p>
+                      )}
                       {num === 1 && (
                         <div className="flex flex-col sm:flex-row gap-3 mt-4">
                           <Button

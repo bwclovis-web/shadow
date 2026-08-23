@@ -2,6 +2,7 @@ import { type TradeStatus } from "@prisma/client"
 
 import { prisma } from "@/lib/db"
 import { touchUserLastActive } from "@/models/user-activity.server"
+import { areUsersBlocked } from "@/models/user-block.server"
 
 const ACTIVE_TRADE_STATUSES: TradeStatus[] = [
   "draft",
@@ -56,6 +57,10 @@ export async function createContactMessage(input: CreateContactMessageInput) {
 
   if (senderId === recipientId) {
     throw new Error("Cannot send message to yourself")
+  }
+
+  if (await areUsersBlocked(senderId, recipientId)) {
+    throw new Error("Messaging is blocked between these collectors")
   }
 
   // Verify sender exists

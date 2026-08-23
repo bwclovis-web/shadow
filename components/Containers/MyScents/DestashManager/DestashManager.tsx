@@ -56,6 +56,8 @@ interface DestashManagerProps {
   apiBasePath?: string
   /** When on a single-bottle page, pass this bottle's id so new decants use it as source (no dropdown). */
   currentBottleId?: string
+  /** Open the create-listing form on mount (e.g. ?list=1 destash CTA). */
+  autoStartCreate?: boolean
 }
 
 const DestashManager = ({
@@ -64,6 +66,7 @@ const DestashManager = ({
   setUserPerfumes,
   apiBasePath = "/api/user-perfumes",
   currentBottleId,
+  autoStartCreate = false,
 }: DestashManagerProps) => {
   const t = useTranslations("myScents.destashManager")
   const tSplits = useTranslations("decantSplits.wizard")
@@ -71,7 +74,7 @@ const DestashManager = ({
   const tListingErrors = useTranslations("listing.errors")
   const { addToFormData } = useCSRF()
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [isCreating, setIsCreating] = useState(false)
+  const [isCreating, setIsCreating] = useState(autoStartCreate)
   const [resumeTargetId, setResumeTargetId] = useState<string | null>(null)
   const [removeTargetId, setRemoveTargetId] = useState<string | null>(null)
   const [showSplitWizard, setShowSplitWizard] = useState(false)

@@ -9,15 +9,13 @@ import {
   voodoodetailsVariants,
 } from "./voodoodetails-variants"
 
-type VooDooDetailsProps = Omit<
-  HTMLProps<HTMLDetailsElement>,
-  "name"
-> &
+type VooDooDetailsProps = Omit<HTMLProps<HTMLDetailsElement>, "name"> &
   VariantProps<typeof voodoodetailsVariants> &
   VariantProps<typeof voodooDetailsSummaryVariants> & {
     summary?: string
     name?: string
     children?: ReactNode
+    /** Initial open state (native details has no React defaultOpen typing). */
     defaultOpen?: boolean
   }
 
@@ -35,14 +33,20 @@ const VooDooDetails = ({
     voodoodetailsVariants({ type }),
     className
   )
-  const summaryClassName = styleMerge(voodooDetailsSummaryVariants({ type, background }))
+  const summaryClassName = styleMerge(
+    voodooDetailsSummaryVariants({ type, background })
+  )
 
   return (
     <details
       className={detailsClassName}
       data-cy="VooDooDetails"
       data-name={name}
-      open={defaultOpen === true}
+      ref={node => {
+        if (node && defaultOpen) {
+          node.open = true
+        }
+      }}
       {...props}
     >
       <summary className={summaryClassName}>

@@ -30,6 +30,11 @@ const MAP_LINKS = [
     labelKey: "map.policy",
     hintKey: "map.policyHint",
   },
+  {
+    href: "/privacy",
+    labelKey: "map.privacy",
+    hintKey: "map.privacyHint",
+  },
 ] as const
 
 const TOOL_LINKS = [
@@ -147,6 +152,9 @@ const TheCollectorsGuideContent = async () => {
                 </p>
                 <p className="text-noir-light text-lg leading-relaxed">
                   {t("section3.content3")}
+                </p>
+                <p className="text-noir-light text-lg leading-relaxed">
+                  {t("section3.content4")}
                 </p>
               </div>
             </section>

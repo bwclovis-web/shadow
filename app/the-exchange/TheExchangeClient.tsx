@@ -367,6 +367,10 @@ const TheExchangeClient = ({
     hasPhotosLabel: tf("hasPhotosLabel"),
     hasPhotosDescription: tf("hasPhotosDescription"),
     hasPhotosToggle: tf("hasPhotosToggle"),
+    minRepTitle: tf("minRepTitle"),
+    minRepDescription: tf("minRepDescription"),
+    minRepLabel: tf("minRepLabel"),
+    minRepAll: tf("minRepAll"),
     clearAll: tf("clearAll"),
   }
 
@@ -429,6 +433,7 @@ const TheExchangeClient = ({
           return tf(key)
         },
         hasPhotosLabel: tf("hasPhotosChip"),
+        minRepLabel: score => tf("minRepChip", { score }),
       },
     })
   }, [

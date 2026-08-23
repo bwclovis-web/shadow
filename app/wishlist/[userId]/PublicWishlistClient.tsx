@@ -11,6 +11,7 @@ import type { PublicWishlistItem } from "@/models/wishlist.server"
 type PublicWishlistClientProps = {
   traderId: string
   traderName: string
+  traderRegion?: string | null
   items: PublicWishlistItem[]
   bannerImage: string
 }
@@ -18,6 +19,7 @@ type PublicWishlistClientProps = {
 const PublicWishlistClient = ({
   traderId,
   traderName,
+  traderRegion,
   items,
   bannerImage,
 }: PublicWishlistClientProps) => {
@@ -43,6 +45,11 @@ const PublicWishlistClient = ({
     },
   }))
 
+  const regionLabel =
+    traderRegion && traderRegion.trim().length > 0
+      ? t("regionHint", { region: traderRegion.trim() })
+      : t("regionUnknown")
+
   return (
     <section>
       <TitleBanner
@@ -54,6 +61,7 @@ const PublicWishlistClient = ({
           <p className="text-lg font-semibold text-noir-gold-500">
             {t("itemCount", { count: items.length })}
           </p>
+          <p className="text-sm text-noir-gold-100">{regionLabel}</p>
           <CopyShareLinkButton sharePath={`/wishlist/${traderId}`} />
           <Link
             href={`/trader-profile/${traderId}`}

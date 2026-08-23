@@ -61,6 +61,7 @@ export default async function PublicWishlistPage({
     <PublicWishlistClient
       traderId={trader.id}
       traderName={traderName}
+      traderRegion={trader.region}
       items={items}
       bannerImage={BANNER_IMAGE}
     />

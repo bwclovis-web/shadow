@@ -12,6 +12,7 @@ import { getUserInventoryStats } from "@/models/user-inventory-stats.server"
 import { requireEntitlement } from "@/utils/membership/entitlements.server"
 
 export type NeglectedBottle = {
+  userPerfumeId: string
   perfumeId: string
   name: string
   slug: string
@@ -108,6 +109,7 @@ export const getCollectionInsights = async (
         return ownedDays >= NEGLECT_DAYS && !wornPerfumeIds.has(b.perfumeId)
       })
       .map(b => ({
+        userPerfumeId: b.id,
         perfumeId: b.perfumeId,
         name: b.perfume.name,
         slug: b.perfume.slug,

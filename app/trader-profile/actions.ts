@@ -8,6 +8,7 @@ import {
   createUserReport,
   parseReportImagesJson,
 } from "@/models/user-report.server"
+import { blockUser } from "@/models/user-block.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
@@ -56,4 +57,44 @@ export const createUserReportAction = async (
   })
 
   return result
+}
+
+export type BlockUserActionState = {
+  success: boolean
+  message: string
+} | null
+
+export const blockUserAction = async (
+  _prevState: BlockUserActionState,
+  formData: FormData
+): Promise<BlockUserActionState> => {
+  const cookieHeader = await getCookieHeader()
+  const session = await getSessionFromCookieHeader(cookieHeader, {
+    includeUser: true,
+  })
+
+  if (!session?.user) {
+    redirect(`/sign-in?redirect=${encodeURIComponent("/the-exchange")}`)
+  }
+
+  const request = new Request("http://localhost", { method: "POST" })
+  await requireCSRF(request, formData)
+
+  const blockedUserId = formData.get("blockedUserId")
+  if (typeof blockedUserId !== "string" || !blockedUserId) {
+    return { success: false, message: "Invalid request" }
+  }
+
+  try {
+    await blockUser(session.user.id, blockedUserId)
+    return {
+      success: true,
+      message: "Collector blocked. They can no longer message you.",
+    }
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Could not block collector",
+    }
+  }
 }

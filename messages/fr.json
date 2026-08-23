@@ -404,7 +404,8 @@
       "alreadyHere": "Déjà dans le Hollow ?",
       "signIn": "Retour à la connexion",
       "needCheckout": "Une adhesion est requise pour creer un compte. Choisissez une offre pour continuer."
-    }
+    },
+    "privacyLink": "Confidentialité"
   },
   "directMessages": {
     "meta": {
@@ -714,7 +715,9 @@
       "membership": "Adhésion",
       "membershipHint": "Member 5 $, Premium 7 $, Collector 10 $ par an. Parcourir L'Archive reste libre.",
       "policy": "Standards du collectionneur",
-      "policyHint": "Livraison, litiges, et comment nous restons un marché de personnes — pas une boutique."
+      "policyHint": "Livraison, litiges, et comment nous restons un marché de personnes — pas une boutique.",
+      "privacy": "Confidentialité",
+      "privacyHint": "Ce que nous collectons, ce que nous ne vendons pas, et comment votre registre reste le vôtre."
     },
     "section1": {
       "title": "Étape un : allumez la mèche — créez un compte",
@@ -804,7 +807,8 @@
       "question5": "Puis-je noter des parfums sans compte ?",
       "answer5": "Vous pouvez parcourir et chercher sans compte, mais pour noter, commenter, lister des decants ou creer une wishlist, une adhesion payante est necessaire. Les early supporters peuvent conserver l'acces.",
       "question6": "Que faire si je trouve une erreur dans la base ?",
-      "answer6": "Nous apprécions votre vigilance ! Si vous repérez une erreur — faute, information incorrecte ou doublon — signalez-la par e-mail. Nous corrigerons."
+      "answer6": "Nous apprécions votre vigilance ! Si vous repérez une erreur — faute, information incorrecte ou doublon — signalez-la par e-mail. Nous corrigerons.",
+      "answer3PrivacyLink": "Lire la politique de confidentialité"
     },
     "modal": {
       "perfume": {
@@ -917,7 +921,10 @@
       "itemsCount": "{{count}} articles dans votre collection",
       "empty": {
         "heading": "Votre collection est vide.",
-        "subheading": "Ajoutez des parfums à votre collection !"
+        "subheading": "Ajoutez des parfums à votre collection !",
+        "browseArchive": "Parcourir The Archive",
+        "takeQuiz": "Faire le quiz olfactif",
+        "collectorsGuide": "Guide du collectionneur"
       }
     },
     "wishlistDemand": {
@@ -1767,7 +1774,12 @@
       "hasPhotosLabel": "Photos de l'annonce",
       "hasPhotosDescription": "Afficher uniquement les annonces avec photos.",
       "hasPhotosChip": "Avec photos",
-      "hasPhotosToggle": "Annonces avec photos uniquement"
+      "hasPhotosToggle": "Annonces avec photos uniquement",
+      "minRepTitle": "Réputation du trader",
+      "minRepDescription": "Afficher les annonces des collectionneurs à ce score ou plus.",
+      "minRepLabel": "Score minimum",
+      "minRepAll": "Toute réputation",
+      "minRepChip": "Réputation {score}+"
     },
     "wishlistMatches": {
       "title": "Correspondances pour vous",
@@ -1878,7 +1890,8 @@
       "perfumes": "{count, number} parfums",
       "separator": "·",
       "ariaLabel": "{users, number} utilisateurs, {houses, number} maisons, {perfumes, number} parfums"
-    }
+    },
+    "privacy": "Confidentialité"
   },
   "shareLinks": {
     "copyLink": "Copier le lien",
@@ -1919,7 +1932,14 @@
       "declined": "Refusé",
       "cancelled": "Annulé"
     },
-    "communityPolicyLink": "Expédition, litiges et règles communautaires"
+    "communityPolicyLink": "Expédition, litiges et règles communautaires",
+    "confirmPhotos": "Confirmer les photos partagées",
+    "checklistAria": "Liste de contrôle de l'échange",
+    "checklistPhotos": "Photos partagées (si proposées)",
+    "checklistTracking": "Suivi",
+    "checklistTrackingWithNumber": "Suivi : {tracking}",
+    "checklistShipped": "Expédié",
+    "checklistReceived": "Reçu"
   },
   "traderProfile": {
     "meta": {
@@ -2187,7 +2207,9 @@
     },
     "empty": {
       "heading": "Votre liste est vide.",
-      "subheading": "Ajoutez des parfums à votre liste !"
+      "subheading": "Ajoutez des parfums à votre liste !",
+      "browseArchive": "Parcourir The Archive",
+      "collectorsGuide": "Guide du collectionneur"
     },
     "heading": "Ma liste de souhaits",
     "subheading": "Gérez votre liste de parfums.",
@@ -2232,7 +2254,9 @@
       "subheading": "Liste de souhaits publique sur perfumer's hollow",
       "itemCount": "{count, plural, one {# parfum} other {# parfums}}",
       "empty": "Aucun article public pour le moment.",
-      "viewProfile": "Voir le profil du vendeur"
+      "viewProfile": "Voir le profil du vendeur",
+      "regionHint": "Région du collectionneur : {region}",
+      "regionUnknown": "Région non renseignée"
     }
   },
   "validation": {
@@ -2450,7 +2474,12 @@
       "harassment": "Harcèlement",
       "noShip": "N’a pas expédié",
       "other": "Autre"
-    }
+    },
+    "blockHeading": "Ou bloquer ce collectionneur",
+    "blockHint": "Le blocage coupe les messages dans les deux sens. Vous pouvez toujours le signaler.",
+    "block": "Bloquer le collectionneur",
+    "blocking": "Blocage…",
+    "blockSuccess": "Collectionneur bloqué. Il ne peut plus vous écrire."
   },
   "dispute": {
     "button": "Ouvrir un litige",
@@ -2904,7 +2933,8 @@
     "redundancy": "Redondance possible",
     "gaps": "Lacunes de goût sur votre étagère",
     "decantMix": "Mélange décants et flacons",
-    "decantMixCounts": "{full} flacons complets · {decants} décants · {unknown} non marqués"
+    "decantMixCounts": "{full} flacons complets · {decants} décants · {unknown} non marqués",
+    "listOnExchange": "Mettre sur The Exchange"
   },
   "wearSuggestions": {
     "title": "Que porter aujourd’hui ?",
@@ -2934,6 +2964,43 @@
     "houseRadar": "Des maisons que vous suivez",
     "fromHouse": "{house}",
     "palateMatch": "Correspond à votre ADN {family}",
-    "savedSearchMatches": "Correspondances de recherches enregistrées (24 dernières h)"
+    "savedSearchMatches": "Correspondances de recherches enregistrées (24 dernières h)",
+    "emptyTakeQuiz": "Faire le quiz olfactif",
+    "emptyBrowseMyScents": "Ouvrir My Scents",
+    "samplingEmpty": "Rien en file pour l'instant. Ajoutez des flacons depuis les recommandations ou My Scents.",
+    "samplingBrowseArchive": "Parcourir The Archive",
+    "staleWishlist": "Toujours sur votre wishlist",
+    "staleWishlistHint": "Pas de correspondance récente — parcourez The Archive ou The Exchange.",
+    "staleWishlistAdded": "Ajouté le {date}"
+  },
+  "samplingQueue": {
+    "heading": "Essayer ensuite",
+    "empty": "Rien en file. Ajoutez des flacons depuis The Archive ou les retours de recommandation.",
+    "browseArchive": "Parcourir The Archive",
+    "loading": "Chargement de la file à essayer…",
+    "loadError": "Impossible de charger la file d'échantillons.",
+    "updateError": "Impossible de mettre à jour l'élément.",
+    "statusLabel": "Statut",
+    "statusQueued": "En file",
+    "statusSampling": "En essai",
+    "statusCompleted": "Terminé",
+    "statusSkipped": "Ignoré",
+    "remove": "Retirer"
+  },
+  "privacyPage": {
+    "meta": {
+      "title": "Confidentialité",
+      "description": "Comment perfumer's hollow traite vos données de compte. Nous ne vendons jamais d'informations personnelles."
+    },
+    "heading": "Confidentialité",
+    "subheading": "Ce que nous collectons, ce que nous ne vendons pas, et comment votre registre reste le vôtre.",
+    "contactLine": "Contact : pour questions, demandes de données ou signaler une activité suspecte, utilisez Correspondence ou contact@perfumershollow.com.",
+    "offPlatform": {
+      "heading": "Paiements et envois restent hors plateforme",
+      "contentOne": "perfumer's hollow ne traite pas les paiements, ne détient pas de fonds et n'expédie pas de flacons. Les prix sont indicatifs. Les accords se font entre collectionneurs.",
+      "contentTwo": "Nous pouvons stocker les données de compte, d'annonces, de messages et de statut d'échange nécessaires au Hollow. Nous n'avons pas de checkout pour des biens.",
+      "termsPrefix": "Voir aussi nos",
+      "termsLink": "Conditions d'utilisation"
+    }
   }
 }

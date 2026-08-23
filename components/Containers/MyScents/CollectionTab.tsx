@@ -3,8 +3,9 @@
 import { type ChangeEvent } from "react"
 import { useTranslations } from "next-intl"
 
-import { Button } from "@/components/Atoms/Button"
+import { Button, VooDooLink } from "@/components/Atoms/Button"
 import Select from "@/components/Atoms/Select/Select"
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { PaginationBar } from "@/components/Molecules/PaginationBar"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import { CollectionGridItem } from "@/components/Containers/MyScents/CollectionGridItem"
@@ -14,6 +15,7 @@ import { isCollectionItemInReview } from "@/lib/collection-review-status"
 import type { UserInventoryStats } from "@/models/user-inventory-stats.server"
 import type { UserPerfumeForClient } from "@/types/my-scents-client"
 import type { SortOption } from "@/utils/sortUtils"
+import { THE_ARCHIVE_PATH, THE_COLLECTORS_GUIDE_PATH } from "@/constants/routes"
 
 type CollectionTabProps = {
   basePath: string
@@ -155,13 +157,27 @@ const CollectionTab = ({
         </>
       )}
       {bottleEntries.length === 0 ? (
-        <div>
+        <div className="text-center py-8 px-4 bg-noir-gray/80 rounded-md border-2 border-noir-light space-y-4">
           <p className="text-noir-gold-100 text-xl">
             {t("collection.empty.heading")}
           </p>
           <p className="text-noir-gold-500 italic">
             {t("collection.empty.subheading")}
           </p>
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <VooDooLink url={THE_ARCHIVE_PATH} variant="primary" background="gold">
+              {t("collection.empty.browseArchive")}
+            </VooDooLink>
+            <VooDooLink url="/scent-quiz" variant="secondary">
+              {t("collection.empty.takeQuiz")}
+            </VooDooLink>
+            <PrefetchLink
+              href={THE_COLLECTORS_GUIDE_PATH}
+              className="text-sm text-noir-gold underline-offset-4 hover:underline"
+            >
+              {t("collection.empty.collectorsGuide")}
+            </PrefetchLink>
+          </div>
         </div>
       ) : filteredData.length === 0 ? (
         <div className="animate-fade-in">

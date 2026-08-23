@@ -13,7 +13,7 @@ import type { WishlistBottlePreference } from "@/lib/mutations/wishlist"
 
 import { revalidateWishlistPage } from "./actions"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
-import { THE_ARCHIVE_PATH } from "@/constants/routes"
+import { THE_ARCHIVE_PATH, THE_COLLECTORS_GUIDE_PATH } from "@/constants/routes"
 
 /** Shape of a single wishlist item as returned by getUserWishlist (serializable from server). */
 export type WishlistItemForClient = {
@@ -84,15 +84,20 @@ const WishlistPageClient = ({
       </div>
 
       {wishlist.length === 0 ? (
-        <div className="mx-auto flex max-w-max flex-col items-center justify-center gap-4 p-4 text-center">
+        <div className="mx-auto flex max-w-lg flex-col items-center justify-center gap-4 p-4 text-center rounded-md border-2 border-noir-light bg-noir-gray/80 py-8">
           <h2>{t("empty.heading")}</h2>
           <p className="text-xl text-noir-gold-100">{t("empty.subheading")}</p>
-          <VooDooLink
-            url={THE_ARCHIVE_PATH}
-            className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            Browse Perfumes
-          </VooDooLink>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <VooDooLink url={THE_ARCHIVE_PATH} variant="primary" background="gold">
+              {t("empty.browseArchive")}
+            </VooDooLink>
+            <PrefetchLink
+              href={THE_COLLECTORS_GUIDE_PATH}
+              className="text-sm text-noir-gold underline-offset-4 hover:underline"
+            >
+              {t("empty.collectorsGuide")}
+            </PrefetchLink>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">

@@ -4,6 +4,7 @@ import type { SeasonKey } from "@/types/perfume-season-vote"
 import {
   clearDiscoveryHasPhotos,
   clearDiscoveryHouse,
+  clearDiscoveryMinRep,
   clearDiscoveryPerfume,
   clearDiscoveryPrice,
   clearDiscoveryRegion,
@@ -30,6 +31,7 @@ export type ExchangeDiscoveryChipCopy = {
   conditionLabel: (condition: DiscoveryListingCondition) => string
   regionLabel: (region: ExchangeRegionBucket) => string
   hasPhotosLabel: string
+  minRepLabel: (score: number) => string
 }
 
 /**
@@ -154,6 +156,16 @@ export const buildExchangeDiscoveryChipItems = (
       label: copy.hasPhotosLabel,
       removeAriaLabel: copy.removeFilterAria(copy.hasPhotosLabel),
       onRemove: () => apply(clearDiscoveryHasPhotos(filters)),
+    })
+  }
+
+  if (filters.minRep != null) {
+    const label = copy.minRepLabel(filters.minRep)
+    chips.push({
+      id: `min-rep-${filters.minRep}`,
+      label,
+      removeAriaLabel: copy.removeFilterAria(label),
+      onRemove: () => apply(clearDiscoveryMinRep(filters)),
     })
   }
 

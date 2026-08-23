@@ -151,6 +151,16 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
     traderIds.length > 0 ? await loadTraderReputationsForUserIds(traderIds) : new Map()
   const traderReputationByUserId = Object.fromEntries(reputationMap)
 
+  if (discovery.minRep != null) {
+    const min = discovery.minRep
+    availablePerfumes = availablePerfumes.filter(perfume =>
+      perfume.userPerfume.some(up => {
+        const score = traderReputationByUserId[up.userId]?.score
+        return score != null && score >= min
+      })
+    )
+  }
+
   const enrichedWishlistMatches =
     viewerId && wishlistMatches.length > 0
       ? await enrichWishlistExchangeMatches(

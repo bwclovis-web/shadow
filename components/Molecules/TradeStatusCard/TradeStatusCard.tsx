@@ -107,6 +107,25 @@ const TradeStatusCard = ({
             <CopyShareLinkButton sharePath={`/trades/${trade.id}`} />
           </div>
           <TradeStatusTimeline tradeId={trade.id} status={trade.status} className="mt-2" />
+          <ul className="mt-3 space-y-1 text-xs text-noir-gold-100" aria-label={t("checklistAria")}>
+            <li className={trade.dealChecklist.photosConfirmed ? "text-noir-gold" : "opacity-60"}>
+              {trade.dealChecklist.photosConfirmed ? "✓" : "○"} {t("checklistPhotos")}
+            </li>
+            <li className={trade.dealChecklist.trackingNumber ? "text-noir-gold" : "opacity-60"}>
+              {trade.dealChecklist.trackingNumber ? "✓" : "○"}{" "}
+              {trade.dealChecklist.trackingNumber
+                ? t("checklistTrackingWithNumber", {
+                    tracking: trade.dealChecklist.trackingNumber,
+                  })
+                : t("checklistTracking")}
+            </li>
+            <li className={trade.dealChecklist.shipped ? "text-noir-gold" : "opacity-60"}>
+              {trade.dealChecklist.shipped ? "✓" : "○"} {t("checklistShipped")}
+            </li>
+            <li className={trade.dealChecklist.received ? "text-noir-gold" : "opacity-60"}>
+              {trade.dealChecklist.received ? "✓" : "○"} {t("checklistReceived")}
+            </li>
+          </ul>
         </div>
       </div>
 
@@ -173,6 +192,17 @@ const TradeStatusCard = ({
           ) : null}
           {trade.status === "accepted" && (isInitiator || isCounterparty) ? (
             <>
+              {!trade.dealChecklist.photosConfirmed ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  disabled={loading}
+                  onClick={() => runTransition("confirm-photos")}
+                >
+                  {t("confirmPhotos")}
+                </Button>
+              ) : null}
               <FormField label={t("trackingOptional")} className="w-full min-w-[200px]">
                 <input
                   type="text"
