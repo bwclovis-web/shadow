@@ -1,12 +1,12 @@
 const LETTER_PATTERN = /^[A-Za-z]$/
 
-export type LetterPaginatedQueryConfig<TResponse extends { success: boolean }> = {
+export type LetterPaginatedQueryConfig = {
   endpoint: string
   errorLabel: string
 }
 
 export const createLetterPaginatedQuery = <TResponse extends { success: boolean }>(
-  config: LetterPaginatedQueryConfig<TResponse>
+  config: LetterPaginatedQueryConfig
 ) => {
   const { endpoint, errorLabel } = config
 

@@ -1,5 +1,4 @@
 import fs from "node:fs"
-import path from "node:path"
 
 import { test as base, expect, type Page } from "@playwright/test"
 
@@ -47,20 +46,22 @@ export const signInViaUi = async (
 }
 
 export const test = base.extend<AuthFixtures>({
-  freePage: async ({ browser }, use) => {
+  // Playwright's fixture callback is named `provide` (not `use`) so
+  // react-hooks/rules-of-hooks does not treat it as React's `use`.
+  freePage: async ({ browser }, provide) => {
     const context = await browser.newContext({
       storageState: FREE_AUTH_FILE,
     })
     const page = await context.newPage()
-    await use(page)
+    await provide(page)
     await context.close()
   },
-  premiumPage: async ({ browser }, use) => {
+  premiumPage: async ({ browser }, provide) => {
     const context = await browser.newContext({
       storageState: PREMIUM_AUTH_FILE,
     })
     const page = await context.newPage()
-    await use(page)
+    await provide(page)
     await context.close()
   },
 })

@@ -28,7 +28,6 @@ import {
 import { extractNotesForItems, type ScraperPipelineOptions } from "@/lib/scraper/notes-graph"
 import { spawnScraperPythonProcess } from "@/lib/scraper/spawn-scraper-python"
 import type {
-  PerfumeCsvRecord,
   ScrapedItem,
   ScraperRunResponse,
   TitleDashSegment,
