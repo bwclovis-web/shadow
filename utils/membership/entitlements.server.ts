@@ -58,6 +58,17 @@ export const canUserParticipateNow = async (
   return canSignupForFree()
 }
 
+/** Participation check when the user row is already loaded (no extra findUnique). */
+export const requireParticipationForUser = async (
+  user: ParticipationUser | null | undefined
+): Promise<{ ok: true } | { ok: false; reason: "unpaid" | "not_found" }> => {
+  if (!user) return { ok: false, reason: "not_found" }
+  if (!(await canUserParticipateNow(user))) {
+    return { ok: false, reason: "unpaid" }
+  }
+  return { ok: true }
+}
+
 export const requireParticipation = async (
   userId: string
 ): Promise<{ ok: true } | { ok: false; reason: "unpaid" | "not_found" }> => {
@@ -68,11 +79,19 @@ export const requireParticipation = async (
       subscriptionStatus: true,
     },
   })
-  if (!user) return { ok: false, reason: "not_found" }
-  if (!(await canUserParticipateNow(user))) {
-    return { ok: false, reason: "unpaid" }
-  }
-  return { ok: true }
+  return requireParticipationForUser(user)
+}
+
+export const userHasEntitlementForUser = (
+  user: {
+    membershipTier?: MembershipTier | null
+    subscriptionStatus?: string | null
+  } | null | undefined,
+  entitlement: DigitalEntitlement
+): boolean => {
+  if (!user) return false
+  const tier = resolveMembershipTier(user)
+  return entitlementsForTier(tier).includes(entitlement)
 }
 
 export const userHasEntitlement = async (
@@ -86,9 +105,22 @@ export const userHasEntitlement = async (
       subscriptionStatus: true,
     },
   })
-  if (!user) return false
-  const tier = resolveMembershipTier(user)
-  return entitlementsForTier(tier).includes(entitlement)
+  return userHasEntitlementForUser(user, entitlement)
+}
+
+/** Entitlement check when membership fields are already loaded (no DB). */
+export const requireEntitlementForUser = (
+  user: {
+    membershipTier?: MembershipTier | null
+    subscriptionStatus?: string | null
+  } | null | undefined,
+  entitlement: DigitalEntitlement
+): { ok: true; tier: MembershipTier } | { ok: false; tier: MembershipTier } => {
+  const tier = resolveMembershipTier(user ?? { membershipTier: "free" })
+  if (!entitlementsForTier(tier).includes(entitlement)) {
+    return { ok: false, tier }
+  }
+  return { ok: true, tier }
 }
 
 export const requireEntitlement = async (
@@ -99,11 +131,7 @@ export const requireEntitlement = async (
     where: { id: userId },
     select: { membershipTier: true, subscriptionStatus: true },
   })
-  const tier = resolveMembershipTier(user ?? { membershipTier: "free" })
-  if (!entitlementsForTier(tier).includes(entitlement)) {
-    return { ok: false, tier }
-  }
-  return { ok: true, tier }
+  return requireEntitlementForUser(user, entitlement)
 }
 
 export const syncMembershipTierFromSubscription = async (params: {

@@ -1,12 +1,15 @@
 import { prisma } from "@/lib/db"
-import type { Prisma } from "@prisma/client"
+import type { MembershipTier, Prisma } from "@prisma/client"
 import {
   isSavedSearchSnoozed,
   notifySavedSearchMatch,
   type SavedSearchQuery,
 } from "@/models/saved-search.server"
 import { getUserAlertPreferences } from "@/models/user-alerts.server"
-import { requireEntitlement } from "@/utils/membership/entitlements.server"
+import {
+  entitlementsForTier,
+  resolveMembershipTier,
+} from "@/utils/membership/entitlements.server"
 import { isFeatureEnabled } from "@/utils/feature-flags"
 
 const LOOKBACK_MS = 24 * 60 * 60 * 1000
@@ -20,6 +23,14 @@ const textIncludes = (haystack: string | null | undefined, needle: string | unde
   if (!needle?.trim()) return true
   if (!haystack) return false
   return haystack.toLowerCase().includes(needle.trim().toLowerCase())
+}
+
+const userMayRunSavedSearchAlerts = (tier: MembershipTier): boolean => {
+  const entitlements = entitlementsForTier(tier)
+  return (
+    entitlements.includes("instant_alerts") ||
+    entitlements.includes("saved_searches")
+  )
 }
 
 /**
@@ -46,6 +57,22 @@ export const runSavedSearchMatchPass = async (): Promise<{
     },
   })
 
+  const userIds = [...new Set(searches.map(s => s.userId))]
+  const membershipRows =
+    userIds.length === 0
+      ? []
+      : await prisma.user.findMany({
+          where: { id: { in: userIds } },
+          select: {
+            id: true,
+            membershipTier: true,
+            subscriptionStatus: true,
+          },
+        })
+  const tierByUserId = new Map<string, MembershipTier>(
+    membershipRows.map(row => [row.id, resolveMembershipTier(row)])
+  )
+
   let notified = 0
   const now = Date.now()
   const preferencesCache = new Map<
@@ -66,10 +93,9 @@ export const runSavedSearchMatchPass = async (): Promise<{
       continue
     }
 
-    const entitlement = await requireEntitlement(search.userId, "instant_alerts")
-    if (!entitlement.ok) {
-      const saved = await requireEntitlement(search.userId, "saved_searches")
-      if (!saved.ok) continue
+    const tier = tierByUserId.get(search.userId) ?? "free"
+    if (!userMayRunSavedSearchAlerts(tier)) {
+      continue
     }
 
     const preferences = await getPreferences(search.userId)

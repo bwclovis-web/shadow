@@ -49,9 +49,16 @@ export const createRefreshToken = (userId: string, tokenVersion: number): string
   )
 }
 
-export const verifyAccessToken = async (
-  token: string
-): Promise<{ userId: string } | null> => {
+export type AccessTokenClaims = {
+  userId: string
+  tokenVersion: number
+}
+
+/**
+ * JWT-verify an access token without a DB round-trip.
+ * Callers that load the user anyway should compare `tokenVersion` against the user row.
+ */
+export const decodeAccessToken = (token: string): AccessTokenClaims | null => {
   try {
     const payload = jwt.verify(token, JWT_SECRET) as {
       userId?: string
@@ -61,19 +68,31 @@ export const verifyAccessToken = async (
     if (payload.type !== "access" || !payload.userId) {
       return null
     }
-    const payloadVersion =
-      typeof payload.tokenVersion === "number" ? payload.tokenVersion : undefined
-    if (payloadVersion === undefined) {
+    if (typeof payload.tokenVersion !== "number") {
       return null
     }
-    const currentVersion = await getUserTokenVersion(payload.userId)
+    return { userId: payload.userId, tokenVersion: payload.tokenVersion }
+  } catch {
+    return null
+  }
+}
+
+export const verifyAccessToken = async (
+  token: string
+): Promise<{ userId: string } | null> => {
+  try {
+    const claims = decodeAccessToken(token)
+    if (!claims) {
+      return null
+    }
+    const currentVersion = await getUserTokenVersion(claims.userId)
     if (currentVersion === null) {
       return null
     }
-    if (payloadVersion < currentVersion) {
+    if (claims.tokenVersion < currentVersion) {
       return null
     }
-    return { userId: payload.userId }
+    return { userId: claims.userId }
   } catch {
     return null
   }

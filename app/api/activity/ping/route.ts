@@ -18,7 +18,10 @@ export const POST = async (request: NextRequest) => {
 
     await requireCSRF(request)
 
-    await touchUserLastActive(authResult.user.id)
+    await touchUserLastActive(
+      authResult.user.id,
+      authResult.user.lastActiveAt ?? null
+    )
 
     return NextResponse.json({ success: true })
   } catch (error) {

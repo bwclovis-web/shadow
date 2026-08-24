@@ -12,7 +12,18 @@ import {
 
 /** Sections after note lists — not valid note sources. */
 const NOTE_REGION_END_RE =
-  /\b(?:when\s+to\s+wear|how\s+it\s+wears|how\s+to\s+use|scent\s+strength|return\s+policy|customer\s+reviews?|ingredients|available\s+sizes?|processing(?:\s*[:•|])|important\s+(?:order\s+)?policy|disclaimer|the\s+vibe|i\s+was\s+told|making\s+a\s+dupe|please\s+text|sizes?\s+\d+\s*ml|hand-blended|hand\s+filled|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|gentle\s+projection|extrait\s+de\s+parfum\s+strength|main\s+accords?)\b/i
+  /\b(?:when\s+to\s+wear|how\s+it\s+wears|how\s+to\s+use|scent\s+strength|return\s+policy|customer\s+reviews?|ingredients|available\s+sizes?|processing(?:\s*[:•|])|important\s+(?:order\s+)?policy|disclaimer|the\s+vibe|mood\b|materials\s+of\s+note|international(?:\s+orders)?|please\s+note|i\s+was\s+told|making\s+a\s+dupe|please\s+text|sizes?\s+\d+\s*ml|hand-blended|hand\s+filled|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|gentle\s+projection|extrait\s+de\s+parfum\s+strength|main\s+accords?)\b/i
+
+/**
+ * True when a `notes?:` match is a false list label (Materials of Note, Please Note).
+ * `matchIndex` is the start of the regex match, which may include a leading separator.
+ */
+export const isFalseNotesListLabel = (source: string, matchIndex: number): boolean => {
+  const window = source.slice(Math.max(0, matchIndex - 40), matchIndex + 28)
+  return /(?:materials\s+of|please|important|allergen)\s+(?:fragrance\s+|scent\s+)?notes?\s*[:\-]/i.test(
+    window,
+  )
+}
 
 /** Marketing / ops copy that may appear before note blocks. */
 const PRE_NOTE_BOILERPLATE_END_RE =
@@ -136,6 +147,18 @@ export const extractUnlabeledFragranceNotesBlock = (text: string): string[] => {
   const block = (endMatch ? afterHeader.slice(0, endMatch.index) : afterHeader).trim()
   if (!block) return []
 
+  // Keskiyön Hovi / indie Shopify: one bullet or middle-dot list under the heading.
+  // Skip Andromeda-style "Material / descriptor" lines that also happen to contain • in accords.
+  if (/[•·]/.test(block) && !/\//.test(block)) {
+    const fromBullets = block
+      .split(/[•·]/)
+      .map(part => canonicalizeNote(part.replace(/\s+/g, " ").trim()))
+      .filter(part => part.length >= 2 && part.length <= 80)
+    if (fromBullets.length >= 2) {
+      return [...new Set(fromBullets)]
+    }
+  }
+
   const found: string[] = []
   for (const line of splitFragranceNotesBlockLines(block)) {
     found.push(...parseMaterialFromFragranceNoteLine(line))
@@ -170,7 +193,9 @@ export const buildNoteConfirmationCorpus = (source: string): string => {
     re.lastIndex = 0
     let m: RegExpExecArray | null
     while ((m = re.exec(raw)) !== null) {
-      if (m[1]?.trim()) parts.push(m[1])
+      if (!m[1]?.trim()) continue
+      if (isFalseNotesListLabel(raw, m.index ?? 0)) continue
+      parts.push(m[1])
     }
   }
 
@@ -178,7 +203,7 @@ export const buildNoteConfirmationCorpus = (source: string): string => {
   parts.push(...extractUnlabeledFragranceNotesBlock(raw))
 
   const blockMatch = raw.match(
-    /\b(?:fragrance\s+notes?|scent\s+notes?|note\s+structure)\b([\s\S]*?)(?=\n\s*(?:when\s+to\s+wear|main\s+accords?|available\s+sizes?|how\s+it\s+wears|processing|disclaimer|important|shipping)|$)/i,
+    /\b(?:fragrance\s+notes?|scent\s+notes?|note\s+structure)\b([\s\S]*?)(?=\n\s*(?:when\s+to\s+wear|main\s+accords?|available\s+sizes?|how\s+it\s+wears|processing|disclaimer|important|shipping|mood|the\s+vibe|materials\s+of\s+note)|$)/i,
   )
   if (blockMatch?.[1]?.trim()) parts.push(blockMatch[1])
 
@@ -414,6 +439,7 @@ export const sanitizeExtractedNoteCandidate = (note: string): string | null => {
       .replace(/\)+$/g, "")
       .replace(/^\(+/g, "")
       .replace(/^[.,;:!?"'`]+/g, "")
+      .replace(/\s*\(\s*not\s+vegan\s*\)\s*/gi, " ")
       .trim(),
   )
   if (!raw) return null
@@ -512,6 +538,9 @@ export const isComplianceOrSourcingNote = (note: string): boolean => {
   if (/^(?:alcohol(?:\s*\(?\s*denat\.?\s*\)?)?|ethyl\s+alcohol|denat\.?)$/i.test(n)) return true
   if (/^(?:water(?:\s*\(?\s*aqua\s*\)?)?|aqua)$/i.test(n)) return true
   if (/^(?:fragrance(?:\s*\(?\s*parfum\s*\)?)?|\(?\s*parfum\s*\)?|parfum)$/i.test(n)) return true
+  if (/^(?:isopropyl\s+myristate|ipm)$/i.test(n)) return true
+  if (/^(?:not\s+vegan|non-vegan)$/i.test(n)) return true
+  if (/\bisopropyl\s+myristate\b/.test(n) || /\bnot\s+vegan\b/.test(n)) return true
   return false
 }
 
@@ -544,6 +573,7 @@ export const isObviousNonMaterialNote = (note: string): boolean => {
     .toLowerCase()
     .replace(/[.,;:!?"'`]+$/g, "")
   if (!n) return true
+  if (/^(?:nostalgic|dreamy|enchanting)$/i.test(n)) return true
   if (/^https?:\/\//i.test(n) || /https?:\/\//i.test(n)) return true
   if (isThemeCssTokenNote(n)) return true
   if (isComplianceOrSourcingNote(n)) return true

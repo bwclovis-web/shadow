@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const notifySavedSearchMatchMock = vi.fn()
 const getUserAlertPreferencesMock = vi.fn()
-const requireEntitlementMock = vi.fn()
 const prismaSavedSearchFindManyMock = vi.fn()
+const prismaUserFindManyMock = vi.fn()
 const prismaUserPerfumeFindManyMock = vi.fn()
 const prismaPerfumeFindManyMock = vi.fn()
 
@@ -21,10 +21,6 @@ vi.mock("@/models/user-alerts.server", () => ({
     getUserAlertPreferencesMock(...args),
 }))
 
-vi.mock("@/utils/membership/entitlements.server", () => ({
-  requireEntitlement: (...args: unknown[]) => requireEntitlementMock(...args),
-}))
-
 vi.mock("@/utils/feature-flags", () => ({
   isFeatureEnabled: () => true,
 }))
@@ -33,6 +29,9 @@ vi.mock("@/lib/db", () => ({
   prisma: {
     savedSearch: {
       findMany: (...args: unknown[]) => prismaSavedSearchFindManyMock(...args),
+    },
+    user: {
+      findMany: (...args: unknown[]) => prismaUserFindManyMock(...args),
     },
     userPerfume: {
       findMany: (...args: unknown[]) => prismaUserPerfumeFindManyMock(...args),
@@ -48,7 +47,13 @@ import { runSavedSearchMatchPass } from "./saved-search-matcher.server"
 describe("runSavedSearchMatchPass", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    requireEntitlementMock.mockResolvedValue({ ok: true })
+    prismaUserFindManyMock.mockResolvedValue([
+      {
+        id: "user-1",
+        membershipTier: "premium",
+        subscriptionStatus: "paid",
+      },
+    ])
     getUserAlertPreferencesMock.mockResolvedValue({
       savedSearchAlertsEnabled: true,
       savedSearchAlertFrequency: "instant",
@@ -99,6 +104,33 @@ describe("runSavedSearchMatchPass", () => {
     expect(notifySavedSearchMatchMock).not.toHaveBeenCalled()
   })
 
+  it("skips free-tier users without per-search entitlement queries", async () => {
+    prismaSavedSearchFindManyMock.mockResolvedValue([
+      {
+        id: "search-1",
+        userId: "user-1",
+        name: "Oud",
+        query: { alertOnNewListing: true },
+        lastMatchedAt: null,
+        snoozedUntil: null,
+      },
+    ])
+    prismaUserFindManyMock.mockResolvedValue([
+      {
+        id: "user-1",
+        membershipTier: "free",
+        subscriptionStatus: "paid",
+      },
+    ])
+
+    const result = await runSavedSearchMatchPass()
+
+    expect(result.notified).toBe(0)
+    expect(prismaUserFindManyMock).toHaveBeenCalledTimes(1)
+    expect(getUserAlertPreferencesMock).not.toHaveBeenCalled()
+    expect(notifySavedSearchMatchMock).not.toHaveBeenCalled()
+  })
+
   it("passes daily delivery to notifySavedSearchMatch", async () => {
     prismaSavedSearchFindManyMock.mockResolvedValue([
       {
@@ -130,6 +162,7 @@ describe("runSavedSearchMatchPass", () => {
     const result = await runSavedSearchMatchPass()
 
     expect(result.notified).toBe(1)
+    expect(prismaUserFindManyMock).toHaveBeenCalledTimes(1)
     expect(notifySavedSearchMatchMock).toHaveBeenCalledWith(
       expect.objectContaining({
         delivery: "daily",

@@ -27,7 +27,7 @@ describe("POST /api/activity/ping", () => {
     vi.clearAllMocks()
     authenticateUserMock.mockResolvedValue({
       success: true,
-      user: { id: "user-1" },
+      user: { id: "user-1", lastActiveAt: null },
     })
     requireCSRFMock.mockResolvedValue(undefined)
     touchUserLastActiveMock.mockResolvedValue(undefined)
@@ -43,7 +43,7 @@ describe("POST /api/activity/ping", () => {
 
     expect(response.status).toBe(200)
     expect(requireCSRFMock).toHaveBeenCalled()
-    expect(touchUserLastActiveMock).toHaveBeenCalledWith("user-1")
+    expect(touchUserLastActiveMock).toHaveBeenCalledWith("user-1", null)
   })
 
   it("returns 403 when CSRF validation fails", async () => {

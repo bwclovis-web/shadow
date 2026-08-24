@@ -7,7 +7,7 @@ import { isTwoFactorEnabled } from "@/models/two-factor.server"
 import { updateUser } from "@/models/user.query"
 import { touchUserLastActive } from "@/models/user-activity.server"
 import { signInCustomer } from "@/models/user.server"
-import { requireParticipation } from "@/utils/membership/entitlements.server"
+import { requireParticipationForUser } from "@/utils/membership/entitlements.server"
 import { validateRateLimit } from "@/utils/api-validation.server"
 import { getAuthRateLimits } from "@/utils/rate-limit-config.server"
 import { setSessionCookies } from "@/utils/security/auth-session-cookies.server"
@@ -150,7 +150,7 @@ export const signInAction = async (
     await setSessionCookies(accessToken, refreshToken)
     await touchUserLastActive(user.id)
 
-    const participation = await requireParticipation(user.id)
+    const participation = await requireParticipationForUser(user)
     if (!participation.ok) {
       redirect(
         `/subscribe?tier=member&redirect=${encodeURIComponent(getProfilePathForUser(user))}`

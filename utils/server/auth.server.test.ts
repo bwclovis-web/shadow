@@ -9,9 +9,10 @@ vi.mock("@/utils/session-from-request.server", () => ({
     mockGetSessionFromRequest(...args),
 }))
 
-const mockRequireParticipation = vi.fn()
+const mockRequireParticipationForUser = vi.fn()
 vi.mock("@/utils/membership/entitlements.server", () => ({
-  requireParticipation: (...args: unknown[]) => mockRequireParticipation(...args),
+  requireParticipationForUser: (...args: unknown[]) =>
+    mockRequireParticipationForUser(...args),
 }))
 
 let authenticateUser: (
@@ -21,10 +22,23 @@ let authenticateUser: (
 
 beforeEach(async () => {
   vi.clearAllMocks()
-  mockRequireParticipation.mockResolvedValue({ ok: true })
+  mockRequireParticipationForUser.mockResolvedValue({ ok: true })
   const mod = await import("./auth.server")
   authenticateUser = mod.authenticateUser
 })
+
+const baseSessionUser = {
+  id: "user-123",
+  email: "test@example.com",
+  firstName: "Test",
+  lastName: "User",
+  username: "testuser",
+  role: "user" as UserRole,
+  subscriptionStatus: "paid" as const,
+  membershipTier: "free" as const,
+  isEarlyAdopter: false,
+  lastActiveAt: null,
+}
 
 describe("authenticateUser", () => {
   it("returns 401 when session is null", async () => {
@@ -50,40 +64,40 @@ describe("authenticateUser", () => {
   })
 
   it("returns success and user when session has user and participation ok", async () => {
-    const sessionUser: AuthUser = {
-      id: "user-123",
-      email: "test@example.com",
-      firstName: "Test",
-      lastName: "User",
-      username: "testuser",
-      role: "user" as UserRole,
-    }
     mockGetSessionFromRequest.mockResolvedValue({
-      userId: sessionUser.id,
-      user: sessionUser,
+      userId: baseSessionUser.id,
+      user: baseSessionUser,
     })
 
     const result = await authenticateUser(new Request("http://test"))
 
     expect(result.success).toBe(true)
-    expect(result.user).toEqual(sessionUser)
-    expect(mockRequireParticipation).toHaveBeenCalledWith("user-123")
-  })
-
-  it("returns 403 subscription_required when participation fails", async () => {
-    const sessionUser: AuthUser = {
+    expect(result.user).toEqual({
       id: "user-123",
       email: "test@example.com",
       firstName: "Test",
       lastName: "User",
       username: "testuser",
-      role: "user" as UserRole,
-    }
-    mockGetSessionFromRequest.mockResolvedValue({
-      userId: sessionUser.id,
-      user: sessionUser,
+      role: "user",
+      lastActiveAt: null,
+      membershipTier: "free",
+      subscriptionStatus: "paid",
+    } satisfies AuthUser)
+    expect(mockRequireParticipationForUser).toHaveBeenCalledWith({
+      isEarlyAdopter: false,
+      subscriptionStatus: "paid",
     })
-    mockRequireParticipation.mockResolvedValue({ ok: false, reason: "unpaid" })
+  })
+
+  it("returns 403 subscription_required when participation fails", async () => {
+    mockGetSessionFromRequest.mockResolvedValue({
+      userId: baseSessionUser.id,
+      user: { ...baseSessionUser, subscriptionStatus: "free" },
+    })
+    mockRequireParticipationForUser.mockResolvedValue({
+      ok: false,
+      reason: "unpaid",
+    })
 
     const result = await authenticateUser(new Request("http://test"))
 
@@ -93,17 +107,13 @@ describe("authenticateUser", () => {
   })
 
   it("skips participation check when requireParticipation is false", async () => {
-    const sessionUser: AuthUser = {
-      id: "user-123",
-      email: "test@example.com",
-      firstName: null,
-      lastName: null,
-      username: "testuser",
-      role: "user" as UserRole,
-    }
     mockGetSessionFromRequest.mockResolvedValue({
-      userId: sessionUser.id,
-      user: sessionUser,
+      userId: baseSessionUser.id,
+      user: {
+        ...baseSessionUser,
+        firstName: null,
+        lastName: null,
+      },
     })
 
     const result = await authenticateUser(new Request("http://test"), {
@@ -111,7 +121,7 @@ describe("authenticateUser", () => {
     })
 
     expect(result.success).toBe(true)
-    expect(mockRequireParticipation).not.toHaveBeenCalled()
+    expect(mockRequireParticipationForUser).not.toHaveBeenCalled()
   })
 
   it("returns 500 when getSessionFromRequest throws", async () => {

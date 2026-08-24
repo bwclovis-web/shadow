@@ -24,7 +24,7 @@ export const useUserAlerts = ({
   initialUnreadCount = 0,
   initialTradeUnreadCount = 0,
   initialDirectMessageUnreadCount = 0,
-  pollIntervalMs = 30_000,
+  pollIntervalMs = 90_000,
   disabled = false,
 }: UseUserAlertsOptions) => {
   const [alerts, setAlerts] = useState<UserAlert[]>(initialAlerts)
@@ -53,27 +53,22 @@ export const useUserAlerts = ({
   const refresh = useCallback(async () => {
     if (!userId) return
     try {
-      const [alertsResponse, messagesResponse] = await Promise.all([
-        fetch(`/api/user-alerts/${userId}`, {
-          headers: addToHeadersRef.current(),
-          cache: "no-store",
-          credentials: "include",
-        }),
-        fetch("/api/messages?unreadCountOnly=1", {
-          cache: "no-store",
-          credentials: "include",
-        }),
-      ])
-      if (alertsResponse.ok) {
-        const data = await alertsResponse.json()
-        setAlerts(data.alerts ?? [])
-        setUnreadCount(data.unreadCount ?? 0)
-        setTradeUnreadCount(data.tradeUnreadCount ?? 0)
-      }
-      if (messagesResponse.ok) {
-        const data: { unreadCount?: number } = await messagesResponse.json()
-        setDirectMessageUnreadCount(data.unreadCount ?? 0)
-      }
+      const response = await fetch("/api/nav-bootstrap", {
+        headers: addToHeadersRef.current(),
+        cache: "no-store",
+        credentials: "include",
+      })
+      if (!response.ok) return
+      const data: {
+        alerts?: UserAlert[]
+        unreadCount?: number
+        tradeUnreadCount?: number
+        directMessageUnreadCount?: number
+      } = await response.json()
+      setAlerts(data.alerts ?? [])
+      setUnreadCount(data.unreadCount ?? 0)
+      setTradeUnreadCount(data.tradeUnreadCount ?? 0)
+      setDirectMessageUnreadCount(data.directMessageUnreadCount ?? 0)
     } catch (error) {
       console.error("Failed to fetch unread counts:", error)
     }

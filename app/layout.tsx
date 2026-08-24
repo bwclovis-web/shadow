@@ -15,8 +15,6 @@ import MobileBottomNavigation from '@/components/Molecules/MobileBottomNavigatio
 import { ActivityPing } from '@/components/Molecules/ActivityPing'
 import ServiceWorkerRegistration from '@/components/Containers/ServiceWorkerRegistration'
 import { getNewListingsThisWeekCount } from '@/models/activity-feed.server'
-import { getUnreadDirectMessageCount } from '@/models/contactMessage.server'
-import { getUnreadAlertCount, getUnreadTradeAlertCount, getUserAlerts } from '@/models/user-alerts.server'
 import { ExchangeNewListingsBadgeProvider } from '@/components/Molecules/ExchangeNewListingsBadge/ExchangeNewListingsBadgeProvider'
 import { UserAlertsProvider } from '@/components/Molecules/UserAlertsProvider/UserAlertsProvider'
 import SiteFooter from '@/components/Organisms/SiteFooter/SiteFooter'
@@ -79,34 +77,11 @@ export default async function RootLayout({
   const locale = await getLocale()
   const messages = await getMessages()
 
-  let directMessageUnreadInitial = 0
-  let initialAlerts: Awaited<ReturnType<typeof getUserAlerts>> = []
-  let initialAlertUnreadCount = 0
-  let initialTradeAlertUnreadCount = 0
   let exchangeNewThisWeekCount = 0
   try {
     exchangeNewThisWeekCount = await getNewListingsThisWeekCount()
   } catch (error) {
     console.error("Failed to load exchange new listings count:", error)
-  }
-  if (user?.id) {
-    try {
-      directMessageUnreadInitial = await getUnreadDirectMessageCount(user.id)
-    } catch (error) {
-      console.error("Failed to load unread message count:", error)
-    }
-    try {
-      const [alerts, unreadCount, tradeUnreadCount] = await Promise.all([
-        getUserAlerts(user.id, 10),
-        getUnreadAlertCount(user.id),
-        getUnreadTradeAlertCount(user.id),
-      ])
-      initialAlerts = alerts ?? []
-      initialAlertUnreadCount = unreadCount ?? 0
-      initialTradeAlertUnreadCount = tradeUnreadCount ?? 0
-    } catch (error) {
-      console.error("Failed to load user alerts:", error)
-    }
   }
 
   return (
@@ -126,13 +101,7 @@ export default async function RootLayout({
         />
         <ViewTransitionsWrapper>
           <NextIntlClientProvider locale={locale} messages={messages}>
-            <UserAlertsProvider
-              userId={user?.id}
-              initialAlerts={initialAlerts}
-              initialUnreadCount={initialAlertUnreadCount}
-              initialTradeUnreadCount={initialTradeAlertUnreadCount}
-              initialDirectMessageUnreadCount={directMessageUnreadInitial}
-            >
+            <UserAlertsProvider userId={user?.id}>
               <ExchangeNewListingsBadgeProvider
                 initialCount={exchangeNewThisWeekCount}
               >

@@ -1,4 +1,5 @@
 import { TradeStatus } from "@prisma/client"
+import { unstable_cache } from "next/cache"
 
 import { prisma } from "@/lib/db"
 import { getPublishedArticlesWithRefs } from "@/lib/sanity/articles.server"
@@ -8,6 +9,7 @@ import { getFollowedIdsForViewer } from "@/models/user-follow.server"
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 const DAYS_IN_WEEK = 7
 const FOLLOWED_ACTIVITY_WINDOW_DAYS = 30
+const NEW_LISTINGS_WEEK_REVALIDATE_SECONDS = 120
 
 const activityFeedListingSelect = {
   id: true,
@@ -78,10 +80,16 @@ export const getNewListingsSinceCount = async (since: Date): Promise<number> =>
     },
   })
 
-export const getNewListingsThisWeekCount = async (): Promise<number> => {
+const fetchNewListingsThisWeekCount = async (): Promise<number> => {
   const weekAgo = new Date(Date.now() - DAYS_IN_WEEK * MS_PER_DAY)
   return getNewListingsSinceCount(weekAgo)
 }
+
+export const getNewListingsThisWeekCount = (): Promise<number> =>
+  unstable_cache(fetchNewListingsThisWeekCount, ["exchange-new-listings-week"], {
+    revalidate: NEW_LISTINGS_WEEK_REVALIDATE_SECONDS,
+    tags: ["exchange-new-week"],
+  })()
 
 export type FollowedActivityTrader = {
   id: string

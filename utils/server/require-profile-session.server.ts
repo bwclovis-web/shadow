@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 
-import { requireParticipation } from "@/utils/membership/entitlements.server"
+import { requireParticipationForUser } from "@/utils/membership/entitlements.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import type { SessionFromRequest, SessionUser } from "@/utils/session-from-request.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
@@ -44,7 +44,7 @@ export const requireOwnedProfileSession = async (
     redirect(buildProfileRedirect(slug, options.subPath))
   }
 
-  const participation = await requireParticipation(session.user.id)
+  const participation = await requireParticipationForUser(session.user)
   if (!participation.ok) {
     redirect(subscribeRedirectForPath(slug, options.subPath))
   }

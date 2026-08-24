@@ -9,7 +9,7 @@ import {
   clearSavedSearchSnooze,
   type SavedSearchQuery,
 } from "@/models/saved-search.server"
-import { requireEntitlement } from "@/utils/membership/entitlements.server"
+import { requireEntitlementForUser } from "@/utils/membership/entitlements.server"
 import { authenticateUser } from "@/utils/server/auth.server"
 import { CSRFError, requireCSRFForJsonBody } from "@/utils/server/csrf.server"
 import { isFeatureEnabled } from "@/utils/feature-flags"
@@ -22,7 +22,7 @@ export const GET = async (request: NextRequest) => {
   if (!auth.success) {
     return NextResponse.json({ error: auth.error }, { status: auth.status ?? 401 })
   }
-  const entitlement = await requireEntitlement(auth.user!.id, "saved_searches")
+  const entitlement = requireEntitlementForUser(auth.user, "saved_searches")
   if (!entitlement.ok) {
     return NextResponse.json(
       {
@@ -46,7 +46,7 @@ export const POST = async (request: NextRequest) => {
     if (!auth.success) {
       return NextResponse.json({ error: auth.error }, { status: auth.status ?? 401 })
     }
-    const entitlement = await requireEntitlement(auth.user!.id, "saved_searches")
+    const entitlement = requireEntitlementForUser(auth.user, "saved_searches")
     if (!entitlement.ok) {
       return NextResponse.json(
         {

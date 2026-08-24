@@ -1,9 +1,15 @@
+import path from "node:path"
 import type { NextConfig } from "next"
 import createNextIntlPlugin from "next-intl/plugin"
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts")
 
 const nextConfig: NextConfig = {
+  // Sibling repos under C:\repos can make Turbopack infer the wrong workspace
+  // root, so CSS @import "tailwindcss" resolves in the parent folder.
+  turbopack: {
+    root: path.join(__dirname),
+  },
   transpilePackages: ["next-sanity"],
   serverExternalPackages: ["@prisma/client", "prisma"],
   experimental: {

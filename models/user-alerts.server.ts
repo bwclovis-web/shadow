@@ -269,6 +269,32 @@ export const getUnreadTradeAlertCount = async (userId: string): Promise<number> 
     },
   })
 
+/** Single groupBy for total unread + trade unread badge counts. */
+export const getUnreadAlertCounts = async (
+  userId: string
+): Promise<{ unreadCount: number; tradeUnreadCount: number }> => {
+  const groups = await prisma.userAlert.groupBy({
+    by: ["alertType"],
+    where: {
+      userId,
+      isRead: false,
+      isDismissed: false,
+    },
+    _count: { _all: true },
+  })
+  const tradeTypes = new Set<string>(TRADE_ALERT_TYPES)
+  let unreadCount = 0
+  let tradeUnreadCount = 0
+  for (const row of groups) {
+    const n = row._count._all
+    unreadCount += n
+    if (tradeTypes.has(row.alertType)) {
+      tradeUnreadCount += n
+    }
+  }
+  return { unreadCount, tradeUnreadCount }
+}
+
 export const dispatchPushForUserAlert = (options: {
   userId: string
   alertType: AlertType

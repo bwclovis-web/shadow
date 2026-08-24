@@ -1,6 +1,7 @@
 import type { ScrapedItem } from "@/types/scraper"
 import {
   extractUnlabeledFragranceNotesBlock,
+  isFalseNotesListLabel,
   sanitizeExtractedNoteCandidate,
 } from "@/lib/scraper/note-source-confirmation"
 import {
@@ -185,9 +186,9 @@ const hasExplicitNoteListSignal = (text: string): boolean => {
   if (/\*{0,2}(?:top|heart|middle|mid|base|opening|dry[\s-]*down)\*{0,2}\s*(?:notes?)?\s*:/i.test(t))
     return true
   if (/\bfragrance\s+notes?\b(?!\s*(?:include|are|is|:))/i.test(t)) return true
-  if (/(?<!(?:please|processing)\s)\bnotes?\s*:\s*[a-z0-9]/i.test(t)) return true
+  if (/(?<!(?:please|processing|important|materials\s+of)\s)\bnotes?\s*:\s*[a-z0-9]/i.test(t)) return true
   // AOE / Wix: "NOTES - BLACKBERRY, HONEY MEAD, …"
-  if (/(?<!(?:please|processing)\s)\bnotes?\s*[-–—]\s*[A-Za-z0-9]/i.test(t)) return true
+  if (/(?<!(?:please|processing|important|materials\s+of)\s)\bnotes?\s*[-–—]\s*[A-Za-z0-9]/i.test(t)) return true
   if (/\b(?:kopfnoten?|herznoten?|basisnoten?|duftnoten)\s*:/i.test(t)) return true
   if (/\bnote\s+di\s+(?:testa|cuore|fondo|olfattive)\s*:/i.test(t)) return true
   if (/\b(?:topnoten?|hartnoten?|basisnoten?)\s*:/i.test(t)) return true
@@ -1055,11 +1056,30 @@ const extractAndromedaBulletPyramidFromPlain = (plain: string): string[] => {
   return segments
 }
 
+/** Insert a space so `Cold RainHeart:` / `MuskInternational Orders:` can be parsed. */
+const unglueIndieShopifySectionLabels = (s: string): string =>
+  s.replace(
+    /([a-z])((?:Top|Heart|Base|The\s+Vibe|Mood|Materials\s+of\s+Note|International(?:\s+Orders)?|Please\s+Note|Ingredients)\s*:)/g,
+    "$1 $2",
+  )
+
+const SHOPIFY_INDIE_NOTE_LIST_STOP_RE =
+  /\s+(?:Mood\b|The\s+Vibe|The\s+Mood|Materials\s+of\s+Note|Ingredients?\b|INGREDIENTS\b|International(?:\s+Orders)?|Please\s+Note|Main\s+Accords?|When\s+to\s+Wear|A\s+dreamy|Note\s+Breakdown|Available\s+Sizes?|Important\s+Disclaimer|Store\s+Policy)\b/i
+
+const takeShopifyIndieNoteListBody = (after: string): string => {
+  const stop = after.search(SHOPIFY_INDIE_NOTE_LIST_STOP_RE)
+  return (stop >= 0 ? after.slice(0, stop) : after.slice(0, 400)).trim()
+}
+
 /**
  * Top/Middle/Base, or "Scent Notes" with Top:/Heart:/Base: bullets.
+ * Also captures Keskiyön Hovi-style `Notes:` / `Fragrance Notes` bullet lists without
+ * swallowing Materials of Note, Mood, or Please Note.
  */
 const extractShopifyIndieNoteSegmentsFromPlain = (plain: string): string[] => {
-  const collapsed = (plain ?? "").replace(/\r/g, "\n").replace(/\s+/g, " ").trim()
+  const collapsed = unglueIndieShopifySectionLabels(
+    (plain ?? "").replace(/\r/g, "\n").replace(/\s+/g, " ").trim(),
+  )
   if (!collapsed) return []
 
   const segments: string[] = []
@@ -1091,13 +1111,42 @@ const extractShopifyIndieNoteSegmentsFromPlain = (plain: string): string[] => {
     segments.push(segment)
   }
 
-  const notesLine = collapsed.match(
-    /\bnotes?\s*:\s*([^.!?]{8,280}?)(?=\s+(?:A\s+dreamy|Note\s+Breakdown|Available\s+Sizes?|Important\s+Disclaimer|Store\s+Policy)|$)/i,
-  )
-  if (notesLine?.[1]) {
-    const body = bulletToComma(notesLine[1])
-    if ((/,/.test(body) || /[•·]/.test(notesLine[1])) && /[a-z]{3,}/i.test(body)) {
-      segments.push(`top notes: ${body}`)
+  const notesLabelRe = /(?:^|[\s.!?])((?:fragrance|scent|perfume)\s+)?notes?\s*:\s*/gi
+  let labeledBody: string | null = null
+  let notesLabelMatch: RegExpExecArray | null
+  while ((notesLabelMatch = notesLabelRe.exec(collapsed)) !== null) {
+    if (isFalseNotesListLabel(collapsed, notesLabelMatch.index)) continue
+    const body = takeShopifyIndieNoteListBody(
+      collapsed.slice(notesLabelMatch.index + notesLabelMatch[0].length),
+    )
+    const converted = bulletToComma(body)
+    if (
+      converted.length >= 8 &&
+      /[a-z]{3,}/i.test(converted) &&
+      (/,/.test(converted) || /[•·]/.test(body))
+    ) {
+      labeledBody = converted
+      if (notesLabelMatch[1]) break
+    }
+  }
+  if (labeledBody) {
+    segments.push(`top notes: ${labeledBody}`)
+  } else {
+    const unlabeledHeader = /\bfragrance\s+notes?\b(?!\s*(?:include|are|is|:))/i.exec(collapsed)
+    if (unlabeledHeader) {
+      const body = takeShopifyIndieNoteListBody(
+        collapsed.slice(unlabeledHeader.index + unlabeledHeader[0].length),
+      )
+      const converted = bulletToComma(body)
+      if (
+        converted.length >= 8 &&
+        /[a-z]{3,}/i.test(converted) &&
+        /[•·]/.test(body) &&
+        !/\//.test(body) &&
+        converted.split(",").filter(Boolean).length >= 2
+      ) {
+        segments.push(`top notes: ${converted}`)
+      }
     }
   }
 
@@ -1154,14 +1203,14 @@ const LAYERED_PYRAMID_LABEL_RE =
   /(?<![a-z0-9-])(top|open|opening|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry\s*down|drydown|end)\s*(?:notes?)?\s*[:\-\u2013\u2014–—]\s*/gi
 
 const PYRAMID_LAYER_STOP_RE =
-  /\s+(?:product\s+reviews?(?:\s*&\s*videos?)?|related\s+products|description\b|master\s+perfumer|olfactory\s+notes|shopping\s+cart|add to cart|you may also|customers also)\b/i
+  /\s+(?:product\s+reviews?(?:\s*&\s*videos?)?|related\s+products|description\b|master\s+perfumer|olfactory\s+notes|shopping\s+cart|add to cart|you may also|customers also|the\s+vibe|mood\b|materials\s+of\s+note|ingredients\b|international(?:\s+orders)?|please\s+note)\b/i
 
 /**
  * Vivamor / WooCommerce themes: <h5>Top Notes:</h5><p>Calabrian Bergamot …</p> (accordion tab).
  * Also matches collapsed plain text after stripHtmlToPlainText.
  */
 const extractLayeredHeadingPyramidFromPlain = (plain: string): string | null => {
-  const collapsed = (plain ?? "").replace(/\s+/g, " ").trim()
+  const collapsed = unglueIndieShopifySectionLabels((plain ?? "").replace(/\s+/g, " ").trim())
   if (!collapsed) return null
   const layerMatches = [...collapsed.matchAll(LAYERED_PYRAMID_LABEL_RE)]
   if (layerMatches.length < 2) return null
@@ -1602,4 +1651,5 @@ export {
 export const __testOnly = {
   extractKayaliNotesContainerFromHtml,
   extractLayeredHeadingPyramidFromPlain,
+  extractShopifyIndieNoteSegmentsFromPlain,
 }

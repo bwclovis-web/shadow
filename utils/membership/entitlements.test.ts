@@ -84,13 +84,70 @@ describe("canParticipate", () => {
     ).toBe(true)
   })
 
-  it("blocks unpaid non-early-adopters", () => {
+  it("rejects unpaid non-early-adopters", () => {
     expect(
       canParticipate({ subscriptionStatus: "free", isEarlyAdopter: false })
     ).toBe(false)
     expect(
       canParticipate({ subscriptionStatus: "cancelled", isEarlyAdopter: false })
     ).toBe(false)
+  })
+})
+
+describe("requireParticipationForUser", () => {
+  it("returns not_found for null user without querying by id", async () => {
+    const { requireParticipationForUser } = await import(
+      "@/utils/membership/entitlements.server"
+    )
+    const result = await requireParticipationForUser(null)
+    expect(result).toEqual({ ok: false, reason: "not_found" })
+  })
+
+  it("returns ok for paid users without a free-window check", async () => {
+    const { requireParticipationForUser } = await import(
+      "@/utils/membership/entitlements.server"
+    )
+    const result = await requireParticipationForUser({
+      subscriptionStatus: "paid",
+      isEarlyAdopter: false,
+    })
+    expect(result).toEqual({ ok: true })
+  })
+})
+
+describe("requireEntitlementForUser", () => {
+  it("allows premium users saved_searches without DB", async () => {
+    const { requireEntitlementForUser } = await import(
+      "@/utils/membership/entitlements.server"
+    )
+    expect(
+      requireEntitlementForUser(
+        { membershipTier: "premium", subscriptionStatus: "paid" },
+        "saved_searches"
+      )
+    ).toEqual({ ok: true, tier: "premium" })
+  })
+
+  it("rejects free-tier users for saved_searches", async () => {
+    const { requireEntitlementForUser } = await import(
+      "@/utils/membership/entitlements.server"
+    )
+    expect(
+      requireEntitlementForUser(
+        { membershipTier: "free", subscriptionStatus: "paid" },
+        "saved_searches"
+      )
+    ).toEqual({ ok: false, tier: "free" })
+  })
+
+  it("treats null user as free tier", async () => {
+    const { requireEntitlementForUser } = await import(
+      "@/utils/membership/entitlements.server"
+    )
+    expect(requireEntitlementForUser(null, "saved_searches")).toEqual({
+      ok: false,
+      tier: "free",
+    })
   })
 })
 

@@ -5,10 +5,12 @@
  */
 
 import cookie from "cookie"
-import type { UserRole } from "@prisma/client"
+import type { MembershipTier, SubscriptionStatus, UserRole } from "@prisma/client"
+import { cache } from "react"
 
 import { getUserById } from "@/models/user.query"
 import {
+  decodeAccessToken,
   refreshAccessToken,
   verifyAccessToken,
 } from "@/utils/security/session-manager.server"
@@ -34,6 +36,11 @@ export type SessionUser = {
   fragranticaUrl?: string | null
   redditUsername?: string | null
   updatedAt?: Date
+  /** Server-side participation / presence fields from the same user row. */
+  subscriptionStatus: SubscriptionStatus
+  membershipTier: MembershipTier
+  isEarlyAdopter: boolean
+  lastActiveAt: Date | null
 }
 
 export type SessionFromRequest = {
@@ -90,26 +97,55 @@ function getCookieHeader(
   return req.headers?.cookie || ""
 }
 
+const toSessionUser = (fullUser: NonNullable<Awaited<ReturnType<typeof getUserById>>>): SessionUser | null => {
+  const user = createSafeUser(fullUser)
+  if (!user) return null
+  return {
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName ?? null,
+    lastName: user.lastName ?? null,
+    username: user.username ?? "",
+    profileSlug: user.profileSlug ?? null,
+    role: user.role,
+    traderAbout: user.traderAbout ?? null,
+    avatarImage: fullUser.avatarImage ?? null,
+    region: fullUser.region ?? null,
+    instagramHandle: fullUser.instagramHandle ?? null,
+    fragranticaUrl: fullUser.fragranticaUrl ?? null,
+    redditUsername: fullUser.redditUsername ?? null,
+    updatedAt: fullUser.updatedAt,
+    subscriptionStatus: fullUser.subscriptionStatus,
+    membershipTier: fullUser.membershipTier,
+    isEarlyAdopter: fullUser.isEarlyAdopter,
+    lastActiveAt: fullUser.lastActiveAt ?? null,
+  }
+}
+
 /**
- * Core: get session from cookie header string.
- * Use this when you only have the raw cookie string (e.g. Express req.headers.cookie).
+ * Resolve session with a single user read when includeUser is true
+ * (JWT decode + getUserById; tokenVersion checked against the user row).
  */
-export async function getSessionFromCookieHeader(
+const resolveSessionFromCookieHeader = async (
   cookieHeader: string,
-  options: GetSessionOptions = {}
-): Promise<SessionFromRequest | SessionWithRefresh | null> {
-  const {
-    includeUser = false,
-    includeTokens = false,
-    attemptRefresh = false,
-  } = options
+  includeUser: boolean,
+  includeTokens: boolean,
+  attemptRefresh: boolean
+): Promise<SessionFromRequest | SessionWithRefresh | null> => {
   const { accessToken, refreshToken } = getTokensFromCookieHeader(cookieHeader)
 
   let userId: string | null = null
+  let accessTokenVersion: number | null = null
   let resolvedAccessToken = accessToken
   let didRefresh = false
 
-  if (accessToken) {
+  if (includeUser && accessToken) {
+    const claims = decodeAccessToken(accessToken)
+    if (claims) {
+      userId = claims.userId
+      accessTokenVersion = claims.tokenVersion
+    }
+  } else if (accessToken) {
     const payload = await verifyAccessToken(accessToken)
     if (payload?.userId) {
       userId = payload.userId
@@ -123,6 +159,7 @@ export async function getSessionFromCookieHeader(
         userId = refreshResult.userId
         resolvedAccessToken = refreshResult.accessToken
         didRefresh = true
+        accessTokenVersion = null
       }
     } catch {
       // Token refresh failed
@@ -150,31 +187,42 @@ export async function getSessionFromCookieHeader(
 
   if (includeUser) {
     const fullUser = await getUserById(userId)
-    if (fullUser?.isBanned) {
+    if (!fullUser || fullUser.isBanned) {
       return null
     }
-    const user = createSafeUser(fullUser)
-    if (user && fullUser) {
-      result.user = {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName ?? null,
-        lastName: user.lastName ?? null,
-        username: user.username ?? "",
-        profileSlug: user.profileSlug ?? null,
-        role: user.role,
-        traderAbout: user.traderAbout ?? null,
-        avatarImage: fullUser.avatarImage ?? null,
-        region: fullUser.region ?? null,
-        instagramHandle: fullUser.instagramHandle ?? null,
-        fragranticaUrl: fullUser.fragranticaUrl ?? null,
-        redditUsername: fullUser.redditUsername ?? null,
-        updatedAt: fullUser.updatedAt,
-      }
+    // After refresh, session manager already validated tokenVersion.
+    if (
+      accessTokenVersion !== null &&
+      accessTokenVersion < fullUser.tokenVersion
+    ) {
+      return null
+    }
+    const sessionUser = toSessionUser(fullUser)
+    if (sessionUser) {
+      result.user = sessionUser
     }
   }
 
   return result
+}
+
+/** Request-scoped dedupe for layout + page session lookups. */
+const getSessionFromCookieHeaderCached = cache(resolveSessionFromCookieHeader)
+
+/**
+ * Core: get session from cookie header string.
+ * Use this when you only have the raw cookie string (e.g. Express req.headers.cookie).
+ */
+export async function getSessionFromCookieHeader(
+  cookieHeader: string,
+  options: GetSessionOptions = {}
+): Promise<SessionFromRequest | SessionWithRefresh | null> {
+  return getSessionFromCookieHeaderCached(
+    cookieHeader,
+    options.includeUser ?? false,
+    options.includeTokens ?? false,
+    options.attemptRefresh ?? false
+  )
 }
 
 /**

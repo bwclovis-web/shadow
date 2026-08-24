@@ -14,6 +14,10 @@ vi.mock("@/lib/db", () => ({
   },
 }))
 
+vi.mock("next/cache", () => ({
+  unstable_cache: (fn: () => Promise<unknown>) => fn,
+}))
+
 import {
   getNewListingsSinceCount,
   getNewListingsThisWeekCount,

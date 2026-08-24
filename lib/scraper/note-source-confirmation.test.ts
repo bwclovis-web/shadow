@@ -8,6 +8,7 @@ import {
   extractUnlabeledFragranceNotesBlock,
   isNoteSubstantiatedInSource,
   isComplianceOrSourcingNote,
+  isFalseNotesListLabel,
   isObviousNonMaterialNote,
   isThemeCssTokenNote,
   peelMarketingDescriptorTail,
@@ -565,6 +566,23 @@ Also listed elsewhere: Neroli E.O. among featured materials.
     ]) {
       expect(isComplianceOrSourcingNote(junk), junk).toBe(true)
     }
+  })
+
+  it("isComplianceOrSourcingNote rejects isopropyl myristate and not-vegan flags", () => {
+    expect(isComplianceOrSourcingNote("isopropyl myristate")).toBe(true)
+    expect(isComplianceOrSourcingNote("IPM")).toBe(true)
+    expect(isComplianceOrSourcingNote("not vegan")).toBe(true)
+    expect(isComplianceOrSourcingNote("beeswax")).toBe(false)
+  })
+
+  it("isFalseNotesListLabel detects Materials of Note and Please Note", () => {
+    const materials = "Notes: roasted coffee • cocoa Mood: cozy Materials of Note: cocoa absolute, cinnamic aldehyde"
+    const materialsIdx = materials.search(/materials\s+of\s+note/i)
+    expect(isFalseNotesListLabel(materials, materialsIdx)).toBe(true)
+    const please = "Please Note: this fragrance contains beeswax and is therefore not vegan."
+    expect(isFalseNotesListLabel(please, please.search(/please\s+note/i))).toBe(true)
+    const real = "Fragrance Notes: lavender marshmallow • vanilla frosting"
+    expect(isFalseNotesListLabel(real, real.search(/fragrance\s+notes/i))).toBe(false)
   })
 
   it("isThemeCssTokenNote rejects Shopify theme CSS bleed", () => {

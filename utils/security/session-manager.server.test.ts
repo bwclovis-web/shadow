@@ -9,6 +9,19 @@ vi.mock("@/lib/db", () => ({
     user: {
       update: vi.fn().mockResolvedValue(undefined),
     },
+    refreshSession: {
+      create: vi.fn().mockResolvedValue({
+        id: "session-1",
+        userId: "user-1",
+        tokenHash: "hash",
+        familyId: "family-1",
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      }),
+      findUnique: vi.fn().mockResolvedValue(null),
+      update: vi.fn().mockResolvedValue(undefined),
+      updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+    },
+    $transaction: vi.fn(async (ops: Promise<unknown>[]) => Promise.all(ops)),
   },
 }))
 
@@ -22,6 +35,9 @@ let createSession: (opts: {
   userAgent?: string
   ipAddress?: string
 }) => Promise<{ accessToken: string; refreshToken: string; sessionId: string; expiresAt: Date }>
+let decodeAccessToken: (
+  token: string
+) => { userId: string; tokenVersion: number } | null
 let verifyAccessToken: (token: string) => Promise<{ userId: string } | null>
 let verifyRefreshToken: (token: string) => Promise<{ userId: string } | null>
 let refreshAccessToken: (refreshToken: string) => Promise<{
@@ -38,6 +54,7 @@ beforeAll(async () => {
   createAccessToken = mod.createAccessToken
   createRefreshToken = mod.createRefreshToken
   createSession = mod.createSession
+  decodeAccessToken = mod.decodeAccessToken
   verifyAccessToken = mod.verifyAccessToken
   verifyRefreshToken = mod.verifyRefreshToken
   refreshAccessToken = mod.refreshAccessToken
@@ -139,6 +156,34 @@ describe("createSession", () => {
     const refreshPayload = jwt.decode(refreshToken) as { tokenVersion: number }
     expect(accessPayload.tokenVersion).toBe(0)
     expect(refreshPayload.tokenVersion).toBe(0)
+  })
+})
+
+describe("decodeAccessToken", () => {
+  it("returns userId and tokenVersion without hitting the DB", () => {
+    const token = createAccessToken("user-ok", 2)
+    expect(decodeAccessToken(token)).toEqual({
+      userId: "user-ok",
+      tokenVersion: 2,
+    })
+  })
+
+  it("returns null for refresh tokens", () => {
+    const token = createRefreshToken("user-1", 0)
+    expect(decodeAccessToken(token)).toBeNull()
+  })
+
+  it("returns null for invalid tokens", () => {
+    expect(decodeAccessToken("invalid.jwt.token")).toBeNull()
+  })
+
+  it("returns null when tokenVersion is omitted", () => {
+    const tokenWithoutVersion = jwt.sign(
+      { userId: "user-1", type: "access" },
+      TEST_JWT_SECRET,
+      { expiresIn: "15m" }
+    )
+    expect(decodeAccessToken(tokenWithoutVersion)).toBeNull()
   })
 })
 
@@ -360,12 +405,15 @@ describe("invalidateAllUserSessions", () => {
 })
 
 describe("invalidateSession", () => {
-  it("is a no-op and does not call prisma", async () => {
+  it("revokes the refresh session by id", async () => {
     const { prisma } = await import("@/lib/db")
-    vi.mocked(prisma.user.update).mockClear()
+    vi.mocked(prisma.refreshSession.updateMany).mockClear()
 
     await invalidateSession("any-session-id")
 
-    expect(prisma.user.update).not.toHaveBeenCalled()
+    expect(prisma.refreshSession.updateMany).toHaveBeenCalledWith({
+      where: { id: "any-session-id", revokedAt: null },
+      data: { revokedAt: expect.any(Date) },
+    })
   })
 })

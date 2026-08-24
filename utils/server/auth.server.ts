@@ -1,13 +1,17 @@
-import type { User, UserRole } from "@prisma/client"
+import type { MembershipTier, SubscriptionStatus, User, UserRole } from "@prisma/client"
 
-import { requireParticipation } from "@/utils/membership/entitlements.server"
+import { requireParticipationForUser } from "@/utils/membership/entitlements.server"
 import { getSessionFromRequest } from "@/utils/session-from-request.server"
 
 /** Authenticated user shape (subset of Prisma User returned by auth; no password) */
 export type AuthUser = Pick<
   User,
   "id" | "email" | "firstName" | "lastName" | "username" | "role"
->
+> & {
+  lastActiveAt?: Date | null
+  membershipTier: MembershipTier
+  subscriptionStatus: SubscriptionStatus
+}
 
 export type AuthResult = {
   success: boolean
@@ -49,10 +53,16 @@ export const authenticateUser = async (
       lastName: u.lastName ?? null,
       username: u.username ?? "",
       role: u.role as UserRole,
+      lastActiveAt: u.lastActiveAt ?? null,
+      membershipTier: u.membershipTier,
+      subscriptionStatus: u.subscriptionStatus,
     }
 
     if (requirePaid) {
-      const participation = await requireParticipation(user.id)
+      const participation = await requireParticipationForUser({
+        isEarlyAdopter: u.isEarlyAdopter,
+        subscriptionStatus: u.subscriptionStatus,
+      })
       if (!participation.ok) {
         return {
           success: false,
