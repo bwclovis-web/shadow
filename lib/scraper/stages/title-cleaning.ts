@@ -14,6 +14,7 @@ import {
   isThemeCssTokenNote,
   isNoteSubstantiatedInSource,
   looksLikeProseNotePhrase,
+  isFalseNotesListLabel,
   isObviousNonMaterialNote,
   peelMarketingDescriptorTail,
   sanitizeExtractedNoteCandidate,
@@ -1040,7 +1041,7 @@ const normalizeImplicitLayerColons = (text: string): string => {
 /** Stop last layer chunk before Pattern/Etsy listing meta (avoids ':' in tokens → junk filter drops all base notes). */
 const truncateAtShopMetaLabels = (s: string): string => {
   const m = s.match(
-    /\s+(?:series|perfume\s+family|unisex|contains\s+true\s+animalics|scent\s+strength|extra info|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|original\s+manufacturers|vibe\s*&\s*wear|vibe\b|wear\s*&\s*performance|wear\s+guide\b|good\s+to\s+know\b|season\s*:|projection\s*:|longevity\s*:|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b|description|product\s+reviews?(?:\s*&\s*videos?)?|related\s+products|shopping\s+cart|made\s+with\s+squarespace)\b/i,
+    /\s+(?:series|perfume\s+family|unisex|contains\s+true\s+animalics|scent\s+strength|extra info|cozy\s+and\s+soft|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|extrait\s+de\s+parfum|hand-blended\s+with\s+care|gentle\s+projection|original\s+manufacturers|vibe\s*&\s*wear|(?:the\s+)?vibe\b|mood\b|materials\s+of\s+note|please\s+note|allergen\s+notice|international(?:\s+orders)?|ingredients\b|wear\s*&\s*performance|wear\s+guide\b|good\s+to\s+know\b|season\s*:|projection\s*:|longevity\s*:|citrus\s+aromatic\b|amber-musky\b|seaside\s+breeze\b|description|product\s+reviews?(?:\s*&\s*videos?)?|related\s+products|shopping\s+cart|made\s+with\s+squarespace)\b/i,
   )
   if (m?.index != null) return s.slice(0, m.index).trim()
   return s.trim()
@@ -1646,8 +1647,8 @@ const FLAT_NOTE_PROSE_BOUNDARY_RES: RegExp[] = [
   /\s+(?:Available in |Originally (?:a |the )?|Our oil perfume|NOTE:|Packaging:|How to use|Shipping:|Return [Pp]olicy|Subscribe(?:\s+now|\s+today)?|You may also|Customers also|Related products|Complete the look|Pairs well|Also available|More from|Write a review|Questions\?|Leave a review|Product reviews?(?:\s*&\s*videos?)?|Ingredients captivate your senses)\b/i,
   /\s+#{1,6}\s*(?:Ingredients|How to use|Shipping|Returns?|FAQ|Details|Directions|Warnings?|Disclaimer|Specifications|Size [Gg]uide|Care [Ii]nstructions)\b/i,
   /\s+(?:Ingredients|Cruelty[- ]free|Vegan |Dermatologist|Clinically tested|Prop(?:osition|\.)?\s*65|FDA disclaimer)\b/i,
-  // Common post-notes sections on indie Shopify PDP
-  /\s+(?:When to Wear|Vibe|How It Wears|Wear\s*&\s*Performance|Wear\s+Guide\b|Good\s+to\s+Know\b|Whether\s+You(?:'|'|&#39;)re\b|Original\s+Manufacturers\b|Season\s*:|Projection\s*:|Longevity\s*:|How (?:It\s+)?Smells|Available Sizes?|Important Information|Important Shop Info|Final Sale|Sampling Size Policy|Fragrance Description(?!\s+:)|For\s+milk\s+lovers|pastel\s+girls|Hand-blended\s+with\s+care|Extrait\s+de\s+Parfum\s+strength|Citrus\s+Aromatic\b|Amber-Musky\b|Seaside\s+Breeze\b|Sweet,\s*Glamorous\b)\b/i,
+  // Common post-notes sections on indie Shopify PDP (Keskiyön Hovi Mood / Materials of Note / Vibe)
+  /\s+(?:When to Wear|(?:The\s+)?Vibe|Mood|Materials\s+of\s+Note|Please\s+Note|Allergen\s+Notice|International(?:\s+Orders)?|How It Wears|Wear\s*&\s*Performance|Wear\s+Guide\b|Good\s+to\s+Know\b|Whether\s+You(?:'|'|&#39;)re\b|Original\s+Manufacturers\b|Season\s*:|Projection\s*:|Longevity\s*:|How (?:It\s+)?Smells|Available Sizes?|Important Information|Important Shop Info|Final Sale|Sampling Size Policy|Fragrance Description(?!\s+:)|For\s+milk\s+lovers|pastel\s+girls|Hand-blended\s+with\s+care|Extrait\s+de\s+Parfum\s+strength|Citrus\s+Aromatic\b|Amber-Musky\b|Seaside\s+Breeze\b|Sweet,\s*Glamorous\b)\b/i,
   /\s+(?:Description\s*:|Like\s+(?:a|an)\b|Each\s+(?:spray|spritz)\b)/i,
   /\s+(?:Wrap\s+(?:yourself|your\s+senses)|Float\s+into|If\s+you\s+love|This\s+perfume\s+is)\b/i,
   /\s+(?:I was told|Making a dupe|Please text if you)\b/i,
@@ -1749,6 +1750,7 @@ const isThinLayeredPyramidScrape = (text: string): boolean => {
 
 /** True when the match is immediately preceded by a layered label (top/heart/base …). */
 const shouldSkipFlatNotesMatch = (source: string, matchIndex: number, prefixChars = 48): boolean => {
+  if (isFalseNotesListLabel(source, matchIndex)) return true
   const rawPrefix = source.slice(Math.max(0, matchIndex - prefixChars), matchIndex)
   if (
     /(?:top|open|opening|head|heart|middle|mid|core|body|center|centre|base|bottom|background|foundation|dry\s*down)\s+$/i.test(
@@ -1774,8 +1776,8 @@ const shouldSkipFlatNotesMatch = (source: string, matchIndex: number, prefixChar
  * (or a prose boundary in `FLAT_NOTE_PROSE_BOUNDARY_RES` if the list runs into accordion text).
  */
 const FLAT_NOTE_LIST_PATTERNS: RegExp[] = [
-  // "Notes:", "Fragrance notes – …" (line to newline) — not "Please note:" / processing banners
-  /(?:^|[\s.!?\n])(?<!(?:please|processing)\s)(?:fragrance\s+)?notes?\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi,
+  // "Notes:", "Fragrance notes – …" (line to newline) — not Please/Materials of/Allergen Note
+  /(?:^|[\s.!?\n])(?<!(?:please|processing|important|allergen|materials\s+of)\s)(?:fragrance\s+)?notes?\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi,
   // "Scent/fragrance/… notes include …" (sentence)
   /(?:^|[\s.!?\n*])(?:perfume|fragrance|scent|aroma|olfactory)\s+notes?\s+include\s+([^.!?\n*]+)/gi,
   // "The / our / these notes include …"

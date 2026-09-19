@@ -1059,12 +1059,12 @@ const extractAndromedaBulletPyramidFromPlain = (plain: string): string[] => {
 /** Insert a space so `Cold RainHeart:` / `MuskInternational Orders:` can be parsed. */
 const unglueIndieShopifySectionLabels = (s: string): string =>
   s.replace(
-    /([a-z])((?:Top|Heart|Base|The\s+Vibe|Mood|Materials\s+of\s+Note|International(?:\s+Orders)?|Please\s+Note|Ingredients)\s*:)/g,
+    /([a-z])((?:Top|Heart|Base|The\s+Vibe|Vibe|Mood|Materials\s+of\s+Note|International(?:\s+Orders)?|Please\s+Note|Allergen\s+Notice|Ingredients)\s*:)/g,
     "$1 $2",
   )
 
 const SHOPIFY_INDIE_NOTE_LIST_STOP_RE =
-  /\s+(?:Mood\b|The\s+Vibe|The\s+Mood|Materials\s+of\s+Note|Ingredients?\b|INGREDIENTS\b|International(?:\s+Orders)?|Please\s+Note|Main\s+Accords?|When\s+to\s+Wear|A\s+dreamy|Note\s+Breakdown|Available\s+Sizes?|Important\s+Disclaimer|Store\s+Policy)\b/i
+  /\s+(?:Mood\b|(?:The\s+)?Vibe\b|The\s+Mood|Materials\s+of\s+Note|Ingredients?\b|INGREDIENTS\b|International(?:\s+Orders)?|Please\s+Note|Allergen\s+Notice|Main\s+Accords?|When\s+to\s+Wear|A\s+dreamy|Note\s+Breakdown|Available\s+Sizes?|Important\s+Disclaimer|Store\s+Policy)\b/i
 
 const takeShopifyIndieNoteListBody = (after: string): string => {
   const stop = after.search(SHOPIFY_INDIE_NOTE_LIST_STOP_RE)

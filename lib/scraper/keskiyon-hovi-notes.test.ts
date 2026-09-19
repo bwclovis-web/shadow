@@ -149,4 +149,49 @@ Materials of Note: Cocoa Absolute, Cinnamic Aldehyde, Milk Lactone.
     expect(corpus).not.toMatch(/cinnamic aldehyde/)
     expect(corpus).not.toMatch(/milk lactone/)
   })
+
+  it("structured extract prefers Notes : over Materials of Note : (real Kahvila spacing)", () => {
+    // Exact spacing from Shopify product.js description (space before colons).
+    const source =
+      "Kahvila, Finnish for “café,” is an atmospheric gourmand. Notes : Roasted Coffee • Bittersweet Cocoa • Steamed Oat Milk • Whisper of Cinnamon • White Chocolate Cake • Warm Sugar • Soft Woods • Skin Musk Ingredients : Alcohol Denat., Parfum (Fragrance), Aqua (Water) Materials of Note : Cocoa Absolute, Cinnamic Aldehyde, Milk Lactone, Benzyl Salicylate, Cashmeran. Allergen Notice : This fragrance contains cinnamic aldehyde."
+    const notes = extractNotesFromStructuredText(source, 2)
+    const all = join(notes)
+    expect(all).toEqual(
+      expect.arrayContaining(["roasted coffee", "bittersweet cocoa", "steamed oat milk", "skin musk"]),
+    )
+    expect(all.join(" ")).not.toMatch(/cinnamic|milk lactone|benzyl salicylate/)
+  })
+
+  it("structured extract stops Fragrance Notes at Mood without colon (Head Full Of Stars)", () => {
+    const source =
+      "Fragrance Notes: Lavender Marshmallow • Vanilla Frosting • Violet Petals • Cashmere • Dream Dust Accord • Cookie Crumbs Mood Dreamy • Nostalgic • Enchanting"
+    const notes = extractNotesFromStructuredText(source, 2)
+    const all = join(notes)
+    expect(all).toEqual(
+      expect.arrayContaining(["lavender marshmallow", "cookie crumbs", "dream dust accord"]),
+    )
+    expect(all.some(n => /mood|dreamy|nostalgic|enchanting/.test(n))).toBe(false)
+  })
+
+  it("structured extract reads unlabeled Fragrance Notes before bare Vibe (What Answers Back)", () => {
+    const source =
+      "Fragrance Notes Cold Fog • Fir Needle • Wet Earth • Oak Moss • Coral Honeysuckle • Cedarwood • Atmospheric Bone Accord • Ambroxan • Labdanum Vibe Wet Appalachian fog rolling through pine trees."
+    const notes = extractNotesFromStructuredText(source, 2)
+    const all = join(notes)
+    expect(all).toEqual(
+      expect.arrayContaining(["cold fog", "fir needle", "wet earth", "ambroxan", "labdanum"]),
+    )
+    expect(all.join(" ")).not.toMatch(/bergamot|sage|appalachian|abandoned/)
+  })
+
+  it("structured extract ignores Materials of Note when that is the only notes?: label (Cicadas)", () => {
+    const source =
+      "Notes: Lemon Iced Tea • Humid Summer Air • Sun-Warmed Cedar • Golden Honey • Beeswax • Weathered Woods • Sun-Dried Cotton Please Note: This fragrance contains beeswax absolute and is therefore not vegan. Materials of Note: Beeswax Absolute (Not Vegan), Lemon Essential Oil, Bergamot Essential Oil, Cedarwood Essential Oil, Tonka Bean Essential Oil, Oakmoss, Benzyl Salicylate."
+    const notes = extractNotesFromStructuredText(source, 2)
+    const all = join(notes)
+    expect(all).toEqual(
+      expect.arrayContaining(["lemon iced tea", "golden honey", "beeswax", "sun-dried cotton"]),
+    )
+    expect(all.some(n => /essential oil|benzyl salicylate|not vegan/.test(n))).toBe(false)
+  })
 })

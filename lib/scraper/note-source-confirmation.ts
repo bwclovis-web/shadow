@@ -12,7 +12,7 @@ import {
 
 /** Sections after note lists — not valid note sources. */
 const NOTE_REGION_END_RE =
-  /\b(?:when\s+to\s+wear|how\s+it\s+wears|how\s+to\s+use|scent\s+strength|return\s+policy|customer\s+reviews?|ingredients|available\s+sizes?|processing(?:\s*[:•|])|important\s+(?:order\s+)?policy|disclaimer|the\s+vibe|mood\b|materials\s+of\s+note|international(?:\s+orders)?|please\s+note|i\s+was\s+told|making\s+a\s+dupe|please\s+text|sizes?\s+\d+\s*ml|hand-blended|hand\s+filled|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|gentle\s+projection|extrait\s+de\s+parfum\s+strength|main\s+accords?)\b/i
+  /\b(?:when\s+to\s+wear|how\s+it\s+wears|how\s+to\s+use|scent\s+strength|return\s+policy|customer\s+reviews?|ingredients|available\s+sizes?|processing(?:\s*[:•|])|important\s+(?:order\s+)?policy|disclaimer|(?:the\s+)?vibe|mood\b|materials\s+of\s+note|allergen\s+notice|international(?:\s+orders)?|please\s+note|i\s+was\s+told|making\s+a\s+dupe|please\s+text|sizes?\s+\d+\s*ml|hand-blended|hand\s+filled|for\s+milk\s+lovers|pastel\s+girls|fans\s+of|gentle\s+projection|extrait\s+de\s+parfum\s+strength|main\s+accords?)\b/i
 
 /**
  * True when a `notes?:` match is a false list label (Materials of Note, Please Note).
@@ -75,7 +75,7 @@ const MATERIAL_LINE_DESCRIPTOR_START =
 
 const FLAT_LIST_CAPTURE_RES: RegExp[] = [
   /(?:^|[\s.!?\n*])(?:featured|key|main|primary|signature|dominant)\s+notes?\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi,
-  /(?:^|[\s.!?\n])(?:fragrance\s+)?notes?\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi,
+  /(?:^|[\s.!?\n])(?<!(?:please|processing|important|allergen|materials\s+of)\s)(?:fragrance\s+)?notes?\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi,
   /(?:^|[\s.!?\n*])(?:perfume|fragrance|scent|aroma|olfactory)\s+notes?\s+include\s+([^.!?\n*]+)/gi,
   /(?:^|[\s.!?\n*])(?:perfume|fragrance|scent|aroma|olfactory)\s+notes?\s+(?:are|is)\s+([^.!?\n*]+)/gi,
   /(?:^|[\s.!?\n*])(?:olfactory|scent|fragrance|aroma|perfume)\s+(?:profile|composition|pyramid)\s*[:\-\u2013\u2014–—]\s*([^\n]+)/gi,
@@ -414,6 +414,9 @@ export const peelMarketingDescriptorTail = (note: string): string => {
       .replace(/\s+dab\s+of\s+this\b.*$/i, "")
       .replace(/\s+made\s+with\s+squarespace\b.*$/i, "")
       .replace(/\s+(?:heavy|sublimated)\s*$/i, "")
+      // Keskiyön Hovi: Mood adjectives glued after last material ("cookie crumbs mood dreamy")
+      .replace(/\s+mood\b.*$/i, "")
+      .replace(/\s+(?:the\s+)?vibe\b.*$/i, "")
       .trim()
   }
   return s
@@ -541,6 +544,14 @@ export const isComplianceOrSourcingNote = (note: string): boolean => {
   if (/^(?:isopropyl\s+myristate|ipm)$/i.test(n)) return true
   if (/^(?:not\s+vegan|non-vegan)$/i.test(n)) return true
   if (/\bisopropyl\s+myristate\b/.test(n) || /\bnot\s+vegan\b/.test(n)) return true
+  // INCI / EU allergen tokens that appear in Materials of Note blocks (not pyramid notes)
+  if (
+    /^(?:benzyl\s+salicylate|benzyl\s+benzoate|cinnamic\s+aldehyde|cinnamal|citral|citronellol|eugenol|geraniol|hexyl\s+cinnamal|hydroxycitronellal|limonene|linalool|tetramethyl\s+acetyloctahydronaphthalenes)$/i.test(
+      n,
+    )
+  ) {
+    return true
+  }
   return false
 }
 
