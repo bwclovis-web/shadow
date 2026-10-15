@@ -21,6 +21,7 @@ import { isDecantSplitsEnabled } from "@/utils/decant-splits-enabled.server"
 import { parseDiscoveryFiltersFromSearchParams } from "@/utils/discovery-filters"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+import { shouldShowAds } from "@/utils/ads/should-show-ads"
 
 import TheExchangeClient from "./TheExchangeClient"
 import type { ExchangePageData } from "./exchange-types"
@@ -220,6 +221,7 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
       openSplitChipsByPerfumeId={openSplitChipsByPerfumeId}
       palateRecommendations={palateRecommendations}
       mutualSwapSuggestions={mutualSwapSuggestions}
+      showAds={shouldShowAds(session?.user)}
     />
     </>
   )

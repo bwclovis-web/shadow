@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 
 import { Button, VooDooLink } from "@/components/Atoms/Button"
+import AdSenseUnit from "@/components/Atoms/AdSenseUnit"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { PaginationBar } from "@/components/Molecules/PaginationBar"
 import { FilterChipStrip } from "@/components/Molecules/FilterChipStrip"
@@ -86,6 +87,7 @@ const TheExchangeClient = ({
   traderReputationByUserId = {},
   viewerId = null,
   openSplitChipsByPerfumeId = {},
+  showAds = true,
 }: ExchangePageData) => {
   const t = useTranslations("tradingPost")
   const tListings = useTranslations("tradingPost.listings")
@@ -675,6 +677,7 @@ const TheExchangeClient = ({
                     ))}
                   </ul>
                 )}
+                <AdSenseUnit showAds={showAds} variant="display" />
               </div>
             </div>
 

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Cormorant_Garamond } from 'next/font/google'
 import { cookies } from 'next/headers'
+import Script from 'next/script'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 import { Analytics } from '@vercel/analytics/next'
@@ -24,6 +25,10 @@ import {
   buildSiteOrganizationJsonLd,
   buildWebSiteJsonLd,
 } from '@/lib/seo/json-ld'
+import {
+  getAdSenseClientId,
+  isAdSenseEnabled,
+} from '@/utils/ads/should-show-ads'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -76,6 +81,8 @@ export default async function RootLayout({
   const user = session?.user ?? null
   const locale = await getLocale()
   const messages = await getMessages()
+  const adsenseClientId = getAdSenseClientId()
+  const adsenseEnabled = isAdSenseEnabled()
 
   let exchangeNewThisWeekCount = 0
   try {
@@ -99,6 +106,15 @@ export default async function RootLayout({
             __html: JSON.stringify(buildWebSiteJsonLd()),
           }}
         />
+        {adsenseEnabled && adsenseClientId ? (
+          <Script
+            id="google-adsense"
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        ) : null}
         <ViewTransitionsWrapper>
           <NextIntlClientProvider locale={locale} messages={messages}>
             <UserAlertsProvider userId={user?.id}>

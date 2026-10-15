@@ -8,6 +8,7 @@ import AlphabeticalNav from "@/components/Organisms/AlphabeticalNav"
 import DataDisplaySection from "@/components/Organisms/DataDisplaySection"
 import DataFilters from "@/components/Organisms/DataFilters"
 import TitleBanner from "@/components/Organisms/TitleBanner"
+import AdSenseUnit from "@/components/Atoms/AdSenseUnit"
 import { useAlphabeticalBrowserState } from "@/hooks/useAlphabeticalBrowserState"
 import { useGsapStagger } from "@/hooks/useGsapStagger"
 import { useInfiniteHouses } from "@/hooks/useInfiniteHouses"
@@ -35,6 +36,7 @@ interface AllHousesClientProps {
   initialLetter?: string | null
   initialHouses?: unknown[]
   initialHousesTotal?: number
+  showAds?: boolean
 }
 
 const useHouseFilters = (t: ReturnType<typeof useTranslations<"allHouses">>) => {
@@ -176,6 +178,7 @@ const AllHousesClient = ({
   initialLetter = null,
   initialHouses = [],
   initialHousesTotal = 0,
+  showAds = true,
 }: AllHousesClientProps) => {
   const t = useTranslations("allHouses")
   const searchParams = useSearchParams()
@@ -401,6 +404,8 @@ const AllHousesClient = ({
         pageSize={pageSize}
         className="mb-8"
       />
+
+      <AdSenseUnit showAds={showAds} variant="display" />
 
       <DataDisplaySection
         containerRef={housesGridRef}

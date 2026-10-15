@@ -1,5 +1,6 @@
 import { getSiteContactEmail } from "@/lib/seo/site-contact"
 import { absoluteUrl } from "@/lib/seo/site-url"
+import { truncateDescription } from "@/lib/seo/truncate"
 
 const SITE_NAME = "perfumer's hollow"
 const SITE_LOGO_PATH = "/images/new/logo-one.webp"
@@ -125,7 +126,7 @@ export const buildPerfumeProductJsonLd = (perfume: PerfumeForJsonLd) => {
     "@context": "https://schema.org",
     "@type": "Product",
     name: perfume.name,
-    description: perfume.description?.trim() || undefined,
+    description: truncateDescription(perfume.description),
     image: perfume.image ? [perfume.image] : undefined,
     url,
     brand: brandName
@@ -160,7 +161,7 @@ export const buildHouseOrganizationJsonLd = (house: HouseForJsonLd) => {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: house.name,
-    description: house.description?.trim() || undefined,
+    description: truncateDescription(house.description),
     url: house.website?.trim() || url,
     logo: house.image ?? undefined,
     ...(house.country ? { address: { "@type": "PostalAddress", addressCountry: house.country } } : {}),

@@ -5,6 +5,9 @@ import { buildItemListJsonLd } from "@/lib/seo/json-ld"
 import { buildPageMetadata } from "@/lib/seo/metadata"
 import { getHousesByLetterPaginated } from "@/models/house.server"
 import { isSanityConfigured } from "@/sanity/env"
+import { shouldShowAds } from "@/utils/ads/should-show-ads"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
+import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
 import AllHousesClient from "./AllHousesClient"
 
@@ -32,6 +35,10 @@ const HousesPage = async ({ searchParams }: Props) => {
     letterParam && /^[A-Za-z]$/.test(letterParam)
       ? letterParam.toUpperCase()
       : null
+  const cookieHeader = await getCookieHeader()
+  const session = await getSessionFromCookieHeader(cookieHeader, {
+    includeUser: true,
+  })
 
   let initialHouses: Awaited<ReturnType<typeof getHousesByLetterPaginated>>["houses"] = []
   let initialTotal = 0
@@ -72,6 +79,7 @@ const HousesPage = async ({ searchParams }: Props) => {
         initialLetter={normalizedLetter}
         initialHouses={initialHouses}
         initialHousesTotal={initialTotal}
+        showAds={shouldShowAds(session?.user)}
       />
     </>
   )

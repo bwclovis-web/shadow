@@ -400,10 +400,11 @@
       "title": "Registrarse",
       "description": "Completa el pago y luego crea tu cuenta para gestionar tu coleccion.",
       "heading": "Únete al Hollow",
-      "subheading": "Tras el pago, crea tu cuenta para seguir descubrimientos, construir tu coleccion y conectar con otros coleccionistas.",
+      "subheading": "Tras el pago, crea tu cuenta para seguir descubrimientos, construir tu coleccion, navegar sin anuncios y conectar con otros coleccionistas.",
       "alreadyHere": "¿Ya estás en el Hollow?",
       "signIn": "Volver a iniciar sesión",
-      "needCheckout": "Se requiere una membresia para crear una cuenta. Elige un plan para continuar."
+      "needCheckout": "Se requiere una membresia para crear una cuenta. Elige un plan para continuar.",
+      "adFreePerk": "Los miembros navegan sin anuncios — una ventaja de unirte al Hollow."
     },
     "privacyLink": "Privacidad"
   },
@@ -436,8 +437,9 @@
     "canceledNotice": "El pago se canceló. Puedes intentarlo de nuevo cuando quieras.",
     "cta": "Continuar al pago",
     "signIn": "Iniciar sesión",
-    "participateCopy": "The Archive y Houses siguen siendo gratis para navegar. Coleccion, Exchange y herramientas de comunidad requieren un plan de pago.",
+    "participateCopy": "The Archive y Houses siguen siendo gratis para navegar. Coleccion, Exchange y herramientas de comunidad requieren un plan de pago. Los miembros tambien navegan sin anuncios.",
     "tierPrice": "${price}/ano",
+    "adFreePerk": "Todos los planes incluyen navegacion sin anuncios.",
     "tiers": {
       "member": "Member",
       "premium": "Premium",
@@ -1691,10 +1693,11 @@
       "contentOne": "Respetamos tu privacidad tanto como un perfumista guarda una fórmula secreta. Así es como manejamos tus datos:",
       "contentList": {
         "one": "Información Recopilada: Podemos recopilar información básica de la cuenta (como nombre de usuario, correo electrónico y preferencias) para ayudar a personalizar tu experiencia y mejorar el sitio.",
-        "two": "Uso de Datos: Los datos se utilizan internamente solo — para recomendaciones, mejoras de características y prevención de fraude. Nunca se venden, nunca se comparten con anunciantes y nunca se utilizan para reventa o marketing más allá de este sitio.",
+        "two": "Uso de Datos: Los datos de la cuenta se usan para operar el servicio — recomendaciones, mejoras y prevencion de fraude. No vendemos tu informacion personal.",
         "three": "Cookies: Como muchos sitios web, utilizamos cookies para recordar tu sesión y mantenerte conectado.",
-        "four": "Seguridad: Tomamos medidas razonables para proteger tus datos, pero ningún sistema es impenetrable. Maneja tus credenciales de cuenta con tanto cuidado como manejarías tu botella de perfume favorita.",
-        "five": "Contacto: Para preguntas, solicitudes de datos o para reportar actividad sospechosa, contáctanos en [INSERTAR CORREO ELECTRÓNICO DE CONTACTO AQUÍ]."
+        "four": "Publicidad: Quienes no son miembros pueden ver anuncios de terceros (por ejemplo, Google AdSense). Los miembros participantes navegan sin anuncios. Los socios publicitarios pueden usar cookies u tecnologias similares segun sus propias politicas.",
+        "five": "Seguridad: Tomamos medidas razonables para proteger tus datos, pero ningún sistema es impenetrable. Maneja tus credenciales de cuenta con tanto cuidado como manejarías tu botella de perfume favorita.",
+        "six": "Contacto: Para preguntas, solicitudes de datos o para reportar actividad sospechosa, usa Correspondence o escribe a contact@perfumershollow.com."
       }
     },
     "changes": {
@@ -2837,7 +2840,8 @@
           "browseCatalog": "Navega el catalogo completo",
           "basicCollection": "Gestion basica de la coleccion",
           "scentQuiz": "Cuestionario de aromas",
-          "recommendationExplanations": "Explicaciones de recomendaciones (siempre incluidas)"
+          "recommendationExplanations": "Explicaciones de recomendaciones (siempre incluidas)",
+          "adFreeBrowsing": "Navegacion sin anuncios"
         }
       },
       "premium": {

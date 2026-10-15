@@ -600,10 +600,11 @@
       "title": "Sign Up",
       "description": "Complete checkout, then create your account to manage your collection.",
       "heading": "Begin Your Collection",
-      "subheading": "After checkout, create your account to track discoveries, build your collection, and connect with fellow fragrance collectors.",
+      "subheading": "After checkout, create your account to track discoveries, build your collection, browse without ads, and connect with fellow fragrance collectors.",
       "alreadyHere": "Already in the Hollow?",
       "signIn": "Return to Sign In",
-      "needCheckout": "Membership is required to create an account. Choose a plan to continue."
+      "needCheckout": "Membership is required to create an account. Choose a plan to continue.",
+      "adFreePerk": "Members browse ad-free — a perk of joining the Hollow."
     }
   },
   "directMessages": {
@@ -630,13 +631,14 @@
     "description": "Choose a digital membership to participate in perfumer's hollow — browse stays free.",
     "heading": "Subscribe",
     "subheading": "Join perfumer's hollow with an annual membership",
-    "participateCopy": "The Archive and Houses remain free to browse. Collection, Exchange, and community tools require a paid plan.",
+    "participateCopy": "The Archive and Houses remain free to browse. Collection, Exchange, and community tools require a paid plan. Members also browse without ads.",
     "paymentRequired": "Complete checkout below. You’ll create your account right after payment.",
     "emailHelp": "Use the email you’ll sign up with — we’ll prefill it after payment.",
     "canceledNotice": "Checkout was canceled. You can try again when you’re ready.",
     "cta": "Continue to payment",
     "signIn": "Sign in",
     "tierPrice": "${price}/year",
+    "adFreePerk": "Every plan includes ad-free browsing.",
     "tiers": {
       "member": "Member",
       "premium": "Premium",
@@ -1968,10 +1970,11 @@
       "contentOne": "Perfumer’s Hollow respects your privacy and handles account information responsibly.",
       "contentList": {
         "one": "Information Collected: We may collect basic account information (such as username, email, and preferences) to help personalize your experience and improve the site.",
-        "two": "Use of Data: Data is used internally only — for recommendations, feature improvements, and fraud prevention. It is never sold, never shared with advertisers, and never used for resale or marketing beyond this site.",
+        "two": "Use of Data: Account data is used to run the service — recommendations, feature improvements, and fraud prevention. We do not sell your personal information.",
         "three": "Cookies: Like many websites, we use cookies to remember your session and keep you logged in.",
-        "four": "Security: We take reasonable steps to protect your data, but no system is impenetrable. Handle your account credentials as carefully as you’d handle your favorite perfume bottle.",
-        "five": "Contact: For questions, data requests, or to report suspicious activity, use Correspondence or email contact@perfumershollow.com."
+        "four": "Advertising: Non-members may see third-party ads (for example via Google AdSense). Participating members browse without ads. Ad partners may use cookies or similar technologies subject to their own policies.",
+        "five": "Security: We take reasonable steps to protect your data, but no system is impenetrable. Handle your account credentials as carefully as you’d handle your favorite perfume bottle.",
+        "six": "Contact: For questions, data requests, or to report suspicious activity, use Correspondence or email contact@perfumershollow.com."
       }
     },
     "changes": {
@@ -2837,7 +2840,8 @@
           "browseCatalog": "Browse the full catalog",
           "basicCollection": "Basic collection management",
           "scentQuiz": "Scent quiz",
-          "recommendationExplanations": "Recommendation explanations (always included)"
+          "recommendationExplanations": "Recommendation explanations (always included)",
+          "adFreeBrowsing": "Ad-free browsing"
         }
       },
       "premium": {

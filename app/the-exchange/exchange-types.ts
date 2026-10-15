@@ -67,4 +67,5 @@ export type ExchangePageData = {
   traderReputationByUserId?: Record<string, TraderReputationV1>
   viewerId?: string | null
   openSplitChipsByPerfumeId?: Record<string, OpenSplitChip[]>
+  showAds?: boolean
 }

@@ -38,7 +38,8 @@ const PrivacyPage = async () => {
             <li>{tTerms("privacy.contentList.two")}</li>
             <li>{tTerms("privacy.contentList.three")}</li>
             <li>{tTerms("privacy.contentList.four")}</li>
-            <li>{t("contactLine")}</li>
+            <li>{tTerms("privacy.contentList.five")}</li>
+            <li>{tTerms("privacy.contentList.six")}</li>
           </ul>
         </section>
         <section className="mx-auto mt-8 bg-noir-dark p-8 rounded-lg border border-noir-gold mb-20">
