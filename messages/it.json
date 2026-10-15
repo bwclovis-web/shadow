@@ -400,10 +400,11 @@
       "title": "Registrati",
       "description": "Completa il pagamento, poi crea l'account per gestire la tua collezione.",
       "heading": "Unisciti al Hollow",
-      "subheading": "Dopo il pagamento, crea l'account per seguire le scoperte, costruire la collezione e connetterti con altri collezionisti.",
+      "subheading": "Dopo il pagamento, crea l'account per seguire le scoperte, costruire la collezione, navigare senza annunci e connetterti con altri collezionisti.",
       "alreadyHere": "Sei già nel Hollow?",
       "signIn": "Torna all'accesso",
-      "needCheckout": "E richiesta un'iscrizione per creare un account. Scegli un piano per continuare."
+      "needCheckout": "E richiesta un'iscrizione per creare un account. Scegli un piano per continuare.",
+      "adFreePerk": "I membri navigano senza annunci — un vantaggio di unirti al Hollow."
     },
     "privacyLink": "Privacy"
   },
@@ -436,8 +437,9 @@
     "canceledNotice": "Il pagamento è stato annullato. Puoi riprovare quando vuoi.",
     "cta": "Continua al pagamento",
     "signIn": "Accedi",
-    "participateCopy": "The Archive e Houses restano gratuiti da sfogliare. Collezione, Exchange e strumenti community richiedono un piano a pagamento.",
+    "participateCopy": "The Archive e Houses restano gratuiti da sfogliare. Collezione, Exchange e strumenti community richiedono un piano a pagamento. I membri navigano anche senza annunci.",
     "tierPrice": "${price}/anno",
+    "adFreePerk": "Ogni piano include la navigazione senza annunci.",
     "tiers": {
       "member": "Member",
       "premium": "Premium",
@@ -1691,10 +1693,11 @@
       "contentOne": "Rispettiamo la tua privacy come un profumiere custodisce una formula segreta. Ecco come trattiamo i tuoi dati:",
       "contentList": {
         "one": "Informazioni raccolte: possiamo raccogliere dati di account (nome utente, email, preferenze) per personalizzare l'esperienza e migliorare il sito.",
-        "two": "Uso dei dati: solo uso interno — raccomandazioni, miglioramenti, prevenzione frodi. Mai venduti, mai condivisi con inserzionisti.",
+        "two": "Uso dei dati: i dati dell'account servono a far funzionare il servizio — raccomandazioni, miglioramenti e prevenzione frodi. Non vendiamo le tue informazioni personali.",
         "three": "Cookie: come molti siti, usiamo cookie per ricordare la sessione e tenerti connesso.",
-        "four": "Sicurezza: adottiamo misure ragionevoli per proteggere i dati, ma nessun sistema è impenetrabile. Proteggi le credenziali come il tuo flacone preferito.",
-        "five": "Contatto: per domande, richieste dati o segnalazione di attività sospette, scrivici a [INSERT CONTACT EMAIL HERE]."
+        "four": "Pubblicita: i non membri possono vedere annunci di terze parti (ad esempio Google AdSense). I membri partecipanti navigano senza annunci. I partner pubblicitari possono usare cookie o tecnologie simili secondo le loro politiche.",
+        "five": "Sicurezza: adottiamo misure ragionevoli per proteggere i dati, ma nessun sistema è impenetrabile. Proteggi le credenziali come il tuo flacone preferito.",
+        "six": "Contatto: per domande, richieste dati o segnalazione di attività sospette, usa Correspondence o scrivi a contact@perfumershollow.com."
       }
     },
     "changes": {
@@ -2837,7 +2840,8 @@
           "browseCatalog": "Sfoglia il catalogo completo",
           "basicCollection": "Gestione base della collezione",
           "scentQuiz": "Quiz olfattivo",
-          "recommendationExplanations": "Spiegazioni delle raccomandazioni (sempre incluse)"
+          "recommendationExplanations": "Spiegazioni delle raccomandazioni (sempre incluse)",
+          "adFreeBrowsing": "Navigazione senza annunci"
         }
       },
       "premium": {

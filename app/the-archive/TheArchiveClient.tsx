@@ -8,6 +8,7 @@ import AlphabeticalNav from "@/components/Organisms/AlphabeticalNav"
 import DataDisplaySection from "@/components/Organisms/DataDisplaySection"
 import DataFilters from "@/components/Organisms/DataFilters"
 import TitleBanner from "@/components/Organisms/TitleBanner"
+import AdSenseUnit from "@/components/Atoms/AdSenseUnit"
 import { THE_ARCHIVE_PATH } from "@/constants/routes"
 import { useAlphabeticalBrowserState } from "@/hooks/useAlphabeticalBrowserState"
 import { useGsapStagger } from "@/hooks/useGsapStagger"
@@ -38,6 +39,7 @@ export type TheArchiveClientProps = {
   /** When set (from `?q=`), show name-search results instead of letter browse. */
   initialSearchQuery?: string | null
   initialSearchResults?: PerfumeFromApi[]
+  showAds?: boolean
 }
 
 type PerfumeFromApi = {
@@ -69,6 +71,7 @@ const TheArchiveClient = ({
   initialFeaturedPerfumes = [],
   initialSearchQuery = null,
   initialSearchResults = [],
+  showAds = true,
 }: TheArchiveClientProps = {}) => {
   const t = useTranslations("allPerfumes")
   const tSort = useTranslations("sortOptions")
@@ -320,6 +323,8 @@ const TheArchiveClient = ({
           pageSize={pageSize}
           className="mb-8"
         />
+
+        <AdSenseUnit showAds={showAds} variant="display" />
 
         {isFeaturedMode && sortedPerfumes.length > 0 ? (
           <h2 className="mb-4 text-center text-2xl font-semibold text-noir-gold">

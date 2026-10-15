@@ -400,10 +400,11 @@
       "title": "S'inscrire",
       "description": "Finalisez le paiement, puis creez votre compte pour gerer votre collection.",
       "heading": "Rejoignez le Hollow",
-      "subheading": "Apres le paiement, creez votre compte pour suivre vos decouvertes, batir votre collection et echanger avec d'autres collectionneurs.",
+      "subheading": "Apres le paiement, creez votre compte pour suivre vos decouvertes, batir votre collection, naviguer sans publicite et echanger avec d'autres collectionneurs.",
       "alreadyHere": "Déjà dans le Hollow ?",
       "signIn": "Retour à la connexion",
-      "needCheckout": "Une adhesion est requise pour creer un compte. Choisissez une offre pour continuer."
+      "needCheckout": "Une adhesion est requise pour creer un compte. Choisissez une offre pour continuer.",
+      "adFreePerk": "Les membres naviguent sans publicite — un avantage de rejoindre le Hollow."
     },
     "privacyLink": "Confidentialité"
   },
@@ -436,8 +437,9 @@
     "canceledNotice": "Le paiement a été annulé. Vous pouvez réessayer quand vous voulez.",
     "cta": "Continuer vers le paiement",
     "signIn": "Se connecter",
-    "participateCopy": "The Archive et Houses restent gratuits a consulter. Collection, Exchange et outils communautaires necessitent un abonnement.",
+    "participateCopy": "The Archive et Houses restent gratuits a consulter. Collection, Exchange et outils communautaires necessitent un abonnement. Les membres naviguent aussi sans publicite.",
     "tierPrice": "${price}/an",
+    "adFreePerk": "Chaque formule inclut une navigation sans publicite.",
     "tiers": {
       "member": "Member",
       "premium": "Premium",
@@ -1691,10 +1693,11 @@
       "contentOne": "Nous respectons votre vie privée comme un parfumeur garde sa formule. Voici comment nous traitons vos données :",
       "contentList": {
         "one": "Informations collectées : nous pouvons collecter des informations de compte (identifiant, e-mail, préférences) pour personnaliser votre expérience et améliorer le site.",
-        "two": "Utilisation des données : usage interne uniquement — recommandations, améliorations, prévention de la fraude. Jamais vendu, jamais partagé avec des annonceurs.",
+        "two": "Utilisation des données : les données de compte servent à faire fonctionner le service — recommandations, améliorations et prévention de la fraude. Nous ne vendons pas vos informations personnelles.",
         "three": "Cookies : comme beaucoup de sites, nous utilisons des cookies pour mémoriser votre session et vous garder connecté.",
-        "four": "Sécurité : nous prenons des mesures raisonnables pour protéger vos données, mais aucun système n'est impénétrable. Protégez vos identifiants comme votre flacon préféré.",
-        "five": "Contact : pour questions, demandes de données ou signalement d'activité suspecte, écrivez-nous à [INSERT CONTACT EMAIL HERE]."
+        "four": "Publicité : les non-membres peuvent voir des annonces de tiers (par exemple Google AdSense). Les membres participants naviguent sans publicité. Les partenaires publicitaires peuvent utiliser des cookies ou technologies similaires selon leurs propres politiques.",
+        "five": "Sécurité : nous prenons des mesures raisonnables pour protéger vos données, mais aucun système n'est impénétrable. Protégez vos identifiants comme votre flacon préféré.",
+        "six": "Contact : pour questions, demandes de données ou signalement d'activité suspecte, utilisez Correspondence ou écrivez à contact@perfumershollow.com."
       }
     },
     "changes": {
@@ -2837,7 +2840,8 @@
           "browseCatalog": "Parcourir le catalogue complet",
           "basicCollection": "Gestion de base de la collection",
           "scentQuiz": "Quiz olfactif",
-          "recommendationExplanations": "Explications des recommandations (toujours incluses)"
+          "recommendationExplanations": "Explications des recommandations (toujours incluses)",
+          "adFreeBrowsing": "Navigation sans publicite"
         }
       },
       "premium": {

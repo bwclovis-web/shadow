@@ -17,6 +17,7 @@ import { selectionFromVoteRow } from "@/models/perfumeSeasonVote.server"
 import { getPerfumeBySlug } from "@/models/perfume.server"
 import { rulesRecommendationService } from "@/services/recommendations"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
+import { shouldShowAds } from "@/utils/ads/should-show-ads"
 import { getTraderDisplayName } from "@/utils/user"
 
 import PerfumeDetailClient from "./PerfumeDetailClient"
@@ -193,6 +194,7 @@ export default async function PerfumeDetailPage({
       relatedArticles={relatedArticles}
       initialFollowing={followState.following}
       selectedLetter={resolvedSearchParams.letter ?? null}
+      showAds={shouldShowAds(session?.user)}
     />
     </>
   )

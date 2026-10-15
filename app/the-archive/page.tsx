@@ -7,6 +7,9 @@ import { buildItemListJsonLd } from "@/lib/seo/json-ld"
 import { buildPageMetadata } from "@/lib/seo/metadata"
 import { getAllPerfumesWithOptions } from "@/models/perfume-catalog.server"
 import { searchPerfumeByNameForViewer } from "@/models/perfume-search.server"
+import { shouldShowAds } from "@/utils/ads/should-show-ads"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
+import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
 const ARCHIVE_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
 const ARCHIVE_SEARCH_LIMIT = 40
@@ -23,11 +26,16 @@ export const generateMetadata = async ({
   const resolved = await searchParams
   const q = typeof resolved.q === "string" ? resolved.q.trim() : ""
   if (q) {
-    return buildPageMetadata({
-      title: t("searchTitle", { query: q }),
-      description: t("searchDescription", { query: q }),
-      canonicalPath: `${THE_ARCHIVE_PATH}?q=${encodeURIComponent(q)}`,
-    })
+    // Search result URLs are useful for users/SearchAction but should not be
+    // indexed as distinct thin pages — canonical + noindex to the hub.
+    return {
+      ...buildPageMetadata({
+        title: t("searchTitle", { query: q }),
+        description: t("searchDescription", { query: q }),
+        canonicalPath: THE_ARCHIVE_PATH,
+      }),
+      robots: { index: false, follow: true },
+    }
   }
   return buildPageMetadata({
     title: t("title"),
@@ -58,6 +66,10 @@ const TheArchivePage = async ({ searchParams }: Props) => {
   const t = await getTranslations("allPerfumes")
   const resolved = await searchParams
   const q = typeof resolved.q === "string" ? resolved.q.trim() : ""
+  const cookieHeader = await getCookieHeader()
+  const session = await getSessionFromCookieHeader(cookieHeader, {
+    includeUser: true,
+  })
 
   let searchResults: Awaited<ReturnType<typeof searchPerfumeByNameForViewer>> =
     []
@@ -104,7 +116,7 @@ const TheArchivePage = async ({ searchParams }: Props) => {
             __html: JSON.stringify(
               buildItemListJsonLd({
                 name: t("searchHeading", { query: q }),
-                path: `${THE_ARCHIVE_PATH}?q=${encodeURIComponent(q)}`,
+                path: THE_ARCHIVE_PATH,
                 items: searchResults.map(p => ({
                   name: p.name,
                   path: `/perfume/${p.slug}`,
@@ -121,6 +133,7 @@ const TheArchivePage = async ({ searchParams }: Props) => {
         initialFeaturedPerfumes={featuredPerfumes}
         initialSearchQuery={q || null}
         initialSearchResults={searchResults.map(mapPerfumeRow)}
+        showAds={shouldShowAds(session?.user)}
       />
     </>
   )

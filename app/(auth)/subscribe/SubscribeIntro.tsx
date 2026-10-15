@@ -30,6 +30,7 @@ const SubscribeIntro = async ({ tierParam }: SubscribeIntroProps) => {
         {t(`tiers.${tier}`)} — {t("tierPrice", { price })}
       </p>
       <p className="text-base text-noir-gold-100 mb-4">{t("participateCopy")}</p>
+      <p className="text-base text-noir-gold-500 mb-4">{t("adFreePerk")}</p>
       <VooDooLink
         url={SIGN_IN_PATH}
         variant="primary"

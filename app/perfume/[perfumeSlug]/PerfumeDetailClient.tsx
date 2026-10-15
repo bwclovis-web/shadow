@@ -5,6 +5,7 @@ import { useTransitionRouter } from "next-view-transitions"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { useTranslations } from "next-intl"
 
+import AdSenseUnit from "@/components/Atoms/AdSenseUnit"
 import { Button } from "@/components/Atoms/Button"
 import ReviewStatusBadge from "@/components/Atoms/ReviewStatusBadge"
 import PerfumeIcons from "@/components/Containers/Perfume/PerfumeIcons"
@@ -53,6 +54,7 @@ type PerfumeDetailClientProps = {
   relatedArticles: ArticleListItem[]
   initialFollowing?: boolean
   selectedLetter: string | null
+  showAds?: boolean
 }
 
 const PerfumeDetailClient = ({
@@ -70,6 +72,7 @@ const PerfumeDetailClient = ({
   relatedArticles,
   initialFollowing = false,
   selectedLetter,
+  showAds = true,
 }: PerfumeDetailClientProps) => {
   const { data: perfume } = usePerfume(initialPerfume.slug, initialPerfume)
   const router = useTransitionRouter()
@@ -236,6 +239,8 @@ const PerfumeDetailClient = ({
             />
           </div>
         </div>
+
+        <AdSenseUnit showAds={showAds} variant="display" />
 
         {similarPerfumes.length > 0 && (
           <SimilarPerfumesCarousel

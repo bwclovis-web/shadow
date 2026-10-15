@@ -28,6 +28,7 @@ describe("buildPerfumeProductJsonLd", () => {
 
     expect(jsonLd["@type"]).toBe("Product")
     expect(jsonLd.name).toBe("Noir 5")
+    expect(jsonLd.description).toBe("A dark floral.")
     expect(jsonLd.url).toBe("https://shadow.example/perfume/noir-5")
     expect(jsonLd.brand).toEqual({
       "@type": "Brand",
@@ -36,6 +37,18 @@ describe("buildPerfumeProductJsonLd", () => {
     })
     expect(jsonLd.image).toEqual(["https://cdn.example/bottle.png"])
     expect(jsonLd.aggregateRating).toBeUndefined()
+  })
+
+  it("omits year-only scrape junk from Product description", () => {
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://shadow.example")
+
+    const jsonLd = buildPerfumeProductJsonLd({
+      name: "Phenomene Verte",
+      slug: "phenomene-verte",
+      description: "2012.0",
+    })
+
+    expect(jsonLd.description).toBeUndefined()
   })
 
   it("adds note layers as additionalProperty", () => {

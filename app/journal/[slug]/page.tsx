@@ -3,7 +3,9 @@ import Image from "next/image"
 import { format } from "date-fns"
 import { notFound, redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
+import type { PortableTextBlock } from "@portabletext/types"
 
+import AdSenseUnit from "@/components/Atoms/AdSenseUnit"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { PortableTextContent } from "@/components/Containers/Blog/PortableTextContent"
 import { HOUSE_DETAIL_PATH, JOURNAL_PATH, PERFUME_PATH } from "@/constants/routes"
@@ -12,6 +14,9 @@ import { getArticleCoverUrl } from "@/lib/sanity/image"
 import { buildArticleJsonLd } from "@/lib/sanity/json-ld"
 import { buildPageMetadata } from "@/lib/seo/metadata"
 import { isSanityConfigured } from "@/sanity/env"
+import { shouldShowAds } from "@/utils/ads/should-show-ads"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
+import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
 export const revalidate = 60
 
@@ -66,7 +71,14 @@ const ArticleDetailPage = async ({ params }: Props) => {
   }
 
   const { slug } = await params
-  const article = await getArticleBySlug(slug)
+  const [article, cookieHeader] = await Promise.all([
+    getArticleBySlug(slug),
+    getCookieHeader(),
+  ])
+  const session = await getSessionFromCookieHeader(cookieHeader, {
+    includeUser: true,
+  })
+  const showAds = shouldShowAds(session?.user)
 
   if (!article) {
     notFound()
@@ -76,6 +88,11 @@ const ArticleDetailPage = async ({ params }: Props) => {
   const coverUrl = getArticleCoverUrl(article.coverImage, 1600, 900)
   const publishedLabel = format(new Date(article.publishedAt), "MMMM d, yyyy")
   const jsonLd = buildArticleJsonLd(article)
+
+  const bodyBlocks = (article.body ?? []) as PortableTextBlock[]
+  const midIndex = Math.max(1, Math.floor(bodyBlocks.length / 2))
+  const bodyBefore = bodyBlocks.slice(0, midIndex)
+  const bodyAfter = bodyBlocks.slice(midIndex)
 
   return (
     <article className="inner-container py-12">
@@ -126,7 +143,13 @@ const ArticleDetailPage = async ({ params }: Props) => {
         </div>
       ) : null}
 
-      <PortableTextContent value={article.body} />
+      {bodyBefore.length > 0 ? <PortableTextContent value={bodyBefore} /> : null}
+      {bodyBlocks.length > 1 ? (
+        <AdSenseUnit showAds={showAds} variant="inArticle" />
+      ) : null}
+      {bodyAfter.length > 0 ? <PortableTextContent value={bodyAfter} /> : null}
+
+      <AdSenseUnit showAds={showAds} variant="display" />
 
       {(article.houseRefs && article.houseRefs.length > 0) ||
       (article.perfumeRefs && article.perfumeRefs.length > 0) ? (

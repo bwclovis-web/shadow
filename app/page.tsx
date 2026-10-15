@@ -1,5 +1,6 @@
 import { getFollowedActivity, getRecentlyListedActivity } from "@/models/activity-feed.server"
 import { getCommunityStats } from "@/models/community-stats.server"
+import { shouldShowAds } from "@/utils/ads/should-show-ads"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { getSeasonalTrendingPerfumes } from "@/models/seasonal-trending.server"
@@ -42,6 +43,7 @@ const HomePage = async () => {
       recentListings={recentListings}
       followedActivity={followedActivity}
       seasonalTrending={seasonalTrending}
+      showAds={shouldShowAds(session?.user)}
     />
   )
 }

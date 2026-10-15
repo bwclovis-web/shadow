@@ -23,6 +23,7 @@ export type MembershipBenefitBulletKey =
   | "basicCollection"
   | "scentQuiz"
   | "recommendationExplanations"
+  | "adFreeBrowsing"
   | "advancedTasteGraph"
   | "unlimitedComparisons"
   | "savedSearchesAlerts"
@@ -49,6 +50,7 @@ export const MEMBERSHIP_BENEFITS = {
       "basicCollection",
       "scentQuiz",
       "recommendationExplanations",
+      "adFreeBrowsing",
     ] as const satisfies readonly MembershipBenefitBulletKey[],
   },
   premium: {

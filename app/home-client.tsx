@@ -5,6 +5,7 @@ import dynamic from "next/dynamic"
 import Image from "next/image"
 import { useTranslations } from "next-intl"
 
+import AdSenseUnit from "@/components/Atoms/AdSenseUnit"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import Select from "@/components/Atoms/Select"
 import CommunityStatsStrip from "@/components/Containers/Home/CommunityStatsStrip"
@@ -43,6 +44,7 @@ interface HomeClientProps {
   recentListings?: ActivityFeedListingRow[]
   followedActivity?: FollowedActivityItem[]
   seasonalTrending?: SeasonalTrendingResult
+  showAds?: boolean
 }
 
 const scheduleIdleWork = (work: () => void) => {
@@ -60,6 +62,7 @@ export default function HomeClient({
   recentListings = [],
   followedActivity = [],
   seasonalTrending = { season: "spring", perfumes: [] },
+  showAds = true,
 }: HomeClientProps) {
   const [searchType, setSearchType] = useState<"perfume-house" | "perfume">("perfume")
   const container = useRef<HTMLDivElement>(null)
@@ -198,6 +201,8 @@ export default function HomeClient({
           </PrefetchLink>
         </nav>
       </section>
+
+      <AdSenseUnit showAds={showAds} variant="display" className="relative z-10" />
 
       {showFeedSection ? (
         <DeferredBelowFold

@@ -15,6 +15,7 @@ const SignUpIntro = async () => {
         {t("heading")}
       </h1>
       <p className="text-lg text-noir-gold-100 mb-4">{t("subheading")}</p>
+      <p className="text-base text-noir-gold-100 mb-4">{t("adFreePerk")}</p>
       <p className="text-lg font-semibold text-noir-gold-500 mb-4">{t("alreadyHere")}</p>
       <VooDooLink
         url={SIGN_IN_PATH}

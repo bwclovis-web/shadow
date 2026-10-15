@@ -6,6 +6,9 @@ import { THE_ARCHIVE_PATH } from "@/constants/routes"
 import { buildItemListJsonLd } from "@/lib/seo/json-ld"
 import { buildPageMetadata } from "@/lib/seo/metadata"
 import { getPerfumesByLetterPaginated } from "@/models/perfume.server"
+import { shouldShowAds } from "@/utils/ads/should-show-ads"
+import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
+import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
 /** Matches `useResponsivePageSize` initial state (8) until `matchMedia` runs. */
 const DEFAULT_PAGE_SIZE = 8
@@ -39,6 +42,10 @@ const TheArchiveLetterPage = async ({ params }: Props) => {
   const { letter } = await params
   const normalizedLetter = letter?.toUpperCase()
   const isValidLetter = /^[A-Za-z]$/.test(normalizedLetter)
+  const cookieHeader = await getCookieHeader()
+  const session = await getSessionFromCookieHeader(cookieHeader, {
+    includeUser: true,
+  })
 
   let initialPerfumes: Awaited<ReturnType<typeof getPerfumesByLetterPaginated>>["perfumes"] = []
   let initialTotal = 0
@@ -80,6 +87,7 @@ const TheArchiveLetterPage = async ({ params }: Props) => {
         initialLetter={isValidLetter ? normalizedLetter : null}
         initialPerfumes={perfumesForClient}
         initialPerfumeTotal={initialTotal}
+        showAds={shouldShowAds(session?.user)}
       />
     </>
   )
