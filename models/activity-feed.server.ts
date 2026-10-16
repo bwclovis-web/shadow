@@ -72,6 +72,22 @@ export const getRecentlyListedActivity = async (
     select: activityFeedListingSelect,
   })
 
+/** Same feed for every viewer; shares the new-listings badge revalidate window. */
+export const getCachedRecentlyListedActivity = async (
+  limit = 12
+): Promise<ActivityFeedListingRow[]> => {
+  const rows = await unstable_cache(
+    () => getRecentlyListedActivity(limit),
+    ["recently-listed-activity", String(limit)],
+    {
+      revalidate: NEW_LISTINGS_WEEK_REVALIDATE_SECONDS,
+      tags: ["exchange-new-week"],
+    }
+  )()
+  // unstable_cache stores JSON, so Date fields come back as strings.
+  return rows.map(row => ({ ...row, createdAt: new Date(row.createdAt) }))
+}
+
 export const getNewListingsSinceCount = async (since: Date): Promise<number> =>
   prisma.userPerfume.count({
     where: {

@@ -50,6 +50,7 @@ vi.mock("@/utils/security/auth-cookie.server", () => ({
 }))
 vi.mock("@/utils/server/user-limit.server", () => ({
   canSignupForFree: vi.fn().mockResolvedValue(false),
+  revalidateSignupAvailability: vi.fn(),
 }))
 
 vi.mock("@/utils/user", () => ({

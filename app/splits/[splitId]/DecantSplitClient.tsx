@@ -7,6 +7,7 @@ import { useCallback, useState } from "react"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button"
+import { JoinLink } from "@/components/Molecules/JoinLink"
 import { useCSRF } from "@/hooks/useCSRF"
 import type { DecantSplitForClient } from "@/types/decant-split"
 import { getProfilePathForUser } from "@/utils/user"
@@ -214,7 +215,9 @@ const DecantSplitClient = ({ initialSplit, viewerId }: DecantSplitClientProps) =
       </section>
 
       {!viewerId && (
-        <p className="text-sm text-noir-gold-100">{t("signInToClaim")}</p>
+        <p className="text-sm text-noir-gold-100">
+          {t("signInToClaim")} <JoinLink />
+        </p>
       )}
     </article>
   )

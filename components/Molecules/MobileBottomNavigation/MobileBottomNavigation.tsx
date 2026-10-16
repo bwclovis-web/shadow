@@ -1,6 +1,8 @@
 "use client"
 
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
+import { useJoinCta } from "@/components/Containers/SignupAvailability"
+import { trackJoinCtaClick } from "@/utils/analytics/track-join-cta"
 import { useDirectMessageUnreadCount } from "@/components/Molecules/UserAlertsProvider/UserAlertsProvider"
 import { useUserAlertsContext } from "@/components/Molecules/UserAlertsProvider/UserAlertsProvider"
 import {
@@ -14,7 +16,7 @@ import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { type FC, type HTMLProps, useEffect, useRef, useState } from "react"
 import { BsBell, BsBook, BsCollection } from "react-icons/bs"
-import { FaExchangeAlt, FaUser } from "react-icons/fa"
+import { FaExchangeAlt, FaUser, FaUserPlus } from "react-icons/fa"
 import { MdMail } from "react-icons/md"
 
 const EXCHANGE_PATH = "/the-exchange"
@@ -72,6 +74,8 @@ const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
 }) => {
   const t = useTranslations("navigation")
   const tBottom = useTranslations("navigation.mobileBottom")
+  const tJoin = useTranslations("join")
+  const joinCta = useJoinCta()
   const pathname = usePathname()
   const messageUnread = useDirectMessageUnreadCount()
   const alertsCtx = useUserAlertsContext()
@@ -244,14 +248,15 @@ const MobileBottomNavigation: FC<MobileBottomNavigationProps> = ({
           </PrefetchLink>
         ) : (
           <PrefetchLink
-            href={SIGN_IN}
-            className={navItemClass(isActive(SIGN_IN, true))}
-            aria-current={isActive(SIGN_IN, true) ? "page" : undefined}
+            href={joinCta.href}
+            onClick={() => trackJoinCtaClick("nav-mobile-bottom", joinCta.freeOpen)}
+            className={navItemClass(isActive(joinCta.href, true))}
+            aria-current={isActive(joinCta.href, true) ? "page" : undefined}
           >
-            <FaUser size={20} aria-hidden focusable={false} />
-            <ActiveBar active={isActive(SIGN_IN, true)} />
+            <FaUserPlus size={20} aria-hidden focusable={false} />
+            <ActiveBar active={isActive(joinCta.href, true)} />
             <span className="text-[11px] font-medium leading-tight">
-              {tBottom("signIn")}
+              {tJoin(joinCta.freeOpen ? "ctaOpen" : "ctaShortClosed")}
             </span>
           </PrefetchLink>
         )}

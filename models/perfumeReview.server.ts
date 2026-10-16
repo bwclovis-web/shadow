@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db" 
+import { revalidatePerfumeCommunityCache } from "@/utils/server/revalidate-catalog-cache.server"
 import { sanitizeReviewHtml } from "@/utils/sanitize"
 
 export interface CreateReviewData {
@@ -101,6 +102,7 @@ export async function updatePerfumeReview(
       },
     },
   })
+  revalidatePerfumeCommunityCache(review.perfumeId)
 
   return review
 }
@@ -131,6 +133,7 @@ export async function deletePerfumeReview(
   await prisma.userPerfumeReview.delete({
     where: { id: reviewId },
   })
+  revalidatePerfumeCommunityCache(existingReview.perfumeId)
 
   return { success: true }
 }
@@ -302,6 +305,7 @@ export async function moderatePerfumeReview(reviewId: string, isApproved: boolea
       },
     },
   })
+  revalidatePerfumeCommunityCache(review.perfumeId)
 
   return review
 }

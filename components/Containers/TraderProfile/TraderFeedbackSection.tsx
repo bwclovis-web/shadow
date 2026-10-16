@@ -10,6 +10,7 @@ import { useTranslations } from "next-intl"
 import { FaStar, FaThumbsDown, FaThumbsUp } from "react-icons/fa"
 import { Button } from "~/components/Atoms/Button"
 import Select from "~/components/Atoms/Select"
+import { JoinLink } from "@/components/Molecules/JoinLink"
 import type { TraderFeedbackSort } from "@/models/traderFeedback.server"
 import type { HelpfulnessVoteValue } from "@/models/traderFeedbackHelpfulness.server"
 import { useTraderFeedback, useTraderFeedbackMutations } from "@/hooks/useTraderFeedback"
@@ -416,7 +417,9 @@ const TraderFeedbackSection = memo(function TraderFeedbackSection({
                 </form>
               )
             ) : (
-              <p className="text-noir-gold-500 text-sm">{t("loginPrompt")}</p>
+              <p className="text-noir-gold-500 text-sm">
+                {t("loginPrompt")} <JoinLink />
+              </p>
             )}
           </div>
         </>

@@ -399,8 +399,10 @@
     "signUp": {
       "title": "S'inscrire",
       "description": "Finalisez le paiement, puis creez votre compte pour gerer votre collection.",
+      "descriptionFree": "Rejoignez perfumer's hollow gratuitement en tant que collectionneur fondateur — aucun paiement tant qu'il reste des places.",
       "heading": "Rejoignez le Hollow",
       "subheading": "Apres le paiement, creez votre compte pour suivre vos decouvertes, batir votre collection, naviguer sans publicite et echanger avec d'autres collectionneurs.",
+      "subheadingFree": "Les places fondatrices sont ouvertes : créez votre compte gratuit pour suivre vos découvertes, constituer votre collection et échanger avec d'autres collectionneurs de parfums. Aucun paiement requis.",
       "alreadyHere": "Déjà dans le Hollow ?",
       "signIn": "Retour à la connexion",
       "needCheckout": "Une adhesion est requise pour creer un compte. Choisissez une offre pour continuer.",
@@ -432,6 +434,7 @@
     "description": "Choisissez une adhesion numerique pour participer a perfumer's hollow — la consultation reste gratuite.",
     "heading": "S'abonner",
     "subheading": "Rejoignez perfumer's hollow avec une adhesion annuelle",
+    "foundingOpenNotice": "Les places fondatrices sont encore gratuites — il en reste {remaining} sur {limit}. Aucun forfait nécessaire pour vous inscrire.",
     "paymentRequired": "Finalisez le paiement ci-dessous. Vous creerez votre compte juste apres.",
     "emailHelp": "Utilisez l'e-mail avec lequel vous vous inscrirez — nous le préremplirons après le paiement.",
     "canceledNotice": "Le paiement a été annulé. Vous pouvez réessayer quand vous voulez.",
@@ -1723,7 +1726,6 @@
     "emptyBrowseArchive": "Parcourir L'Archive",
     "emptyCollectorsGuide": "Guide du collectionneur",
     "emptySignIn": "Connexion",
-    "emptySignUp": "Créer un compte",
     "signInToPropose": "Connectez-vous pour proposer un échange",
     "availableFrom": "Disponible chez",
     "search": {
@@ -2200,8 +2202,7 @@
   },
   "follow": {
     "follow": "Suivre",
-    "following": "Abonné",
-    "signInToFollow": "Connectez-vous pour suivre"
+    "following": "Abonné"
   },
   "wishlist": {
     "meta": {
@@ -2825,10 +2826,12 @@
   "membershipPage": {
     "heading": "Abonnement numérique",
     "subheading": "Débloquez découverte, personnalisation et outils de collection — uniquement numérique.",
-    "intro": "Les adhesions Shadow debloquent decouverte, personnalisation et outils de collection. Consultez le catalogue gratuitement ; participer necessite un forfait annuel. Nous ne vendons pas de flacons ni ne traitons de paiements entre collectionneurs.",
+    "intro": "Les adhésions perfumer's hollow débloquent découverte, personnalisation et outils de collection. Consultez le catalogue gratuitement ; participer nécessite un forfait annuel. Nous ne vendons pas de flacons, ne traitons pas de paiements et ne prenons aucune commission sur les transactions.",
+    "introFoundingOpen": "Les collectionneurs fondateurs rejoignent perfumer's hollow gratuitement dans la limite des places : constituez votre collection, votez, donnez votre avis et échangez sans forfait. Les formules payantes ajoutent une découverte plus poussée et des outils de collection avancés. Nous ne vendons pas de flacons, ne traitons pas de paiements et ne prenons aucune commission sur les transactions.",
     "communityLink": "Explorer Community",
     "ctaFree": "Commencer",
     "ctaSubscribe": "S’abonner",
+    "ctaJoinFree": "Rejoindre gratuitement",
     "currentPlanBadge": "Votre plan",
     "currentPlanCta": "Plan actuel",
     "currentPlanMessage": "Vous avez déjà cette adhésion.",
@@ -3006,5 +3009,16 @@
       "termsPrefix": "Voir aussi nos",
       "termsLink": "Conditions d'utilisation"
     }
+  },
+  "join": {
+    "ctaOpen": "Rejoindre gratuitement",
+    "ctaClosed": "Devenir membre",
+    "ctaShortClosed": "Rejoindre",
+    "newHereOpen": "Nouveau ici ? Rejoignez-nous gratuitement",
+    "newHereClosed": "Nouveau ici ? Devenez membre",
+    "followOpen": "Rejoignez gratuitement pour suivre",
+    "followClosed": "Devenez membre pour suivre",
+    "spotsLeft": "{remaining, plural, one {# place fondatrice sur {limit} restante} other {# places fondatrices sur {limit} restantes}}",
+    "bannerOpen": "Les collectionneurs fondateurs s'inscrivent gratuitement — encore {remaining} places sur {limit}."
   }
 }

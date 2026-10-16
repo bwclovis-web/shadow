@@ -4,7 +4,6 @@ import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 
 import { getArticlesForPerfumeSlug } from "@/lib/sanity/articles.server"
-import { prisma } from "@/lib/db"
 import {
   buildBreadcrumbListJsonLd,
   buildPerfumeProductJsonLd,
@@ -12,10 +11,12 @@ import {
 import { buildPageMetadata } from "@/lib/seo/metadata"
 import { truncateDescription } from "@/lib/seo/truncate"
 import { getFollowStateForViewer } from "@/models/user-follow.server"
-import { getPerfumeDetailPayload } from "@/models/perfumeDetail.server"
+import {
+  getPerfumeDetailPayload,
+  getSimilarPerfumesForViewer,
+} from "@/models/perfumeDetail.server"
 import { selectionFromVoteRow } from "@/models/perfumeSeasonVote.server"
 import { getPerfumeBySlug } from "@/models/perfume.server"
-import { rulesRecommendationService } from "@/services/recommendations"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { shouldShowAds } from "@/utils/ads/should-show-ads"
 import { getTraderDisplayName } from "@/utils/user"
@@ -78,15 +79,8 @@ export default async function PerfumeDetailPage({
 
   const viewerId = session?.userId ?? null
   const [payload, similarPerfumes, relatedArticles, followState] = await Promise.all([
-    getPerfumeDetailPayload(
-      perfume.id,
-      session?.userId ?? null,
-      REVIEWS_PAGE_SIZE
-    ),
-    rulesRecommendationService
-      .getSimilarPerfumes(perfume.id, SIMILAR_PERFUMES_LIMIT, {
-        userId: session?.userId,
-      })
+    getPerfumeDetailPayload(perfume.id, viewerId, REVIEWS_PAGE_SIZE),
+    getSimilarPerfumesForViewer(perfume.id, SIMILAR_PERFUMES_LIMIT, viewerId)
       .catch((err) => {
         console.warn(
           "[perfume] getSimilarPerfumes failed, showing none:",
@@ -101,19 +95,6 @@ export default async function PerfumeDetailPage({
   const overall = payload.averageRatings.overall
   const ratingCount = payload.averageRatings.totalRatings
   const reviewSlice = payload.reviewsData.reviews.slice(0, 5)
-  const overallByUserId = new Map<string, number | null>()
-  if (reviewSlice.length > 0) {
-    const ratingRows = await prisma.userPerfumeRating.findMany({
-      where: {
-        perfumeId: perfume.id,
-        userId: { in: reviewSlice.map(r => r.userId) },
-      },
-      select: { userId: true, overall: true },
-    })
-    for (const row of ratingRows) {
-      overallByUserId.set(row.userId, row.overall)
-    }
-  }
 
   const productJsonLd = buildPerfumeProductJsonLd({
     name: perfume.name,
@@ -137,7 +118,7 @@ export default async function PerfumeDetailPage({
         .replace(/\s+/g, " ")
         .trim(),
       datePublished: r.createdAt.toISOString(),
-      ratingValue: overallByUserId.get(r.userId) ?? null,
+      ratingValue: payload.reviewerOverallByUserId[r.userId] ?? null,
     })),
   })
 

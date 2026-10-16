@@ -8,8 +8,8 @@ import {
   getAvailablePerfumesForDecantingPaginated,
   getPerfumeById,
 } from "@/models/perfume.server"
-import { getFollowedActivity, getRecentlyListedActivity } from "@/models/activity-feed.server"
-import { getSeasonalTrendingPerfumes } from "@/models/seasonal-trending.server"
+import { getCachedRecentlyListedActivity, getFollowedActivity } from "@/models/activity-feed.server"
+import { getCachedSeasonalTrendingPerfumes } from "@/models/seasonal-trending.server"
 import { getExchangePalateRecommendations } from "@/models/exchange-palate.server"
 import { getMutualTradeSuggestions } from "@/models/mutual-trade-suggestions.server"
 import { getWishlistExchangeMatches } from "@/models/wishlist-matching.server"
@@ -93,9 +93,9 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
       viewerId
         ? getWishlistExchangeMatches(viewerId)
         : Promise.resolve([]),
-      getRecentlyListedActivity(12),
+      getCachedRecentlyListedActivity(12),
       viewerId ? getFollowedActivity(viewerId, 12) : Promise.resolve([]),
-      getSeasonalTrendingPerfumes(10),
+      getCachedSeasonalTrendingPerfumes(10),
       viewerId
         ? getExchangePalateRecommendations(viewerId).catch(error => {
             console.error("[the-exchange] palate recommendations failed", error)

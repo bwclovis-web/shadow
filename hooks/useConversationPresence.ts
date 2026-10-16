@@ -4,6 +4,9 @@ import { useEffect } from "react"
 
 import { useCSRF } from "@/hooks/useCSRF"
 
+/** Must stay below `PRESENCE_ACTIVE_MS` in `models/conversation-presence.server.ts`. */
+const PRESENCE_HEARTBEAT_MS = 60_000
+
 export const useConversationPresence = (counterpartUserId: string | null) => {
   const { addToHeaders } = useCSRF()
 
@@ -29,17 +32,17 @@ export const useConversationPresence = (counterpartUserId: string | null) => {
       postPresence(visible)
     }
 
+    const heartbeat = () => {
+      if (document.visibilityState === "visible") postPresence(true)
+    }
+
     update()
-    const heartbeat = setInterval(update, 30_000)
+    const heartbeatId = setInterval(heartbeat, PRESENCE_HEARTBEAT_MS)
     document.addEventListener("visibilitychange", update)
-    window.addEventListener("focus", update)
-    window.addEventListener("blur", update)
 
     return () => {
-      clearInterval(heartbeat)
+      clearInterval(heartbeatId)
       document.removeEventListener("visibilitychange", update)
-      window.removeEventListener("focus", update)
-      window.removeEventListener("blur", update)
       postPresence(false)
     }
   }, [counterpartUserId, addToHeaders])

@@ -101,7 +101,9 @@ const ThreadClient = ({
   }
 
   useEffect(() => {
-    const interval = setInterval(() => router.refresh(), 15_000)
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") router.refresh()
+    }, 30_000)
     const onVisibility = () => {
       if (document.visibilityState === "visible") router.refresh()
     }

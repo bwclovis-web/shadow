@@ -5,13 +5,17 @@ import { getTranslations } from "next-intl/server"
 import { Button } from "@/components/Atoms/Button"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
+import { FoundingSpotsBanner } from "@/components/Molecules/FoundingSpotsBanner"
 import TitleBanner from "@/components/Organisms/TitleBanner"
+import { SIGN_UP } from "@/constants/routes"
 import { prisma } from "@/lib/db"
 import { buildPageMetadata } from "@/lib/seo/metadata"
 import { MEMBERSHIP_BENEFITS } from "@/utils/membership/benefits"
 import { resolveMembershipTier } from "@/utils/membership/entitlements.server"
+import { CLOSED_SIGNUP_AVAILABILITY } from "@/utils/membership/signup-availability"
 import { membershipTierToCheckoutTier } from "@/utils/membership/stripe-prices"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
+import { getSignupAvailability } from "@/utils/server/user-limit.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { styleMerge } from "@/utils/styleUtils"
 
@@ -42,7 +46,12 @@ const getCurrentMembershipTier = async (): Promise<MembershipTier | null> => {
 
 const MembershipBenefitsPage = async () => {
   const t = await getTranslations("membershipPage")
-  const currentTier = await getCurrentMembershipTier()
+  const [currentTier, availability] = await Promise.all([
+    getCurrentMembershipTier(),
+    getSignupAvailability().catch(() => CLOSED_SIGNUP_AVAILABILITY),
+  ])
+  const isGuest = currentTier === null
+  const foundingOpen = isGuest && availability.freeOpen
   const tiers = [
     { key: "free" as const },
     { key: "premium" as const },
@@ -57,8 +66,11 @@ const MembershipBenefitsPage = async () => {
         subheading={t("subheading")}
       />
       <PageWrapper>
+        {foundingOpen ? (
+          <FoundingSpotsBanner placement="membership" className="mb-6" />
+        ) : null}
         <p className="mb-8 text-noir-gold-100/90 max-w-2xl">
-          {t("intro")}{" "}
+          {foundingOpen ? t("introFoundingOpen") : t("intro")}{" "}
           <PrefetchLink href="/community" className="underline text-noir-gold-500">
             {t("communityLink")}
           </PrefetchLink>
@@ -67,7 +79,8 @@ const MembershipBenefitsPage = async () => {
           {tiers.map(({ key }) => {
             const benefit = MEMBERSHIP_BENEFITS[key]
             const checkoutTier = membershipTierToCheckoutTier(key)
-            const href = `/subscribe?tier=${checkoutTier}`
+            const joinFree = foundingOpen && key === "free"
+            const href = joinFree ? SIGN_UP : `/subscribe?tier=${checkoutTier}`
             const isCurrent = currentTier === key
             return (
               <section
@@ -120,7 +133,7 @@ const MembershipBenefitsPage = async () => {
                     href={href}
                     className="text-center text-sm uppercase tracking-wide border border-noir-gold/40 py-2 rounded hover:bg-white/5"
                   >
-                    {t("ctaSubscribe")}
+                    {joinFree ? t("ctaJoinFree") : t("ctaSubscribe")}
                   </PrefetchLink>
                 )}
               </section>

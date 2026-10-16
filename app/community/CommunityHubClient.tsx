@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl"
 
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import Select from "@/components/Atoms/Select"
+import { JoinLink } from "@/components/Molecules/JoinLink"
 
 import {
   AlertsTab,
@@ -155,7 +156,8 @@ const CommunityHubClient = ({ signedIn, signInHref }: CommunityHubClientProps) =
             {t("signInPrompt")}{" "}
             <PrefetchLink href={signInHref} className="underline text-noir-gold-500">
               {t("signIn")}
-            </PrefetchLink>
+            </PrefetchLink>{" "}
+            <JoinLink />
           </p>
         ) : null}
 

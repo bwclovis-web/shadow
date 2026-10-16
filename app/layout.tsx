@@ -29,6 +29,9 @@ import {
   getAdSenseClientId,
   isAdSenseEnabled,
 } from '@/utils/ads/should-show-ads'
+import { SignupAvailabilityProvider } from '@/components/Containers/SignupAvailability'
+import { CLOSED_SIGNUP_AVAILABILITY } from '@/utils/membership/signup-availability'
+import { getSignupAvailability } from '@/utils/server/user-limit.server'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -84,12 +87,16 @@ export default async function RootLayout({
   const adsenseClientId = getAdSenseClientId()
   const adsenseEnabled = isAdSenseEnabled()
 
-  let exchangeNewThisWeekCount = 0
-  try {
-    exchangeNewThisWeekCount = await getNewListingsThisWeekCount()
-  } catch (error) {
-    console.error("Failed to load exchange new listings count:", error)
-  }
+  const [exchangeNewThisWeekCount, signupAvailability] = await Promise.all([
+    getNewListingsThisWeekCount().catch((error: unknown) => {
+      console.error("Failed to load exchange new listings count:", error)
+      return 0
+    }),
+    getSignupAvailability().catch((error: unknown) => {
+      console.error("Failed to load signup availability:", error)
+      return CLOSED_SIGNUP_AVAILABILITY
+    }),
+  ])
 
   return (
     <html lang={locale} className={`${inter.variable} ${cormorantGaramond.variable}`}>
@@ -117,6 +124,7 @@ export default async function RootLayout({
         ) : null}
         <ViewTransitionsWrapper>
           <NextIntlClientProvider locale={locale} messages={messages}>
+            <SignupAvailabilityProvider availability={signupAvailability}>
             <UserAlertsProvider userId={user?.id}>
               <ExchangeNewListingsBadgeProvider
                 initialCount={exchangeNewThisWeekCount}
@@ -132,6 +140,7 @@ export default async function RootLayout({
               </Providers>
               </ExchangeNewListingsBadgeProvider>
             </UserAlertsProvider>
+            </SignupAvailabilityProvider>
           </NextIntlClientProvider>
           <div id="modal-portal" />
         </ViewTransitionsWrapper>

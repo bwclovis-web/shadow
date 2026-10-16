@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import type React from "react"
 import { getTranslations } from "next-intl/server"
 import { notFound, redirect } from "next/navigation"
+import { cache } from "react"
 
 import { getThread, markThreadAsRead } from "@/models/contactMessage.server"
 import { getActiveDisputeTradeIds } from "@/models/trade-dispute.server"
@@ -14,6 +15,19 @@ import { getTraderDisplayName } from "@/utils/user"
 
 import ThreadClient from "./ThreadClient"
 
+const getThreadCounterpart = cache((otherUserId: string) =>
+  prisma.user.findUnique({
+    where: { id: otherUserId },
+    select: {
+      id: true,
+      username: true,
+      firstName: true,
+      lastName: true,
+      avatarImage: true,
+    },
+  })
+)
+
 export async function generateMetadata({
   params,
 }: {
@@ -21,10 +35,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { otherUserId } = await params
   const t = await getTranslations("directMessages.meta")
-  const otherUser = await prisma.user.findUnique({
-    where: { id: otherUserId },
-    select: { username: true, firstName: true, lastName: true },
-  })
+  const otherUser = await getThreadCounterpart(otherUserId)
   if (!otherUser) {
     return {
       title: t("threadFallbackTitle"),
@@ -54,7 +65,7 @@ export default async function ThreadPage({
   }
 
   await redirectUnlessCanParticipate(
-    session.user.id,
+    session.user,
     `/exchanges/${otherUserId}`
   )
 
@@ -62,16 +73,7 @@ export default async function ThreadPage({
     notFound()
   }
 
-  const otherUser = await prisma.user.findUnique({
-    where: { id: otherUserId },
-    select: {
-      id: true,
-      username: true,
-      firstName: true,
-      lastName: true,
-      avatarImage: true,
-    },
-  })
+  const otherUser = await getThreadCounterpart(otherUserId)
   if (!otherUser) notFound()
 
   let thread: Awaited<ReturnType<typeof getThread>> = []

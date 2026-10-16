@@ -1,4 +1,5 @@
 import { screen } from "@testing-library/react"
+import type { PropsWithChildren } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { TraderFeedbackResponse } from "~/lib/queries/traderFeedback"
@@ -26,6 +27,23 @@ function mockReputation(
     ...overrides,
   }
 }
+
+vi.mock("next-view-transitions", () => ({
+  useTransitionRouter: () => ({
+    push: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  Link: ({
+    children,
+    href,
+    className,
+    ...rest
+  }: PropsWithChildren<{ href: string; className?: string }>) => (
+    <a href={href} className={className} {...rest}>
+      {children}
+    </a>
+  ),
+}))
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({

@@ -599,8 +599,10 @@
     "signUp": {
       "title": "Sign Up",
       "description": "Complete checkout, then create your account to manage your collection.",
+      "descriptionFree": "Join perfumer's hollow free as a founding collector — no checkout needed while spots last.",
       "heading": "Begin Your Collection",
       "subheading": "After checkout, create your account to track discoveries, build your collection, browse without ads, and connect with fellow fragrance collectors.",
+      "subheadingFree": "Founding spots are open — create your free account to track discoveries, build your collection, and connect with fellow fragrance collectors. No checkout needed.",
       "alreadyHere": "Already in the Hollow?",
       "signIn": "Return to Sign In",
       "needCheckout": "Membership is required to create an account. Choose a plan to continue.",
@@ -631,6 +633,7 @@
     "description": "Choose a digital membership to participate in perfumer's hollow — browse stays free.",
     "heading": "Subscribe",
     "subheading": "Join perfumer's hollow with an annual membership",
+    "foundingOpenNotice": "Founding spots are still free — {remaining} of {limit} left. No plan needed to join.",
     "participateCopy": "The Archive and Houses remain free to browse. Collection, Exchange, and community tools require a paid plan. Members also browse without ads.",
     "paymentRequired": "Complete checkout below. You’ll create your account right after payment.",
     "emailHelp": "Use the email you’ll sign up with — we’ll prefill it after payment.",
@@ -2000,7 +2003,6 @@
     "emptyBrowseArchive": "Browse The Archive",
     "emptyCollectorsGuide": "Collector’s Guide",
     "emptySignIn": "Sign in",
-    "emptySignUp": "Create an account",
     "signInToPropose": "Sign in to propose an exchange",
     "availableFrom": "Available from",
     "search": {
@@ -2463,8 +2465,7 @@
   },
   "follow": {
     "follow": "Follow",
-    "following": "Following",
-    "signInToFollow": "Sign in to follow"
+    "following": "Following"
   },
   "wishlist": {
     "meta": {
@@ -2825,10 +2826,12 @@
   "membershipPage": {
     "heading": "Digital membership",
     "subheading": "Unlock discovery, personalization, and collection tools — digital only.",
-    "intro": "Shadow memberships unlock discovery, personalization, and collection tools. Browse the catalog free; participation requires an annual plan. We do not sell bottles, process payouts, or charge transaction fees.",
+    "intro": "perfumer's hollow memberships unlock discovery, personalization, and collection tools. Browse the catalog free; participation requires an annual plan. We do not sell bottles, process payouts, or charge transaction fees.",
+    "introFoundingOpen": "Founding collectors join perfumer's hollow free while spots last — build your collection, vote, review, and trade without a plan. Paid tiers add deeper discovery and collection tools. We do not sell bottles, process payouts, or charge transaction fees.",
     "communityLink": "Explore Community",
     "ctaFree": "Get started",
     "ctaSubscribe": "Subscribe",
+    "ctaJoinFree": "Join free",
     "currentPlanBadge": "Your plan",
     "currentPlanCta": "Current plan",
     "currentPlanMessage": "You're already on this membership.",
@@ -3006,5 +3009,16 @@
       "termsPrefix": "Also see our",
       "termsLink": "Terms of Use"
     }
+  },
+  "join": {
+    "ctaOpen": "Join free",
+    "ctaClosed": "Become a member",
+    "ctaShortClosed": "Join",
+    "newHereOpen": "New here? Join free",
+    "newHereClosed": "New here? Become a member",
+    "followOpen": "Join free to follow",
+    "followClosed": "Become a member to follow",
+    "spotsLeft": "{remaining, plural, one {# of {limit} founding spot left} other {# of {limit} founding spots left}}",
+    "bannerOpen": "Founding collectors join free — {remaining} of {limit} spots left."
   }
 }

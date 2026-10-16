@@ -1,6 +1,10 @@
-import { unstable_cache } from "next/cache"
+import { revalidateTag, unstable_cache } from "next/cache"
 
 import { prisma } from "@/lib/db"
+import {
+  computeSignupAvailability,
+  type SignupAvailability,
+} from "@/utils/membership/signup-availability"
 
 /**
  * Maximum number of users who can sign up for free (early adopters).
@@ -8,6 +12,7 @@ import { prisma } from "@/lib/db"
  */
 export const FREE_USER_LIMIT = 100
 
+const FREE_SIGNUP_WINDOW_TAG = "free-signup-window"
 const FREE_SIGNUP_WINDOW_REVALIDATE_SECONDS = 300
 
 /**
@@ -20,21 +25,27 @@ const FREE_SIGNUP_WINDOW_REVALIDATE_SECONDS = 300
 export const getCurrentUserCount = async (): Promise<number> =>
   prisma.user.count()
 
-const fetchCanSignupForFree = async (): Promise<boolean> => {
-  const slice = await prisma.user.findMany({
-    take: FREE_USER_LIMIT,
-    select: { id: true },
-  })
-  return slice.length < FREE_USER_LIMIT
-}
+const fetchSignupAvailability = async (): Promise<SignupAvailability> =>
+  computeSignupAvailability(await getCurrentUserCount(), FREE_USER_LIMIT)
+
+/**
+ * Free founding-signup window state (spots left). Drives signup gating and the
+ * join CTA wording across the site. Cached briefly; busted after each signup.
+ */
+export const getSignupAvailability = (): Promise<SignupAvailability> =>
+  unstable_cache(fetchSignupAvailability, [FREE_SIGNUP_WINDOW_TAG], {
+    revalidate: FREE_SIGNUP_WINDOW_REVALIDATE_SECONDS,
+    tags: [FREE_SIGNUP_WINDOW_TAG],
+  })()
 
 /**
  * Returns true if free signups are still available (current count < FREE_USER_LIMIT).
  * Use this in the signup action to gate signups and redirect to /subscribe when at limit.
- * Cached briefly so unpaid participation checks do not hit the DB on every API call.
  */
-export const canSignupForFree = (): Promise<boolean> =>
-  unstable_cache(fetchCanSignupForFree, ["free-signup-window"], {
-    revalidate: FREE_SIGNUP_WINDOW_REVALIDATE_SECONDS,
-    tags: ["free-signup-window"],
-  })()
+export const canSignupForFree = async (): Promise<boolean> =>
+  (await getSignupAvailability()).freeOpen
+
+/** Call after a user is created so spots-left and CTA wording update immediately. */
+export const revalidateSignupAvailability = (): void => {
+  revalidateTag(FREE_SIGNUP_WINDOW_TAG, "max")
+}

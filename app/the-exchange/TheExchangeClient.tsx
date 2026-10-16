@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl"
 
 import { Button, VooDooLink } from "@/components/Atoms/Button"
 import AdSenseUnit from "@/components/Atoms/AdSenseUnit"
-import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
+import { JoinLink } from "@/components/Molecules/JoinLink"
 import { PaginationBar } from "@/components/Molecules/PaginationBar"
 import { FilterChipStrip } from "@/components/Molecules/FilterChipStrip"
 import { SaveSearchButton } from "@/components/Molecules/SaveSearchButton/SaveSearchButton"
@@ -69,7 +69,6 @@ export type { ExchangePageData } from "./exchange-types"
 
 const ROUTE_PATH = "/the-exchange"
 const BANNER_IMAGE = "/images/new/exchange.webp"
-const SIGN_UP_PATH = "/sign-up"
 const SIGN_IN_WITH_RETURN = `${SIGN_IN}?redirect=${encodeURIComponent(ROUTE_PATH)}`
 const TheExchangeClient = ({
   availablePerfumes,
@@ -480,12 +479,7 @@ const TheExchangeClient = ({
             <VooDooLink url={SIGN_IN_WITH_RETURN} variant="secondary">
               {t("emptySignIn")}
             </VooDooLink>
-            <PrefetchLink
-              href={SIGN_UP_PATH}
-              className="text-sm text-noir-gold underline-offset-4 hover:underline"
-            >
-              {t("emptySignUp")}
-            </PrefetchLink>
+            <JoinLink placement="exchange-empty" />
           </div>
         </div>
       ) : (

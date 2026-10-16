@@ -16,6 +16,7 @@ import { LuStore } from "react-icons/lu"
 
 import { Button } from "@/components/Atoms/Button/Button"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
+import { JoinLink } from "@/components/Molecules/JoinLink"
 import { CompareCardNotes } from "@/components/Molecules/CompareCardNotes/CompareCardNotes"
 import { PerfumeAggregateRatingsSummary } from "@/components/Molecules/PerfumeAggregateRatingsSummary/PerfumeAggregateRatingsSummary"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
@@ -432,7 +433,7 @@ function ComparePageInner({
 
         {!userId && items.length > 0 ? (
           <p className="max-w-6xl mx-auto mb-6 text-center text-sm text-noir-gold-500">
-            {t("personalizeHint")}
+            {t("personalizeHint")} <JoinLink />
           </p>
         ) : null}
 

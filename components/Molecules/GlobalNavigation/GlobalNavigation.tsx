@@ -5,6 +5,9 @@ import type { HTMLProps } from "react"
 import { Suspense } from "react"
 import { usePathname } from "next/navigation"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
+import { VooDooLink } from "@/components/Atoms/Button/VooDooLink"
+import { useJoinCta } from "@/components/Containers/SignupAvailability"
+import { trackJoinCtaClick } from "@/utils/analytics/track-join-cta"
 import { useTranslations } from "next-intl"
 import { FaUser } from "react-icons/fa6"
 
@@ -32,6 +35,30 @@ const navLinkBase =
   "text-noir-gold hover:text-noir-light text-lg px-2 py-1 border border-transparent transition-colors duration-400"
 const navLinkActive =
   "text-noir-light bg-noir-black/30 rounded-full border-noir-light/90"
+
+const GuestJoinCta = () => {
+  const t = useTranslations("join")
+  const { href, labelKey, freeOpen, spotsLeft, limit } = useJoinCta()
+
+  return (
+    <div className="flex items-center gap-3">
+      {freeOpen ? (
+        <span className="text-xs text-noir-gold-100/80">
+          {t("spotsLeft", { remaining: spotsLeft, limit })}
+        </span>
+      ) : null}
+      <VooDooLink
+        url={href}
+        variant="primary"
+        background="gold"
+        size="sm"
+        onClick={() => trackJoinCtaClick("nav-desktop", freeOpen)}
+      >
+        {t(labelKey)}
+      </VooDooLink>
+    </div>
+  )
+}
 
 function GlobalNavigationContent({ user }: GlobalNavigationProps) {
   const t = useTranslations("navigation")
@@ -68,17 +95,20 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
         <LanguageSwitcher />
         <div className="flex items-center gap-2">
           {!user ? (
-            <PrefetchLink
-              href={SIGN_IN}
-              aria-label={t("signIn")}
-              className={styleMerge(
-                navLinkBase,
-                "flex",
-                isActive(SIGN_IN, true) && navLinkActive
-              )}
-            >
-              <FaUser size={20} aria-hidden focusable={false} />
-            </PrefetchLink>
+            <>
+              <GuestJoinCta />
+              <PrefetchLink
+                href={SIGN_IN}
+                aria-label={t("signIn")}
+                className={styleMerge(
+                  navLinkBase,
+                  "flex",
+                  isActive(SIGN_IN, true) && navLinkActive
+                )}
+              >
+                <FaUser size={20} aria-hidden focusable={false} />
+              </PrefetchLink>
+            </>
           ) : (
             <>
               {user.id && <GlobalAlertBell userId={user.id} />}

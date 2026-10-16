@@ -1,6 +1,10 @@
+import { unstable_cache } from "next/cache"
+
 import { prisma } from "@/lib/db"
 import type { SeasonKey } from "@/types/perfume-season-vote"
 import { getCurrentSeasonKey } from "@/utils/season-calendar"
+
+const SEASONAL_TRENDING_REVALIDATE_SECONDS = 1800
 
 export type SeasonalTrendingPerfumeRow = {
   perfumeId: string
@@ -73,3 +77,13 @@ export const getSeasonalTrendingPerfumes = async (
 
   return { season, perfumes: perfumesRanked }
 }
+
+export const getCachedSeasonalTrendingPerfumes = (
+  limit = 10,
+  season: SeasonKey = getCurrentSeasonKey()
+): Promise<SeasonalTrendingResult> =>
+  unstable_cache(
+    () => getSeasonalTrendingPerfumes(limit, season),
+    ["seasonal-trending", season, String(limit)],
+    { revalidate: SEASONAL_TRENDING_REVALIDATE_SECONDS, tags: ["perfume"] }
+  )()

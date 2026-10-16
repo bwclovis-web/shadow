@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db"
 import { getScentDnaForUser } from "@/models/scent-dna.server"
-import { getSeasonalTrendingPerfumes } from "@/models/seasonal-trending.server"
+import { getCachedSeasonalTrendingPerfumes } from "@/models/seasonal-trending.server"
 import { getPersonalizedRecommendations } from "@/services/recommendations"
 import { classifyNoteNameToFamily } from "@/utils/scent-dna/note-families"
 import { requireEntitlement } from "@/utils/membership/entitlements.server"
@@ -66,7 +66,7 @@ export const getSeasonalPlanningSuggestions = async (
         },
       },
     }),
-    getSeasonalTrendingPerfumes(6, season),
+    getCachedSeasonalTrendingPerfumes(6, season),
     getScentDnaForUser(userId),
     getPersonalizedRecommendations(userId, 6),
   ])

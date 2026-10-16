@@ -6,7 +6,9 @@ import { FaUserCheck, FaUserPlus } from "react-icons/fa6"
 
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { Button } from "@/components/Atoms/Button/Button"
+import { useJoinCta } from "@/components/Containers/SignupAvailability"
 import { useFollowMutation, type FollowTargetType } from "@/lib/mutations/follow"
+import { trackJoinCtaClick } from "@/utils/analytics/track-join-cta"
 
 type FollowButtonProps = {
   targetType: FollowTargetType
@@ -24,14 +26,20 @@ const FollowButton = ({
   className,
 }: FollowButtonProps) => {
   const t = useTranslations("follow")
+  const tJoin = useTranslations("join")
+  const joinCta = useJoinCta()
   const followMutation = useFollowMutation()
   const [following, setFollowing] = useState(initialFollowing)
 
   if (!viewerId) {
     return (
-      <PrefetchLink href="/sign-in" className={className}>
+      <PrefetchLink
+        href={joinCta.href}
+        className={className}
+        onClick={() => trackJoinCtaClick("follow", joinCta.freeOpen)}
+      >
         <Button variant="secondary" size="sm" type="button">
-          {t("signInToFollow")}
+          {tJoin(joinCta.followKey)}
         </Button>
       </PrefetchLink>
     )

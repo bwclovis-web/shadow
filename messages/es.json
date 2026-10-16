@@ -399,8 +399,10 @@
     "signUp": {
       "title": "Registrarse",
       "description": "Completa el pago y luego crea tu cuenta para gestionar tu coleccion.",
+      "descriptionFree": "Únete gratis a perfumer's hollow como coleccionista fundador — sin pago mientras haya plazas.",
       "heading": "Únete al Hollow",
       "subheading": "Tras el pago, crea tu cuenta para seguir descubrimientos, construir tu coleccion, navegar sin anuncios y conectar con otros coleccionistas.",
+      "subheadingFree": "Las plazas fundadoras están abiertas: crea tu cuenta gratuita para seguir descubrimientos, construir tu colección y conectar con otros coleccionistas de fragancias. Sin pago previo.",
       "alreadyHere": "¿Ya estás en el Hollow?",
       "signIn": "Volver a iniciar sesión",
       "needCheckout": "Se requiere una membresia para crear una cuenta. Elige un plan para continuar.",
@@ -432,6 +434,7 @@
     "description": "Elige una membresia digital para participar en perfumer's hollow — navegar sigue siendo gratis.",
     "heading": "Suscribirse",
     "subheading": "Unete a perfumer's hollow con una membresia anual",
+    "foundingOpenNotice": "Las plazas fundadoras siguen siendo gratis — quedan {remaining} de {limit}. No necesitas un plan para unirte.",
     "paymentRequired": "Completa el pago abajo. Crearas tu cuenta justo despues del pago.",
     "emailHelp": "Usa el correo con el que te registrarás — lo rellenaremos tras el pago.",
     "canceledNotice": "El pago se canceló. Puedes intentarlo de nuevo cuando quieras.",
@@ -1723,7 +1726,6 @@
     "emptyBrowseArchive": "Explorar El Archivo",
     "emptyCollectorsGuide": "Guía del coleccionista",
     "emptySignIn": "Iniciar sesión",
-    "emptySignUp": "Crear una cuenta",
     "signInToPropose": "Inicia sesión para proponer un intercambio",
     "availableFrom": "Disponible de",
     "search": {
@@ -2200,8 +2202,7 @@
   },
   "follow": {
     "follow": "Seguir",
-    "following": "Siguiendo",
-    "signInToFollow": "Inicia sesión para seguir"
+    "following": "Siguiendo"
   },
   "wishlist": {
     "meta": {
@@ -2825,10 +2826,12 @@
   "membershipPage": {
     "heading": "Membresía digital",
     "subheading": "Desbloquea descubrimiento, personalización y herramientas de colección — solo digital.",
-    "intro": "Las membresias de Shadow desbloquean descubrimiento, personalizacion y herramientas de coleccion. Navega el catalogo gratis; participar requiere un plan anual. No vendemos botellas ni procesamos pagos entre coleccionistas.",
+    "intro": "Las membresías de perfumer's hollow desbloquean descubrimiento, personalización y herramientas de colección. Navega el catálogo gratis; participar requiere un plan anual. No vendemos botellas, no procesamos pagos ni cobramos comisiones por transacción.",
+    "introFoundingOpen": "Los coleccionistas fundadores se unen gratis a perfumer's hollow mientras haya plazas: crea tu colección, vota, reseña e intercambia sin plan. Los niveles de pago añaden descubrimiento y herramientas de colección avanzadas. No vendemos botellas, no procesamos pagos ni cobramos comisiones por transacción.",
     "communityLink": "Explorar Community",
     "ctaFree": "Empezar",
     "ctaSubscribe": "Suscribirse",
+    "ctaJoinFree": "Únete gratis",
     "currentPlanBadge": "Tu plan",
     "currentPlanCta": "Plan actual",
     "currentPlanMessage": "Ya tienes esta membresía.",
@@ -3006,5 +3009,16 @@
       "termsPrefix": "Consulta también nuestros",
       "termsLink": "Términos de uso"
     }
+  },
+  "join": {
+    "ctaOpen": "Únete gratis",
+    "ctaClosed": "Hazte miembro",
+    "ctaShortClosed": "Unirse",
+    "newHereOpen": "¿Eres nuevo? Únete gratis",
+    "newHereClosed": "¿Eres nuevo? Hazte miembro",
+    "followOpen": "Únete gratis para seguir",
+    "followClosed": "Hazte miembro para seguir",
+    "spotsLeft": "{remaining, plural, one {Queda # de {limit} plazas fundadoras} other {Quedan # de {limit} plazas fundadoras}}",
+    "bannerOpen": "Los coleccionistas fundadores se unen gratis — quedan {remaining} de {limit} plazas."
   }
 }

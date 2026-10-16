@@ -10,6 +10,7 @@ import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import Select from "@/components/Atoms/Select"
 import CommunityStatsStrip from "@/components/Containers/Home/CommunityStatsStrip"
 import { DeferredBelowFold } from "@/components/Molecules/DeferredBelowFold/DeferredBelowFold"
+import { FoundingSpotsBanner } from "@/components/Molecules/FoundingSpotsBanner"
 import SearchBar from "@/components/Organisms/SearchBar"
 import {
   THE_ARCHIVE_PATH,
@@ -45,6 +46,7 @@ interface HomeClientProps {
   followedActivity?: FollowedActivityItem[]
   seasonalTrending?: SeasonalTrendingResult
   showAds?: boolean
+  isGuest?: boolean
 }
 
 const scheduleIdleWork = (work: () => void) => {
@@ -63,6 +65,7 @@ export default function HomeClient({
   followedActivity = [],
   seasonalTrending = { season: "spring", perfumes: [] },
   showAds = true,
+  isGuest = false,
 }: HomeClientProps) {
   const [searchType, setSearchType] = useState<"perfume-house" | "perfume">("perfume")
   const container = useRef<HTMLDivElement>(null)
@@ -155,6 +158,7 @@ export default function HomeClient({
           <p className="subtitle">{subheading}</p>
         </div>
         <CommunityStatsStrip stats={communityStats} className="lg:my-2 max-w-2xl" />
+        {isGuest ? <FoundingSpotsBanner className="w-full max-w-4xl" /> : null}
         <div className="flex flex-col-reverse md:flex-row items-baseline justify-start w-full lg:mt-2 mt-0 gap-4 md:gap-0 max-w-4xl">
           <Select
             size="expanded"

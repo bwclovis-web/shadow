@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db"
 import { updateScentProfileFromBehavior } from "@/models/scent-profile.server"
+import { revalidatePerfumeCommunityCache } from "@/utils/server/revalidate-catalog-cache.server"
 
 export async function createPerfumeRating(data: {
   userId: string
@@ -21,6 +22,7 @@ export async function createPerfumeRating(data: {
       overall: data.overall,
     },
   })
+  revalidatePerfumeCommunityCache(data.perfumeId)
 
   if (rating.overall != null) {
     try {
@@ -52,6 +54,7 @@ export async function updatePerfumeRating(
     where: { id: ratingId },
     data: updates,
   })
+  revalidatePerfumeCommunityCache(updatedRating.perfumeId)
 
   // Only update scent profile when overall was part of this update.
   // The ratings API sends one category per call (longevity, sillage, etc.);
@@ -126,7 +129,9 @@ export async function getPerfumeRatings(perfumeId: string) {
 }
 
 export async function deletePerfumeRating(ratingId: string): Promise<void> {
-  await prisma.userPerfumeRating.delete({
+  const deleted = await prisma.userPerfumeRating.delete({
     where: { id: ratingId },
+    select: { perfumeId: true },
   })
+  revalidatePerfumeCommunityCache(deleted.perfumeId)
 }

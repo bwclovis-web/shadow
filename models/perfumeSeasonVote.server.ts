@@ -7,6 +7,7 @@ import {
   type SeasonSelection,
   type SeasonVoteAggregates,
 } from "@/types/perfume-season-vote"
+import { revalidatePerfumeCommunityCache } from "@/utils/server/revalidate-catalog-cache.server"
 
 export { SEASON_KEYS, type SeasonKey, type SeasonRankEntry, type SeasonSelection, type SeasonVoteAggregates }
 
@@ -45,7 +46,7 @@ export async function upsertSeasonVote(
     throw new Error("Select at least one season")
   }
 
-  return prisma.userPerfumeSeasonVote.upsert({
+  const vote = await prisma.userPerfumeSeasonVote.upsert({
     where: {
       userId_perfumeId: { userId, perfumeId },
     },
@@ -64,6 +65,8 @@ export async function upsertSeasonVote(
       fall: selection.fall,
     },
   })
+  revalidatePerfumeCommunityCache(perfumeId)
+  return vote
 }
 
 export async function clearSeasonVote(userId: string, perfumeId: string) {
@@ -73,6 +76,7 @@ export async function clearSeasonVote(userId: string, perfumeId: string) {
       perfumeId,
     },
   })
+  revalidatePerfumeCommunityCache(perfumeId)
 }
 
 export async function getSeasonVoteAggregates(perfumeId: string): Promise<SeasonVoteAggregates> {

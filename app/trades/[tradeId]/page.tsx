@@ -43,7 +43,7 @@ export default async function TradeDetailPage({
     redirect(`/sign-in?redirect=${encodeURIComponent(`/trades/${tradeId}`)}`)
   }
 
-  await redirectUnlessCanParticipate(session.user.id, `/trades/${tradeId}`)
+  await redirectUnlessCanParticipate(session.user, `/trades/${tradeId}`)
 
   const trade = await getTradeByIdForViewer(tradeId, session.user.id, {
     viewerRole: session.user.role,

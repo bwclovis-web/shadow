@@ -20,7 +20,10 @@ import {
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { getClientIdentifierFromHeaders } from "@/utils/server/request.server"
 import { getCheckoutSession } from "@/utils/server/stripe.server"
-import { canSignupForFree } from "@/utils/server/user-limit.server"
+import {
+  canSignupForFree,
+  revalidateSignupAvailability,
+} from "@/utils/server/user-limit.server"
 import { getProfilePathForUser } from "@/utils/user"
 import { parseWithZod } from "@conform-to/zod"
 
@@ -45,6 +48,7 @@ const completeSignUp = async (
   createOptions: Parameters<typeof createUser>[1]
 ): Promise<never> => {
   const user = await createUser(formData, createOptions)
+  revalidateSignupAvailability()
   const { accessToken, refreshToken } = await createSession({
     userId: user.id,
     tokenVersion: user.tokenVersion ?? 0,

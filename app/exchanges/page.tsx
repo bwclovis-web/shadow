@@ -28,7 +28,7 @@ export default async function MessagesPage(): Promise<React.ReactElement> {
     redirect("/sign-in")
   }
 
-  await redirectUnlessCanParticipate(session.user.id, "/exchanges")
+  await redirectUnlessCanParticipate(session.user, "/exchanges")
 
   let conversations: Awaited<ReturnType<typeof getConversations>> = []
   try {

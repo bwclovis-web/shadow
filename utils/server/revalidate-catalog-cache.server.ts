@@ -12,3 +12,20 @@ export function revalidatePerfumeDataCache() {
 export function revalidateHouseDataCache() {
   revalidateTag("house", REVALIDATE_PROFILE)
 }
+
+export const perfumeCommunityCacheTag = (perfumeId: string) =>
+  `perfume-community-${perfumeId}`
+
+/**
+ * Ratings, approved reviews, and season votes shown on the perfume page.
+ * Expires immediately so the writer sees their own change on the next load.
+ * Called from model writes that also run in scripts/tests, where Next has no
+ * cache store and `revalidateTag` throws; the time-based revalidate covers those.
+ */
+export const revalidatePerfumeCommunityCache = (perfumeId: string) => {
+  try {
+    revalidateTag(perfumeCommunityCacheTag(perfumeId), { expire: 0 })
+  } catch {
+    // No Next.js request context.
+  }
+}

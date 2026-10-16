@@ -399,8 +399,10 @@
     "signUp": {
       "title": "Registrati",
       "description": "Completa il pagamento, poi crea l'account per gestire la tua collezione.",
+      "descriptionFree": "Unisciti gratis a perfumer's hollow come collezionista fondatore — nessun pagamento finché ci sono posti.",
       "heading": "Unisciti al Hollow",
       "subheading": "Dopo il pagamento, crea l'account per seguire le scoperte, costruire la collezione, navigare senza annunci e connetterti con altri collezionisti.",
+      "subheadingFree": "I posti fondatori sono aperti: crea il tuo account gratuito per seguire le scoperte, costruire la tua collezione e connetterti con altri collezionisti di fragranze. Nessun pagamento richiesto.",
       "alreadyHere": "Sei già nel Hollow?",
       "signIn": "Torna all'accesso",
       "needCheckout": "E richiesta un'iscrizione per creare un account. Scegli un piano per continuare.",
@@ -432,6 +434,7 @@
     "description": "Scegli un'iscrizione digitale per partecipare a perfumer's hollow — la consultazione resta gratuita.",
     "heading": "Abbonati",
     "subheading": "Entra in perfumer's hollow con un'iscrizione annuale",
+    "foundingOpenNotice": "I posti fondatori sono ancora gratuiti — ne restano {remaining} su {limit}. Non serve un piano per iscriversi.",
     "paymentRequired": "Completa il pagamento qui sotto. Creerai l'account subito dopo.",
     "emailHelp": "Usa l'email con cui ti registrerai — la precompileremo dopo il pagamento.",
     "canceledNotice": "Il pagamento è stato annullato. Puoi riprovare quando vuoi.",
@@ -1723,7 +1726,6 @@
     "emptyBrowseArchive": "Sfoglia L'Archivio",
     "emptyCollectorsGuide": "Guida del collezionista",
     "emptySignIn": "Accedi",
-    "emptySignUp": "Crea un account",
     "signInToPropose": "Accedi per proporre uno scambio",
     "availableFrom": "Disponibile da",
     "search": {
@@ -2200,8 +2202,7 @@
   },
   "follow": {
     "follow": "Segui",
-    "following": "Segui già",
-    "signInToFollow": "Accedi per seguire"
+    "following": "Segui già"
   },
   "wishlist": {
     "meta": {
@@ -2825,10 +2826,12 @@
   "membershipPage": {
     "heading": "Membership digitale",
     "subheading": "Sblocca scoperta, personalizzazione e strumenti di collezione — solo digitale.",
-    "intro": "Le iscrizioni Shadow sbloccano scoperta, personalizzazione e strumenti di collezione. Sfoglia il catalogo gratis; partecipare richiede un piano annuale. Non vendiamo flaconi ne gestiamo pagamenti tra collezionisti.",
+    "intro": "Le iscrizioni a perfumer's hollow sbloccano scoperta, personalizzazione e strumenti di collezione. Sfoglia il catalogo gratis; partecipare richiede un piano annuale. Non vendiamo flaconi, non gestiamo pagamenti e non applichiamo commissioni sulle transazioni.",
+    "introFoundingOpen": "I collezionisti fondatori si uniscono gratis a perfumer's hollow fino a esaurimento posti: crea la tua collezione, vota, recensisci e scambia senza piano. I piani a pagamento aggiungono scoperta più approfondita e strumenti di collezione avanzati. Non vendiamo flaconi, non gestiamo pagamenti e non applichiamo commissioni sulle transazioni.",
     "communityLink": "Esplora Community",
     "ctaFree": "Inizia",
     "ctaSubscribe": "Abbonati",
+    "ctaJoinFree": "Unisciti gratis",
     "currentPlanBadge": "Il tuo piano",
     "currentPlanCta": "Piano attuale",
     "currentPlanMessage": "Hai già questa membership.",
@@ -3006,5 +3009,16 @@
       "termsPrefix": "Vedi anche i nostri",
       "termsLink": "Termini di utilizzo"
     }
+  },
+  "join": {
+    "ctaOpen": "Unisciti gratis",
+    "ctaClosed": "Diventa membro",
+    "ctaShortClosed": "Unisciti",
+    "newHereOpen": "Nuovo qui? Unisciti gratis",
+    "newHereClosed": "Nuovo qui? Diventa membro",
+    "followOpen": "Unisciti gratis per seguire",
+    "followClosed": "Diventa membro per seguire",
+    "spotsLeft": "{remaining, plural, one {Resta # posto fondatore su {limit}} other {Restano # posti fondatori su {limit}}}",
+    "bannerOpen": "I collezionisti fondatori si uniscono gratis — restano {remaining} posti su {limit}."
   }
 }

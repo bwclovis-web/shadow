@@ -7,6 +7,7 @@ import type {
   PerfumeDetailSeasonAggregatesProp,
   PerfumeDetailUserSeasonVoteProp,
 } from "@/components/Containers/Perfume/perfume-detail-types"
+import { JoinLink } from "@/components/Molecules/JoinLink"
 import { useSaveSeasonVote } from "@/lib/mutations/seasonVotes"
 import { type SeasonSelection, emptySeasonSelection } from "@/types/perfume-season-vote"
 import { useErrorHandler } from "@/hooks/useErrorHandler"
@@ -120,7 +121,9 @@ const PerfumeSeasonVote = ({
       </h3>
 
       {!isLoggedIn && (
-        <p className="text-sm text-noir-gold-500 mb-4">{t("loginToVote")}</p>
+        <p className="text-sm text-noir-gold-500 mb-4">
+          {t("loginToVote")} <JoinLink />
+        </p>
       )}
 
       <p className="text-xs text-noir-gold-100/90 mb-4">{t("subtitle")}</p>

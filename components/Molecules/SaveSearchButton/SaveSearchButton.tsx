@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button/Button"
+import { JoinLink } from "@/components/Molecules/JoinLink"
 import { useCSRF } from "@/hooks/useCSRF"
 import type { SavedSearchQuery } from "@/models/saved-search.server"
 
@@ -25,6 +26,7 @@ export const SaveSearchButton = ({
     "idle"
   )
   const [error, setError] = useState<string | null>(null)
+  const [needsAccount, setNeedsAccount] = useState(false)
 
   const onSave = useCallback(async () => {
     setStatus("saving")
@@ -46,6 +48,7 @@ export const SaveSearchButton = ({
       if (res.status === 401) {
         setStatus("error")
         setError(t("signInRequired"))
+        setNeedsAccount(true)
         return
       }
       if (!res.ok) {
@@ -94,6 +97,7 @@ export const SaveSearchButton = ({
           {error}
         </p>
       )}
+      {needsAccount && <JoinLink className="mt-1 inline-block text-xs" />}
     </div>
   )
 }

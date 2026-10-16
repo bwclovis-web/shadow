@@ -30,6 +30,7 @@ vi.mock("@/components/Molecules/UserAlertsProvider/UserAlertsProvider", () => ({
   useUserAlertsContext: () => ({ unreadCount: 1 }),
 }))
 
+import { SignupAvailabilityProvider } from "@/components/Containers/SignupAvailability"
 import { renderWithProviders } from "@/test/utils/test-utils"
 import MobileBottomNavigation from "./MobileBottomNavigation"
 
@@ -84,8 +85,31 @@ describe("MobileBottomNavigation", () => {
     expect(wrapper).toHaveClass("mobile-safe-bottom")
   })
 
-  it("shows sign in when logged out", () => {
-    renderWithProviders(<MobileBottomNavigation user={null} />)
-    expect(screen.getByText("Sign in")).toBeInTheDocument()
+  it("shows join free linking to sign-up while founding spots remain", () => {
+    renderWithProviders(
+      <SignupAvailabilityProvider
+        availability={{ freeOpen: true, spotsLeft: 95, limit: 100 }}
+      >
+        <MobileBottomNavigation user={null} />
+      </SignupAvailabilityProvider>
+    )
+    expect(screen.getByRole("link", { name: /join free/i })).toHaveAttribute(
+      "href",
+      "/sign-up"
+    )
+  })
+
+  it("shows join linking to membership once founding spots are gone", () => {
+    renderWithProviders(
+      <SignupAvailabilityProvider
+        availability={{ freeOpen: false, spotsLeft: 0, limit: 100 }}
+      >
+        <MobileBottomNavigation user={null} />
+      </SignupAvailabilityProvider>
+    )
+    expect(screen.getByRole("link", { name: /^join$/i })).toHaveAttribute(
+      "href",
+      "/membership"
+    )
   })
 })
