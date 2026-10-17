@@ -1,6 +1,6 @@
 /**
  * Cloudflare Turnstile server verification.
- * When TURNSTILE_SECRET_KEY is unset, verification is skipped (local/dev).
+ * When TURNSTILE_SECRET_KEY is unset, only non-production environments skip verification.
  * When set, a valid cf-turnstile-response token is required.
  */
 
@@ -25,7 +25,12 @@ export const verifyTurnstileToken = async (
 ): Promise<TurnstileVerifyResult> => {
   const secret = process.env.TURNSTILE_SECRET_KEY?.trim()
   if (!secret) {
-    return { ok: true }
+    return process.env.NODE_ENV === "production"
+      ? { ok: false, error: "Security check unavailable. Please try again." }
+      : { ok: true }
+  }
+  if (process.env.NODE_ENV === "production" && !getTurnstileSiteKey()) {
+    return { ok: false, error: "Security check unavailable. Please try again." }
   }
 
   const trimmed = typeof token === "string" ? token.trim() : ""
