@@ -1,3 +1,5 @@
 npm run lint
 npm run typecheck
-npm run build
+# Skip `prisma generate` (part of `npm run build`): on Windows it can't replace the
+# query engine DLL while `npm run dev` has it loaded. CI/Vercel builds still generate.
+npx next build
