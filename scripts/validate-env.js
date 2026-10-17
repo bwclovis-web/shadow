@@ -18,6 +18,8 @@ const requiredProd = [
   "DATABASE_URL",
   "JWT_SECRET",
   "NEXT_PUBLIC_APP_URL",
+  "TURNSTILE_SECRET_KEY",
+  "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
 ]
 const optionalDocumented = [
   "SESSION_SECRET",

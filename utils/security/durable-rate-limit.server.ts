@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto"
+
 import { prisma } from "@/lib/db"
 import { createJsonResponse } from "@/utils/response.server"
 
@@ -69,27 +71,26 @@ export const enforceDurableRateLimit = async (
 ): Promise<void> => {
   const now = new Date()
   try {
-    const existing = await prisma.rateLimitBucket.findUnique({
-      where: { key: identifier },
-    })
+    // One PostgreSQL statement serializes concurrent requests on the unique key.
+    // Keep rejected counts bounded and preserve the original window until expiry.
+    const [existing] = await prisma.$queryRaw<Array<{ count: number; resetAt: Date }>>`
+      INSERT INTO "RateLimitBucket" ("id", "key", "count", "resetAt", "updatedAt", "createdAt")
+      VALUES (${randomUUID()}, ${identifier}, 1, ${new Date(now.getTime() + windowMs)}, ${now}, ${now})
+      ON CONFLICT ("key") DO UPDATE SET
+        "count" = CASE
+          WHEN "RateLimitBucket"."resetAt" <= ${now} THEN 1
+          ELSE LEAST("RateLimitBucket"."count", ${maxRequests}) + 1
+        END,
+        "resetAt" = CASE
+          WHEN "RateLimitBucket"."resetAt" <= ${now} THEN EXCLUDED."resetAt"
+          ELSE "RateLimitBucket"."resetAt"
+        END,
+        "updatedAt" = ${now}
+      RETURNING "count", "resetAt"
+    `
+    if (!existing) throw new Error("Rate limit bucket was not returned")
 
-    if (!existing || existing.resetAt <= now) {
-      await prisma.rateLimitBucket.upsert({
-        where: { key: identifier },
-        create: {
-          key: identifier,
-          count: 1,
-          resetAt: new Date(now.getTime() + windowMs),
-        },
-        update: {
-          count: 1,
-          resetAt: new Date(now.getTime() + windowMs),
-        },
-      })
-      return
-    }
-
-    if (existing.count >= maxRequests) {
+    if (existing.count > maxRequests) {
       recordViolation(identifier)
       try {
         const { logSecurityAudit } = await import(
@@ -109,10 +110,6 @@ export const enforceDurableRateLimit = async (
       throwRateLimited(existing.resetAt.getTime())
     }
 
-    await prisma.rateLimitBucket.update({
-      where: { key: identifier },
-      data: { count: { increment: 1 } },
-    })
   } catch (error) {
     if (error instanceof Response) throw error
     // DB unavailable — fall back to process memory so auth still has protection.
