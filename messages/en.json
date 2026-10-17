@@ -863,7 +863,7 @@
       "perfumes": "The Archive…"
     },
     "heading": "Perfumer's Hollow",
-    "description": "A comprehensive database of perfumes and their houses.",
+    "description": "Discover fragrances, build your collection, and connect with fellow collectors.",
     "subheading": "Where Fragrance Leaves a Shadow.",
     "searchType": {
       "perfume-house": "fragrance houses…",
@@ -896,6 +896,53 @@
     },
     "seasonalTrending": {
       "title": "Trending this {season}"
+    },
+    "galleryWalk": {
+      "hero": {
+        "searchTypes": {
+          "perfume": "Perfumes",
+          "perfume-house": "Houses"
+        },
+        "placeholder": {
+          "perfume": "Search perfumes by name…",
+          "perfume-house": "Search fragrance houses by name…"
+        },
+        "searchHint": "Search the Archive by perfume or fragrance house name."
+      },
+      "pathways": {
+        "ariaLabel": "Explore Perfumer's Hollow",
+        "archive": {
+          "title": "Explore the Archive",
+          "description": "Discover perfumes, houses, and the stories behind them."
+        },
+        "exchange": {
+          "title": "Join the Exchange",
+          "description": "Browse real listings from collectors across the Hollow."
+        },
+        "community": {
+          "title": "Be Part of the Community",
+          "description": "Explore trays, wear journals, and collector challenges."
+        }
+      },
+      "latest": {
+        "title": "Latest on the Exchange",
+        "description": "Recently listed bottles from collectors across the Hollow.",
+        "viewAll": "View all listings",
+        "milliliters": "{amount} ml",
+        "empty": "No bottles are listed right now.",
+        "visitExchange": "Visit the Exchange"
+      },
+      "publicTrays": {
+        "title": "Public Trays",
+        "description": "Explore curated collections from across the community.",
+        "details": "See what fellow collectors are wearing, explore themed selections, and discover fragrances through shared inspiration.",
+        "cta": "View Public Trays"
+      },
+      "journal": {
+        "title": "From the Journal",
+        "description": "Stories, guides, and reflections from the world of fragrance.",
+        "viewAll": "View all articles"
+      }
     }
   },
   "howItWorks": {

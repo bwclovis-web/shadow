@@ -9,7 +9,7 @@ import { getFollowedIdsForViewer } from "@/models/user-follow.server"
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 const DAYS_IN_WEEK = 7
 const FOLLOWED_ACTIVITY_WINDOW_DAYS = 30
-const NEW_LISTINGS_WEEK_REVALIDATE_SECONDS = 120
+export const NEW_LISTINGS_WEEK_REVALIDATE_SECONDS = 120
 
 const activityFeedListingSelect = {
   id: true,
@@ -57,7 +57,7 @@ export type ActivityFeedListingRow = {
   }
 }
 
-const availableListingWhere = {
+export const availableListingWhere = {
   available: { not: "0" },
   user: { isBanned: false },
 } as const

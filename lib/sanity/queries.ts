@@ -33,6 +33,14 @@ export const articlesIndexWithRefsQuery = `
   }
 `
 
+/** Newest published articles for one language, capped at `$limit`. */
+export const latestArticlesQuery = `
+  *[_type == "article" && defined(slug.current) && publishedAt <= now() && ${languageFilter}]
+  | order(publishedAt desc)[0...$limit] {
+    ${articleFields}
+  }
+`
+
 /** All published articles (sitemap / static params). */
 export const articlesIndexAllLanguagesQuery = `
   *[_type == "article" && defined(slug.current) && publishedAt <= now()]

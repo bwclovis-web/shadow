@@ -11,7 +11,8 @@ const BLOG_BASE_PATH = JOURNAL_PATH
 
 type ArticleCardProps = {
   article: ArticleListItem
-  variant?: "default" | "featured"
+  /** `home` renders an h3 card for homepage sections that already own an h2. */
+  variant?: "default" | "featured" | "home"
 }
 
 export const ArticleCard = ({ article, variant = "default" }: ArticleCardProps) => {
@@ -22,6 +23,46 @@ export const ArticleCard = ({ article, variant = "default" }: ArticleCardProps) 
     isFeatured ? 700 : 500
   )
   const publishedLabel = format(new Date(article.publishedAt), "MMMM d, yyyy")
+
+  if (variant === "home") {
+    return (
+      <article className="group noir-border relative flex h-full w-full flex-col bg-noir-dark before:z-10 after:z-10">
+        <PrefetchLink
+          href={`${BLOG_BASE_PATH}/${article.slug}`}
+          className="flex h-full flex-col focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-gold"
+          prefetch={false}
+        >
+          <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-noir-gold/40 bg-noir-black">
+            {coverUrl ? (
+              <Image
+                src={coverUrl}
+                alt={article.coverImage?.alt ?? article.title}
+                fill
+                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                sizes="(min-width: 80rem) 390px, (min-width: 48rem) 33vw, 100vw"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-noir-dark to-noir-black" />
+            )}
+          </div>
+          <div className="flex flex-1 flex-col gap-2 p-5">
+            <h3 className="!text-2xl !leading-tight text-noir-gold transition-colors group-hover:text-noir-gold-100">
+              {article.title}
+            </h3>
+            {article.excerpt ? (
+              <p className="line-clamp-3 text-[0.9375rem] leading-relaxed text-noir-light/80 lg:text-base">
+                {article.excerpt}
+              </p>
+            ) : null}
+            <p className="mt-auto pt-3 text-[0.8125rem] text-noir-light/60">
+              <time dateTime={article.publishedAt}>{publishedLabel}</time>
+              {article.author ? ` · ${article.author}` : null}
+            </p>
+          </div>
+        </PrefetchLink>
+      </article>
+    )
+  }
 
   if (isFeatured) {
     return (

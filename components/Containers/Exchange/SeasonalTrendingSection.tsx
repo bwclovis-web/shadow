@@ -12,28 +12,24 @@ import { normalizeRemoteImageSrc } from "@/utils/styleUtils"
 type SeasonalTrendingSectionProps = {
   season: SeasonKey
   perfumes: SeasonalTrendingPerfumeRow[]
+  /** `compact` is the homepage horizontal ranked strip; `sidebar` is the Exchange list. */
   variant?: "sidebar" | "compact"
   className?: string
 }
 
-const TrendingRow = ({
-  rank,
-  perfume,
-  compact,
-}: {
+type TrendingItemProps = {
   rank: number
   perfume: SeasonalTrendingPerfumeRow
-  compact: boolean
-}) => {
+}
+
+const TrendingRow = ({ rank, perfume }: TrendingItemProps) => {
   const t = useTranslations("tradingPost.seasonalTrending")
   const imageSrc = normalizeRemoteImageSrc(perfume.image)
 
   return (
     <PrefetchLink
       href={`/perfume/${perfume.slug}`}
-      className={`flex min-w-0 gap-3 rounded-md border border-noir-light/30 bg-noir-dark/50 p-2 transition-colors hover:border-noir-gold/50 hover:bg-noir-dark/80 ${
-        compact ? "shrink-0 snap-start" : ""
-      }`}
+      className="flex min-w-0 gap-3 rounded-md border border-noir-light/30 bg-noir-dark/50 p-2 transition-colors hover:border-noir-gold/50 hover:bg-noir-dark/80"
       aria-label={t("viewPerfume", { name: perfume.name })}
     >
       <span
@@ -42,18 +38,14 @@ const TrendingRow = ({
       >
         {rank}
       </span>
-      <span
-        className={`relative shrink-0 overflow-hidden rounded-md border border-noir-gold/30 bg-noir-black/40 ${
-          compact ? "h-12 w-12" : "h-14 w-14"
-        }`}
-      >
+      <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md border border-noir-gold/30 bg-noir-black/40">
         {imageSrc ? (
           <Image
             src={imageSrc}
             alt=""
             fill
             className="object-cover"
-            sizes={compact ? "48px" : "56px"}
+            sizes="56px"
           />
         ) : (
           <span
@@ -81,6 +73,45 @@ const TrendingRow = ({
   )
 }
 
+const CompactTrendingItem = ({ rank, perfume }: TrendingItemProps) => {
+  const imageSrc = normalizeRemoteImageSrc(perfume.image)
+
+  return (
+    <PrefetchLink
+      href={`/perfume/${perfume.slug}`}
+      className="flex h-full min-w-0 items-center gap-3 border border-noir-gold/30 bg-noir-black/40 p-2.5 transition-colors hover:border-noir-gold/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-gold"
+    >
+      <span
+        className="w-6 shrink-0 text-center font-headline text-2xl font-semibold leading-none text-noir-gold tabular-nums"
+        aria-hidden
+      >
+        {rank}
+      </span>
+      <span className="relative h-12 w-12 shrink-0 overflow-hidden border border-noir-gold/30 bg-noir-black">
+        {imageSrc ? (
+          <Image
+            src={imageSrc}
+            alt=""
+            fill
+            className="object-contain"
+            sizes="48px"
+          />
+        ) : null}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="line-clamp-2 text-sm font-semibold leading-snug text-noir-gold">
+          {perfume.name}
+        </span>
+        {perfume.perfumeHouse ? (
+          <span className="mt-0.5 block truncate text-xs text-noir-light/75">
+            {perfume.perfumeHouse.name}
+          </span>
+        ) : null}
+      </span>
+    </PrefetchLink>
+  )
+}
+
 const SeasonalTrendingSection = ({
   season,
   perfumes,
@@ -96,14 +127,39 @@ const SeasonalTrendingSection = ({
   if (perfumes.length === 0) return null
   const seasonLabel = tSeason(season)
 
+  if (isCompact) {
+    return (
+      <section
+        className={className}
+        aria-labelledby="home-seasonal-trending-heading"
+      >
+        <div className="flex items-center gap-2">
+          <FaLeaf className="h-4 w-4 shrink-0 text-noir-gold" aria-hidden />
+          <h2
+            id="home-seasonal-trending-heading"
+            className="!text-[clamp(1.625rem,2.1vw,1.875rem)] !font-semibold"
+          >
+            {t("title", { season: seasonLabel })}
+          </h2>
+        </div>
+        <ol className="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
+          {perfumes.map((perfume, index) => (
+            <li
+              key={perfume.perfumeId}
+              className="w-[220px] shrink-0 snap-start xl:w-[calc((100%-3rem)/5)]"
+            >
+              <CompactTrendingItem rank={index + 1} perfume={perfume} />
+            </li>
+          ))}
+        </ol>
+      </section>
+    )
+  }
+
   return (
     <section
       className={className}
-      aria-labelledby={
-        isCompact
-          ? "home-seasonal-trending-heading"
-          : "exchange-seasonal-trending-heading"
-      }
+      aria-labelledby="exchange-seasonal-trending-heading"
     >
       <div className="flex items-start gap-3">
         <FaLeaf
@@ -112,41 +168,21 @@ const SeasonalTrendingSection = ({
         />
         <div>
           <h2
-            id={
-              isCompact
-                ? "home-seasonal-trending-heading"
-                : "exchange-seasonal-trending-heading"
-            }
-            className={`font-semibold text-noir-gold ${isCompact ? "text-lg" : "text-base"}`}
+            id="exchange-seasonal-trending-heading"
+            className="font-semibold text-noir-gold text-base"
           >
             {t("title", { season: seasonLabel })}
           </h2>
-          {!isCompact ? (
-            <p className="mt-1 text-xs text-noir-gold-100">{t("description")}</p>
-          ) : null}
+          <p className="mt-1 text-xs text-noir-gold-100">{t("description")}</p>
         </div>
       </div>
-
-      {isCompact ? (
-        <ul className="mt-4 flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
-          {perfumes.map((perfume, index) => (
-            <li
-              key={perfume.perfumeId}
-              className="min-w-[min(100%,280px)] max-w-[280px]"
-            >
-              <TrendingRow rank={index + 1} perfume={perfume} compact />
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <ol className="mt-4 space-y-2">
-          {perfumes.map((perfume, index) => (
-            <li key={perfume.perfumeId}>
-              <TrendingRow rank={index + 1} perfume={perfume} compact={false} />
-            </li>
-          ))}
-        </ol>
-      )}
+      <ol className="mt-4 space-y-2">
+        {perfumes.map((perfume, index) => (
+          <li key={perfume.perfumeId}>
+            <TrendingRow rank={index + 1} perfume={perfume} />
+          </li>
+        ))}
+      </ol>
     </section>
   )
 }

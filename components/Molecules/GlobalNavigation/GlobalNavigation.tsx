@@ -76,49 +76,55 @@ function GlobalNavigationContent({ user }: GlobalNavigationProps) {
       className="fixed z-30 w-full h-auto bg-noir-dark/60 backdrop-blur-md top-0 hidden lg:block"
       data-sticky-header="global-navigation"
     >
-      <PrefetchLink
-        href="/"
-        className="absolute left-30 top-1/2 z-20 -translate-y-1/2 block px-2"
-        aria-label={logoText}
-      >
-        <Image
-          src="/images/new/logo-one.webp"
-          alt=""
-          width={356}
-          height={356}
-          priority={pathname !== "/"}
-          quality={75}
-          className="h-[var(--spacing-site-header-desktop)] w-auto max-h-42 drop-shadow-[0_4px_24px_rgba(0,0,0,0.55)]"
-        />
-      </PrefetchLink>
-      <div className="relative py-2 z-10 flex justify-end items-center px-30 bg-noir-black/60 backdrop-blur-md w-full gap-4">
-        <LanguageSwitcher />
-        <div className="flex items-center gap-2">
-          {!user ? (
-            <>
-              <GuestJoinCta />
-              <PrefetchLink
-                href={SIGN_IN}
-                aria-label={t("signIn")}
-                className={styleMerge(
-                  navLinkBase,
-                  "flex",
-                  isActive(SIGN_IN, true) && navLinkActive
-                )}
-              >
-                <FaUser size={20} aria-hidden focusable={false} />
-              </PrefetchLink>
-            </>
-          ) : (
-            <>
-              {user.id && <GlobalAlertBell userId={user.id} />}
-              <LogoutButton />
-            </>
-          )}
+      <div className="pointer-events-none absolute inset-0 z-20">
+        <div className="relative mx-auto h-full w-full max-w-[1280px] px-10">
+          <PrefetchLink
+            href="/"
+            className="pointer-events-auto absolute left-8 top-1/2 -translate-y-1/2 block px-2"
+            aria-label={logoText}
+          >
+            <Image
+              src="/images/new/logo-one.webp"
+              alt=""
+              width={356}
+              height={356}
+              priority={pathname !== "/"}
+              quality={75}
+              className="h-[var(--spacing-site-header-desktop)] w-auto max-h-42 drop-shadow-[0_4px_24px_rgba(0,0,0,0.55)]"
+            />
+          </PrefetchLink>
+        </div>
+      </div>
+      <div className="relative z-10 w-full bg-noir-black/60 backdrop-blur-md">
+        <div className="mx-auto flex w-full max-w-[1280px] items-center justify-end gap-4 px-10 py-2">
+          <LanguageSwitcher />
+          <div className="flex items-center gap-2">
+            {!user ? (
+              <>
+                <GuestJoinCta />
+                <PrefetchLink
+                  href={SIGN_IN}
+                  aria-label={t("signIn")}
+                  className={styleMerge(
+                    navLinkBase,
+                    "flex",
+                    isActive(SIGN_IN, true) && navLinkActive
+                  )}
+                >
+                  <FaUser size={20} aria-hidden focusable={false} />
+                </PrefetchLink>
+              </>
+            ) : (
+              <>
+                {user.id && <GlobalAlertBell userId={user.id} />}
+                <LogoutButton />
+              </>
+            )}
+          </div>
         </div>
       </div>
       <nav
-        className="relative z-10 hidden lg:flex justify-between items-center px-30 py-2 min-h-14"
+        className="relative z-10 mx-auto hidden min-h-14 w-full max-w-[1280px] items-center justify-between px-10 py-2 lg:flex"
         aria-label={t("aria.primary")}
         data-cy="GlobalNavigation"
       >

@@ -11,6 +11,7 @@ const OnboardingBannerSlot = async ({ userId }: OnboardingBannerSlotProps) => {
     if (!state?.showBanner) return null
     return (
       <div
+        data-onboarding-banner
         className="sticky top-[var(--spacing-site-header-mobile)] z-25 mt-[var(--spacing-site-header-mobile)] w-full border-b border-noir-gold/40 bg-noir-dark shadow-lg lg:top-[var(--spacing-site-header-desktop)] lg:mt-[var(--spacing-site-header-desktop)]"
       >
         <OnboardingBanner state={state} />

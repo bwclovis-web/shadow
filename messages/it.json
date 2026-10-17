@@ -664,7 +664,7 @@
       "perfumes": "l'Archivio…"
     },
     "heading": "Perfumer's Hollow",
-    "description": "Un database di profumi e case.",
+    "description": "Scopri fragranze, costruisci la tua collezione e entra in contatto con altri collezionisti.",
     "subheading": "Dove la fragranza lascia un'ombra.",
     "searchType": {
       "perfume-house": "case di fragranze…",
@@ -697,6 +697,53 @@
     },
     "seasonalTrending": {
       "title": "Di tendenza in {season}"
+    },
+    "galleryWalk": {
+      "hero": {
+        "searchTypes": {
+          "perfume": "Profumi",
+          "perfume-house": "Case"
+        },
+        "placeholder": {
+          "perfume": "Cerca profumi per nome…",
+          "perfume-house": "Cerca case di fragranze per nome…"
+        },
+        "searchHint": "Cerca nell'Archivio per nome del profumo o della casa."
+      },
+      "pathways": {
+        "ariaLabel": "Esplora Perfumer's Hollow",
+        "archive": {
+          "title": "Esplora L'Archivio",
+          "description": "Scopri profumi, case e le storie che li accompagnano."
+        },
+        "exchange": {
+          "title": "Unisciti a L'Exchange",
+          "description": "Sfoglia annunci reali dei collezionisti di tutto l'Hollow."
+        },
+        "community": {
+          "title": "Entra nella community",
+          "description": "Esplora vassoi, diari d'uso e sfide per collezionisti."
+        }
+      },
+      "latest": {
+        "title": "Ultime novità su L'Exchange",
+        "description": "Flaconi aggiunti di recente dai collezionisti di tutto l'Hollow.",
+        "viewAll": "Vedi tutti gli annunci",
+        "milliliters": "{amount} ml",
+        "empty": "Al momento non ci sono flaconi in vendita.",
+        "visitExchange": "Visita L'Exchange"
+      },
+      "publicTrays": {
+        "title": "Vassoi pubblici",
+        "description": "Esplora le collezioni curate dalla community.",
+        "details": "Scopri cosa indossano gli altri collezionisti, esplora selezioni tematiche e trova fragranze attraverso ispirazioni condivise.",
+        "cta": "Vedi i vassoi pubblici"
+      },
+      "journal": {
+        "title": "Dal Journal",
+        "description": "Storie, guide e riflessioni dal mondo delle fragranze.",
+        "viewAll": "Vedi tutti gli articoli"
+      }
     }
   },
   "howItWorks": {

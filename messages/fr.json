@@ -664,7 +664,7 @@
       "perfumes": "l'Archive…"
     },
     "heading": "Perfumer's Hollow",
-    "description": "Une base de parfums et de maisons.",
+    "description": "Découvrez des parfums, constituez votre collection et échangez avec d'autres collectionneurs.",
     "subheading": "Là où le parfum laisse une ombre.",
     "searchType": {
       "perfume-house": "maisons de parfum…",
@@ -697,6 +697,53 @@
     },
     "seasonalTrending": {
       "title": "Tendances {season}"
+    },
+    "galleryWalk": {
+      "hero": {
+        "searchTypes": {
+          "perfume": "Parfums",
+          "perfume-house": "Maisons"
+        },
+        "placeholder": {
+          "perfume": "Rechercher un parfum par nom…",
+          "perfume-house": "Rechercher une maison de parfum par nom…"
+        },
+        "searchHint": "Recherchez dans L'Archive par nom de parfum ou de maison."
+      },
+      "pathways": {
+        "ariaLabel": "Explorer Perfumer's Hollow",
+        "archive": {
+          "title": "Explorer L'Archive",
+          "description": "Découvrez les parfums, les maisons et leurs histoires."
+        },
+        "exchange": {
+          "title": "Rejoindre L'Échange",
+          "description": "Parcourez les annonces réelles des collectionneurs du Hollow."
+        },
+        "community": {
+          "title": "Rejoindre la communauté",
+          "description": "Explorez les plateaux, journaux de port et défis de collectionneurs."
+        }
+      },
+      "latest": {
+        "title": "Nouveautés sur L'Échange",
+        "description": "Flacons récemment proposés par les collectionneurs du Hollow.",
+        "viewAll": "Voir toutes les annonces",
+        "milliliters": "{amount} ml",
+        "empty": "Aucun flacon n'est proposé pour le moment.",
+        "visitExchange": "Visiter L'Échange"
+      },
+      "publicTrays": {
+        "title": "Plateaux publics",
+        "description": "Explorez les collections choisies par la communauté.",
+        "details": "Découvrez ce que portent les autres collectionneurs, parcourez des sélections thématiques et trouvez des parfums grâce aux inspirations partagées.",
+        "cta": "Voir les plateaux publics"
+      },
+      "journal": {
+        "title": "Le Journal",
+        "description": "Histoires, guides et réflexions du monde du parfum.",
+        "viewAll": "Voir tous les articles"
+      }
     }
   },
   "howItWorks": {

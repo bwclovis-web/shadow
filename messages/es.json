@@ -664,7 +664,7 @@
       "perfumes": "el Archivo…"
     },
     "heading": "Perfumer's Hollow",
-    "description": "Una base de datos completa de perfumes y sus casas.",
+    "description": "Descubra fragancias, construya su colección y conecte con otros coleccionistas.",
     "subheading": "Donde la fragancia deja una sombra.",
     "searchType": {
       "perfume-house": "casas de fragancias…",
@@ -697,6 +697,53 @@
     },
     "seasonalTrending": {
       "title": "Tendencias de {season}"
+    },
+    "galleryWalk": {
+      "hero": {
+        "searchTypes": {
+          "perfume": "Perfumes",
+          "perfume-house": "Casas"
+        },
+        "placeholder": {
+          "perfume": "Buscar perfumes por nombre…",
+          "perfume-house": "Buscar casas de fragancias por nombre…"
+        },
+        "searchHint": "Busque en El Archivo por nombre de perfume o de casa de fragancias."
+      },
+      "pathways": {
+        "ariaLabel": "Explorar Perfumer's Hollow",
+        "archive": {
+          "title": "Explorar El Archivo",
+          "description": "Descubra perfumes, casas y las historias que hay detrás."
+        },
+        "exchange": {
+          "title": "Únase al Intercambio",
+          "description": "Explore anuncios reales de coleccionistas de todo el Hollow."
+        },
+        "community": {
+          "title": "Sea parte de la comunidad",
+          "description": "Explore bandejas, diarios de uso y retos para coleccionistas."
+        }
+      },
+      "latest": {
+        "title": "Lo último en el Intercambio",
+        "description": "Frascos publicados recientemente por coleccionistas de todo el Hollow.",
+        "viewAll": "Ver todos los anuncios",
+        "milliliters": "{amount} ml",
+        "empty": "No hay frascos publicados en este momento.",
+        "visitExchange": "Visitar el Intercambio"
+      },
+      "publicTrays": {
+        "title": "Bandejas públicas",
+        "description": "Explore colecciones seleccionadas de toda la comunidad.",
+        "details": "Descubra lo que llevan otros coleccionistas, explore selecciones temáticas y encuentre fragancias a través de la inspiración compartida.",
+        "cta": "Ver bandejas públicas"
+      },
+      "journal": {
+        "title": "Del diario",
+        "description": "Historias, guías y reflexiones del mundo de las fragancias.",
+        "viewAll": "Ver todos los artículos"
+      }
     }
   },
   "howItWorks": {

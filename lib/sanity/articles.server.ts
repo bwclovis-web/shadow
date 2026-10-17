@@ -15,6 +15,7 @@ import {
   articlesIndexAllLanguagesQuery,
   articlesIndexQuery,
   articlesIndexWithRefsQuery,
+  latestArticlesQuery,
 } from "./queries"
 import type { ArticleDetail, ArticleListItem } from "./types"
 
@@ -58,6 +59,43 @@ export const getPublishedArticlesWithRefs = async (
   if (!isSanityConfigured) return []
   const locale = await resolveLanguage(language)
   return withEnglishFallback(locale, true)
+}
+
+const fetchLatestForLanguage = async (
+  language: JournalLocale,
+  limit: number
+): Promise<ArticleListItem[]> =>
+  sanityFetch<ArticleListItem[]>({
+    query: latestArticlesQuery,
+    params: { language, limit },
+    tags: ["articles", `articles:${language}`],
+  })
+
+/** Newest `limit` published articles in the viewer's locale, falling back to English when none exist. */
+export const getLatestPublishedArticles = async (
+  limit: number,
+  language?: JournalLocale
+): Promise<ArticleListItem[]> => {
+  if (!isSanityConfigured) return []
+  const locale = await resolveLanguage(language)
+  const primary = await fetchLatestForLanguage(locale, limit)
+  if (primary.length > 0 || locale === DEFAULT_JOURNAL_LOCALE) {
+    return primary
+  }
+  return fetchLatestForLanguage(DEFAULT_JOURNAL_LOCALE, limit)
+}
+
+/** For pages where a Journal outage must not take down the page (e.g. the homepage). */
+export const getLatestPublishedArticlesOrEmpty = async (
+  limit: number,
+  language?: JournalLocale
+): Promise<ArticleListItem[]> => {
+  try {
+    return await getLatestPublishedArticles(limit, language)
+  } catch (error) {
+    console.error("[journal] latest articles failed", error)
+    return []
+  }
 }
 
 /** Every published article across languages (sitemap / static generation). */

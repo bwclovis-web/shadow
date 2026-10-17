@@ -260,6 +260,12 @@ img {
     scroll-behavior: auto !important;
     will-change: auto !important;
   }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
 }
 
 /* Performance-optimized offline indicator */
