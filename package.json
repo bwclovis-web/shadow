@@ -36,7 +36,7 @@
     "notes:materials:report": "npx tsx scripts/note-materials-report.ts",
     "scraper:worker": "npx tsx scripts/scraper-worker.ts",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "eslint --cache",
     "knip": "knip",
     "typecheck": "tsc",
     "test": "vitest run",

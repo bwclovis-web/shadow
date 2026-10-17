@@ -44,6 +44,7 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+.eslintcache
 next-env.d.ts
 
 /scraper

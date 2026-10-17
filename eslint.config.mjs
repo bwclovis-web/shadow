@@ -35,6 +35,13 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "scripts/**",
     "crews/**",
+    // Python scraper (with huge local run/webdriver caches) and DB backups — nothing to lint
+    "scraper/**",
+    "backups/**",
+    // Generated / scratch output
+    ".sanity/**",
+    ".tmp/**",
+    "test-results/**",
     // Python venvs (Selenium and other vendor JS are not valid for our ESLint parser)
     "**/.venv/**",
   ]),
