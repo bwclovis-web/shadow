@@ -1,377 +1,230 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import { useParams, useSearchParams } from "next/navigation"
+import { useState } from "react"
 import { useTranslations } from "next-intl"
 
-import AlphabeticalNav from "@/components/Organisms/AlphabeticalNav"
-import DataDisplaySection from "@/components/Organisms/DataDisplaySection"
-import DataFilters from "@/components/Organisms/DataFilters"
-import TitleBanner from "@/components/Organisms/TitleBanner"
 import AdSenseUnit from "@/components/Atoms/AdSenseUnit"
-import { THE_ARCHIVE_PATH } from "@/constants/routes"
-import { useAlphabeticalBrowserState } from "@/hooks/useAlphabeticalBrowserState"
-import { useGsapStagger } from "@/hooks/useGsapStagger"
-import { useInfinitePagination } from "@/hooks/useInfinitePagination"
-import { useInfinitePerfumesByLetter } from "@/hooks/useInfinitePerfumes"
-import { useResponsivePageSize } from "@/hooks/useMediaQuery"
-import {
-  getDefaultSortOptions,
-  sortItems,
-  type SortOption,
-} from "@/utils/sortUtils"
+import { Button } from "@/components/Atoms/Button/Button"
+import ArchiveFilterFields, {
+  type ArchiveFilterDraft,
+  countArchiveFilterDraft,
+} from "@/components/Containers/Catalog/ArchiveFilterFields"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
+import type { CatalogItemDisplay } from "@/components/Molecules/CatalogItem/CatalogItem"
 import { SaveSearchButton } from "@/components/Molecules/SaveSearchButton/SaveSearchButton"
+import CatalogFilterDrawer from "@/components/Organisms/CatalogFilterDrawer/CatalogFilterDrawer"
+import CatalogResults from "@/components/Organisms/CatalogResults/CatalogResults"
+import CatalogToolbar from "@/components/Organisms/CatalogToolbar/CatalogToolbar"
+import TitleBanner from "@/components/Organisms/TitleBanner"
+import { PERFUME_PATH } from "@/constants/routes"
+import { useCatalogNavigation } from "@/hooks/useCatalogNavigation"
+import type { CatalogOption, CatalogPage, CatalogPerfumeItem } from "@/types/catalog"
+import {
+  ARCHIVE_SORTS,
+  type ArchiveCatalogState,
+  type ArchiveSort,
+  buildArchiveCatalogHref,
+  countArchiveFilters,
+  emptyArchiveFilters,
+} from "@/utils/catalog-params"
+import {
+  perfumeImageTransitionName,
+  perfumeTitleTransitionName,
+} from "@/utils/view-transition-names"
 
 const BANNER_IMAGE = "/images/new/vault.webp"
-const SINGLE_LETTER_REGEX = /^[A-Za-z]$/
-type ArchiveRevealDirection = "forward" | "backward"
-const ARCHIVE_STAGGER = 0.042
-const ARCHIVE_HORIZONTAL_OFFSET = 16
-const ARCHIVE_VERTICAL_OFFSET = 12
+const FALLBACK_IMAGE = "/images/single-bottle.webp"
 
 export type TheArchiveClientProps = {
-  initialLetter?: string | null
-  initialPerfumes?: PerfumeFromApi[]
-  initialPerfumeTotal?: number
-  /** Recent bottles shown on the Archive landing when no letter is selected. */
-  initialFeaturedPerfumes?: PerfumeFromApi[]
-  /** When set (from `?q=`), show name-search results instead of letter browse. */
-  initialSearchQuery?: string | null
-  initialSearchResults?: PerfumeFromApi[]
+  state: ArchiveCatalogState
+  catalog: CatalogPage<CatalogPerfumeItem>
+  selectedHouses: CatalogOption[]
+  selectedNotes: CatalogOption[]
+  /** From `?q=`: relevance-ranked name search instead of the filtered catalog. */
+  searchQuery: string | null
   showAds?: boolean
 }
 
-type PerfumeFromApi = {
-  id: string
-  name: string
-  slug: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  type?: string
-  image?: string
-  perfumeHouse?: { name: string } | null
-}
-
-const parseLetterFromParam = (param: unknown): string | null => {
-  if (typeof param !== "string" || !SINGLE_LETTER_REGEX.test(param)) return null
-  return param.toUpperCase()
-}
-
-const getLetterRank = (letter: string | null): number =>
-  letter ? letter.charCodeAt(0) - 64 : 0
-
-const getArchiveNavigationRank = (letter: string | null, page: number): number =>
-  getLetterRank(letter) * 1_000 + page
-
 const TheArchiveClient = ({
-  initialLetter = null,
-  initialPerfumes = [],
-  initialPerfumeTotal = 0,
-  initialFeaturedPerfumes = [],
-  initialSearchQuery = null,
-  initialSearchResults = [],
+  state,
+  catalog,
+  selectedHouses,
+  selectedNotes,
+  searchQuery,
   showAds = true,
-}: TheArchiveClientProps = {}) => {
+}: TheArchiveClientProps) => {
   const t = useTranslations("allPerfumes")
+  const tCatalog = useTranslations("catalog")
   const tSort = useTranslations("sortOptions")
-  const params = useParams()
-  const searchParams = useSearchParams()
-
-  const [selectedSort, setSelectedSort] = useState<SortOption>("created-desc")
-  const [archiveRevealDirection, setArchiveRevealDirection] =
-    useState<ArchiveRevealDirection>("forward")
-  const [gridCueToken, setGridCueToken] = useState(0)
-  const archiveGridRef = useRef<HTMLDivElement>(null)
-  const previousArchiveSelectionRef = useRef<{
-    letter: string | null
-    page: number
-  } | null>(null)
-
-  const pageSize = useResponsivePageSize()
-  const letterFromUrl = parseLetterFromParam(params?.letter)
-  const pageFromUrl = Math.max(1, parseInt(searchParams.get("pg") ?? "1", 10))
-  const searchQueryFromUrl = (searchParams.get("q") ?? "").trim()
-  const activeSearchQuery = searchQueryFromUrl || initialSearchQuery || null
-  const isSearchMode = Boolean(activeSearchQuery)
-  const isFeaturedMode = !isSearchMode && !letterFromUrl
-
-  const useInitialData =
-    !isSearchMode &&
-    letterFromUrl &&
-    initialLetter &&
-    letterFromUrl.toUpperCase() === initialLetter.toUpperCase()
-
-  const sortOptions = getDefaultSortOptions((key: string) =>
-    tSort(key.replace("sortOptions.", ""))
-  )
-
-  const {
-    data,
-    isLoading,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-    error,
-  } = useInfinitePerfumesByLetter({
-    letter: isSearchMode || isFeaturedMode ? null : letterFromUrl,
-    houseType: "all",
-    pageSize,
-    initialData: useInitialData ? initialPerfumes : undefined,
-    initialTotalCount: useInitialData ? initialPerfumeTotal : undefined,
+  const { isPending, state: requested, navigate, prefetch } = useCatalogNavigation(state)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [draft, setDraft] = useState<ArchiveFilterDraft>({
+    houses: selectedHouses,
+    notes: selectedNotes,
+    seasons: state.filters.seasons,
   })
 
-  const { items: letterPerfumes, pagination, loading: letterLoading } =
-    useInfinitePagination({
-      pages: data?.pages,
-      currentPage: pageFromUrl,
-      pageSize,
-      isLoading,
-      isFetchingNextPage,
-      hasNextPage,
-      fetchNextPage,
-      extractItems: (page: { perfumes?: unknown[] }) => page.perfumes ?? [],
-      extractTotalCount: (page?: {
-        meta?: { totalCount?: number }
-        count?: number
-      }) => page?.meta?.totalCount ?? page?.count,
-    })
-
-  const searchPerfumes: PerfumeFromApi[] = isSearchMode
-    ? initialSearchResults
-    : []
-
-  const perfumes = isSearchMode
-    ? searchPerfumes
-    : isFeaturedMode
-      ? initialFeaturedPerfumes
-      : (letterPerfumes as PerfumeFromApi[])
-  const loading = isSearchMode || isFeaturedMode ? false : letterLoading
-  const searchPagination = {
-    currentPage: 1,
-    totalPages: 1,
-    totalCount: searchPerfumes.length,
-    hasNextPage: false,
-    hasPrevPage: false,
-  }
-  const paginationForUi =
-    isSearchMode || isFeaturedMode ? searchPagination : pagination
-  const normalizedPerfumes = (perfumes as PerfumeFromApi[]).map((perfume) => ({
-    ...perfume,
-    createdAt: perfume.createdAt ?? perfume.updatedAt ?? new Date(0),
-  }))
-
-  const sortedPerfumes = sortItems(normalizedPerfumes, selectedSort)
-  const sortedPerfumeIds = sortedPerfumes
-    .map(perfume => perfume.id)
-    .join(",")
-
-  useEffect(() => {
-    const nextSelection = { letter: letterFromUrl, page: pageFromUrl }
-    const previousSelection = previousArchiveSelectionRef.current
-
-    if (previousSelection) {
-      const previousRank = getArchiveNavigationRank(
-        previousSelection.letter,
-        previousSelection.page
-      )
-      const nextRank = getArchiveNavigationRank(
-        nextSelection.letter,
-        nextSelection.page
-      )
-
-      if (previousRank !== nextRank) {
-        setArchiveRevealDirection(nextRank > previousRank ? "forward" : "backward")
-      }
-
-      if (previousSelection.letter !== nextSelection.letter) {
-        setGridCueToken(current => current + 1)
-      }
-    }
-
-    previousArchiveSelectionRef.current = nextSelection
-  }, [letterFromUrl, pageFromUrl])
-
-  useGsapStagger(archiveGridRef, {
-    selector: "[data-display-card]",
-    deps: [
-      letterFromUrl ?? "all",
-      pageFromUrl,
-      selectedSort,
-      sortedPerfumeIds,
-      archiveRevealDirection,
-    ],
-    enabled: !loading && sortedPerfumes.length > 0,
-    stagger: ARCHIVE_STAGGER,
-    from: {
-      opacity: 0,
-      x:
-        archiveRevealDirection === "forward"
-          ? ARCHIVE_HORIZONTAL_OFFSET
-          : -ARCHIVE_HORIZONTAL_OFFSET,
-      y: ARCHIVE_VERTICAL_OFFSET,
-      scale: 0.982,
-    },
-    to: {
-      opacity: 1,
-      x: 0,
-      y: 0,
-      scale: 1,
-      duration: 0.42,
-      ease: "power2.out",
-      clearProps: "transform,opacity",
-    },
+  const isSearchMode = Boolean(searchQuery)
+  const activeFilterCount = countArchiveFilters(state.filters)
+  const requestedFilterCount = countArchiveFilters(requested.filters)
+  const withPatch = (patch: Partial<ArchiveCatalogState>): ArchiveCatalogState => ({
+    ...state,
+    page: 1,
+    ...patch,
   })
+  /** Only a view change keeps the name search; every other action returns to browsing. */
+  const go = (
+    next: ArchiveCatalogState,
+    options?: { scrollToResults?: boolean; keepSearch?: boolean }
+  ) =>
+    navigate(
+      buildArchiveCatalogHref(next, options?.keepSearch ? searchQuery : null),
+      next,
+      options
+    )
 
-  const buildPath = (page: number) => {
-    const letterSegment = letterFromUrl
-      ? `/${letterFromUrl.toLowerCase()}`
-      : ""
-    const pageSuffix = page > 1 ? `?pg=${page}` : ""
-    return `${THE_ARCHIVE_PATH}${letterSegment}${pageSuffix}`
+  const openFilters = () => {
+    setDraft({ houses: selectedHouses, notes: selectedNotes, seasons: state.filters.seasons })
+    setFiltersOpen(true)
   }
 
-  const buildPathForLetter = (letter: string | null) =>
-    letter ? `${THE_ARCHIVE_PATH}/${letter.toLowerCase()}` : THE_ARCHIVE_PATH
-
-  const { handleLetterClick, goToPage } = useAlphabeticalBrowserState({
-      letter: letterFromUrl,
-      pageFromUrl,
-      basePathForSync: letterFromUrl
-        ? `${THE_ARCHIVE_PATH}/${letterFromUrl.toLowerCase()}`
-        : THE_ARCHIVE_PATH,
-      buildPath,
-      buildPathForLetter,
-      pagination: paginationForUi,
-      loading,
-      itemCount: perfumes.length,
-    })
-
-  const onPrefetchNext = useCallback(() => {
-    if (isSearchMode || isFeaturedMode || !hasNextPage) return
-    void fetchNextPage()
-  }, [fetchNextPage, hasNextPage, isSearchMode, isFeaturedMode])
-
-  const onPrefetchPage = useCallback(
-    (targetPage: number) => {
-      if (isSearchMode || isFeaturedMode) return
-      if (targetPage <= pagination.currentPage) return
-      if (!hasNextPage) return
-      void fetchNextPage()
-    },
-    [fetchNextPage, hasNextPage, isSearchMode, isFeaturedMode, pagination.currentPage]
-  )
-
-  if (error && !isSearchMode) {
-    return (
-      <div>
-        Error loading perfumes:{" "}
-        {error instanceof Error ? error.message : "Unknown error"}
-      </div>
+  const applyFilters = () => {
+    setFiltersOpen(false)
+    go(
+      withPatch({
+        filters: {
+          houseIds: draft.houses.map(house => house.id),
+          noteIds: draft.notes.map(note => note.id),
+          seasons: draft.seasons,
+        },
+      })
     )
   }
+
+  const items: CatalogItemDisplay[] = catalog.items.map(perfume => ({
+    id: perfume.id,
+    href: state.letter
+      ? `${PERFUME_PATH}/${perfume.slug}?letter=${state.letter}`
+      : `${PERFUME_PATH}/${perfume.slug}`,
+    title: perfume.name,
+    subtitle: perfume.houseName,
+    image: perfume.image,
+    fallbackImage: FALLBACK_IMAGE,
+    imageAlt: perfume.houseName ? `${perfume.name} by ${perfume.houseName}` : perfume.name,
+    isPendingReview: perfume.isPending,
+    compareItem: {
+      id: perfume.id,
+      slug: perfume.slug,
+      name: perfume.name,
+      image: perfume.image ?? undefined,
+    },
+    imageTransitionName: perfumeImageTransitionName(perfume.id),
+    titleTransitionName: perfumeTitleTransitionName(perfume.id),
+  }))
+
+  const emptyState = searchQuery ? (
+    <p className="text-lg text-noir-light">{t("searchEmpty")}</p>
+  ) : (
+    <div className="flex flex-col items-start gap-4 border border-noir-gold/40 bg-noir-black/40 p-6">
+      <p className="text-lg text-noir-light">
+        {state.letter && activeFilterCount === 0
+          ? t("emptyLetter", { letter: state.letter })
+          : t("emptyFiltered")}
+      </p>
+      {activeFilterCount > 0 ? (
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => go(withPatch({ filters: emptyArchiveFilters() }))}
+        >
+          {tCatalog("clearFilters")}
+        </Button>
+      ) : null}
+    </div>
+  )
 
   return (
     <main id="main-content">
       <TitleBanner
         image={BANNER_IMAGE}
-        heading={
-          isSearchMode && activeSearchQuery
-            ? t("searchHeading", { query: activeSearchQuery })
-            : t("heading")
-        }
+        heading={searchQuery ? t("searchHeading", { query: searchQuery }) : t("heading")}
         subheading={
-          isSearchMode && activeSearchQuery
-            ? t("searchSubheading", {
-                count: sortedPerfumes.length,
-                query: activeSearchQuery,
-              })
+          searchQuery
+            ? t("searchSubheading", { count: catalog.totalCount, query: searchQuery })
             : t("subheading")
         }
       />
 
-      <PageWrapper>
-        <DataFilters
+      <PageWrapper className="space-y-6">
+        <CatalogToolbar
           searchType="perfume"
-          sortOptions={sortOptions}
-          selectedSort={selectedSort}
-          onSortChange={(evt: { target: { value: string } }) =>
-            setSelectedSort(evt.target.value as SortOption)
-          }
-          className="mb-8"
-        />
-
-        {isSearchMode && activeSearchQuery ? (
-          <div className="mb-6">
-            <SaveSearchButton
-              name={`Archive: ${activeSearchQuery.slice(0, 80)}`}
-              query={{
-                q: activeSearchQuery,
-                perfumeName: activeSearchQuery,
-                source: "archive",
-                alertOnEditorial: true,
-                alertOnNewListing: true,
-              }}
-            />
-          </div>
-        ) : null}
-        <AlphabeticalNav
-          selectedLetter={isSearchMode || isFeaturedMode ? null : letterFromUrl}
-          onLetterSelect={handleLetterClick}
-          prefetchType="perfumes"
-          houseType="all"
-          pageSize={pageSize}
-          className="mb-8"
+          sortOptions={ARCHIVE_SORTS.map(sort => ({ id: sort, name: sort, label: tSort(sort) }))}
+          sort={requested.sort}
+          onSortChange={sort => go(withPatch({ sort: sort as ArchiveSort }))}
+          activeFilterCount={requestedFilterCount}
+          onOpenFilters={openFilters}
+          view={requested.view}
+          onViewChange={view => go({ ...state, view }, { keepSearch: true })}
+          letter={isSearchMode ? null : requested.letter}
+          onLetterSelect={letter => go(withPatch({ letter }))}
+          onLetterHover={letter => prefetch(buildArchiveCatalogHref(withPatch({ letter })))}
+          hideRefinements={isSearchMode}
+          labels={{
+            searchPlaceholder: t("searchPlaceholder"),
+            sort: tCatalog("toolbar.sort"),
+            filters: tCatalog("toolbar.filters"),
+            filtersAria: tCatalog("toolbar.filtersAria", { count: requestedFilterCount }),
+            view: tCatalog("toolbar.view"),
+            gridView: tCatalog("toolbar.gridView"),
+            listView: tCatalog("toolbar.listView"),
+            letterNav: tCatalog("toolbar.letterNav"),
+          }}
         />
 
         <AdSenseUnit showAds={showAds} variant="display" />
 
-        {isFeaturedMode && sortedPerfumes.length > 0 ? (
-          <h2 className="mb-4 text-center text-2xl font-semibold text-noir-gold">
-            {t("featuredHeading")}
-          </h2>
-        ) : null}
-
-        {isSearchMode && sortedPerfumes.length === 0 ? (
-          <p className="text-noir-light text-lg">{t("searchEmpty")}</p>
-        ) : isSearchMode || isFeaturedMode ? (
-          <DataDisplaySection
-            containerRef={archiveGridRef}
-            data={sortedPerfumes}
-            isLoading={loading}
-            type="perfume"
-            selectedLetter={null}
-            sourcePage="archive"
-            transitionCueKey={
-              gridCueToken > 0
-                ? `archive-${gridCueToken}-all`
-                : undefined
-            }
-            transitionCueDirection={archiveRevealDirection}
-            transitionCueTone="archive"
-          />
-        ) : (
-          <DataDisplaySection
-            containerRef={archiveGridRef}
-            data={sortedPerfumes}
-            isLoading={loading}
-            type="perfume"
-            selectedLetter={letterFromUrl}
-            sourcePage="archive"
-            transitionCueKey={
-              gridCueToken > 0
-                ? `archive-${gridCueToken}-${letterFromUrl ?? "all"}`
-                : undefined
-            }
-            transitionCueDirection={archiveRevealDirection}
-            transitionCueTone="archive"
-            pagination={pagination}
-            onPageChange={goToPage}
-            onPrefetchNext={onPrefetchNext}
-            onPrefetchPage={onPrefetchPage}
-          />
-        )}
+        <CatalogResults
+          heading={t("resultsCount", { shown: catalog.items.length, total: catalog.totalCount })}
+          items={items}
+          view={requested.view}
+          actionLabel={t("viewAction")}
+          isPending={isPending}
+          pendingLabel={tCatalog("updating")}
+          emptyState={emptyState}
+          page={catalog.page}
+          totalPages={catalog.totalPages}
+          onPageChange={page => go({ ...state, page }, { scrollToResults: true })}
+          aside={
+            searchQuery ? (
+              <div className="mb-6">
+                <SaveSearchButton
+                  name={`Archive: ${searchQuery.slice(0, 80)}`}
+                  query={{
+                    q: searchQuery,
+                    perfumeName: searchQuery,
+                    source: "archive",
+                    alertOnEditorial: true,
+                    alertOnNewListing: true,
+                  }}
+                />
+              </div>
+            ) : null
+          }
+        />
       </PageWrapper>
+
+      <CatalogFilterDrawer
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        title={t("filters.title")}
+        closeLabel={tCatalog("drawer.close")}
+        clearLabel={tCatalog("drawer.clearAll")}
+        applyLabel={tCatalog("drawer.apply", { count: countArchiveFilterDraft(draft) })}
+        onClear={() => setDraft({ houses: [], notes: [], seasons: [] })}
+        onApply={applyFilters}
+      >
+        <ArchiveFilterFields value={draft} onChange={setDraft} />
+      </CatalogFilterDrawer>
     </main>
   )
 }

@@ -14,12 +14,73 @@ interface AlphabeticalNavProps {
   prefetchType?: "houses" | "perfumes"
   houseType?: string
   pageSize?: number
+  /** `compact`: one scrollable row on small screens, two rows from `lg`. */
+  variant?: "default" | "compact"
+  /** Accessible name for the compact `nav` landmark. */
+  ariaLabel?: string
+  /** Called on hover/focus of a letter (e.g. to prefetch its route). */
+  onLetterHover?: (letter: string) => void
 }
 
 const ALL_BUTTON_KEY = "__all__"
 const LETTER_CHANGE_ANIMATION_MS = 560
 
-const AlphabeticalNav = ({
+const CompactAlphabeticalNav = ({
+  selectedLetter,
+  onLetterSelect,
+  onLetterHover,
+  ariaLabel,
+  className = "",
+}: Pick<
+  AlphabeticalNavProps,
+  "selectedLetter" | "onLetterSelect" | "onLetterHover" | "ariaLabel" | "className"
+>) => {
+  const t = useTranslations("common")
+  const letters = getAlphabetLetters()
+  const buttonClassName =
+    "w-auto md:w-auto h-9 min-w-9 shrink-0 snap-start rounded-sm border px-2 text-sm font-medium shadow-none transition-colors duration-200 lg:h-8 lg:min-w-0"
+  const idleClassName =
+    "border-noir-gold/50 bg-noir-dark/80 text-noir-gold hover:border-noir-gold hover:bg-noir-gold/20"
+  const selectedClassName =
+    "border-noir-gold bg-noir-gold text-noir-black hover:bg-noir-gold"
+
+  const renderButton = (
+    key: string,
+    label: string,
+    letter: string | null,
+    extraClassName = ""
+  ) => {
+    const isSelected = selectedLetter === letter
+    return (
+      <Button
+        key={key}
+        type="button"
+        size={null}
+        variant={null}
+        aria-pressed={isSelected}
+        onClick={() => onLetterSelect(letter)}
+        onMouseEnter={letter ? () => onLetterHover?.(letter) : undefined}
+        onFocus={letter ? () => onLetterHover?.(letter) : undefined}
+        className={`${buttonClassName} ${isSelected ? selectedClassName : idleClassName} ${extraClassName}`}
+      >
+        {label}
+      </Button>
+    )
+  }
+
+  return (
+    <nav aria-label={ariaLabel} className={className}>
+      <div className="flex snap-x gap-1.5 overflow-x-auto pb-1 mask-r-from-90% lg:grid lg:grid-cols-14 lg:overflow-visible lg:pb-0 lg:mask-none">
+        {renderButton(ALL_BUTTON_KEY, t("all"), null, "px-3 uppercase tracking-wider")}
+        {letters.map(letter =>
+          renderButton(letter, letter, letter, letter === "N" ? "lg:col-start-2" : "")
+        )}
+      </div>
+    </nav>
+  )
+}
+
+const DefaultAlphabeticalNav = ({
   selectedLetter,
   onLetterSelect,
   className = "",
@@ -171,5 +232,12 @@ const AlphabeticalNav = ({
     </div>
   )
 }
+
+const AlphabeticalNav = ({ variant = "default", ...props }: AlphabeticalNavProps) =>
+  variant === "compact" ? (
+    <CompactAlphabeticalNav {...props} />
+  ) : (
+    <DefaultAlphabeticalNav {...props} />
+  )
 
 export default AlphabeticalNav

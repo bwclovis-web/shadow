@@ -25,8 +25,21 @@ interface TagSearchProps extends Omit<HTMLProps<HTMLDivElement>, "onChange" | "d
   maxSelections?: number
   inputId?: string
   searchInputLabel?: string
+  searchLabelClassName?: string
   selectedLayout?: TagSearchSelectedLayout
   surface?: TagSearchSurface
+  /** Defaults to note-tag search (`/api/getTag`). */
+  searchFn?: (query: string) => Promise<Tag[]>
+  messages?: { loading: string; empty: string; formatError: (err: string) => string }
+  placeholder?: string
+  /** Replaces the default empty-selection copy in the `flow` layout. */
+  emptyLabel?: string
+}
+
+const DEFAULT_MESSAGES = {
+  loading: "Searching…",
+  empty: "No tags found",
+  formatError: (err: string) => `Search error: ${err}`,
 }
 
 const TagSearch = ({
@@ -38,8 +51,13 @@ const TagSearch = ({
   maxSelections,
   inputId = "tag-search",
   searchInputLabel,
+  searchLabelClassName,
   selectedLayout = "footer",
   surface = "light",
+  searchFn,
+  messages = DEFAULT_MESSAGES,
+  placeholder,
+  emptyLabel,
 }: TagSearchProps) => {
   const initialTags = Array.isArray(data) ? data : []
   const [selectedTags, setSelectedTags] = useState<Tag[]>(initialTags)
@@ -53,11 +71,12 @@ const TagSearch = ({
     })
   }, [data])
 
-  const searchFunction = useCallback(async (query: string) => {
+  const searchTags = useCallback(async (query: string) => {
     const res = await fetch(`${TAG_SEARCH_API}?tag=${encodeURIComponent(query)}`)
     if (!res.ok) throw new Error("Tag search request failed")
     return (await res.json()) as Tag[]
   }, [])
+  const searchFunction = searchFn ?? searchTags
 
   const handleItemClick = (item: Tag | { id: string; name?: string }) => {
     if (selectedTags.some(t => t.id === item.id)) return
@@ -98,6 +117,7 @@ const TagSearch = ({
           inputId={inputId}
           listboxId={`${inputId}-listbox`}
           label={searchLabel}
+          labelClassName={searchLabelClassName}
           searchFn={searchFunction}
           minLength={2}
           delay={300}
@@ -106,12 +126,9 @@ const TagSearch = ({
             handleItemClick(item)
           }}
           clearInputOnSelect
+          placeholder={placeholder}
           inputClassName={searchbarVariants({ size: "standard" })}
-          messages={{
-            loading: "Searching…",
-            empty: "No tags found",
-            formatError: err => `Search error: ${err}`,
-          }}
+          messages={messages}
           footerSlot={
             allowCreate
               ? ({ clearList }: { clearList: () => void }) => (
@@ -136,6 +153,7 @@ const TagSearch = ({
         onRemoveTag={handleRemoveTag}
         layout={selectedLayout === "flow" ? "flow" : "footer"}
         surface={surfaceKey}
+        emptyLabel={emptyLabel}
       />
     </div>
   )

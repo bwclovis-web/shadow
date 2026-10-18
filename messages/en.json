@@ -528,9 +528,16 @@
     "heading": "Behind the Bottle",
     "subheading": "The houses, creators, and identities shaping the world of fragrance.",
     "readStories": "Read editorial stories →",
+    "searchPlaceholder": "Search fragrance houses…",
+    "resultsCount": "Showing {shown, number} of {total, plural, one {# house} other {# houses}}",
+    "emptyFiltered": "No houses match these filters.",
+    "emptyLetter": "No houses starting with {letter} yet.",
+    "viewAction": "View house",
     "filters": {
       "houseType": "Filter by Type:",
-      "sortBy": "Sort by:"
+      "sortBy": "Sort by:",
+      "title": "Filter houses",
+      "typeTitle": "Type"
     },
     "houseTypes": {
       "all": "All",
@@ -545,7 +552,7 @@
       "created-asc": "Oldest Entries",
       "name-asc": "Alphabetical A-Z",
       "name-desc": "Alphabetical Z-A",
-      "type-asc": "By Fragrance Type"
+      "type-asc": "By House Type"
     }
   },
   "allPerfumes": {
@@ -560,7 +567,49 @@
     "searchHeading": "Results for “{query}”",
     "searchSubheading": "{count, plural, =0 {No fragrances matched “{query}”.} one {# fragrance matching “{query}”.} other {# fragrances matching “{query}”.}}",
     "searchEmpty": "No fragrances matched that search. Try another name, or browse by letter below.",
-    "featuredHeading": "Recently added"
+    "searchPlaceholder": "Search the Archive…",
+    "resultsCount": "Showing {shown, number} of {total, plural, one {# perfume} other {# perfumes}}",
+    "emptyFiltered": "No perfumes match these filters.",
+    "emptyLetter": "No perfumes starting with {letter} yet.",
+    "viewAction": "View perfume",
+    "filters": {
+      "title": "Filter fragrances",
+      "house": "House",
+      "houseSearch": "Search houses",
+      "houseSearchPlaceholder": "Search houses…",
+      "selectedHouses": "Selected houses",
+      "noHousesSelected": "No houses selected.",
+      "notes": "Notes",
+      "noteSearch": "Search notes",
+      "noteSearchPlaceholder": "Search notes…",
+      "selectedNotes": "Selected notes",
+      "noNotesSelected": "No notes selected.",
+      "season": "Season",
+      "seasonDescription": "Shows perfumes the community has voted for in any selected season."
+    }
+  },
+  "catalog": {
+    "toolbar": {
+      "sort": "Sort by",
+      "filters": "Filters",
+      "filtersAria": "{count, plural, =0 {Filters, none applied} one {Filters, # applied} other {Filters, # applied}}",
+      "view": "Layout",
+      "gridView": "Grid view",
+      "listView": "List view",
+      "letterNav": "Browse by letter"
+    },
+    "drawer": {
+      "close": "Close filters",
+      "clearAll": "Clear all",
+      "apply": "Apply filters ({count})"
+    },
+    "filters": {
+      "searching": "Searching…",
+      "noMatches": "No matches found",
+      "searchError": "Search is unavailable right now. Try again."
+    },
+    "updating": "Updating results…",
+    "clearFilters": "Clear filters"
   },
   "auth": {
     "heading": "Enter the Hollow",

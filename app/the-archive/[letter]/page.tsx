@@ -1,29 +1,26 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 
+import { loadArchiveCatalog } from "@/app/the-archive/archive-catalog.server"
 import TheArchiveClient from "@/app/the-archive/TheArchiveClient"
 import { THE_ARCHIVE_PATH } from "@/constants/routes"
 import { buildItemListJsonLd } from "@/lib/seo/json-ld"
 import { buildPageMetadata } from "@/lib/seo/metadata"
-import { getPerfumesByLetterPaginated } from "@/models/perfume.server"
 import { shouldShowAds } from "@/utils/ads/should-show-ads"
+import { parseArchiveCatalogState, parseCatalogLetter } from "@/utils/catalog-params"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
-/** Matches `useResponsivePageSize` initial state (8) until `matchMedia` runs. */
-const DEFAULT_PAGE_SIZE = 8
-
 type Props = {
   params: Promise<{ letter: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
 export const generateMetadata = async ({ params }: Props): Promise<Metadata> => {
-  const { letter } = await params
-  const normalizedLetter = letter?.toUpperCase()
-  const isValidLetter = /^[A-Za-z]$/.test(normalizedLetter)
+  const normalizedLetter = parseCatalogLetter((await params).letter)
   const t = await getTranslations("allPerfumes.meta")
 
-  if (!isValidLetter) {
+  if (!normalizedLetter) {
     return {
       title: t("title"),
       description: t("description"),
@@ -38,35 +35,20 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
   })
 }
 
-const TheArchiveLetterPage = async ({ params }: Props) => {
-  const { letter } = await params
-  const normalizedLetter = letter?.toUpperCase()
-  const isValidLetter = /^[A-Za-z]$/.test(normalizedLetter)
+const TheArchiveLetterPage = async ({ params, searchParams }: Props) => {
+  const normalizedLetter = parseCatalogLetter((await params).letter)
   const cookieHeader = await getCookieHeader()
   const session = await getSessionFromCookieHeader(cookieHeader, {
     includeUser: true,
   })
 
-  let initialPerfumes: Awaited<ReturnType<typeof getPerfumesByLetterPaginated>>["perfumes"] = []
-  let initialTotal = 0
-
-  if (isValidLetter) {
-    const result = await getPerfumesByLetterPaginated(normalizedLetter, {
-      skip: 0,
-      take: DEFAULT_PAGE_SIZE,
-    })
-    initialPerfumes = result.perfumes
-    initialTotal = result.count
-  }
-
-  const perfumesForClient = initialPerfumes.map((p) => ({
-    ...p,
-    image: p.image ?? undefined,
-  }))
+  const data = await loadArchiveCatalog(
+    parseArchiveCatalogState(await searchParams, normalizedLetter)
+  )
 
   return (
     <>
-      {isValidLetter && initialPerfumes.length > 0 ? (
+      {normalizedLetter && data.catalog.items.length > 0 ? (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -74,7 +56,7 @@ const TheArchiveLetterPage = async ({ params }: Props) => {
               buildItemListJsonLd({
                 name: `Perfumes starting with ${normalizedLetter}`,
                 path: `${THE_ARCHIVE_PATH}/${normalizedLetter}`,
-                items: initialPerfumes.map(p => ({
+                items: data.catalog.items.map(p => ({
                   name: p.name,
                   path: `/perfume/${p.slug}`,
                 })),
@@ -84,9 +66,8 @@ const TheArchiveLetterPage = async ({ params }: Props) => {
         />
       ) : null}
       <TheArchiveClient
-        initialLetter={isValidLetter ? normalizedLetter : null}
-        initialPerfumes={perfumesForClient}
-        initialPerfumeTotal={initialTotal}
+        {...data}
+        searchQuery={null}
         showAds={shouldShowAds(session?.user)}
       />
     </>

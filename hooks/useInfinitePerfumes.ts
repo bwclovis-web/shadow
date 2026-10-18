@@ -1,10 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
 
-import {
-  getMorePerfumes,
-  getPerfumesByLetter,
-  queryKeys,
-} from "@/lib/queries/perfumes"
+import { getMorePerfumes, queryKeys } from "@/lib/queries/perfumes"
 
 const STALE_TIME_5_MIN = 5 * 60 * 1000
 
@@ -29,14 +25,6 @@ const getNextPageParam =
     return skip + (returned > 0 ? returned : (lastPage.meta.take ?? pageSize))
   }
 
-interface UseInfinitePerfumesByLetterOptions {
-  letter: string | null
-  houseType?: string
-  pageSize?: number
-  initialData?: any[]
-  initialTotalCount?: number
-}
-
 interface UseInfinitePerfumesByHouseOptions {
   houseSlug: string
   pageSize?: number
@@ -45,61 +33,6 @@ interface UseInfinitePerfumesByHouseOptions {
   /** Pass only when SSR first page matches these params (avoids wrong placeholder). */
   sortBy?: string
   q?: string
-}
-
-/**
- * Hook to fetch perfumes by letter with infinite scroll pagination.
- * Replaces useInfiniteScrollPerfumes with TanStack Query useInfiniteQuery.
- * 
- * @param options - Configuration options
- * @returns Infinite query result with pages, hasNextPage, fetchNextPage, etc.
- * 
- * @example
- * ```tsx
- * const { data, fetchNextPage, hasNextPage } = useInfinitePerfumesByLetter({
- *   letter: 'A',
- *   houseType: 'all',
- *   pageSize: 16
- * })
- * const perfumes = data?.pages.flatMap(page => page.perfumes) || []
- * ```
- */
-export const useInfinitePerfumesByLetter = (
-  options: UseInfinitePerfumesByLetterOptions
-) => {
-  const { letter, houseType = "all", pageSize = 16, initialData, initialTotalCount } = options
-  const totalCount = initialTotalCount ?? initialData?.length ?? 0
-
-  return useInfiniteQuery({
-    queryKey: queryKeys.perfumes.byLetterInfinite(letter || "", houseType, pageSize),
-    queryFn: ({ pageParam }) =>
-      getPerfumesByLetter(letter!, houseType, pageParam as number, pageSize),
-    enabled: !!letter && /^[A-Za-z]$/.test(letter),
-    initialPageParam: 0,
-    getNextPageParam: getNextPageParam(pageSize),
-    staleTime: STALE_TIME_5_MIN,
-    // Use placeholderData for non-SSR scenarios or when you want stale-while-revalidate behavior
-    placeholderData: initialData
-      ? {
-          pages: [
-            {
-              success: true,
-              perfumes: initialData,
-              count: initialData.length,
-              meta: {
-                letter: letter || "",
-                skip: 0,
-                take:
-                  initialData.length > 0 ? initialData.length : pageSize,
-                hasMore: totalCount > initialData.length,
-                totalCount,
-              },
-            },
-          ],
-          pageParams: [0],
-        }
-      : undefined,
-  })
 }
 
 /**

@@ -17,6 +17,7 @@ interface TagListProps {
   onRemoveTag?: (tagId: string) => void
   layout?: TagListLayout
   surface?: TagListSurface
+  emptyLabel?: string
 }
 
 export const TagList = ({
@@ -26,6 +27,7 @@ export const TagList = ({
   onRemoveTag,
   layout = "footer",
   surface = "light",
+  emptyLabel,
 }: TagListProps) => {
   const t = useTranslations("components.tagList")
   const isFlow = layout === "flow"
@@ -84,7 +86,8 @@ export const TagList = ({
               isDark ? "text-stone-500" : "text-stone-400"
             )}
           >
-            {type === "exchange" ? t("emptyExchange") : t("emptyWishlist")}
+            {emptyLabel ??
+              (type === "exchange" ? t("emptyExchange") : t("emptyWishlist"))}
           </li>
         )}
         {selectedTags.map(item =>

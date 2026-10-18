@@ -4,6 +4,7 @@ export const MEMBERSHIP = "/membership"
 export const ADMIN_PATH = "/admin"
 /** House detail page - use with /houses/[slug] */
 export const HOUSE_DETAIL_PATH = "/houses"
+export const HOUSES_PATH = "/houses"
 export const PERFUME_PATH = "/perfume"
 export const THE_ARCHIVE_PATH = "/the-archive"
 export const THE_EXCHANGE_PATH = "/the-exchange"

@@ -4,6 +4,8 @@ import { cache } from "react"
 
 import { prisma } from "@/lib/db"
 import { migrateHouseImageToR2 } from "@/lib/r2-migrate"
+import type { CatalogHouseItem, CatalogPage } from "@/types/catalog"
+import type { HouseSort, HouseTypeKey } from "@/utils/catalog-params"
 import { deletePerfumeImageFromR2, deletePerfumeRelatedRecords } from "@/models/perfume-delete.server"
 import { calculateRelevanceScore } from "@/utils/calculateRelevanceScore"
 import { assertValid, validationError } from "@/utils/errorHandling.patterns"
@@ -361,6 +363,69 @@ export const getPerfumeHouseSummaryById = async (id: string) => {
     where: { id },
     select: { id: true, name: true },
   })
+}
+
+export const getPerfumeHouseSummariesByIds = async (ids: string[]) => {
+  if (ids.length === 0) return []
+  return prisma.perfumeHouse.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  })
+}
+
+/** Same visibility as letter browsing: only houses with at least one perfume. */
+export const getHouseCatalogPage = async (options: {
+  letter: string | null
+  houseTypes: HouseTypeKey[]
+  sort: HouseSort
+  page: number
+  pageSize: number
+}): Promise<CatalogPage<CatalogHouseItem>> => {
+  const { letter, houseTypes, sort, page, pageSize } = options
+  const where: Prisma.PerfumeHouseWhereInput = { perfumes: { some: {} } }
+  if (letter) {
+    where.name = { startsWith: letter, mode: "insensitive" }
+  }
+  if (houseTypes.length > 0) {
+    where.type = { in: houseTypes }
+  }
+  const orderBy: Prisma.PerfumeHouseOrderByWithRelationInput[] = [
+    buildNameOrderBy(sort) as Prisma.PerfumeHouseOrderByWithRelationInput,
+    ...(sort === "type-asc" ? [{ name: "asc" as const }] : []),
+    { id: "asc" },
+  ]
+
+  const fetchPage = (targetPage: number) =>
+    prisma.perfumeHouse.findMany({
+      where,
+      select: { id: true, name: true, slug: true, image: true, type: true },
+      orderBy,
+      skip: (targetPage - 1) * pageSize,
+      take: pageSize,
+    })
+
+  const [rows, totalCount] = await Promise.all([
+    fetchPage(page),
+    prisma.perfumeHouse.count({ where }),
+  ])
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize))
+  const resolvedPage = Math.min(page, totalPages)
+  const resolvedRows =
+    resolvedPage === page ? rows : await fetchPage(resolvedPage)
+
+  return {
+    items: resolvedRows.map(row => ({
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      image: row.image,
+      houseType: row.type,
+    })),
+    totalCount,
+    page: resolvedPage,
+    totalPages,
+  }
 }
 
 export const getPerfumeHouseById = async (

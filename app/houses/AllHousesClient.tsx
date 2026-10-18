@@ -1,432 +1,171 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useState } from "react"
 import { useTranslations } from "next-intl"
 
-import AlphabeticalNav from "@/components/Organisms/AlphabeticalNav"
-import DataDisplaySection from "@/components/Organisms/DataDisplaySection"
-import DataFilters from "@/components/Organisms/DataFilters"
-import TitleBanner from "@/components/Organisms/TitleBanner"
 import AdSenseUnit from "@/components/Atoms/AdSenseUnit"
-import { useAlphabeticalBrowserState } from "@/hooks/useAlphabeticalBrowserState"
-import { useGsapStagger } from "@/hooks/useGsapStagger"
-import { useInfiniteHouses } from "@/hooks/useInfiniteHouses"
-import { useInfinitePagination } from "@/hooks/useInfinitePagination"
-import { useResponsivePageSize } from "@/hooks/useMediaQuery"
-import {
-  getDefaultSortOptions,
-  sortItems,
-  type SortOption,
-} from "@/utils/sortUtils"
+import { Button } from "@/components/Atoms/Button/Button"
+import HouseTypeFilterFields from "@/components/Containers/Catalog/HouseTypeFilterFields"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
-
-const ROUTE_PATH = "/houses"
+import type { CatalogItemDisplay } from "@/components/Molecules/CatalogItem/CatalogItem"
+import CatalogFilterDrawer from "@/components/Organisms/CatalogFilterDrawer/CatalogFilterDrawer"
+import CatalogResults from "@/components/Organisms/CatalogResults/CatalogResults"
+import CatalogToolbar from "@/components/Organisms/CatalogToolbar/CatalogToolbar"
+import TitleBanner from "@/components/Organisms/TitleBanner"
+import { HOUSE_DETAIL_PATH } from "@/constants/routes"
+import { useCatalogNavigation } from "@/hooks/useCatalogNavigation"
+import type { CatalogHouseItem, CatalogPage } from "@/types/catalog"
+import {
+  buildHouseCatalogHref,
+  HOUSE_SORTS,
+  type HouseCatalogState,
+  type HouseSort,
+  type HouseTypeKey,
+} from "@/utils/catalog-params"
+import {
+  houseImageTransitionName,
+  houseTitleTransitionName,
+} from "@/utils/view-transition-names"
 
 const BANNER_IMAGE = "/images/new/behind.webp"
-type HousesRevealDirection = "forward" | "backward"
-const HOUSES_STAGGER = 0.065
-const HOUSES_HORIZONTAL_OFFSET = 7
-const HOUSES_VERTICAL_OFFSET = 20
+const FALLBACK_IMAGE = "/images/house-soon.webp"
 
 interface AllHousesClientProps {
   heading: string
   subheading: string
-  showBlogLink?: boolean
-  initialLetter?: string | null
-  initialHouses?: unknown[]
-  initialHousesTotal?: number
+  state: HouseCatalogState
+  catalog: CatalogPage<CatalogHouseItem>
   showAds?: boolean
 }
-
-const useHouseFilters = (t: ReturnType<typeof useTranslations<"allHouses">>) => {
-  const houseTypeOptions = [
-    {
-      id: "all",
-      value: "all",
-      label: t("houseTypes.all"),
-      name: "houseType",
-      defaultChecked: true,
-    },
-    {
-      id: "niche",
-      value: "niche",
-      label: t("houseTypes.niche"),
-      name: "houseType",
-      defaultChecked: false,
-    },
-    {
-      id: "designer",
-      value: "designer",
-      label: t("houseTypes.designer"),
-      name: "houseType",
-      defaultChecked: false,
-    },
-    {
-      id: "indie",
-      value: "indie",
-      label: t("houseTypes.indie"),
-      name: "houseType",
-      defaultChecked: false,
-    },
-    {
-      id: "celebrity",
-      value: "celebrity",
-      label: t("houseTypes.celebrity"),
-      name: "houseType",
-      defaultChecked: false,
-    },
-    {
-      id: "drugstore",
-      value: "drugstore",
-      label: t("houseTypes.drugstore"),
-      name: "houseType",
-      defaultChecked: false,
-    },
-  ]
-
-  const sortOptions = getDefaultSortOptions(t)
-
-  return { houseTypeOptions, sortOptions }
-}
-
-const useHouseHandlers = (
-  setSelectedHouseType: (houseType: string) => void,
-  setSelectedSort: (sort: SortOption) => void
-) => {
-  const handleHouseTypeChange = (evt: { target: { value: string } }) => {
-    setSelectedHouseType(evt.target.value)
-  }
-
-  const handleSortChange = (evt: { target: { value: string } }) => {
-    setSelectedSort(evt.target.value as SortOption)
-  }
-
-  return { handleHouseTypeChange, handleSortChange }
-}
-
-const useHousesData = (
-  letterFromUrl: string | null,
-  selectedHouseType: string,
-  currentPage: number,
-  pageSize: number,
-  initialData?: unknown[],
-  initialTotalCount?: number
-) => {
-  const {
-    data,
-    isLoading,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-    error,
-  } = useInfiniteHouses({
-    letter: letterFromUrl,
-    houseType: selectedHouseType,
-    pageSize,
-    initialData,
-    initialTotalCount,
-  })
-
-  const { items: houses, pagination, loading } = useInfinitePagination({
-    pages: data?.pages,
-    currentPage,
-    pageSize,
-    isLoading,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-    extractItems: (page) => (page as { houses?: unknown[] }).houses ?? [],
-    extractTotalCount: (page) =>
-      (page as { meta?: { totalCount?: number }; count?: number })?.meta
-        ?.totalCount ??
-      (page as { count?: number })?.count,
-  })
-
-  return {
-    houses,
-    pagination,
-    loading,
-    error,
-    data,
-    fetchNextPage,
-    hasNextPage: hasNextPage ?? false,
-  }
-}
-
-const buildHousesPath = (
-  letter: string | null,
-  page: number
-): string => {
-  const params = new URLSearchParams()
-  if (letter) params.set("letter", letter.toLowerCase())
-  if (page > 1) params.set("pg", page.toString())
-  const query = params.toString()
-  return query ? `${ROUTE_PATH}?${query}` : ROUTE_PATH
-}
-
-const getLetterRank = (letter: string | null): number =>
-  letter ? letter.charCodeAt(0) - 64 : 0
-
-const getHousesNavigationRank = (letter: string | null, page: number): number =>
-  getLetterRank(letter) * 1_000 + page
 
 const AllHousesClient = ({
   heading,
   subheading,
-  showBlogLink: _showBlogLink = false,
-  initialLetter = null,
-  initialHouses = [],
-  initialHousesTotal = 0,
+  state,
+  catalog,
   showAds = true,
 }: AllHousesClientProps) => {
   const t = useTranslations("allHouses")
-  const searchParams = useSearchParams()
+  const tCatalog = useTranslations("catalog")
+  const { isPending, state: requested, navigate, prefetch } = useCatalogNavigation(state)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [draftTypes, setDraftTypes] = useState<HouseTypeKey[]>(state.houseTypes)
 
-  const [selectedHouseType, setSelectedHouseType] = useState("all")
-  const [selectedSort, setSelectedSort] = useState<SortOption>("created-desc")
-  const [housesRevealDirection, setHousesRevealDirection] =
-    useState<HousesRevealDirection>("forward")
-  const [gridCueToken, setGridCueToken] = useState(0)
-  const housesGridRef = useRef<HTMLDivElement>(null)
-  const previousHousesSelectionRef = useRef<{
-    letter: string | null
-    page: number
-  } | null>(null)
-
-  const pageSize = useResponsivePageSize()
-
-  const letterParam = searchParams.get("letter")
-  const letterFromUrl =
-    letterParam && /^[A-Za-z]$/.test(letterParam)
-      ? letterParam.toUpperCase()
-      : null
-
-  const pageFromUrl = Math.max(1, parseInt(searchParams.get("pg") ?? "1", 10))
-
-  const useInitialData =
-    letterFromUrl &&
-    initialLetter &&
-    letterFromUrl === initialLetter &&
-    selectedHouseType === "all"
-
-  const filters = useHouseFilters(t)
-  const handlers = useHouseHandlers(setSelectedHouseType, setSelectedSort)
-
-  const {
-    houses,
-    pagination,
-    loading,
-    error,
-    fetchNextPage,
-    hasNextPage,
-  } = useHousesData(
-    letterFromUrl,
-    selectedHouseType,
-    pageFromUrl,
-    pageSize,
-    useInitialData ? initialHouses : undefined,
-    useInitialData ? initialHousesTotal : undefined
-  )
-
-  const onPrefetchNext = useCallback(() => {
-    if (!hasNextPage) return
-    void fetchNextPage()
-  }, [fetchNextPage, hasNextPage])
-
-  const onPrefetchPage = useCallback(
-    (targetPage: number) => {
-      if (targetPage <= pagination.currentPage) return
-      if (!hasNextPage) return
-      void fetchNextPage()
-    },
-    [fetchNextPage, hasNextPage, pagination.currentPage]
-  )
-
-  const normalizedHouses = useMemo(
-    () =>
-      houses.map((house) => {
-        const h = house as Record<string, unknown> & {
-          id?: string
-          name?: string
-          slug?: string
-          createdAt?: Date
-          updatedAt?: Date
-        }
-        return {
-          ...h,
-          id: h.id ?? "",
-          name: h.name ?? "",
-          slug: h.slug ?? "",
-          createdAt:
-            h.createdAt ?? h.updatedAt ?? new Date(0),
-        }
-      }),
-    [houses]
-  )
-
-  const sortedHouses = useMemo(
-    () => sortItems(normalizedHouses as import("@/utils/sortUtils").SortableItem[], selectedSort),
-    [normalizedHouses, selectedSort]
-  )
-  const sortedHouseIds = useMemo(
-    () =>
-      sortedHouses
-        .map(house => String((house as { id?: string }).id ?? ""))
-        .join(","),
-    [sortedHouses]
-  )
-
-  useEffect(() => {
-    const nextSelection = { letter: letterFromUrl, page: pageFromUrl }
-    const previousSelection = previousHousesSelectionRef.current
-
-    if (previousSelection) {
-      const previousRank = getHousesNavigationRank(
-        previousSelection.letter,
-        previousSelection.page
-      )
-      const nextRank = getHousesNavigationRank(
-        nextSelection.letter,
-        nextSelection.page
-      )
-
-      if (previousRank !== nextRank) {
-        setHousesRevealDirection(nextRank > previousRank ? "forward" : "backward")
-      }
-
-      if (previousSelection.letter !== nextSelection.letter) {
-        setGridCueToken(current => current + 1)
-      }
-    }
-
-    previousHousesSelectionRef.current = nextSelection
-  }, [letterFromUrl, pageFromUrl])
-
-  useGsapStagger(housesGridRef, {
-    selector: "[data-display-card]",
-    deps: [
-      letterFromUrl ?? "all",
-      pageFromUrl,
-      selectedHouseType,
-      selectedSort,
-      sortedHouseIds,
-      housesRevealDirection,
-    ],
-    enabled: !loading && sortedHouses.length > 0,
-    stagger: HOUSES_STAGGER,
-    from: {
-      opacity: 0,
-      x:
-        housesRevealDirection === "forward"
-          ? HOUSES_HORIZONTAL_OFFSET
-          : -HOUSES_HORIZONTAL_OFFSET,
-      y: HOUSES_VERTICAL_OFFSET,
-      scale: 0.988,
-    },
-    to: {
-      opacity: 1,
-      x: 0,
-      y: 0,
-      scale: 1,
-      duration: 0.52,
-      ease: "power1.out",
-      clearProps: "transform,opacity",
-    },
+  const activeFilterCount = state.houseTypes.length
+  const withPatch = (patch: Partial<HouseCatalogState>): HouseCatalogState => ({
+    ...state,
+    page: 1,
+    ...patch,
   })
+  const go = (next: HouseCatalogState, options?: { scrollToResults?: boolean }) =>
+    navigate(buildHouseCatalogHref(next), next, options)
 
-  const buildPath = useMemo(
-    () => (page: number) => buildHousesPath(letterFromUrl, page),
-    [letterFromUrl]
-  )
-
-  const buildPathForLetter = useMemo(
-    () => (letter: string | null) => buildHousesPath(letter, 1),
-    []
-  )
-
-  const { handleLetterClick, goToPage } = useAlphabeticalBrowserState({
-      letter: letterFromUrl,
-      pageFromUrl,
-      basePathForSync: ROUTE_PATH,
-      buildPath,
-      buildPathForLetter,
-      pagination,
-      loading,
-      itemCount: houses.length,
-    })
-
-  if (error) {
-    return (
-      <div>
-        Error loading houses:{" "}
-        {error instanceof Error ? error.message : "Unknown error"}
-      </div>
-    )
+  const openFilters = () => {
+    setDraftTypes(state.houseTypes)
+    setFiltersOpen(true)
   }
 
-  return (  
+  const applyFilters = () => {
+    setFiltersOpen(false)
+    go(withPatch({ houseTypes: draftTypes }))
+  }
+
+  const items: CatalogItemDisplay[] = catalog.items.map(house => ({
+    id: house.id,
+    href: state.letter
+      ? `${HOUSE_DETAIL_PATH}/${house.slug}?letter=${state.letter}`
+      : `${HOUSE_DETAIL_PATH}/${house.slug}`,
+    title: house.name,
+    subtitle: t(`houseTypes.${house.houseType}`),
+    image: house.image,
+    fallbackImage: FALLBACK_IMAGE,
+    imageAlt: house.name,
+    imageTransitionName: houseImageTransitionName(house.id),
+    titleTransitionName: houseTitleTransitionName(house.id),
+  }))
+
+  const emptyState = (
+    <div className="flex flex-col items-start gap-4 border border-noir-gold/40 bg-noir-black/40 p-6">
+      <p className="text-lg text-noir-light">
+        {state.letter && activeFilterCount === 0
+          ? t("emptyLetter", { letter: state.letter })
+          : t("emptyFiltered")}
+      </p>
+      {activeFilterCount > 0 ? (
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => go(withPatch({ houseTypes: [] }))}
+        >
+          {tCatalog("clearFilters")}
+        </Button>
+      ) : null}
+    </div>
+  )
+
+  return (
     <main id="main-content">
-      
-      <TitleBanner
-        image={BANNER_IMAGE}
-        heading={heading}
-        subheading={subheading}
-      />
-    <PageWrapper>
-      {/* {showBlogLink ? (
-        <p className="inner-container -mt-6 mb-8 text-center">
-          <PrefetchLink
-            href={JOURNAL_PATH}
-            className="text-blue-200 underline hover:text-noir-gold font-medium"
-          >
-            {t("readStories")}
-          </PrefetchLink>
-        </p>
-      ) : null} */}
+      <TitleBanner image={BANNER_IMAGE} heading={heading} subheading={subheading} />
 
-      <DataFilters
-        searchType="perfume-house"
-        sortOptions={filters.sortOptions}
-        typeOptions={filters.houseTypeOptions}
-        selectedSort={selectedSort}
-        selectedType={selectedHouseType}
-        onSortChange={handlers.handleSortChange}
-        onTypeChange={handlers.handleHouseTypeChange}
-        className="mb-8"
-      />
+      <PageWrapper className="space-y-6">
+        <CatalogToolbar
+          searchType="perfume-house"
+          sortOptions={HOUSE_SORTS.map(sort => ({
+            id: sort,
+            name: sort,
+            label: t(`sortOptions.${sort}`),
+          }))}
+          sort={requested.sort}
+          onSortChange={sort => go(withPatch({ sort: sort as HouseSort }))}
+          activeFilterCount={requested.houseTypes.length}
+          onOpenFilters={openFilters}
+          view={requested.view}
+          onViewChange={view => go({ ...state, view })}
+          letter={requested.letter}
+          onLetterSelect={letter => go(withPatch({ letter }))}
+          onLetterHover={letter => prefetch(buildHouseCatalogHref(withPatch({ letter })))}
+          labels={{
+            searchPlaceholder: t("searchPlaceholder"),
+            sort: tCatalog("toolbar.sort"),
+            filters: tCatalog("toolbar.filters"),
+            filtersAria: tCatalog("toolbar.filtersAria", {
+              count: requested.houseTypes.length,
+            }),
+            view: tCatalog("toolbar.view"),
+            gridView: tCatalog("toolbar.gridView"),
+            listView: tCatalog("toolbar.listView"),
+            letterNav: tCatalog("toolbar.letterNav"),
+          }}
+        />
 
-      <AlphabeticalNav
-        selectedLetter={letterFromUrl}
-        onLetterSelect={handleLetterClick}
-        prefetchType="houses"
-        houseType={selectedHouseType}
-        pageSize={pageSize}
-        className="mb-8"
-      />
+        <AdSenseUnit showAds={showAds} variant="display" />
 
-      <AdSenseUnit showAds={showAds} variant="display" />
-
-      <DataDisplaySection
-        containerRef={housesGridRef}
-        data={sortedHouses as unknown as { id: string; name: string; slug: string; image?: string; type?: string; perfumeHouse?: { name: string } }[]}
-        isLoading={loading}
-        type="house"
-        selectedLetter={letterFromUrl}
-        sourcePage="houses"
-        transitionCueKey={
-          gridCueToken > 0
-            ? `houses-${gridCueToken}-${letterFromUrl ?? "all"}`
-            : undefined
-        }
-        transitionCueDirection={housesRevealDirection}
-        transitionCueTone="houses"
-        pagination={pagination}
-        onPageChange={goToPage}
-        onPrefetchNext={onPrefetchNext}
-        onPrefetchPage={onPrefetchPage}
-      />
+        <CatalogResults
+          heading={t("resultsCount", { shown: catalog.items.length, total: catalog.totalCount })}
+          items={items}
+          view={requested.view}
+          actionLabel={t("viewAction")}
+          isPending={isPending}
+          pendingLabel={tCatalog("updating")}
+          emptyState={emptyState}
+          page={catalog.page}
+          totalPages={catalog.totalPages}
+          onPageChange={page => go({ ...state, page }, { scrollToResults: true })}
+        />
       </PageWrapper>
+
+      <CatalogFilterDrawer
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        title={t("filters.title")}
+        closeLabel={tCatalog("drawer.close")}
+        clearLabel={tCatalog("drawer.clearAll")}
+        applyLabel={tCatalog("drawer.apply", { count: draftTypes.length })}
+        onClear={() => setDraftTypes([])}
+        onApply={applyFilters}
+      >
+        <HouseTypeFilterFields value={draftTypes} onChange={setDraftTypes} />
+      </CatalogFilterDrawer>
     </main>
   )
 }

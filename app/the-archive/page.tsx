@@ -5,26 +5,31 @@ import TheArchiveClient from "@/app/the-archive/TheArchiveClient"
 import { THE_ARCHIVE_PATH } from "@/constants/routes"
 import { buildItemListJsonLd } from "@/lib/seo/json-ld"
 import { buildPageMetadata } from "@/lib/seo/metadata"
-import { getAllPerfumesWithOptions } from "@/models/perfume-catalog.server"
-import { searchPerfumeByNameForViewer } from "@/models/perfume-search.server"
 import { shouldShowAds } from "@/utils/ads/should-show-ads"
+import { emptyArchiveFilters, parseArchiveCatalogState } from "@/utils/catalog-params"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 
+import { type ArchiveCatalogData, loadArchiveCatalog, loadArchiveSearch } from "./archive-catalog.server"
+
 const ARCHIVE_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
-const ARCHIVE_SEARCH_LIMIT = 40
-const ARCHIVE_FEATURED_LIMIT = 12
+
+type SearchParams = Record<string, string | string[] | undefined>
 
 type Props = {
-  searchParams: Promise<{ q?: string }>
+  searchParams: Promise<SearchParams>
+}
+
+const readSearchQuery = (params: SearchParams): string => {
+  const raw = params.q
+  return (Array.isArray(raw) ? raw[0] : raw ?? "").trim()
 }
 
 export const generateMetadata = async ({
   searchParams,
 }: Props): Promise<Metadata> => {
   const t = await getTranslations("allPerfumes.meta")
-  const resolved = await searchParams
-  const q = typeof resolved.q === "string" ? resolved.q.trim() : ""
+  const q = readSearchQuery(await searchParams)
   if (q) {
     // Search result URLs are useful for users/SearchAction but should not be
     // indexed as distinct thin pages — canonical + noindex to the hub.
@@ -44,58 +49,24 @@ export const generateMetadata = async ({
   })
 }
 
-const mapPerfumeRow = (p: {
-  id: string
-  name: string
-  slug: string
-  createdAt: Date
-  updatedAt: Date
-  image: string | null
-  perfumeHouse: { name: string } | null
-}) => ({
-  id: p.id,
-  name: p.name,
-  slug: p.slug,
-  createdAt: p.createdAt,
-  updatedAt: p.updatedAt,
-  image: p.image ?? undefined,
-  perfumeHouse: p.perfumeHouse ? { name: p.perfumeHouse.name } : null,
-})
-
 const TheArchivePage = async ({ searchParams }: Props) => {
   const t = await getTranslations("allPerfumes")
-  const resolved = await searchParams
-  const q = typeof resolved.q === "string" ? resolved.q.trim() : ""
+  const params = await searchParams
+  const q = readSearchQuery(params)
+  const requested = parseArchiveCatalogState(params, null)
   const cookieHeader = await getCookieHeader()
   const session = await getSessionFromCookieHeader(cookieHeader, {
     includeUser: true,
   })
 
-  let searchResults: Awaited<ReturnType<typeof searchPerfumeByNameForViewer>> =
-    []
-  let featuredPerfumes: ReturnType<typeof mapPerfumeRow>[] = []
-
-  if (q) {
-    try {
-      searchResults = await searchPerfumeByNameForViewer(q, {
-        limit: ARCHIVE_SEARCH_LIMIT,
-      })
-    } catch (error) {
-      console.error("[the-archive] search failed:", error)
-      searchResults = []
-    }
-  } else {
-    try {
-      const featured = await getAllPerfumesWithOptions({
-        sortBy: "created-desc",
-        take: ARCHIVE_FEATURED_LIMIT,
-      })
-      featuredPerfumes = featured.items.map(mapPerfumeRow)
-    } catch (error) {
-      console.error("[the-archive] featured load failed:", error)
-      featuredPerfumes = []
-    }
-  }
+  const data: ArchiveCatalogData = q
+    ? {
+        state: { ...requested, filters: emptyArchiveFilters(), page: 1 },
+        catalog: await loadArchiveSearch(q),
+        selectedHouses: [],
+        selectedNotes: [],
+      }
+    : await loadArchiveCatalog(requested)
 
   return (
     <>
@@ -109,7 +80,7 @@ const TheArchivePage = async ({ searchParams }: Props) => {
           ))}
         </ul>
       </nav>
-      {q && searchResults.length > 0 ? (
+      {q && data.catalog.items.length > 0 ? (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -117,7 +88,7 @@ const TheArchivePage = async ({ searchParams }: Props) => {
               buildItemListJsonLd({
                 name: t("searchHeading", { query: q }),
                 path: THE_ARCHIVE_PATH,
-                items: searchResults.map(p => ({
+                items: data.catalog.items.map(p => ({
                   name: p.name,
                   path: `/perfume/${p.slug}`,
                 })),
@@ -127,12 +98,8 @@ const TheArchivePage = async ({ searchParams }: Props) => {
         />
       ) : null}
       <TheArchiveClient
-        initialLetter={null}
-        initialPerfumes={[]}
-        initialPerfumeTotal={0}
-        initialFeaturedPerfumes={featuredPerfumes}
-        initialSearchQuery={q || null}
-        initialSearchResults={searchResults.map(mapPerfumeRow)}
+        {...data}
+        searchQuery={q || null}
         showAds={shouldShowAds(session?.user)}
       />
     </>

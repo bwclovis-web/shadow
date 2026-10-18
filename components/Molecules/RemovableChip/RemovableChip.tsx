@@ -76,7 +76,7 @@ export const RemovableChip = ({
   ...liProps
 }: RemovableChipProps) => {
   const chipClass = styleMerge(chipClassByVisualTone[visual][tone], className)
-  const removeClass = removeClassByVisualTone[visual][tone]
+  const removeClass = styleMerge("w-auto", removeClassByVisualTone[visual][tone])
   const labelClassName =
     visual === "tag" ? "min-w-0 truncate" : undefined
 

@@ -329,9 +329,16 @@
     "heading": "Dietro il flacone",
     "subheading": "Le case, i creatori e le identità che danno forma al mondo della fragranza.",
     "readStories": "Leggi gli articoli editoriali →",
+    "searchPlaceholder": "Cerca case di profumi…",
+    "resultsCount": "{shown, number} di {total, plural, one {# casa} other {# case}}",
+    "emptyFiltered": "Nessuna casa corrisponde a questi filtri.",
+    "emptyLetter": "Nessuna casa inizia ancora con {letter}.",
+    "viewAction": "Vedi la casa",
     "filters": {
       "houseType": "Filtra per tipo:",
-      "sortBy": "Ordina per:"
+      "sortBy": "Ordina per:",
+      "title": "Filtra le case",
+      "typeTitle": "Tipo"
     },
     "houseTypes": {
       "all": "Tutti",
@@ -346,7 +353,7 @@
       "created-asc": "Voci più antiche",
       "name-asc": "Alfabetico A-Z",
       "name-desc": "Alfabetico Z-A",
-      "type-asc": "Per tipo di fragranza"
+      "type-asc": "Per tipo di casa"
     }
   },
   "allPerfumes": {
@@ -361,7 +368,49 @@
     "searchHeading": "Risultati per “{query}”",
     "searchSubheading": "{count, plural, =0 {Nessuna fragranza corrisponde a “{query}”.} one {# fragranza corrispondente a “{query}”.} other {# fragranze corrispondenti a “{query}”.}}",
     "searchEmpty": "Nessuna fragranza corrisponde a questa ricerca. Prova un altro nome oppure sfoglia per lettera qui sotto.",
-    "featuredHeading": "Aggiunti di recente"
+    "searchPlaceholder": "Cerca nell'Archivio…",
+    "resultsCount": "{shown, number} di {total, plural, one {# profumo} other {# profumi}}",
+    "emptyFiltered": "Nessun profumo corrisponde a questi filtri.",
+    "emptyLetter": "Nessun profumo inizia ancora con {letter}.",
+    "viewAction": "Vedi il profumo",
+    "filters": {
+      "title": "Filtra le fragranze",
+      "house": "Casa",
+      "houseSearch": "Cerca case",
+      "houseSearchPlaceholder": "Cerca case…",
+      "selectedHouses": "Case selezionate",
+      "noHousesSelected": "Nessuna casa selezionata.",
+      "notes": "Note",
+      "noteSearch": "Cerca note",
+      "noteSearchPlaceholder": "Cerca note…",
+      "selectedNotes": "Note selezionate",
+      "noNotesSelected": "Nessuna nota selezionata.",
+      "season": "Stagione",
+      "seasonDescription": "Mostra i profumi che la community ha votato per una qualsiasi delle stagioni selezionate."
+    }
+  },
+  "catalog": {
+    "toolbar": {
+      "sort": "Ordina per",
+      "filters": "Filtri",
+      "filtersAria": "{count, plural, =0 {Filtri, nessuno applicato} one {Filtri, # applicato} other {Filtri, # applicati}}",
+      "view": "Layout",
+      "gridView": "Vista a griglia",
+      "listView": "Vista a elenco",
+      "letterNav": "Sfoglia per lettera"
+    },
+    "drawer": {
+      "close": "Chiudi filtri",
+      "clearAll": "Cancella tutto",
+      "apply": "Applica filtri ({count})"
+    },
+    "filters": {
+      "searching": "Ricerca in corso…",
+      "noMatches": "Nessuna corrispondenza",
+      "searchError": "La ricerca non è disponibile al momento. Riprova."
+    },
+    "updating": "Aggiornamento dei risultati…",
+    "clearFilters": "Cancella filtri"
   },
   "auth": {
     "heading": "Bentornato",
