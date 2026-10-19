@@ -28,7 +28,7 @@ export const isTwoFactorEnabled = (user: {
   user.twoFactorEnabledAt != null && user.totpSecretEncrypted != null
 
 export const normalizeTotpCode = (code: string): string =>
-  code.replace(/\s/g, "").trim()
+  code.replace(/[\s-]/g, "").trim()
 
 export const normalizeBackupCode = (code: string): string =>
   code.replace(/[\s-]/g, "").trim().toUpperCase()
@@ -56,6 +56,24 @@ export const getTwoFactorStatus = async (
   return user
 }
 
+export const createTwoFactorSetup = async (
+  userId: string
+): Promise<{ secret: string; otpauthUri: string } | { error: string }> => {
+  const user = await getTwoFactorStatus(userId)
+  if (!user) {
+    return { error: "User not found" }
+  }
+
+  const secret = generateSecret()
+  const otpauthUri = generateURI({
+    issuer: APP_NAME,
+    label: user.email,
+    secret,
+  })
+
+  return { secret, otpauthUri }
+}
+
 export const startTwoFactorEnrollment = async (
   userId: string
 ): Promise<{ secret: string; otpauthUri: string } | { error: string }> => {
@@ -67,14 +85,7 @@ export const startTwoFactorEnrollment = async (
     return { error: "Two-factor authentication is already enabled" }
   }
 
-  const secret = generateSecret()
-  const otpauthUri = generateURI({
-    issuer: APP_NAME,
-    label: user.email,
-    secret,
-  })
-
-  return { secret, otpauthUri }
+  return createTwoFactorSetup(userId)
 }
 
 const getDecryptedTotpSecret = (totpSecretEncrypted: string): string =>
@@ -214,6 +225,68 @@ export const confirmTwoFactorEnrollment = async (
   })
 
   return { success: true, backupCodes }
+}
+
+export const replaceTwoFactorSecret = async (
+  userId: string,
+  secret: string,
+  code: string
+): Promise<{ success: true } | { success: false; error: string }> => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      twoFactorEnabledAt: true,
+      totpSecretEncrypted: true,
+    },
+  })
+  if (!user || !isTwoFactorEnabled(user)) {
+    return { success: false, error: "Two-factor authentication is not enabled" }
+  }
+
+  const normalizedCode = normalizeTotpCode(code)
+  if (!/^\d{6}$/.test(normalizedCode)) {
+    return {
+      success: false,
+      error: "Verification code must be exactly 6 digits",
+    }
+  }
+
+  const codeValid = await verifyTotpWithSecret(secret, normalizedCode)
+  if (!codeValid) {
+    return {
+      success: false,
+      error:
+        "Invalid verification code. Scan the QR code shown here and enter the newest code.",
+    }
+  }
+
+  let encryptedSecret: string
+  try {
+    encryptedSecret = encryptField(secret)
+  } catch (error) {
+    console.error("Failed to encrypt TOTP secret:", error)
+    return {
+      success: false,
+      error:
+        "Two-factor setup is unavailable: TOTP_ENCRYPTION_KEY is missing or invalid. Add a 32-byte key to your environment and restart the server.",
+    }
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { totpSecretEncrypted: encryptedSecret },
+  })
+
+  await logTwoFactorAudit({
+    userId,
+    action: "DATA_MODIFICATION",
+    severity: "warning",
+    resourceId: userId,
+    details: { action: "two_factor_secret_replaced" },
+  })
+
+  return { success: true }
 }
 
 export const consumeBackupCode = async (

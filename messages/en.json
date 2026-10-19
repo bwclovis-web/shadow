@@ -643,7 +643,14 @@
       "submit": "Verify",
       "useBackupCode": "Use a backup code instead",
       "useAuthenticator": "Use authenticator app instead",
-      "errorTitle": "Verification error"
+      "errorTitle": "Verification error",
+      "scanNew": "Scan a new authenticator",
+      "scanNewHelp": "If the code from your app is rejected, generate a new QR code and scan it. That replaces the authenticator entry on this account.",
+      "scanQr": "Scan this QR code, then enter the new 6-digit code.",
+      "qrAlt": "Authenticator QR code",
+      "manualKey": "Manual entry key",
+      "confirmNew": "Confirm new authenticator",
+      "generateAnother": "Generate a new QR code"
     },
     "signUp": {
       "title": "Sign Up",
@@ -1671,6 +1678,9 @@
     "qrAlt": "Authenticator QR code",
     "manualKey": "Manual entry key",
     "rescanButton": "Generate a new QR code",
+    "replaceTitle": "Replace authenticator",
+    "replaceDescription": "Generate a new QR code if your authenticator app no longer matches this account. Scan it, then confirm with your password and the new 6-digit code.",
+    "replaceButton": "Show a new QR code",
     "currentPassword": "Current password",
     "verificationCode": "6-digit code",
     "confirmEnable": "Confirm and enable",

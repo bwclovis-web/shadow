@@ -443,7 +443,14 @@
       "submit": "Vérifier",
       "useBackupCode": "Utiliser un code de secours",
       "useAuthenticator": "Utiliser l'application d'authentification",
-      "errorTitle": "Erreur de vérification"
+      "errorTitle": "Erreur de vérification",
+      "scanNew": "Scanner un nouvel authentificateur",
+      "scanNewHelp": "Si le code de votre application est refusé, générez un nouveau QR code et scannez-le. Cela remplace l'authentificateur de ce compte.",
+      "scanQr": "Scannez ce QR code, puis saisissez le nouveau code à 6 chiffres.",
+      "qrAlt": "QR code de l'authentificateur",
+      "manualKey": "Clé de saisie manuelle",
+      "confirmNew": "Confirmer le nouvel authentificateur",
+      "generateAnother": "Générer un nouveau QR code"
     },
     "signUp": {
       "title": "S'inscrire",
@@ -1466,6 +1473,9 @@
     "qrAlt": "QR code authentificateur",
     "manualKey": "Clé manuelle",
     "rescanButton": "Générer un nouveau QR code",
+    "replaceTitle": "Remplacer l'authentificateur",
+    "replaceDescription": "Générez un nouveau QR code si votre application d'authentification ne correspond plus à ce compte. Scannez-le, puis confirmez avec votre mot de passe et le nouveau code à 6 chiffres.",
+    "replaceButton": "Afficher un nouveau QR code",
     "currentPassword": "Mot de passe actuel",
     "verificationCode": "Code à 6 chiffres",
     "confirmEnable": "Confirmer et activer",

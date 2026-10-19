@@ -1,13 +1,15 @@
 "use server"
 
 import { cookies } from "next/headers"
-import QRCode from "qrcode"
 
+import { prisma } from "@/lib/db"
 import { changePassword } from "@/models/user.server"
 import {
   confirmTwoFactorEnrollment,
+  createTwoFactorSetup,
   disableTwoFactor,
   regenerateBackupCodes,
+  replaceTwoFactorSecret,
   startTwoFactorEnrollment,
 } from "@/models/two-factor.server"
 import { ErrorHandler } from "@/utils/errorHandling"
@@ -21,6 +23,7 @@ import {
   getPending2faSetupCookieOptions,
   verifyPending2faSetupToken,
 } from "@/utils/security/pending-2fa.server"
+import { verifyPassword } from "@/utils/security/password-security.server"
 import { requireCSRF } from "@/utils/server/csrf.server"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
@@ -50,7 +53,7 @@ const rateLimitTwoFactor = async (userId: string) => {
 export type StartEnrollmentState =
   | {
       success: true
-      qrDataUrl: string
+      otpauthUri: string
       manualKey: string
     }
   | { success: false; error: string }
@@ -89,11 +92,9 @@ export const startEnrollmentAction = async (
       getPending2faSetupCookieOptions()
     )
 
-    const qrDataUrl = await QRCode.toDataURL(result.otpauthUri)
-
     return {
       success: true,
-      qrDataUrl,
+      otpauthUri: result.otpauthUri,
       manualKey: result.secret,
     }
   } catch (error) {
@@ -158,6 +159,127 @@ export const confirmEnrollmentAction = async (
     })
 
     return { success: true, backupCodes: result.backupCodes }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Something went wrong",
+    }
+  }
+}
+
+export const startReplacementAction = async (
+  _prev: StartEnrollmentState,
+  formData: FormData
+): Promise<StartEnrollmentState> => {
+  const request = new Request("http://localhost", { method: "POST" })
+  try {
+    await requireCSRF(request, formData)
+    const user = await requireSession()
+    if (!user) {
+      return { success: false, error: "Authentication required" }
+    }
+    try {
+      await rateLimitTwoFactor(user.id)
+    } catch (e) {
+      if (e instanceof Response) {
+        return { success: false, error: "Too many attempts. Try again later." }
+      }
+      throw e
+    }
+
+    const result = await createTwoFactorSetup(user.id)
+    if ("error" in result) {
+      return { success: false, error: result.error }
+    }
+
+    const setupToken = createPending2faSetupToken(user.id, result.secret)
+    const cookieStore = await cookies()
+    cookieStore.set(
+      getPending2faSetupCookieName(),
+      setupToken,
+      getPending2faSetupCookieOptions()
+    )
+
+    return {
+      success: true,
+      otpauthUri: result.otpauthUri,
+      manualKey: result.secret,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Something went wrong",
+    }
+  }
+}
+
+export type ReplaceAuthenticatorState =
+  | { success: true; message: string }
+  | { success: false; error: string }
+  | null
+
+export const confirmReplacementAction = async (
+  _prev: ReplaceAuthenticatorState,
+  formData: FormData
+): Promise<ReplaceAuthenticatorState> => {
+  const request = new Request("http://localhost", { method: "POST" })
+  try {
+    await requireCSRF(request, formData)
+    const user = await requireSession()
+    if (!user) {
+      return { success: false, error: "Authentication required" }
+    }
+    try {
+      await rateLimitTwoFactor(user.id)
+    } catch (e) {
+      if (e instanceof Response) {
+        return { success: false, error: "Too many attempts. Try again later." }
+      }
+      throw e
+    }
+
+    const cookieStore = await cookies()
+    const setupToken = cookieStore.get(getPending2faSetupCookieName())?.value
+    if (!setupToken) {
+      return { success: false, error: "Setup session expired. Please start again." }
+    }
+    const pending = verifyPending2faSetupToken(setupToken)
+    if (!pending || pending.userId !== user.id) {
+      cookieStore.set(getPending2faSetupCookieName(), "", {
+        ...getPending2faSetupCookieOptions(),
+        maxAge: 0,
+      })
+      return { success: false, error: "Setup session expired. Please start again." }
+    }
+
+    const password = String(formData.get("password") ?? "")
+    const code = String(formData.get("code") ?? "")
+    const record = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { password: true },
+    })
+    if (!record) {
+      return { success: false, error: "User not found" }
+    }
+    const passwordValid = await verifyPassword(password, record.password)
+    if (!passwordValid) {
+      return { success: false, error: "Current password is incorrect" }
+    }
+
+    const result = await replaceTwoFactorSecret(user.id, pending.secret, code)
+    if (!result.success) {
+      return { success: false, error: result.error }
+    }
+
+    cookieStore.set(getPending2faSetupCookieName(), "", {
+      ...getPending2faSetupCookieOptions(),
+      maxAge: 0,
+    })
+
+    return {
+      success: true,
+      message: "Authenticator replaced. Use the new code the next time you sign in.",
+    }
   } catch (error) {
     return {
       success: false,

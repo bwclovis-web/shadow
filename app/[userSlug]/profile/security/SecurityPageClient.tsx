@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button/Button"
 import Input from "@/components/Atoms/Input/Input"
+import AuthenticatorQr from "@/components/Molecules/AuthenticatorQr/AuthenticatorQr"
 import ErrorDisplay from "@/components/Containers/ErrorDisplay/ErrorDisplay"
 import { CSRFToken } from "@/components/Molecules/CSRFToken/CSRFToken"
 import TitleBanner from "@/components/Organisms/TitleBanner/TitleBanner"
@@ -15,15 +16,18 @@ import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 
 import {
   confirmEnrollmentAction,
+  confirmReplacementAction,
   disableTwoFactorAction,
   regenerateBackupCodesAction,
   revokeAllOtherSessionsAction,
   revokeSessionAction,
   startEnrollmentAction,
+  startReplacementAction,
   type ActiveSessionRow,
   type ConfirmEnrollmentState,
   type DisableTwoFactorState,
   type RegenerateBackupCodesState,
+  type ReplaceAuthenticatorState,
   type RevokeSessionState,
   type StartEnrollmentState,
 } from "./actions"
@@ -66,6 +70,14 @@ const SecurityPageClient = ({
   const [startState, startFormAction] = useActionState(
     startEnrollmentAction,
     null as StartEnrollmentState
+  )
+  const [replaceState, replaceFormAction] = useActionState(
+    startReplacementAction,
+    null as StartEnrollmentState
+  )
+  const [replaceConfirmState, replaceConfirmFormAction] = useActionState(
+    confirmReplacementAction,
+    null as ReplaceAuthenticatorState
   )
   const [confirmState, confirmFormAction] = useActionState(
     confirmEnrollmentAction,
@@ -207,12 +219,7 @@ const SecurityPageClient = ({
             ) : (
               <div className="space-y-4">
                 <p className="text-sm text-noir-gold-100">{t("scanQr")}</p>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={startState.qrDataUrl}
-                  alt={t("qrAlt")}
-                  className="mx-auto w-48 h-48"
-                />
+                <AuthenticatorQr otpauthUri={startState.otpauthUri} alt={t("qrAlt")} />
                 <p className="text-xs text-noir-gold-100 break-all">
                   {t("manualKey")}: {startState.manualKey}
                 </p>
@@ -270,6 +277,72 @@ const SecurityPageClient = ({
         {twoFactorEnabled && !backupCodes && (
           <>
             <p className="text-sm text-noir-gold-500 py-2">{t("enabledStatus")}</p>
+            <div className="bg-noir-dark/40 border border-noir-gold-500/30 rounded-lg p-6 space-y-3 mb-4">
+              <h2 className="font-semibold text-noir-gold">{t("replaceTitle")}</h2>
+              <p className="text-sm text-noir-gold-100">{t("replaceDescription")}</p>
+              {replaceConfirmState?.success === true && (
+                <p className="text-sm text-green-300">{replaceConfirmState.message}</p>
+              )}
+              {replaceState?.success !== true ? (
+                <form action={replaceFormAction}>
+                  <CSRFToken />
+                  {replaceState?.success === false && (
+                    <ErrorDisplay
+                      error={replaceState.error}
+                      variant="inline"
+                      title={t("errorTitle")}
+                    />
+                  )}
+                  <Button type="submit" variant="icon" background="gold" size="md">
+                    {t("replaceButton")}
+                  </Button>
+                </form>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm text-noir-gold-100">{t("scanQr")}</p>
+                  <AuthenticatorQr otpauthUri={replaceState.otpauthUri} alt={t("qrAlt")} />
+                  <p className="text-xs text-noir-gold-100 break-all">
+                    {t("manualKey")}: {replaceState.manualKey}
+                  </p>
+                  <form action={replaceConfirmFormAction} className="space-y-3">
+                    <CSRFToken />
+                    <Input
+                      shading
+                      inputId="replace-password"
+                      label={t("currentPassword")}
+                      inputType="password"
+                      name="password"
+                      autoComplete="current-password"
+                    />
+                    <Input
+                      shading
+                      inputId="replace-code"
+                      label={t("verificationCode")}
+                      inputType="text"
+                      name="code"
+                      autoComplete="one-time-code"
+                      inputMode="numeric"
+                    />
+                    {replaceConfirmState?.success === false && (
+                      <ErrorDisplay
+                        error={replaceConfirmState.error}
+                        variant="inline"
+                        title={t("errorTitle")}
+                      />
+                    )}
+                    <Button type="submit" variant="icon" background="gold" size="md">
+                      {t("confirmEnable")}
+                    </Button>
+                  </form>
+                  <form action={replaceFormAction}>
+                    <CSRFToken />
+                    <Button type="submit" variant="icon" background="gold" size="sm">
+                      {t("rescanButton")}
+                    </Button>
+                  </form>
+                </div>
+              )}
+            </div>
             <div className="bg-white shadow-lg rounded-lg p-6 space-y-3 mb-4">
               <h2 className="font-semibold text-gray-900">{t("regenerateTitle")}</h2>
               <form action={regenFormAction} className="space-y-3">

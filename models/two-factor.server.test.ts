@@ -42,10 +42,12 @@ vi.mock("@/utils/security/password-security.server", () => ({
   verifyPassword: vi.fn(),
 }))
 
+import { prisma } from "@/lib/db"
 import {
   isTwoFactorEnabled,
   normalizeBackupCode,
   normalizeTotpCode,
+  replaceTwoFactorSecret,
   verifyTotpWithSecret,
 } from "./two-factor.server"
 
@@ -71,8 +73,9 @@ describe("two-factor.server", () => {
   })
 
   describe("normalizeTotpCode", () => {
-    it("strips spaces", () => {
+    it("strips spaces and hyphens", () => {
       expect(normalizeTotpCode("123 456")).toBe("123456")
+      expect(normalizeTotpCode("123-456")).toBe("123456")
     })
   })
 
@@ -94,6 +97,41 @@ describe("two-factor.server", () => {
       const secret = generateSecret()
       const valid = await verifyTotpWithSecret(secret, "000000")
       expect(valid).toBe(false)
+    })
+  })
+
+  describe("replaceTwoFactorSecret", () => {
+    it("stores the new secret when the scanned code matches", async () => {
+      const secret = generateSecret()
+      const token = generateSync({ secret })
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        id: "user-1",
+        twoFactorEnabledAt: new Date(),
+        totpSecretEncrypted: "enc:old-secret",
+      } as never)
+      vi.mocked(prisma.user.update).mockResolvedValue({} as never)
+
+      const result = await replaceTwoFactorSecret("user-1", secret, token)
+
+      expect(result).toEqual({ success: true })
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: "user-1" },
+        data: { totpSecretEncrypted: `enc:${secret}` },
+      })
+    })
+
+    it("does not replace the secret when the code is wrong", async () => {
+      vi.mocked(prisma.user.update).mockClear()
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        id: "user-1",
+        twoFactorEnabledAt: new Date(),
+        totpSecretEncrypted: "enc:old-secret",
+      } as never)
+
+      const result = await replaceTwoFactorSecret("user-1", generateSecret(), "000000")
+
+      expect(result.success).toBe(false)
+      expect(prisma.user.update).not.toHaveBeenCalled()
     })
   })
 })
