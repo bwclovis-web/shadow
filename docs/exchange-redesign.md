@@ -221,7 +221,7 @@ Implement only the step the user names. After each: report changes, checks, prev
 - [x] **Step 5 — List view + View collectors** — Grid/list share results + committed criteria (`view`); list rows with one open expansion; grid md+ wide side panel / mobile nearly full-screen sheet; shared `ExchangeOfferContent` + `useExchangeOffers` (5 + load more); fill display only when validated; guest/own-listing + action-boundary revalidate; filter changes reset collectors; panel trap pauses for session `Modal` (lightbox/composer).
 - [x] **Step 6 — Filter drawer polish** — Nearly full-screen mobile (`mobileHeight="nearlyFull"`); draft Apply/Clear/close-cancel; draft note chips + URL hydration; searchable house/notes (bounded, debounce, stale guard); live shortcuts/chips sync open draft; focus trap includes typeahead portals; fixed Apply/Clear footer + safe area. (Doc previously numbered this Step 7; collectors remain under Step 5.)
 - [x] **Step 7 — States + recent activity polish** — Distinct zero-matches / no-inventory / failure / stale; temporary `ExchangeEmptyIllustration` (~240×160); empty replaces results only; activity hidden when empty; sparse cards full grid width; `?previewState=` fixtures in dev/preview.
-- [ ] **Step 8 — Harden** — i18n sync (`sync-translations` skill); unit + smoke tests; secondary sections placement; a11y pass; no hero/`TitleBanner` drift.
+- [x] **Step 8 — Harden** — OrnamentalFrame on Exchange rails + listing rows (not global `.noir-border`); scale fixture bounds tests; lint/tsc/vitest/build recorded; hero/`TitleBanner` untouched; homepage/journal/detail/auth left on existing frames.
 
 ### Step 2 limitations (chrome)
 
@@ -268,6 +268,12 @@ Implement only the step the user names. After each: report changes, checks, prev
 - Temporary illustration: `ExchangeEmptyIllustration` (charcoal + `LuImage`, `aria-hidden`). Future file: `public/images/new/exchange-empty.webp` (not shipped).
 - QA fixtures (no DB edits): `?previewState=zero-matches|no-inventory|failure` when `NODE_ENV=development` or `VERCEL_ENV=preview`.
 - Activity feed already returns `null` when both streams are empty.
+
+### Step 8 — harden notes
+
+- OrnamentalFrame rollout (approved corner): Exchange toolbar/results/cards/rows + wishlist / palate / mutual rails + `ExchangeListingRow`. **Left** on `.noir-border` / catalog borders: auth, membership, homepage gallery, journal, perfume detail, Archive/Houses `CatalogItem`, compare, forms.
+- Scale fixtures: `utils/exchange-bounds.scale.test.ts` (5k groups → 24/page; 320 offers → 5/page; previews ≤3; minRep cap; soft JSON budget). Not DB performance.
+- Browser widths for Exchange review: **1440 / 1024 / 820 / 390 / 320**.
 
 ---
 

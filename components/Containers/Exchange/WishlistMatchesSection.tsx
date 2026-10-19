@@ -4,6 +4,7 @@ import { useCallback } from "react"
 import { useTranslations } from "next-intl"
 import { FaHeart } from "react-icons/fa6"
 
+import { OrnamentalFrame } from "@/components/Atoms/OrnamentalFrame"
 import { TradeMatchReasonLine } from "@/components/Molecules/TradeMatchReasonLine"
 import type { WishlistExchangeMatchEnriched } from "@/services/trade-match"
 import { Button } from "@/components/Atoms/Button"
@@ -96,8 +97,10 @@ const WishlistMatchesSection = ({
   if (matches.length === 0) return null
 
   return (
-    <section
-      className="noir-border rounded-md border-noir-gold/40 bg-noir-gold/10 p-4"
+    <OrnamentalFrame
+      as="section"
+      size="standard"
+      className="rounded-md bg-noir-gold/10 p-4"
       aria-labelledby="wishlist-matches-heading"
     >
       <div className="flex items-start gap-3">
@@ -154,7 +157,7 @@ const WishlistMatchesSection = ({
           />
         </Modal>
       ) : null}
-    </section>
+    </OrnamentalFrame>
   )
 }
 

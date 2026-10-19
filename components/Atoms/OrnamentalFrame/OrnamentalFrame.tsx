@@ -1,4 +1,4 @@
-import type { ElementType, ReactNode } from "react"
+import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react"
 
 import { styleMerge } from "@/utils/styleUtils"
 
@@ -6,14 +6,18 @@ import { OrnamentalCorner } from "./OrnamentalCorner"
 
 export type OrnamentalFrameSize = "compact" | "standard"
 
-export type OrnamentalFrameProps = {
+type OrnamentalFrameOwnProps<T extends ElementType> = {
   children: ReactNode
   /** `compact` for cards; `standard` for larger panels. */
   size?: OrnamentalFrameSize
   className?: string
   /** Wrapper element. Defaults to `div`. */
-  as?: ElementType
+  as?: T
 }
+
+export type OrnamentalFrameProps<T extends ElementType = "div"> =
+  OrnamentalFrameOwnProps<T> &
+    Omit<ComponentPropsWithoutRef<T>, keyof OrnamentalFrameOwnProps<T>>
 
 const SIZE_PX: Record<OrnamentalFrameSize, number> = {
   compact: 20,
@@ -22,23 +26,31 @@ const SIZE_PX: Record<OrnamentalFrameSize, number> = {
 
 /**
  * Fine gold rectangular frame with curling corner flourishes.
- * Does not replace `.noir-border` — opt-in wrapper for Exchange (and future) surfaces.
+ * Complements `.noir-border` (two L-corners) — do **not** replace auth, membership,
+ * homepage gallery, journal, perfume-detail, or form chrome with this wrapper.
+ *
+ * Intended sizes:
+ * - `compact` — discovery cards / listing rows
+ * - `standard` — Exchange toolbar, results shell, secondary Exchange rails
  *
  * Corners are decorative (aria-hidden, pointer-events-none) and sit on the border
  * outside the content box so focus rings inside are not clipped.
  */
-export const OrnamentalFrame = ({
+export const OrnamentalFrame = <T extends ElementType = "div">({
   children,
   size = "standard",
   className,
-  as: Tag = "div",
-}: OrnamentalFrameProps) => {
+  as,
+  ...rest
+}: OrnamentalFrameProps<T>) => {
+  const Tag = as ?? ("div" as ElementType)
   const cornerPx = SIZE_PX[size]
   /** Pull ornaments slightly outward so curls clear the border without eating padding. */
   const cornerOffset = size === "compact" ? "-3px" : "-4px"
 
   return (
     <Tag
+      {...rest}
       className={styleMerge(
         "relative overflow-visible text-noir-gold",
         className

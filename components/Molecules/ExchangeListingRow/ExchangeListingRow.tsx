@@ -6,6 +6,7 @@ import { GiTrade } from "react-icons/gi"
 
 import type { ExchangeUserPerfumeRow } from "@/app/the-exchange/exchange-types"
 import { Button } from "@/components/Atoms/Button/Button"
+import { OrnamentalFrame } from "@/components/Atoms/OrnamentalFrame"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import ListingPhotos from "@/components/Molecules/ListingPhotos/ListingPhotos"
 import { TradeMatchReasonLine } from "@/components/Molecules/TradeMatchReasonLine"
@@ -68,7 +69,11 @@ const ExchangeListingRow = memo(({
   const traderName = getTraderDisplayName(listing.user)
 
   return (
-    <li className="noir-border bg-noir-dark/40 p-3 text-sm text-noir-gold-100">
+    <OrnamentalFrame
+      as="li"
+      size="compact"
+      className="bg-noir-dark/40 p-3 text-sm text-noir-gold-100"
+    >
       {showProfileLink ? (
         <PrefetchLink
           href={`/trader-profile/${listing.userId}`}
@@ -143,7 +148,7 @@ const ExchangeListingRow = memo(({
           {tComposer(getTradeCtaLabelKey(listing.tradePreference, listing.tradeOnly))}
         </Button>
       ) : null}
-    </li>
+    </OrnamentalFrame>
   )
 })
 ExchangeListingRow.displayName = "ExchangeListingRow"

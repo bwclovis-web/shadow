@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { FaArrowRightArrowLeft } from "react-icons/fa6"
 
+import { OrnamentalFrame } from "@/components/Atoms/OrnamentalFrame"
 import type { MutualTradeSuggestion } from "@/models/mutual-trade-suggestions.server"
 
 type MutualSwapsSectionProps = {
@@ -16,8 +17,10 @@ const MutualSwapsSection = ({ suggestions }: MutualSwapsSectionProps) => {
   if (suggestions.length === 0) return null
 
   return (
-    <section
-      className="noir-border rounded-md border-noir-gold/30 bg-noir-dark/40 p-4"
+    <OrnamentalFrame
+      as="section"
+      size="standard"
+      className="rounded-md bg-noir-dark/40 p-4"
       aria-labelledby="mutual-swaps-heading"
     >
       <div className="flex items-start gap-3">
@@ -63,7 +66,7 @@ const MutualSwapsSection = ({ suggestions }: MutualSwapsSectionProps) => {
           </li>
         ))}
       </ul>
-    </section>
+    </OrnamentalFrame>
   )
 }
 

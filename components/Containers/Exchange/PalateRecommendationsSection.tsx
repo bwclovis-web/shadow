@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl"
 import { FaWandSparkles } from "react-icons/fa6"
 
 import { Button } from "@/components/Atoms/Button"
+import { OrnamentalFrame } from "@/components/Atoms/OrnamentalFrame"
 import { TradeComposerModal } from "@/components/Containers/Trade/TradeComposerModal"
 import { ExchangePerfumeCard } from "@/components/Molecules/ExchangePerfumeCard"
 import { TradeMatchReasonLine } from "@/components/Molecules/TradeMatchReasonLine"
@@ -82,8 +83,10 @@ const PalateRecommendationsSection = ({
   if (matches.length === 0) return null
 
   return (
-    <section
-      className="noir-border rounded-md border-noir-gold/40 bg-noir-dark/50 p-4"
+    <OrnamentalFrame
+      as="section"
+      size="standard"
+      className="rounded-md bg-noir-dark/50 p-4"
       aria-labelledby="palate-recs-heading"
     >
       <div className="flex items-start gap-3">
@@ -189,7 +192,7 @@ const PalateRecommendationsSection = ({
           />
         </Modal>
       ) : null}
-    </section>
+    </OrnamentalFrame>
   )
 }
 
