@@ -220,7 +220,7 @@ Implement only the step the user names. After each: report changes, checks, prev
 - [x] **Step 4 — Grid cards** — `ExchangeFragranceGroupCard`: main + ≤2 previews (simple when one); seller→catalog→neutral; offer count + bottle mark; factual primary trade badges; compare toggle; View collectors → existing offer/composer flow; 1/2/3 grid with sparse max-widths.
 - [x] **Step 5 — List view + View collectors** — Grid/list share results + committed criteria (`view`); list rows with one open expansion; grid md+ wide side panel / mobile nearly full-screen sheet; shared `ExchangeOfferContent` + `useExchangeOffers` (5 + load more); fill display only when validated; guest/own-listing + action-boundary revalidate; filter changes reset collectors; panel trap pauses for session `Modal` (lightbox/composer).
 - [x] **Step 6 — Filter drawer polish** — Nearly full-screen mobile (`mobileHeight="nearlyFull"`); draft Apply/Clear/close-cancel; draft note chips + URL hydration; searchable house/notes (bounded, debounce, stale guard); live shortcuts/chips sync open draft; focus trap includes typeahead portals; fixed Apply/Clear footer + safe area. (Doc previously numbered this Step 7; collectors remain under Step 5.)
-- [ ] **Step 7 — States + recent activity polish** — Distinct empty / no-inventory / failure; temporary illustration slot; empty inset never under real results.
+- [x] **Step 7 — States + recent activity polish** — Distinct zero-matches / no-inventory / failure / stale; temporary `ExchangeEmptyIllustration` (~240×160); empty replaces results only; activity hidden when empty; sparse cards full grid width; `?previewState=` fixtures in dev/preview.
 - [ ] **Step 8 — Harden** — i18n sync (`sync-translations` skill); unit + smoke tests; secondary sections placement; a11y pass; no hero/`TitleBanner` drift.
 
 ### Step 2 limitations (chrome)
@@ -259,6 +259,15 @@ Implement only the step the user names. After each: report changes, checks, prev
 - Notes remain perfume-level **any-of** (`some` / `in`); no ANY/ALL URL control.
 - `useDebouncedSearch` ignores stale in-flight suggestion responses; typeahead listboxes mark `data-focus-trap-portal`.
 - Archive/Houses keep default compact drawer height; Exchange passes `mobileHeight="nearlyFull"`.
+
+### Step 7 — states notes
+
+- Modes via `resolveExchangeResultsMode`: failure → stale → zero-matches / no-inventory → results.
+- Failure never uses zero-match copy; Retry calls `router.refresh()`.
+- Stale: label “Previous results” + dimmed prior cards (`aria-busy`); never claim they match the new query.
+- Temporary illustration: `ExchangeEmptyIllustration` (charcoal + `LuImage`, `aria-hidden`). Future file: `public/images/new/exchange-empty.webp` (not shipped).
+- QA fixtures (no DB edits): `?previewState=zero-matches|no-inventory|failure` when `NODE_ENV=development` or `VERCEL_ENV=preview`.
+- Activity feed already returns `null` when both streams are empty.
 
 ---
 

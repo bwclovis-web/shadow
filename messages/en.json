@@ -2111,6 +2111,18 @@
     "emptySignIn": "Sign in",
     "signInToPropose": "Sign in to propose an exchange",
     "availableFrom": "Available from",
+    "states": {
+      "zeroMatchesTitle": "No matching fragrances",
+      "zeroMatchesDescription": "Nothing on The Exchange matches your current search and filters. Clear filters or adjust criteria — your selections stay visible above.",
+      "noInventoryTitle": "The Exchange is quiet right now",
+      "noInventoryDescription": "No eligible listings are available to browse yet. Explore the Archive, or check back as collectors add bottles.",
+      "loadFailedTitle": "Couldn’t load Exchange results",
+      "loadFailedDescription": "Something went wrong while loading fragrances. Retry — this is not an empty result set.",
+      "retry": "Retry",
+      "staleLabel": "Previous results",
+      "updatingTitle": "Updating results…",
+      "updatingDescription": "Showing the last loaded page until your new criteria finish loading. These are not current matches."
+    },
     "search": {
       "placeholder": "Search available fragrances...",
       "noResults": "No fragrances found",

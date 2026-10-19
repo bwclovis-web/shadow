@@ -1834,6 +1834,18 @@
     "emptySignIn": "Iniciar sesión",
     "signInToPropose": "Inicia sesión para proponer un intercambio",
     "availableFrom": "Disponible de",
+    "states": {
+      "zeroMatchesTitle": "Ninguna fragancia coincide",
+      "zeroMatchesDescription": "Nada en The Exchange coincide con tu búsqueda y filtros actuales. Borra los filtros o ajústalos: tus criterios siguen visibles arriba.",
+      "noInventoryTitle": "The Exchange está en calma ahora",
+      "noInventoryDescription": "Aún no hay anuncios elegibles para explorar. Mira The Archive o vuelve más tarde cuando los coleccionistas añadan botellas.",
+      "loadFailedTitle": "No se pudieron cargar los resultados",
+      "loadFailedDescription": "Algo falló al cargar fragancias. Reintenta: esto no es un resultado vacío.",
+      "retry": "Reintentar",
+      "staleLabel": "Resultados anteriores",
+      "updatingTitle": "Actualizando resultados…",
+      "updatingDescription": "Se muestra la última página cargada hasta que terminen tus nuevos criterios. No son coincidencias actuales."
+    },
     "search": {
       "placeholder": "Buscar fragancias disponibles...",
       "noResults": "No se encontraron fragancias",

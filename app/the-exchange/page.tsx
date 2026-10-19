@@ -22,12 +22,30 @@ import {
   parseDiscoveryFiltersFromSearchParams,
 } from "@/utils/discovery-filters"
 import { exchangeGroupToPageRow } from "@/utils/exchange-group-card"
+import {
+  parseExchangePreviewState,
+  type ExchangePreviewState,
+} from "@/utils/exchange-results-state"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { shouldShowAds } from "@/utils/ads/should-show-ads"
 
 import TheExchangeClient from "./TheExchangeClient"
-import type { ExchangePageData } from "./exchange-types"
+import type { ExchangePageData, ExchangePaginationMeta } from "./exchange-types"
+
+const allowExchangeStatePreview = () =>
+  process.env.NODE_ENV === "development" ||
+  process.env.VERCEL_ENV === "preview"
+
+const emptyGroupsPagination = (): ExchangePaginationMeta => ({
+  totalCount: 0,
+  pageSize: EXCHANGE_GROUP_PAGE_SIZE,
+  currentPage: 1,
+  totalPages: 0,
+  hasMore: false,
+  hasNextPage: false,
+  hasPrevPage: false,
+})
 
 /**
  * Always dynamic: session, viewer exclusion, ads, and followed activity must not
@@ -74,8 +92,30 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
   if (searchQuery) filterQuery.set("q", searchQuery)
   const filterQueryString = filterQuery.toString()
 
+  const previewState: ExchangePreviewState | null = allowExchangeStatePreview()
+    ? parseExchangePreviewState(params.previewState)
+    : null
+
+  const groupsPagePromise = getExchangeFragranceGroupsPage({
+    page: initialPage,
+    pageSize: EXCHANGE_GROUP_PAGE_SIZE,
+    search: searchQuery || undefined,
+    discovery,
+    viewerId,
+  }).then(
+    page => ({ ...page, loadFailed: false as const }),
+    error => {
+      console.error("[the-exchange] fragrance groups failed", error)
+      return {
+        groups: [],
+        meta: emptyGroupsPagination(),
+        loadFailed: true as const,
+      }
+    }
+  )
+
   const [
-    groupsPage,
+    groupsOutcome,
     initialNoteTags,
     initialHouse,
     initialPerfume,
@@ -86,13 +126,7 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
     palateRecommendations,
     mutualSwapSuggestions,
   ] = await Promise.all([
-    getExchangeFragranceGroupsPage({
-      page: initialPage,
-      pageSize: EXCHANGE_GROUP_PAGE_SIZE,
-      search: searchQuery || undefined,
-      discovery,
-      viewerId,
-    }),
+    groupsPagePromise,
     discovery.noteIds.length > 0
       ? getPerfumeNotesByIds(discovery.noteIds)
       : Promise.resolve([]),
@@ -117,8 +151,21 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
     viewerId ? getMutualTradeSuggestions(viewerId) : Promise.resolve([]),
   ])
 
-  const availablePerfumes = groupsPage.groups.map(exchangeGroupToPageRow)
-  const pagination = groupsPage.meta
+  const loadFailed = groupsOutcome.loadFailed
+  const availablePerfumes =
+    previewState === "no-inventory" ||
+    previewState === "zero-matches" ||
+    previewState === "failure" ||
+    loadFailed
+      ? []
+      : groupsOutcome.groups.map(exchangeGroupToPageRow)
+  const pagination =
+    previewState === "no-inventory" ||
+    previewState === "zero-matches" ||
+    previewState === "failure" ||
+    loadFailed
+      ? emptyGroupsPagination()
+      : groupsOutcome.meta
 
   const traderIds = [
     ...new Set(
@@ -196,6 +243,8 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
         palateRecommendations={palateRecommendations}
         mutualSwapSuggestions={mutualSwapSuggestions}
         showAds={shouldShowAds(session?.user)}
+        loadFailed={loadFailed || previewState === "failure"}
+        previewState={previewState}
       />
     </>
   )

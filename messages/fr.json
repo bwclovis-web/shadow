@@ -1834,6 +1834,18 @@
     "emptySignIn": "Connexion",
     "signInToPropose": "Connectez-vous pour proposer un échange",
     "availableFrom": "Disponible chez",
+    "states": {
+      "zeroMatchesTitle": "Aucun parfum ne correspond",
+      "zeroMatchesDescription": "Rien sur The Exchange ne correspond à votre recherche et à vos filtres. Effacez ou ajustez les critères — vos sélections restent visibles ci-dessus.",
+      "noInventoryTitle": "The Exchange est calme pour le moment",
+      "noInventoryDescription": "Aucune annonce éligible n’est encore disponible. Explorez The Archive, ou revenez lorsque des collectionneurs ajouteront des flacons.",
+      "loadFailedTitle": "Impossible de charger les résultats",
+      "loadFailedDescription": "Une erreur s’est produite lors du chargement. Réessayez — ce n’est pas un résultat vide.",
+      "retry": "Réessayer",
+      "staleLabel": "Résultats précédents",
+      "updatingTitle": "Mise à jour des résultats…",
+      "updatingDescription": "Affichage de la dernière page chargée jusqu’à ce que vos nouveaux critères soient prêts. Ce ne sont pas les correspondances actuelles."
+    },
     "search": {
       "placeholder": "Rechercher des parfums disponibles...",
       "noResults": "Aucun parfum trouvé",

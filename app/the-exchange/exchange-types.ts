@@ -9,6 +9,7 @@ import type { OnboardingTraderMatchEnriched } from "@/services/trade-match"
 import type { MutualTradeSuggestion } from "@/models/mutual-trade-suggestions.server"
 import type { TraderReputationV1 } from "@/services/reputation/types"
 import type { OpenSplitChip } from "@/types/decant-split"
+import type { ExchangePreviewState } from "@/utils/exchange-results-state"
 
 export type ExchangePaginationMeta = {
   totalCount: number
@@ -73,4 +74,11 @@ export type ExchangePageData = {
   viewerId?: string | null
   openSplitChipsByPerfumeId?: Record<string, OpenSplitChip[]>
   showAds?: boolean
+  /** True when the fragrance-group query threw; never present as zero matches. */
+  loadFailed?: boolean
+  /**
+   * Controlled UI fixture for local/preview QA (`?previewState=`).
+   * Ignored in production deployments.
+   */
+  previewState?: ExchangePreviewState | null
 }
