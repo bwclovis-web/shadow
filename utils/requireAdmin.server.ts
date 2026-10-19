@@ -1,7 +1,11 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
-import { getTwoFactorStatus, isTwoFactorEnabled } from "@/models/two-factor.server"
+import {
+  getTwoFactorStatus,
+  isTwoFactorEnabled,
+  isTwoFactorEnforcementEnabled,
+} from "@/models/two-factor.server"
 import type { SessionFromRequest } from "@/utils/session-from-request.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { getProfilePathForUser } from "@/utils/user"
@@ -32,12 +36,14 @@ export const requireAdminSession = async (
     redirect("/unauthorized")
   }
 
-  const twoFactorStatus = await getTwoFactorStatus(session.user.id)
-  if (!twoFactorStatus || !isTwoFactorEnabled(twoFactorStatus)) {
-    const securityPath = `${getProfilePathForUser(session.user)}/security`
-    redirect(
-      `${securityPath}?require2fa=1&redirect=${encodeURIComponent(redirectPath)}`
-    )
+  if (isTwoFactorEnforcementEnabled()) {
+    const twoFactorStatus = await getTwoFactorStatus(session.user.id)
+    if (!twoFactorStatus || !isTwoFactorEnabled(twoFactorStatus)) {
+      const securityPath = `${getProfilePathForUser(session.user)}/security`
+      redirect(
+        `${securityPath}?require2fa=1&redirect=${encodeURIComponent(redirectPath)}`
+      )
+    }
   }
 
   return session as SessionFromRequest & {

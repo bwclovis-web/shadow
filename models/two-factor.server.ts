@@ -27,6 +27,17 @@ export const isTwoFactorEnabled = (user: {
 }): boolean =>
   user.twoFactorEnabledAt != null && user.totpSecretEncrypted != null
 
+/**
+ * Whether sign-in / admin gates should challenge or require 2FA.
+ * Off during local `next dev` so localhost accounts with 2FA stay usable.
+ * Set AUTH_FORCE_2FA=true to exercise the full flow in development.
+ * Always on when NODE_ENV is not development (never skip in production).
+ */
+export const isTwoFactorEnforcementEnabled = (): boolean => {
+  if (process.env.NODE_ENV !== "development") return true
+  return process.env.AUTH_FORCE_2FA === "true"
+}
+
 export const normalizeTotpCode = (code: string): string =>
   code.replace(/[\s-]/g, "").trim()
 

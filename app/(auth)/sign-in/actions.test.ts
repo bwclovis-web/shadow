@@ -31,6 +31,7 @@ vi.mock("@/utils/api-validation.server", () => ({
 }))
 vi.mock("@/models/two-factor.server", () => ({
   isTwoFactorEnabled: vi.fn().mockReturnValue(false),
+  isTwoFactorEnforcementEnabled: vi.fn().mockReturnValue(true),
 }))
 vi.mock("@/utils/rate-limit-config.server", () => ({
   getAuthRateLimits: vi.fn().mockReturnValue({

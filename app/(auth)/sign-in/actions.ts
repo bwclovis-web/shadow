@@ -3,7 +3,10 @@
 import { cookies, headers } from "next/headers"
 import { redirect } from "next/navigation"
 
-import { isTwoFactorEnabled } from "@/models/two-factor.server"
+import {
+  isTwoFactorEnabled,
+  isTwoFactorEnforcementEnabled,
+} from "@/models/two-factor.server"
 import { updateUser } from "@/models/user.query"
 import { touchUserLastActive } from "@/models/user-activity.server"
 import { signInCustomer } from "@/models/user.server"
@@ -120,7 +123,7 @@ export const signInAction = async (
       user = { ...existingUser, username }
     }
 
-    if (isTwoFactorEnabled(user)) {
+    if (isTwoFactorEnforcementEnabled() && isTwoFactorEnabled(user)) {
       if (loginCtx) {
         await recordLoginAttempt({
           userId: user.id,

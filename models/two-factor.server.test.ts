@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { generateSecret, generateSync } from "otplib"
 
 vi.mock("@/lib/db", () => ({
@@ -45,6 +45,7 @@ vi.mock("@/utils/security/password-security.server", () => ({
 import { prisma } from "@/lib/db"
 import {
   isTwoFactorEnabled,
+  isTwoFactorEnforcementEnabled,
   normalizeBackupCode,
   normalizeTotpCode,
   replaceTwoFactorSecret,
@@ -69,6 +70,38 @@ describe("two-factor.server", () => {
           totpSecretEncrypted: null,
         })
       ).toBe(false)
+    })
+  })
+
+  describe("isTwoFactorEnforcementEnabled", () => {
+    const originalNodeEnv = process.env.NODE_ENV
+    const originalForce = process.env.AUTH_FORCE_2FA
+
+    afterEach(() => {
+      process.env.NODE_ENV = originalNodeEnv
+      if (originalForce === undefined) {
+        delete process.env.AUTH_FORCE_2FA
+      } else {
+        process.env.AUTH_FORCE_2FA = originalForce
+      }
+    })
+
+    it("is off in development unless AUTH_FORCE_2FA is true", () => {
+      process.env.NODE_ENV = "development"
+      delete process.env.AUTH_FORCE_2FA
+      expect(isTwoFactorEnforcementEnabled()).toBe(false)
+
+      process.env.AUTH_FORCE_2FA = "true"
+      expect(isTwoFactorEnforcementEnabled()).toBe(true)
+    })
+
+    it("is always on outside development", () => {
+      process.env.NODE_ENV = "production"
+      delete process.env.AUTH_FORCE_2FA
+      expect(isTwoFactorEnforcementEnabled()).toBe(true)
+
+      process.env.AUTH_FORCE_2FA = "false"
+      expect(isTwoFactorEnforcementEnabled()).toBe(true)
     })
   })
 
