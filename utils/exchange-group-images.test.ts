@@ -51,9 +51,26 @@ describe("resolveExchangeGroupImages", () => {
     expect(resolved.main.src).toBe("/images/catalog.jpg")
   })
 
-  it("uses simple layout for a single seller photo", () => {
+  it("pads mosaic with catalog when only one seller photo", () => {
     const resolved = resolveExchangeGroupImages({
       image: "/images/catalog.jpg",
+      userPerfume: [
+        listing({
+          id: "a",
+          userId: "u1",
+          images: ["https://cdn.example.com/a.jpg"],
+        }),
+      ],
+    })
+    expect(resolved.layout).toBe("mosaic")
+    expect(resolved.main.kind).toBe("seller")
+    expect(resolved.sides).toHaveLength(1)
+    expect(resolved.sides[0]?.kind).toBe("catalog")
+  })
+
+  it("keeps simple layout for a single seller photo without catalog", () => {
+    const resolved = resolveExchangeGroupImages({
+      image: null,
       userPerfume: [
         listing({
           id: "a",

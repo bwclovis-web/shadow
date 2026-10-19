@@ -42,6 +42,7 @@
     "removeItem": "Remove {name} from compare",
     "toggleAdd": "Add to compare",
     "toggleRemove": "Remove from compare",
+    "buttonLabel": "Compare",
     "maxReached": "Compare tray is full (maximum {max} perfumes)",
     "pageHeading": "Compare Fragrances",
     "pageSubheading": "Explore notes, ratings, house details, and Exchange availability side by side.",
@@ -2254,6 +2255,9 @@
       "photoIndex": "Photo {current} of {total}",
       "offerCount": "{count, plural, one {# matching offer} other {# matching offers}}",
       "viewCollectors": "View collectors",
+      "resultsFragranceCount": "{count, plural, one {# fragrance} other {# fragrances}}",
+      "resultsMeta": "{fragrances, plural, one {# fragrance} other {# fragrances}} · {offers, plural, one {# offer} other {# offers}}",
+      "resultsRange": "Showing {from, number}–{to, number} of {total, number}",
       "groupLightboxTitle": "Photos for {name}",
       "fillRemaining": "About {percent}% remaining",
       "offerUnavailable": "This offer is no longer available.",
@@ -2271,6 +2275,8 @@
     },
     "toolbar": {
       "sortNameAsc": "Name (A–Z)",
+      "sortNameDesc": "Name (Z–A)",
+      "sortOffersNewest": "Newest offers",
       "tradeShortcutsAria": "Exchange preference shortcuts"
     }
   },

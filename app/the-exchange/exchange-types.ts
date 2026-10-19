@@ -1,14 +1,11 @@
 import type { Tag } from "@/lib/queries/tags"
-import type {
-  ActivityFeedListingRow,
-  FollowedActivityItem,
-} from "@/models/activity-feed.server"
 import type { SeasonalTrendingResult } from "@/models/seasonal-trending.server"
 import type { WishlistExchangeMatchEnriched } from "@/services/trade-match"
 import type { OnboardingTraderMatchEnriched } from "@/services/trade-match"
 import type { MutualTradeSuggestion } from "@/models/mutual-trade-suggestions.server"
 import type { TraderReputationV1 } from "@/services/reputation/types"
 import type { OpenSplitChip } from "@/types/decant-split"
+import type { ExchangeGroupSort } from "@/utils/exchange-constants"
 import type { ExchangePreviewState } from "@/utils/exchange-results-state"
 
 export type ExchangePaginationMeta = {
@@ -59,6 +56,7 @@ export type ExchangePageData = {
   availablePerfumes: ExchangePerfumeRow[]
   pagination: ExchangePaginationMeta
   searchQuery: string
+  sort: ExchangeGroupSort
   /** Current URL search string without `pg` — used for offer query keys. */
   filterQueryString: string
   initialNoteTags: Tag[]
@@ -67,8 +65,6 @@ export type ExchangePageData = {
   wishlistMatches?: WishlistExchangeMatchEnriched[]
   palateRecommendations?: OnboardingTraderMatchEnriched[]
   mutualSwapSuggestions?: MutualTradeSuggestion[]
-  recentListings?: ActivityFeedListingRow[]
-  followedActivity?: FollowedActivityItem[]
   seasonalTrending?: SeasonalTrendingResult
   traderReputationByUserId?: Record<string, TraderReputationV1>
   viewerId?: string | null

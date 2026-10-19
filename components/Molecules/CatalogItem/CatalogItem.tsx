@@ -134,9 +134,15 @@ export const CatalogItemRow = ({
       </div>
       <span className="hidden shrink-0 items-center gap-2 pr-2 text-sm font-medium text-noir-gold md:inline-flex">
         {actionLabel}
-        <FiArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+        <FiArrowRight
+          className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+          aria-hidden
+        />
       </span>
-      <FiChevronRight className="h-5 w-5 shrink-0 text-noir-gold md:hidden" aria-hidden />
+      <FiChevronRight
+        className="h-5 w-5 shrink-0 text-noir-gold md:hidden"
+        aria-hidden
+      />
     </PrefetchLink>
     {item.compareItem ? (
       <div className="relative h-12 w-12 shrink-0">

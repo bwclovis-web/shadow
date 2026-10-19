@@ -69,12 +69,12 @@ const LinkCard = ({
       : undefined
 
   return (
-    <div className="relative aspect-square w-full h-full min-h-72 group noir-border overflow-hidden transition-all duration-300 ease-in-out bg-noir-dark/70 backdrop-blur-sm">
+    <div className="group relative aspect-square h-full min-h-72 w-full overflow-hidden border border-noir-gold/70 bg-noir-dark/70 backdrop-blur-sm transition-all duration-300 ease-in-out hover:border-noir-gold">
       <PrefetchLink
         href={href}
         prefetch={false}
         transitionVariant="list-to-detail"
-        className="flex flex-col overflow-hidden justify-between items-center group transition-all duration-300 ease-in-out"
+        className="group flex h-full flex-col items-center justify-between overflow-hidden transition-all duration-300 ease-in-out"
       >
         <div className="text-center relative z-10 bg-noir-dark/50 backdrop-blur-sm w-full p-2">
           <h2

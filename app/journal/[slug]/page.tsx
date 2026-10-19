@@ -131,15 +131,17 @@ const ArticleDetailPage = async ({ params }: Props) => {
       </header>
 
       {coverUrl ? (
-        <div className="relative max-w-4xl mx-auto aspect-[16/9] mb-12 noir-border overflow-hidden">
-          <Image
-            src={coverUrl}
-            alt={article.coverImage?.alt ?? article.title}
-            fill
-            priority
-            className="object-cover"
-            sizes="(min-width: 1024px) 896px, 100vw"
-          />
+        <div className="relative mx-auto mb-12 aspect-[16/9] max-w-4xl noir-border">
+          <div className="absolute inset-0 overflow-hidden">
+            <Image
+              src={coverUrl}
+              alt={article.coverImage?.alt ?? article.title}
+              fill
+              priority
+              className="object-cover"
+              sizes="(min-width: 1024px) 896px, 100vw"
+            />
+          </div>
         </div>
       ) : null}
 

@@ -1,5 +1,6 @@
 "use client"
 
+import type { MouseEvent } from "react"
 import { useTranslations } from "next-intl"
 import { LuGitCompareArrows } from "react-icons/lu"
 
@@ -12,19 +13,29 @@ import { styleMerge } from "@/utils/styleUtils"
 
 export interface PerfumeCompareToggleProps {
   item: CompareItem
+  /**
+   * `icon` — compact control overlaid on media (Archive / home).
+   * `labeled` — full-width secondary CTA for Exchange grid/list (mockup).
+   */
+  variant?: "icon" | "labeled"
+  className?: string
 }
 
 /**
  * Card compare control; must stay a sibling of `PrefetchLink`, not nested inside it.
  * Compare toggle — see docs/README.md (product backlog CF-001).
  */
-export function PerfumeCompareToggle({ item }: PerfumeCompareToggleProps) {
+export const PerfumeCompareToggle = ({
+  item,
+  variant = "icon",
+  className,
+}: PerfumeCompareToggleProps) => {
   const t = useTranslations("compare")
-  const items = useCompareStore((s) => s.items)
-  const maxItems = useCompareStore((s) => s.maxItems)
-  const toggle = useCompareStore((s) => s.toggle)
+  const items = useCompareStore(s => s.items)
+  const maxItems = useCompareStore(s => s.maxItems)
+  const toggle = useCompareStore(s => s.toggle)
 
-  const selected = items.some((i) => i.id === item.id)
+  const selected = items.some(i => i.id === item.id)
   const atMax = items.length >= maxItems
   const disabled = !selected && atMax
 
@@ -34,9 +45,45 @@ export function PerfumeCompareToggle({ item }: PerfumeCompareToggleProps) {
       ? t("toggleRemove")
       : t("toggleAdd")
   const itemTooltip = `${label}: ${item.name}`
+  const labeledText = selected ? t("toggleRemove") : t("buttonLabel")
+
+  const onClick = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (disabled) return
+    toggle(item)
+  }
+
+  if (variant === "labeled") {
+    return (
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        aria-pressed={selected}
+        disabled={disabled}
+        title={itemTooltip}
+        aria-label={label}
+        className={styleMerge(
+          "w-full max-w-full border-noir-gold/70",
+          selected && "bg-noir-gold/20 text-noir-gold-100 border-noir-gold-500",
+          disabled && "opacity-60",
+          className
+        )}
+        onClick={onClick}
+      >
+        {labeledText}
+      </Button>
+    )
+  }
 
   return (
-    <div className="pointer-events-auto absolute bottom-2 right-2 z-30 group/compare">
+    <div
+      className={styleMerge(
+        "pointer-events-auto absolute bottom-2 right-2 z-30 group/compare",
+        className
+      )}
+    >
       <span
         className="pointer-events-none absolute -top-9 right-0 whitespace-nowrap rounded-sm border border-noir-gold/50 bg-noir-black/95 px-2 py-1 text-xs text-noir-gold opacity-0 shadow transition-opacity duration-150 group-hover/compare:opacity-100 group-focus-within/compare:opacity-100"
         role="tooltip"
@@ -57,12 +104,7 @@ export function PerfumeCompareToggle({ item }: PerfumeCompareToggleProps) {
           selected && "bg-noir-gold/20 text-noir-gold-100 border-noir-gold-500",
           disabled && "opacity-60"
         )}
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          if (disabled) return
-          toggle(item)
-        }}
+        onClick={onClick}
       >
         <LuGitCompareArrows className="h-5 w-5" aria-hidden />
       </Button>

@@ -271,9 +271,16 @@ Implement only the step the user names. After each: report changes, checks, prev
 
 ### Step 8 — harden notes
 
-- OrnamentalFrame rollout (approved corner): Exchange toolbar/results/cards/rows + wishlist / palate / mutual rails + `ExchangeListingRow`. **Left** on `.noir-border` / catalog borders: auth, membership, homepage gallery, journal, perfume detail, Archive/Houses `CatalogItem`, compare, forms.
+- OrnamentalFrame rollout: Exchange toolbar/results/cards/rows + wishlist / palate / mutual rails + `ExchangeListingRow`; Archive / Houses `CatalogToolbar` + `CatalogItem` card/row; recommended cards. Global `.noir-border` / `.noir-border-dk` use the same four SVG flourishes (padded viewBox + join-aligned backgrounds; clip media on an inner wrapper, not the framed element).
 - Scale fixtures: `utils/exchange-bounds.scale.test.ts` (5k groups → 24/page; 320 offers → 5/page; previews ≤3; minRep cap; soft JSON budget). Not DB performance.
 - Browser widths for Exchange review: **1440 / 1024 / 820 / 390 / 320**.
+
+### Visual polish (post Step 8)
+
+- Grid/list cards: dual CTAs (`View collectors` + labeled `Compare`); list rows show up to 3 preview thumbs.
+- Toolbar: search + sort/filters + view toggle on one desktop row; active toggle remains gold fill.
+- Results meta: fragrance (± offer) counts + “Showing X–Y of Z”; `PaginationBar` when `totalPages > 1`.
+- View/`pg` URL changes no longer flash the stale “Updating results…” panel (filter-key mismatch only).
 
 ---
 
@@ -343,7 +350,7 @@ Decide explicitly in the Step 2 / Step 5 reports before locking copy:
 - Mockup nav / founding spots / search hints → keep production nav and real `tradingPost` copy (adjust placeholders only via i18n when a step asks).
 - Current grid is effectively 1→2→3 at `xl` with page size 16 and a sticky filter column → replace per layout contract.
 - Current eager nested listings → on-demand offers (Step 5).
-- `.noir-border` two-corner CSS → reusable four-corner treatment closer to mockups without changing global banner styles.
+- `.noir-border` two-corner CSS → four SVG corner flourishes (shared art with `OrnamentalFrame`).
 - Activity feed currently sits **above** the grid → move **below** results (Step 7).
 - `minRep` post-filter → must move into shared eligibility (Step 2).
 

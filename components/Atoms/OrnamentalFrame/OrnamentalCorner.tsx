@@ -20,22 +20,22 @@ export const OrnamentalCorner = ({ className, size }: OrnamentalCornerProps) => 
     xmlns="http://www.w3.org/2000/svg"
     className={styleMerge("overflow-visible", className)}
   >
-    {/* Arms along the frame edge (top-left corner at ~3,3) */}
+    {/* Arms along the frame edge — start closer to the join so they meet the CSS border */}
     <path
-      d="M11 3 H28"
+      d="M9 3 H28"
       stroke="currentColor"
       strokeWidth="1"
       strokeLinecap="round"
     />
     <path
-      d="M3 11 V28"
+      d="M3 9 V28"
       stroke="currentColor"
       strokeWidth="1"
       strokeLinecap="round"
     />
-    {/* Soft corner join */}
+    {/* Soft corner join (origin ~3,3) */}
     <path
-      d="M11 3 C6 3 3 6 3 11"
+      d="M9 3 C5.5 3 3 5.5 3 9"
       stroke="currentColor"
       strokeWidth="1"
       strokeLinecap="round"

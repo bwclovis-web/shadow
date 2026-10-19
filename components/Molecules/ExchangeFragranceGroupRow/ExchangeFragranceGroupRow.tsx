@@ -59,16 +59,23 @@ export const ExchangeFragranceGroupRow = ({
   const resolved = resolveExchangeGroupImages(perfume)
   const thumb = resolved.main.src || FALLBACK
   const panelId = `exchange-list-offers-${perfume.id}`
+  const previewThumbs = [resolved.main, ...resolved.sides].slice(0, 3)
+  const compareItem = {
+    id: perfume.id,
+    slug: perfume.slug,
+    name: perfume.name,
+    image: perfume.image ?? undefined,
+  }
 
   return (
     <OrnamentalFrame size="compact" as="article" className="bg-noir-dark/80">
-      <div className="relative flex flex-col gap-3 p-3 md:flex-row md:items-center md:gap-4 md:p-4">
+      <div className="flex flex-col gap-3 p-3 md:flex-row md:items-center md:gap-4 md:p-4">
         <div className="relative h-20 w-20 shrink-0 overflow-hidden bg-noir-black md:h-24 md:w-24">
           <Image
             src={thumb}
             alt=""
             fill
-            className="object-contain p-1"
+            className="object-cover"
             sizes="96px"
             loading="lazy"
           />
@@ -89,24 +96,44 @@ export const ExchangeFragranceGroupRow = ({
             </p>
           ) : null}
           {openSplitSlot}
-          <p className="flex items-center gap-1.5 text-sm font-medium text-noir-gold">
-            <ExchangeBottleMark />
+          <p className="flex items-center justify-start gap-1 text-sm font-medium text-noir-gold">
+            <ExchangeBottleMark className="h-7 w-[16px] shrink-0" />
             <span>{t("offerCount", { count: perfume.offerCount })}</span>
           </p>
         </div>
 
-        <div className="flex shrink-0 flex-wrap items-center gap-2 md:flex-col md:items-stretch">
+        {previewThumbs.length > 1 ? (
+          <div className="hidden shrink-0 gap-1.5 md:flex" aria-hidden>
+            {previewThumbs.map((slot, index) => (
+              <div
+                key={`${slot.userPerfumeId ?? slot.src}-${index}`}
+                className="relative h-16 w-14 overflow-hidden bg-noir-black"
+              >
+                <Image
+                  src={slot.src || FALLBACK}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="56px"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:min-w-[10.5rem]">
           <Button
             type="button"
             variant="primary"
             background="gold"
             size="sm"
-            className="w-full max-w-full md:w-auto"
+            className="w-full max-w-full"
             aria-expanded={expanded}
             aria-controls={panelId}
             onClick={e => onToggle(e.currentTarget)}
           >
-            <span className="inline-flex items-center gap-2">
+            <span className="inline-flex items-center justify-center gap-2">
               {t("viewCollectors")}
               <LuChevronDown
                 className={styleMerge(
@@ -117,19 +144,7 @@ export const ExchangeFragranceGroupRow = ({
               />
             </span>
           </Button>
-        </div>
-
-        <div className="absolute right-2 top-2 md:static md:self-start">
-          <div className="relative h-10 w-10">
-            <PerfumeCompareToggle
-              item={{
-                id: perfume.id,
-                slug: perfume.slug,
-                name: perfume.name,
-                image: perfume.image ?? undefined,
-              }}
-            />
-          </div>
+          <PerfumeCompareToggle item={compareItem} variant="labeled" />
         </div>
       </div>
 

@@ -23,7 +23,6 @@ import { ExchangeFragranceGroupCard } from "@/components/Molecules/ExchangeFragr
 import { ExchangeFragranceGroupRow } from "@/components/Molecules/ExchangeFragranceGroupRow/ExchangeFragranceGroupRow"
 import { ExchangeOpenSplitChip } from "@/components/Molecules/ExchangeOpenSplitChip/ExchangeOpenSplitChip"
 import { ExchangeResultsStatePanel } from "@/components/Molecules/ExchangeResultsStatePanel"
-import ActivityFeedSection from "@/components/Containers/Exchange/ActivityFeedSection"
 import {
   ExchangeDiscoveryToolbar,
   type ExchangeBrowseView,
@@ -65,6 +64,11 @@ import {
   type DiscoveryTradePreference,
   type PerfumeDiscoveryFilters,
 } from "@/utils/discovery-filters"
+import {
+  DEFAULT_EXCHANGE_GROUP_SORT,
+  parseExchangeGroupSort,
+  type ExchangeGroupSort,
+} from "@/utils/exchange-constants"
 import {
   exchangeCommittedFilterKey,
   resolveExchangeResultsMode,
@@ -117,6 +121,7 @@ const TheExchangeClient = ({
   availablePerfumes,
   pagination,
   searchQuery,
+  sort: initialSort,
   filterQueryString,
   initialNoteTags,
   initialHouse,
@@ -124,8 +129,6 @@ const TheExchangeClient = ({
   wishlistMatches = [],
   palateRecommendations = [],
   mutualSwapSuggestions = [],
-  recentListings = [],
-  followedActivity = [],
   seasonalTrending = { season: "spring", perfumes: [] },
   traderReputationByUserId = {},
   viewerId = null,
@@ -147,7 +150,7 @@ const TheExchangeClient = ({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const [isNavPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [filterDrawerGeneration, setFilterDrawerGeneration] = useState(0)
   const [draftFilters, setDraftFilters] = useState<PerfumeDiscoveryFilters>(
@@ -189,6 +192,10 @@ const TheExchangeClient = ({
     new URLSearchParams(searchParamsKey).get("view") === "list"
       ? "list"
       : "grid"
+
+  const resultsSort: ExchangeGroupSort = parseExchangeGroupSort(
+    new URLSearchParams(searchParamsKey).get("sort") ?? initialSort
+  )
 
   const activeFilterCount = countDiscoveryFilters(discoveryFromUrl)
   const draftFilterCount = countDiscoveryFilters(draftFilters)
@@ -430,6 +437,17 @@ const TheExchangeClient = ({
     [searchParams, pushUrlFromSearchParams]
   )
 
+  const handleSortChange = useCallback(
+    (nextSort: ExchangeGroupSort) => {
+      const nextSearch = new URLSearchParams(searchParams.toString())
+      if (nextSort === DEFAULT_EXCHANGE_GROUP_SORT) nextSearch.delete("sort")
+      else nextSearch.set("sort", nextSort)
+      nextSearch.delete("pg")
+      pushUrlFromSearchParams(nextSearch)
+    },
+    [searchParams, pushUrlFromSearchParams]
+  )
+
   const handleOpenCollectors = useCallback(
     (perfume: ExchangePerfumeRow, trigger: HTMLButtonElement | null) => {
       collectorsTriggerRef.current = trigger
@@ -508,6 +526,22 @@ const TheExchangeClient = ({
   }
 
   const totalCount = pagination.totalCount ?? availablePerfumes.length
+  const pageOfferCount = availablePerfumes.reduce(
+    (sum, perfume) => sum + perfume.offerCount,
+    0
+  )
+  const rangeFrom =
+    totalCount === 0
+      ? 0
+      : (pagination.currentPage - 1) * pagination.pageSize + 1
+  const rangeTo =
+    totalCount === 0
+      ? 0
+      : Math.min(
+          (pagination.currentPage - 1) * pagination.pageSize +
+            availablePerfumes.length,
+          totalCount
+        )
   const committedHasCriteria =
     discoveryFiltersActive(discoveryFromUrl) || Boolean(searchQuery.trim())
 
@@ -515,9 +549,10 @@ const TheExchangeClient = ({
     () => exchangeCommittedFilterKey(new URLSearchParams(searchParamsKey)),
     [searchParamsKey]
   )
+  // Only criteria/search mismatch makes results stale — not view/pg URL toggles
+  // (those share the same committed filter key and would flash a false “updating” state).
   const resultsAreStale =
-    !previewState &&
-    (isNavPending || pendingFilterKey !== filterQueryString)
+    !previewState && pendingFilterKey !== filterQueryString
 
   const resultsMode = resolveExchangeResultsMode({
     loadFailed,
@@ -694,6 +729,8 @@ const TheExchangeClient = ({
                 onSearchChange={setLocalSearchValue}
                 activeFilterCount={activeFilterCount}
                 onOpenFilters={openFilters}
+                sort={resultsSort}
+                onSortChange={handleSortChange}
                 view={resultsView}
                 onViewChange={handleViewChange}
                 labels={{
@@ -701,6 +738,8 @@ const TheExchangeClient = ({
                   keyboardHint: t("search.keyboardHint"),
                   sort: tCatalog("toolbar.sort"),
                   sortNameAsc: tToolbar("sortNameAsc"),
+                  sortNameDesc: tToolbar("sortNameDesc"),
+                  sortOffersNewest: tToolbar("sortOffersNewest"),
                   filters: tCatalog("toolbar.filters"),
                   filtersAria: tCatalog("toolbar.filtersAria", {
                     count: activeFilterCount,
@@ -761,6 +800,30 @@ const TheExchangeClient = ({
             </div>
 
             <OrnamentalFrame size="standard" className="bg-noir-black/30 p-3 md:p-4">
+              {resultsMode === "results" || resultsMode === "stale" ? (
+                <div className="mb-4 flex flex-col gap-1 text-sm text-noir-gold/80 sm:flex-row sm:items-center sm:justify-between">
+                  <p>
+                    {pagination.totalPages <= 1
+                      ? tListings("resultsMeta", {
+                          fragrances: totalCount,
+                          offers: pageOfferCount,
+                        })
+                      : tListings("resultsFragranceCount", {
+                          count: totalCount,
+                        })}
+                  </p>
+                  {availablePerfumes.length > 0 ? (
+                    <p>
+                      {tListings("resultsRange", {
+                        from: rangeFrom,
+                        to: rangeTo,
+                        total: totalCount,
+                      })}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+
               {resultsMode === "failure" ? (
                 <ExchangeResultsStatePanel
                   mode="failure"
@@ -788,7 +851,7 @@ const TheExchangeClient = ({
                         "pointer-events-none opacity-50",
                         resultsView === "list"
                           ? "flex flex-col gap-3"
-                          : "grid auto-rows-fr grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+                          : "grid auto-rows-fr grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3"
                       )}
                     >
                       {availablePerfumes.map((perfume, index) => (
@@ -864,7 +927,7 @@ const TheExchangeClient = ({
                   className={
                     resultsView === "list"
                       ? "flex flex-col gap-3"
-                      : "grid auto-rows-fr grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+                      : "grid auto-rows-fr grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3"
                   }
                 >
                   {availablePerfumes.map((perfume, index) => {
@@ -945,22 +1008,16 @@ const TheExchangeClient = ({
                 </ul>
               ) : null}
 
-              {resultsMode === "results" && pagination.totalPages > 1 ? (
+              {(resultsMode === "results" || resultsMode === "stale") &&
+              pagination.totalPages > 1 ? (
                 <PaginationBar
-                  className="pt-6"
+                  className="border-t border-noir-gold/20 pt-6 mt-6"
                   currentPage={pagination.currentPage}
                   totalPages={pagination.totalPages}
                   onPageChange={handlePageChange}
                 />
               ) : null}
             </OrnamentalFrame>
-
-            {recentListings.length > 0 || followedActivity.length > 0 ? (
-              <ActivityFeedSection
-                listings={recentListings}
-                followedItems={followedActivity}
-              />
-            ) : null}
 
             {viewerId && wishlistMatches.length > 0 ? (
               <WishlistMatchesSection

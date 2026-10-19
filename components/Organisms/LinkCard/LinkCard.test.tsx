@@ -267,10 +267,11 @@ describe("LinkCard", () => {
   })
 
   describe("Styling", () => {
-    it("applies noir border class", () => {
+    it("applies a plain gold border without ornamental corners", () => {
       const { container } = renderLinkCard(<LinkCard data={mockPerfumeData} type="perfume" />)
-      const card = container.querySelector(".noir-border")
+      const card = container.querySelector(".border-noir-gold\\/70")
       expect(card).toBeInTheDocument()
+      expect(container.querySelector(".noir-border")).not.toBeInTheDocument()
     })
 
     it("applies transition classes", () => {

@@ -26,7 +26,7 @@ export const ArticleCard = ({ article, variant = "default" }: ArticleCardProps) 
 
   if (variant === "home") {
     return (
-      <article className="group noir-border relative flex h-full w-full flex-col bg-noir-dark before:z-10 after:z-10">
+      <article className="group relative flex h-full w-full flex-col overflow-hidden border border-noir-gold/70 bg-noir-dark hover:border-noir-gold">
         <PrefetchLink
           href={`${BLOG_BASE_PATH}/${article.slug}`}
           className="flex h-full flex-col focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-gold"
@@ -66,10 +66,10 @@ export const ArticleCard = ({ article, variant = "default" }: ArticleCardProps) 
 
   if (isFeatured) {
     return (
-      <article className="group noir-border bg-noir-dark/50 overflow-hidden">
+      <article className="group overflow-hidden border border-noir-gold/70 bg-noir-dark/50 hover:border-noir-gold">
         <PrefetchLink
           href={`${BLOG_BASE_PATH}/${article.slug}`}
-          className="grid md:grid-cols-2 gap-0"
+          className="grid gap-0 md:grid-cols-2"
           prefetch={false}
         >
           <div className="relative aspect-[16/10] md:aspect-auto md:min-h-[280px] w-full bg-noir-black overflow-hidden">
@@ -117,10 +117,10 @@ export const ArticleCard = ({ article, variant = "default" }: ArticleCardProps) 
   }
 
   return (
-    <article className="group noir-border bg-noir-dark/50 overflow-hidden flex flex-col h-full">
+    <article className="group flex h-full flex-col overflow-hidden border border-noir-gold/70 bg-noir-dark/50 hover:border-noir-gold">
       <PrefetchLink
         href={`${BLOG_BASE_PATH}/${article.slug}`}
-        className="flex flex-col h-full"
+        className="flex h-full flex-col"
         prefetch={false}
       >
         <div className="relative aspect-[16/10] w-full bg-noir-black overflow-hidden">

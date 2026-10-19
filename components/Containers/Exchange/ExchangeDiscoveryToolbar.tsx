@@ -1,12 +1,13 @@
 "use client"
 
-import type { RefObject } from "react"
+import type { ChangeEvent, ReactNode, RefObject } from "react"
 import { FiFilter } from "react-icons/fi"
 import { LuLayoutGrid, LuList } from "react-icons/lu"
 
 import { Button } from "@/components/Atoms/Button/Button"
 import Select from "@/components/Atoms/Select/Select"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
+import type { ExchangeGroupSort } from "@/utils/exchange-constants"
 import { styleMerge } from "@/utils/styleUtils"
 
 export type ExchangeBrowseView = "grid" | "list"
@@ -16,6 +17,8 @@ export type ExchangeDiscoveryToolbarLabels = {
   keyboardHint: string
   sort: string
   sortNameAsc: string
+  sortNameDesc: string
+  sortOffersNewest: string
   filters: string
   filtersAria: string
   view: string
@@ -30,6 +33,8 @@ export type ExchangeDiscoveryToolbarProps = {
   onSearchChange: (value: string) => void
   activeFilterCount: number
   onOpenFilters: () => void
+  sort: ExchangeGroupSort
+  onSortChange: (sort: ExchangeGroupSort) => void
   view: ExchangeBrowseView
   onViewChange: (view: ExchangeBrowseView) => void
   labels: ExchangeDiscoveryToolbarLabels
@@ -45,6 +50,8 @@ export const ExchangeDiscoveryToolbar = ({
   onSearchChange,
   activeFilterCount,
   onOpenFilters,
+  sort,
+  onSortChange,
   view,
   onViewChange,
   labels,
@@ -52,16 +59,26 @@ export const ExchangeDiscoveryToolbar = ({
 }: ExchangeDiscoveryToolbarProps) => {
   const sortOptions = [
     {
+      id: "offers-newest",
+      name: "offers-newest",
+      label: labels.sortOffersNewest,
+    },
+    {
       id: "name-asc",
       name: "name-asc",
       label: labels.sortNameAsc,
+    },
+    {
+      id: "name-desc",
+      name: "name-desc",
+      label: labels.sortNameDesc,
     },
   ]
 
   const viewButton = (
     value: ExchangeBrowseView,
     label: string,
-    icon: React.ReactNode
+    icon: ReactNode
   ) => (
     <Button
       type="button"
@@ -72,7 +89,7 @@ export const ExchangeDiscoveryToolbar = ({
       title={label}
       onClick={() => onViewChange(value)}
       className={styleMerge(
-        `${controlHeight} flex w-11 items-center justify-center rounded-none border-0 transition-colors`,
+        `${controlHeight} flex items-center justify-center rounded-none border-0 px-3 transition-colors md:min-w-[3.25rem] md:px-4`,
         view === value
           ? "bg-noir-gold text-noir-black"
           : "bg-noir-black/60 text-noir-gold hover:bg-noir-gold/20"
@@ -82,10 +99,14 @@ export const ExchangeDiscoveryToolbar = ({
     </Button>
   )
 
+  const handleSortChange = (evt: ChangeEvent<HTMLSelectElement>) => {
+    onSortChange(evt.target.value as ExchangeGroupSort)
+  }
+
   return (
     <div className={styleMerge("space-y-3", className)}>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 lg:flex lg:flex-wrap">
-        <div className="min-w-0 lg:min-w-[16rem] lg:flex-1">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="min-w-0 flex-1">
           <SearchInput
             id={searchId}
             inputRef={searchInputRef}
@@ -95,16 +116,15 @@ export const ExchangeDiscoveryToolbar = ({
           />
         </div>
 
-        <div className="col-span-2 flex flex-wrap items-center gap-2 md:gap-3 lg:contents">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3">
           <Select
             selectId="exchange-sort"
             ariaLabel={labels.sort}
             selectData={sortOptions}
-            value="name-asc"
-            action={() => undefined}
-            disabled
+            value={sort}
+            action={handleSortChange}
             size="compact"
-            className={`${controlHeight} w-full min-w-0 max-w-none flex-1 bg-noir-black/60 pr-0 text-sm lg:w-auto lg:min-w-[12rem] lg:flex-none`}
+            className={`${controlHeight} min-w-0 flex-1 bg-noir-black/60 pr-0 text-sm sm:min-w-[14rem] sm:flex-none lg:min-w-[16rem]`}
           />
           <Button
             type="button"
@@ -128,23 +148,22 @@ export const ExchangeDiscoveryToolbar = ({
               {activeFilterCount}
             </span>
           </Button>
-        </div>
-
-        <div
-          role="group"
-          aria-label={labels.view}
-          className="col-start-2 row-start-1 flex shrink-0 overflow-hidden rounded-sm border border-noir-gold"
-        >
-          {viewButton(
-            "grid",
-            labels.gridView,
-            <LuLayoutGrid className="h-5 w-5" aria-hidden />
-          )}
-          {viewButton(
-            "list",
-            labels.listView,
-            <LuList className="h-5 w-5" aria-hidden />
-          )}
+          <div
+            role="group"
+            aria-label={labels.view}
+            className="ml-auto flex shrink-0 overflow-hidden rounded-sm border border-noir-gold sm:ml-0"
+          >
+            {viewButton(
+              "grid",
+              labels.gridView,
+              <LuLayoutGrid className="h-5 w-5 md:h-6 md:w-6" aria-hidden />
+            )}
+            {viewButton(
+              "list",
+              labels.listView,
+              <LuList className="h-5 w-5 md:h-6 md:w-6" aria-hidden />
+            )}
+          </div>
         </div>
       </div>
       <p className="text-center text-xs text-noir-gold-500 lg:text-left">

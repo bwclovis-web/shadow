@@ -7,38 +7,44 @@ type ExchangeBottleMarkProps = {
 /**
  * Outline bottle mark reused from NoirRating `PerfumeBottle` default path.
  * Decorative only — no rating fill / liquid behavior.
+ * Wider body + left-aligned viewBox so it sits flush with following text.
  */
 export const ExchangeBottleMark = ({ className }: ExchangeBottleMarkProps) => (
   <svg
     aria-hidden
-    viewBox="0 0 30 34"
+    viewBox="0 0 18 34"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
-    className={styleMerge("h-4 w-4 shrink-0 text-noir-gold", className)}
+    preserveAspectRatio="xMinYMid meet"
+    className={styleMerge(
+      "h-6 w-[14px] shrink-0 text-noir-gold",
+      className
+    )}
   >
-    {/* Cap — same proportions as components/Organisms/NoirRating/PerfumeBottle */}
+    {/* Cap */}
     <rect
-      x="13.5"
-      y="2"
-      width="3"
-      height="2"
-      rx="1.5"
+      x="6"
+      y="1.5"
+      width="6"
+      height="2.5"
+      rx="1.25"
       stroke="currentColor"
-      strokeWidth="1"
+      strokeWidth="2.5"
     />
     <rect
-      x="13.5"
+      x="6.5"
       y="4"
-      width="3"
+      width="5"
       height="4"
       stroke="currentColor"
-      strokeWidth="1"
+      strokeWidth="2.5"
     />
-    {/* Default elegant bottle body */}
+    {/* Wider bottle body */}
     <path
-      d="M12 8c0-1 1-2 3-2s3 1 3 2v20c0 2-1 3-3 3s-3-1-3-3V8z"
+      d="M4.5 8c0-1.2 1.5-2.5 4.5-2.5S13.5 6.8 13.5 8v19.5c0 2.2-1.5 3.5-4.5 3.5S4.5 29.7 4.5 27.5V8z"
       stroke="currentColor"
-      strokeWidth="1.5"
+      strokeWidth="2.5"
+      strokeLinejoin="round"
     />
   </svg>
 )

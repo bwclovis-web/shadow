@@ -84,7 +84,8 @@ function CompareColumn({
   const exchangeHref = `${EXCHANGE_PATH}?${DISCOVERY_QUERY.perfume}=${encodeURIComponent(dto.id)}`
 
   return (
-    <article className="noir-border bg-white/5 flex flex-col gap-3 overflow-hidden">
+    <article className="noir-border flex flex-col gap-3 bg-white/5">
+      <div className="flex flex-col gap-3 overflow-hidden">
       {bestForYou ? (
         <div
           className="mx-3 mt-3 rounded-sm border border-noir-gold/50 bg-noir-gold/10 px-3 py-2 text-center"
@@ -169,6 +170,7 @@ function CompareColumn({
         >
           {t("viewOnExchange")}
         </PrefetchLink>
+      </div>
       </div>
     </article>
   )

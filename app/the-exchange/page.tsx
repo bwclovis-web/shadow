@@ -6,7 +6,6 @@ import { buildItemListJsonLd } from "@/lib/seo/json-ld"
 import { getPerfumeHouseSummaryById } from "@/models/house.server"
 import { getPerfumeById } from "@/models/perfume.server"
 import { getExchangeFragranceGroupsPage } from "@/models/perfume-exchange-groups.server"
-import { getCachedRecentlyListedActivity, getFollowedActivity } from "@/models/activity-feed.server"
 import { getCachedSeasonalTrendingPerfumes } from "@/models/seasonal-trending.server"
 import { getExchangePalateRecommendations } from "@/models/exchange-palate.server"
 import { getMutualTradeSuggestions } from "@/models/mutual-trade-suggestions.server"
@@ -16,7 +15,10 @@ import { loadTraderReputationsForUserIds } from "@/services/reputation/loadReput
 import { listOpenSplitChipsForPerfumes } from "@/models/decant-split.server"
 import { enrichWishlistExchangeMatches } from "@/services/trade-match"
 import { isDecantSplitsEnabled } from "@/utils/decant-splits-enabled.server"
-import { EXCHANGE_GROUP_PAGE_SIZE } from "@/utils/exchange-constants"
+import {
+  EXCHANGE_GROUP_PAGE_SIZE,
+  parseExchangeGroupSort,
+} from "@/utils/exchange-constants"
 import {
   discoveryFiltersToSearchParams,
   parseDiscoveryFiltersFromSearchParams,
@@ -76,6 +78,11 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
   const searchQuery = (
     typeof params.q === "string" ? params.q : (params.q?.[0] ?? "")
   ).trim()
+  const sortParam =
+    typeof params.sort === "string"
+      ? params.sort
+      : (params.sort?.[0] ?? undefined)
+  const sort = parseExchangeGroupSort(sortParam)
   const discovery = parseDiscoveryFiltersFromSearchParams(params)
   const initialPage = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
 
@@ -102,6 +109,7 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
     search: searchQuery || undefined,
     discovery,
     viewerId,
+    sort,
   }).then(
     page => ({ ...page, loadFailed: false as const }),
     error => {
@@ -120,8 +128,6 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
     initialHouse,
     initialPerfume,
     wishlistMatches,
-    recentListings,
-    followedActivity,
     seasonalTrending,
     palateRecommendations,
     mutualSwapSuggestions,
@@ -139,8 +145,6 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
         )
       : Promise.resolve(null),
     viewerId ? getWishlistExchangeMatches(viewerId) : Promise.resolve([]),
-    getCachedRecentlyListedActivity(12),
-    viewerId ? getFollowedActivity(viewerId, 12) : Promise.resolve([]),
     getCachedSeasonalTrendingPerfumes(10),
     viewerId
       ? getExchangePalateRecommendations(viewerId).catch(error => {
@@ -229,13 +233,12 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
         }
         pagination={pagination}
         searchQuery={searchQuery}
+        sort={sort}
         filterQueryString={filterQueryString}
         initialNoteTags={initialNoteTags}
         initialHouse={initialHouse}
         initialPerfume={initialPerfume}
         wishlistMatches={enrichedWishlistMatches}
-        recentListings={recentListings}
-        followedActivity={followedActivity}
         seasonalTrending={seasonalTrending}
         traderReputationByUserId={traderReputationByUserId}
         viewerId={viewerId}

@@ -70,6 +70,7 @@ export const exchangeCommittedFilterKey = (search: URLSearchParams): string => {
   const next = new URLSearchParams(search)
   next.delete("pg")
   next.delete("view")
+  next.delete("sort")
   next.delete("previewState")
   return next.toString()
 }

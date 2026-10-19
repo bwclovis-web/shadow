@@ -105,43 +105,47 @@ const RecommendedForYou = ({
           return (
             <li
               key={similar.id}
-              className="h-full noir-border relative w-full transition-colors duration-300 ease-in-out hover:bg-white/5 flex flex-col"
+              className="relative flex h-full w-full flex-col overflow-hidden border border-noir-gold/70 bg-noir-dark/40 transition-colors duration-300 ease-in-out hover:border-noir-gold hover:bg-white/5"
             >
               <PrefetchLink
                 href={`/perfume/${similar.slug}`}
                 prefetch={false}
-                className="block p-2 flex-1 min-h-0"
+                className="block min-h-0 flex-1 p-2"
               >
-                <h3 className="text-center block text-sm tracking-wide py-2 font-semibold text-noir-gold leading-tight capitalize line-clamp-2">
+                <h3 className="line-clamp-2 block py-2 text-center text-sm font-semibold capitalize leading-tight tracking-wide text-noir-gold">
                   {similar.name}
                 </h3>
                 <Image
                   src={recImageSrc}
-                  alt={tSingleHouse("perfumeBottleAltText", { name: similar.name })}
+                  alt={tSingleHouse("perfumeBottleAltText", {
+                    name: similar.name,
+                  })}
                   priority={index < 3}
                   width={128}
                   height={128}
                   quality={75}
-                  className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-lg mb-2 mx-auto dark:brightness-90"
+                  className="mx-auto mb-2 h-24 w-24 rounded-lg object-cover sm:h-28 sm:w-28 dark:brightness-90"
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
                   style={
                     {
-                      viewTransitionName: perfumeImageTransitionName(similar.id),
+                      viewTransitionName: perfumeImageTransitionName(
+                        similar.id
+                      ),
                     } as React.CSSProperties
                   }
                 />
-                {similar.perfumeHouse && (
-                  <p className="text-center text-xs text-noir-gold-500/80 truncate">
+                {similar.perfumeHouse ? (
+                  <p className="truncate text-center text-xs text-noir-gold-500/80">
                     {similar.perfumeHouse.name}
                   </p>
-                )}
+                ) : null}
               </PrefetchLink>
-              {!sharedListReason && similar.reason != null && (
-                <div className="flex justify-center pb-2 px-2">
+              {!sharedListReason && similar.reason != null ? (
+                <div className="flex justify-center px-2 pb-2">
                   <RecommendationReasonLine reason={similar.reason} />
                 </div>
-              )}
-              {enableFeedback && (
+              ) : null}
+              {enableFeedback ? (
                 <div className="flex flex-wrap justify-center gap-1 px-2 pb-3">
                   {feedbackActions.map(fa => (
                     <button
@@ -149,13 +153,13 @@ const RecommendedForYou = ({
                       type="button"
                       disabled={pendingId === similar.id}
                       onClick={() => void sendFeedback(similar.id, fa.action)}
-                      className="text-[10px] uppercase tracking-wide px-2 py-1 rounded border border-noir-gold/30 text-noir-gold-500 hover:bg-white/5 disabled:opacity-50"
+                      className="rounded border border-noir-gold/30 px-2 py-1 text-[10px] uppercase tracking-wide text-noir-gold-500 hover:bg-white/5 disabled:opacity-50"
                     >
                       {fa.label}
                     </button>
                   ))}
                 </div>
-              )}
+              ) : null}
             </li>
           )
         })}

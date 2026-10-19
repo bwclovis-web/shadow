@@ -237,16 +237,77 @@ img {
   );
 }
 
+/*
+ * Four SVG corner flourishes (same art as `OrnamentalFrame` / `OrnamentalCorner`).
+ * SVGs use a padded viewBox so curls are not clipped as backgrounds.
+ * Join (~3,3 in the unpadded art) is aligned to the border corner via
+ * inset + background-position math (corner 20px, viewBox 40 → join @ 3.5px).
+ * Keep `overflow` visible on this element; clip media on an inner wrapper.
+ */
 .noir-border {
-  @apply border-4 border-double border-noir-gold  transition-all duration-300 ease-in-out
-        before:content-[''] before:absolute before:w-3 before:h-3 before:border-2 before:border-noir-gold before:top-0 before:left-0 before:border-r-0 before:border-b-0
-        after:content-[''] after:absolute after:w-3 after:h-3 after:border-2 after:border-noir-gold after:bottom-0 after:right-0 after:border-l-0 after:border-t-0;
+  --noir-corner-size: 20px;
+  --noir-corner-join: 3.5px; /* 7/40 * 20 */
+  --noir-corner-pad: 6px;
+  --noir-corner-pos: calc(var(--noir-corner-pad) - var(--noir-corner-join));
+  @apply relative overflow-visible border border-noir-gold transition-all duration-300 ease-in-out;
+}
+
+.noir-border::before {
+  content: "";
+  position: absolute;
+  inset: calc(-1 * var(--noir-corner-pad));
+  z-index: 10;
+  pointer-events: none;
+  background-image:
+    url("/images/ornamental-corner.svg"),
+    url("/images/ornamental-corner-tr.svg"),
+    url("/images/ornamental-corner-bl.svg"),
+    url("/images/ornamental-corner-br.svg");
+  background-repeat: no-repeat;
+  background-size: var(--noir-corner-size) var(--noir-corner-size);
+  background-position:
+    left var(--noir-corner-pos) top var(--noir-corner-pos),
+    right var(--noir-corner-pos) top var(--noir-corner-pos),
+    left var(--noir-corner-pos) bottom var(--noir-corner-pos),
+    right var(--noir-corner-pos) bottom var(--noir-corner-pos);
+}
+
+.noir-border::after {
+  content: none;
+  display: none;
 }
 
 .noir-border-dk {
-  @apply border-6 border-double border-noir-dark  transition-all duration-300 ease-in-out
-        before:content-[''] before:absolute before:w-3 before:h-3 before:border-2 before:border-noir-dark/80 before:top-0 before:left-0 before:border-r-0 before:border-b-0
-        after:content-[''] after:absolute after:w-3 after:h-3 after:border-2 after:border-noir-dark/80 after:bottom-0 after:right-0 after:border-l-0 after:border-t-0;
+  --noir-corner-size: 20px;
+  --noir-corner-join: 3.5px;
+  --noir-corner-pad: 6px;
+  --noir-corner-pos: calc(var(--noir-corner-pad) - var(--noir-corner-join));
+  @apply relative overflow-visible border border-noir-dark transition-all duration-300 ease-in-out;
+}
+
+.noir-border-dk::before {
+  content: "";
+  position: absolute;
+  inset: calc(-1 * var(--noir-corner-pad));
+  z-index: 10;
+  pointer-events: none;
+  background-image:
+    url("/images/ornamental-corner-dark.svg"),
+    url("/images/ornamental-corner-dark-tr.svg"),
+    url("/images/ornamental-corner-dark-bl.svg"),
+    url("/images/ornamental-corner-dark-br.svg");
+  background-repeat: no-repeat;
+  background-size: var(--noir-corner-size) var(--noir-corner-size);
+  background-position:
+    left var(--noir-corner-pos) top var(--noir-corner-pos),
+    right var(--noir-corner-pos) top var(--noir-corner-pos),
+    left var(--noir-corner-pos) bottom var(--noir-corner-pos),
+    right var(--noir-corner-pos) bottom var(--noir-corner-pos);
+}
+
+.noir-border-dk::after {
+  content: none;
+  display: none;
 }
 
 /* Enhanced animation performance optimizations */

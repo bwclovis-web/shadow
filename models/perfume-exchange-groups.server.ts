@@ -4,10 +4,12 @@ import { prisma } from "@/lib/db"
 import { loadTraderReputationsForUserIds } from "@/services/reputation/loadReputationInputs.server"
 import { getTraderDisplayName } from "@/utils/user"
 import {
+  DEFAULT_EXCHANGE_GROUP_SORT,
   EXCHANGE_GROUP_PAGE_SIZE,
   EXCHANGE_MIN_REP_TRADER_CAP,
   EXCHANGE_OFFER_PAGE_SIZE,
   EXCHANGE_PREVIEW_IMAGE_MAX,
+  type ExchangeGroupSort,
 } from "@/utils/exchange-constants"
 import type { PerfumeDiscoveryFilters } from "@/utils/discovery-filters"
 import {
@@ -172,18 +174,84 @@ const resolveMinRepEligibleUserIds = async (
   })
 }
 
+type PerfumeRow = {
+  id: string
+  name: string
+  slug: string
+  image: string | null
+  perfumeHouse: { id: string; name: string; slug: string } | null
+}
+
+const perfumeBrowseSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  image: true,
+  perfumeHouse: {
+    select: { id: true, name: true, slug: true },
+  },
+} as const
+
+const fetchPerfumeRowsBySort = async (options: {
+  sort: ExchangeGroupSort
+  perfumeWhere: Prisma.PerfumeWhereInput
+  listingWhere: Prisma.UserPerfumeWhereInput
+  skip: number
+  take: number
+}): Promise<PerfumeRow[]> => {
+  const { sort, perfumeWhere, listingWhere, skip, take } = options
+
+  if (sort === "offers-newest") {
+    const ranked = await prisma.userPerfume.groupBy({
+      by: ["perfumeId"],
+      where: {
+        AND: [listingWhere, { perfume: perfumeWhere }],
+      },
+      _max: { createdAt: true },
+      orderBy: [{ _max: { createdAt: "desc" } }, { perfumeId: "asc" }],
+      skip,
+      take,
+    })
+    if (ranked.length === 0) return []
+
+    const ids = ranked.map(row => row.perfumeId)
+    const rows = await prisma.perfume.findMany({
+      where: { id: { in: ids } },
+      select: perfumeBrowseSelect,
+    })
+    const byId = new Map(rows.map(row => [row.id, row]))
+    return ids.flatMap(id => {
+      const row = byId.get(id)
+      return row ? [row] : []
+    })
+  }
+
+  return prisma.perfume.findMany({
+    where: perfumeWhere,
+    select: perfumeBrowseSelect,
+    orderBy:
+      sort === "name-desc"
+        ? [{ name: "desc" }, { id: "asc" }]
+        : [{ name: "asc" }, { id: "asc" }],
+    skip,
+    take,
+  })
+}
+
 export const getExchangeFragranceGroupsPage = async (options: {
   page?: number
   pageSize?: number
   search?: string
   discovery?: PerfumeDiscoveryFilters
   viewerId?: string | null
+  sort?: ExchangeGroupSort
 }): Promise<ExchangeFragranceGroupsPage> => {
   const pageSize = Math.min(
     Math.max(options.pageSize ?? EXCHANGE_GROUP_PAGE_SIZE, 1),
     EXCHANGE_GROUP_PAGE_SIZE
   )
   const requestedPage = Math.max(options.page ?? 1, 1)
+  const sort = options.sort ?? DEFAULT_EXCHANGE_GROUP_SORT
 
   const { perfumeWhere, listingWhere } = await resolveExchangeEligibility({
     search: options.search,
@@ -200,18 +268,10 @@ export const getExchangeFragranceGroupsPage = async (options: {
   const skip = hasAnyData ? (currentPage - 1) * pageSize : 0
 
   const perfumeRows = hasAnyData
-    ? await prisma.perfume.findMany({
-        where: perfumeWhere,
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          image: true,
-          perfumeHouse: {
-            select: { id: true, name: true, slug: true },
-          },
-        },
-        orderBy: [{ name: "asc" }, { id: "asc" }],
+    ? await fetchPerfumeRowsBySort({
+        sort,
+        perfumeWhere,
+        listingWhere,
         skip,
         take: pageSize,
       })
@@ -231,14 +291,6 @@ export const getExchangeFragranceGroupsPage = async (options: {
       hasPrevPage: hasAnyData ? currentPage > 1 : false,
     },
   }
-}
-
-type PerfumeRow = {
-  id: string
-  name: string
-  slug: string
-  image: string | null
-  perfumeHouse: { id: string; name: string; slug: string } | null
 }
 
 const attachCountsAndPreviews = async (

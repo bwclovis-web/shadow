@@ -42,6 +42,7 @@
     "removeItem": "Retirer {name} de la comparaison",
     "toggleAdd": "Ajouter à la comparaison",
     "toggleRemove": "Retirer de la comparaison",
+    "buttonLabel": "Comparer",
     "maxReached": "Le bac de comparaison est plein (maximum {max} parfums)",
     "pageHeading": "Comparer",
     "pageSubheading": "Notes, avis, disponibilité et maison",
@@ -1967,6 +1968,9 @@
       "photoIndex": "Photo {current} sur {total}",
       "offerCount": "{count, plural, one {# offre correspondante} other {# offres correspondantes}}",
       "viewCollectors": "Voir les collectionneurs",
+      "resultsFragranceCount": "{count, plural, one {# fragrance} other {# fragrances}}",
+      "resultsMeta": "{fragrances, plural, one {# fragrance} other {# fragrances}} · {offers, plural, one {# offre} other {# offres}}",
+      "resultsRange": "Affichage de {from, number}–{to, number} sur {total, number}",
       "groupLightboxTitle": "Photos pour {name}",
       "fillRemaining": "Environ {percent}% restant",
       "offerUnavailable": "Cette offre n’est plus disponible.",
@@ -1994,6 +1998,8 @@
     },
     "toolbar": {
       "sortNameAsc": "Nom (A–Z)",
+      "sortNameDesc": "Nom (Z–A)",
+      "sortOffersNewest": "Offres les plus récentes",
       "tradeShortcutsAria": "Raccourcis de préférence d’échange"
     }
   },

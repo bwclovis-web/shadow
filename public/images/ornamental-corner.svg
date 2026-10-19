@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 40 40" fill="none">
+  <!-- viewBox padded so outward curls are not clipped as CSS backgrounds -->
+  <path d="M9 3 H28" stroke="#C9A227" stroke-width="1" stroke-linecap="round"/>
+  <path d="M3 9 V28" stroke="#C9A227" stroke-width="1" stroke-linecap="round"/>
+  <path d="M9 3 C5.5 3 3 5.5 3 9" stroke="#C9A227" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M16 3 C19 3 20.5 1.2 19.6 -0.6 C18.2 -2.8 13.8 -1.4 14.6 1.2 C15 2.2 16.4 3 18 3" stroke="#C9A227" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M3 16 C3 19 1.2 20.5 -0.6 19.6 C-2.8 18.2 -1.4 13.8 1.2 14.6 C2.2 15 3 16.4 3 18" stroke="#C9A227" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M7.5 3 C7.8 1.6 9.2 0.9 10.4 1.6" stroke="#C9A227" stroke-width="0.9" stroke-linecap="round"/>
+  <path d="M3 7.5 C1.6 7.8 0.9 9.2 1.6 10.4" stroke="#C9A227" stroke-width="0.9" stroke-linecap="round"/>
+</svg>

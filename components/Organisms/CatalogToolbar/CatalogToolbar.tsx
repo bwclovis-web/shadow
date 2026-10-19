@@ -4,6 +4,7 @@ import { FiFilter } from "react-icons/fi"
 import { LuLayoutGrid, LuList } from "react-icons/lu"
 
 import { Button } from "@/components/Atoms/Button/Button"
+import { OrnamentalFrame } from "@/components/Atoms/OrnamentalFrame"
 import Select from "@/components/Atoms/Select/Select"
 import AlphabeticalNav from "@/components/Organisms/AlphabeticalNav"
 import SearchBar from "@/components/Organisms/SearchBar/SearchBar"
@@ -78,72 +79,72 @@ const CatalogToolbar = ({
   )
 
   return (
-    <div
-      className={styleMerge(
-        "space-y-4 border border-noir-gold/50 bg-noir-black/40 p-3 md:p-4",
-        className
-      )}
+    <OrnamentalFrame
+      size="standard"
+      className={styleMerge("bg-noir-black/40", className)}
     >
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 lg:flex">
-        <div className="min-w-0 lg:flex-1">
-          <SearchBar
-            searchType={searchType}
-            placeholder={labels.searchPlaceholder}
-            className="h-11 py-0 text-sm md:py-0 md:text-base"
-          />
-        </div>
-        {hideRefinements ? null : (
-          <div className="col-span-2 flex items-center gap-2 md:gap-3">
-            <Select
-              selectId={`${searchType}-catalog-sort`}
-              ariaLabel={labels.sort}
-              selectData={sortOptions}
-              value={sort}
-              action={evt => onSortChange(evt.target.value)}
-              size="compact"
-              className={`${controlHeight} w-full min-w-0 max-w-none flex-1 bg-noir-black/60 pr-0 text-sm lg:w-auto lg:min-w-[12rem] lg:flex-none`}
+      <div className="space-y-4 p-3 md:p-4">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 lg:flex">
+          <div className="min-w-0 lg:flex-1">
+            <SearchBar
+              searchType={searchType}
+              placeholder={labels.searchPlaceholder}
+              className="h-11 py-0 text-sm md:py-0 md:text-base"
             />
-            <Button
-              type="button"
-              variant={activeFilterCount > 0 ? "primary" : "secondary"}
-              size={null}
-              aria-label={labels.filtersAria}
-              onClick={onOpenFilters}
-              className={`${controlHeight} flex w-auto shrink-0 items-center gap-2 px-3 text-sm md:px-4`}
-            >
-              <FiFilter className="h-4 w-4" aria-hidden />
-              <span>{labels.filters}</span>
-              <span
-                aria-hidden
-                className={styleMerge(
-                  "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-semibold",
-                  activeFilterCount > 0
-                    ? "bg-noir-black text-noir-gold"
-                    : "border border-noir-gold/50 text-noir-gold-100"
-                )}
-              >
-                {activeFilterCount}
-              </span>
-            </Button>
           </div>
-        )}
-        <div
-          role="group"
-          aria-label={labels.view}
-          className="col-start-2 row-start-1 flex shrink-0 overflow-hidden rounded-sm border border-noir-gold"
-        >
-          {viewButton("grid", labels.gridView, <LuLayoutGrid className="h-5 w-5" aria-hidden />)}
-          {viewButton("list", labels.listView, <LuList className="h-5 w-5" aria-hidden />)}
+          {hideRefinements ? null : (
+            <div className="col-span-2 flex items-center gap-2 md:gap-3">
+              <Select
+                selectId={`${searchType}-catalog-sort`}
+                ariaLabel={labels.sort}
+                selectData={sortOptions}
+                value={sort}
+                action={evt => onSortChange(evt.target.value)}
+                size="compact"
+                className={`${controlHeight} w-full min-w-0 max-w-none flex-1 bg-noir-black/60 pr-0 text-sm lg:w-auto lg:min-w-[12rem] lg:flex-none`}
+              />
+              <Button
+                type="button"
+                variant={activeFilterCount > 0 ? "primary" : "secondary"}
+                size={null}
+                aria-label={labels.filtersAria}
+                onClick={onOpenFilters}
+                className={`${controlHeight} flex w-auto shrink-0 items-center gap-2 px-3 text-sm md:px-4`}
+              >
+                <FiFilter className="h-4 w-4" aria-hidden />
+                <span>{labels.filters}</span>
+                <span
+                  aria-hidden
+                  className={styleMerge(
+                    "inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-semibold",
+                    activeFilterCount > 0
+                      ? "bg-noir-black text-noir-gold"
+                      : "border border-noir-gold/50 text-noir-gold-100"
+                  )}
+                >
+                  {activeFilterCount}
+                </span>
+              </Button>
+            </div>
+          )}
+          <div
+            role="group"
+            aria-label={labels.view}
+            className="col-start-2 row-start-1 flex shrink-0 overflow-hidden rounded-sm border border-noir-gold"
+          >
+            {viewButton("grid", labels.gridView, <LuLayoutGrid className="h-5 w-5" aria-hidden />)}
+            {viewButton("list", labels.listView, <LuList className="h-5 w-5" aria-hidden />)}
+          </div>
         </div>
+        <AlphabeticalNav
+          variant="compact"
+          ariaLabel={labels.letterNav}
+          selectedLetter={letter}
+          onLetterSelect={onLetterSelect}
+          onLetterHover={onLetterHover}
+        />
       </div>
-      <AlphabeticalNav
-        variant="compact"
-        ariaLabel={labels.letterNav}
-        selectedLetter={letter}
-        onLetterSelect={onLetterSelect}
-        onLetterHover={onLetterHover}
-      />
-    </div>
+    </OrnamentalFrame>
   )
 }
 

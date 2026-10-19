@@ -17,6 +17,7 @@ const messages = {
     removeItem: "Remove {name} from compare",
     toggleAdd: "Add to compare",
     toggleRemove: "Remove from compare",
+    buttonLabel: "Compare",
     maxReached: "Compare tray is full",
   },
 }

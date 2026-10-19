@@ -32,6 +32,22 @@ type GroupImageSource = {
   userPerfume: ExchangeUserPerfumeRow[]
 }
 
+const catalogSlot = (src: string): ExchangeGroupImageSlot => ({
+  src,
+  kind: "catalog",
+  condition: null,
+  tradePreference: null,
+  tradeOnly: false,
+})
+
+const fallbackSlot = (): ExchangeGroupImageSlot => ({
+  src: EXCHANGE_NEUTRAL_FALLBACK_IMAGE,
+  kind: "fallback",
+  condition: null,
+  tradePreference: null,
+  tradeOnly: false,
+})
+
 const sellerSlotsFromListings = (
   listings: ExchangeUserPerfumeRow[]
 ): ExchangeGroupImageSlot[] => {
@@ -56,8 +72,8 @@ const sellerSlotsFromListings = (
 }
 
 /**
- * Main photo + up to 2 side previews. Seller → catalog → neutral fallback.
- * One image uses a simple layout; 2+ seller thumbs use mosaic.
+ * Main photo + up to 2 side previews (mock: large left + two stacked right).
+ * Seller → catalog fill → neutral. Mosaic whenever there are 2+ distinct images.
  */
 export const resolveExchangeGroupImages = (
   source: GroupImageSource
@@ -66,31 +82,7 @@ export const resolveExchangeGroupImages = (
   const catalogSrc = normalizeRemoteImageSrc(source.image ?? null)
 
   if (sellerSlots.length === 0) {
-    const main: ExchangeGroupImageSlot = catalogSrc
-      ? {
-          src: catalogSrc,
-          kind: "catalog",
-          condition: null,
-          tradePreference: null,
-          tradeOnly: false,
-        }
-      : {
-          src: EXCHANGE_NEUTRAL_FALLBACK_IMAGE,
-          kind: "fallback",
-          condition: null,
-          tradePreference: null,
-          tradeOnly: false,
-        }
-    return {
-      main,
-      sides: [],
-      layout: "simple",
-      lightboxUrls: [main.src],
-    }
-  }
-
-  if (sellerSlots.length === 1) {
-    const main = sellerSlots[0]!
+    const main = catalogSrc ? catalogSlot(catalogSrc) : fallbackSlot()
     return {
       main,
       sides: [],
@@ -100,11 +92,38 @@ export const resolveExchangeGroupImages = (
   }
 
   const main = sellerSlots[0]!
-  const sides = sellerSlots.slice(1, 3)
+  const sideCandidates = sellerSlots.slice(1, 3)
+
+  // Prefer mosaic chrome: pad side slots with catalog when it differs from main.
+  if (
+    catalogSrc &&
+    catalogSrc !== main.src &&
+    !sideCandidates.some(slot => slot.src === catalogSrc)
+  ) {
+    while (sideCandidates.length < 2) {
+      sideCandidates.push(catalogSlot(catalogSrc))
+      break // one catalog fill is enough; second cell may stay empty
+    }
+  }
+
+  if (sideCandidates.length === 0) {
+    return {
+      main,
+      sides: [],
+      layout: "simple",
+      lightboxUrls: [main.src],
+    }
+  }
+
+  const sides = sideCandidates.slice(0, 2)
+  const lightboxUrls = [main.src, ...sides.map(s => s.src)].filter(
+    (url, index, all) => all.indexOf(url) === index
+  )
+
   return {
     main,
     sides,
     layout: "mosaic",
-    lightboxUrls: [main.src, ...sides.map(s => s.src)],
+    lightboxUrls,
   }
 }

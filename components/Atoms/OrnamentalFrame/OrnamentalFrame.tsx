@@ -24,17 +24,21 @@ const SIZE_PX: Record<OrnamentalFrameSize, number> = {
   standard: 28,
 }
 
+/** ViewBox coordinate where the corner join sits in `OrnamentalCorner`. */
+const CORNER_JOIN = 3
+const VIEWBOX = 32
+
 /**
  * Fine gold rectangular frame with curling corner flourishes.
- * Complements `.noir-border` (two L-corners) — do **not** replace auth, membership,
- * homepage gallery, journal, perfume-detail, or form chrome with this wrapper.
+ * Prefer this when you need the React corner (currentColor, size variants).
+ * Global `.noir-border` paints the same SVG flourishes via CSS backgrounds.
  *
  * Intended sizes:
  * - `compact` — discovery cards / listing rows
- * - `standard` — Exchange toolbar, results shell, secondary Exchange rails
+ * - `standard` — Exchange toolbar, results shell, secondary rails
  *
- * Corners are decorative (aria-hidden, pointer-events-none) and sit on the border
- * outside the content box so focus rings inside are not clipped.
+ * Outer frame stays `overflow-visible` so curls can paint outside; content is
+ * inset and clipped so media cannot hang over the border line.
  */
 export const OrnamentalFrame = <T extends ElementType = "div">({
   children,
@@ -45,8 +49,8 @@ export const OrnamentalFrame = <T extends ElementType = "div">({
 }: OrnamentalFrameProps<T>) => {
   const Tag = as ?? ("div" as ElementType)
   const cornerPx = SIZE_PX[size]
-  /** Pull ornaments slightly outward so curls clear the border without eating padding. */
-  const cornerOffset = size === "compact" ? "-3px" : "-4px"
+  /** Place viewBox join (3,3) on the element’s top-left border corner. */
+  const cornerOffset = `-${(CORNER_JOIN / VIEWBOX) * cornerPx}px`
 
   return (
     <Tag
@@ -59,41 +63,46 @@ export const OrnamentalFrame = <T extends ElementType = "div">({
       {/* Straight frame lines */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 border border-current"
+        className="pointer-events-none absolute inset-0 z-20 rounded-[1px] border border-current"
       />
 
       {/* Four corners: one SVG, mirrored for TR / BL / BR */}
       <span
         aria-hidden
-        className="pointer-events-none absolute z-10"
+        className="pointer-events-none absolute z-30"
         style={{ top: cornerOffset, left: cornerOffset }}
       >
         <OrnamentalCorner size={cornerPx} />
       </span>
       <span
         aria-hidden
-        className="pointer-events-none absolute z-10 origin-center scale-x-[-1]"
+        className="pointer-events-none absolute z-30 origin-center scale-x-[-1]"
         style={{ top: cornerOffset, right: cornerOffset }}
       >
         <OrnamentalCorner size={cornerPx} />
       </span>
       <span
         aria-hidden
-        className="pointer-events-none absolute z-10 origin-center scale-y-[-1]"
+        className="pointer-events-none absolute z-30 origin-center scale-y-[-1]"
         style={{ bottom: cornerOffset, left: cornerOffset }}
       >
         <OrnamentalCorner size={cornerPx} />
       </span>
       <span
         aria-hidden
-        className="pointer-events-none absolute z-10 origin-center scale-x-[-1] scale-y-[-1]"
+        className="pointer-events-none absolute z-30 origin-center scale-x-[-1] scale-y-[-1]"
         style={{ bottom: cornerOffset, right: cornerOffset }}
       >
         <OrnamentalCorner size={cornerPx} />
       </span>
 
-      {/* Content stays in normal flow; overflow-visible on parent keeps focus rings */}
-      <div className="relative">{children}</div>
+      {/*
+        Inset + clip so images/buttons stay inside the border.
+        Corners remain outside via the overflow-visible parent.
+      */}
+      <div className="relative z-0 box-border h-full min-h-0 min-w-0 overflow-hidden p-px">
+        {children}
+      </div>
     </Tag>
   )
 }

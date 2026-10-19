@@ -37,6 +37,8 @@ const GroupPhoto = ({
   sizes,
   className,
   onOpen,
+  /** Mock mosaics use cover; simple/fallback keep contain. */
+  fit = "cover",
 }: {
   slot: ExchangeGroupImageSlot
   alt: string
@@ -44,6 +46,7 @@ const GroupPhoto = ({
   sizes: string
   className?: string
   onOpen: () => void
+  fit?: "cover" | "contain"
 }) => (
   <button
     type="button"
@@ -59,7 +62,9 @@ const GroupPhoto = ({
       fill
       priority={priority}
       loading={priority ? undefined : "lazy"}
-      className="object-contain p-2"
+      className={
+        fit === "cover" ? "object-cover" : "object-contain p-2"
+      }
       sizes={sizes}
     />
   </button>
@@ -94,109 +99,118 @@ export const ExchangeFragranceGroupCard = ({
       : null
 
   const showCollectorsCta = perfume.offerCount > 0
+  const compareItem = {
+    id: perfume.id,
+    slug: perfume.slug,
+    name: perfume.name,
+    image: perfume.image ?? undefined,
+  }
 
   return (
     <OrnamentalFrame
       size="compact"
       as="article"
-      className={styleMerge(
-        "flex h-full min-w-0 flex-col bg-noir-dark/80",
-        className
-      )}
+      className={styleMerge("h-full min-w-0 bg-noir-dark/80", className)}
     >
-      <div className="relative isolate">
-        {resolved.layout === "simple" ? (
-          <div className="relative aspect-[4/3] w-full">
-            <GroupPhoto
-              slot={resolved.main}
-              alt=""
-              priority={imagePriority}
-              sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
-              onOpen={() => openLightbox(0)}
-            />
-          </div>
-        ) : (
-          <div className="grid aspect-[4/3] grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)] gap-1">
-            <GroupPhoto
-              slot={resolved.main}
-              alt=""
-              priority={imagePriority}
-              sizes="(min-width: 1024px) 22vw, (min-width: 768px) 35vw, 70vw"
-              onOpen={() => openLightbox(0)}
-            />
-            <div className="grid min-h-0 grid-rows-2 gap-1">
-              {resolved.sides.map((slot, index) => (
-                <GroupPhoto
-                  key={`${slot.userPerfumeId ?? slot.src}-${index}`}
-                  slot={slot}
-                  alt=""
-                  sizes="(min-width: 1024px) 12vw, 30vw"
-                  onOpen={() => openLightbox(index + 1)}
-                />
-              ))}
-              {resolved.sides.length === 1 ? (
-                <div className="bg-noir-black/60" aria-hidden />
-              ) : null}
+      <div className="flex h-full min-w-0 flex-col">
+        <div className="relative isolate overflow-hidden">
+          {resolved.layout === "simple" ? (
+            <div className="relative aspect-[3/2] w-full">
+              <GroupPhoto
+                slot={resolved.main}
+                alt=""
+                priority={imagePriority}
+                fit={
+                  resolved.main.kind === "seller" ||
+                  resolved.main.kind === "catalog"
+                    ? "cover"
+                    : "contain"
+                }
+                sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                onOpen={() => openLightbox(0)}
+              />
             </div>
+          ) : (
+            /* Mock: ~2:1 main/side, square side thumbs, visible gutters */
+            <div className="grid aspect-[3/2] grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-1.5 bg-noir-black p-1.5">
+              <GroupPhoto
+                slot={resolved.main}
+                alt=""
+                priority={imagePriority}
+                fit="cover"
+                sizes="(min-width: 1024px) 22vw, (min-width: 768px) 35vw, 70vw"
+                onOpen={() => openLightbox(0)}
+              />
+              <div className="grid min-h-0 grid-rows-2 gap-1.5">
+                {resolved.sides.map((slot, index) => (
+                  <GroupPhoto
+                    key={`${slot.userPerfumeId ?? slot.src}-${index}`}
+                    slot={slot}
+                    alt=""
+                    fit="cover"
+                    sizes="(min-width: 1024px) 11vw, 28vw"
+                    onOpen={() => openLightbox(index + 1)}
+                  />
+                ))}
+                {resolved.sides.length === 1 ? (
+                  <div className="bg-noir-dark/90" aria-hidden />
+                ) : null}
+              </div>
+            </div>
+          )}
+
+          {primaryBadges ? (
+            <div className="pointer-events-none absolute left-2.5 top-2.5 z-10">
+              <ListingImageBadges
+                condition={primaryBadges.condition}
+                tradePreference={primaryBadges.tradePreference}
+                tradeOnly={primaryBadges.tradeOnly}
+              />
+            </div>
+          ) : null}
+        </div>
+
+        <div className="flex flex-1 flex-col gap-2 p-3 md:p-4">
+          <h3 className="!text-xl !leading-snug break-words md:!text-2xl">
+            <PrefetchLink
+              href={perfumeHref}
+              className="text-noir-gold hover:text-noir-gold-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-gold"
+            >
+              {perfume.name}
+            </PrefetchLink>
+          </h3>
+
+          {houseName ? (
+            <p className="truncate text-sm text-noir-light/90">{houseName}</p>
+          ) : null}
+
+          {openSplitSlot}
+
+          <p className="flex items-center justify-start gap-1 text-sm font-medium text-noir-gold">
+            <ExchangeBottleMark className="h-7 w-[16px] shrink-0" />
+            <span>
+              {t("offerCount", {
+                count: perfume.offerCount,
+              })}
+            </span>
+          </p>
+
+          <div className="mt-auto flex flex-col gap-2 pt-1">
+            {showCollectorsCta ? (
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                background="gold"
+                className="w-full max-w-full"
+                onClick={e => onViewCollectors(e.currentTarget)}
+              >
+                {viewCollectorsLabel}
+              </Button>
+            ) : null}
+            <PerfumeCompareToggle item={compareItem} variant="labeled" />
           </div>
-        )}
-
-        {primaryBadges ? (
-          <div className="pointer-events-none absolute left-2 top-2 z-10">
-            <ListingImageBadges
-              condition={primaryBadges.condition}
-              tradePreference={primaryBadges.tradePreference}
-              tradeOnly={primaryBadges.tradeOnly}
-            />
-          </div>
-        ) : null}
-
-        <PerfumeCompareToggle
-          item={{
-            id: perfume.id,
-            slug: perfume.slug,
-            name: perfume.name,
-            image: perfume.image ?? undefined,
-          }}
-        />
-      </div>
-
-      <div className="flex flex-1 flex-col gap-2 p-3 md:p-4">
-        <h3 className="!text-xl !leading-snug break-words md:!text-2xl">
-          <PrefetchLink
-            href={perfumeHref}
-            className="text-noir-gold hover:text-noir-gold-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-gold"
-          >
-            {perfume.name}
-          </PrefetchLink>
-        </h3>
-        {houseName ? (
-          <p className="truncate text-sm text-noir-light/90">{houseName}</p>
-        ) : null}
-
-        {openSplitSlot}
-
-        <p className="flex items-center gap-1.5 text-sm font-medium text-noir-gold">
-          <ExchangeBottleMark />
-          <span>
-            {t("offerCount", {
-              count: perfume.offerCount,
-            })}
-          </span>
-        </p>
-
-        {showCollectorsCta ? (
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            background="gold"
-            className="mt-auto w-full max-w-full"
-            onClick={e => onViewCollectors(e.currentTarget)}
-          >
-            {viewCollectorsLabel}
-          </Button>
-        ) : null}
+        </div>
       </div>
 
       {lightboxIndex !== null ? (
