@@ -44,7 +44,7 @@ const HomeListingCard = ({ listing }: HomeListingCardProps) => {
   ].filter((detail): detail is string => Boolean(detail))
 
   return (
-    <article className="noir-border relative isolate flex w-full min-w-0 flex-col bg-noir-dark before:z-10 after:z-10">
+    <article className="relative isolate flex w-full min-w-0 flex-col overflow-hidden border border-noir-gold/70 bg-noir-dark hover:border-noir-gold">
       <div className="group relative aspect-[4/3] overflow-hidden bg-noir-black">
         <PrefetchLink
           href={perfumeHref}

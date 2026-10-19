@@ -271,7 +271,7 @@ Implement only the step the user names. After each: report changes, checks, prev
 
 ### Step 8 — harden notes
 
-- OrnamentalFrame rollout: Exchange toolbar/results/cards/rows + wishlist / palate / mutual rails + `ExchangeListingRow`; Archive / Houses `CatalogToolbar` + `CatalogItem` card/row; recommended cards. Global `.noir-border` / `.noir-border-dk` use the same four SVG flourishes (padded viewBox + join-aligned backgrounds; clip media on an inner wrapper, not the framed element).
+- OrnamentalFrame rollout: Exchange toolbar/results/cards/rows + wishlist / palate / mutual rails + `ExchangeListingRow`; Archive / Houses `CatalogToolbar` (not catalog item cards — plain gold border). Global `.noir-border` / `.noir-border-dk` use the same four SVG flourishes on panels (padded viewBox + join-aligned backgrounds; clip media on an inner wrapper, not the framed element). Discovery/link/home/article cards stay plain-bordered.
 - Scale fixtures: `utils/exchange-bounds.scale.test.ts` (5k groups → 24/page; 320 offers → 5/page; previews ≤3; minRep cap; soft JSON budget). Not DB performance.
 - Browser widths for Exchange review: **1440 / 1024 / 820 / 390 / 320**.
 
