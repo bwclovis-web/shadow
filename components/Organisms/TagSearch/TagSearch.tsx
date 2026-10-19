@@ -14,8 +14,8 @@ import { tagSearchVariants } from "./tagsearch-variants"
 
 const TAG_SEARCH_API = "/api/getTag"
 
-export type TagSearchSurface = "light" | "dark"
-export type TagSearchSelectedLayout = "footer" | "flow"
+export type TagSearchSurface = "light" | "dark" | "plain"
+export type TagSearchSelectedLayout = "footer" | "flow" | "none"
 
 interface TagSearchProps extends Omit<HTMLProps<HTMLDivElement>, "onChange" | "data"> {
   onChange?: (tags: Tag[]) => void
@@ -95,9 +95,16 @@ const TagSearch = ({
 
   const searchLabel =
     searchInputLabel ?? (label ? `${label} search` : "Search")
-  const surfaceKey = surface === "dark" ? "dark" : "light"
-  const layoutKey = selectedLayout === "flow" ? "flow" : "footer"
+  const surfaceKey =
+    surface === "dark" ? "dark" : surface === "plain" ? "plain" : "light"
+  const layoutKey =
+    selectedLayout === "flow"
+      ? "flow"
+      : selectedLayout === "none"
+        ? "none"
+        : "footer"
   const createFieldId = `${inputId}-create`
+  const listSurface = surfaceKey === "plain" ? "dark" : surfaceKey
 
   return (
     <div
@@ -110,7 +117,7 @@ const TagSearch = ({
       <div
         className={styleMerge(
           "relative z-20 flex min-h-0 flex-col",
-          selectedLayout === "flow" ? "gap-2" : "gap-1"
+          selectedLayout === "footer" ? "gap-1" : "gap-2"
         )}
       >
         <SearchTypeahead<Tag>
@@ -146,15 +153,17 @@ const TagSearch = ({
           }
         />
       </div>
-      <TagList
-        type="exchange"
-        selectedTags={selectedTags}
-        label={label}
-        onRemoveTag={handleRemoveTag}
-        layout={selectedLayout === "flow" ? "flow" : "footer"}
-        surface={surfaceKey}
-        emptyLabel={emptyLabel}
-      />
+      {selectedLayout === "none" ? null : (
+        <TagList
+          type="exchange"
+          selectedTags={selectedTags}
+          label={label}
+          onRemoveTag={handleRemoveTag}
+          layout={selectedLayout === "flow" ? "flow" : "footer"}
+          surface={listSurface}
+          emptyLabel={emptyLabel}
+        />
+      )}
     </div>
   )
 }

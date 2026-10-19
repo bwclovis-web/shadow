@@ -100,7 +100,7 @@ export const OrnamentalFrame = <T extends ElementType = "div">({
         Inset + clip so images/buttons stay inside the border.
         Corners remain outside via the overflow-visible parent.
       */}
-      <div className="relative z-0 box-border h-full min-h-0 min-w-0 overflow-hidden p-px">
+      <div className="relative z-0 box-border flex h-full min-h-0 min-w-0 flex-col overflow-hidden p-px">
         {children}
       </div>
     </Tag>

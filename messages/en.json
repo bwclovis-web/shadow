@@ -602,7 +602,9 @@
     "drawer": {
       "close": "Close filters",
       "clearAll": "Clear all",
-      "apply": "Apply filters ({count})"
+      "apply": "Apply filters ({count})",
+      "applyFilters": "Apply filters",
+      "selectionCount": "{count, plural, =0 {None selected} one {# selected} other {# selected}}"
     },
     "filters": {
       "searching": "Searching…",
@@ -2133,16 +2135,17 @@
     "filters": {
       "toggle": "Filters",
       "notesTitle": "Notes",
-      "notesDescription": "Match fragrances that include any of the selected notes (perfume-level).",
+      "notesDescription": "Match fragrances with any of the selected notes.",
       "notesSearchLabel": "Notes",
       "notesSearchPlaceholder": "Search notes…",
       "notesEmptyLabel": "No notes selected.",
       "seasonTitle": "Season",
       "seasonDescription": "Explore fragrances by season and atmosphere.",
       "houseTitle": "House",
+      "houseDescription": "Search and select a house name.",
       "houseSearchLabel": "Search house name",
       "houseClear": "Clear",
-      "priceTitle": "Listing price",
+      "priceTitle": "Price range",
       "priceDescription": "Filter listings by price range.",
       "minLabel": "Min",
       "maxLabel": "Max",
@@ -2155,7 +2158,9 @@
       "priceChipMin": "Min {min}",
       "priceChipMax": "Max {max}",
       "priceChipRange": "{min}–{max}",
-      "tradePrefTitle": "Exchange preference",
+      "summaryAny": "Any",
+      "summaryNoPriceLimit": "No limit",
+      "tradePrefTitle": "Trade preference",
       "tradePrefDescription": "Filter listings by preferred exchange type.",
       "tradePrefAria": "Exchange preference filters",
       "bottleTitle": "Bottle type",

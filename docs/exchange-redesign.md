@@ -8,6 +8,8 @@ Implementation contract for adapting The Exchange (`/the-exchange`) to the suppl
 - `C:\Users\bwclo\.cursor\projects\c-repos-shadow\assets\exxchange-dt2-0d4bac6b-ade4-41ca-9b96-94784c65fe4c.jpg`
 - `C:\Users\bwclo\.cursor\projects\c-repos-shadow\assets\exchange_tab-dcbe83d2-9024-4aac-8ced-94edddf2a8c4.jpg`
 - `C:\Users\bwclo\.cursor\projects\c-repos-shadow\assets\exchange-mob-6a093cc1-b542-4c17-a157-e718a6e163ea.jpg`
+- Filter drawer: `C:\Users\bwclo\.cursor\projects\c-repos-shadow\assets\drawer1-768aedcc-1445-4870-91a3-9613835ef1fa.jpg`
+- Filter drawer (mobile): `C:\Users\bwclo\.cursor\projects\c-repos-shadow\assets\drawer-mobile-ec252cf5-ca70-4944-8980-c2eab971b5d7.jpg`
 
 ---
 
@@ -258,7 +260,8 @@ Implement only the step the user names. After each: report changes, checks, prev
 - Trade shortcuts + chip strip commit live and, if the drawer is open, update draft so trade prefs stay consistent.
 - Notes remain perfume-level **any-of** (`some` / `in`); no ANY/ALL URL control.
 - `useDebouncedSearch` ignores stale in-flight suggestion responses; typeahead listboxes mark `data-focus-trap-portal`.
-- Archive/Houses keep default compact drawer height; Exchange passes `mobileHeight="nearlyFull"`.
+- Archive/Houses keep default compact drawer height + `chrome="default"`; Exchange passes `mobileHeight="nearlyFull"`, `chrome="ornamental"` (~460px desktop, nearly full-width mobile sheet), header selection count, fixed Clear/Apply footer.
+- Exchange panel `layout="drawer"`: `OrnamentalFrame` on outer shell only; Notes + House open; Season compact (no All-seasons tile); other groups collapsed with value summaries; single draft chip strip for notes/house (no nested TagSearch frame / tall empty notes box); charcoal price inputs with visible Min/Max labels.
 
 ### Step 7 — states notes
 
@@ -281,6 +284,30 @@ Implement only the step the user names. After each: report changes, checks, prev
 - Toolbar: search + sort/filters + view toggle on one desktop row; active toggle remains gold fill.
 - Results meta: fragrance (± offer) counts + “Showing X–Y of Z”; `PaginationBar` when `totalPages > 1`.
 - View/`pg` URL changes no longer flash the stale “Updating results…” panel (filter-key mismatch only).
+
+### Filter drawer visual redesign (mockup) — staged checklist
+
+Reuse existing pieces only (`CatalogFilterDrawer`, `DiscoveryFiltersPanel`, `FilterPanelSection`, `SeasonSelectionToggleRow`, `HouseAutocomplete` / `TagSearch`, `OrnamentalFrame` / `OrnamentalCorner`, `TheExchangeClient` draft/apply/clear). Do **not** rebuild drawer state management or change queries/URL semantics. Selection counts must reflect real draft state; avoid duplicate chip rows; keep current note matching (perfume-level any-of); no new icon packages.
+
+Implement **one** checklist item per request, then STOP for visual review.
+
+- [ ] **FD-1 — Drawer shell** — Ornamental outer frame only; desktop ~460px right panel; mobile nearly full-width sheet; fixed header (Filters + accurate draft selection count + close); independently scrolling body; fixed Clear all / Apply filters footer (safe-area); Archive/Houses stay on default chrome.
+- [ ] **FD-2 — Collapsible sections** — Drawer tone headings (sentence-case gold); Notes + House initially open; other groups collapsed with current-value summaries; listing-photos row with toggle; no nested decorative frames inside sections.
+- [ ] **FD-3 — Search / season / input polish** — Plain TagSearch (no tall empty notes box); house searchable without redundant chip UI; single draft chip strip for notes/house; compact season tiles (no oversized All-seasons control); charcoal price Min/Max with visible labels; reuse existing icons / bottle SVG.
+- [ ] **FD-4 — Behavior + responsive verification** — Preserve draft/apply/cancel + live shortcut/chip sync; keyboard / focus trap / typeahead portals; dropdowns visible in scroll body; verify desktop (~460) and mobile sheet; run scoped lint/tsc + related unit tests; no hero/layout/query regressions.
+
+#### Local inventory (inspect-only — 2026-10-19)
+
+| Scope | Detail |
+| --- | --- |
+| Git | `main` @ `cedba0e` (“corner updates”), **matches** `origin/main`. All filter-redesign deltas are **uncommitted** working-tree changes (not on GitHub). |
+| Uncommitted files (13) | `app/the-exchange/TheExchangeClient.tsx`; `components/Organisms/CatalogFilterDrawer/CatalogFilterDrawer.tsx`; `components/Organisms/DiscoveryFiltersPanel/DiscoveryFiltersPanel.tsx`; `components/Molecules/FilterPanelSection/FilterPanelSection.tsx`; `components/Containers/Perfume/PerfumeSeasonVote/SeasonSelectionToggleRow.tsx`; `components/Organisms/TagSearch/TagSearch.tsx`; `components/Organisms/TagSearch/tagsearch-variants.ts`; `components/Atoms/OrnamentalFrame/OrnamentalFrame.tsx`; `docs/exchange-redesign.md`; `messages/{en,es,fr,it}.json` |
+| Unchanged vs confirmed list | `HouseAutocomplete` / `HouseTypeahead` **not** modified in this WIP (drawer passes `selected={null}` when `layout="drawer"` and relies on chip strip). `OrnamentalCorner.tsx` unchanged. Draft/apply/clear handlers in `TheExchangeClient` still the same functions; only drawer props / labels / `layout` wiring added. |
+| GitHub (`origin/main`) baseline | Drawer: no `chrome` / `selectionCountLabel`; width `md:w-[26rem]`; apply label `drawer.apply` with count; panel is non-collapsible stacked sections inside a nested gold border; TagSearch `surface="dark"` + `selectedLayout="flow"` (tall framed notes block); season row includes All-seasons; no drawer chip strip. |
+| Local WIP vs that baseline | Implements most of FD-1–FD-3 in the working tree (`chrome="ornamental"`, `md:w-[28.75rem]`, header count from `draftFilterCount`, `layout="drawer"`, collapsible sections, plain/`none` TagSearch, compact seasons, draft note/house chips). **Not committed; treat FD-1–FD-4 as unchecked until each step is explicitly requested and reviewed.** |
+| Related tests (exist; none assert new drawer chrome) | `utils/discovery-filters.test.ts` (`countDiscoveryFilters`, parse/serialize); `app/the-exchange/buildExchangeDiscoveryChipItems.test.ts`; `utils/exchange-listing-filter.server.test.ts`; `models/perfume-exchange-discovery.server.test.ts`; `components/Organisms/TagSearch/TagSearch.test.tsx`; `components/Molecules/FilterChipStrip/FilterChipStrip.test.tsx`; `e2e/smoke/exchange.spec.ts` (page loads filter/search chrome — smoke only). **No** dedicated `CatalogFilterDrawer` / `DiscoveryFiltersPanel` / `FilterPanelSection` unit tests. |
+
+Preview after implementation steps: `/the-exchange` → **Filters**.
 
 ---
 

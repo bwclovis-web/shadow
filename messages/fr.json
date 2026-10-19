@@ -403,7 +403,9 @@
     "drawer": {
       "close": "Fermer les filtres",
       "clearAll": "Tout effacer",
-      "apply": "Appliquer les filtres ({count})"
+      "apply": "Appliquer les filtres ({count})",
+      "applyFilters": "Appliquer les filtres",
+      "selectionCount": "{count, plural, =0 {Aucune sélection} one {# sélectionné} other {# sélectionnés}}"
     },
     "filters": {
       "searching": "Recherche…",
@@ -1856,7 +1858,7 @@
     "filters": {
       "toggle": "Filtres",
       "notesTitle": "Notes",
-      "notesDescription": "Correspond aux parfums qui incluent l’une des notes sélectionnées (niveau parfum).",
+      "notesDescription": "Correspond aux fragrances qui incluent l’une des notes sélectionnées.",
       "notesSearchLabel": "Notes",
       "notesSearchPlaceholder": "Rechercher des notes…",
       "notesEmptyLabel": "Aucune note sélectionnée.",
@@ -1865,7 +1867,7 @@
       "houseTitle": "Maison",
       "houseSearchLabel": "Rechercher une maison",
       "houseClear": "Effacer",
-      "priceTitle": "Prix annoncé",
+      "priceTitle": "Fourchette de prix",
       "priceDescription": "Filtrez les annonces selon la fourchette de prix.",
       "minLabel": "Min",
       "maxLabel": "Max",
@@ -1878,7 +1880,7 @@
       "priceChipMin": "Min {min}",
       "priceChipMax": "Max {max}",
       "priceChipRange": "{min}–{max}",
-      "tradePrefTitle": "Préférence d'échange",
+      "tradePrefTitle": "Préférence d’échange",
       "tradePrefDescription": "Filtrez les annonces selon le type d'échange souhaité.",
       "tradePrefAria": "Filtres de préférence d'échange",
       "bottleTitle": "Type de flacon",
@@ -1905,7 +1907,10 @@
       "minRepDescription": "Afficher les annonces des collectionneurs à ce score ou plus.",
       "minRepLabel": "Score minimum",
       "minRepAll": "Toute réputation",
-      "minRepChip": "Réputation {score}+"
+      "minRepChip": "Réputation {score}+",
+      "houseDescription": "Recherchez et sélectionnez un nom de maison.",
+      "summaryAny": "Tous",
+      "summaryNoPriceLimit": "Sans limite"
     },
     "wishlistMatches": {
       "title": "Correspondances pour vous",

@@ -18,8 +18,8 @@ import {
   WinterSeasonIcon,
 } from "./SeasonVoteIcons"
 
-const seasonIcon = (key: SeasonKey, filled: boolean) => {
-  const props = { filled, className: "w-11 h-11 sm:w-12 sm:h-12" }
+const seasonIcon = (key: SeasonKey, filled: boolean, className: string) => {
+  const props = { filled, className }
   switch (key) {
     case "winter":
       return <WinterSeasonIcon {...props} />
@@ -41,6 +41,10 @@ export type SeasonSelectionToggleRowProps = {
   selection: SeasonSelection
   onChange: (next: SeasonSelection) => void
   disabled?: boolean
+  /** Smaller tiles for filter drawers (mockup). */
+  compact?: boolean
+  /** Perfume detail keeps “All seasons”; Exchange drawer omits it. */
+  showAllSeasons?: boolean
 }
 
 /**
@@ -51,10 +55,13 @@ export function SeasonSelectionToggleRow({
   selection,
   onChange,
   disabled = false,
+  compact = false,
+  showAllSeasons = true,
 }: SeasonSelectionToggleRowProps) {
   const t = useTranslations("singlePerfume.seasonVote")
   const allSelected = SEASON_KEYS.every((k) => selection[k])
   const [animatedKey, setAnimatedKey] = useState<string | null>(null)
+  const iconClass = compact ? "h-7 w-7" : "w-11 h-11 sm:w-12 sm:h-12"
 
   useEffect(() => {
     if (!animatedKey) return
@@ -82,7 +89,13 @@ export function SeasonSelectionToggleRow({
   }
 
   return (
-    <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+    <div
+      className={
+        compact
+          ? "grid grid-cols-4 gap-2"
+          : "flex flex-wrap justify-center gap-3 sm:gap-4"
+      }
+    >
       {SEASON_KEYS.map((key) => (
         <button
           key={key}
@@ -93,12 +106,13 @@ export function SeasonSelectionToggleRow({
             toggleSeason(key)
           }}
           className={`
-            group relative flex flex-col items-center gap-1 rounded-lg border p-2 transition-[transform,opacity,border-color,background-color,box-shadow] duration-300 ease-out
+            group relative flex flex-col items-center gap-1 rounded-sm border transition-[transform,opacity,border-color,background-color,box-shadow] duration-300 ease-out
+            ${compact ? "px-1 py-2" : "rounded-lg p-2"}
             ${disabled ? "cursor-default opacity-80" : "cursor-pointer motion-safe:hover:-translate-y-0.5 hover:opacity-95"}
             ${
               selection[key]
-                ? "border-noir-gold-100 bg-noir-gold/10 shadow-[0_0_0_1px_rgba(255,247,204,0.22),0_14px_28px_rgba(212,175,55,0.16)] -translate-y-0.5"
-                : "border-white/10 bg-noir-black/20 hover:border-noir-gold/30"
+                ? "border-noir-gold bg-noir-gold/10 -translate-y-0.5 shadow-[0_0_0_1px_rgba(255,247,204,0.22),0_14px_28px_rgba(212,175,55,0.16)]"
+                : "border-noir-gold/40 bg-noir-black/40 hover:border-noir-gold/70"
             }
             ${animatedKey === key ? "motion-safe:animate-vault-stamp" : ""}
           `}
@@ -113,12 +127,12 @@ export function SeasonSelectionToggleRow({
                 : "border-noir-gold/15 opacity-0 group-hover:opacity-100"
             }`}
           />
-          {seasonIcon(key, selection[key])}
+          {seasonIcon(key, selection[key], iconClass)}
           <span
-            className={`text-xs transition-[color,transform] duration-300 ${
+            className={`text-xs capitalize transition-[color,transform] duration-300 ${
               selection[key]
-                ? "text-noir-gold scale-[1.03]"
-                : "text-noir-gold-500"
+                ? "scale-[1.03] text-noir-gold"
+                : "text-noir-gold-100"
             }`}
           >
             {t(`season.${key}`)}
@@ -126,45 +140,50 @@ export function SeasonSelectionToggleRow({
         </button>
       ))}
 
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => {
-          setAnimatedKey(ALL_SEASONS_KEY)
-          toggleAll()
-        }}
-        className={`
-          group relative flex min-w-[5.25rem] flex-col items-center gap-1 rounded-lg border p-2 transition-[transform,opacity,border-color,background-color,box-shadow] duration-300 ease-out
-          ${disabled ? "cursor-default opacity-80" : "cursor-pointer motion-safe:hover:-translate-y-0.5 hover:opacity-95"}
-          ${
-            allSelected
-              ? "border-noir-gold-100 bg-noir-gold/10 shadow-[0_0_0_1px_rgba(255,247,204,0.22),0_14px_28px_rgba(212,175,55,0.16)] -translate-y-0.5"
-              : "border-white/10 bg-noir-black/20 hover:border-noir-gold/30"
-          }
-          ${animatedKey === ALL_SEASONS_KEY ? "motion-safe:animate-vault-stamp" : ""}
-        `}
-        aria-pressed={allSelected}
-        aria-label={t("allSeasons")}
-      >
-        <span
-          aria-hidden
-          className={`pointer-events-none absolute inset-[3px] rounded-[inherit] border transition-opacity duration-300 ${
-            allSelected
-              ? "border-noir-black/25 opacity-100"
-              : "border-noir-gold/15 opacity-0 group-hover:opacity-100"
-          }`}
-        />
-        <AllSeasonsIcon filled={allSelected} className="w-11 h-11 sm:w-12 sm:h-12" />
-        <span
-          className={`text-xs uppercase tracking-[0.18em] transition-[color,transform] duration-300 ${
-            allSelected
-              ? "text-noir-gold scale-[1.03]"
-              : "text-noir-gold-500"
-          }`}
+      {showAllSeasons ? (
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => {
+            setAnimatedKey(ALL_SEASONS_KEY)
+            toggleAll()
+          }}
+          className={`
+            group relative flex min-w-[5.25rem] flex-col items-center gap-1 rounded-lg border p-2 transition-[transform,opacity,border-color,background-color,box-shadow] duration-300 ease-out
+            ${disabled ? "cursor-default opacity-80" : "cursor-pointer motion-safe:hover:-translate-y-0.5 hover:opacity-95"}
+            ${
+              allSelected
+                ? "border-noir-gold-100 bg-noir-gold/10 -translate-y-0.5 shadow-[0_0_0_1px_rgba(255,247,204,0.22),0_14px_28px_rgba(212,175,55,0.16)]"
+                : "border-white/10 bg-noir-black/20 hover:border-noir-gold/30"
+            }
+            ${animatedKey === ALL_SEASONS_KEY ? "motion-safe:animate-vault-stamp" : ""}
+          `}
+          aria-pressed={allSelected}
+          aria-label={t("allSeasons")}
         >
-          {t("allSeasons")}
-        </span>
-      </button>
+          <span
+            aria-hidden
+            className={`pointer-events-none absolute inset-[3px] rounded-[inherit] border transition-opacity duration-300 ${
+              allSelected
+                ? "border-noir-black/25 opacity-100"
+                : "border-noir-gold/15 opacity-0 group-hover:opacity-100"
+            }`}
+          />
+          <AllSeasonsIcon
+            filled={allSelected}
+            className="h-11 w-11 sm:h-12 sm:w-12"
+          />
+          <span
+            className={`text-xs uppercase tracking-[0.18em] transition-[color,transform] duration-300 ${
+              allSelected
+                ? "scale-[1.03] text-noir-gold"
+                : "text-noir-gold-500"
+            }`}
+          >
+            {t("allSeasons")}
+          </span>
+        </button>
+      ) : null}
     </div>
   )
 }

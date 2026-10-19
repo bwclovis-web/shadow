@@ -1,11 +1,24 @@
 "use client"
 
-import { useEffect, useId, useMemo, useState, type FC } from "react"
+import { useEffect, useId, useMemo, useState, type FC, type ReactNode } from "react"
+import {
+  LuArrowLeftRight,
+  LuFlower2,
+  LuHouse,
+  LuImage,
+  LuMapPin,
+  LuShield,
+  LuSparkles,
+  LuStar,
+  LuTag,
+} from "react-icons/lu"
 
 import CheckBox from "@/components/Atoms/CheckBox/CheckBox"
+import { ExchangeBottleMark } from "@/components/Atoms/ExchangeBottleMark"
 import Input from "@/components/Atoms/Input/Input"
 import Select from "@/components/Atoms/Select/Select"
 import { SeasonSelectionToggleRow } from "@/components/Containers/Perfume/PerfumeSeasonVote/SeasonSelectionToggleRow"
+import { FilterChipStrip } from "@/components/Molecules/FilterChipStrip"
 import { FilterPanelSection } from "@/components/Molecules/FilterPanelSection"
 import { FilterToggleGroup } from "@/components/Molecules/FilterToggleGroup"
 import {
@@ -44,6 +57,7 @@ export type DiscoveryFiltersPanelLabels = {
   seasonTitle: string
   seasonDescription: string
   houseTitle: string
+  houseDescription?: string
   houseSearchLabel: string
   houseClear: string
   houseSearching?: string
@@ -86,6 +100,15 @@ export type DiscoveryFiltersPanelLabels = {
   minRepDescription: string
   minRepLabel: string
   minRepAll: string
+  /** Drawer: "{count} selected" within a section badge. */
+  sectionSelectedCount?: (count: number) => string
+  /** Drawer: season / trade / etc. empty summaries. */
+  summaryAny?: string
+  summaryAnyRegion?: string
+  summaryAnyReputation?: string
+  summaryNoPriceLimit?: string
+  activeFiltersAria?: string
+  removeFilterAria?: (label: string) => string
 }
 
 export type DiscoveryFiltersPanelProps = {
@@ -97,6 +120,13 @@ export type DiscoveryFiltersPanelProps = {
   initialHouse: HouseAutocompleteOption | null
   labels: DiscoveryFiltersPanelLabels
   className?: string
+  /**
+   * `drawer` — Exchange filter mockup (collapsible groups, plain inputs,
+   * single chip strip). Default keeps the older stacked panel for reuse.
+   */
+  layout?: "default" | "drawer"
+  /** Season labels for collapsed summaries (drawer). */
+  seasonLabel?: (key: "winter" | "spring" | "summer" | "fall") => string
 }
 
 const TRADE_PREF_OPTIONS: DiscoveryTradePreference[] = [...DISCOVERY_TRADE_PREFERENCES]
@@ -114,6 +144,9 @@ const resolveDraftNoteTags = (
   return noteIds.map(id => byId.get(id) ?? { id, name: id })
 }
 
+const joinSummary = (parts: string[], fallback: string): string =>
+  parts.length > 0 ? parts.join(", ") : fallback
+
 export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
   value,
   onChange,
@@ -121,9 +154,12 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
   initialHouse,
   labels,
   className,
+  layout = "default",
+  seasonLabel,
 }) => {
   const regionSelectId = useId()
   const minRepSelectId = useId()
+  const drawer = layout === "drawer"
   const [minStr, setMinStr] = useState(
     () => (value.minPrice != null ? String(value.minPrice) : "")
   )
@@ -162,13 +198,12 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
     setMaxStr(value.maxPrice != null ? String(value.maxPrice) : "")
   }, [value.maxPrice])
 
-  const houseSelected =
-    localHouse ??
-    (initialHouse && initialHouse.id === value.houseId
-      ? initialHouse
-      : value.houseId
-        ? { id: value.houseId, name: value.houseId }
-        : null)
+  const houseSelected = useMemo((): HouseAutocompleteOption | null => {
+    if (localHouse) return localHouse
+    if (initialHouse && initialHouse.id === value.houseId) return initialHouse
+    if (value.houseId) return { id: value.houseId, name: value.houseId }
+    return null
+  }, [localHouse, initialHouse, value.houseId])
 
   const noteSearchMessages = useMemo(
     () => ({
@@ -241,26 +276,30 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
     }
   }
 
+  const tradePrefLabel = (pref: DiscoveryTradePreference): string =>
+    pref === "cash"
+      ? labels.tradePrefCash
+      : pref === "trade"
+        ? labels.tradePrefTrade
+        : labels.tradePrefBoth
+
+  const bottleLabel = (bottle: ExchangeBottleType): string =>
+    bottle === "full"
+      ? labels.bottleFull
+      : bottle === "partial"
+        ? labels.bottlePartial
+        : bottle === "sample"
+          ? labels.bottleSample
+          : labels.bottleDecant
+
   const tradePrefOptions = TRADE_PREF_OPTIONS.map(pref => ({
     value: pref,
-    label:
-      pref === "cash"
-        ? labels.tradePrefCash
-        : pref === "trade"
-          ? labels.tradePrefTrade
-          : labels.tradePrefBoth,
+    label: tradePrefLabel(pref),
   }))
 
   const bottleOptions = BOTTLE_OPTIONS.map(bottle => ({
     value: bottle,
-    label:
-      bottle === "full"
-        ? labels.bottleFull
-        : bottle === "partial"
-          ? labels.bottlePartial
-          : bottle === "sample"
-            ? labels.bottleSample
-            : labels.bottleDecant,
+    label: bottleLabel(bottle),
   }))
 
   const conditionOptions = CONDITION_OPTIONS.map(condition => ({
@@ -286,185 +325,360 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
     })),
   ]
 
+  const anySummary = labels.summaryAny ?? "Any"
+  const sectionSelected =
+    labels.sectionSelectedCount ?? ((count: number) => `${count} selected`)
+
+  const draftChips = useMemo(() => {
+    if (!drawer) return []
+    const removeAria =
+      labels.removeFilterAria ?? ((label: string) => `Remove filter: ${label}`)
+    const chips = draftNoteTags.map(tag => ({
+      id: `draft-note-${tag.id}`,
+      label: tag.name,
+      removeAriaLabel: removeAria(tag.name),
+      onRemove: () => {
+        const nextTags = draftNoteTags.filter(t => t.id !== tag.id)
+        setDraftNoteTags(nextTags)
+        onChange({ ...value, noteIds: nextTags.map(t => t.id) })
+      },
+    }))
+    if (houseSelected) {
+      chips.push({
+        id: `draft-house-${houseSelected.id}`,
+        label: houseSelected.name,
+        removeAriaLabel: removeAria(houseSelected.name),
+        onRemove: () => {
+          setLocalHouse(null)
+          onChange({ ...value, houseId: null })
+        },
+      })
+    }
+    return chips
+  }, [
+    drawer,
+    draftNoteTags,
+    houseSelected,
+    labels.removeFilterAria,
+    onChange,
+    value,
+  ])
+
+  const priceSummary = (() => {
+    if (value.minPrice != null && value.maxPrice != null) {
+      return `${value.minPrice}–${value.maxPrice}`
+    }
+    if (value.minPrice != null) return `${labels.minLabel} ${value.minPrice}`
+    if (value.maxPrice != null) return `${labels.maxLabel} ${value.maxPrice}`
+    return labels.summaryNoPriceLimit ?? "No limit"
+  })()
+
+  const section = (
+    props: {
+      title: string
+      description?: string
+      icon?: ReactNode
+      summary?: string
+      badge?: string
+      defaultOpen?: boolean
+      collapsible?: boolean
+      trailing?: ReactNode
+      children?: ReactNode
+    }
+  ) => (
+    <FilterPanelSection
+      tone={drawer ? "drawer" : "default"}
+      collapsible={props.collapsible ?? drawer}
+      defaultOpen={props.defaultOpen ?? !drawer}
+      title={props.title}
+      description={props.description}
+      icon={drawer ? props.icon : undefined}
+      summary={drawer ? props.summary : undefined}
+      badge={drawer ? props.badge : undefined}
+      trailing={props.trailing}
+    >
+      {props.children}
+    </FilterPanelSection>
+  )
+
+  const priceInputs = (
+    <div className="grid grid-cols-2 gap-3">
+      <Input
+        inputId="exchange-discovery-min-price"
+        inputType="number"
+        shading={false}
+        label={labels.minLabel}
+        min={0}
+        step="any"
+        value={minStr}
+        onChange={e => setMinStr(e.target.value)}
+        onBlur={commitPrice}
+        className="!border !border-solid !border-noir-gold bg-noir-black/90 !text-base text-noir-gold-100 focus:!border-noir-gold-500 focus:ring-noir-gold"
+      />
+      <Input
+        inputId="exchange-discovery-max-price"
+        inputType="number"
+        shading={false}
+        label={labels.maxLabel}
+        min={0}
+        step="any"
+        value={maxStr}
+        onChange={e => setMaxStr(e.target.value)}
+        onBlur={commitPrice}
+        className="!border !border-solid !border-noir-gold bg-noir-black/90 !text-base text-noir-gold-100 focus:!border-noir-gold-500 focus:ring-noir-gold"
+      />
+    </div>
+  )
+
   return (
     <div
       className={styleMerge(
-        "space-y-6 rounded-md border border-noir-gold bg-noir-dark p-4",
+        drawer
+          ? "space-y-1"
+          : "space-y-6 rounded-md border border-noir-gold bg-noir-dark p-4",
         className
       )}
     >
-      <FilterPanelSection
-        title={labels.notesTitle}
-        description={labels.notesDescription}
-      >
-        <TagSearch
-          inputId="exchange-discovery-notes"
-          label={labels.notesSearchLabel}
-          searchInputLabel={labels.notesSearchLabel}
-          searchLabelClassName="sr-only"
-          placeholder={labels.notesSearchPlaceholder}
-          emptyLabel={labels.notesEmptyLabel}
-          data={draftNoteTags}
-          allowCreate={false}
-          maxSelections={CATALOG_MAX_SELECTIONS}
-          surface="dark"
-          selectedLayout="flow"
-          messages={noteSearchMessages}
-          onChange={tags => {
-            setDraftNoteTags(tags)
-            onChange({ ...value, noteIds: tags.map(t => t.id) })
-          }}
+      {drawer && draftChips.length > 0 ? (
+        <FilterChipStrip
+          chips={draftChips}
+          regionAriaLabel={labels.activeFiltersAria ?? "Selected filters"}
+          className="mb-4"
         />
-      </FilterPanelSection>
+      ) : null}
 
-      <FilterPanelSection
-        title={labels.seasonTitle}
-        description={labels.seasonDescription}
-      >
-        <SeasonSelectionToggleRow
-          selection={seasonsArrayToSelection(value.seasons)}
-          onChange={sel =>
-            onChange({
-              ...value,
-              seasons: selectionToSeasonsArray(sel),
-            })
+      {section({
+        title: labels.notesTitle,
+        description: labels.notesDescription,
+        icon: <LuFlower2 aria-hidden />,
+        defaultOpen: true,
+        badge:
+          value.noteIds.length > 0
+            ? sectionSelected(value.noteIds.length)
+            : undefined,
+        children: (
+          <TagSearch
+            inputId="exchange-discovery-notes"
+            label={labels.notesSearchLabel}
+            searchInputLabel={labels.notesSearchLabel}
+            searchLabelClassName="sr-only"
+            placeholder={labels.notesSearchPlaceholder}
+            emptyLabel={labels.notesEmptyLabel}
+            data={draftNoteTags}
+            allowCreate={false}
+            maxSelections={CATALOG_MAX_SELECTIONS}
+            surface={drawer ? "plain" : "dark"}
+            selectedLayout={drawer ? "none" : "flow"}
+            messages={noteSearchMessages}
+            onChange={tags => {
+              setDraftNoteTags(tags)
+              onChange({ ...value, noteIds: tags.map(t => t.id) })
+            }}
+          />
+        ),
+      })}
+
+      {section({
+        title: labels.houseTitle,
+        description: drawer ? labels.houseDescription : undefined,
+        icon: <LuHouse aria-hidden />,
+        defaultOpen: true,
+        badge: houseSelected ? sectionSelected(1) : undefined,
+        children: (
+          <HouseAutocomplete
+            inputId="exchange-discovery-house"
+            label={labels.houseSearchLabel}
+            clearLabel={labels.houseClear}
+            selected={drawer ? null : houseSelected}
+            messages={houseSearchMessages}
+            onSelect={house => {
+              setLocalHouse(house)
+              onChange({ ...value, houseId: house?.id ?? null })
+            }}
+          />
+        ),
+      })}
+
+      {section({
+        title: labels.seasonTitle,
+        description: drawer ? undefined : labels.seasonDescription,
+        icon: <LuSparkles aria-hidden />,
+        defaultOpen: drawer,
+        summary: joinSummary(
+          value.seasons.map(s => seasonLabel?.(s) ?? s),
+          anySummary
+        ),
+        children: (
+          <SeasonSelectionToggleRow
+            selection={seasonsArrayToSelection(value.seasons)}
+            compact={drawer}
+            showAllSeasons={!drawer}
+            onChange={sel =>
+              onChange({
+                ...value,
+                seasons: selectionToSeasonsArray(sel),
+              })
+            }
+          />
+        ),
+      })}
+
+      {section({
+        title: labels.tradePrefTitle,
+        description: drawer ? undefined : labels.tradePrefDescription,
+        icon: <LuArrowLeftRight aria-hidden />,
+        defaultOpen: false,
+        summary: joinSummary(
+          value.tradePreferences.map(tradePrefLabel),
+          anySummary
+        ),
+        children: (
+          <FilterToggleGroup
+            options={tradePrefOptions}
+            selected={value.tradePreferences}
+            onChange={tradePreferences =>
+              onChange({ ...value, tradePreferences })
+            }
+            ariaLabel={labels.tradePrefAria}
+          />
+        ),
+      })}
+
+      {section({
+        title: labels.bottleTitle,
+        description: drawer ? undefined : labels.bottleDescription,
+        icon: <ExchangeBottleMark className="h-4 w-3" />,
+        defaultOpen: false,
+        summary: joinSummary(value.bottleTypes.map(bottleLabel), anySummary),
+        children: (
+          <FilterToggleGroup
+            options={bottleOptions}
+            selected={value.bottleTypes}
+            onChange={bottleTypes => onChange({ ...value, bottleTypes })}
+            ariaLabel={labels.bottleAria}
+          />
+        ),
+      })}
+
+      {section({
+        title: labels.conditionTitle,
+        description: drawer ? undefined : labels.conditionDescription,
+        icon: <LuShield aria-hidden />,
+        defaultOpen: false,
+        summary: joinSummary(
+          value.conditions.map(c => labels.conditionLabels[c]),
+          anySummary
+        ),
+        children: (
+          <FilterToggleGroup
+            options={conditionOptions}
+            selected={value.conditions}
+            onChange={conditions => onChange({ ...value, conditions })}
+            ariaLabel={labels.conditionAria}
+          />
+        ),
+      })}
+
+      {section({
+        title: labels.regionTitle,
+        description: drawer ? undefined : labels.regionDescription,
+        icon: <LuMapPin aria-hidden />,
+        defaultOpen: false,
+        summary: value.region
+          ? regionLabelFor(value.region)
+          : (labels.summaryAnyRegion ?? labels.regionAll),
+        children: (
+          <Select
+            selectId={regionSelectId}
+            label={labels.regionLabel}
+            selectData={regionSelectData}
+            value={value.region ?? ""}
+            action={e => {
+              const raw = e.target.value
+              onChange({
+                ...value,
+                region: raw ? (raw as ExchangeRegionBucket) : null,
+              })
+            }}
+            size="compact"
+            className="w-full max-w-none md:w-full"
+          />
+        ),
+      })}
+
+      {section({
+        title: labels.minRepTitle,
+        description: drawer ? undefined : labels.minRepDescription,
+        icon: <LuStar aria-hidden />,
+        defaultOpen: false,
+        summary:
+          value.minRep != null
+            ? `${value.minRep}+`
+            : (labels.summaryAnyReputation ?? labels.minRepAll),
+        children: (
+          <Select
+            selectId={minRepSelectId}
+            label={labels.minRepLabel}
+            selectData={minRepSelectData}
+            value={value.minRep != null ? String(value.minRep) : ""}
+            action={e => {
+              const raw = e.target.value
+              onChange({
+                ...value,
+                minRep: raw ? (Number(raw) as DiscoveryMinRep) : null,
+              })
+            }}
+            size="compact"
+            className="w-full max-w-none md:w-full"
+          />
+        ),
+      })}
+
+      {section({
+        title: labels.priceTitle,
+        description: drawer ? undefined : labels.priceDescription,
+        icon: <LuTag aria-hidden />,
+        defaultOpen: false,
+        summary: priceSummary,
+        children: priceInputs,
+      })}
+
+      {drawer ? (
+        <FilterPanelSection
+          tone="drawer"
+          collapsible={false}
+          title={labels.hasPhotosLabel}
+          description={labels.hasPhotosDescription}
+          icon={<LuImage aria-hidden />}
+          trailing={
+            <CheckBox
+              id="exchange-discovery-has-photos"
+              label={
+                <span className="sr-only">{labels.hasPhotosToggle}</span>
+              }
+              checked={value.hasPhotos}
+              onChange={() =>
+                onChange({ ...value, hasPhotos: !value.hasPhotos })
+              }
+            />
           }
         />
-      </FilterPanelSection>
-
-      <FilterPanelSection title={labels.houseTitle}>
-        <HouseAutocomplete
-          inputId="exchange-discovery-house"
-          label={labels.houseSearchLabel}
-          clearLabel={labels.houseClear}
-          selected={houseSelected}
-          messages={houseSearchMessages}
-          onSelect={house => {
-            setLocalHouse(house)
-            onChange({ ...value, houseId: house?.id ?? null })
-          }}
-        />
-      </FilterPanelSection>
-
-      <FilterPanelSection
-        title={labels.tradePrefTitle}
-        description={labels.tradePrefDescription}
-      >
-        <FilterToggleGroup
-          options={tradePrefOptions}
-          selected={value.tradePreferences}
-          onChange={tradePreferences => onChange({ ...value, tradePreferences })}
-          ariaLabel={labels.tradePrefAria}
-        />
-      </FilterPanelSection>
-
-      <FilterPanelSection
-        title={labels.bottleTitle}
-        description={labels.bottleDescription}
-      >
-        <FilterToggleGroup
-          options={bottleOptions}
-          selected={value.bottleTypes}
-          onChange={bottleTypes => onChange({ ...value, bottleTypes })}
-          ariaLabel={labels.bottleAria}
-        />
-      </FilterPanelSection>
-
-      <FilterPanelSection
-        title={labels.conditionTitle}
-        description={labels.conditionDescription}
-      >
-        <FilterToggleGroup
-          options={conditionOptions}
-          selected={value.conditions}
-          onChange={conditions => onChange({ ...value, conditions })}
-          ariaLabel={labels.conditionAria}
-        />
-      </FilterPanelSection>
-
-      <FilterPanelSection
-        title={labels.regionTitle}
-        description={labels.regionDescription}
-      >
-        <Select
-          selectId={regionSelectId}
-          label={labels.regionLabel}
-          selectData={regionSelectData}
-          value={value.region ?? ""}
-          action={e => {
-            const raw = e.target.value
-            onChange({
-              ...value,
-              region: raw ? (raw as ExchangeRegionBucket) : null,
-            })
-          }}
-          size="compact"
-          className="w-full max-w-none md:w-full"
-        />
-      </FilterPanelSection>
-
-      <FilterPanelSection
-        title={labels.minRepTitle}
-        description={labels.minRepDescription}
-      >
-        <Select
-          selectId={minRepSelectId}
-          label={labels.minRepLabel}
-          selectData={minRepSelectData}
-          value={value.minRep != null ? String(value.minRep) : ""}
-          action={e => {
-            const raw = e.target.value
-            onChange({
-              ...value,
-              minRep: raw ? (Number(raw) as DiscoveryMinRep) : null,
-            })
-          }}
-          size="compact"
-          className="w-full max-w-none md:w-full"
-        />
-      </FilterPanelSection>
-
-      <FilterPanelSection
-        title={labels.priceTitle}
-        description={labels.priceDescription}
-      >
-        <div className="grid grid-cols-2 gap-3">
-          <Input
-            inputId="exchange-discovery-min-price"
-            inputType="number"
-            shading
-            label={labels.minLabel}
-            min={0}
-            step="any"
-            value={minStr}
-            onChange={e => setMinStr(e.target.value)}
-            onBlur={commitPrice}
-          />
-          <Input
-            inputId="exchange-discovery-max-price"
-            inputType="number"
-            shading
-            label={labels.maxLabel}
-            min={0}
-            step="any"
-            value={maxStr}
-            onChange={e => setMaxStr(e.target.value)}
-            onBlur={commitPrice}
-          />
-        </div>
-      </FilterPanelSection>
-
-      <FilterPanelSection
-        title={labels.hasPhotosLabel}
-        description={labels.hasPhotosDescription}
-      >
-        <CheckBox
-          id="exchange-discovery-has-photos"
-          label={labels.hasPhotosToggle}
-          checked={value.hasPhotos}
-          onChange={() => onChange({ ...value, hasPhotos: !value.hasPhotos })}
-        />
-      </FilterPanelSection>
+      ) : (
+        section({
+          title: labels.hasPhotosLabel,
+          description: labels.hasPhotosDescription,
+          children: (
+            <CheckBox
+              id="exchange-discovery-has-photos"
+              label={labels.hasPhotosToggle}
+              checked={value.hasPhotos}
+              onChange={() =>
+                onChange({ ...value, hasPhotos: !value.hasPhotos })
+              }
+            />
+          ),
+        })
+      )}
     </div>
   )
 }

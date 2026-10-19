@@ -403,7 +403,9 @@
     "drawer": {
       "close": "Chiudi filtri",
       "clearAll": "Cancella tutto",
-      "apply": "Applica filtri ({count})"
+      "apply": "Applica filtri ({count})",
+      "applyFilters": "Applica filtri",
+      "selectionCount": "{count, plural, =0 {Nessuna selezione} one {# selezionato} other {# selezionati}}"
     },
     "filters": {
       "searching": "Ricerca in corso…",
@@ -1856,7 +1858,7 @@
     "filters": {
       "toggle": "Filtri",
       "notesTitle": "Note",
-      "notesDescription": "Trova fragranze che includono una qualsiasi delle note selezionate (livello profumo).",
+      "notesDescription": "Trova fragranze che includono una qualsiasi delle note selezionate.",
       "notesSearchLabel": "Note",
       "notesSearchPlaceholder": "Cerca note…",
       "notesEmptyLabel": "Nessuna nota selezionata.",
@@ -1865,7 +1867,7 @@
       "houseTitle": "Casa",
       "houseSearchLabel": "Cerca nome casa",
       "houseClear": "Rimuovi",
-      "priceTitle": "Prezzo inserzione",
+      "priceTitle": "Fascia di prezzo",
       "priceDescription": "Filtra gli annunci per fascia di prezzo.",
       "minLabel": "Min",
       "maxLabel": "Max",
@@ -1905,7 +1907,10 @@
       "minRepDescription": "Mostra gli annunci di collezionisti con questo punteggio o superiore.",
       "minRepLabel": "Punteggio minimo",
       "minRepAll": "Qualsiasi reputazione",
-      "minRepChip": "Reputazione {score}+"
+      "minRepChip": "Reputazione {score}+",
+      "houseDescription": "Cerca e seleziona il nome di una casa.",
+      "summaryAny": "Qualsiasi",
+      "summaryNoPriceLimit": "Nessun limite"
     },
     "wishlistMatches": {
       "title": "Corrispondenze per te",

@@ -581,6 +581,7 @@ const TheExchangeClient = ({
     seasonTitle: tf("seasonTitle"),
     seasonDescription: tf("seasonDescription"),
     houseTitle: tf("houseTitle"),
+    houseDescription: tf("houseDescription"),
     houseSearchLabel: tf("houseSearchLabel"),
     houseClear: tf("houseClear"),
     houseSearching: tCatalog("filters.searching"),
@@ -629,6 +630,14 @@ const TheExchangeClient = ({
     minRepDescription: tf("minRepDescription"),
     minRepLabel: tf("minRepLabel"),
     minRepAll: tf("minRepAll"),
+    sectionSelectedCount: (count: number) =>
+      tCatalog("drawer.selectionCount", { count }),
+    summaryAny: tf("summaryAny"),
+    summaryAnyRegion: tf("regionAll"),
+    summaryAnyReputation: tf("minRepAll"),
+    summaryNoPriceLimit: tf("summaryNoPriceLimit"),
+    activeFiltersAria: tf("activeFiltersAria"),
+    removeFilterAria: (label: string) => tf("removeFilterAria", { label }),
   }
 
   const tradeShortcutOptions = DISCOVERY_TRADE_PREFERENCES.map(pref => ({
@@ -1094,10 +1103,14 @@ const TheExchangeClient = ({
               title={tf("toggle")}
               closeLabel={tCatalog("drawer.close")}
               clearLabel={tCatalog("drawer.clearAll")}
-              applyLabel={tCatalog("drawer.apply", { count: draftFilterCount })}
+              applyLabel={tCatalog("drawer.applyFilters")}
               onClear={clearDraftFilters}
               onApply={applyFilters}
               mobileHeight="nearlyFull"
+              chrome="ornamental"
+              selectionCountLabel={tCatalog("drawer.selectionCount", {
+                count: draftFilterCount,
+              })}
             >
               <DiscoveryFiltersPanel
                 key={filterDrawerGeneration}
@@ -1106,6 +1119,8 @@ const TheExchangeClient = ({
                 initialNoteTags={initialNoteTags}
                 initialHouse={initialHouse}
                 labels={filterLabels}
+                layout="drawer"
+                seasonLabel={key => tSeason(key)}
               />
             </CatalogFilterDrawer>
         </>
