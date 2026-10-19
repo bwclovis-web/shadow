@@ -218,8 +218,8 @@ Implement only the step the user names. After each: report changes, checks, prev
 - [x] **Step 2 — Below-hero chrome** — Toolbar → trade shortcuts/chips → results (existing cards) → activity; filters in `CatalogFilterDrawer` with draft/apply; `OrnamentalFrame` on toolbar + results; hero untouched; **data query unchanged**.
 - [x] **Step 3 — Group discovery data** — 24 groups/page; narrow DTO; ≤3 attributed previews; offer + collector counts; shared eligibility (incl. price + `minRep` before pagination); on-demand offers API (5/page, cursor); page `force-dynamic`; cards wired via preview stubs + CTA fetch.
 - [x] **Step 4 — Grid cards** — `ExchangeFragranceGroupCard`: main + ≤2 previews (simple when one); seller→catalog→neutral; offer count + bottle mark; factual primary trade badges; compare toggle; View collectors → existing offer/composer flow; 1/2/3 grid with sparse max-widths.
-- [ ] **Step 5 — List view** — Collapsed rows; URL `view=list`; one open expansion host wired (offers may still stub until Step 6).
-- [ ] **Step 6 — View collectors + on-demand offers** — Side panel (md+) / full-screen sheet (mobile); list uses same query; 5 offers/page; cash/swap via existing flows; revalidate at action boundary; preserve filters + scroll.
+- [x] **Step 5 — List view + View collectors** — Grid/list share results + committed criteria (`view`); list rows with one open expansion; grid md+ wide side panel / mobile nearly full-screen sheet; shared `ExchangeOfferContent` + `useExchangeOffers` (5 + load more); fill display only when validated; guest/own-listing + action-boundary revalidate; filter changes reset collectors; panel trap pauses for session `Modal` (lightbox/composer).
+- [x] **Step 6 — View collectors + on-demand offers** — Covered with Step 5 (panel/sheet/list share one query and offer content).
 - [ ] **Step 7 — Filter drawer polish** — Nearly full-screen mobile if still needed beyond catalog primitive; confirm draft/apply vs live-URL.
 - [ ] **Step 8 — States + recent activity polish** — Distinct empty / no-inventory / failure; temporary illustration slot; empty inset never under real results.
 - [ ] **Step 9 — Harden** — i18n sync (`sync-translations` skill); unit + smoke tests; secondary sections placement; a11y pass; no hero/`TitleBanner` drift.
@@ -244,6 +244,14 @@ Implement only the step the user names. After each: report changes, checks, prev
 - View collectors uses the existing on-demand offers → composer / listing picker (or sign-in) until Step 5 panel.
 - Trade badges reflect the **primary seller photo** listing only (factual for that image).
 - Lightbox uses card preview URLs only; full per-offer galleries remain on-demand via offers API / later panel.
+
+### Step 5 — list + collectors notes
+
+- URL `view=list` (omit for grid). Same `availablePerfumes` + `filterQueryString` for both presentations.
+- Offers: `GET /api/exchange/offers` via `useExchangeOffers`; first page 5; Load more appends cursor pages.
+- Fill: `ExchangeOfferFillDisplay` + `resolveOfferFillPercent` only — no inferred %.
+- Grid card CTA opens collectors for guests too; contact still requires sign-in; own listings show hint without CTA.
+- Removed / stale offers marked at contact boundary after `verifyOfferStillAvailable`.
 
 ---
 

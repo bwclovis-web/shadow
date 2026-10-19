@@ -1953,7 +1953,20 @@
       "photoIndex": "Foto {current} di {total}",
       "offerCount": "{count, plural, one {# offerta corrispondente} other {# offerte corrispondenti}}",
       "viewCollectors": "Vedi collezionisti",
-      "groupLightboxTitle": "Foto di {name}"
+      "groupLightboxTitle": "Foto di {name}",
+      "fillRemaining": "Circa {percent}% rimanente",
+      "offerUnavailable": "Questa offerta non è più disponibile.",
+      "signInToContact": "Accedi per contattare",
+      "ownListingHint": "Questo è il tuo annuncio.",
+      "offersLoading": "Caricamento offerte…",
+      "offersLoadFailed": "Impossibile caricare le offerte. Riprova.",
+      "offersRetry": "Riprova",
+      "offersEmpty": "Nessuna offerta corrispondente per {name}.",
+      "offersLoadMore": "Carica altre offerte",
+      "offersLoadingMore": "Caricamento…",
+      "offersEnd": "Non ci sono altre offerte",
+      "collectorsTitle": "Collezionisti — {name}",
+      "collectorsClose": "Chiudi collezionisti"
     },
     "palateRecommendations": {
       "title": "Consigliato per il tuo palato",
@@ -1967,7 +1980,6 @@
     },
     "toolbar": {
       "sortNameAsc": "Nome (A–Z)",
-      "listViewUnavailable": "Vista elenco in arrivo",
       "tradeShortcutsAria": "Scorciatoie preferenza di scambio"
     }
   },

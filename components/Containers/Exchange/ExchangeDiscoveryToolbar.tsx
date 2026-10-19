@@ -9,6 +9,8 @@ import Select from "@/components/Atoms/Select/Select"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import { styleMerge } from "@/utils/styleUtils"
 
+export type ExchangeBrowseView = "grid" | "list"
+
 export type ExchangeDiscoveryToolbarLabels = {
   searchPlaceholder: string
   keyboardHint: string
@@ -19,7 +21,6 @@ export type ExchangeDiscoveryToolbarLabels = {
   view: string
   gridView: string
   listView: string
-  listViewUnavailable: string
 }
 
 export type ExchangeDiscoveryToolbarProps = {
@@ -29,16 +30,14 @@ export type ExchangeDiscoveryToolbarProps = {
   onSearchChange: (value: string) => void
   activeFilterCount: number
   onOpenFilters: () => void
+  view: ExchangeBrowseView
+  onViewChange: (view: ExchangeBrowseView) => void
   labels: ExchangeDiscoveryToolbarLabels
   className?: string
 }
 
 const controlHeight = "h-11"
 
-/**
- * Exchange browse toolbar (search + sort placeholder + Filters + view).
- * Sort/list are non-functional until later data/list steps; grid is the only live view.
- */
 export const ExchangeDiscoveryToolbar = ({
   searchId,
   searchInputRef,
@@ -46,6 +45,8 @@ export const ExchangeDiscoveryToolbar = ({
   onSearchChange,
   activeFilterCount,
   onOpenFilters,
+  view,
+  onViewChange,
   labels,
   className,
 }: ExchangeDiscoveryToolbarProps) => {
@@ -56,6 +57,30 @@ export const ExchangeDiscoveryToolbar = ({
       label: labels.sortNameAsc,
     },
   ]
+
+  const viewButton = (
+    value: ExchangeBrowseView,
+    label: string,
+    icon: React.ReactNode
+  ) => (
+    <Button
+      type="button"
+      variant={null}
+      size={null}
+      aria-pressed={view === value}
+      aria-label={label}
+      title={label}
+      onClick={() => onViewChange(value)}
+      className={styleMerge(
+        `${controlHeight} flex w-11 items-center justify-center rounded-none border-0 transition-colors`,
+        view === value
+          ? "bg-noir-gold text-noir-black"
+          : "bg-noir-black/60 text-noir-gold hover:bg-noir-gold/20"
+      )}
+    >
+      {icon}
+    </Button>
+  )
 
   return (
     <div className={styleMerge("space-y-3", className)}>
@@ -110,29 +135,16 @@ export const ExchangeDiscoveryToolbar = ({
           aria-label={labels.view}
           className="col-start-2 row-start-1 flex shrink-0 overflow-hidden rounded-sm border border-noir-gold"
         >
-          <Button
-            type="button"
-            variant={null}
-            size={null}
-            aria-pressed
-            aria-label={labels.gridView}
-            title={labels.gridView}
-            className={`${controlHeight} flex w-11 items-center justify-center rounded-none border-0 bg-noir-gold text-noir-black`}
-          >
+          {viewButton(
+            "grid",
+            labels.gridView,
             <LuLayoutGrid className="h-5 w-5" aria-hidden />
-          </Button>
-          <Button
-            type="button"
-            variant={null}
-            size={null}
-            disabled
-            aria-pressed={false}
-            aria-label={labels.listViewUnavailable}
-            title={labels.listViewUnavailable}
-            className={`${controlHeight} flex w-11 items-center justify-center rounded-none border-0 bg-noir-black/60 text-noir-gold/40`}
-          >
+          )}
+          {viewButton(
+            "list",
+            labels.listView,
             <LuList className="h-5 w-5" aria-hidden />
-          </Button>
+          )}
         </div>
       </div>
       <p className="text-center text-xs text-noir-gold-500 lg:text-left">

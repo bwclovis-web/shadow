@@ -15,9 +15,13 @@ import { FilterChipStrip } from "@/components/Molecules/FilterChipStrip"
 import { FilterToggleGroup } from "@/components/Molecules/FilterToggleGroup"
 import { SaveSearchButton } from "@/components/Molecules/SaveSearchButton/SaveSearchButton"
 import { ExchangeFragranceGroupCard } from "@/components/Molecules/ExchangeFragranceGroupCard"
+import { ExchangeFragranceGroupRow } from "@/components/Molecules/ExchangeFragranceGroupRow/ExchangeFragranceGroupRow"
 import { ExchangeOpenSplitChip } from "@/components/Molecules/ExchangeOpenSplitChip/ExchangeOpenSplitChip"
 import ActivityFeedSection from "@/components/Containers/Exchange/ActivityFeedSection"
-import { ExchangeDiscoveryToolbar } from "@/components/Containers/Exchange/ExchangeDiscoveryToolbar"
+import {
+  ExchangeDiscoveryToolbar,
+  type ExchangeBrowseView,
+} from "@/components/Containers/Exchange/ExchangeDiscoveryToolbar"
 import MutualSwapsSection from "@/components/Containers/Exchange/MutualSwapsSection"
 import PalateRecommendationsSection from "@/components/Containers/Exchange/PalateRecommendationsSection"
 import SeasonalTrendingSection from "@/components/Containers/Exchange/SeasonalTrendingSection"
@@ -25,6 +29,7 @@ import WishlistMatchesSection from "@/components/Containers/Exchange/WishlistMat
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 import Modal from "@/components/Organisms/Modal"
 import CatalogFilterDrawer from "@/components/Organisms/CatalogFilterDrawer/CatalogFilterDrawer"
+import { ExchangeCollectorsPanel } from "@/components/Organisms/ExchangeCollectorsPanel/ExchangeCollectorsPanel"
 import TitleBanner from "@/components/Organisms/TitleBanner"
 import {
   SIGN_IN,
@@ -32,13 +37,18 @@ import {
   THE_COLLECTORS_GUIDE_PATH,
 } from "@/constants/routes"
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
+import { useExchangeOffers } from "@/hooks/useExchangeOffers"
 import { useGsapStagger } from "@/hooks/useGsapStagger"
+import { useMediaQuery } from "@/hooks/useMediaQuery"
 import { useTradeComposerModal } from "@/hooks/useTradeComposerModal"
-import { fetchExchangeOffersPage } from "@/lib/queries/exchange-offers"
 import type { ExchangeOfferDto } from "@/types/exchange-discovery"
 import { tradeListingSeedFromExchangeRow } from "@/types/trade"
+import { TABLET_MEDIA } from "@/constants/breakpoints"
 import { getTraderDisplayName } from "@/utils/user"
-import type { ExchangeUserPerfumeRow } from "./exchange-types"
+import type {
+  ExchangePerfumeRow,
+  ExchangeUserPerfumeRow,
+} from "./exchange-types"
 import {
   countDiscoveryFilters,
   discoveryFiltersActive,
@@ -129,13 +139,26 @@ const TheExchangeClient = ({
   const [draftFilters, setDraftFilters] = useState<PerfumeDiscoveryFilters>(
     emptyDiscoveryFilters()
   )
+  const [collectorsPerfumeId, setCollectorsPerfumeId] = useState<string | null>(
+    null
+  )
+  const [listExpandedPerfumeId, setListExpandedPerfumeId] = useState<
+    string | null
+  >(null)
+  const [contactBusyOfferId, setContactBusyOfferId] = useState<string | null>(
+    null
+  )
+  const [removedOfferIds, setRemovedOfferIds] = useState<Set<string>>(
+    () => new Set()
+  )
+  const collectorsTriggerRef = useRef<HTMLButtonElement | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const exchangeGridRef = useRef<HTMLUListElement>(null)
+  const isMdUp = useMediaQuery(TABLET_MEDIA)
   const {
     composerData,
     modalOpen: composerModalOpen,
     openComposer,
-    openListingPicker,
     closeComposer,
   } = useTradeComposerModal()
 
@@ -148,8 +171,76 @@ const TheExchangeClient = ({
     [searchParamsKey]
   )
 
+  const resultsView: ExchangeBrowseView =
+    new URLSearchParams(searchParamsKey).get("view") === "list"
+      ? "list"
+      : "grid"
+
   const activeFilterCount = countDiscoveryFilters(discoveryFromUrl)
   const draftFilterCount = countDiscoveryFilters(draftFilters)
+
+  const collectorsPerfume = useMemo(
+    () =>
+      collectorsPerfumeId
+        ? (availablePerfumes.find(p => p.id === collectorsPerfumeId) ?? null)
+        : null,
+    [availablePerfumes, collectorsPerfumeId]
+  )
+
+  const listExpandedPerfume = useMemo(
+    () =>
+      listExpandedPerfumeId
+        ? (availablePerfumes.find(p => p.id === listExpandedPerfumeId) ?? null)
+        : null,
+    [availablePerfumes, listExpandedPerfumeId]
+  )
+
+  const activeOffersPerfumeId =
+    resultsView === "list" ? listExpandedPerfumeId : collectorsPerfumeId
+
+  const offersQuery = useExchangeOffers({
+    perfumeId: activeOffersPerfumeId,
+    filterQueryString,
+    enabled: Boolean(activeOffersPerfumeId),
+  })
+
+  useEffect(() => {
+    setCollectorsPerfumeId(null)
+    setListExpandedPerfumeId(null)
+    collectorsTriggerRef.current = null
+    setRemovedOfferIds(new Set())
+    setContactBusyOfferId(null)
+  }, [filterQueryString])
+
+  useEffect(() => {
+    if (resultsView === "list") {
+      setCollectorsPerfumeId(null)
+    } else {
+      setListExpandedPerfumeId(null)
+    }
+    setRemovedOfferIds(new Set())
+    setContactBusyOfferId(null)
+  }, [resultsView])
+
+  useEffect(() => {
+    setRemovedOfferIds(new Set())
+    setContactBusyOfferId(null)
+  }, [activeOffersPerfumeId])
+
+  useEffect(() => {
+    if (
+      collectorsPerfumeId &&
+      !availablePerfumes.some(p => p.id === collectorsPerfumeId)
+    ) {
+      setCollectorsPerfumeId(null)
+    }
+    if (
+      listExpandedPerfumeId &&
+      !availablePerfumes.some(p => p.id === listExpandedPerfumeId)
+    ) {
+      setListExpandedPerfumeId(null)
+    }
+  }, [availablePerfumes, collectorsPerfumeId, listExpandedPerfumeId])
 
   const pushUrlFromSearchParams = useCallback(
     (nextSearch: URLSearchParams) => {
@@ -236,7 +327,7 @@ const TheExchangeClient = ({
       pathname === ROUTE_PATH || pathname.endsWith(ROUTE_PATH)
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (!onExchangeRoute || filtersOpen) return
+      if (!onExchangeRoute || filtersOpen || collectorsPerfumeId) return
       const target = e.target as HTMLElement
       const inField =
         target.tagName === "INPUT" ||
@@ -277,62 +368,88 @@ const TheExchangeClient = ({
   }, [
     pathname,
     filtersOpen,
+    collectorsPerfumeId,
     discoveryFromUrl,
     cancelPending,
     handleDiscoveryChange,
     setLocalSearchValue,
   ])
 
-  const handleProposeSwapFromCard = useCallback(
-    async (
-      perfume: (typeof availablePerfumes)[number],
-      trigger: HTMLButtonElement | null
-    ) => {
-      if (!viewerId || perfume.offerCount <= 0) return
+  const restoreCollectorsFocus = useCallback(() => {
+    const trigger = collectorsTriggerRef.current
+    collectorsTriggerRef.current = null
+    requestAnimationFrame(() => {
+      trigger?.focus()
+    })
+  }, [])
 
-      const perfumeMeta = {
-        perfumeId: perfume.id,
-        perfumeName: perfume.name,
-        perfumeHouse: perfume.perfumeHouse?.name,
-        perfumeImage: perfume.image ?? null,
+  const closeCollectorsPanel = useCallback(() => {
+    setCollectorsPerfumeId(null)
+    restoreCollectorsFocus()
+  }, [restoreCollectorsFocus])
+
+  const handleViewChange = useCallback(
+    (nextView: ExchangeBrowseView) => {
+      const nextSearch = new URLSearchParams(searchParams.toString())
+      if (nextView === "list") nextSearch.set("view", "list")
+      else nextSearch.delete("view")
+      pushUrlFromSearchParams(nextSearch)
+    },
+    [searchParams, pushUrlFromSearchParams]
+  )
+
+  const handleOpenCollectors = useCallback(
+    (perfume: ExchangePerfumeRow, trigger: HTMLButtonElement | null) => {
+      collectorsTriggerRef.current = trigger
+      if (resultsView === "list") {
+        setListExpandedPerfumeId(prev =>
+          prev === perfume.id ? null : perfume.id
+        )
+        return
       }
+      setCollectorsPerfumeId(perfume.id)
+    },
+    [resultsView]
+  )
 
+  const handleContactOffer = useCallback(
+    async (offer: ExchangeOfferDto) => {
+      const perfume =
+        resultsView === "list" ? listExpandedPerfume : collectorsPerfume
+      if (!perfume || !viewerId || offer.userId === viewerId) return
+
+      setContactBusyOfferId(offer.id)
       try {
-        const page = await fetchExchangeOffersPage({
-          perfumeId: perfume.id,
-          filterQueryString,
-        })
-        const listings = page.offers
-          .filter(o => o.userId !== viewerId)
-          .map(offerDtoToUserPerfumeRow)
-        if (listings.length === 0) return
-
-        if (listings.length === 1) {
-          const up = listings[0]!
-          openComposer(
-            {
-              seed: tradeListingSeedFromExchangeRow(up, perfumeMeta),
-              counterpartyDisplayName: getTraderDisplayName(up.user),
-            },
-            trigger
-          )
+        const available = await offersQuery.verifyOfferStillAvailable(offer.id)
+        if (!available) {
+          setRemovedOfferIds(prev => new Set(prev).add(offer.id))
           return
         }
 
-        openListingPicker(listings, perfumeMeta, {
-          trigger,
-          traderReputationByUserId,
-        })
-      } catch (error) {
-        console.error("[the-exchange] failed to load offers for CTA", error)
+        const up = offerDtoToUserPerfumeRow(offer)
+        openComposer(
+          {
+            seed: tradeListingSeedFromExchangeRow(up, {
+              perfumeId: perfume.id,
+              perfumeName: perfume.name,
+              perfumeHouse: perfume.perfumeHouse?.name,
+              perfumeImage: perfume.image ?? null,
+            }),
+            counterpartyDisplayName: getTraderDisplayName(up.user),
+          },
+          collectorsTriggerRef.current
+        )
+      } finally {
+        setContactBusyOfferId(null)
       }
     },
     [
+      resultsView,
+      listExpandedPerfume,
+      collectorsPerfume,
       viewerId,
-      filterQueryString,
       openComposer,
-      openListingPicker,
-      traderReputationByUserId,
+      offersQuery,
     ]
   )
 
@@ -539,6 +656,8 @@ const TheExchangeClient = ({
                 onSearchChange={setLocalSearchValue}
                 activeFilterCount={activeFilterCount}
                 onOpenFilters={openFilters}
+                view={resultsView}
+                onViewChange={handleViewChange}
                 labels={{
                   searchPlaceholder: t("search.placeholder"),
                   keyboardHint: t("search.keyboardHint"),
@@ -551,7 +670,6 @@ const TheExchangeClient = ({
                   view: tCatalog("toolbar.view"),
                   gridView: tCatalog("toolbar.gridView"),
                   listView: tCatalog("toolbar.listView"),
-                  listViewUnavailable: tToolbar("listViewUnavailable"),
                 }}
               />
             </OrnamentalFrame>
@@ -627,43 +745,92 @@ const TheExchangeClient = ({
                 <ul
                   ref={exchangeGridRef}
                   className={styleMerge(
-                    "grid auto-rows-fr grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3",
-                    availablePerfumes.length === 1 && "max-w-md",
-                    availablePerfumes.length === 2 && "max-w-3xl"
+                    resultsView === "list"
+                      ? "flex flex-col gap-3"
+                      : "grid auto-rows-fr grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3",
+                    resultsView === "grid" &&
+                      availablePerfumes.length === 1 &&
+                      "max-w-md",
+                    resultsView === "grid" &&
+                      availablePerfumes.length === 2 &&
+                      "max-w-3xl"
                   )}
                 >
-                  {availablePerfumes.map((perfume, index) => (
-                    <li
-                      key={perfume.id}
-                      data-exchange-card
-                      className="relative min-w-0"
-                    >
-                      <ExchangeFragranceGroupCard
-                        perfume={perfume}
-                        viewerId={viewerId}
-                        imagePriority={index < 3}
-                        viewCollectorsLabel={tListings("viewCollectors")}
-                        signInHref={SIGN_IN_WITH_RETURN}
-                        signInLabel={t("signInToPropose")}
-                        onViewCollectors={trigger =>
-                          void handleProposeSwapFromCard(perfume, trigger)
-                        }
-                        openSplitSlot={
-                          (openSplitChipsByPerfumeId[perfume.id]?.length ?? 0) >
-                          0 ? (
-                            <ExchangeOpenSplitChip
-                              chips={openSplitChipsByPerfumeId[perfume.id]!}
-                              label={tSplits("openSplitChip", {
-                                count:
-                                  openSplitChipsByPerfumeId[perfume.id]![0]!
-                                    .openSlotCount,
-                              })}
-                            />
-                          ) : null
-                        }
-                      />
-                    </li>
-                  ))}
+                  {availablePerfumes.map((perfume, index) => {
+                    const openSplitSlot =
+                      (openSplitChipsByPerfumeId[perfume.id]?.length ?? 0) >
+                      0 ? (
+                        <ExchangeOpenSplitChip
+                          chips={openSplitChipsByPerfumeId[perfume.id]!}
+                          label={tSplits("openSplitChip", {
+                            count:
+                              openSplitChipsByPerfumeId[perfume.id]![0]!
+                                .openSlotCount,
+                          })}
+                        />
+                      ) : null
+
+                    return (
+                      <li
+                        key={perfume.id}
+                        data-exchange-card
+                        className="relative min-w-0"
+                      >
+                        {resultsView === "list" ? (
+                          <ExchangeFragranceGroupRow
+                            perfume={perfume}
+                            expanded={listExpandedPerfumeId === perfume.id}
+                            onToggle={trigger =>
+                              handleOpenCollectors(perfume, trigger)
+                            }
+                            offers={
+                              listExpandedPerfumeId === perfume.id
+                                ? offersQuery.offers
+                                : []
+                            }
+                            status={
+                              listExpandedPerfumeId === perfume.id
+                                ? offersQuery.status
+                                : "idle"
+                            }
+                            errorMessage={
+                              listExpandedPerfumeId === perfume.id
+                                ? offersQuery.errorMessage
+                                : null
+                            }
+                            hasMore={
+                              listExpandedPerfumeId === perfume.id
+                                ? offersQuery.hasMore
+                                : false
+                            }
+                            loadingMore={
+                              listExpandedPerfumeId === perfume.id
+                                ? offersQuery.loadingMore
+                                : false
+                            }
+                            viewerId={viewerId}
+                            signInHref={SIGN_IN_WITH_RETURN}
+                            removedOfferIds={removedOfferIds}
+                            contactBusyOfferId={contactBusyOfferId}
+                            onContact={offer => void handleContactOffer(offer)}
+                            onRetry={() => void offersQuery.reload()}
+                            onLoadMore={() => void offersQuery.loadMore()}
+                            openSplitSlot={openSplitSlot}
+                          />
+                        ) : (
+                          <ExchangeFragranceGroupCard
+                            perfume={perfume}
+                            imagePriority={index < 3}
+                            viewCollectorsLabel={tListings("viewCollectors")}
+                            onViewCollectors={trigger =>
+                              handleOpenCollectors(perfume, trigger)
+                            }
+                            openSplitSlot={openSplitSlot}
+                          />
+                        )}
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
 
@@ -711,6 +878,32 @@ const TheExchangeClient = ({
             ) : null}
 
             <AdSenseUnit showAds={showAds} variant="display" />
+
+            {collectorsPerfume && resultsView === "grid" ? (
+              <ExchangeCollectorsPanel
+                open
+                onClose={closeCollectorsPanel}
+                title={tListings("collectorsTitle", {
+                  name: collectorsPerfume.name,
+                })}
+                closeLabel={tListings("collectorsClose")}
+                perfumeName={collectorsPerfume.name}
+                perfumeImage={collectorsPerfume.image}
+                offers={offersQuery.offers}
+                status={offersQuery.status}
+                errorMessage={offersQuery.errorMessage}
+                hasMore={offersQuery.hasMore}
+                loadingMore={offersQuery.loadingMore}
+                viewerId={viewerId}
+                signInHref={SIGN_IN_WITH_RETURN}
+                removedOfferIds={removedOfferIds}
+                contactBusyOfferId={contactBusyOfferId}
+                onContact={offer => void handleContactOffer(offer)}
+                onRetry={() => void offersQuery.reload()}
+                onLoadMore={() => void offersQuery.loadMore()}
+                variant={isMdUp ? "panel" : "sheet"}
+              />
+            ) : null}
 
             {composerData && composerModalOpen ? (
               <Modal innerType="dark" animateStart="top">

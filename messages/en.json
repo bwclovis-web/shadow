@@ -2240,11 +2240,23 @@
       "photoIndex": "Photo {current} of {total}",
       "offerCount": "{count, plural, one {# matching offer} other {# matching offers}}",
       "viewCollectors": "View collectors",
-      "groupLightboxTitle": "Photos for {name}"
+      "groupLightboxTitle": "Photos for {name}",
+      "fillRemaining": "About {percent}% remaining",
+      "offerUnavailable": "This offer is no longer available.",
+      "signInToContact": "Sign in to contact",
+      "ownListingHint": "This is your listing.",
+      "offersLoading": "Loading collector offers…",
+      "offersLoadFailed": "Could not load offers. Please try again.",
+      "offersRetry": "Retry",
+      "offersEmpty": "No matching offers for {name}.",
+      "offersLoadMore": "Load more offers",
+      "offersLoadingMore": "Loading more…",
+      "offersEnd": "No more offers",
+      "collectorsTitle": "Collectors — {name}",
+      "collectorsClose": "Close collectors"
     },
     "toolbar": {
       "sortNameAsc": "Name (A–Z)",
-      "listViewUnavailable": "List view coming soon",
       "tradeShortcutsAria": "Exchange preference shortcuts"
     }
   },

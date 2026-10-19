@@ -4,7 +4,7 @@ import Image from "next/image"
 import { useTranslations } from "next-intl"
 
 import type { ExchangePerfumeRow } from "@/app/the-exchange/exchange-types"
-import { Button, VooDooLink } from "@/components/Atoms/Button"
+import { Button } from "@/components/Atoms/Button"
 import { ExchangeBottleMark } from "@/components/Atoms/ExchangeBottleMark"
 import { OrnamentalFrame } from "@/components/Atoms/OrnamentalFrame"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
@@ -23,13 +23,9 @@ const FALLBACK_BOTTLE = "/images/single-bottle.webp"
 
 export type ExchangeFragranceGroupCardProps = {
   perfume: ExchangePerfumeRow
-  viewerId?: string | null
   imagePriority?: boolean
-  /** Existing supported destination until Step 5 panel. */
   onViewCollectors: (trigger: HTMLButtonElement | null) => void
   viewCollectorsLabel: string
-  signInHref: string
-  signInLabel: string
   openSplitSlot?: React.ReactNode
   className?: string
 }
@@ -74,11 +70,8 @@ export const ExchangeFragranceGroupCard = ({
   imagePriority = false,
   onViewCollectors,
   viewCollectorsLabel,
-  signInHref,
-  signInLabel,
   openSplitSlot,
   className,
-  viewerId = null,
 }: ExchangeFragranceGroupCardProps) => {
   const t = useTranslations("tradingPost.listings")
   const resolved = resolveExchangeGroupImages(perfume)
@@ -193,27 +186,16 @@ export const ExchangeFragranceGroupCard = ({
         </p>
 
         {showCollectorsCta ? (
-          viewerId ? (
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              background="gold"
-              className="mt-auto w-full max-w-full"
-              onClick={e => onViewCollectors(e.currentTarget)}
-            >
-              {viewCollectorsLabel}
-            </Button>
-          ) : (
-            <VooDooLink
-              url={signInHref}
-              variant="primary"
-              background="gold"
-              className="mt-auto w-full max-w-full"
-            >
-              {signInLabel}
-            </VooDooLink>
-          )
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            background="gold"
+            className="mt-auto w-full max-w-full"
+            onClick={e => onViewCollectors(e.currentTarget)}
+          >
+            {viewCollectorsLabel}
+          </Button>
         ) : null}
       </div>
 
