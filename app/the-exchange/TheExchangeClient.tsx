@@ -12,13 +12,20 @@ import { OrnamentalFrame } from "@/components/Atoms/OrnamentalFrame"
 import { JoinLink } from "@/components/Molecules/JoinLink"
 import { PaginationBar } from "@/components/Molecules/PaginationBar"
 import { FilterChipStrip } from "@/components/Molecules/FilterChipStrip"
+import { FilterToggleGroup } from "@/components/Molecules/FilterToggleGroup"
 import { SaveSearchButton } from "@/components/Molecules/SaveSearchButton/SaveSearchButton"
-import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import { ExchangePerfumeCard } from "@/components/Molecules/ExchangePerfumeCard"
 import { ExchangeOpenSplitChip } from "@/components/Molecules/ExchangeOpenSplitChip/ExchangeOpenSplitChip"
+import ActivityFeedSection from "@/components/Containers/Exchange/ActivityFeedSection"
+import { ExchangeDiscoveryToolbar } from "@/components/Containers/Exchange/ExchangeDiscoveryToolbar"
+import MutualSwapsSection from "@/components/Containers/Exchange/MutualSwapsSection"
+import PalateRecommendationsSection from "@/components/Containers/Exchange/PalateRecommendationsSection"
+import SeasonalTrendingSection from "@/components/Containers/Exchange/SeasonalTrendingSection"
+import WishlistMatchesSection from "@/components/Containers/Exchange/WishlistMatchesSection"
+import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
 import Modal from "@/components/Organisms/Modal"
+import CatalogFilterDrawer from "@/components/Organisms/CatalogFilterDrawer/CatalogFilterDrawer"
 import TitleBanner from "@/components/Organisms/TitleBanner"
-import { DESKTOP_MEDIA } from "@/constants/breakpoints"
 import {
   SIGN_IN,
   THE_ARCHIVE_PATH,
@@ -26,23 +33,6 @@ import {
 } from "@/constants/routes"
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
 import { useGsapStagger } from "@/hooks/useGsapStagger"
-import { useMediaQuery } from "@/hooks/useMediaQuery"
-
-const DiscoveryFiltersPanel = dynamic(
-  () =>
-    import("@/components/Organisms/DiscoveryFiltersPanel").then(
-      (mod) => mod.DiscoveryFiltersPanel
-    ),
-  { ssr: false }
-)
-
-const TradeComposerModal = dynamic(
-  () =>
-    import("@/components/Containers/Trade/TradeComposerModal").then(
-      (mod) => mod.TradeComposerModal
-    ),
-  { ssr: false }
-)
 import { useTradeComposerModal } from "@/hooks/useTradeComposerModal"
 import {
   getTradeCtaLabelKey,
@@ -51,26 +41,40 @@ import {
 } from "@/types/trade"
 import { getTraderDisplayName } from "@/utils/user"
 import {
+  countDiscoveryFilters,
   discoveryFiltersActive,
   discoveryFiltersToSearchParams,
+  DISCOVERY_TRADE_PREFERENCES,
   emptyDiscoveryFilters,
   parseDiscoveryFiltersFromSearchParams,
+  type DiscoveryTradePreference,
   type PerfumeDiscoveryFilters,
 } from "@/utils/discovery-filters"
-import ActivityFeedSection from "@/components/Containers/Exchange/ActivityFeedSection"
-import MutualSwapsSection from "@/components/Containers/Exchange/MutualSwapsSection"
-import PalateRecommendationsSection from "@/components/Containers/Exchange/PalateRecommendationsSection"
-import SeasonalTrendingSection from "@/components/Containers/Exchange/SeasonalTrendingSection"
-import WishlistMatchesSection from "@/components/Containers/Exchange/WishlistMatchesSection"
 import { buildExchangeDiscoveryChipItems } from "./buildExchangeDiscoveryChipItems"
 import type { ExchangePageData } from "./exchange-types"
-import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
+
+const DiscoveryFiltersPanel = dynamic(
+  () =>
+    import("@/components/Organisms/DiscoveryFiltersPanel").then(
+      mod => mod.DiscoveryFiltersPanel
+    ),
+  { ssr: false }
+)
+
+const TradeComposerModal = dynamic(
+  () =>
+    import("@/components/Containers/Trade/TradeComposerModal").then(
+      mod => mod.TradeComposerModal
+    ),
+  { ssr: false }
+)
 
 export type { ExchangePageData } from "./exchange-types"
 
 const ROUTE_PATH = "/the-exchange"
 const BANNER_IMAGE = "/images/new/exchange.webp"
 const SIGN_IN_WITH_RETURN = `${SIGN_IN}?redirect=${encodeURIComponent(ROUTE_PATH)}`
+
 const TheExchangeClient = ({
   availablePerfumes,
   pagination,
@@ -95,6 +99,8 @@ const TheExchangeClient = ({
   const tTradeComposer = useTranslations("tradeComposer")
   const tRep = useTranslations("tradingPost.reputation")
   const tf = useTranslations("tradingPost.filters")
+  const tToolbar = useTranslations("tradingPost.toolbar")
+  const tCatalog = useTranslations("catalog")
   const tSeason = useTranslations("singlePerfume.seasonVote.season")
   const tTraderPrefs = useTranslations("traderProfile.preferences")
   const tListingCondition = useTranslations("listing.condition")
@@ -102,8 +108,10 @@ const TheExchangeClient = ({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const isLg = useMediaQuery(DESKTOP_MEDIA)
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [draftFilters, setDraftFilters] = useState<PerfumeDiscoveryFilters>(
+    emptyDiscoveryFilters()
+  )
   const searchInputRef = useRef<HTMLInputElement>(null)
   const exchangeGridRef = useRef<HTMLUListElement>(null)
   const {
@@ -122,6 +130,9 @@ const TheExchangeClient = ({
       ),
     [searchParamsKey]
   )
+
+  const activeFilterCount = countDiscoveryFilters(discoveryFromUrl)
+  const draftFilterCount = countDiscoveryFilters(draftFilters)
 
   const pushUrlFromSearchParams = useCallback(
     (nextSearch: URLSearchParams) => {
@@ -189,12 +200,26 @@ const TheExchangeClient = ({
     [searchParams, pushUrlFromSearchParams]
   )
 
+  const openFilters = useCallback(() => {
+    setDraftFilters(discoveryFromUrl)
+    setFiltersOpen(true)
+  }, [discoveryFromUrl])
+
+  const applyFilters = useCallback(() => {
+    handleDiscoveryChange(draftFilters)
+    setFiltersOpen(false)
+  }, [draftFilters, handleDiscoveryChange])
+
+  const clearDraftFilters = useCallback(() => {
+    setDraftFilters(emptyDiscoveryFilters())
+  }, [])
+
   useEffect(() => {
     const onExchangeRoute =
       pathname === ROUTE_PATH || pathname.endsWith(ROUTE_PATH)
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (!onExchangeRoute) return
+      if (!onExchangeRoute || filtersOpen) return
       const target = e.target as HTMLElement
       const inField =
         target.tagName === "INPUT" ||
@@ -234,6 +259,7 @@ const TheExchangeClient = ({
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [
     pathname,
+    filtersOpen,
     discoveryFromUrl,
     cancelPending,
     handleDiscoveryChange,
@@ -315,6 +341,12 @@ const TheExchangeClient = ({
     pushUrlFromSearchParams(nextSearch)
   }
 
+  const handleTradeShortcutChange = (
+    tradePreferences: DiscoveryTradePreference[]
+  ) => {
+    handleDiscoveryChange({ ...discoveryFromUrl, tradePreferences })
+  }
+
   const totalCount = pagination.totalCount ?? availablePerfumes.length
   const isEmptyExchange =
     totalCount === 0 &&
@@ -376,15 +408,15 @@ const TheExchangeClient = ({
     clearAll: tf("clearAll"),
   }
 
-  const filterPanel = (
-    <DiscoveryFiltersPanel
-      value={discoveryFromUrl}
-      onChange={handleDiscoveryChange}
-      initialNoteTags={initialNoteTags}
-      initialHouse={initialHouse}
-      labels={filterLabels}
-    />
-  )
+  const tradeShortcutOptions = DISCOVERY_TRADE_PREFERENCES.map(pref => ({
+    value: pref,
+    label:
+      pref === "cash"
+        ? tTraderPrefs("cash")
+        : pref === "trade"
+          ? tTraderPrefs("exchange")
+          : tTraderPrefs("both"),
+  }))
 
   const discoveryChipItems = useMemo(() => {
     if (!discoveryFiltersActive(discoveryFromUrl)) {
@@ -415,8 +447,7 @@ const TheExchangeClient = ({
         unknownNote: tf("unknownNote"),
         priceChipMin: min => tf("priceChipMin", { min }),
         priceChipMax: max => tf("priceChipMax", { max }),
-        priceChipRange: (min, max) =>
-          tf("priceChipRange", { min, max }),
+        priceChipRange: (min, max) => tf("priceChipRange", { min, max }),
         tradePrefLabel: pref => tTraderPrefs(pref),
         bottleLabel: bottle =>
           bottle === "decant" ? tf("bottleDecant") : tWishlistBottle(bottle),
@@ -463,252 +494,290 @@ const TheExchangeClient = ({
         </span>
       </TitleBanner>
 
-      <PageWrapper>
-      {isEmptyExchange ? (
-        <div className="text-center py-8 px-4 bg-noir-gray/80 rounded-md mt-8 border-2 border-noir-light space-y-4">
-          <h2 className="text-noir-light font-black text-3xl text-shadow-md text-shadow-noir-dark">
-            {t("empty")}
-          </h2>
-          <p className="text-noir-gold/90 max-w-lg mx-auto">{t("emptyHint")}</p>
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            <VooDooLink url={THE_ARCHIVE_PATH} variant="primary" background="gold">
-              {t("emptyBrowseArchive")}
-            </VooDooLink>
-            <VooDooLink url={THE_COLLECTORS_GUIDE_PATH} variant="secondary">
-              {t("emptyCollectorsGuide")}
-            </VooDooLink>
-            <VooDooLink url={SIGN_IN_WITH_RETURN} variant="secondary">
-              {t("emptySignIn")}
-            </VooDooLink>
-            <JoinLink placement="exchange-empty" />
-          </div>
-        </div>
-      ) : (
-        <>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(260px,300px)_1fr] lg:items-start">
-              <div className="min-w-0 space-y-6 lg:sticky lg:top-4">
-                {isLg ? (
-                  <aside aria-label={tf("toggle")}>
-                    {/* Step 1 preview: ornamental frame on one Exchange panel only */}
-                    <OrnamentalFrame
-                      size="standard"
-                      className="bg-noir-gray/80 p-4"
-                    >
-                      {filterPanel}
-                    </OrnamentalFrame>
-                  </aside>
-                ) : (
-                  <details
-                    className="rounded-md border border-noir-light bg-noir-gray/80"
-                    open={mobileFiltersOpen}
-                    onToggle={e => setMobileFiltersOpen(e.currentTarget.open)}
-                  >
-                    <summary className="cursor-pointer list-none px-4 py-3 font-semibold text-noir-gold [&::-webkit-details-marker]:hidden">
-                      {tf("toggle")}
-                    </summary>
-                    <div className="border-t border-noir-light/40 px-4 pb-4 pt-2">
-                      {filterPanel}
-                    </div>
-                  </details>
-                )}
-                {seasonalTrending.perfumes.length > 0 ? (
-                  <SeasonalTrendingSection
-                    season={seasonalTrending.season}
-                    perfumes={seasonalTrending.perfumes}
-                    variant="sidebar"
-                    className="noir-border rounded-md border-noir-gold/40 bg-noir-gold/10 p-4"
-                  />
-                ) : null}
-              </div>
-
-              <div className="min-w-0 space-y-6">
-                {discoveryChipItems.length > 0 ? (
-                  <FilterChipStrip
-                    chips={discoveryChipItems}
-                    regionAriaLabel={tf("activeFiltersAria")}
-                    onClearAll={() =>
-                      handleDiscoveryChange(emptyDiscoveryFilters())
-                    }
-                    clearAllLabel={tf("clearAll")}
-                    variant="dark"
-                    className="rounded-md border border-noir-light/40 bg-noir-gray/40 p-3"
-                  />
-                ) : null}
-                {(discoveryFiltersActive(discoveryFromUrl) ||
-                  Boolean(localSearchValue.trim())) && (
-                  <SaveSearchButton
-                    name={`Exchange: ${(
-                      localSearchValue.trim() ||
-                      discoveryFromUrl.perfumeId ||
-                      discoveryFromUrl.houseId ||
-                      "filters"
-                    )
-                      .toString()
-                      .slice(0, 60)}`}
-                    query={{
-                      q: localSearchValue.trim() || undefined,
-                      houseId: discoveryFromUrl.houseId ?? undefined,
-                      perfumeId: discoveryFromUrl.perfumeId ?? undefined,
-                      noteIds: discoveryFromUrl.noteIds.length
-                        ? discoveryFromUrl.noteIds
-                        : undefined,
-                      source: "exchange",
-                      alertOnNewListing: true,
-                      alertOnEditorial: false,
-                    }}
-                  />
-                )}
-                <div className="max-w-md mx-auto lg:mx-0 lg:max-w-none">
-                  <SearchInput
-                    id="exchange-search"
-                    inputRef={searchInputRef}
-                    value={localSearchValue}
-                    onChange={setLocalSearchValue}
-                    placeholder={t("search.placeholder")}
-                  />
-                  <p className="mt-1 text-center text-xs text-noir-gold-500 lg:text-left">
-                    {t("search.keyboardHint")}
-                  </p>
-                </div>
-                {recentListings.length > 0 || followedActivity.length > 0 ? (
-                  <ActivityFeedSection
-                    listings={recentListings}
-                    followedItems={followedActivity}
-                  />
-                ) : null}
-                {viewerId && wishlistMatches.length > 0 ? (
-                  <WishlistMatchesSection
-                    matches={wishlistMatches}
-                    viewerId={viewerId}
-                    traderReputationByUserId={traderReputationByUserId}
-                  />
-                ) : null}
-                {viewerId && mutualSwapSuggestions.length > 0 ? (
-                  <MutualSwapsSection suggestions={mutualSwapSuggestions} />
-                ) : null}
-                {viewerId && palateRecommendations.length > 0 ? (
-                  <PalateRecommendationsSection
-                    matches={palateRecommendations}
-                    viewerId={viewerId}
-                    traderReputationByUserId={traderReputationByUserId}
-                  />
-                ) : null}
-                {availablePerfumes.length === 0 ? (
-                  <div className="text-center py-8 bg-noir-dark/80 rounded-md border-2 border-noir-gold animate-fade-in">
-                    <h2>
-                      {t("search.noResults")}
-                    </h2>
-                    <p className="text-noir-gold-100 mt-2">
-                      {t("search.tryDifferent")}
-                    </p>
-                  </div>
-                ) : (
-                  <ul
-                    ref={exchangeGridRef}
-                    className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 auto-rows-fr"
-                  >
-                    {availablePerfumes.map(perfume => (
-                      <li
-                        key={perfume.id}
-                        data-exchange-card
-                        className="relative"
-                      >
-                        <ExchangePerfumeCard perfume={perfume} viewerId={viewerId}>
-                          <div className="rounded-md space-y-2">
-                            {(openSplitChipsByPerfumeId[perfume.id]?.length ?? 0) > 0 && (
-                              <ExchangeOpenSplitChip
-                                chips={openSplitChipsByPerfumeId[perfume.id]!}
-                                label={tSplits("openSplitChip", {
-                                  count:
-                                    openSplitChipsByPerfumeId[perfume.id]![0]!
-                                      .openSlotCount,
-                                })}
-                              />
-                            )}
-                            <p className="text-sm font-medium text-noir-gold">
-                              {tListings("summary", {
-                                count: perfume.userPerfume.length,
-                              })}
-                            </p>
-                            {(() => {
-                              const otherListings = perfume.userPerfume.filter(
-                                up => up.userId !== viewerId
-                              )
-                              const scores = otherListings
-                                .map(up => traderReputationByUserId[up.userId]?.score)
-                                .filter((s): s is number => s != null)
-                              if (scores.length === 0) return null
-                              const best = Math.max(...scores)
-                              return (
-                                <p className="text-xs text-noir-gold-500/80">
-                                  {tRep("exchangeTrust", { score: best })}
-                                </p>
-                              )
-                            })()}
-                            {viewerId &&
-                            perfume.userPerfume.some(
-                              up => up.userId !== viewerId
-                            ) ? (
-                              <Button
-                                type="button"
-                                variant="primary"
-                                size="sm"
-                                background="gold"
-                                className="w-full max-w-full"
-                                onClick={e =>
-                                  handleProposeSwapFromCard(
-                                    perfume,
-                                    e.currentTarget
-                                  )
-                                }
-                              >
-                                {tTradeComposer(getCardOfferCtaKey(perfume))}
-                              </Button>
-                            ) : !viewerId && perfume.userPerfume.length > 0 ? (
-                              <VooDooLink
-                                url={SIGN_IN_WITH_RETURN}
-                                variant="primary"
-                                background="gold"
-                                className="w-full max-w-full"
-                              >
-                                {t("signInToPropose")}
-                              </VooDooLink>
-                            ) : null}
-                          </div>
-                        </ExchangePerfumeCard>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                <AdSenseUnit showAds={showAds} variant="display" />
-              </div>
+      <PageWrapper className="space-y-6">
+        {isEmptyExchange ? (
+          <div className="mt-8 space-y-4 rounded-md border-2 border-noir-light bg-noir-gray/80 px-4 py-8 text-center">
+            <h2 className="text-3xl font-black text-noir-light text-shadow-md text-shadow-noir-dark">
+              {t("empty")}
+            </h2>
+            <p className="mx-auto max-w-lg text-noir-gold/90">{t("emptyHint")}</p>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <VooDooLink
+                url={THE_ARCHIVE_PATH}
+                variant="primary"
+                background="gold"
+              >
+                {t("emptyBrowseArchive")}
+              </VooDooLink>
+              <VooDooLink url={THE_COLLECTORS_GUIDE_PATH} variant="secondary">
+                {t("emptyCollectorsGuide")}
+              </VooDooLink>
+              <VooDooLink url={SIGN_IN_WITH_RETURN} variant="secondary">
+                {t("emptySignIn")}
+              </VooDooLink>
+              <JoinLink placement="exchange-empty" />
             </div>
-
-          {pagination.totalPages > 1 && (
-            <PaginationBar
-              className="py-6"
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              onPageChange={handlePageChange}
-            />
-          )}
-
-          {composerData && composerModalOpen ? (
-            <Modal innerType="dark" animateStart="top">
-              <TradeComposerModal
-                data={composerData}
-                onClose={closeComposer}
-                onViewProfileClick={closeComposer}
-                traderReputationByUserId={traderReputationByUserId}
-                onListingPicked={init => {
-                  closeComposer()
-                  setTimeout(() => openComposer(init), 0)
+          </div>
+        ) : (
+          <>
+            <OrnamentalFrame size="standard" className="bg-noir-black/40 p-3 md:p-4">
+              <ExchangeDiscoveryToolbar
+                searchId="exchange-search"
+                searchInputRef={searchInputRef}
+                searchValue={localSearchValue}
+                onSearchChange={setLocalSearchValue}
+                activeFilterCount={activeFilterCount}
+                onOpenFilters={openFilters}
+                labels={{
+                  searchPlaceholder: t("search.placeholder"),
+                  keyboardHint: t("search.keyboardHint"),
+                  sort: tCatalog("toolbar.sort"),
+                  sortNameAsc: tToolbar("sortNameAsc"),
+                  filters: tCatalog("toolbar.filters"),
+                  filtersAria: tCatalog("toolbar.filtersAria", {
+                    count: activeFilterCount,
+                  }),
+                  view: tCatalog("toolbar.view"),
+                  gridView: tCatalog("toolbar.gridView"),
+                  listView: tCatalog("toolbar.listView"),
+                  listViewUnavailable: tToolbar("listViewUnavailable"),
                 }}
               />
-            </Modal>
-          ) : null}
-        </>
-      )}
+            </OrnamentalFrame>
+
+            <div className="space-y-3">
+              <FilterToggleGroup
+                options={tradeShortcutOptions}
+                selected={discoveryFromUrl.tradePreferences}
+                onChange={handleTradeShortcutChange}
+                ariaLabel={tToolbar("tradeShortcutsAria")}
+              />
+
+              {discoveryChipItems.length > 0 ? (
+                <FilterChipStrip
+                  chips={discoveryChipItems}
+                  regionAriaLabel={tf("activeFiltersAria")}
+                  onClearAll={() =>
+                    handleDiscoveryChange(emptyDiscoveryFilters())
+                  }
+                  clearAllLabel={tf("clearAll")}
+                  variant="dark"
+                  className="rounded-md border border-noir-light/40 bg-noir-gray/40 p-3"
+                />
+              ) : null}
+
+              {(discoveryFiltersActive(discoveryFromUrl) ||
+                Boolean(localSearchValue.trim())) && (
+                <SaveSearchButton
+                  name={`Exchange: ${(
+                    localSearchValue.trim() ||
+                    discoveryFromUrl.perfumeId ||
+                    discoveryFromUrl.houseId ||
+                    "filters"
+                  )
+                    .toString()
+                    .slice(0, 60)}`}
+                  query={{
+                    q: localSearchValue.trim() || undefined,
+                    houseId: discoveryFromUrl.houseId ?? undefined,
+                    perfumeId: discoveryFromUrl.perfumeId ?? undefined,
+                    noteIds: discoveryFromUrl.noteIds.length
+                      ? discoveryFromUrl.noteIds
+                      : undefined,
+                    source: "exchange",
+                    alertOnNewListing: true,
+                    alertOnEditorial: false,
+                  }}
+                />
+              )}
+            </div>
+
+            <OrnamentalFrame size="standard" className="bg-noir-black/30 p-3 md:p-4">
+              {availablePerfumes.length === 0 ? (
+                <div className="animate-fade-in rounded-md border-2 border-noir-gold bg-noir-dark/80 py-8 text-center">
+                  <h2>{t("search.noResults")}</h2>
+                  <p className="mt-2 text-noir-gold-100">
+                    {t("search.tryDifferent")}
+                  </p>
+                  {activeFilterCount > 0 ? (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="mt-4"
+                      onClick={() =>
+                        handleDiscoveryChange(emptyDiscoveryFilters())
+                      }
+                    >
+                      {tCatalog("clearFilters")}
+                    </Button>
+                  ) : null}
+                </div>
+              ) : (
+                <ul
+                  ref={exchangeGridRef}
+                  className="grid auto-rows-fr grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+                >
+                  {availablePerfumes.map(perfume => (
+                    <li
+                      key={perfume.id}
+                      data-exchange-card
+                      className="relative"
+                    >
+                      <ExchangePerfumeCard
+                        perfume={perfume}
+                        viewerId={viewerId}
+                      >
+                        <div className="space-y-2 rounded-md">
+                          {(openSplitChipsByPerfumeId[perfume.id]?.length ?? 0) >
+                            0 && (
+                            <ExchangeOpenSplitChip
+                              chips={openSplitChipsByPerfumeId[perfume.id]!}
+                              label={tSplits("openSplitChip", {
+                                count:
+                                  openSplitChipsByPerfumeId[perfume.id]![0]!
+                                    .openSlotCount,
+                              })}
+                            />
+                          )}
+                          <p className="text-sm font-medium text-noir-gold">
+                            {tListings("summary", {
+                              count: perfume.userPerfume.length,
+                            })}
+                          </p>
+                          {(() => {
+                            const otherListings = perfume.userPerfume.filter(
+                              up => up.userId !== viewerId
+                            )
+                            const scores = otherListings
+                              .map(
+                                up =>
+                                  traderReputationByUserId[up.userId]?.score
+                              )
+                              .filter((s): s is number => s != null)
+                            if (scores.length === 0) return null
+                            const best = Math.max(...scores)
+                            return (
+                              <p className="text-xs text-noir-gold-500/80">
+                                {tRep("exchangeTrust", { score: best })}
+                              </p>
+                            )
+                          })()}
+                          {viewerId &&
+                          perfume.userPerfume.some(
+                            up => up.userId !== viewerId
+                          ) ? (
+                            <Button
+                              type="button"
+                              variant="primary"
+                              size="sm"
+                              background="gold"
+                              className="w-full max-w-full"
+                              onClick={e =>
+                                handleProposeSwapFromCard(
+                                  perfume,
+                                  e.currentTarget
+                                )
+                              }
+                            >
+                              {tTradeComposer(getCardOfferCtaKey(perfume))}
+                            </Button>
+                          ) : !viewerId && perfume.userPerfume.length > 0 ? (
+                            <VooDooLink
+                              url={SIGN_IN_WITH_RETURN}
+                              variant="primary"
+                              background="gold"
+                              className="w-full max-w-full"
+                            >
+                              {t("signInToPropose")}
+                            </VooDooLink>
+                          ) : null}
+                        </div>
+                      </ExchangePerfumeCard>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {pagination.totalPages > 1 ? (
+                <PaginationBar
+                  className="pt-6"
+                  currentPage={pagination.currentPage}
+                  totalPages={pagination.totalPages}
+                  onPageChange={handlePageChange}
+                />
+              ) : null}
+            </OrnamentalFrame>
+
+            {recentListings.length > 0 || followedActivity.length > 0 ? (
+              <ActivityFeedSection
+                listings={recentListings}
+                followedItems={followedActivity}
+              />
+            ) : null}
+
+            {viewerId && wishlistMatches.length > 0 ? (
+              <WishlistMatchesSection
+                matches={wishlistMatches}
+                viewerId={viewerId}
+                traderReputationByUserId={traderReputationByUserId}
+              />
+            ) : null}
+            {viewerId && mutualSwapSuggestions.length > 0 ? (
+              <MutualSwapsSection suggestions={mutualSwapSuggestions} />
+            ) : null}
+            {viewerId && palateRecommendations.length > 0 ? (
+              <PalateRecommendationsSection
+                matches={palateRecommendations}
+                viewerId={viewerId}
+                traderReputationByUserId={traderReputationByUserId}
+              />
+            ) : null}
+            {seasonalTrending.perfumes.length > 0 ? (
+              <SeasonalTrendingSection
+                season={seasonalTrending.season}
+                perfumes={seasonalTrending.perfumes}
+                variant="sidebar"
+                className="rounded-md border border-noir-gold/40 bg-noir-gold/10 p-4"
+              />
+            ) : null}
+
+            <AdSenseUnit showAds={showAds} variant="display" />
+
+            {composerData && composerModalOpen ? (
+              <Modal innerType="dark" animateStart="top">
+                <TradeComposerModal
+                  data={composerData}
+                  onClose={closeComposer}
+                  onViewProfileClick={closeComposer}
+                  traderReputationByUserId={traderReputationByUserId}
+                  onListingPicked={init => {
+                    closeComposer()
+                    setTimeout(() => openComposer(init), 0)
+                  }}
+                />
+              </Modal>
+            ) : null}
+
+            <CatalogFilterDrawer
+              open={filtersOpen}
+              onClose={() => setFiltersOpen(false)}
+              title={tf("toggle")}
+              closeLabel={tCatalog("drawer.close")}
+              clearLabel={tCatalog("drawer.clearAll")}
+              applyLabel={tCatalog("drawer.apply", { count: draftFilterCount })}
+              onClear={clearDraftFilters}
+              onApply={applyFilters}
+            >
+              <DiscoveryFiltersPanel
+                value={draftFilters}
+                onChange={setDraftFilters}
+                initialNoteTags={initialNoteTags}
+                initialHouse={initialHouse}
+                labels={filterLabels}
+              />
+            </CatalogFilterDrawer>
+          </>
+        )}
       </PageWrapper>
     </main>
   )

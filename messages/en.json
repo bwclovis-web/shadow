@@ -2238,6 +2238,11 @@
       "openListingPhoto": "Open photo from {collector}, image {index}",
       "multiLightboxTitle": "Listing photos",
       "photoIndex": "Photo {current} of {total}"
+    },
+    "toolbar": {
+      "sortNameAsc": "Name (A–Z)",
+      "listViewUnavailable": "List view coming soon",
+      "tradeShortcutsAria": "Exchange preference shortcuts"
     }
   },
   "tradeComposer": {

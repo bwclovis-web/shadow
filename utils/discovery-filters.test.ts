@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import {
   clearDiscoveryHouse,
   clearDiscoveryPrice,
+  countDiscoveryFilters,
   DISCOVERY_QUERY,
   discoveryFiltersActive,
   discoveryFiltersToSearchParams,
@@ -190,5 +191,25 @@ describe("clearDiscoveryPrice", () => {
     const next = clearDiscoveryPrice(base)
     expect(next.minPrice).toBeNull()
     expect(next.maxPrice).toBeNull()
+  })
+})
+
+describe("countDiscoveryFilters", () => {
+  it("returns 0 for empty filters", () => {
+    expect(countDiscoveryFilters(emptyDiscoveryFilters())).toBe(0)
+  })
+
+  it("counts discrete applied values", () => {
+    expect(
+      countDiscoveryFilters({
+        ...emptyDiscoveryFilters(),
+        noteIds: ["a", "b"],
+        houseId: "h1",
+        tradePreferences: ["cash"],
+        hasPhotos: true,
+        minPrice: 10,
+        maxPrice: 50,
+      })
+    ).toBe(6)
   })
 })

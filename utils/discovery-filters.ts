@@ -306,6 +306,20 @@ export const discoveryFiltersActive = (filters: PerfumeDiscoveryFilters): boolea
   filters.hasPhotos ||
   filters.minRep != null
 
+/** Discrete applied-filter count for toolbar badges (each note/season/pref/etc. counts). */
+export const countDiscoveryFilters = (filters: PerfumeDiscoveryFilters): number =>
+  filters.noteIds.length +
+  filters.seasons.length +
+  (filters.houseId ? 1 : 0) +
+  (filters.perfumeId ? 1 : 0) +
+  (filters.minPrice != null || filters.maxPrice != null ? 1 : 0) +
+  filters.tradePreferences.length +
+  filters.bottleTypes.length +
+  filters.conditions.length +
+  (filters.region ? 1 : 0) +
+  (filters.hasPhotos ? 1 : 0) +
+  (filters.minRep != null ? 1 : 0)
+
 export const removeDiscoveryNoteId = (
   filters: PerfumeDiscoveryFilters,
   noteId: string

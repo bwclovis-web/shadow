@@ -125,6 +125,7 @@ URL-driven, server-rendered fragrance groups (same overall pattern as Archive/Ho
 | --- | --- |
 | Page | `app/the-exchange/page.tsx` |
 | Client shell | `app/the-exchange/TheExchangeClient.tsx` (evolve; split if file grows) |
+| Toolbar | `components/Containers/Exchange/ExchangeDiscoveryToolbar.tsx` |
 | Types / chips | `app/the-exchange/exchange-types.ts`, `buildExchangeDiscoveryChipItems.ts` |
 | Group query | `models/perfume-exchange.server.ts` (+ tests) |
 | Listing eligibility | `utils/exchange-listing-filter.server.ts` (+ tests) |
@@ -210,16 +211,25 @@ Trade shortcuts map to existing `tradePref` tokens (`cash` / `trade` / `both`), 
 Implement only the step the user names. After each: report changes, checks, preview (`/the-exchange`), limitations; **STOP**.
 
 - [x] **Step 0 — Plan (this doc)** — Inventory complete; hub linked; no app changes.
-- [ ] **Step 1 — Below-hero chrome + ornamental frame**
-  - [x] Reusable `OrnamentalFrame` / `OrnamentalCorner` (compact + standard); preview on desktop Exchange filter panel only — awaiting visual approval.
-  - [ ] Remove permanent filter sidebar; add toolbar shell (search/sort/Filters/view), trade shortcuts, chip strip region; hero untouched.
-- [ ] **Step 2 — Group discovery data** — 24 groups/page; narrow DTO; ≤3 preview URLs + offer/collector counts; server sort/filter before pagination; shared eligibility; fix `minRep` (and any other post-pagination filters); no full listing payload on the page.
-- [ ] **Step 3 — Grid cards** — 3 / 2 / 1 columns; View collectors CTA; image fallbacks; bottle icon affordance without rating behavior change.
-- [ ] **Step 4 — List view** — Collapsed rows; URL `view=list`; one open expansion host wired (offers may still stub until Step 5).
-- [ ] **Step 5 — View collectors + on-demand offers** — Side panel (md+) / full-screen sheet (mobile); list uses same query; 5 offers/page; cash/swap via existing flows; revalidate at action boundary; preserve filters + scroll.
-- [ ] **Step 6 — Filter drawer** — Right modal; nearly full-screen mobile; draft/apply aligned with catalog UX unless Exchange must stay live-URL (document choice in the step report); reuse `DiscoveryFiltersPanel`.
-- [ ] **Step 7 — States + recent activity** — Distinct empty / no-inventory / failure; temporary illustration slot; recent activity **below** results; empty inset never under real results.
-- [ ] **Step 8 — Harden** — i18n sync (`sync-translations` skill); unit + smoke tests; secondary sections placement; a11y pass; no hero/`TitleBanner` drift.
+- [x] **Step 1 — Ornamental frame** — Reusable `OrnamentalFrame` / `OrnamentalCorner` (compact + standard).
+- [x] **Step 2 — Below-hero chrome** — Toolbar → trade shortcuts/chips → results (existing cards) → activity; filters in `CatalogFilterDrawer` with draft/apply; `OrnamentalFrame` on toolbar + results; hero untouched; **data query unchanged**.
+- [ ] **Step 3 — Group discovery data** — 24 groups/page; narrow DTO; ≤3 preview URLs + offer/collector counts; server sort/filter before pagination; shared eligibility; fix `minRep` (and any other post-pagination filters); no full listing payload on the page.
+- [ ] **Step 4 — Grid cards** — Mosaic/group card treatment; View collectors CTA; image fallbacks; bottle icon affordance without rating behavior change.
+- [ ] **Step 5 — List view** — Collapsed rows; URL `view=list`; one open expansion host wired (offers may still stub until Step 6).
+- [ ] **Step 6 — View collectors + on-demand offers** — Side panel (md+) / full-screen sheet (mobile); list uses same query; 5 offers/page; cash/swap via existing flows; revalidate at action boundary; preserve filters + scroll.
+- [ ] **Step 7 — Filter drawer polish** — Nearly full-screen mobile if still needed beyond catalog primitive; confirm draft/apply vs live-URL.
+- [ ] **Step 8 — States + recent activity polish** — Distinct empty / no-inventory / failure; temporary illustration slot; empty inset never under real results.
+- [ ] **Step 9 — Harden** — i18n sync (`sync-translations` skill); unit + smoke tests; secondary sections placement; a11y pass; no hero/`TitleBanner` drift.
+
+### Step 2 limitations (data / UX deferred)
+
+- Page size still **16**; sort still **name asc** only (sort control disabled placeholder).
+- List view control is **disabled** (no `view` URL yet).
+- Offers still **eager**-loaded on the page; no mosaics / View collectors panel.
+- `minRep` still applied post-pagination on the server page.
+- Filter drawer reuses catalog primitive (**85dvh** bottom sheet below `md`, right panel from `md`) — not yet nearly full-screen mobile.
+- Trade shortcuts update the URL immediately; other filters use draft/apply in the drawer.
+- Secondary rails (wishlist / mutual / palate / seasonal) sit **below** activity, not in a sidebar.
 
 ---
 

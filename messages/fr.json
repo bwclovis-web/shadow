@@ -1961,6 +1961,11 @@
       "description": "Collectionneurs qui ont ce que vous cherchez et veulent quelque chose que vous proposez.",
       "youWant": "Vous voulez",
       "theyWant": "Ils veulent"
+    },
+    "toolbar": {
+      "sortNameAsc": "Nom (A–Z)",
+      "listViewUnavailable": "Vue liste bientôt disponible",
+      "tradeShortcutsAria": "Raccourcis de préférence d’échange"
     }
   },
   "tradeComposer": {
