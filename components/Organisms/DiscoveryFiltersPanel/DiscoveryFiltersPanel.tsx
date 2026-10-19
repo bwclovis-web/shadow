@@ -1,6 +1,14 @@
 "use client"
 
-import { useEffect, useId, useMemo, useState, type FC, type ReactNode } from "react"
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type FC,
+  type ReactNode,
+} from "react"
 import {
   LuArrowLeftRight,
   LuFlower2,
@@ -18,7 +26,6 @@ import { ExchangeBottleMark } from "@/components/Atoms/ExchangeBottleMark"
 import Input from "@/components/Atoms/Input/Input"
 import Select from "@/components/Atoms/Select/Select"
 import { SeasonSelectionToggleRow } from "@/components/Containers/Perfume/PerfumeSeasonVote/SeasonSelectionToggleRow"
-import { FilterChipStrip } from "@/components/Molecules/FilterChipStrip"
 import { FilterPanelSection } from "@/components/Molecules/FilterPanelSection"
 import { FilterToggleGroup } from "@/components/Molecules/FilterToggleGroup"
 import {
@@ -40,8 +47,10 @@ import {
   type ExchangeBottleType,
   type ExchangeRegionBucket,
   type PerfumeDiscoveryFilters,
+  parseDiscoveryPriceRangeStrings,
   seasonsArrayToSelection,
   selectionToSeasonsArray,
+  withDiscoveryPriceStrings,
 } from "@/utils/discovery-filters"
 import { styleMerge } from "@/utils/styleUtils"
 
@@ -59,6 +68,7 @@ export type DiscoveryFiltersPanelLabels = {
   houseTitle: string
   houseDescription?: string
   houseSearchLabel: string
+  houseSearchPlaceholder?: string
   houseClear: string
   houseSearching?: string
   houseNoMatches?: string
@@ -121,12 +131,20 @@ export type DiscoveryFiltersPanelProps = {
   labels: DiscoveryFiltersPanelLabels
   className?: string
   /**
-   * `drawer` — Exchange filter mockup (collapsible groups, plain inputs,
-   * single chip strip). Default keeps the older stacked panel for reuse.
+   * `drawer` — Exchange filter hierarchy (collapsible groups, no nested
+   * panel border). Default keeps the older stacked panel for reuse.
    */
   layout?: "default" | "drawer"
   /** Season labels for collapsed summaries (drawer). */
   seasonLabel?: (key: "winter" | "spring" | "summer" | "fall") => string
+  /**
+   * Register a flush that merges local price field strings into `value`.
+   * Used so Apply can commit the latest typed price without waiting for blur
+   * (and without racing React state from onBlur → onClick).
+   */
+  registerPendingPriceFlush?: (
+    flush: (() => PerfumeDiscoveryFilters) | null
+  ) => void
 }
 
 const TRADE_PREF_OPTIONS: DiscoveryTradePreference[] = [...DISCOVERY_TRADE_PREFERENCES]
@@ -156,6 +174,7 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
   className,
   layout = "default",
   seasonLabel,
+  registerPendingPriceFlush,
 }) => {
   const regionSelectId = useId()
   const minRepSelectId = useId()
@@ -166,6 +185,12 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
   const [maxStr, setMaxStr] = useState(
     () => (value.maxPrice != null ? String(value.maxPrice) : "")
   )
+  const minStrRef = useRef(minStr)
+  const maxStrRef = useRef(maxStr)
+  minStrRef.current = minStr
+  maxStrRef.current = maxStr
+  const valueRef = useRef(value)
+  valueRef.current = value
 
   const [localHouse, setLocalHouse] = useState<HouseAutocompleteOption | null>(
     null
@@ -190,13 +215,31 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
     }
   }, [initialHouse, value.houseId])
 
+  // Sync from committed draft without clobbering in-progress typing (e.g. "50.").
   useEffect(() => {
+    const parsed = parseDiscoveryPriceRangeStrings(minStr, maxStr)
+    if (
+      parsed.minPrice === value.minPrice &&
+      parsed.maxPrice === value.maxPrice
+    ) {
+      return
+    }
     setMinStr(value.minPrice != null ? String(value.minPrice) : "")
-  }, [value.minPrice])
+    setMaxStr(value.maxPrice != null ? String(value.maxPrice) : "")
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- local strings are source while typing
+  }, [value.minPrice, value.maxPrice])
 
   useEffect(() => {
-    setMaxStr(value.maxPrice != null ? String(value.maxPrice) : "")
-  }, [value.maxPrice])
+    if (!registerPendingPriceFlush) return
+    registerPendingPriceFlush(() =>
+      withDiscoveryPriceStrings(
+        valueRef.current,
+        minStrRef.current,
+        maxStrRef.current
+      )
+    )
+    return () => registerPendingPriceFlush(null)
+  }, [registerPendingPriceFlush])
 
   const houseSelected = useMemo((): HouseAutocompleteOption | null => {
     if (localHouse) return localHouse
@@ -238,25 +281,19 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
     ]
   )
 
-  const commitPrice = () => {
-    const minTrim = minStr.trim()
-    const maxTrim = maxStr.trim()
-    const minV = minTrim === "" ? null : Number.parseFloat(minTrim)
-    const maxV = maxTrim === "" ? null : Number.parseFloat(maxTrim)
-    const minPrice =
-      minV != null && Number.isFinite(minV) && minV >= 0 ? minV : null
-    const maxPrice =
-      maxV != null && Number.isFinite(maxV) && maxV >= 0 ? maxV : null
-    let nextMin = minPrice
-    let nextMax = maxPrice
-    if (nextMin != null && nextMax != null && nextMin > nextMax) {
-      ;[nextMin, nextMax] = [nextMax, nextMin]
+  const commitPriceFromStrings = (nextMinStr: string, nextMaxStr: string) => {
+    const next = withDiscoveryPriceStrings(value, nextMinStr, nextMaxStr)
+    if (
+      next.minPrice === value.minPrice &&
+      next.maxPrice === value.maxPrice
+    ) {
+      return
     }
-    onChange({
-      ...value,
-      minPrice: nextMin,
-      maxPrice: nextMax,
-    })
+    onChange(next)
+  }
+
+  const commitPrice = () => {
+    commitPriceFromStrings(minStr, maxStr)
   }
 
   const regionLabelFor = (bucket: ExchangeRegionBucket): string => {
@@ -329,41 +366,6 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
   const sectionSelected =
     labels.sectionSelectedCount ?? ((count: number) => `${count} selected`)
 
-  const draftChips = useMemo(() => {
-    if (!drawer) return []
-    const removeAria =
-      labels.removeFilterAria ?? ((label: string) => `Remove filter: ${label}`)
-    const chips = draftNoteTags.map(tag => ({
-      id: `draft-note-${tag.id}`,
-      label: tag.name,
-      removeAriaLabel: removeAria(tag.name),
-      onRemove: () => {
-        const nextTags = draftNoteTags.filter(t => t.id !== tag.id)
-        setDraftNoteTags(nextTags)
-        onChange({ ...value, noteIds: nextTags.map(t => t.id) })
-      },
-    }))
-    if (houseSelected) {
-      chips.push({
-        id: `draft-house-${houseSelected.id}`,
-        label: houseSelected.name,
-        removeAriaLabel: removeAria(houseSelected.name),
-        onRemove: () => {
-          setLocalHouse(null)
-          onChange({ ...value, houseId: null })
-        },
-      })
-    }
-    return chips
-  }, [
-    drawer,
-    draftNoteTags,
-    houseSelected,
-    labels.removeFilterAria,
-    onChange,
-    value,
-  ])
-
   const priceSummary = (() => {
     if (value.minPrice != null && value.maxPrice != null) {
       return `${value.minPrice}–${value.maxPrice}`
@@ -401,31 +403,42 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
     </FilterPanelSection>
   )
 
+  const filterFieldClass =
+    "!min-h-11 !border !border-solid !border-noir-gold/50 !bg-noir-black/80 !text-base font-medium text-noir-gold-100 focus:!border-noir-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-gold"
+
   const priceInputs = (
     <div className="grid grid-cols-2 gap-3">
       <Input
         inputId="exchange-discovery-min-price"
         inputType="number"
-        shading={false}
+        shading={!drawer}
         label={labels.minLabel}
         min={0}
         step="any"
         value={minStr}
-        onChange={e => setMinStr(e.target.value)}
+        onChange={e => {
+          const next = e.target.value
+          setMinStr(next)
+          commitPriceFromStrings(next, maxStr)
+        }}
         onBlur={commitPrice}
-        className="!border !border-solid !border-noir-gold bg-noir-black/90 !text-base text-noir-gold-100 focus:!border-noir-gold-500 focus:ring-noir-gold"
+        className={drawer ? filterFieldClass : undefined}
       />
       <Input
         inputId="exchange-discovery-max-price"
         inputType="number"
-        shading={false}
+        shading={!drawer}
         label={labels.maxLabel}
         min={0}
         step="any"
         value={maxStr}
-        onChange={e => setMaxStr(e.target.value)}
+        onChange={e => {
+          const next = e.target.value
+          setMaxStr(next)
+          commitPriceFromStrings(minStr, next)
+        }}
         onBlur={commitPrice}
-        className="!border !border-solid !border-noir-gold bg-noir-black/90 !text-base text-noir-gold-100 focus:!border-noir-gold-500 focus:ring-noir-gold"
+        className={drawer ? filterFieldClass : undefined}
       />
     </div>
   )
@@ -434,26 +447,18 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
     <div
       className={styleMerge(
         drawer
-          ? "space-y-1"
+          ? "space-y-0"
           : "space-y-6 rounded-md border border-noir-gold bg-noir-dark p-4",
         className
       )}
     >
-      {drawer && draftChips.length > 0 ? (
-        <FilterChipStrip
-          chips={draftChips}
-          regionAriaLabel={labels.activeFiltersAria ?? "Selected filters"}
-          className="mb-4"
-        />
-      ) : null}
-
       {section({
         title: labels.notesTitle,
         description: labels.notesDescription,
         icon: <LuFlower2 aria-hidden />,
         defaultOpen: true,
         badge:
-          value.noteIds.length > 0
+          drawer && value.noteIds.length > 0
             ? sectionSelected(value.noteIds.length)
             : undefined,
         children: (
@@ -463,12 +468,13 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
             searchInputLabel={labels.notesSearchLabel}
             searchLabelClassName="sr-only"
             placeholder={labels.notesSearchPlaceholder}
-            emptyLabel={labels.notesEmptyLabel}
+            emptyLabel={drawer ? undefined : labels.notesEmptyLabel}
             data={draftNoteTags}
             allowCreate={false}
             maxSelections={CATALOG_MAX_SELECTIONS}
+            /* Plain: no nested frame / tall empty box; chips only when selected. */
             surface={drawer ? "plain" : "dark"}
-            selectedLayout={drawer ? "none" : "flow"}
+            selectedLayout="flow"
             messages={noteSearchMessages}
             onChange={tags => {
               setDraftNoteTags(tags)
@@ -483,13 +489,16 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
         description: drawer ? labels.houseDescription : undefined,
         icon: <LuHouse aria-hidden />,
         defaultOpen: true,
-        badge: houseSelected ? sectionSelected(1) : undefined,
+        badge:
+          drawer && houseSelected ? sectionSelected(1) : undefined,
         children: (
           <HouseAutocomplete
             inputId="exchange-discovery-house"
             label={labels.houseSearchLabel}
             clearLabel={labels.houseClear}
-            selected={drawer ? null : houseSelected}
+            selected={houseSelected}
+            tone={drawer ? "filter" : "default"}
+            placeholder={labels.houseSearchPlaceholder}
             messages={houseSearchMessages}
             onSelect={house => {
               setLocalHouse(house)
@@ -503,7 +512,7 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
         title: labels.seasonTitle,
         description: drawer ? undefined : labels.seasonDescription,
         icon: <LuSparkles aria-hidden />,
-        defaultOpen: drawer,
+        defaultOpen: true,
         summary: joinSummary(
           value.seasons.map(s => seasonLabel?.(s) ?? s),
           anySummary
@@ -512,7 +521,7 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
           <SeasonSelectionToggleRow
             selection={seasonsArrayToSelection(value.seasons)}
             compact={drawer}
-            showAllSeasons={!drawer}
+            showAllSeasons
             onChange={sel =>
               onChange({
                 ...value,

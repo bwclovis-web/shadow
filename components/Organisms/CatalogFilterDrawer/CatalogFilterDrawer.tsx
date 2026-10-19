@@ -11,6 +11,7 @@ import { styleMerge } from "@/utils/styleUtils"
 
 export type CatalogFilterDrawerMobileHeight = "compact" | "nearlyFull"
 
+/** Exchange mockup chrome; Archive/Houses omit this (default). */
 export type CatalogFilterDrawerChrome = "default" | "ornamental"
 
 export type CatalogFilterDrawerProps = {
@@ -29,11 +30,11 @@ export type CatalogFilterDrawerProps = {
    */
   mobileHeight?: CatalogFilterDrawerMobileHeight
   /**
-   * `ornamental` — Exchange mockup: SVG corners, ~460px desktop, selection
-   * count beside the title. Archive/Houses keep `default`.
+   * `ornamental` — Exchange: curling corners, ~460px desktop, draft count
+   * in the header. Defaults preserve Archive/Houses presentation.
    */
   chrome?: CatalogFilterDrawerChrome
-  /** e.g. "2 selected" — shown in the header when `chrome="ornamental"`. */
+  /** Draft selection label, e.g. "2 selected" (`chrome="ornamental"`). */
   selectionCountLabel?: string
 }
 
@@ -76,16 +77,28 @@ const CatalogFilterDrawer = ({
 
   if (!open || typeof document === "undefined") return null
 
+  const dragHandle = (
+    <div
+      aria-hidden
+      className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-noir-gold/40 md:hidden"
+    />
+  )
+
   const header = (
-    <header className="flex shrink-0 items-center gap-3 border-b border-noir-gold/40 px-5 py-4 md:px-6">
-      <div className="flex min-w-0 flex-1 items-baseline gap-3">
-        <h2 id={titleId} className="!mb-0 !pb-0 !text-2xl capitalize md:!text-3xl">
-          {title}
-        </h2>
-        {ornamental && selectionCountLabel ? (
-          <p className="truncate text-sm text-noir-gold-100">{selectionCountLabel}</p>
-        ) : null}
-      </div>
+    <header className="relative z-10 flex shrink-0 items-center gap-3 border-b border-noir-gold/40 px-5 py-4 md:px-6">
+      <h2
+        id={titleId}
+        className="!mb-0 !shrink-0 !pb-0 !text-2xl !leading-none capitalize md:!text-3xl"
+      >
+        {title}
+      </h2>
+      {ornamental && selectionCountLabel ? (
+        <p className="min-w-0 flex-1 truncate text-right text-sm !leading-none text-noir-gold-100">
+          {selectionCountLabel}
+        </p>
+      ) : (
+        <div className="min-w-0 flex-1" aria-hidden />
+      )}
       <Button
         type="button"
         variant="icon"
@@ -100,13 +113,13 @@ const CatalogFilterDrawer = ({
   )
 
   const body = (
-    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 md:px-6">
+    <div className="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 md:px-6">
       {children}
     </div>
   )
 
   const footer = (
-    <footer className="grid shrink-0 grid-cols-2 gap-3 border-t border-noir-gold/40 px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:px-6">
+    <footer className="relative z-10 grid shrink-0 grid-cols-2 gap-3 border-t border-noir-gold/40 px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:px-6">
       <Button
         type="button"
         variant="secondary"
@@ -136,31 +149,32 @@ const CatalogFilterDrawer = ({
         onClick={onClose}
       />
       {ornamental ? (
-        <div
-          ref={panelRef}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={titleId}
+        /*
+          Flex shell is the dialog itself. OrnamentalFrame uses clipContent=false
+          so it does not insert an overflow-hidden wrapper that would break
+          height, scrolling, focus rings, or typeahead portals.
+        */
+        <OrnamentalFrame
+          size="standard"
+          clipContent={false}
           className={styleMerge(
-            "absolute inset-x-0 bottom-0 top-[4dvh] max-h-[96dvh] transition-transform duration-300 ease-out motion-reduce:transition-none starting:translate-y-full",
-            "md:inset-y-3 md:left-auto md:right-3 md:max-h-none md:w-[28.75rem] md:starting:translate-x-full md:starting:translate-y-0"
+            "absolute inset-x-0 bottom-0 top-[4dvh] flex max-h-[96dvh] flex-col bg-noir-black shadow-[0_-12px_40px_rgba(0,0,0,0.6)] transition-transform duration-300 ease-out motion-reduce:transition-none starting:translate-y-full",
+            "md:inset-y-3 md:left-auto md:right-3 md:top-3 md:bottom-3 md:max-h-none md:w-[28.75rem] md:starting:translate-x-full md:starting:translate-y-0"
           )}
         >
-          <OrnamentalFrame
-            size="standard"
-            className="flex h-full min-h-0 flex-col bg-noir-black shadow-[0_-12px_40px_rgba(0,0,0,0.6)]"
+          <div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            className="flex min-h-0 flex-1 flex-col"
           >
-            <div className="flex h-full min-h-0 flex-col">
-              <div
-                aria-hidden
-                className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-noir-gold/40 md:hidden"
-              />
-              {header}
-              {body}
-              {footer}
-            </div>
-          </OrnamentalFrame>
-        </div>
+            {dragHandle}
+            {header}
+            {body}
+            {footer}
+          </div>
+        </OrnamentalFrame>
       ) : (
         <div
           ref={panelRef}
@@ -175,10 +189,7 @@ const CatalogFilterDrawer = ({
               : "max-h-[85dvh] rounded-t-xl"
           )}
         >
-          <div
-            aria-hidden
-            className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-noir-gold/40 md:hidden"
-          />
+          {dragHandle}
           {header}
           {body}
           {footer}

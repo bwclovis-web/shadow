@@ -1865,8 +1865,8 @@
       "seasonTitle": "Saison",
       "seasonDescription": "Explorez les parfums par saison et atmosphère.",
       "houseTitle": "Maison",
-      "houseSearchLabel": "Rechercher une maison",
-      "houseClear": "Effacer",
+      "houseSearchLabel": "Nom de la maison",
+      "houseClear": "Effacer la maison",
       "priceTitle": "Fourchette de prix",
       "priceDescription": "Filtrez les annonces selon la fourchette de prix.",
       "minLabel": "Min",
@@ -1910,7 +1910,8 @@
       "minRepChip": "Réputation {score}+",
       "houseDescription": "Recherchez et sélectionnez un nom de maison.",
       "summaryAny": "Tous",
-      "summaryNoPriceLimit": "Sans limite"
+      "summaryNoPriceLimit": "Sans limite",
+      "houseSearchPlaceholder": "Rechercher une maison…"
     },
     "wishlistMatches": {
       "title": "Correspondances pour vous",

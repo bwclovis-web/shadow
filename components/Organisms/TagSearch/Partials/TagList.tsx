@@ -9,6 +9,8 @@ type TagItem = { id: string; name: string }
 
 export type TagListLayout = "footer" | "flow"
 export type TagListSurface = "light" | "dark"
+/** `bare` — filter drawer: chips only, no nested frame / empty box / bright heading. */
+export type TagListChrome = "boxed" | "bare"
 
 interface TagListProps {
   type: "exchange" | "wishlist"
@@ -18,6 +20,7 @@ interface TagListProps {
   layout?: TagListLayout
   surface?: TagListSurface
   emptyLabel?: string
+  chrome?: TagListChrome
 }
 
 export const TagList = ({
@@ -28,10 +31,17 @@ export const TagList = ({
   layout = "footer",
   surface = "light",
   emptyLabel,
+  chrome = "boxed",
 }: TagListProps) => {
   const t = useTranslations("components.tagList")
   const isFlow = layout === "flow"
   const isDark = surface === "dark"
+  const isBare = chrome === "bare"
+
+  if (isBare && selectedTags.length === 0) {
+    return null
+  }
+
   const heading =
     label != null && label !== ""
       ? isFlow
@@ -42,12 +52,14 @@ export const TagList = ({
         : "Selected tags"
 
   const headingClass = styleMerge(
-    isFlow
-      ? styleMerge(
-          "text-xs font-semibold uppercase tracking-wider",
-          isDark ? "text-noir-gold-100/90" : "text-stone-600"
-        )
-      : "block-label"
+    isBare
+      ? "sr-only"
+      : isFlow
+        ? styleMerge(
+            "text-xs font-semibold uppercase tracking-wider",
+            isDark ? "text-noir-gold-100/90" : "text-stone-600"
+          )
+        : "block-label"
   )
 
   return (
@@ -64,22 +76,24 @@ export const TagList = ({
       <p className={headingClass}>{heading}</p>
       <ul
         className={
-          isFlow
-            ? styleMerge(
-                "flex min-h-10 w-full flex-wrap gap-2 rounded-lg border p-3 mb-4",
-                isDark
-                  ? "border-noir-gold-100  bg-noir-dark/40 shadow-inner"
-                : "border-noir-gold bg-noir-gold/10 shadow-sm"
-              )
-            : styleMerge(
-                "flex h-full w-full gap-2 overflow-x-auto overflow-y-hidden rounded-md px-1 py-1",
-                isDark ? "bg-noir-dark/30" : "bg-noir-gold/10"
-              )
+          isBare
+            ? "flex w-full flex-wrap gap-2"
+            : isFlow
+              ? styleMerge(
+                  "mb-4 flex min-h-10 w-full flex-wrap gap-2 rounded-lg border p-3",
+                  isDark
+                    ? "border-noir-gold-100 bg-noir-dark/40 shadow-inner"
+                    : "border-noir-gold bg-noir-gold/10 shadow-sm"
+                )
+              : styleMerge(
+                  "flex h-full w-full gap-2 overflow-x-auto overflow-y-hidden rounded-md px-1 py-1",
+                  isDark ? "bg-noir-dark/30" : "bg-noir-gold/10"
+                )
         }
         role="list"
         aria-label={heading}
       >
-        {selectedTags.length === 0 && isFlow && (
+        {!isBare && selectedTags.length === 0 && isFlow ? (
           <li
             className={styleMerge(
               "w-full py-2 text-center text-sm italic",
@@ -89,7 +103,7 @@ export const TagList = ({
             {emptyLabel ??
               (type === "exchange" ? t("emptyExchange") : t("emptyWishlist"))}
           </li>
-        )}
+        ) : null}
         {selectedTags.map(item =>
           onRemoveTag ? (
             <RemovableChip

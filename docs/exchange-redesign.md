@@ -291,10 +291,28 @@ Reuse existing pieces only (`CatalogFilterDrawer`, `DiscoveryFiltersPanel`, `Fil
 
 Implement **one** checklist item per request, then STOP for visual review.
 
-- [ ] **FD-1 — Drawer shell** — Ornamental outer frame only; desktop ~460px right panel; mobile nearly full-width sheet; fixed header (Filters + accurate draft selection count + close); independently scrolling body; fixed Clear all / Apply filters footer (safe-area); Archive/Houses stay on default chrome.
-- [ ] **FD-2 — Collapsible sections** — Drawer tone headings (sentence-case gold); Notes + House initially open; other groups collapsed with current-value summaries; listing-photos row with toggle; no nested decorative frames inside sections.
-- [ ] **FD-3 — Search / season / input polish** — Plain TagSearch (no tall empty notes box); house searchable without redundant chip UI; single draft chip strip for notes/house; compact season tiles (no oversized All-seasons control); charcoal price Min/Max with visible labels; reuse existing icons / bottle SVG.
-- [ ] **FD-4 — Behavior + responsive verification** — Preserve draft/apply/cancel + live shortcut/chip sync; keyboard / focus trap / typeahead portals; dropdowns visible in scroll body; verify desktop (~460) and mobile sheet; run scoped lint/tsc + related unit tests; no hero/layout/query regressions.
+- [x] **FD-1 — Drawer shell** — `CatalogFilterDrawer` `chrome="ornamental"`: `OrnamentalFrame` with `clipContent={false}` so the flex shell (header / scroll body / footer) is not trapped in an overflow clip; desktop `md:w-[28.75rem]` (~460px); Exchange keeps `mobileHeight="nearlyFull"`; header draft count from `draftFilterCount`; Apply label without count; Archive/Houses unchanged (`chrome` default).
+- [x] **FD-2 — Collapsible sections** — `layout="drawer"`: order Notes → House → Season → Trade → Bottle → Condition → Region → Reputation → Price → Photos; Notes/House/Season initially open (season compact); remaining collapsed with localized draft summaries; photos inline row + toggle; burgundy section bands + fine separators; no nested gold panel border; uncontrolled `details` `defaultOpen` so rerenders do not reset expand state; chips only inside Notes (no duplicate strip).
+- [x] **FD-3 — Search / season / input polish** — Plain TagSearch (`bare` chips, no nested/tall empty box); HouseAutocomplete `tone="filter"` (charcoal field + one removable chip); season `compact` 2×2→4-up with compact All seasons (select-all/clear preserved); charcoal Min/Max price with ivory labels; photos keep CheckBox; typeahead stays portaled for scroll dialog.
+- [x] **FD-4 — Behavior + responsive verification** — See evidence below (2026-10-19). Price Apply-without-blur fixed; draft/cancel/clear/apply + Archive defaults checked in browser; lint/tsc clean; Vitest blocked by PostCSS config.
+
+#### FD-4 evidence (2026-10-19)
+
+| Check | Result |
+| --- | --- |
+| **Price Apply without blur** | **Fixed.** Local Min/Max strings sync into draft on change (without clobbering in-progress typing like `50.`); `registerPendingPriceFlush` + Apply reads string refs so the URL gets the latest typed value even when blur→setState races the click. Browser: type `42` in Min, click Apply while focus remains on the field → `?minPrice=42`, Filters shows “1 applied”. |
+| Open copies committed | Escape after editing Min `999` left URL at `minPrice=42`; reopen showed Min `42` / “1 selected”. |
+| Close / Escape cancel | Discarded unapplied `999`; URL unchanged. |
+| Clear → Apply | Header “None selected”; URL cleared; Filters “none applied”. Apply still resets `pg` via existing `handleDiscoveryChange`. |
+| Desktop drawer | Width **460px** (`md:w-[28.75rem]`); header + footer pinned; body `overflow-y: auto`; `document.body` overflow `hidden` while open. |
+| Mobile sheet | **390** / **320**: full width, `top-[4dvh]` / ~96dvh shell after settle; footer present (safe-area padding resolves to `16px` in desktop Chrome without notch env). |
+| Archive defaults | `/the-archive` Filters: width **416** (`26rem`), default chrome (no OrnamentalFrame parent, no header selection count). Houses still omit `chrome` / `mobileHeight` in code. |
+| Hero | `TitleBanner` / `.title-banner` **not** in FD-4 diff. Live hero still `.title-banner` + “The Exchange”; heights vary by viewport as before (measured ~890@1440 / ~460@820 / ~426@390 / ~261@320 — no code change to banner). |
+| Lint | `eslint` on `TheExchangeClient`, `DiscoveryFiltersPanel`, `discovery-filters.ts` — **pass**. |
+| Types | `npx tsc --noEmit` — **pass**. |
+| Unit tests | Added `parseDiscoveryPriceRangeStrings` / `withDiscoveryPriceStrings` cases + `DiscoveryFiltersPanel.price.test.tsx` (flush without blur). **Pass (25)** when Vitest is pointed at a config with `css.postcss.plugins: []` (avoids Vite rejecting `postcss.config.mjs` `@tailwindcss/postcss` tuple). Default `npx vitest run` / `npm test` often **blocked** by that PostCSS error before suites load — repo-wide, not introduced by FD-4. |
+| Focus trap / typeahead portals | Not re-instrumented end-to-end this pass; prior Step 6 trap + `data-focus-trap-portal` unchanged. Spot-check: drawer focus lands on Close; Escape closes. |
+| Remaining | Fix Vitest ↔ `postcss.config.mjs` compatibility (repo-wide). Optional: deeper keyboard tab-order through notes/house listboxes; physical device safe-area / on-screen keyboard. |
 
 #### Local inventory (inspect-only — 2026-10-19)
 
@@ -304,7 +322,7 @@ Implement **one** checklist item per request, then STOP for visual review.
 | Uncommitted files (13) | `app/the-exchange/TheExchangeClient.tsx`; `components/Organisms/CatalogFilterDrawer/CatalogFilterDrawer.tsx`; `components/Organisms/DiscoveryFiltersPanel/DiscoveryFiltersPanel.tsx`; `components/Molecules/FilterPanelSection/FilterPanelSection.tsx`; `components/Containers/Perfume/PerfumeSeasonVote/SeasonSelectionToggleRow.tsx`; `components/Organisms/TagSearch/TagSearch.tsx`; `components/Organisms/TagSearch/tagsearch-variants.ts`; `components/Atoms/OrnamentalFrame/OrnamentalFrame.tsx`; `docs/exchange-redesign.md`; `messages/{en,es,fr,it}.json` |
 | Unchanged vs confirmed list | `HouseAutocomplete` / `HouseTypeahead` **not** modified in this WIP (drawer passes `selected={null}` when `layout="drawer"` and relies on chip strip). `OrnamentalCorner.tsx` unchanged. Draft/apply/clear handlers in `TheExchangeClient` still the same functions; only drawer props / labels / `layout` wiring added. |
 | GitHub (`origin/main`) baseline | Drawer: no `chrome` / `selectionCountLabel`; width `md:w-[26rem]`; apply label `drawer.apply` with count; panel is non-collapsible stacked sections inside a nested gold border; TagSearch `surface="dark"` + `selectedLayout="flow"` (tall framed notes block); season row includes All-seasons; no drawer chip strip. |
-| Local WIP vs that baseline | Implements most of FD-1–FD-3 in the working tree (`chrome="ornamental"`, `md:w-[28.75rem]`, header count from `draftFilterCount`, `layout="drawer"`, collapsible sections, plain/`none` TagSearch, compact seasons, draft note/house chips). **Not committed; treat FD-1–FD-4 as unchecked until each step is explicitly requested and reviewed.** |
+| Local WIP vs that baseline | **FD-1–FD-4 done** (uncommitted). |
 | Related tests (exist; none assert new drawer chrome) | `utils/discovery-filters.test.ts` (`countDiscoveryFilters`, parse/serialize); `app/the-exchange/buildExchangeDiscoveryChipItems.test.ts`; `utils/exchange-listing-filter.server.test.ts`; `models/perfume-exchange-discovery.server.test.ts`; `components/Organisms/TagSearch/TagSearch.test.tsx`; `components/Molecules/FilterChipStrip/FilterChipStrip.test.tsx`; `e2e/smoke/exchange.spec.ts` (page loads filter/search chrome — smoke only). **No** dedicated `CatalogFilterDrawer` / `DiscoveryFiltersPanel` / `FilterPanelSection` unit tests. |
 
 Preview after implementation steps: `/the-exchange` → **Filters**.

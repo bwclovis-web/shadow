@@ -19,12 +19,17 @@ export const searchbarVariants = cva(
         animated: "rounded-sm border-double border-4 focus:animate-pulse",
         home: "focus:outline-[4000px] focus:outline-noir-gold/90 focus:bg-noir-dark",
         flat: "rounded-tr-sm rounded-br-sm",
+        /** Exchange / catalog filter drawer — charcoal field, subtle gold edge. */
+        filter:
+          "rounded-sm border-noir-gold/50 bg-noir-black/80 font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-gold",
       },
       size: {
         /** Home / listing hero search (large touch target on `md+`). */
         hero: "py-2 md:py-3 md:text-xl",
         /** Forms, filters, admin — same look, smaller vertical rhythm. */
         standard: "py-2 text-sm md:text-base",
+        /** Touch-friendly filter fields (~44px). */
+        filter: "min-h-11 py-2.5 text-sm",
       },
     },
   }

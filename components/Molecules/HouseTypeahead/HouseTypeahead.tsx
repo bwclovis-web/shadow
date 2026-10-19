@@ -3,9 +3,13 @@
 import { type FC, useEffect, useId, useState } from "react"
 
 import { Button } from "@/components/Atoms/Button/Button"
+import { RemovableChip } from "@/components/Molecules/RemovableChip"
 import SearchTypeahead from "@/components/Molecules/SearchTypeahead"
 import { searchbarVariants } from "@/components/Molecules/SearchTypeahead/searchbar-variants"
 import { styleMerge } from "@/utils/styleUtils"
+
+const FILTER_LABEL_CLASS =
+  "!mb-1 !max-w-none !bg-transparent !p-0 text-sm font-medium capitalize text-noir-gold-100"
 
 export type HouseOption = { id: string; name: string }
 
@@ -37,6 +41,12 @@ type HouseTypeaheadControlledProps = {
   label: string
   clearLabel: string
   className?: string
+  /**
+   * `filter` — charcoal field + removable chip (Exchange drawer).
+   * Default keeps the readonly selected field + Clear button.
+   */
+  tone?: "default" | "filter"
+  placeholder?: string
   messages?: {
     loading: string
     empty: string
@@ -112,12 +122,54 @@ const HouseTypeaheadControlled: FC<HouseTypeaheadControlledProps> = ({
   label,
   clearLabel,
   className,
+  tone = "default",
+  placeholder,
   messages,
 }) => {
   const searchMessages = messages ?? {
     loading: "Searching…",
     empty: "No matches found",
     formatError: (err: string) => err,
+  }
+  const isFilter = tone === "filter"
+
+  if (isFilter) {
+    return (
+      <div className={styleMerge("relative flex flex-col gap-2", className)}>
+        {selected ? (
+          <ul className="flex flex-wrap gap-2" role="list" aria-label={label}>
+            <RemovableChip
+              visual="tag"
+              tone="dark"
+              label={selected.name}
+              onRemove={() => onSelect(null)}
+              removeAriaLabel={clearLabel}
+              removeTitle={clearLabel}
+            />
+          </ul>
+        ) : null}
+        <SearchTypeahead<HouseOption>
+          inputId={inputId}
+          listboxId={`${inputId}-listbox`}
+          label={label}
+          labelClassName={FILTER_LABEL_CLASS}
+          placeholder={placeholder}
+          searchFn={searchPerfumeHouses}
+          minLength={2}
+          delay={300}
+          defaultInputValue=""
+          clearInputOnSelect
+          onSelect={(item: HouseOption) =>
+            onSelect({ id: item.id, name: item.name })
+          }
+          inputClassName={searchbarVariants({
+            size: "filter",
+            variant: "filter",
+          })}
+          messages={searchMessages}
+        />
+      </div>
+    )
   }
 
   if (selected) {

@@ -150,6 +150,32 @@ function parseOptionalNonNegativeNumber(raw: string): number | null {
 }
 
 /**
+ * Parse filter drawer Min/Max price field strings (same rules as URL parse:
+ * non-negative finite numbers; swap when min > max).
+ */
+export const parseDiscoveryPriceRangeStrings = (
+  minRaw: string,
+  maxRaw: string
+): { minPrice: number | null; maxPrice: number | null } => {
+  let minPrice = parseOptionalNonNegativeNumber(minRaw)
+  let maxPrice = parseOptionalNonNegativeNumber(maxRaw)
+  if (minPrice != null && maxPrice != null && minPrice > maxPrice) {
+    ;[minPrice, maxPrice] = [maxPrice, minPrice]
+  }
+  return { minPrice, maxPrice }
+}
+
+/** Merge local price input strings into a filters object (Apply without blur). */
+export const withDiscoveryPriceStrings = (
+  filters: PerfumeDiscoveryFilters,
+  minRaw: string,
+  maxRaw: string
+): PerfumeDiscoveryFilters => ({
+  ...filters,
+  ...parseDiscoveryPriceRangeStrings(minRaw, maxRaw),
+})
+
+/**
  * Read discovery filters from URL search params (client `URLSearchParams` or App Router `searchParams`).
  */
 export const parseDiscoveryFiltersFromSearchParams = (

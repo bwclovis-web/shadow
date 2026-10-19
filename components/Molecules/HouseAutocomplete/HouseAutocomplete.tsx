@@ -13,6 +13,8 @@ export type HouseAutocompleteProps = {
   label: string
   clearLabel: string
   className?: string
+  tone?: "default" | "filter"
+  placeholder?: string
   messages?: {
     loading: string
     empty: string

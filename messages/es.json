@@ -1865,8 +1865,8 @@
       "seasonTitle": "Estación",
       "seasonDescription": "Explora fragancias por estación y atmósfera.",
       "houseTitle": "Casa",
-      "houseSearchLabel": "Buscar nombre de la casa",
-      "houseClear": "Quitar",
+      "houseSearchLabel": "Nombre de la casa",
+      "houseClear": "Quitar casa",
       "priceTitle": "Rango de precio",
       "priceDescription": "Filtra listados por rango de precios.",
       "minLabel": "Mín",
@@ -1910,7 +1910,8 @@
       "minRepChip": "Reputación {score}+",
       "houseDescription": "Busca y selecciona un nombre de casa.",
       "summaryAny": "Cualquiera",
-      "summaryNoPriceLimit": "Sin límite"
+      "summaryNoPriceLimit": "Sin límite",
+      "houseSearchPlaceholder": "Buscar nombre de la casa…"
     },
     "wishlistMatches": {
       "title": "Coincidencias para ti",

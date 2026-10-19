@@ -1,4 +1,11 @@
-import type { FC, ReactNode } from "react"
+"use client"
+
+import {
+  useLayoutEffect,
+  useRef,
+  type FC,
+  type ReactNode,
+} from "react"
 import { FiChevronDown } from "react-icons/fi"
 
 import { styleMerge } from "@/utils/styleUtils"
@@ -10,6 +17,11 @@ export type FilterPanelSectionProps = {
   className?: string
   /** Renders as a native disclosure (title toggles the content). */
   collapsible?: boolean
+  /**
+   * Initial open state for collapsible sections only.
+   * Applied once on mount so unrelated parent rerenders do not reset
+   * the user’s expand/collapse choice.
+   */
   defaultOpen?: boolean
   /** Leading icon (drawer layout). */
   icon?: ReactNode
@@ -37,6 +49,17 @@ export const FilterPanelSection: FC<FilterPanelSectionProps> = ({
   trailing,
 }) => {
   const drawer = tone === "drawer"
+  const detailsRef = useRef<HTMLDetailsElement>(null)
+
+  useLayoutEffect(() => {
+    if (!collapsible) return
+    const el = detailsRef.current
+    if (!el) return
+    el.open = defaultOpen
+    // Mount-only: do not re-sync when parent rerenders with the same prop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional
+  }, [collapsible])
+
   const descriptionNode = description ? (
     <p
       className={styleMerge(
@@ -53,7 +76,7 @@ export const FilterPanelSection: FC<FilterPanelSectionProps> = ({
       className={styleMerge(
         "!mb-0 !pb-0",
         drawer
-          ? "!text-base !font-normal capitalize !normal-case tracking-normal md:!text-lg"
+          ? "!text-[1.375rem] !font-normal !leading-snug capitalize !normal-case tracking-normal text-noir-gold"
           : collapsible
             ? "!text-xl"
             : "uppercase"
@@ -66,9 +89,12 @@ export const FilterPanelSection: FC<FilterPanelSectionProps> = ({
   if (collapsible) {
     return (
       <details
-        open={defaultOpen}
+        ref={detailsRef}
         className={styleMerge(
-          "group border-b border-noir-gold/25 pb-4",
+          "group",
+          drawer
+            ? "border-b border-noir-gold/20 bg-noir-dark/55 px-3 py-2 first:rounded-t-sm last:border-b-0"
+            : "border-b border-noir-gold/25 pb-4",
           className
         )}
       >
@@ -100,7 +126,7 @@ export const FilterPanelSection: FC<FilterPanelSectionProps> = ({
             )}
           </span>
         </summary>
-        <div className="space-y-3 pt-3">
+        <div className="space-y-3 pt-2 pb-1">
           {descriptionNode}
           {children ?? null}
         </div>
@@ -112,7 +138,7 @@ export const FilterPanelSection: FC<FilterPanelSectionProps> = ({
     <section
       className={styleMerge(
         drawer
-          ? "space-y-3 border-b border-noir-gold/25 pb-4"
+          ? "space-y-3 border-b border-noir-gold/20 bg-noir-dark/55 px-3 py-3 last:border-b-0"
           : "space-y-2",
         className
       )}

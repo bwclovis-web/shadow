@@ -352,8 +352,22 @@ const TheExchangeClient = ({
     setFiltersOpen(false)
   }, [])
 
+  const pendingPriceFlushRef = useRef<(() => PerfumeDiscoveryFilters) | null>(
+    null
+  )
+
+  const registerPendingPriceFlush = useCallback(
+    (flush: (() => PerfumeDiscoveryFilters) | null) => {
+      pendingPriceFlushRef.current = flush
+    },
+    []
+  )
+
   const applyFilters = useCallback(() => {
-    handleDiscoveryChange(draftFilters)
+    // Flush local price strings so Apply without blur commits the typed value
+    // (onBlur → setState can race the Apply click).
+    const next = pendingPriceFlushRef.current?.() ?? draftFilters
+    handleDiscoveryChange(next)
     setFiltersOpen(false)
   }, [draftFilters, handleDiscoveryChange])
 
@@ -583,6 +597,7 @@ const TheExchangeClient = ({
     houseTitle: tf("houseTitle"),
     houseDescription: tf("houseDescription"),
     houseSearchLabel: tf("houseSearchLabel"),
+    houseSearchPlaceholder: tf("houseSearchPlaceholder"),
     houseClear: tf("houseClear"),
     houseSearching: tCatalog("filters.searching"),
     houseNoMatches: tCatalog("filters.noMatches"),
@@ -1121,6 +1136,7 @@ const TheExchangeClient = ({
                 labels={filterLabels}
                 layout="drawer"
                 seasonLabel={key => tSeason(key)}
+                registerPendingPriceFlush={registerPendingPriceFlush}
               />
             </CatalogFilterDrawer>
         </>

@@ -134,7 +134,10 @@ const TagSearch = ({
           }}
           clearInputOnSelect
           placeholder={placeholder}
-          inputClassName={searchbarVariants({ size: "standard" })}
+          inputClassName={searchbarVariants({
+            size: surfaceKey === "plain" ? "filter" : "standard",
+            variant: surfaceKey === "plain" ? "filter" : "default",
+          })}
           messages={messages}
           footerSlot={
             allowCreate
@@ -162,6 +165,7 @@ const TagSearch = ({
           layout={selectedLayout === "flow" ? "flow" : "footer"}
           surface={listSurface}
           emptyLabel={emptyLabel}
+          chrome={surfaceKey === "plain" ? "bare" : "boxed"}
         />
       )}
     </div>

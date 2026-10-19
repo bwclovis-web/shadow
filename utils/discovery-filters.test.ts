@@ -9,11 +9,13 @@ import {
   discoveryFiltersToSearchParams,
   emptyDiscoveryFilters,
   parseDiscoveryFiltersFromSearchParams,
+  parseDiscoveryPriceRangeStrings,
   parseListingPriceToNumber,
   removeDiscoveryNoteId,
   removeDiscoverySeason,
   seasonsArrayToSelection,
   selectionToSeasonsArray,
+  withDiscoveryPriceStrings,
 } from "@/utils/discovery-filters"
 
 describe("parseListingPriceToNumber", () => {
@@ -32,6 +34,50 @@ describe("parseListingPriceToNumber", () => {
     expect(parseListingPriceToNumber("  ")).toBeNull()
     expect(parseListingPriceToNumber("abc")).toBeNull()
     expect(parseListingPriceToNumber(undefined)).toBeNull()
+  })
+})
+
+describe("parseDiscoveryPriceRangeStrings", () => {
+  it("parses min and max", () => {
+    expect(parseDiscoveryPriceRangeStrings("10", "50")).toEqual({
+      minPrice: 10,
+      maxPrice: 50,
+    })
+  })
+
+  it("treats empty strings as null", () => {
+    expect(parseDiscoveryPriceRangeStrings("", "  ")).toEqual({
+      minPrice: null,
+      maxPrice: null,
+    })
+    expect(parseDiscoveryPriceRangeStrings("25", "")).toEqual({
+      minPrice: 25,
+      maxPrice: null,
+    })
+  })
+
+  it("swaps when min is greater than max", () => {
+    expect(parseDiscoveryPriceRangeStrings("200", "50")).toEqual({
+      minPrice: 50,
+      maxPrice: 200,
+    })
+  })
+
+  it("rejects negative and non-finite values", () => {
+    expect(parseDiscoveryPriceRangeStrings("-1", "abc")).toEqual({
+      minPrice: null,
+      maxPrice: null,
+    })
+  })
+
+  it("withDiscoveryPriceStrings merges into filters", () => {
+    const next = withDiscoveryPriceStrings(
+      emptyDiscoveryFilters(),
+      "12",
+      "40"
+    )
+    expect(next.minPrice).toBe(12)
+    expect(next.maxPrice).toBe(40)
   })
 })
 
