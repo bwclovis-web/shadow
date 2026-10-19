@@ -22,7 +22,8 @@ export type AttributedGallerySlide = {
   tradeOnly: boolean
 }
 
-export const MOSAIC_THUMB_MAX = 4
+/** @deprecated Prefer EXCHANGE_PREVIEW_IMAGE_MAX — kept as alias for mosaic helpers. */
+export const MOSAIC_THUMB_MAX = 3
 
 /** Listings shown on exchange card photos (excludes viewer's own when logged in). */
 export const getExchangeCardPhotoListings = (

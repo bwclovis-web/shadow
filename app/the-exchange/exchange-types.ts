@@ -48,13 +48,18 @@ export type ExchangePerfumeRow = {
   slug: string
   image?: string | null
   perfumeHouse?: { id: string; name: string; slug: string; type: string } | null
+  /** Preview stubs only on browse (≤3); full offers load on demand. */
   userPerfume: ExchangeUserPerfumeRow[]
+  offerCount: number
+  collectorCount: number
 }
 
 export type ExchangePageData = {
   availablePerfumes: ExchangePerfumeRow[]
   pagination: ExchangePaginationMeta
   searchQuery: string
+  /** Current URL search string without `pg` — used for offer query keys. */
+  filterQueryString: string
   initialNoteTags: Tag[]
   initialHouse: { id: string; name: string } | null
   initialPerfume: { id: string; name: string } | null

@@ -5,6 +5,8 @@ import {
   buildExchangeListingUserPerfumeWhere,
   buildUserRegionWhereForExchangeBucket,
   hasExchangeListingFilters,
+  hasOfferLevelDiscoveryFilters,
+  mergeUserPerfumeListingWhere,
 } from "@/utils/exchange-listing-filter.server"
 
 describe("hasExchangeListingFilters", () => {
@@ -26,6 +28,62 @@ describe("hasExchangeListingFilters", () => {
         bottleTypes: ["decant"],
       })
     ).toBe(true)
+    expect(
+      hasExchangeListingFilters({
+        ...emptyDiscoveryFilters(),
+        minPrice: 10,
+      })
+    ).toBe(true)
+  })
+})
+
+describe("hasOfferLevelDiscoveryFilters", () => {
+  it("includes minRep as offer-level", () => {
+    expect(
+      hasOfferLevelDiscoveryFilters({
+        ...emptyDiscoveryFilters(),
+        minRep: 70,
+      })
+    ).toBe(true)
+  })
+})
+
+describe("mergeUserPerfumeListingWhere same-offer AND", () => {
+  it("ANDs trade + price id list on one listing row", () => {
+    const tradeWhere = buildExchangeListingUserPerfumeWhere({
+      ...emptyDiscoveryFilters(),
+      tradePreferences: ["cash"],
+    })
+    const merged = mergeUserPerfumeListingWhere(
+      { available: { not: "0" } },
+      tradeWhere,
+      ["listing-in-price-range"]
+    )
+    expect(merged).toEqual({
+      AND: [
+        { available: { not: "0" } },
+        {
+          OR: [{ tradeOnly: false, tradePreference: "cash" }],
+        },
+        { id: { in: ["listing-in-price-range"] } },
+      ],
+    })
+  })
+
+  it("does not let trade-only on listing A satisfy price on listing B", () => {
+    // Documented contract: price ids and trade prefs share one UserPerfume where (AND).
+    const tradeWhere = buildExchangeListingUserPerfumeWhere({
+      ...emptyDiscoveryFilters(),
+      tradePreferences: ["trade"],
+    })
+    const merged = mergeUserPerfumeListingWhere(
+      { available: { not: "0" } },
+      tradeWhere,
+      ["price-match-id"]
+    )
+    expect(JSON.stringify(merged)).toContain("price-match-id")
+    expect(JSON.stringify(merged)).toContain("trade")
+    expect(merged).toHaveProperty("AND")
   })
 })
 

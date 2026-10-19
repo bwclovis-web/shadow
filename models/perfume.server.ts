@@ -32,3 +32,9 @@ export {
   getAvailablePerfumesForDecantingPaginated,
 } from "./perfume-exchange.server"
 
+export {
+  getExchangeFragranceGroupsPage,
+  getExchangeMatchingOffersPage,
+  resolveExchangeEligibility,
+} from "./perfume-exchange-groups.server"
+

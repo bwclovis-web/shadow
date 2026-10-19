@@ -34,12 +34,15 @@ import {
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
 import { useGsapStagger } from "@/hooks/useGsapStagger"
 import { useTradeComposerModal } from "@/hooks/useTradeComposerModal"
+import { fetchExchangeOffersPage } from "@/lib/queries/exchange-offers"
+import type { ExchangeOfferDto } from "@/types/exchange-discovery"
 import {
   getTradeCtaLabelKey,
   isCashOnlyListing,
   tradeListingSeedFromExchangeRow,
 } from "@/types/trade"
 import { getTraderDisplayName } from "@/utils/user"
+import type { ExchangeUserPerfumeRow } from "./exchange-types"
 import {
   countDiscoveryFilters,
   discoveryFiltersActive,
@@ -75,10 +78,29 @@ const ROUTE_PATH = "/the-exchange"
 const BANNER_IMAGE = "/images/new/exchange.webp"
 const SIGN_IN_WITH_RETURN = `${SIGN_IN}?redirect=${encodeURIComponent(ROUTE_PATH)}`
 
+const offerDtoToUserPerfumeRow = (
+  offer: ExchangeOfferDto
+): ExchangeUserPerfumeRow => ({
+  id: offer.id,
+  userId: offer.userId,
+  available: offer.available,
+  type: offer.type,
+  tradePreference: offer.tradePreference,
+  tradeOnly: offer.tradeOnly,
+  price: offer.price,
+  tradePrice: offer.tradePrice,
+  images: offer.images,
+  condition: offer.condition,
+  decantFormat: offer.decantFormat,
+  mlRemaining: offer.mlRemaining,
+  user: offer.user,
+})
+
 const TheExchangeClient = ({
   availablePerfumes,
   pagination,
   searchQuery,
+  filterQueryString,
   initialNoteTags,
   initialHouse,
   initialPerfume = null,
@@ -267,13 +289,11 @@ const TheExchangeClient = ({
   ])
 
   const handleProposeSwapFromCard = useCallback(
-    (
+    async (
       perfume: (typeof availablePerfumes)[number],
       trigger: HTMLButtonElement | null
     ) => {
-      if (!viewerId) return
-      const listings = perfume.userPerfume.filter(up => up.userId !== viewerId)
-      if (listings.length === 0) return
+      if (!viewerId || perfume.offerCount <= 0) return
 
       const perfumeMeta = {
         perfumeId: perfume.id,
@@ -282,29 +302,49 @@ const TheExchangeClient = ({
         perfumeImage: perfume.image ?? null,
       }
 
-      if (listings.length === 1) {
-        const up = listings[0]!
-        openComposer(
-          {
-            seed: tradeListingSeedFromExchangeRow(up, perfumeMeta),
-            counterpartyDisplayName: getTraderDisplayName(up.user),
-          },
-          trigger
-        )
-        return
-      }
+      try {
+        const page = await fetchExchangeOffersPage({
+          perfumeId: perfume.id,
+          filterQueryString,
+        })
+        const listings = page.offers
+          .filter(o => o.userId !== viewerId)
+          .map(offerDtoToUserPerfumeRow)
+        if (listings.length === 0) return
 
-      openListingPicker(listings, perfumeMeta, {
-        trigger,
-        traderReputationByUserId,
-      })
+        if (listings.length === 1) {
+          const up = listings[0]!
+          openComposer(
+            {
+              seed: tradeListingSeedFromExchangeRow(up, perfumeMeta),
+              counterpartyDisplayName: getTraderDisplayName(up.user),
+            },
+            trigger
+          )
+          return
+        }
+
+        openListingPicker(listings, perfumeMeta, {
+          trigger,
+          traderReputationByUserId,
+        })
+      } catch (error) {
+        console.error("[the-exchange] failed to load offers for CTA", error)
+      }
     },
-    [viewerId, openComposer, openListingPicker, traderReputationByUserId]
+    [
+      viewerId,
+      filterQueryString,
+      openComposer,
+      openListingPicker,
+      traderReputationByUserId,
+    ]
   )
 
   const getCardOfferCtaKey = (
     perfume: (typeof availablePerfumes)[number]
   ): "proposeSwap" | "connectAboutBottle" | "chooseListing" => {
+    if (perfume.offerCount > 1) return "chooseListing"
     const listings = perfume.userPerfume.filter(
       up => viewerId && up.userId !== viewerId
     )
@@ -312,10 +352,14 @@ const TheExchangeClient = ({
       const up = listings[0]!
       return getTradeCtaLabelKey(up.tradePreference, up.tradeOnly)
     }
-    if (listings.every(up => isCashOnlyListing(up.tradePreference, up.tradeOnly))) {
+    if (
+      listings.length > 0 &&
+      listings.every(up => isCashOnlyListing(up.tradePreference, up.tradeOnly))
+    ) {
       return "connectAboutBottle"
     }
     if (
+      listings.length > 0 &&
       listings.every(
         up => !isCashOnlyListing(up.tradePreference, up.tradeOnly)
       )
@@ -641,14 +685,11 @@ const TheExchangeClient = ({
                           )}
                           <p className="text-sm font-medium text-noir-gold">
                             {tListings("summary", {
-                              count: perfume.userPerfume.length,
+                              count: perfume.offerCount,
                             })}
                           </p>
                           {(() => {
-                            const otherListings = perfume.userPerfume.filter(
-                              up => up.userId !== viewerId
-                            )
-                            const scores = otherListings
+                            const scores = perfume.userPerfume
                               .map(
                                 up =>
                                   traderReputationByUserId[up.userId]?.score
@@ -662,10 +703,7 @@ const TheExchangeClient = ({
                               </p>
                             )
                           })()}
-                          {viewerId &&
-                          perfume.userPerfume.some(
-                            up => up.userId !== viewerId
-                          ) ? (
+                          {viewerId && perfume.offerCount > 0 ? (
                             <Button
                               type="button"
                               variant="primary"
@@ -673,7 +711,7 @@ const TheExchangeClient = ({
                               background="gold"
                               className="w-full max-w-full"
                               onClick={e =>
-                                handleProposeSwapFromCard(
+                                void handleProposeSwapFromCard(
                                   perfume,
                                   e.currentTarget
                                 )
@@ -681,7 +719,7 @@ const TheExchangeClient = ({
                             >
                               {tTradeComposer(getCardOfferCtaKey(perfume))}
                             </Button>
-                          ) : !viewerId && perfume.userPerfume.length > 0 ? (
+                          ) : !viewerId && perfume.offerCount > 0 ? (
                             <VooDooLink
                               url={SIGN_IN_WITH_RETURN}
                               variant="primary"

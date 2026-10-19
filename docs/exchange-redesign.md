@@ -85,7 +85,7 @@ Secondary surfaces that exist today (wishlist matches, mutual swaps, palate reco
 - Perfume-level filters: notes (any of selected), seasons (any), house (single id), perfume id, search name/house — via `buildExchangeDiscoveryWhereFragments`.
 - `minRep` is applied **after** pagination in the page component today (eligibility/count bug relative to this contract; fix in the data step).
 - Select today omits `amount` / `mlRemaining` / `decantFormat` even though `exchange-types` and photo tests mention some of them — fill indicators must only appear when a later step loads **valid** volume data.
-- Photo helpers: `utils/exchange-listing-photos.ts` (`MOSAIC_THUMB_MAX = 4` today; redesign cap is **3**). Fallback chain for display: seller upload → catalog image → neutral placeholder (align with `getPrimaryListingImage` / listing photo components).
+- Photo helpers: `utils/exchange-listing-photos.ts` (`MOSAIC_THUMB_MAX = 3`). Fallback chain for display: seller upload → catalog image → neutral placeholder (align with `getPrimaryListingImage` / listing photo components).
 - Actions: `TradeComposerModal` + `useTradeComposerModal` / `ExchangeListingPicker` / `ExchangeListingRow`; cash vs swap via `getTradeCtaLabelKey` / `isCashOnlyListing`.
 - Rating bottle art: `components/Organisms/NoirRating/` (`PerfumeBottle`, `OverallBottle`, accents/gradients). Reuse artwork for offer-count affordances **without** changing perfume rating behavior.
 - Catalog reuse targets: `CatalogToolbar` patterns, `CatalogFilterDrawer` (adapt mobile to nearly full-screen / right drawer per mockups), `FilterChipStrip`, `PaginationBar`, `DiscoveryFiltersPanel` field set, `useCatalogNavigation`-style URL pushes (`scroll: false`), atoms per `.cursor/rules/reuse-ui-components.mdc`.
@@ -127,11 +127,14 @@ URL-driven, server-rendered fragrance groups (same overall pattern as Archive/Ho
 | Client shell | `app/the-exchange/TheExchangeClient.tsx` (evolve; split if file grows) |
 | Toolbar | `components/Containers/Exchange/ExchangeDiscoveryToolbar.tsx` |
 | Types / chips | `app/the-exchange/exchange-types.ts`, `buildExchangeDiscoveryChipItems.ts` |
-| Group query | `models/perfume-exchange.server.ts` (+ tests) |
-| Listing eligibility | `utils/exchange-listing-filter.server.ts` (+ tests) |
-| Photos / previews | `utils/exchange-listing-photos.ts` (+ tests) |
-| Offer page API | New thin `app/api/...` route → model helper (narrow DTO, take/skip, same eligibility) |
-| Client fetch | `lib/queries/` (no `models/*.server` imports) |
+| Group query | `models/perfume-exchange-groups.server.ts` (`getExchangeFragranceGroupsPage`) |
+| Legacy exchange queries | `models/perfume-exchange.server.ts` (fragments; non-paginated helper) |
+| Listing eligibility | `utils/exchange-listing-filter.server.ts` (+ tests); shared via `resolveExchangeEligibility` |
+| DTOs | `types/exchange-discovery.ts` |
+| Card adapter | `utils/exchange-group-card.ts` |
+| Photos / previews | `utils/exchange-listing-photos.ts` (`MOSAIC_THUMB_MAX = 3`) |
+| Offer page API | `app/api/exchange/offers/route.ts` → `getExchangeMatchingOffersPage` |
+| Client fetch | `lib/queries/exchange-offers.ts` |
 | Filter UI | Reuse `DiscoveryFiltersPanel` inside adapted drawer |
 | Cards / list / panel | New or evolved Exchange molecules under `components/Molecules/` / `components/Containers/Exchange/` |
 
@@ -213,7 +216,7 @@ Implement only the step the user names. After each: report changes, checks, prev
 - [x] **Step 0 — Plan (this doc)** — Inventory complete; hub linked; no app changes.
 - [x] **Step 1 — Ornamental frame** — Reusable `OrnamentalFrame` / `OrnamentalCorner` (compact + standard).
 - [x] **Step 2 — Below-hero chrome** — Toolbar → trade shortcuts/chips → results (existing cards) → activity; filters in `CatalogFilterDrawer` with draft/apply; `OrnamentalFrame` on toolbar + results; hero untouched; **data query unchanged**.
-- [ ] **Step 3 — Group discovery data** — 24 groups/page; narrow DTO; ≤3 preview URLs + offer/collector counts; server sort/filter before pagination; shared eligibility; fix `minRep` (and any other post-pagination filters); no full listing payload on the page.
+- [x] **Step 3 — Group discovery data** — 24 groups/page; narrow DTO; ≤3 attributed previews; offer + collector counts; shared eligibility (incl. price + `minRep` before pagination); on-demand offers API (5/page, cursor); page `force-dynamic`; cards wired via preview stubs + CTA fetch.
 - [ ] **Step 4 — Grid cards** — Mosaic/group card treatment; View collectors CTA; image fallbacks; bottle icon affordance without rating behavior change.
 - [ ] **Step 5 — List view** — Collapsed rows; URL `view=list`; one open expansion host wired (offers may still stub until Step 6).
 - [ ] **Step 6 — View collectors + on-demand offers** — Side panel (md+) / full-screen sheet (mobile); list uses same query; 5 offers/page; cash/swap via existing flows; revalidate at action boundary; preserve filters + scroll.
@@ -221,15 +224,20 @@ Implement only the step the user names. After each: report changes, checks, prev
 - [ ] **Step 8 — States + recent activity polish** — Distinct empty / no-inventory / failure; temporary illustration slot; empty inset never under real results.
 - [ ] **Step 9 — Harden** — i18n sync (`sync-translations` skill); unit + smoke tests; secondary sections placement; a11y pass; no hero/`TitleBanner` drift.
 
-### Step 2 limitations (data / UX deferred)
+### Step 2 limitations (chrome)
 
-- Page size still **16**; sort still **name asc** only (sort control disabled placeholder).
 - List view control is **disabled** (no `view` URL yet).
-- Offers still **eager**-loaded on the page; no mosaics / View collectors panel.
-- `minRep` still applied post-pagination on the server page.
 - Filter drawer reuses catalog primitive (**85dvh** bottom sheet below `md`, right panel from `md`) — not yet nearly full-screen mobile.
 - Trade shortcuts update the URL immediately; other filters use draft/apply in the drawer.
 - Secondary rails (wishlist / mutual / palate / seasonal) sit **below** activity, not in a sidebar.
+
+### Step 3 — data notes
+
+- Groups: offset `pg` (clamped); sort **name asc, id asc**. Offers: **cursor** on `updatedAt+id` (no arbitrary offer page jumps).
+- `minRep` is applied in eligibility before pagination via a bounded trader set (`EXCHANGE_MIN_REP_TRADER_CAP`); reputation is not a DB column.
+- Browse payload is narrow (counts + ≤3 previews). Full matching offers: `GET /api/exchange/offers`.
+- Collector vs offer counts are on the group DTO; UI still labels the listing summary with offer count only (copy for collectors deferred).
+- **Fill level:** `UserPerfume.mlRemaining` (Float?) and `amount` (string capacity) exist; `available` is listed-for-sale ml. NoirRating bottle SVGs animate **rating** liquid, not inventory. Accurate fill % requires finite `mlRemaining` and parseable `amount > 0` — **never** infer from condition, rating, or ambiguous quantity. Offer DTO exposes `mlRemaining` + `amount` for a later step; Step 3 does not render fill indicators or add schema fields.
 
 ---
 

@@ -31,7 +31,18 @@ export const hasExchangeListingFilters = (
         discovery.bottleTypes.length > 0 ||
         discovery.conditions.length > 0 ||
         discovery.region != null ||
-        discovery.hasPhotos)
+        discovery.hasPhotos ||
+        discovery.minPrice != null ||
+        discovery.maxPrice != null)
+  )
+
+/** True when discovery includes constraints that apply to a single UserPerfume row. */
+export const hasOfferLevelDiscoveryFilters = (
+  discovery: PerfumeDiscoveryFilters | undefined
+): boolean =>
+  Boolean(
+    discovery &&
+      (hasExchangeListingFilters(discovery) || discovery.minRep != null)
   )
 
 const tradePreferenceWhere = (
@@ -175,8 +186,10 @@ export const fetchPerfumeIdsWithMatchingListings = async (
 ): Promise<string[] | null> => {
   const listingWhere = buildExchangeListingUserPerfumeWhere(discovery)
   const needsBottleSql = discovery.bottleTypes.length > 0
+  const needsPriceSql =
+    discovery.minPrice != null || discovery.maxPrice != null
 
-  if (!listingWhere && !needsBottleSql) return null
+  if (!listingWhere && !needsBottleSql && !needsPriceSql) return null
 
   let bottleIds: string[] | undefined
   if (needsBottleSql) {
@@ -184,16 +197,63 @@ export const fetchPerfumeIdsWithMatchingListings = async (
     if (bottleIds.length === 0) return []
   }
 
+  let priceIds: string[] | undefined
+  if (needsPriceSql) {
+    priceIds = await fetchUserPerfumeIdsWithListingPriceInRange(
+      discovery.minPrice,
+      discovery.maxPrice
+    )
+    if (priceIds.length === 0) return []
+  }
+
   const userPerfumeWhere = mergeUserPerfumeListingWhere(
     { available: { not: "0" } },
     listingWhere,
     bottleIds
   )
+  const whereWithPrice =
+    priceIds != null
+      ? mergeUserPerfumeListingWhere(userPerfumeWhere, undefined, priceIds)
+      : userPerfumeWhere
 
   const rows = await prisma.userPerfume.findMany({
-    where: userPerfumeWhere,
+    where: whereWithPrice,
     select: { perfumeId: true },
     distinct: ["perfumeId"],
   })
   return rows.map(r => r.perfumeId)
+}
+
+/**
+ * In-stock listing ids whose `price` parses into the numeric range (same-offer AND).
+ */
+export const fetchUserPerfumeIdsWithListingPriceInRange = async (
+  minPrice: number | null,
+  maxPrice: number | null
+): Promise<string[]> => {
+  if (minPrice == null && maxPrice == null) return []
+
+  const parts: Prisma.Sql[] = [
+    Prisma.sql`up."available" <> '0'`,
+    Prisma.sql`up.price IS NOT NULL`,
+    Prisma.sql`TRIM(up.price) <> ''`,
+    Prisma.sql`(NULLIF(REGEXP_REPLACE(TRIM(up.price), '[^0-9.]', '', 'g'), '')) ~ '^[0-9]+(\\.[0-9]+)?$'`,
+  ]
+  if (minPrice != null) {
+    parts.push(
+      Prisma.sql`(NULLIF(REGEXP_REPLACE(TRIM(up.price), '[^0-9.]', '', 'g'), ''))::numeric >= ${minPrice}`
+    )
+  }
+  if (maxPrice != null) {
+    parts.push(
+      Prisma.sql`(NULLIF(REGEXP_REPLACE(TRIM(up.price), '[^0-9.]', '', 'g'), ''))::numeric <= ${maxPrice}`
+    )
+  }
+  const whereClause = Prisma.join(parts, " AND ")
+  const rows = await prisma.$queryRaw<{ id: string }[]>`
+    SELECT up.id AS id
+    FROM "UserPerfume" up
+    WHERE ${whereClause}
+  `
+  return rows.map(r => r.id)
 }

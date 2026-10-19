@@ -4,10 +4,8 @@ import { getTranslations } from "next-intl/server"
 import { buildPageMetadata } from "@/lib/seo/metadata"
 import { buildItemListJsonLd } from "@/lib/seo/json-ld"
 import { getPerfumeHouseSummaryById } from "@/models/house.server"
-import {
-  getAvailablePerfumesForDecantingPaginated,
-  getPerfumeById,
-} from "@/models/perfume.server"
+import { getPerfumeById } from "@/models/perfume.server"
+import { getExchangeFragranceGroupsPage } from "@/models/perfume-exchange-groups.server"
 import { getCachedRecentlyListedActivity, getFollowedActivity } from "@/models/activity-feed.server"
 import { getCachedSeasonalTrendingPerfumes } from "@/models/seasonal-trending.server"
 import { getExchangePalateRecommendations } from "@/models/exchange-palate.server"
@@ -18,7 +16,12 @@ import { loadTraderReputationsForUserIds } from "@/services/reputation/loadReput
 import { listOpenSplitChipsForPerfumes } from "@/models/decant-split.server"
 import { enrichWishlistExchangeMatches } from "@/services/trade-match"
 import { isDecantSplitsEnabled } from "@/utils/decant-splits-enabled.server"
-import { parseDiscoveryFiltersFromSearchParams } from "@/utils/discovery-filters"
+import { EXCHANGE_GROUP_PAGE_SIZE } from "@/utils/exchange-constants"
+import {
+  discoveryFiltersToSearchParams,
+  parseDiscoveryFiltersFromSearchParams,
+} from "@/utils/discovery-filters"
+import { exchangeGroupToPageRow } from "@/utils/exchange-group-card"
 import { getCookieHeader } from "@/utils/server/get-cookie-header.server"
 import { getSessionFromCookieHeader } from "@/utils/session-from-request.server"
 import { shouldShowAds } from "@/utils/ads/should-show-ads"
@@ -26,9 +29,11 @@ import { shouldShowAds } from "@/utils/ads/should-show-ads"
 import TheExchangeClient from "./TheExchangeClient"
 import type { ExchangePageData } from "./exchange-types"
 
-export const revalidate = 60
-
-const PAGE_SIZE = 16
+/**
+ * Always dynamic: session, viewer exclusion, ads, and followed activity must not
+ * share a public ISR cache.
+ */
+export const dynamic = "force-dynamic"
 
 export const generateMetadata = async (): Promise<Metadata> => {
   const t = await getTranslations("tradingPost.meta")
@@ -55,14 +60,22 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
   ).trim()
   const discovery = parseDiscoveryFiltersFromSearchParams(params)
   const initialPage = Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
-  const initialSkip = (initialPage - 1) * PAGE_SIZE
 
   const cookieHeader = await getCookieHeader()
-  const session = await getSessionFromCookieHeader(cookieHeader, { includeUser: true })
+  const session = await getSessionFromCookieHeader(cookieHeader, {
+    includeUser: true,
+  })
   const viewerId = session?.user?.id ?? null
 
+  const filterQuery = discoveryFiltersToSearchParams(
+    discovery,
+    new URLSearchParams()
+  )
+  if (searchQuery) filterQuery.set("q", searchQuery)
+  const filterQueryString = filterQuery.toString()
+
   const [
-    perfumePage,
+    groupsPage,
     initialNoteTags,
     initialHouse,
     initialPerfume,
@@ -73,94 +86,54 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
     palateRecommendations,
     mutualSwapSuggestions,
   ] = await Promise.all([
-      getAvailablePerfumesForDecantingPaginated({
-        skip: initialSkip,
-        take: PAGE_SIZE,
-        search: searchQuery || undefined,
-        discovery,
-      }),
-      discovery.noteIds.length > 0
-        ? getPerfumeNotesByIds(discovery.noteIds)
-        : Promise.resolve([]),
-      discovery.houseId
-        ? getPerfumeHouseSummaryById(discovery.houseId)
-        : Promise.resolve(null),
-      discovery.perfumeId
-        ? getPerfumeById(discovery.perfumeId).then(p =>
-            p ? { id: p.id, name: p.name } : null
-          )
-        : Promise.resolve(null),
-      viewerId
-        ? getWishlistExchangeMatches(viewerId)
-        : Promise.resolve([]),
-      getCachedRecentlyListedActivity(12),
-      viewerId ? getFollowedActivity(viewerId, 12) : Promise.resolve([]),
-      getCachedSeasonalTrendingPerfumes(10),
-      viewerId
-        ? getExchangePalateRecommendations(viewerId).catch(error => {
-            console.error("[the-exchange] palate recommendations failed", error)
-            return []
-          })
-        : Promise.resolve([]),
-      viewerId ? getMutualTradeSuggestions(viewerId) : Promise.resolve([]),
-    ])
-
-  let { perfumes: availablePerfumes, meta: pagination } = perfumePage
-
-  const needsRefetch =
-    pagination.totalCount > 0 &&
-    availablePerfumes.length === 0 &&
-    pagination.totalPages > 0 &&
-    initialSkip >= pagination.totalCount
-
-  if (needsRefetch) {
-    const lastPage = pagination.totalPages
-    const adjustedSkip = (lastPage - 1) * PAGE_SIZE
-    const adjusted = await getAvailablePerfumesForDecantingPaginated({
-      skip: adjustedSkip,
-      take: PAGE_SIZE,
+    getExchangeFragranceGroupsPage({
+      page: initialPage,
+      pageSize: EXCHANGE_GROUP_PAGE_SIZE,
       search: searchQuery || undefined,
       discovery,
-    })
-    availablePerfumes = adjusted.perfumes
-    pagination = adjusted.meta
-  }
+      viewerId,
+    }),
+    discovery.noteIds.length > 0
+      ? getPerfumeNotesByIds(discovery.noteIds)
+      : Promise.resolve([]),
+    discovery.houseId
+      ? getPerfumeHouseSummaryById(discovery.houseId)
+      : Promise.resolve(null),
+    discovery.perfumeId
+      ? getPerfumeById(discovery.perfumeId).then(p =>
+          p ? { id: p.id, name: p.name } : null
+        )
+      : Promise.resolve(null),
+    viewerId ? getWishlistExchangeMatches(viewerId) : Promise.resolve([]),
+    getCachedRecentlyListedActivity(12),
+    viewerId ? getFollowedActivity(viewerId, 12) : Promise.resolve([]),
+    getCachedSeasonalTrendingPerfumes(10),
+    viewerId
+      ? getExchangePalateRecommendations(viewerId).catch(error => {
+          console.error("[the-exchange] palate recommendations failed", error)
+          return []
+        })
+      : Promise.resolve([]),
+    viewerId ? getMutualTradeSuggestions(viewerId) : Promise.resolve([]),
+  ])
 
-  if (pagination.totalCount === 0) {
-    pagination = {
-      ...pagination,
-      currentPage: 1,
-      totalPages: 0,
-      hasNextPage: false,
-      hasPrevPage: false,
-      hasMore: false,
-    }
-  }
+  const availablePerfumes = groupsPage.groups.map(exchangeGroupToPageRow)
+  const pagination = groupsPage.meta
 
   const traderIds = [
     ...new Set(
       [
-        ...availablePerfumes,
-        ...wishlistMatches,
-        ...palateRecommendations.map(m => ({
-          userPerfume: [{ userId: m.counterpartyId }],
-        })),
-      ].flatMap(p => p.userPerfume.map(up => up.userId))
+        ...availablePerfumes.flatMap(p => p.userPerfume.map(up => up.userId)),
+        ...wishlistMatches.flatMap(p => p.userPerfume.map(up => up.userId)),
+        ...palateRecommendations.map(m => m.counterpartyId),
+      ].filter(Boolean)
     ),
   ]
   const reputationMap =
-    traderIds.length > 0 ? await loadTraderReputationsForUserIds(traderIds) : new Map()
+    traderIds.length > 0
+      ? await loadTraderReputationsForUserIds(traderIds)
+      : new Map()
   const traderReputationByUserId = Object.fromEntries(reputationMap)
-
-  if (discovery.minRep != null) {
-    const min = discovery.minRep
-    availablePerfumes = availablePerfumes.filter(perfume =>
-      perfume.userPerfume.some(up => {
-        const score = traderReputationByUserId[up.userId]?.score
-        return score != null && score >= min
-      })
-    )
-  }
 
   const enrichedWishlistMatches =
     viewerId && wishlistMatches.length > 0
@@ -198,31 +171,32 @@ const TheExchangePage = async ({ searchParams }: PageProps) => {
                   name: p.name,
                   path: `/perfume/${p.slug}`,
                 })),
-              }),
+              })
             ),
           }}
         />
       ) : null}
       <TheExchangeClient
-      availablePerfumes={
-        availablePerfumes as unknown as ExchangePageData["availablePerfumes"]
-      }
-      pagination={pagination}
-      searchQuery={searchQuery}
-      initialNoteTags={initialNoteTags}
-      initialHouse={initialHouse}
-      initialPerfume={initialPerfume}
-      wishlistMatches={enrichedWishlistMatches}
-      recentListings={recentListings}
-      followedActivity={followedActivity}
-      seasonalTrending={seasonalTrending}
-      traderReputationByUserId={traderReputationByUserId}
-      viewerId={viewerId}
-      openSplitChipsByPerfumeId={openSplitChipsByPerfumeId}
-      palateRecommendations={palateRecommendations}
-      mutualSwapSuggestions={mutualSwapSuggestions}
-      showAds={shouldShowAds(session?.user)}
-    />
+        availablePerfumes={
+          availablePerfumes as ExchangePageData["availablePerfumes"]
+        }
+        pagination={pagination}
+        searchQuery={searchQuery}
+        filterQueryString={filterQueryString}
+        initialNoteTags={initialNoteTags}
+        initialHouse={initialHouse}
+        initialPerfume={initialPerfume}
+        wishlistMatches={enrichedWishlistMatches}
+        recentListings={recentListings}
+        followedActivity={followedActivity}
+        seasonalTrending={seasonalTrending}
+        traderReputationByUserId={traderReputationByUserId}
+        viewerId={viewerId}
+        openSplitChipsByPerfumeId={openSplitChipsByPerfumeId}
+        palateRecommendations={palateRecommendations}
+        mutualSwapSuggestions={mutualSwapSuggestions}
+        showAds={shouldShowAds(session?.user)}
+      />
     </>
   )
 }

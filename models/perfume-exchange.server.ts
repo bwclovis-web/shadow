@@ -6,6 +6,7 @@ import {
   buildExchangeListingUserPerfumeWhere,
   fetchPerfumeIdsWithMatchingListings,
   fetchUserPerfumeIdsMatchingBottleTypes,
+  fetchUserPerfumeIdsWithListingPriceInRange,
   hasExchangeListingFilters,
   mergeUserPerfumeListingWhere,
 } from "@/utils/exchange-listing-filter.server"
@@ -212,6 +213,17 @@ export const getAvailablePerfumesForDecantingPaginated = async ({
       listingFilterWhere,
       bottleTypeIds
     )
+    if (discovery.minPrice != null || discovery.maxPrice != null) {
+      const priceListingIds = await fetchUserPerfumeIdsWithListingPriceInRange(
+        discovery.minPrice,
+        discovery.maxPrice
+      )
+      nestedListingWhere = mergeUserPerfumeListingWhere(
+        nestedListingWhere,
+        undefined,
+        priceListingIds
+      )
+    }
   }
 
   const whereClause: Prisma.PerfumeWhereInput =
