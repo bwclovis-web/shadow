@@ -25,6 +25,9 @@ const isFocusableSurface = (el: HTMLElement) => {
   return true
 }
 
+/** Portaled typeahead listboxes mark themselves so traps can include them. */
+export const FOCUS_TRAP_PORTAL_ATTR = "data-focus-trap-portal"
+
 /** Returns focusable descendants of `container` in tab order (document order). */
 export const getTabbableElements = (container: HTMLElement): HTMLElement[] => {
   const nodes = container.querySelectorAll<HTMLElement>(TABBABLE_SELECTOR)
@@ -42,6 +45,26 @@ export const getTabbableElements = (container: HTMLElement): HTMLElement[] => {
   })
 }
 
+const getOpenFocusTrapPortals = (): HTMLElement[] =>
+  Array.from(
+    document.querySelectorAll<HTMLElement>(`[${FOCUS_TRAP_PORTAL_ATTR}]`)
+  )
+
+const getTrapTabbables = (container: HTMLElement): HTMLElement[] => {
+  const portals = getOpenFocusTrapPortals()
+  return [container, ...portals].flatMap(root => getTabbableElements(root))
+}
+
+const isExpandedCombobox = (el: HTMLElement | null): boolean =>
+  Boolean(
+    el &&
+      el.getAttribute("role") === "combobox" &&
+      el.getAttribute("aria-expanded") === "true"
+  )
+
+const isInsideFocusTrapPortal = (el: HTMLElement | null): boolean =>
+  Boolean(el?.closest(`[${FOCUS_TRAP_PORTAL_ATTR}]`))
+
 export type UseFocusTrapOptions = {
   active: boolean
   initialFocusRef?: RefObject<HTMLElement | null>
@@ -51,6 +74,7 @@ export type UseFocusTrapOptions = {
 /**
  * Keeps keyboard focus inside `containerRef` while `active`, optionally moves
  * initial focus when activated, and calls `onEscape` on Escape.
+ * Includes open `[data-focus-trap-portal]` nodes (e.g. typeahead listboxes).
  * Reusable for Modal and any other overlay.
  */
 export const useFocusTrap = (
@@ -77,7 +101,13 @@ export const useFocusTrap = (
     }
 
     const onKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement as HTMLElement | null
+
       if (e.key === "Escape" && onEscape) {
+        // Let open combobox / portaled listbox dismiss before closing the host.
+        if (isExpandedCombobox(activeEl) || isInsideFocusTrapPortal(activeEl)) {
+          return
+        }
         e.preventDefault()
         e.stopPropagation()
         onEscape()
@@ -89,14 +119,13 @@ export const useFocusTrap = (
       }
 
       const container = containerRef.current
-      const tabbables = getTabbableElements(container)
+      const tabbables = getTrapTabbables(container)
       if (tabbables.length === 0) {
         return
       }
 
-      const first = tabbables[0]
-      const last = tabbables[tabbables.length - 1]
-      const activeEl = document.activeElement as HTMLElement | null
+      const first = tabbables[0]!
+      const last = tabbables[tabbables.length - 1]!
 
       if (!e.shiftKey && activeEl === last) {
         e.preventDefault()
@@ -104,6 +133,13 @@ export const useFocusTrap = (
       } else if (e.shiftKey && activeEl === first) {
         e.preventDefault()
         last.focus()
+      } else if (
+        activeEl &&
+        !container.contains(activeEl) &&
+        !isInsideFocusTrapPortal(activeEl)
+      ) {
+        e.preventDefault()
+        first.focus()
       }
     }
 

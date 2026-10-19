@@ -37,6 +37,11 @@ type HouseTypeaheadControlledProps = {
   label: string
   clearLabel: string
   className?: string
+  messages?: {
+    loading: string
+    empty: string
+    formatError: (error: string) => string
+  }
 }
 
 export type HouseTypeaheadProps = HouseTypeaheadFormProps | HouseTypeaheadControlledProps
@@ -107,7 +112,14 @@ const HouseTypeaheadControlled: FC<HouseTypeaheadControlledProps> = ({
   label,
   clearLabel,
   className,
+  messages,
 }) => {
+  const searchMessages = messages ?? {
+    loading: "Searching…",
+    empty: "No matches found",
+    formatError: (err: string) => err,
+  }
+
   if (selected) {
     return (
       <div className={styleMerge("relative", className)}>
@@ -147,11 +159,7 @@ const HouseTypeaheadControlled: FC<HouseTypeaheadControlledProps> = ({
         defaultInputValue=""
         onSelect={(item: HouseOption) => onSelect({ id: item.id, name: item.name })}
         inputClassName={searchbarVariants({ size: "standard" })}
-        messages={{
-          loading: "…",
-          empty: "—",
-          formatError: (err: string) => err,
-        }}
+        messages={searchMessages}
       />
     </div>
   )

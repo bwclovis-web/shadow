@@ -219,16 +219,15 @@ Implement only the step the user names. After each: report changes, checks, prev
 - [x] **Step 3 — Group discovery data** — 24 groups/page; narrow DTO; ≤3 attributed previews; offer + collector counts; shared eligibility (incl. price + `minRep` before pagination); on-demand offers API (5/page, cursor); page `force-dynamic`; cards wired via preview stubs + CTA fetch.
 - [x] **Step 4 — Grid cards** — `ExchangeFragranceGroupCard`: main + ≤2 previews (simple when one); seller→catalog→neutral; offer count + bottle mark; factual primary trade badges; compare toggle; View collectors → existing offer/composer flow; 1/2/3 grid with sparse max-widths.
 - [x] **Step 5 — List view + View collectors** — Grid/list share results + committed criteria (`view`); list rows with one open expansion; grid md+ wide side panel / mobile nearly full-screen sheet; shared `ExchangeOfferContent` + `useExchangeOffers` (5 + load more); fill display only when validated; guest/own-listing + action-boundary revalidate; filter changes reset collectors; panel trap pauses for session `Modal` (lightbox/composer).
-- [x] **Step 6 — View collectors + on-demand offers** — Covered with Step 5 (panel/sheet/list share one query and offer content).
-- [ ] **Step 7 — Filter drawer polish** — Nearly full-screen mobile if still needed beyond catalog primitive; confirm draft/apply vs live-URL.
-- [ ] **Step 8 — States + recent activity polish** — Distinct empty / no-inventory / failure; temporary illustration slot; empty inset never under real results.
-- [ ] **Step 9 — Harden** — i18n sync (`sync-translations` skill); unit + smoke tests; secondary sections placement; a11y pass; no hero/`TitleBanner` drift.
+- [x] **Step 6 — Filter drawer polish** — Nearly full-screen mobile (`mobileHeight="nearlyFull"`); draft Apply/Clear/close-cancel; draft note chips + URL hydration; searchable house/notes (bounded, debounce, stale guard); live shortcuts/chips sync open draft; focus trap includes typeahead portals; fixed Apply/Clear footer + safe area. (Doc previously numbered this Step 7; collectors remain under Step 5.)
+- [ ] **Step 7 — States + recent activity polish** — Distinct empty / no-inventory / failure; temporary illustration slot; empty inset never under real results.
+- [ ] **Step 8 — Harden** — i18n sync (`sync-translations` skill); unit + smoke tests; secondary sections placement; a11y pass; no hero/`TitleBanner` drift.
 
 ### Step 2 limitations (chrome)
 
-- List view control is **disabled** (no `view` URL yet).
-- Filter drawer reuses catalog primitive (**85dvh** bottom sheet below `md`, right panel from `md`) — not yet nearly full-screen mobile.
-- Trade shortcuts update the URL immediately; other filters use draft/apply in the drawer.
+- ~~List view control is disabled~~ — enabled in Step 5 (`view=list`).
+- ~~Mobile drawer 85dvh~~ — Exchange uses nearly full-screen in Step 6; Archive/Houses keep compact.
+- Trade shortcuts + chips commit live; drawer fields stay draft until Apply (Step 6 syncs open draft on live commits).
 - Secondary rails (wishlist / mutual / palate / seasonal) sit **below** activity, not in a sidebar.
 
 ### Step 3 — data notes
@@ -252,6 +251,14 @@ Implement only the step the user names. After each: report changes, checks, prev
 - Fill: `ExchangeOfferFillDisplay` + `resolveOfferFillPercent` only — no inferred %.
 - Grid card CTA opens collectors for guests too; contact still requires sign-in; own listings show hint without CTA.
 - Removed / stale offers marked at contact boundary after `verifyOfferStillAvailable`.
+
+### Step 6 — filter drawer notes
+
+- Drawer draft until Apply; Close/Escape/backdrop cancel; Clear empties draft only (note chips follow `value.noteIds`).
+- Trade shortcuts + chip strip commit live and, if the drawer is open, update draft so trade prefs stay consistent.
+- Notes remain perfume-level **any-of** (`some` / `in`); no ANY/ALL URL control.
+- `useDebouncedSearch` ignores stale in-flight suggestion responses; typeahead listboxes mark `data-focus-trap-portal`.
+- Archive/Houses keep default compact drawer height; Exchange passes `mobileHeight="nearlyFull"`.
 
 ---
 

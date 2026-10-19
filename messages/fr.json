@@ -1843,8 +1843,10 @@
     "filters": {
       "toggle": "Filtres",
       "notesTitle": "Notes",
-      "notesDescription": "Trouvez des parfums par leurs notes.",
+      "notesDescription": "Correspond aux parfums qui incluent l’une des notes sélectionnées (niveau parfum).",
       "notesSearchLabel": "Notes",
+      "notesSearchPlaceholder": "Rechercher des notes…",
+      "notesEmptyLabel": "Aucune note sélectionnée.",
       "seasonTitle": "Saison",
       "seasonDescription": "Explorez les parfums par saison et atmosphère.",
       "houseTitle": "Maison",

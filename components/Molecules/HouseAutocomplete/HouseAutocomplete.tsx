@@ -13,6 +13,11 @@ export type HouseAutocompleteProps = {
   label: string
   clearLabel: string
   className?: string
+  messages?: {
+    loading: string
+    empty: string
+    formatError: (error: string) => string
+  }
 }
 
 /** @deprecated Use HouseTypeahead with variant="controlled" */

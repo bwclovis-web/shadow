@@ -6,6 +6,9 @@ import { FiX } from "react-icons/fi"
 
 import { Button } from "@/components/Atoms/Button/Button"
 import { useFocusTrap } from "@/hooks/useFocusTrap"
+import { styleMerge } from "@/utils/styleUtils"
+
+export type CatalogFilterDrawerMobileHeight = "compact" | "nearlyFull"
 
 export type CatalogFilterDrawerProps = {
   open: boolean
@@ -17,11 +20,17 @@ export type CatalogFilterDrawerProps = {
   onClear: () => void
   onApply: () => void
   children: ReactNode
+  /**
+   * Mobile bottom-sheet height. Archive/Houses keep `compact` (85dvh).
+   * Exchange uses `nearlyFull` (~96dvh) to match collectors sheet.
+   */
+  mobileHeight?: CatalogFilterDrawerMobileHeight
 }
 
 /**
  * Bottom sheet below `md`, right-hand panel from `md`. Changes stay in the
- * caller's draft state until Apply.
+ * caller's draft state until Apply. Close / backdrop / Escape cancel without
+ * committing. Clear only resets draft (caller).
  */
 const CatalogFilterDrawer = ({
   open,
@@ -33,6 +42,7 @@ const CatalogFilterDrawer = ({
   onClear,
   onApply,
   children,
+  mobileHeight = "compact",
 }: CatalogFilterDrawerProps) => {
   const titleId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
@@ -66,9 +76,18 @@ const CatalogFilterDrawer = ({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-xl border border-b-0 border-noir-gold bg-noir-black shadow-[0_-12px_40px_rgba(0,0,0,0.6)] transition-transform duration-300 ease-out motion-reduce:transition-none starting:translate-y-full md:inset-y-0 md:left-auto md:right-0 md:max-h-none md:w-[26rem] md:rounded-none md:border-y-0 md:border-r-0 md:starting:translate-x-full md:starting:translate-y-0"
+        className={styleMerge(
+          "absolute inset-x-0 bottom-0 flex flex-col border border-b-0 border-noir-gold bg-noir-black shadow-[0_-12px_40px_rgba(0,0,0,0.6)] transition-transform duration-300 ease-out motion-reduce:transition-none starting:translate-y-full",
+          "md:inset-y-0 md:left-auto md:right-0 md:max-h-none md:w-[26rem] md:rounded-none md:border-y-0 md:border-r-0 md:starting:translate-x-full md:starting:translate-y-0",
+          mobileHeight === "nearlyFull"
+            ? "top-[4dvh] max-h-[96dvh] rounded-t-xl"
+            : "max-h-[85dvh] rounded-t-xl"
+        )}
       >
-        <div aria-hidden className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-noir-gold/40 md:hidden" />
+        <div
+          aria-hidden
+          className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-noir-gold/40 md:hidden"
+        />
         <header className="flex shrink-0 items-center justify-between gap-4 border-b border-noir-gold/40 px-5 py-4">
           <h2 id={titleId} className="!text-2xl md:!text-3xl">
             {title}
@@ -88,10 +107,22 @@ const CatalogFilterDrawer = ({
           {children}
         </div>
         <footer className="grid shrink-0 grid-cols-2 gap-3 border-t border-noir-gold/40 px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <Button type="button" variant="secondary" size="lg" className="w-full md:w-full" onClick={onClear}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            className="w-full md:w-full"
+            onClick={onClear}
+          >
             {clearLabel}
           </Button>
-          <Button type="button" variant="primary" size="lg" className="w-full md:w-full" onClick={onApply}>
+          <Button
+            type="button"
+            variant="primary"
+            size="lg"
+            className="w-full md:w-full"
+            onClick={onApply}
+          >
             {applyLabel}
           </Button>
         </footer>

@@ -2120,8 +2120,10 @@
     "filters": {
       "toggle": "Filters",
       "notesTitle": "Notes",
-      "notesDescription": "Find fragrances by their notes.",
+      "notesDescription": "Match fragrances that include any of the selected notes (perfume-level).",
       "notesSearchLabel": "Notes",
+      "notesSearchPlaceholder": "Search notes…",
+      "notesEmptyLabel": "No notes selected.",
       "seasonTitle": "Season",
       "seasonDescription": "Explore fragrances by season and atmosphere.",
       "houseTitle": "House",

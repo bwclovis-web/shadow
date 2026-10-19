@@ -14,6 +14,7 @@ import {
 import { createPortal } from "react-dom"
 
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
+import { FOCUS_TRAP_PORTAL_ATTR } from "@/hooks/useFocusTrap"
 import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
 import { highlightSearchTerm } from "@/utils/highlightSearchTerm"
 import { styleMerge } from "@/utils/styleUtils"
@@ -214,6 +215,7 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
     if (selectableCount === 0) {
       if (e.key === "Escape") {
         e.preventDefault()
+        e.stopPropagation()
         clearResults()
         setActiveIndex(-1)
         setDismissed(true)
@@ -247,6 +249,7 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
       }
       case "Escape": {
         e.preventDefault()
+        e.stopPropagation()
         clearResults()
         setActiveIndex(-1)
         setDismissed(true)
@@ -281,6 +284,7 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
       role="listbox"
       aria-label={label}
       tabIndex={-1}
+      {...{ [FOCUS_TRAP_PORTAL_ATTR]: "" }}
       className={styleMerge(typeaheadPanelClass, "fixed z-[99999]")}
       style={{
         top: coords.top,
@@ -324,6 +328,7 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
                 <PrefetchLink
                   href={getOptionHref(item)}
                   prefetch={false}
+                  tabIndex={-1}
                   className="block min-w-full capitalize"
                   onClick={() => clearQuery()}
                   onMouseDown={e => e.preventDefault()}
@@ -344,6 +349,7 @@ export function SearchTypeahead<T extends TypeaheadItem = TypeaheadItem>({
             >
               <button
                 type="button"
+                tabIndex={-1}
                 className="block min-w-full text-left capitalize p-2 hover:bg-noir-dark hover:text-noir-light cursor-pointer dark:hover:bg-noir-gold/20 dark:hover:text-noir-black"
                 onMouseDown={e => e.preventDefault()}
                 onClick={() => handleSelect(item)}

@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useId, useState, type FC } from "react"
+import { useEffect, useId, useMemo, useState, type FC } from "react"
 
-import { Button } from "@/components/Atoms/Button/Button"
 import CheckBox from "@/components/Atoms/CheckBox/CheckBox"
 import Input from "@/components/Atoms/Input/Input"
+import Select from "@/components/Atoms/Select/Select"
 import { SeasonSelectionToggleRow } from "@/components/Containers/Perfume/PerfumeSeasonVote/SeasonSelectionToggleRow"
 import { FilterPanelSection } from "@/components/Molecules/FilterPanelSection"
 import { FilterToggleGroup } from "@/components/Molecules/FilterToggleGroup"
@@ -12,16 +12,15 @@ import {
   HouseAutocomplete,
   type HouseAutocompleteOption,
 } from "@/components/Molecules/HouseAutocomplete"
-import { selectVariants, selectWrapperVariants } from "@/components/Atoms/Select/select-variants"
 import TagSearch from "@/components/Organisms/TagSearch/TagSearch"
 import type { Tag } from "@/lib/queries/tags"
+import { CATALOG_MAX_SELECTIONS } from "@/utils/catalog-params"
 import {
   DISCOVERY_LISTING_CONDITIONS,
   DISCOVERY_MIN_REP_OPTIONS,
   DISCOVERY_TRADE_PREFERENCES,
   EXCHANGE_BOTTLE_TYPES,
   EXCHANGE_REGION_BUCKETS,
-  emptyDiscoveryFilters,
   type DiscoveryListingCondition,
   type DiscoveryMinRep,
   type DiscoveryTradePreference,
@@ -37,11 +36,19 @@ export type DiscoveryFiltersPanelLabels = {
   notesTitle: string
   notesDescription: string
   notesSearchLabel: string
+  notesSearchPlaceholder?: string
+  notesEmptyLabel?: string
+  notesSearching?: string
+  notesNoMatches?: string
+  notesSearchError?: string
   seasonTitle: string
   seasonDescription: string
   houseTitle: string
   houseSearchLabel: string
   houseClear: string
+  houseSearching?: string
+  houseNoMatches?: string
+  houseSearchError?: string
   priceTitle: string
   priceDescription: string
   minLabel: string
@@ -79,7 +86,6 @@ export type DiscoveryFiltersPanelLabels = {
   minRepDescription: string
   minRepLabel: string
   minRepAll: string
-  clearAll: string
 }
 
 export type DiscoveryFiltersPanelProps = {
@@ -97,6 +103,17 @@ const TRADE_PREF_OPTIONS: DiscoveryTradePreference[] = [...DISCOVERY_TRADE_PREFE
 const BOTTLE_OPTIONS: ExchangeBottleType[] = [...EXCHANGE_BOTTLE_TYPES]
 const CONDITION_OPTIONS: DiscoveryListingCondition[] = [...DISCOVERY_LISTING_CONDITIONS]
 
+const resolveDraftNoteTags = (
+  noteIds: string[],
+  initialNoteTags: Tag[],
+  previous: Tag[]
+): Tag[] => {
+  const byId = new Map<string, Tag>()
+  for (const tag of initialNoteTags) byId.set(tag.id, tag)
+  for (const tag of previous) byId.set(tag.id, tag)
+  return noteIds.map(id => byId.get(id) ?? { id, name: id })
+}
+
 export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
   value,
   onChange,
@@ -106,6 +123,7 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
   className,
 }) => {
   const regionSelectId = useId()
+  const minRepSelectId = useId()
   const [minStr, setMinStr] = useState(
     () => (value.minPrice != null ? String(value.minPrice) : "")
   )
@@ -116,6 +134,15 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
   const [localHouse, setLocalHouse] = useState<HouseAutocompleteOption | null>(
     null
   )
+  const [draftNoteTags, setDraftNoteTags] = useState<Tag[]>(() =>
+    resolveDraftNoteTags(value.noteIds, initialNoteTags, [])
+  )
+
+  useEffect(() => {
+    setDraftNoteTags(prev =>
+      resolveDraftNoteTags(value.noteIds, initialNoteTags, prev)
+    )
+  }, [value.noteIds, initialNoteTags])
 
   useEffect(() => {
     if (!value.houseId) {
@@ -143,6 +170,39 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
         ? { id: value.houseId, name: value.houseId }
         : null)
 
+  const noteSearchMessages = useMemo(
+    () => ({
+      loading: labels.notesSearching ?? "Searching…",
+      empty: labels.notesNoMatches ?? "No matches found",
+      formatError: (err: string) =>
+        labels.notesSearchError
+          ? `${labels.notesSearchError} (${err})`
+          : err,
+    }),
+    [
+      labels.notesSearching,
+      labels.notesNoMatches,
+      labels.notesSearchError,
+    ]
+  )
+
+  const houseSearchMessages = useMemo(
+    () => ({
+      loading: labels.houseSearching ?? labels.notesSearching ?? "Searching…",
+      empty: labels.houseNoMatches ?? labels.notesNoMatches ?? "No matches found",
+      formatError: (err: string) =>
+        labels.houseSearchError ?? labels.notesSearchError ?? err,
+    }),
+    [
+      labels.houseSearching,
+      labels.houseNoMatches,
+      labels.houseSearchError,
+      labels.notesSearching,
+      labels.notesNoMatches,
+      labels.notesSearchError,
+    ]
+  )
+
   const commitPrice = () => {
     const minTrim = minStr.trim()
     const maxTrim = maxStr.trim()
@@ -154,11 +214,7 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
       maxV != null && Number.isFinite(maxV) && maxV >= 0 ? maxV : null
     let nextMin = minPrice
     let nextMax = maxPrice
-    if (
-      nextMin != null &&
-      nextMax != null &&
-      nextMin > nextMax
-    ) {
+    if (nextMin != null && nextMax != null && nextMin > nextMax) {
       ;[nextMin, nextMax] = [nextMax, nextMin]
     }
     onChange({
@@ -212,14 +268,23 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
     label: labels.conditionLabels[condition],
   }))
 
-  const selectShell = styleMerge(
-    selectWrapperVariants({ size: "compact" }),
-    "w-full min-w-0 max-w-none bg-transparent pr-0"
-  )
-  const selectClass = styleMerge(
-    selectVariants({ size: "compact" }),
-    "w-full min-w-0 bg-noir-dark/60 text-sm text-noir-gold-100"
-  )
+  const regionSelectData = [
+    { id: "", name: "all", label: labels.regionAll },
+    ...EXCHANGE_REGION_BUCKETS.map(bucket => ({
+      id: bucket,
+      name: bucket,
+      label: regionLabelFor(bucket),
+    })),
+  ]
+
+  const minRepSelectData = [
+    { id: "", name: "all", label: labels.minRepAll },
+    ...DISCOVERY_MIN_REP_OPTIONS.map(score => ({
+      id: String(score),
+      name: String(score),
+      label: `${score}+`,
+    })),
+  ]
 
   return (
     <div
@@ -228,21 +293,34 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
         className
       )}
     >
-      <FilterPanelSection title={labels.notesTitle} description={labels.notesDescription}>
+      <FilterPanelSection
+        title={labels.notesTitle}
+        description={labels.notesDescription}
+      >
         <TagSearch
           inputId="exchange-discovery-notes"
           label={labels.notesSearchLabel}
-          data={initialNoteTags}
+          searchInputLabel={labels.notesSearchLabel}
+          searchLabelClassName="sr-only"
+          placeholder={labels.notesSearchPlaceholder}
+          emptyLabel={labels.notesEmptyLabel}
+          data={draftNoteTags}
           allowCreate={false}
+          maxSelections={CATALOG_MAX_SELECTIONS}
           surface="dark"
           selectedLayout="flow"
-          onChange={tags =>
+          messages={noteSearchMessages}
+          onChange={tags => {
+            setDraftNoteTags(tags)
             onChange({ ...value, noteIds: tags.map(t => t.id) })
-          }
+          }}
         />
       </FilterPanelSection>
 
-      <FilterPanelSection title={labels.seasonTitle} description={labels.seasonDescription}>
+      <FilterPanelSection
+        title={labels.seasonTitle}
+        description={labels.seasonDescription}
+      >
         <SeasonSelectionToggleRow
           selection={seasonsArrayToSelection(value.seasons)}
           onChange={sel =>
@@ -260,6 +338,7 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
           label={labels.houseSearchLabel}
           clearLabel={labels.houseClear}
           selected={houseSelected}
+          messages={houseSearchMessages}
           onSelect={house => {
             setLocalHouse(house)
             onChange({ ...value, houseId: house?.id ?? null })
@@ -279,7 +358,10 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
         />
       </FilterPanelSection>
 
-      <FilterPanelSection title={labels.bottleTitle} description={labels.bottleDescription}>
+      <FilterPanelSection
+        title={labels.bottleTitle}
+        description={labels.bottleDescription}
+      >
         <FilterToggleGroup
           options={bottleOptions}
           selected={value.bottleTypes}
@@ -300,71 +382,52 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
         />
       </FilterPanelSection>
 
-      <FilterPanelSection title={labels.regionTitle} description={labels.regionDescription}>
-        <div className={selectShell}>
-          <label
-            className="mb-1 block text-sm text-noir-gold-500"
-            htmlFor={regionSelectId}
-          >
-            {labels.regionLabel}
-          </label>
-          <select
-            id={regionSelectId}
-            value={value.region ?? ""}
-            onChange={e => {
-              const raw = e.target.value
-              onChange({
-                ...value,
-                region: raw ? (raw as ExchangeRegionBucket) : null,
-              })
-            }}
-            className={selectClass}
-          >
-            <option value="" className="bg-noir-dark">
-              {labels.regionAll}
-            </option>
-            {EXCHANGE_REGION_BUCKETS.map(bucket => (
-              <option key={bucket} value={bucket} className="bg-noir-dark">
-                {regionLabelFor(bucket)}
-              </option>
-            ))}
-          </select>
-        </div>
+      <FilterPanelSection
+        title={labels.regionTitle}
+        description={labels.regionDescription}
+      >
+        <Select
+          selectId={regionSelectId}
+          label={labels.regionLabel}
+          selectData={regionSelectData}
+          value={value.region ?? ""}
+          action={e => {
+            const raw = e.target.value
+            onChange({
+              ...value,
+              region: raw ? (raw as ExchangeRegionBucket) : null,
+            })
+          }}
+          size="compact"
+          className="w-full max-w-none md:w-full"
+        />
       </FilterPanelSection>
 
-      <FilterPanelSection title={labels.minRepTitle} description={labels.minRepDescription}>
-        <div className={selectShell}>
-          <label
-            className="mb-1 block text-sm text-noir-gold-500"
-            htmlFor={`${regionSelectId}-min-rep`}
-          >
-            {labels.minRepLabel}
-          </label>
-          <select
-            id={`${regionSelectId}-min-rep`}
-            value={value.minRep ?? ""}
-            onChange={e => {
-              const raw = e.target.value
-              onChange({
-                ...value,
-                minRep: raw ? (Number(raw) as DiscoveryMinRep) : null,
-              })
-            }}
-            className={selectClass}
-          >
-            <option value="" className="bg-noir-dark">
-              {labels.minRepAll}
-            </option>
-            {DISCOVERY_MIN_REP_OPTIONS.map(score => (
-              <option key={score} value={score} className="bg-noir-dark">
-                {score}+
-              </option>
-            ))}
-          </select>
-        </div>
+      <FilterPanelSection
+        title={labels.minRepTitle}
+        description={labels.minRepDescription}
+      >
+        <Select
+          selectId={minRepSelectId}
+          label={labels.minRepLabel}
+          selectData={minRepSelectData}
+          value={value.minRep != null ? String(value.minRep) : ""}
+          action={e => {
+            const raw = e.target.value
+            onChange({
+              ...value,
+              minRep: raw ? (Number(raw) as DiscoveryMinRep) : null,
+            })
+          }}
+          size="compact"
+          className="w-full max-w-none md:w-full"
+        />
       </FilterPanelSection>
 
-      <FilterPanelSection title={labels.priceTitle} description={labels.priceDescription}>
+      <FilterPanelSection
+        title={labels.priceTitle}
+        description={labels.priceDescription}
+      >
         <div className="grid grid-cols-2 gap-3">
           <Input
             inputId="exchange-discovery-min-price"
@@ -402,23 +465,6 @@ export const DiscoveryFiltersPanel: FC<DiscoveryFiltersPanelProps> = ({
           onChange={() => onChange({ ...value, hasPhotos: !value.hasPhotos })}
         />
       </FilterPanelSection>
-
-      <Button
-        type="button"
-        variant="secondary"
-        size="sm"
-        background="gold"
-        className="w-full"
-        onClick={() => {
-          onChange(emptyDiscoveryFilters())
-          setMinStr("")
-          setMaxStr("")
-          setLocalHouse(null)
-        }}
-      >
-        {labels.clearAll}
-      </Button>
     </div>
   )
 }
-

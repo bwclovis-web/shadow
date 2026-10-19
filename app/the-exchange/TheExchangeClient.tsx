@@ -136,6 +136,7 @@ const TheExchangeClient = ({
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [filterDrawerGeneration, setFilterDrawerGeneration] = useState(0)
   const [draftFilters, setDraftFilters] = useState<PerfumeDiscoveryFilters>(
     emptyDiscoveryFilters()
   )
@@ -308,10 +309,26 @@ const TheExchangeClient = ({
     [searchParams, pushUrlFromSearchParams]
   )
 
+  /** Live commits (shortcuts / chips) keep an open drawer draft aligned. */
+  const commitDiscovery = useCallback(
+    (next: PerfumeDiscoveryFilters) => {
+      handleDiscoveryChange(next)
+      if (filtersOpen) {
+        setDraftFilters(next)
+      }
+    },
+    [handleDiscoveryChange, filtersOpen]
+  )
+
   const openFilters = useCallback(() => {
     setDraftFilters(discoveryFromUrl)
+    setFilterDrawerGeneration(g => g + 1)
     setFiltersOpen(true)
   }, [discoveryFromUrl])
+
+  const closeFilters = useCallback(() => {
+    setFiltersOpen(false)
+  }, [])
 
   const applyFilters = useCallback(() => {
     handleDiscoveryChange(draftFilters)
@@ -350,7 +367,7 @@ const TheExchangeClient = ({
         e.preventDefault()
         setLocalSearchValue("")
         cancelPending()
-        if (hasFilters) handleDiscoveryChange(emptyDiscoveryFilters())
+        if (hasFilters) commitDiscovery(emptyDiscoveryFilters())
         searchInputRef.current?.blur()
         return
       }
@@ -359,7 +376,7 @@ const TheExchangeClient = ({
         e.preventDefault()
         setLocalSearchValue("")
         cancelPending()
-        handleDiscoveryChange(emptyDiscoveryFilters())
+        commitDiscovery(emptyDiscoveryFilters())
       }
     }
 
@@ -371,7 +388,7 @@ const TheExchangeClient = ({
     collectorsPerfumeId,
     discoveryFromUrl,
     cancelPending,
-    handleDiscoveryChange,
+    commitDiscovery,
     setLocalSearchValue,
   ])
 
@@ -472,7 +489,7 @@ const TheExchangeClient = ({
   const handleTradeShortcutChange = (
     tradePreferences: DiscoveryTradePreference[]
   ) => {
-    handleDiscoveryChange({ ...discoveryFromUrl, tradePreferences })
+    commitDiscovery({ ...discoveryFromUrl, tradePreferences })
   }
 
   const totalCount = pagination.totalCount ?? availablePerfumes.length
@@ -485,11 +502,19 @@ const TheExchangeClient = ({
     notesTitle: tf("notesTitle"),
     notesDescription: tf("notesDescription"),
     notesSearchLabel: tf("notesSearchLabel"),
+    notesSearchPlaceholder: tf("notesSearchPlaceholder"),
+    notesEmptyLabel: tf("notesEmptyLabel"),
+    notesSearching: tCatalog("filters.searching"),
+    notesNoMatches: tCatalog("filters.noMatches"),
+    notesSearchError: tCatalog("filters.searchError"),
     seasonTitle: tf("seasonTitle"),
     seasonDescription: tf("seasonDescription"),
     houseTitle: tf("houseTitle"),
     houseSearchLabel: tf("houseSearchLabel"),
     houseClear: tf("houseClear"),
+    houseSearching: tCatalog("filters.searching"),
+    houseNoMatches: tCatalog("filters.noMatches"),
+    houseSearchError: tCatalog("filters.searchError"),
     priceTitle: tf("priceTitle"),
     priceDescription: tf("priceDescription"),
     minLabel: tf("minLabel"),
@@ -533,7 +558,6 @@ const TheExchangeClient = ({
     minRepDescription: tf("minRepDescription"),
     minRepLabel: tf("minRepLabel"),
     minRepAll: tf("minRepAll"),
-    clearAll: tf("clearAll"),
   }
 
   const tradeShortcutOptions = DISCOVERY_TRADE_PREFERENCES.map(pref => ({
@@ -568,7 +592,7 @@ const TheExchangeClient = ({
       noteTags: initialNoteTags,
       houseLabel,
       perfumeLabel,
-      apply: handleDiscoveryChange,
+      apply: commitDiscovery,
       seasonLabel: key => tSeason(key),
       copy: {
         removeFilterAria: label => tf("removeFilterAria", { label }),
@@ -599,7 +623,7 @@ const TheExchangeClient = ({
     })
   }, [
     discoveryFromUrl,
-    handleDiscoveryChange,
+    commitDiscovery,
     initialHouse,
     initialPerfume,
     initialNoteTags,
@@ -687,7 +711,7 @@ const TheExchangeClient = ({
                   chips={discoveryChipItems}
                   regionAriaLabel={tf("activeFiltersAria")}
                   onClearAll={() =>
-                    handleDiscoveryChange(emptyDiscoveryFilters())
+                    commitDiscovery(emptyDiscoveryFilters())
                   }
                   clearAllLabel={tf("clearAll")}
                   variant="dark"
@@ -734,7 +758,7 @@ const TheExchangeClient = ({
                       variant="secondary"
                       className="mt-4"
                       onClick={() =>
-                        handleDiscoveryChange(emptyDiscoveryFilters())
+                        commitDiscovery(emptyDiscoveryFilters())
                       }
                     >
                       {tCatalog("clearFilters")}
@@ -922,15 +946,17 @@ const TheExchangeClient = ({
 
             <CatalogFilterDrawer
               open={filtersOpen}
-              onClose={() => setFiltersOpen(false)}
+              onClose={closeFilters}
               title={tf("toggle")}
               closeLabel={tCatalog("drawer.close")}
               clearLabel={tCatalog("drawer.clearAll")}
               applyLabel={tCatalog("drawer.apply", { count: draftFilterCount })}
               onClear={clearDraftFilters}
               onApply={applyFilters}
+              mobileHeight="nearlyFull"
             >
               <DiscoveryFiltersPanel
+                key={filterDrawerGeneration}
                 value={draftFilters}
                 onChange={setDraftFilters}
                 initialNoteTags={initialNoteTags}

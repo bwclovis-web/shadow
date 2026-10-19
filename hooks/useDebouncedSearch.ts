@@ -42,7 +42,9 @@ export function useDebouncedSearch<T = unknown>(
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const abortRef = useRef<AbortController | null>(null)
+  const requestGen = useRef(0)
+  const searchFnRef = useRef(searchFn)
+  searchFnRef.current = searchFn
 
   useEffect(() => {
     if (!controlled && initialValue !== undefined) {
@@ -51,6 +53,7 @@ export function useDebouncedSearch<T = unknown>(
   }, [initialValue, controlled])
 
   const clearResults = useCallback(() => {
+    requestGen.current += 1
     setResults([])
     setError(null)
   }, [])
@@ -60,6 +63,7 @@ export function useDebouncedSearch<T = unknown>(
       clearTimeout(timeoutRef.current)
       timeoutRef.current = null
     }
+    requestGen.current += 1
   }, [])
 
   useEffect(() => {
@@ -67,37 +71,47 @@ export function useDebouncedSearch<T = unknown>(
       clearTimeout(timeoutRef.current)
       timeoutRef.current = null
     }
-    if (abortRef.current) {
-      abortRef.current.abort()
-    }
 
     const trimmed = searchValue.trim()
     if (trimmed.length < minLength) {
+      requestGen.current += 1
       setResults([])
       setError(null)
       setIsLoading(false)
       return
     }
 
+    const gen = ++requestGen.current
     setIsLoading(true)
     setError(null)
 
-    timeoutRef.current = setTimeout(async () => {
-      try {
-        const data = await searchFn(trimmed)
-        setResults(Array.isArray(data) ? data : [])
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Search failed")
-        setResults([])
-      } finally {
-        setIsLoading(false)
-      }
+    timeoutRef.current = setTimeout(() => {
+      void (async () => {
+        try {
+          const data = await searchFnRef.current(trimmed)
+          if (gen !== requestGen.current) return
+          setResults(Array.isArray(data) ? data : [])
+        } catch (err) {
+          if (gen !== requestGen.current) return
+          setError(err instanceof Error ? err.message : "Search failed")
+          setResults([])
+        } finally {
+          if (gen === requestGen.current) setIsLoading(false)
+        }
+      })()
     }, delay)
 
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+        timeoutRef.current = null
+      }
+      // Invalidate in-flight responses from this effect instance.
+      if (gen === requestGen.current) {
+        requestGen.current += 1
+      }
     }
-  }, [searchValue, delay, minLength, searchFn])
+  }, [searchValue, delay, minLength])
 
   return {
     searchValue,
