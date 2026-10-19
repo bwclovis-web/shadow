@@ -217,7 +217,7 @@ Implement only the step the user names. After each: report changes, checks, prev
 - [x] **Step 1 — Ornamental frame** — Reusable `OrnamentalFrame` / `OrnamentalCorner` (compact + standard).
 - [x] **Step 2 — Below-hero chrome** — Toolbar → trade shortcuts/chips → results (existing cards) → activity; filters in `CatalogFilterDrawer` with draft/apply; `OrnamentalFrame` on toolbar + results; hero untouched; **data query unchanged**.
 - [x] **Step 3 — Group discovery data** — 24 groups/page; narrow DTO; ≤3 attributed previews; offer + collector counts; shared eligibility (incl. price + `minRep` before pagination); on-demand offers API (5/page, cursor); page `force-dynamic`; cards wired via preview stubs + CTA fetch.
-- [ ] **Step 4 — Grid cards** — Mosaic/group card treatment; View collectors CTA; image fallbacks; bottle icon affordance without rating behavior change.
+- [x] **Step 4 — Grid cards** — `ExchangeFragranceGroupCard`: main + ≤2 previews (simple when one); seller→catalog→neutral; offer count + bottle mark; factual primary trade badges; compare toggle; View collectors → existing offer/composer flow; 1/2/3 grid with sparse max-widths.
 - [ ] **Step 5 — List view** — Collapsed rows; URL `view=list`; one open expansion host wired (offers may still stub until Step 6).
 - [ ] **Step 6 — View collectors + on-demand offers** — Side panel (md+) / full-screen sheet (mobile); list uses same query; 5 offers/page; cash/swap via existing flows; revalidate at action boundary; preserve filters + scroll.
 - [ ] **Step 7 — Filter drawer polish** — Nearly full-screen mobile if still needed beyond catalog primitive; confirm draft/apply vs live-URL.
@@ -236,8 +236,14 @@ Implement only the step the user names. After each: report changes, checks, prev
 - Groups: offset `pg` (clamped); sort **name asc, id asc**. Offers: **cursor** on `updatedAt+id` (no arbitrary offer page jumps).
 - `minRep` is applied in eligibility before pagination via a bounded trader set (`EXCHANGE_MIN_REP_TRADER_CAP`); reputation is not a DB column.
 - Browse payload is narrow (counts + ≤3 previews). Full matching offers: `GET /api/exchange/offers`.
-- Collector vs offer counts are on the group DTO; UI still labels the listing summary with offer count only (copy for collectors deferred).
-- **Fill level:** `UserPerfume.mlRemaining` (Float?) and `amount` (string capacity) exist; `available` is listed-for-sale ml. NoirRating bottle SVGs animate **rating** liquid, not inventory. Accurate fill % requires finite `mlRemaining` and parseable `amount > 0` — **never** infer from condition, rating, or ambiguous quantity. Offer DTO exposes `mlRemaining` + `amount` for a later step; Step 3 does not render fill indicators or add schema fields.
+- Collector vs offer counts are on the group DTO; grid cards show **matching offer** count copy.
+- **Fill level:** `UserPerfume.mlRemaining` (Float?) and `amount` (string capacity) exist; `available` is listed-for-sale ml. NoirRating bottle SVGs animate **rating** liquid, not inventory. Accurate fill % requires finite `mlRemaining` and parseable `amount > 0` — **never** infer from condition, rating, or ambiguous quantity. Group cards use outline bottle mark only (no fill). Offer DTO exposes volume fields for a later step.
+
+### Step 4 — card notes
+
+- View collectors uses the existing on-demand offers → composer / listing picker (or sign-in) until Step 5 panel.
+- Trade badges reflect the **primary seller photo** listing only (factual for that image).
+- Lightbox uses card preview URLs only; full per-offer galleries remain on-demand via offers API / later panel.
 
 ---
 

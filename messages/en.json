@@ -2237,7 +2237,10 @@
       "photosFromListings": "{count, plural, one {Photo from # listing} other {Photos from # listings}}",
       "openListingPhoto": "Open photo from {collector}, image {index}",
       "multiLightboxTitle": "Listing photos",
-      "photoIndex": "Photo {current} of {total}"
+      "photoIndex": "Photo {current} of {total}",
+      "offerCount": "{count, plural, one {# matching offer} other {# matching offers}}",
+      "viewCollectors": "View collectors",
+      "groupLightboxTitle": "Photos for {name}"
     },
     "toolbar": {
       "sortNameAsc": "Name (A–Z)",

@@ -14,7 +14,7 @@ import { PaginationBar } from "@/components/Molecules/PaginationBar"
 import { FilterChipStrip } from "@/components/Molecules/FilterChipStrip"
 import { FilterToggleGroup } from "@/components/Molecules/FilterToggleGroup"
 import { SaveSearchButton } from "@/components/Molecules/SaveSearchButton/SaveSearchButton"
-import { ExchangePerfumeCard } from "@/components/Molecules/ExchangePerfumeCard"
+import { ExchangeFragranceGroupCard } from "@/components/Molecules/ExchangeFragranceGroupCard"
 import { ExchangeOpenSplitChip } from "@/components/Molecules/ExchangeOpenSplitChip/ExchangeOpenSplitChip"
 import ActivityFeedSection from "@/components/Containers/Exchange/ActivityFeedSection"
 import { ExchangeDiscoveryToolbar } from "@/components/Containers/Exchange/ExchangeDiscoveryToolbar"
@@ -36,11 +36,7 @@ import { useGsapStagger } from "@/hooks/useGsapStagger"
 import { useTradeComposerModal } from "@/hooks/useTradeComposerModal"
 import { fetchExchangeOffersPage } from "@/lib/queries/exchange-offers"
 import type { ExchangeOfferDto } from "@/types/exchange-discovery"
-import {
-  getTradeCtaLabelKey,
-  isCashOnlyListing,
-  tradeListingSeedFromExchangeRow,
-} from "@/types/trade"
+import { tradeListingSeedFromExchangeRow } from "@/types/trade"
 import { getTraderDisplayName } from "@/utils/user"
 import type { ExchangeUserPerfumeRow } from "./exchange-types"
 import {
@@ -53,6 +49,7 @@ import {
   type DiscoveryTradePreference,
   type PerfumeDiscoveryFilters,
 } from "@/utils/discovery-filters"
+import { styleMerge } from "@/utils/styleUtils"
 import { buildExchangeDiscoveryChipItems } from "./buildExchangeDiscoveryChipItems"
 import type { ExchangePageData } from "./exchange-types"
 
@@ -118,8 +115,6 @@ const TheExchangeClient = ({
   const t = useTranslations("tradingPost")
   const tListings = useTranslations("tradingPost.listings")
   const tSplits = useTranslations("decantSplits.exchange")
-  const tTradeComposer = useTranslations("tradeComposer")
-  const tRep = useTranslations("tradingPost.reputation")
   const tf = useTranslations("tradingPost.filters")
   const tToolbar = useTranslations("tradingPost.toolbar")
   const tCatalog = useTranslations("catalog")
@@ -340,34 +335,6 @@ const TheExchangeClient = ({
       traderReputationByUserId,
     ]
   )
-
-  const getCardOfferCtaKey = (
-    perfume: (typeof availablePerfumes)[number]
-  ): "proposeSwap" | "connectAboutBottle" | "chooseListing" => {
-    if (perfume.offerCount > 1) return "chooseListing"
-    const listings = perfume.userPerfume.filter(
-      up => viewerId && up.userId !== viewerId
-    )
-    if (listings.length === 1) {
-      const up = listings[0]!
-      return getTradeCtaLabelKey(up.tradePreference, up.tradeOnly)
-    }
-    if (
-      listings.length > 0 &&
-      listings.every(up => isCashOnlyListing(up.tradePreference, up.tradeOnly))
-    ) {
-      return "connectAboutBottle"
-    }
-    if (
-      listings.length > 0 &&
-      listings.every(
-        up => !isCashOnlyListing(up.tradePreference, up.tradeOnly)
-      )
-    ) {
-      return "proposeSwap"
-    }
-    return "chooseListing"
-  }
 
   const handlePageChange = (page: number) => {
     cancelPending()
@@ -659,21 +626,31 @@ const TheExchangeClient = ({
               ) : (
                 <ul
                   ref={exchangeGridRef}
-                  className="grid auto-rows-fr grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+                  className={styleMerge(
+                    "grid auto-rows-fr grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3",
+                    availablePerfumes.length === 1 && "max-w-md",
+                    availablePerfumes.length === 2 && "max-w-3xl"
+                  )}
                 >
-                  {availablePerfumes.map(perfume => (
+                  {availablePerfumes.map((perfume, index) => (
                     <li
                       key={perfume.id}
                       data-exchange-card
-                      className="relative"
+                      className="relative min-w-0"
                     >
-                      <ExchangePerfumeCard
+                      <ExchangeFragranceGroupCard
                         perfume={perfume}
                         viewerId={viewerId}
-                      >
-                        <div className="space-y-2 rounded-md">
-                          {(openSplitChipsByPerfumeId[perfume.id]?.length ?? 0) >
-                            0 && (
+                        imagePriority={index < 3}
+                        viewCollectorsLabel={tListings("viewCollectors")}
+                        signInHref={SIGN_IN_WITH_RETURN}
+                        signInLabel={t("signInToPropose")}
+                        onViewCollectors={trigger =>
+                          void handleProposeSwapFromCard(perfume, trigger)
+                        }
+                        openSplitSlot={
+                          (openSplitChipsByPerfumeId[perfume.id]?.length ?? 0) >
+                          0 ? (
                             <ExchangeOpenSplitChip
                               chips={openSplitChipsByPerfumeId[perfume.id]!}
                               label={tSplits("openSplitChip", {
@@ -682,55 +659,9 @@ const TheExchangeClient = ({
                                     .openSlotCount,
                               })}
                             />
-                          )}
-                          <p className="text-sm font-medium text-noir-gold">
-                            {tListings("summary", {
-                              count: perfume.offerCount,
-                            })}
-                          </p>
-                          {(() => {
-                            const scores = perfume.userPerfume
-                              .map(
-                                up =>
-                                  traderReputationByUserId[up.userId]?.score
-                              )
-                              .filter((s): s is number => s != null)
-                            if (scores.length === 0) return null
-                            const best = Math.max(...scores)
-                            return (
-                              <p className="text-xs text-noir-gold-500/80">
-                                {tRep("exchangeTrust", { score: best })}
-                              </p>
-                            )
-                          })()}
-                          {viewerId && perfume.offerCount > 0 ? (
-                            <Button
-                              type="button"
-                              variant="primary"
-                              size="sm"
-                              background="gold"
-                              className="w-full max-w-full"
-                              onClick={e =>
-                                void handleProposeSwapFromCard(
-                                  perfume,
-                                  e.currentTarget
-                                )
-                              }
-                            >
-                              {tTradeComposer(getCardOfferCtaKey(perfume))}
-                            </Button>
-                          ) : !viewerId && perfume.offerCount > 0 ? (
-                            <VooDooLink
-                              url={SIGN_IN_WITH_RETURN}
-                              variant="primary"
-                              background="gold"
-                              className="w-full max-w-full"
-                            >
-                              {t("signInToPropose")}
-                            </VooDooLink>
-                          ) : null}
-                        </div>
-                      </ExchangePerfumeCard>
+                          ) : null
+                        }
+                      />
                     </li>
                   ))}
                 </ul>

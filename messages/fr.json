@@ -1950,7 +1950,10 @@
       "photosFromListings": "{count, plural, one {Photo d'une annonce} other {Photos de # annonces}}",
       "openListingPhoto": "Ouvrir la photo de {collector}, image {index}",
       "multiLightboxTitle": "Photos des annonces",
-      "photoIndex": "Photo {current} sur {total}"
+      "photoIndex": "Photo {current} sur {total}",
+      "offerCount": "{count, plural, one {# offre correspondante} other {# offres correspondantes}}",
+      "viewCollectors": "Voir les collectionneurs",
+      "groupLightboxTitle": "Photos pour {name}"
     },
     "palateRecommendations": {
       "title": "Recommandé pour votre palais",
