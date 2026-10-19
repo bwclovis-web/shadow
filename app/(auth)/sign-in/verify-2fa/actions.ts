@@ -1,5 +1,6 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { cookies, headers } from "next/headers"
 import { redirect } from "next/navigation"
 
@@ -46,7 +47,7 @@ export type Verify2faActionState = { error?: string } | null
 
 const completeVerifiedSignIn = async (
   userId: string,
-  auditDetails: Record<string, unknown>
+  auditDetails: Prisma.InputJsonValue
 ): Promise<Verify2faActionState> => {
   const user = await getUserById(userId)
   if (!user || user.isBanned) {

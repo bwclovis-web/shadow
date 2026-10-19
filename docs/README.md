@@ -43,6 +43,7 @@ Root [README.md](../README.md) stays short: product blurb + common commands + li
 | [product-roadmap.md](./product-roadmap.md) | Next loops: IA freeze, conflict map, phased plan, Guide policy, **invite-beta launch sequence (A–E)** |
 | [homepage-gallery-walk.md](./homepage-gallery-walk.md) | “Gallery Walk” homepage implementation contract and checklist |
 | [catalog-redesign.md](./catalog-redesign.md) | Archive and Houses catalog redesign: reference priorities, URL contract, checklist |
+| [exchange-redesign.md](./exchange-redesign.md) | The Exchange redesign: workflow, layout/data/collectors contract, staged checklist |
 | [MONETIZATION_PLAYBOOK.md](./MONETIZATION_PLAYBOOK.md) | Subscription / revenue experiments |
 | [user-guide-decants.md](./user-guide-decants.md) | Decants / inventory / splits (copy for Help/FAQ) |
 
