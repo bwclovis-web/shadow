@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl"
 
 import { Button, VooDooLink } from "@/components/Atoms/Button"
 import AdSenseUnit from "@/components/Atoms/AdSenseUnit"
+import { OrnamentalFrame } from "@/components/Atoms/OrnamentalFrame"
 import { JoinLink } from "@/components/Molecules/JoinLink"
 import { PaginationBar } from "@/components/Molecules/PaginationBar"
 import { FilterChipStrip } from "@/components/Molecules/FilterChipStrip"
@@ -487,7 +488,15 @@ const TheExchangeClient = ({
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(260px,300px)_1fr] lg:items-start">
               <div className="min-w-0 space-y-6 lg:sticky lg:top-4">
                 {isLg ? (
-                  <aside aria-label={tf("toggle")}>{filterPanel}</aside>
+                  <aside aria-label={tf("toggle")}>
+                    {/* Step 1 preview: ornamental frame on one Exchange panel only */}
+                    <OrnamentalFrame
+                      size="standard"
+                      className="bg-noir-gray/80 p-4"
+                    >
+                      {filterPanel}
+                    </OrnamentalFrame>
+                  </aside>
                 ) : (
                   <details
                     className="rounded-md border border-noir-light bg-noir-gray/80"

@@ -209,8 +209,10 @@ Trade shortcuts map to existing `tradePref` tokens (`cash` / `trade` / `both`), 
 
 Implement only the step the user names. After each: report changes, checks, preview (`/the-exchange`), limitations; **STOP**.
 
-- [ ] **Step 0 — Plan (this doc)** — Inventory complete; hub linked; no app changes.
-- [ ] **Step 1 — Below-hero chrome** — Remove permanent filter sidebar; add toolbar shell (search/sort/Filters/view placeholders as needed), trade shortcuts, chip strip region; hero untouched; ornamental utility if needed for chrome frames only.
+- [x] **Step 0 — Plan (this doc)** — Inventory complete; hub linked; no app changes.
+- [ ] **Step 1 — Below-hero chrome + ornamental frame**
+  - [x] Reusable `OrnamentalFrame` / `OrnamentalCorner` (compact + standard); preview on desktop Exchange filter panel only — awaiting visual approval.
+  - [ ] Remove permanent filter sidebar; add toolbar shell (search/sort/Filters/view), trade shortcuts, chip strip region; hero untouched.
 - [ ] **Step 2 — Group discovery data** — 24 groups/page; narrow DTO; ≤3 preview URLs + offer/collector counts; server sort/filter before pagination; shared eligibility; fix `minRep` (and any other post-pagination filters); no full listing payload on the page.
 - [ ] **Step 3 — Grid cards** — 3 / 2 / 1 columns; View collectors CTA; image fallbacks; bottle icon affordance without rating behavior change.
 - [ ] **Step 4 — List view** — Collapsed rows; URL `view=list`; one open expansion host wired (offers may still stub until Step 5).
