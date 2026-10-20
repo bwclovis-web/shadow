@@ -1713,6 +1713,9 @@
     "icons": {
       "addButton": "Agregar a la lista de deseos",
       "inWishlist": "En tu lista de deseos",
+      "addToTryNext": "Añadir a Probar después",
+      "inTryNext": "En Probar después",
+      "tryNextError": "No se pudo añadir a Probar después.",
       "cancelButton": "Cancelar",
       "editButton": "Editar perfume",
       "deleteButton": "Eliminar perfume",
@@ -3258,8 +3261,12 @@
   },
   "samplingQueue": {
     "heading": "Probar después",
-    "empty": "Nada en cola aún. Añade frascos desde The Archive o el feedback de recomendaciones.",
+    "empty": "Nada en cola aún. Busca en The Archive abajo, o abre un perfume y elige Añadir a Probar después.",
     "browseArchive": "Explorar The Archive",
+    "addSearchLabel": "Añadir una fragancia",
+    "addSearchPlaceholder": "Busca en The Archive para encolar…",
+    "addedToast": "Añadido a Probar después.",
+    "addError": "No se pudo añadir esa fragancia.",
     "loading": "Cargando cola de probar después…",
     "loadError": "No se pudo cargar la cola de muestreo.",
     "updateError": "No se pudo actualizar el elemento.",

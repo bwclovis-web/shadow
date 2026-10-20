@@ -1712,6 +1712,9 @@
     "icons": {
       "addButton": "Ajouter à la liste de souhaits",
       "inWishlist": "Dans votre liste",
+      "addToTryNext": "Ajouter à Essayer ensuite",
+      "inTryNext": "Dans Essayer ensuite",
+      "tryNextError": "Impossible d'ajouter à Essayer ensuite.",
       "cancelButton": "Annuler",
       "editButton": "Modifier le parfum",
       "deleteButton": "Supprimer le parfum",
@@ -3258,8 +3261,12 @@
   },
   "samplingQueue": {
     "heading": "Essayer ensuite",
-    "empty": "Rien en file. Ajoutez des flacons depuis The Archive ou les retours de recommandation.",
+    "empty": "Rien en file. Cherchez dans The Archive ci-dessous, ou ouvrez un parfum et choisissez Ajouter à Essayer ensuite.",
     "browseArchive": "Parcourir The Archive",
+    "addSearchLabel": "Ajouter une fragrance",
+    "addSearchPlaceholder": "Chercher dans The Archive pour mettre en file…",
+    "addedToast": "Ajouté à Essayer ensuite.",
+    "addError": "Impossible d'ajouter cette fragrance.",
     "loading": "Chargement de la file à essayer…",
     "loadError": "Impossible de charger la file d'échantillons.",
     "updateError": "Impossible de mettre à jour l'élément.",

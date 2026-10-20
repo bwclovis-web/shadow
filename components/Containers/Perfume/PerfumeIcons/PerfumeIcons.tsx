@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { BsHeartFill, BsHearts } from "react-icons/bs"
 import { GrEdit } from "react-icons/gr"
+import { LuFlaskConical } from "react-icons/lu"
 import { MdDeleteForever } from "react-icons/md"
 
 import { Button, VooDooLink } from "@/components/Atoms/Button"
@@ -14,6 +15,7 @@ import {
   WISHLIST_BOTTLE_PREFERENCE_OPTIONS,
   type WishlistBottlePreference,
 } from "@/lib/mutations/wishlist"
+import { postAddToSamplingQueue } from "@/lib/sampling-queue-client"
 import { useTranslations } from "next-intl"
 
 const DELETE_MODAL_ID = "delete-perfume-item"
@@ -41,6 +43,9 @@ const PerfumeIcons = ({
   isInWishlist,
 }: PerfumeIconsProps) => {
   const [inWishlist, setInWishlist] = useState(isInWishlist)
+  const [inTryNext, setInTryNext] = useState(false)
+  const [tryNextPending, setTryNextPending] = useState(false)
+  const [tryNextError, setTryNextError] = useState<string | null>(null)
   const [animatedAction, setAnimatedAction] = useState<string | null>(null)
   const { modalOpen, toggleModal, modalId, closeModal } = useSessionStore()
   const [isPublic, setIsPublic] = useState(false)
@@ -109,6 +114,23 @@ const PerfumeIcons = ({
   }
 
   const wishlistAriaLabel = `${inWishlist ? tCommon("remove") : tCommon("add")} ${perfume.name} ${inWishlist ? "from" : "to"} wishlist`
+
+  const handleAddToTryNext = async () => {
+    if (inTryNext || tryNextPending) return
+    setTryNextPending(true)
+    setTryNextError(null)
+    try {
+      await postAddToSamplingQueue(perfume.id)
+      setInTryNext(true)
+      setAnimatedAction("tryNext")
+    } catch (error) {
+      console.error("Failed to add to Try next:", error)
+      setTryNextError(tIcons("icons.tryNextError"))
+    } finally {
+      setTryNextPending(false)
+    }
+  }
+
   const isAdmin = userRole === "admin"
   const actionButtonClassName =
     "group relative overflow-hidden min-w-full justify-between border-noir-gold-100 bg-noir-gold/10 " +
@@ -214,6 +236,30 @@ const PerfumeIcons = ({
           perfume={perfume}
           className={actionButtonClassName}
         />
+        <Button
+          type="button"
+          onClick={() => void handleAddToTryNext()}
+          variant="icon"
+          background="gold"
+          size="sm"
+          className={`${actionButtonClassName} ${
+            inTryNext ? activeActionButtonClassName : ""
+          } ${animatedAction === "tryNext" ? "motion-safe:animate-vault-stamp" : ""}`}
+          disabled={tryNextPending || inTryNext}
+          aria-label={
+            inTryNext
+              ? tIcons("icons.inTryNext")
+              : `${tIcons("icons.addToTryNext")}: ${perfume.name}`
+          }
+          leftIcon={<LuFlaskConical size={22} aria-hidden />}
+        >
+          {inTryNext ? tIcons("icons.inTryNext") : tIcons("icons.addToTryNext")}
+        </Button>
+        {tryNextError ? (
+          <p className="text-center text-xs text-red-300" role="alert">
+            {tryNextError}
+          </p>
+        ) : null}
         {isAdmin && (
           <div>
             <h2 className="text-center mb-2">

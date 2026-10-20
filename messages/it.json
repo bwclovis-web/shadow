@@ -1712,6 +1712,9 @@
     "icons": {
       "addButton": "Aggiungi alla wishlist",
       "inWishlist": "Nella tua wishlist",
+      "addToTryNext": "Aggiungi a Prova dopo",
+      "inTryNext": "In Prova dopo",
+      "tryNextError": "Impossibile aggiungere a Prova dopo.",
       "cancelButton": "Annulla",
       "editButton": "Modifica profumo",
       "deleteButton": "Elimina profumo",
@@ -3258,8 +3261,12 @@
   },
   "samplingQueue": {
     "heading": "Prova dopo",
-    "empty": "Niente in coda. Aggiungi flaconi da The Archive o dal feedback delle raccomandazioni.",
+    "empty": "Niente in coda. Cerca in The Archive qui sotto, oppure apri un profumo e scegli Aggiungi a Prova dopo.",
     "browseArchive": "Sfoglia The Archive",
+    "addSearchLabel": "Aggiungi una fragranza",
+    "addSearchPlaceholder": "Cerca in The Archive per mettere in coda…",
+    "addedToast": "Aggiunto a Prova dopo.",
+    "addError": "Impossibile aggiungere quella fragranza.",
     "loading": "Caricamento coda prova dopo…",
     "loadError": "Impossibile caricare la coda di campionamento.",
     "updateError": "Impossibile aggiornare l'elemento.",

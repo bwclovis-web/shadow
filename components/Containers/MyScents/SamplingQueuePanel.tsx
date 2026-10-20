@@ -6,7 +6,10 @@ import { useTranslations } from "next-intl"
 
 import { Button } from "@/components/Atoms/Button"
 import Select from "@/components/Atoms/Select/Select"
-import { apiFetch, getCsrfHeaders } from "@/lib/api-client"
+import SearchBar from "@/components/Organisms/SearchBar"
+import { apiFetch, getCSRFFromCookie, getCsrfHeaders } from "@/lib/api-client"
+import { postAddToSamplingQueue } from "@/lib/sampling-queue-client"
+import { THE_ARCHIVE_PATH } from "@/constants/routes"
 
 type SamplingQueueItemRow = {
   id: string
@@ -57,6 +60,8 @@ export const SamplingQueuePanel = ({
   )
   const [loading, setLoading] = useState(!initialItems)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [adding, setAdding] = useState(false)
 
   const refresh = useCallback(async () => {
     try {
@@ -78,16 +83,38 @@ export const SamplingQueuePanel = ({
     }
   }, [initialItems, refresh])
 
+  const addPerfume = async (perfumeId: string) => {
+    if (!perfumeId || adding) return
+    setAdding(true)
+    setError(null)
+    setNotice(null)
+    try {
+      await postAddToSamplingQueue(perfumeId)
+      setNotice(t("addedToast"))
+      await refresh()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("addError"))
+    } finally {
+      setAdding(false)
+    }
+  }
+
   const updateStatus = async (id: string, status: string) => {
     try {
       setError(null)
+      const csrf = getCSRFFromCookie()
       await apiFetch("/api/sampling-queue", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...getCsrfHeaders(),
         },
-        body: JSON.stringify({ intent: "update-status", id, status }),
+        body: JSON.stringify({
+          intent: "update-status",
+          id,
+          status,
+          ...(csrf ? { _csrf: csrf } : {}),
+        }),
       })
       setItems(prev =>
         prev.map(item =>
@@ -104,33 +131,23 @@ export const SamplingQueuePanel = ({
   const removeItem = async (id: string) => {
     try {
       setError(null)
+      const csrf = getCSRFFromCookie()
       await apiFetch("/api/sampling-queue", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...getCsrfHeaders(),
         },
-        body: JSON.stringify({ intent: "remove", id }),
+        body: JSON.stringify({
+          intent: "remove",
+          id,
+          ...(csrf ? { _csrf: csrf } : {}),
+        }),
       })
       setItems(prev => prev.filter(item => item.id !== id))
     } catch (err) {
       setError(err instanceof Error ? err.message : t("updateError"))
     }
-  }
-
-  if (loading) {
-    return <p className="text-sm text-noir-gold-100">{t("loading")}</p>
-  }
-
-  if (items.length === 0) {
-    return (
-      <div className="rounded border border-noir-gold-500/30 bg-noir-dark/40 px-4 py-4 space-y-3">
-        <p className="text-sm text-noir-gold-100">{t("empty")}</p>
-        <Link href="/the-archive" className="text-noir-gold underline text-sm">
-          {t("browseArchive")}
-        </Link>
-      </div>
-    )
   }
 
   const statusSelectData = STATUS_OPTIONS.map(o => ({
@@ -139,9 +156,48 @@ export const SamplingQueuePanel = ({
     label: t(o.labelKey),
   }))
 
+  const addSearch = (
+    <div className="w-full min-w-0 space-y-1">
+      <p className="text-xs font-semibold uppercase tracking-wide text-noir-gold-100">
+        {t("addSearchLabel")}
+      </p>
+      <SearchBar
+        variant="default"
+        size="standard"
+        searchType="perfume"
+        inputId="try-next-add-search"
+        placeholder={t("addSearchPlaceholder")}
+        className="w-full"
+        clearInputOnSelect
+        disabled={adding}
+        action={item => void addPerfume(item.id)}
+      />
+    </div>
+  )
+
+  if (loading) {
+    return <p className="text-sm text-noir-gold-100">{t("loading")}</p>
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="space-y-3 rounded border border-noir-gold-500/30 bg-noir-dark/40 px-4 py-4">
+        <p className="text-sm text-noir-gold-100">{t("empty")}</p>
+        {addSearch}
+        {error ? <p className="text-sm text-red-300">{error}</p> : null}
+        {notice ? <p className="text-sm text-noir-gold">{notice}</p> : null}
+        <Link href={THE_ARCHIVE_PATH} className="text-sm text-noir-gold underline">
+          {t("browseArchive")}
+        </Link>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-3">
+      {addSearch}
       {error ? <p className="text-sm text-red-300">{error}</p> : null}
+      {notice ? <p className="text-sm text-noir-gold">{notice}</p> : null}
       <ul className={`space-y-3 ${compact ? "" : ""}`}>
         {items.map(item => (
           <li

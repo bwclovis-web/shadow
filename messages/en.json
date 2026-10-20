@@ -1912,6 +1912,9 @@
     "icons": {
       "addButton": "Add to Seeking",
       "inWishlist": "In seeking",
+      "addToTryNext": "Add to Try next",
+      "inTryNext": "In Try next",
+      "tryNextError": "Could not add to Try next.",
       "cancelButton": "Cancel",
       "editButton": "Edit Perfume",
       "deleteButton": "Delete Perfume",
@@ -3258,8 +3261,12 @@
   },
   "samplingQueue": {
     "heading": "Try next",
-    "empty": "Nothing queued yet. Add bottles from the Archive or recommendation feedback.",
+    "empty": "Nothing queued yet. Search the Archive below, or open a perfume and choose Add to Try next.",
     "browseArchive": "Browse The Archive",
+    "addSearchLabel": "Add a fragrance",
+    "addSearchPlaceholder": "Search the Archive to queue…",
+    "addedToast": "Added to Try next.",
+    "addError": "Could not add that fragrance.",
     "loading": "Loading try-next queue…",
     "loadError": "Could not load sampling queue.",
     "updateError": "Could not update queue item.",
