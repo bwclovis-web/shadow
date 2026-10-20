@@ -26,6 +26,16 @@ export const CARD_THUMB_HOVER_CLASS = [
   "motion-reduce:group-hover:scale-100",
 ].join(" ")
 
+/**
+ * Color-preserving cover hover (Collection redesign and surfaces that must not
+ * rest in grayscale). Scale only — no `grayscale-*` filters.
+ */
+export const CARD_IMAGE_COLOR_HOVER_CLASS = [
+  "object-cover object-center",
+  "transition-transform duration-500 ease-in-out group-hover:scale-105",
+  "motion-reduce:transition-none motion-reduce:group-hover:scale-100",
+].join(" ")
+
 /** Square LinkCard with a remote image (Matches for you, house perfume grids). */
 export const LINK_CARD_IMAGE_CLASS = [
   "w-full h-full aspect-square object-fill object-center scale-150",

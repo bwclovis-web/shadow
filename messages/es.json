@@ -1030,6 +1030,20 @@
     "collection": {
       "heading": "Mi Colección de Perfumes",
       "itemsCount": "{{count}} artículos en tu colección",
+      "toolbar": {
+        "view": "Diseño de la colección",
+        "gridView": "Vista de cuadrícula",
+        "listView": "Vista de lista",
+        "listViewPending": "Vista de lista (próximamente)"
+      },
+      "card": {
+        "owned": "En posesión {ml} ml",
+        "ownedUnknown": "Volumen en posesión desconocido",
+        "listedFragrance": "En anuncio {ml} ml",
+        "listedFragranceHint": "Total de mililitros en anuncio para esta fragancia (no por botella)",
+        "listedFragranceAria": "Fragancia en anuncio {ml} mililitros en tu colección",
+        "viewBottle": "Ver botella"
+      },
       "empty": {
         "heading": "Tu colección está vacía.",
         "subheading": "¡Comienza a agregar perfumes a tu colección!",

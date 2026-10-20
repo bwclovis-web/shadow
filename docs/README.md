@@ -48,6 +48,7 @@ Root [README.md](../README.md) stays short: product blurb + common commands + li
 | [MONETIZATION_PLAYBOOK.md](./MONETIZATION_PLAYBOOK.md) | Subscription / revenue experiments |
 | [user-guide-decants.md](./user-guide-decants.md) | Decants / inventory / splits (copy for Help/FAQ) |
 | [destash-improvements.md](./destash-improvements.md) | Destash / decant reliability: volume policy, pause, writers, staged checklist |
+| [collection-redesign.md](./collection-redesign.md) | My Scents Collection redesign: grid/list, Edit destash rail, reuse map, staged checklist |
 
 ---
 

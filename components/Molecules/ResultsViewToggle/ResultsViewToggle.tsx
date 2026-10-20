@@ -19,6 +19,8 @@ export type ResultsViewToggleProps = {
   onViewChange: (view: ResultsView) => void
   labels: ResultsViewToggleLabels
   disabled?: boolean
+  /** Per-option disable (e.g. list deferred while grid ships). */
+  disabledViews?: ResultsView[]
   className?: string
 }
 
@@ -45,7 +47,8 @@ const viewButton = (
       `${controlHeight} flex items-center justify-center rounded-none border-0 px-3 transition-colors md:min-w-[3.25rem] md:px-4`,
       current === value
         ? "bg-noir-gold text-noir-black"
-        : "bg-noir-black/60 text-noir-gold hover:bg-noir-gold/20"
+        : "bg-noir-black/60 text-noir-gold hover:bg-noir-gold/20",
+      disabled && current !== value ? "opacity-50" : ""
     )}
   >
     {icon}
@@ -61,6 +64,7 @@ export const ResultsViewToggle = ({
   onViewChange,
   labels,
   disabled = false,
+  disabledViews = [],
   className,
 }: ResultsViewToggleProps) => (
   <div
@@ -77,7 +81,7 @@ export const ResultsViewToggle = ({
       labels.gridView,
       <LuLayoutGrid className="h-5 w-5 md:h-6 md:w-6" aria-hidden />,
       onViewChange,
-      disabled
+      disabled || disabledViews.includes("grid")
     )}
     {viewButton(
       "list",
@@ -85,7 +89,7 @@ export const ResultsViewToggle = ({
       labels.listView,
       <LuList className="h-5 w-5 md:h-6 md:w-6" aria-hidden />,
       onViewChange,
-      disabled
+      disabled || disabledViews.includes("list")
     )}
   </div>
 )

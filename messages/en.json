@@ -1229,6 +1229,20 @@
     "collection": {
       "heading": "My Perfume Collection",
       "itemsCount": "{{count}} items in your collection",
+      "toolbar": {
+        "view": "Collection layout",
+        "gridView": "Grid view",
+        "listView": "List view",
+        "listViewPending": "List view (coming soon)"
+      },
+      "card": {
+        "owned": "Owned {ml} ml",
+        "ownedUnknown": "Owned unknown",
+        "listedFragrance": "Listed {ml} ml",
+        "listedFragranceHint": "Total millilitres listed for this fragrance (not bottle-specific)",
+        "listedFragranceAria": "Fragrance listed {ml} millilitres across your collection",
+        "viewBottle": "View bottle"
+      },
       "empty": {
         "heading": "Your collection is empty.",
         "subheading": "Add bottles from the Archive, or take the scent quiz to find a place to start.",

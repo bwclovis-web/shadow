@@ -322,12 +322,6 @@ const MyScentsPageClient = ({
         subheading={t("subheading")}
       >
         <div className="flex flex-wrap items-center gap-3 mx-auto max-w-max">
-          <AddToCollectionModal
-            onAddedToCollection={refreshCollection}
-            onOptimisticAddToCollection={handleOptimisticAdd}
-            onOptimisticAddRollback={handleOptimisticRollback}
-            autoFocusSearch={autoFocusAddSearch}
-          />
           <Button
             type="button"
             variant="secondary"
@@ -412,6 +406,14 @@ const MyScentsPageClient = ({
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={handlePageChange}
+              addToCollection={
+                <AddToCollectionModal
+                  onAddedToCollection={refreshCollection}
+                  onOptimisticAddToCollection={handleOptimisticAdd}
+                  onOptimisticAddRollback={handleOptimisticRollback}
+                  autoFocusSearch={autoFocusAddSearch}
+                />
+              }
             />
           }
         />
