@@ -4,6 +4,7 @@ import Image from "next/image"
 import { type ChangeEvent, useState } from "react"
 import { useTranslations } from "next-intl"
 
+import { OrnamentalOverlay } from "@/components/Atoms/OrnamentalFrame"
 import Select from "@/components/Atoms/Select"
 import CommunityStatsStrip from "@/components/Containers/Home/CommunityStatsStrip"
 import SearchBar from "@/components/Organisms/SearchBar"
@@ -57,10 +58,17 @@ const HomeHero = ({
           className="object-cover object-[72%_center] sepia-[0.7] saturate-[1.4] brightness-90"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-noir-black/70 via-noir-black/80 to-noir-black md:bg-gradient-to-r md:from-noir-black md:via-noir-black/75 md:via-45% md:to-noir-black/5" />
+        <div className="hero-vignette absolute inset-0" aria-hidden />
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-noir-black/80 to-transparent" />
       </div>
 
-      <div className="relative pt-[var(--spacing-site-header-mobile)] lg:pt-[var(--spacing-site-header-desktop)] [[data-onboarding-banner]+main_&]:pt-0">
+      <OrnamentalOverlay
+        size="hero"
+        frame={false}
+        className="inset-0 z-[5]"
+      />
+
+      <div className="relative z-10 pt-[var(--spacing-site-header-mobile)] lg:pt-[var(--spacing-site-header-desktop)] [[data-onboarding-banner]+main_&]:pt-0">
         <div className="mx-auto flex w-full max-w-[1280px] items-center px-5 py-6 sm:px-8 lg:min-h-[24rem] lg:px-10 lg:py-8">
           <div className="flex w-full flex-col items-start gap-4 text-left lg:w-[52%]">
             <div className="text-shadow-lg/90 text-shadow-noir-black">

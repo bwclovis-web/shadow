@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import Image from "next/image"
 
+import { OrnamentalOverlay } from "@/components/Atoms/OrnamentalFrame"
 import { normalizeRemoteImageSrc, styleMerge, validImageRegex } from "@/utils/styleUtils"
 
 interface HeroHeaderProps {
@@ -25,7 +26,7 @@ interface HeroHeaderProps {
 }
 
 const DEFAULT_HEADER_CLASSES =
-  "flex items-end justify-center mb-10 relative w-full overflow-hidden"
+  "flex items-end justify-center mb-10 relative w-full overflow-visible"
 const DEFAULT_HEIGHT_CLASS = "h-[600px]"
 const DEFAULT_BODY_CLASSES =
   "relative z-10 px-8 text-center filter w-full rounded-lg py-4 text-shadow-lg text-shadow-noir-black/90"
@@ -69,16 +70,25 @@ const HeroHeader = ({
     <header
       className={styleMerge(DEFAULT_HEADER_CLASSES, heightClassName, headerClassName)}
     >
-      <Image
-        src={imageSrc}
-        alt={imageAlt ?? title}
-        priority={priority}
-        width={imageWidth}
-        height={imageHeight}
-        quality={imageQuality}
-        className={imageClassName}
-        sizes={sizes}
-        style={{ viewTransitionName: computedViewTransitionName } as React.CSSProperties}
+      <div className="absolute inset-0 z-0 overflow-hidden rounded-lg">
+        <Image
+          src={imageSrc}
+          alt={imageAlt ?? title}
+          priority={priority}
+          width={imageWidth}
+          height={imageHeight}
+          quality={imageQuality}
+          className={styleMerge(imageClassName, "!absolute inset-0 h-full w-full")}
+          sizes={sizes}
+          style={{ viewTransitionName: computedViewTransitionName } as React.CSSProperties}
+        />
+        <div className="hero-vignette absolute inset-0 z-[1]" aria-hidden />
+      </div>
+
+      <OrnamentalOverlay
+        size="hero"
+        frame={false}
+        className="inset-0 z-[5]"
       />
 
       <div className={styleMerge(DEFAULT_BODY_CLASSES, bodyClassName)}>

@@ -1,6 +1,7 @@
 import { type ReactNode } from "react"
 import Image from "next/image"
 
+import { OrnamentalOverlay } from "@/components/Atoms/OrnamentalFrame"
 import { normalizeRemoteImageSrc } from "@/utils/styleUtils"
 
 interface TitleBannerProps {
@@ -40,6 +41,12 @@ const TitleBanner = ({
           flipImage ? "scale-x-[-1]" : ""
         } mb-2 filter brightness-[1.2] sepia-[0.2] mix-blend-screen mt-12 md:mt-0 rounded-lg absolute top-0 left-0 right-0 z-0`}
         sizes="100vw"
+      />
+      <div className="hero-vignette absolute inset-0 z-[1] rounded-lg" aria-hidden />
+      <OrnamentalOverlay
+        size="hero"
+        frame={false}
+        className="inset-0 z-[5]"
       />
       <div className="relative z-10 w-full max-w-max p-2 top-20 md:top-0 md:px-8 rounded-lg md:py-4 text-noir-gold text-center text-shadow-lg text-shadow-noir-black bg-noir-black/40 backdrop-blur-sm">
         <h1 className="text-shadow-lg text-shadow-noir-black/90">{heading}</h1>

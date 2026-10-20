@@ -6,4 +6,10 @@ export {
 export {
   OrnamentalCorner,
   type OrnamentalCornerProps,
+  type OrnamentalCornerVariant,
 } from "./OrnamentalCorner"
+export {
+  OrnamentalOverlay,
+  type OrnamentalOverlayProps,
+  type OrnamentalOverlaySize,
+} from "./OrnamentalOverlay"

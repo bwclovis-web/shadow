@@ -237,6 +237,17 @@ img {
   );
 }
 
+/* Soft edge darkening for page heroes (TitleBanner / HeroHeader / HomeHero). */
+.hero-vignette {
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 78% 72% at 50% 42%,
+    transparent 28%,
+    color-mix(in oklab, var(--color-noir-black) 55%, transparent) 68%,
+    var(--color-noir-black) 100%
+  );
+}
+
 /*
  * Four SVG corner flourishes (same art as `OrnamentalFrame` / `OrnamentalCorner`).
  * SVGs use a padded viewBox so curls are not clipped as backgrounds.

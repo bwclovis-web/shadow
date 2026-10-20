@@ -2,9 +2,15 @@ import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react"
 
 import { styleMerge } from "@/utils/styleUtils"
 
-import { OrnamentalCorner } from "./OrnamentalCorner"
+import {
+  OrnamentalOverlay,
+  type OrnamentalOverlaySize,
+} from "./OrnamentalOverlay"
 
-export type OrnamentalFrameSize = "compact" | "standard"
+export type OrnamentalFrameSize = Extract<
+  OrnamentalOverlaySize,
+  "compact" | "standard"
+>
 
 type OrnamentalFrameOwnProps<T extends ElementType> = {
   children: ReactNode
@@ -26,15 +32,6 @@ export type OrnamentalFrameProps<T extends ElementType = "div"> =
   OrnamentalFrameOwnProps<T> &
     Omit<ComponentPropsWithoutRef<T>, keyof OrnamentalFrameOwnProps<T>>
 
-const SIZE_PX: Record<OrnamentalFrameSize, number> = {
-  compact: 20,
-  standard: 28,
-}
-
-/** ViewBox coordinate where the corner join sits in `OrnamentalCorner`. */
-const CORNER_JOIN = 3
-const VIEWBOX = 32
-
 /**
  * Fine gold rectangular frame with curling corner flourishes.
  * Prefer this when you need the React corner (currentColor, size variants).
@@ -46,6 +43,8 @@ const VIEWBOX = 32
  *
  * Outer frame stays `overflow-visible` so curls can paint outside; content is
  * inset and clipped so media cannot hang over the border line.
+ *
+ * For page heroes, use `OrnamentalOverlay` (paint-only) instead of wrapping.
  */
 export const OrnamentalFrame = <T extends ElementType = "div">({
   children,
@@ -56,9 +55,6 @@ export const OrnamentalFrame = <T extends ElementType = "div">({
   ...rest
 }: OrnamentalFrameProps<T>) => {
   const Tag = as ?? ("div" as ElementType)
-  const cornerPx = SIZE_PX[size]
-  /** Place viewBox join (3,3) on the element’s top-left border corner. */
-  const cornerOffset = `-${(CORNER_JOIN / VIEWBOX) * cornerPx}px`
 
   return (
     <Tag
@@ -68,41 +64,7 @@ export const OrnamentalFrame = <T extends ElementType = "div">({
         className
       )}
     >
-      {/* Straight frame lines */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 z-20 rounded-[1px] border border-current"
-      />
-
-      {/* Four corners: one SVG, mirrored for TR / BL / BR */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute z-30"
-        style={{ top: cornerOffset, left: cornerOffset }}
-      >
-        <OrnamentalCorner size={cornerPx} />
-      </span>
-      <span
-        aria-hidden
-        className="pointer-events-none absolute z-30 origin-center scale-x-[-1]"
-        style={{ top: cornerOffset, right: cornerOffset }}
-      >
-        <OrnamentalCorner size={cornerPx} />
-      </span>
-      <span
-        aria-hidden
-        className="pointer-events-none absolute z-30 origin-center scale-y-[-1]"
-        style={{ bottom: cornerOffset, left: cornerOffset }}
-      >
-        <OrnamentalCorner size={cornerPx} />
-      </span>
-      <span
-        aria-hidden
-        className="pointer-events-none absolute z-30 origin-center scale-x-[-1] scale-y-[-1]"
-        style={{ bottom: cornerOffset, right: cornerOffset }}
-      >
-        <OrnamentalCorner size={cornerPx} />
-      </span>
+      <OrnamentalOverlay size={size} className="z-20" />
 
       {clipContent ? (
         <div className="relative z-0 box-border flex h-full min-h-0 min-w-0 flex-col overflow-hidden p-px">

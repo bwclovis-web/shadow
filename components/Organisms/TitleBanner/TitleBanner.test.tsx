@@ -15,7 +15,7 @@ vi.mock("next/image", () => ({
 
 describe("TitleBanner", () => {
   it("renders a titlebanner", () => {
-    render(
+    const { container } = render(
       <TitleBanner
         image="/test-image.jpg"
         heading="Test Heading"
@@ -23,5 +23,6 @@ describe("TitleBanner", () => {
       />
     )
     expect(screen.getByText("Test Heading")).toBeTruthy()
+    expect(container.querySelector("[aria-hidden] svg")).toBeTruthy()
   })
 })
