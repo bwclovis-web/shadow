@@ -2363,7 +2363,7 @@
     },
     "empty": {
       "heading": "Tu lista de deseos está vacía.",
-      "subheading": "¡Comienza a agregar perfumes a tu lista de deseos!",
+      "subheading": "Añade frascos concretos desde El Archivo. Márcalos como públicos para que aparezcan en tu página Seeking compartida.",
       "browseArchive": "Explorar The Archive",
       "collectorsGuide": "Guía del coleccionista"
     },
@@ -2441,9 +2441,9 @@
         "description": "Perfumes que {traderName} busca en perfumer's hollow."
       },
       "heading": "{traderName} busca",
-      "subheading": "Lista de deseos pública en perfumer's hollow",
+      "subheading": "Fragancias que aún esperan ser descubiertas.",
       "itemCount": "{count, plural, one {# perfume} other {# perfumes}}",
-      "empty": "Aún no hay artículos públicos en la lista.",
+      "empty": "Aún no hay nada en su lista Seeking pública.",
       "viewProfile": "Ver perfil del comerciante",
       "showingRange": "Mostrando {from} – {to} de {total}",
       "paginationNav": "Paginación de Seeking pública",

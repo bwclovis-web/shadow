@@ -28,6 +28,13 @@ export type ExchangeFragranceGroupCardProps = {
   onViewCollectors: (trigger: HTMLButtonElement | null) => void
   viewCollectorsLabel: string
   openSplitSlot?: React.ReactNode
+  /**
+   * Replaces the default collectors CTA (+ compare). Use for Matches / palate
+   * carousels that need a custom action while keeping the same card chrome.
+   */
+  footer?: React.ReactNode
+  /** When `footer` is set, compare defaults off; pass true to keep it. */
+  showCompareToggle?: boolean
   className?: string
 }
 
@@ -53,7 +60,7 @@ const GroupPhoto = ({
     type="button"
     onClick={onOpen}
     className={styleMerge(
-      "relative block h-full w-full overflow-hidden bg-noir-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-gold",
+      "group relative block h-full w-full overflow-hidden bg-noir-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-gold",
       className
     )}
   >
@@ -79,6 +86,8 @@ export const ExchangeFragranceGroupCard = ({
   onViewCollectors,
   viewCollectorsLabel,
   openSplitSlot,
+  footer,
+  showCompareToggle,
   className,
 }: ExchangeFragranceGroupCardProps) => {
   const t = useTranslations("tradingPost.listings")
@@ -101,7 +110,8 @@ export const ExchangeFragranceGroupCard = ({
         }
       : null
 
-  const showCollectorsCta = perfume.offerCount > 0
+  const showCollectorsCta = footer == null && perfume.offerCount > 0
+  const compareEnabled = showCompareToggle ?? footer == null
   const compareItem = {
     id: perfume.id,
     slug: perfume.slug,
@@ -199,6 +209,7 @@ export const ExchangeFragranceGroupCard = ({
           </p>
 
           <div className="mt-auto flex flex-col gap-2 pt-1">
+            {footer}
             {showCollectorsCta ? (
               <Button
                 type="button"
@@ -211,7 +222,9 @@ export const ExchangeFragranceGroupCard = ({
                 {viewCollectorsLabel}
               </Button>
             ) : null}
-            <PerfumeCompareToggle item={compareItem} variant="labeled" />
+            {compareEnabled ? (
+              <PerfumeCompareToggle item={compareItem} variant="labeled" />
+            ) : null}
           </div>
         </div>
       </div>

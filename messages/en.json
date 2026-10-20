@@ -2626,7 +2626,7 @@
     },
     "empty": {
       "heading": "Nothing is being sought yet.",
-      "subheading": "Add specific bottles from the Archive. A public wishlist is how other collectors see what you want.",
+      "subheading": "Add specific bottles from the Archive. Mark entries public so they appear on your shared Seeking page.",
       "browseArchive": "Browse The Archive",
       "collectorsGuide": "Collector’s Guide"
     },
@@ -2704,11 +2704,11 @@
         "description": "Perfumes {traderName} is looking for on perfumer's hollow."
       },
       "heading": "{traderName} is looking for",
-      "subheading": "Public wishlist — how other collectors see what they want. No separate looking-for board.",
+      "subheading": "Fragrances still waiting to be discovered.",
       "itemCount": "{count, plural, one {# perfume} other {# perfumes}}",
       "regionHint": "Collector region: {region}",
       "regionUnknown": "Region not set",
-      "empty": "No public wishlist items yet.",
+      "empty": "Nothing on their public Seeking list yet.",
       "viewProfile": "View trader profile",
       "showingRange": "Showing {from} – {to} of {total}",
       "paginationNav": "Public Seeking pagination",

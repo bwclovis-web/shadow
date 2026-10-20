@@ -2363,7 +2363,7 @@
     },
     "empty": {
       "heading": "Votre liste est vide.",
-      "subheading": "Ajoutez des parfums à votre liste !",
+      "subheading": "Ajoutez des flacons précis depuis L'Archive. Marquez-les comme publics pour qu'ils apparaissent sur votre page Seeking partagée.",
       "browseArchive": "Parcourir The Archive",
       "collectorsGuide": "Guide du collectionneur"
     },
@@ -2441,9 +2441,9 @@
         "description": "Parfums recherchés par {traderName} sur perfumer's hollow."
       },
       "heading": "{traderName} recherche",
-      "subheading": "Liste de souhaits publique sur perfumer's hollow",
+      "subheading": "Des fragrances qui attendent encore d'être découvertes.",
       "itemCount": "{count, plural, one {# parfum} other {# parfums}}",
-      "empty": "Aucun article public pour le moment.",
+      "empty": "Rien sur leur liste Seeking publique pour le moment.",
       "viewProfile": "Voir le profil du vendeur",
       "showingRange": "Affichage de {from} – {to} sur {total}",
       "paginationNav": "Pagination Seeking publique",

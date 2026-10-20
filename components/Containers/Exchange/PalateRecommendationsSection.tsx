@@ -4,10 +4,11 @@ import { useCallback } from "react"
 import { useTranslations } from "next-intl"
 import { FaWandSparkles } from "react-icons/fa6"
 
+import type { ExchangePerfumeRow } from "@/app/the-exchange/exchange-types"
 import { Button } from "@/components/Atoms/Button"
 import { OrnamentalFrame } from "@/components/Atoms/OrnamentalFrame"
 import { TradeComposerModal } from "@/components/Containers/Trade/TradeComposerModal"
-import { ExchangePerfumeCard } from "@/components/Molecules/ExchangePerfumeCard"
+import { ExchangeFragranceGroupCard } from "@/components/Molecules/ExchangeFragranceGroupCard"
 import { TradeMatchReasonLine } from "@/components/Molecules/TradeMatchReasonLine"
 import Modal from "@/components/Organisms/Modal"
 import { useTradeComposerModal } from "@/hooks/useTradeComposerModal"
@@ -24,9 +25,44 @@ type PalateRecommendationsSectionProps = {
   traderReputationByUserId?: Record<string, TraderReputationV1>
 }
 
+const toExchangeRow = (match: OnboardingTraderMatchEnriched): ExchangePerfumeRow => ({
+  id: match.perfumeId,
+  name: match.perfumeName,
+  slug: match.perfumeSlug,
+  image: match.perfumeImage,
+  perfumeHouse: match.perfumeHouse
+    ? { id: "", name: match.perfumeHouse, slug: "", type: "" }
+    : null,
+  userPerfume: [
+    {
+      id: match.userPerfumeId,
+      userId: match.counterpartyId,
+      available: match.available,
+      type: null,
+      tradePreference: match.tradePreference,
+      tradeOnly: match.tradeOnly,
+      price: match.price,
+      tradePrice: match.tradePrice,
+      images: match.images,
+      condition: match.condition,
+      decantFormat: match.decantFormat,
+      mlRemaining: match.mlRemaining,
+      user: {
+        id: match.counterpartyId,
+        firstName: null,
+        lastName: null,
+        username: null,
+        email: null,
+      },
+    },
+  ],
+  offerCount: 1,
+  collectorCount: 1,
+})
+
 const PalateRecommendationsSection = ({
   matches,
-  viewerId,
+  viewerId: _viewerId,
   traderReputationByUserId = {},
 }: PalateRecommendationsSectionProps) => {
   const t = useTranslations("tradingPost.palateRecommendations")
@@ -108,61 +144,34 @@ const PalateRecommendationsSection = ({
       <ul className="mt-4 flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
         {matches.map(match => {
           const reputation = traderReputationByUserId[match.counterpartyId]
-          const cardPerfume = {
-            id: match.perfumeId,
-            name: match.perfumeName,
-            slug: match.perfumeSlug,
-            image: match.perfumeImage,
-            perfumeHouse: match.perfumeHouse
-              ? { id: "", name: match.perfumeHouse, slug: "", type: "" }
-              : null,
-            userPerfume: [
-              {
-                id: match.userPerfumeId,
-                userId: match.counterpartyId,
-                available: match.available,
-                type: null,
-                tradePreference: match.tradePreference,
-                tradeOnly: match.tradeOnly,
-                price: match.price,
-                tradePrice: match.tradePrice,
-                images: match.images,
-                condition: match.condition,
-                decantFormat: match.decantFormat,
-                mlRemaining: match.mlRemaining,
-                user: {
-                  id: match.counterpartyId,
-                  firstName: null,
-                  lastName: null,
-                  username: null,
-                  email: null,
-                },
-              },
-            ],
-          }
 
           return (
             <li
               key={match.userPerfumeId}
-              className="min-w-[min(100%,280px)] max-w-[280px] shrink-0 snap-start"
+              className="min-w-[min(100%,20rem)] w-[min(100%,20rem)] shrink-0 snap-start"
             >
-              <ExchangePerfumeCard
-                perfume={cardPerfume}
-                viewerId={viewerId}
-                enableSharedViewTransitions={false}
-              >
-                <div className="mt-2 space-y-2">
-                  {match.matchExplanation ? (
-                    <TradeMatchReasonLine reasons={match.matchExplanation.reasons} />
-                  ) : null}
-                  {reputation?.score != null ? (
-                    <p className="text-xs text-noir-gold-500/80">
-                      {tRep("exchangeTrust", { score: reputation.score })}
+              <ExchangeFragranceGroupCard
+                perfume={toExchangeRow(match)}
+                onViewCollectors={() => undefined}
+                viewCollectorsLabel=""
+                openSplitSlot={
+                  <div className="space-y-1">
+                    {match.matchExplanation ? (
+                      <TradeMatchReasonLine
+                        reasons={match.matchExplanation.reasons}
+                      />
+                    ) : null}
+                    {reputation?.score != null ? (
+                      <p className="text-xs text-noir-gold-500/80">
+                        {tRep("exchangeTrust", { score: reputation.score })}
+                      </p>
+                    ) : null}
+                    <p className="text-sm text-noir-gold-100">
+                      {match.counterpartyDisplayName} · {match.available} ml
                     </p>
-                  ) : null}
-                  <p className="text-sm text-noir-gold-100">
-                    {match.counterpartyDisplayName} · {match.available} ml
-                  </p>
+                  </div>
+                }
+                footer={
                   <Button
                     type="button"
                     variant="primary"
@@ -172,11 +181,14 @@ const PalateRecommendationsSection = ({
                     onClick={e => handlePropose(match, e.currentTarget)}
                   >
                     {tTradeComposer(
-                      getTradeCtaLabelKey(match.tradePreference, match.tradeOnly)
+                      getTradeCtaLabelKey(
+                        match.tradePreference,
+                        match.tradeOnly
+                      )
                     )}
                   </Button>
-                </div>
-              </ExchangePerfumeCard>
+                }
+              />
             </li>
           )
         })}

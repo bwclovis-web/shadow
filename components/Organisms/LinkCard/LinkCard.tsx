@@ -2,6 +2,10 @@ import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import ReviewStatusBadge from "@/components/Atoms/ReviewStatusBadge"
 import { PerfumeCompareToggle } from "@/components/Molecules/PerfumeCompareToggle/PerfumeCompareToggle"
 import { HOUSE_DETAIL_PATH, PERFUME_PATH } from "@/constants/routes"
+import {
+  LINK_CARD_FALLBACK_IMAGE_CLASS,
+  LINK_CARD_IMAGE_CLASS,
+} from "@/utils/card-motion"
 import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
 import {
   houseImageTransitionName,
@@ -108,9 +112,7 @@ const LinkCard = ({
               height={500}
               priority={imagePriority}
               quality={75}
-              className="w-full mask-radial-at-center mask-radial-from-10% mask-radial-to-75%                                                        
-            transition-all duration-500 ease-in-out scale-150 h-full aspect-square object-fill object-center
-            filter grayscale-100 group-hover:grayscale-0 group-hover:scale-110 group-hover:mask-radial-from-30% group-hover:mask-radial-to-100%"
+              className={LINK_CARD_IMAGE_CLASS}
               sizes="(max-width: 640px) 70vw, (max-width: 1024px) 25vw, 20vw"
               style={
                 imageTransitionName
@@ -126,9 +128,7 @@ const LinkCard = ({
               height={400}
               priority={imagePriority}
               quality={75}
-              className="w-full object-fill mask-radial-at-center mask-radial-from-10% mask-radial-to-75%                                                        
-            transition-all duration-500 ease-in-out scale-120 h-full aspect-square
-            filter grayscale-100 group-hover:grayscale-0 group-hover:scale-100 group-hover:mask-radial-from-30% group-hover:mask-radial-to-100%"
+              className={LINK_CARD_FALLBACK_IMAGE_CLASS}
               sizes="(max-width: 640px) 70vw, (max-width: 1024px) 25vw, 30vw"
               style={
                 imageTransitionName
