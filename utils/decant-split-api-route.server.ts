@@ -44,11 +44,40 @@ export const authenticateDecantSplitRequest = async (request: NextRequest) => {
 }
 
 export const decantSplitRouteError = (error: unknown, fallback: string) => {
+  if (
+    error &&
+    typeof error === "object" &&
+    "errorCode" in error &&
+    "message" in error &&
+    typeof (error as { message: unknown }).message === "string"
+  ) {
+    const allocationLike = error as { errorCode: string; message: string; name?: string }
+    if (
+      allocationLike.name === "AllocationValidationError" ||
+      [
+        "invalidVolume",
+        "ownershipUnknown",
+        "noOwnedVolume",
+        "exceedsAvailable",
+        "wouldInvalidateAllocations",
+        "sourceBottleInUse",
+        "conflictRetryExhausted",
+      ].includes(allocationLike.errorCode)
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: allocationLike.message,
+          errorCode: allocationLike.errorCode,
+        },
+        { status: 400 }
+      )
+    }
+  }
+
   const msg = error instanceof Error ? error.message : fallback
   const status =
-    msg.includes("Not authorized") ||
-    msg.includes("Only the host") ||
-    msg.includes("Cannot")
+    msg.includes("Not authorized") || msg.includes("Only the host")
       ? 403
       : msg.includes("not found") || msg.includes("Not found")
         ? 404

@@ -33,9 +33,15 @@ interface DestashItemProps {
   destash: UserPerfumeI
   onEdit: () => void
   onDelete: () => void
+  isBusy?: boolean
 }
 
-const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
+const DestashItem = ({
+  destash,
+  onEdit,
+  onDelete,
+  isBusy = false,
+}: DestashItemProps) => {
   const tListItem = useTranslations("myScents.listItem")
   const tDestash = useTranslations("myScents.destashManager")
   const tComments = useTranslations("myScents.comments")
@@ -119,6 +125,7 @@ const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
               size="sm"
               leftIcon={<MdEdit size={16} />}
               className="w-full md:w-auto flex items-center justify-between gap-2"
+              disabled={isBusy}
             >
               {tDestash("edit")}
             </Button>
@@ -130,8 +137,9 @@ const DestashItem = ({ destash, onEdit, onDelete }: DestashItemProps) => {
               background="red"
               leftIcon={<MdDelete size={16} />}
               className="w-full md:w-auto"
+              disabled={isBusy}
             >
-              {tDestash("delete")}
+              {isBusy ? tDestash("pausing") : tDestash("delete")}
             </Button>
           </div>
         </div>

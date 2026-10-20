@@ -1,13 +1,27 @@
-import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef, useState } from "react"
+import {
+  type Dispatch,
+  type SetStateAction,
+  useCallback,
+  useRef,
+  useState,
+} from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { MdAdd } from "react-icons/md"
+import { LuSplit } from "react-icons/lu"
 
 import { Button } from "@/components/Atoms/Button"
 import { useCSRF } from "@/hooks/useCSRF"
 import { useSessionStore } from "@/hooks/sessionStore"
 import type { UserPerfumeI } from "@/types"
-
+import {
+  appendDestashListingFields,
+  buildCleanCreateUserPerfume,
+  mergeListingIntoCollection,
+  parseDestashApiResponse,
+  toDestashListingSubmitPayload,
+  type DestashApiResult,
+} from "@/lib/destash-form-payload"
 import {
   getActiveListings,
   getPausedListings,
@@ -16,47 +30,21 @@ import {
   parseMl,
 } from "@/lib/user-inventory"
 import { resolveListingApiError } from "@/lib/resolve-listing-api-error"
+import { isDecantSplitsEnabledClient } from "@/utils/decant-splits-enabled"
 
 import DecantSplitWizard from "../DecantSplit/DecantSplitWizard"
 import DestashForm, { type DeStashData } from "../DeStashForm/DeStashForm"
 import DestashItem from "./DestashItem"
 import PausedDestashItem from "./PausedDestashItem"
-import { isDecantSplitsEnabledClient } from "@/utils/decant-splits-enabled"
-import { LuSplit } from "react-icons/lu"
 
-const totalDestashedForPerfume = (entriesForPerfume: UserPerfumeI[]) =>
-  entriesForPerfume.reduce((sum, e) => sum + parseMl(e.available), 0)
-
-const standaloneDestashMl = (entriesForPerfume: UserPerfumeI[]) =>
-  entriesForPerfume
-    .filter((e) => !isCollectionBottle(e) && parseMl(e.available) > 0)
-    .reduce((sum, e) => sum + parseMl(e.available), 0)
-
-/** How much has already been listed from this bottle (row + separate destash entries). */
-const getDestashedMlForBottle = (
-  sourceBottleId: string,
-  entriesForPerfume: UserPerfumeI[]
-) => {
-  const source = entriesForPerfume.find((e) => e.id === sourceBottleId)
-  if (!source || !isCollectionBottle(source)) return 0
-
-  const collectionBottles = entriesForPerfume.filter(isCollectionBottle)
-
-  if (collectionBottles.length <= 1) {
-    return totalDestashedForPerfume(entriesForPerfume)
-  }
-
-  return parseMl(source.available) + standaloneDestashMl(entriesForPerfume)
-}
+type ListingAction = "pausing" | "resuming" | "removing" | "saving"
 
 interface DestashManagerProps {
   perfumeId: string
   userPerfumes: UserPerfumeI[]
   setUserPerfumes: Dispatch<SetStateAction<UserPerfumeI[]>>
   apiBasePath?: string
-  /** When on a single-bottle page, pass this bottle's id so new decants use it as source (no dropdown). */
   currentBottleId?: string
-  /** Open the create-listing form on mount (e.g. ?list=1 destash CTA). */
   autoStartCreate?: boolean
 }
 
@@ -70,30 +58,74 @@ const DestashManager = ({
 }: DestashManagerProps) => {
   const t = useTranslations("myScents.destashManager")
   const tSplits = useTranslations("decantSplits.wizard")
-  const router = useRouter()
   const tListingErrors = useTranslations("listing.errors")
+  const router = useRouter()
   const { addToFormData } = useCSRF()
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [isCreating, setIsCreating] = useState(autoStartCreate)
-  const [resumeTargetId, setResumeTargetId] = useState<string | null>(null)
-  const [removeTargetId, setRemoveTargetId] = useState<string | null>(null)
-  const [showSplitWizard, setShowSplitWizard] = useState(false)
-  const [submitState, setSubmitState] = useState<"idle" | "submitting">("idle")
-  const [submitData, setSubmitData] = useState<{
-    success?: boolean
-    userPerfume?: UserPerfumeI
-    error?: string
-  } | null>(null)
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const previousStateRef = useRef<"idle" | "submitting">("idle")
-  const submittedRef = useRef(false)
   const { closeModal } = useSessionStore()
 
-  const submitForm = useCallback(
-    async (formData: FormData) => {
-      setSubmitState("submitting")
-      setSubmitError(null)
-      submittedRef.current = true
+  const [editingId, setEditingId] = useState<string | null>(null)
+  /** Snapshot so parent refreshes cannot overwrite an in-progress edit. */
+  const [editingSnapshot, setEditingSnapshot] = useState<UserPerfumeI | null>(
+    null
+  )
+  const [isCreating, setIsCreating] = useState(autoStartCreate)
+  const [showSplitWizard, setShowSplitWizard] = useState(false)
+  const [formSubmitting, setFormSubmitting] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
+  const [pauseAllBusy, setPauseAllBusy] = useState(false)
+  const [pauseAllError, setPauseAllError] = useState<string | null>(null)
+  const [pendingById, setPendingById] = useState<Record<string, ListingAction>>(
+    {}
+  )
+  const [errorById, setErrorById] = useState<Record<string, string>>({})
+
+  const formSubmitLockRef = useRef(false)
+  const listingActionLocksRef = useRef<Set<string>>(new Set())
+
+  const setListingPending = (id: string, action: ListingAction | null) => {
+    setPendingById(prev => {
+      if (action == null) {
+        const next = { ...prev }
+        delete next[id]
+        return next
+      }
+      return { ...prev, [id]: action }
+    })
+  }
+
+  const setListingError = (id: string, message: string | null) => {
+    setErrorById(prev => {
+      if (message == null) {
+        const next = { ...prev }
+        delete next[id]
+        return next
+      }
+      return { ...prev, [id]: message }
+    })
+  }
+
+  const resolveErrorMessage = useCallback(
+    (result: DestashApiResult, fallback: string) => {
+      if (result.networkError) {
+        return t("networkError")
+      }
+      if (result.malformed || (!result.ok && !result.error && !result.errorCode)) {
+        return t("unexpectedResponse")
+      }
+      return (
+        resolveListingApiError(
+          { error: result.error, errorCode: result.errorCode },
+          tListingErrors
+        ) ??
+        result.error ??
+        fallback
+      )
+    },
+    [t, tListingErrors]
+  )
+
+  const postDestash = useCallback(
+    async (formData: FormData): Promise<DestashApiResult> => {
       addToFormData(formData)
       try {
         const res = await fetch(apiBasePath, {
@@ -101,224 +133,346 @@ const DestashManager = ({
           body: formData,
           credentials: "include",
         })
-        const data = await res.json().catch(() => ({}))
-        setSubmitData(data)
-        return data
-      } finally {
-        setSubmitState("idle")
+        return parseDestashApiResponse(res)
+      } catch {
+        return {
+          ok: false,
+          status: 0,
+          success: false,
+          malformed: false,
+          networkError: true,
+        }
       }
     },
     [apiBasePath, addToFormData]
   )
 
-  useEffect(() => {
-    const responseData = submitData
-    const isSuccess =
-      responseData &&
-      typeof responseData === "object" &&
-      "success" in responseData
-        ? (responseData as { success?: boolean }).success
-        : false
+  const applySuccessfulListing = useCallback(
+    (updated: UserPerfumeI) => {
+      // While editing another row, still merge list data; edit form uses snapshot.
+      setUserPerfumes(prev => mergeListingIntoCollection(prev, updated))
+    },
+    [setUserPerfumes]
+  )
 
-    const transitionedToIdle =
-      previousStateRef.current === "submitting" && submitState === "idle"
-
-    if (transitionedToIdle && submittedRef.current && !isSuccess) {
-      const payload =
-        responseData && typeof responseData === "object"
-          ? (responseData as { error?: string; errorCode?: string })
-          : {}
-      setSubmitError(resolveListingApiError(payload, tListingErrors))
-    }
-
-    if (transitionedToIdle && isSuccess && submittedRef.current) {
-      setSubmitError(null)
-      if (
-        responseData &&
-        typeof responseData === "object" &&
-        "userPerfume" in responseData
-      ) {
-        const updatedUserPerfume = (responseData as { userPerfume: UserPerfumeI })
-          .userPerfume
-        if (updatedUserPerfume) {
-          setUserPerfumes((prev) => {
-            const index = prev.findIndex((up) => up.id === updatedUserPerfume.id)
-            if (index >= 0) {
-              const updated = [...prev]
-              updated[index] = updatedUserPerfume
-              return updated
-            }
-            return [...prev, updatedUserPerfume]
-          })
-        }
-      }
-      setIsCreating(false)
-      setEditingId(null)
-      submittedRef.current = false
-    }
-
-    previousStateRef.current = submitState
-  }, [submitState, submitData, setUserPerfumes, tListingErrors])
-
-  const entriesForPerfume = userPerfumes.filter((up) => up.perfumeId === perfumeId)
+  const entriesForPerfume = userPerfumes.filter(up => up.perfumeId === perfumeId)
   const destashes = getActiveListings(entriesForPerfume)
   const pausedDestashes = getPausedListings(entriesForPerfume)
-
-  const totalOwned = entriesForPerfume.reduce((sum, entry) => {
-    const amt = parseFloat(entry.amount?.replace(/[^0-9.]/g, "") || "0")
-    return sum + (isNaN(amt) ? 0 : amt)
-  }, 0)
-  const totalDestashed = totalDestashedForPerfume(entriesForPerfume)
-  const poolRemaining = Math.max(0, totalOwned - totalDestashed)
 
   const handleCreateNew = () => {
     setIsCreating(true)
     setEditingId(null)
+    setEditingSnapshot(null)
+    setFormError(null)
+    setPauseAllError(null)
   }
 
   const handleEdit = (id: string) => {
+    const row = userPerfumes.find(up => up.id === id)
+    if (!row) return
     setEditingId(id)
+    setEditingSnapshot({ ...row })
     setIsCreating(false)
+    setFormError(null)
+    setPauseAllError(null)
   }
 
   const handleCancel = () => {
     setEditingId(null)
+    setEditingSnapshot(null)
     setIsCreating(false)
+    setFormError(null)
   }
 
-  const pauseListing = (userPerfumeId: string) => {
-    setUserPerfumes((prev) =>
-      prev.map((perfume) => {
-        if (perfume.id !== userPerfumeId) return perfume
-        const listed = parseMl(perfume.available)
-        if (listed <= 0) return perfume
-        return {
-          ...perfume,
-          available: "0",
-          pausedAvailable: perfume.available,
-        }
-      })
+  const pauseListing = async (
+    userPerfumeId: string
+  ): Promise<{ ok: boolean; error?: string }> => {
+    if (listingActionLocksRef.current.has(userPerfumeId)) {
+      return { ok: false }
+    }
+    const current = userPerfumes.find(up => up.id === userPerfumeId)
+    if (!current || parseMl(current.available) <= 0) return { ok: false }
+
+    listingActionLocksRef.current.add(userPerfumeId)
+    setListingPending(userPerfumeId, "pausing")
+    setListingError(userPerfumeId, null)
+
+    const previous = { ...current }
+    const pausedSnapshot = current.available
+    setUserPerfumes(prev =>
+      prev.map(perfume =>
+        perfume.id === userPerfumeId
+          ? {
+              ...perfume,
+              available: "0",
+              pausedAvailable: pausedSnapshot,
+            }
+          : perfume
+      )
     )
+
     const formData = new FormData()
     formData.append("action", "decant")
     formData.append("userPerfumeId", userPerfumeId)
     formData.append("perfumeId", perfumeId)
     formData.append("amount", "0")
-    submitForm(formData)
-  }
 
-  const resumeListing = async (userPerfumeId: string, pausedAvailable: string) => {
-    setResumeTargetId(userPerfumeId)
     try {
-      const formData = new FormData()
-      formData.append("action", "decant")
-      formData.append("userPerfumeId", userPerfumeId)
-      formData.append("perfumeId", perfumeId)
-      formData.append("amount", pausedAvailable)
-      formData.append("resumePaused", "true")
-      await submitForm(formData)
+      const result = await postDestash(formData)
+      if (result.success) {
+        if (result.userPerfume) {
+          applySuccessfulListing({
+            ...result.userPerfume,
+            available: "0",
+            pausedAvailable:
+              result.userPerfume.pausedAvailable ?? pausedSnapshot,
+          })
+        }
+        return { ok: true }
+      }
+
+      setUserPerfumes(prev =>
+        prev.map(perfume => (perfume.id === userPerfumeId ? previous : perfume))
+      )
+      const message = resolveErrorMessage(result, t("pauseFailed"))
+      setListingError(userPerfumeId, message)
+      return { ok: false, error: message }
     } finally {
-      setResumeTargetId(null)
+      listingActionLocksRef.current.delete(userPerfumeId)
+      setListingPending(userPerfumeId, null)
     }
   }
 
-  const removePausedListing = (userPerfumeId: string) => {
-    setRemoveTargetId(userPerfumeId)
-    setUserPerfumes((prev) =>
-      prev.map((perfume) =>
+  const resumeListing = async (
+    userPerfumeId: string,
+    pausedAvailable: string
+  ) => {
+    if (listingActionLocksRef.current.has(userPerfumeId)) return
+    const current = userPerfumes.find(up => up.id === userPerfumeId)
+    if (!current) return
+
+    listingActionLocksRef.current.add(userPerfumeId)
+    setListingPending(userPerfumeId, "resuming")
+    setListingError(userPerfumeId, null)
+
+    const previous = { ...current }
+    const amount = pausedAvailable
+    setUserPerfumes(prev =>
+      prev.map(perfume =>
+        perfume.id === userPerfumeId
+          ? { ...perfume, available: amount, pausedAvailable: null }
+          : perfume
+      )
+    )
+
+    const formData = new FormData()
+    formData.append("action", "decant")
+    formData.append("userPerfumeId", userPerfumeId)
+    formData.append("perfumeId", perfumeId)
+    formData.append("amount", amount)
+    formData.append("resumePaused", "true")
+
+    try {
+      const result = await postDestash(formData)
+      if (result.success) {
+        if (result.userPerfume) {
+          applySuccessfulListing({
+            ...result.userPerfume,
+            available: amount,
+            pausedAvailable: null,
+          })
+        }
+        return
+      }
+      setUserPerfumes(prev =>
+        prev.map(perfume => (perfume.id === userPerfumeId ? previous : perfume))
+      )
+      setListingError(
+        userPerfumeId,
+        resolveErrorMessage(result, t("resumeFailed"))
+      )
+    } finally {
+      listingActionLocksRef.current.delete(userPerfumeId)
+      setListingPending(userPerfumeId, null)
+    }
+  }
+
+  const removePausedListing = async (userPerfumeId: string) => {
+    if (listingActionLocksRef.current.has(userPerfumeId)) return
+    const current = userPerfumes.find(up => up.id === userPerfumeId)
+    if (!current) return
+
+    listingActionLocksRef.current.add(userPerfumeId)
+    setListingPending(userPerfumeId, "removing")
+    setListingError(userPerfumeId, null)
+
+    const previous = { ...current }
+    setUserPerfumes(prev =>
+      prev.map(perfume =>
         perfume.id === userPerfumeId
           ? { ...perfume, pausedAvailable: null }
           : perfume
       )
     )
+
     const formData = new FormData()
     formData.append("action", "decant")
     formData.append("userPerfumeId", userPerfumeId)
     formData.append("perfumeId", perfumeId)
     formData.append("amount", "0")
-    submitForm(formData).finally(() => setRemoveTargetId(null))
+
+    try {
+      const result = await postDestash(formData)
+      if (result.success) {
+        if (result.userPerfume) {
+          applySuccessfulListing({
+            ...result.userPerfume,
+            pausedAvailable: null,
+          })
+        }
+        return
+      }
+      setUserPerfumes(prev =>
+        prev.map(perfume => (perfume.id === userPerfumeId ? previous : perfume))
+      )
+      setListingError(
+        userPerfumeId,
+        resolveErrorMessage(result, t("removePausedFailed"))
+      )
+    } finally {
+      listingActionLocksRef.current.delete(userPerfumeId)
+      setListingPending(userPerfumeId, null)
+    }
   }
 
   const handleDelete = (userPerfumeId: string) => {
     closeModal()
-    if (userPerfumes.find((up) => up.id === userPerfumeId)) {
-      pauseListing(userPerfumeId)
+    if (userPerfumes.find(up => up.id === userPerfumeId)) {
+      void pauseListing(userPerfumeId)
     }
   }
 
-  const handlePauseAll = () => {
-    if (destashes.length === 0) return
-    for (const destash of destashes) {
-      pauseListing(destash.id)
+  const handlePauseAll = async () => {
+    if (destashes.length === 0 || pauseAllBusy || formSubmitting) return
+    setPauseAllBusy(true)
+    setPauseAllError(null)
+
+    const targets = [...destashes]
+    let failed = 0
+    for (const destash of targets) {
+      const result = await pauseListing(destash.id)
+      if (!result.ok) failed += 1
     }
+
+    if (failed > 0) {
+      setPauseAllError(
+        t("pauseAllPartialFailure", {
+          failed,
+          total: targets.length,
+        })
+      )
+    }
+    setPauseAllBusy(false)
   }
 
-  const appendListingFields = (formData: FormData, data: DeStashData) => {
-    formData.append("images", JSON.stringify(data.images))
-    if (data.condition) formData.append("condition", data.condition)
-    if (data.decantFormat) formData.append("decantFormat", data.decantFormat)
-  }
+  const handleDecantConfirm = async (data: DeStashData) => {
+    if (formSubmitLockRef.current) return
+    formSubmitLockRef.current = true
+    setFormSubmitting(true)
+    setFormError(null)
 
-  const handleDecantConfirm = (data: DeStashData) => {
+    const payload = toDestashListingSubmitPayload(data)
     const formData = new FormData()
     formData.append("perfumeId", perfumeId)
-    formData.append("tradePreference", data.tradePreference)
-    formData.append("tradeOnly", data.tradeOnly.toString())
+    formData.append("amount", payload.amount)
+    appendDestashListingFields(formData, payload)
 
-    const isEditing = editingId && !isCreating && !data.createNew
+    const isEditing = Boolean(editingId && !isCreating && !data.createNew)
 
-    if (isEditing) {
+    if (isEditing && editingId) {
       formData.append("action", "decant")
       formData.append("userPerfumeId", editingId)
-      formData.append("amount", data.amount)
-      if (data.price) formData.append("tradePrice", data.price)
-      appendListingFields(formData, data)
+      setListingPending(editingId, "saving")
     } else if (isCreating && currentBottleId) {
       const activeDestashes = userPerfumes.filter(
-        (up) => up.perfumeId === perfumeId && parseMl(up.available) > 0
+        up => up.perfumeId === perfumeId && parseMl(up.available) > 0
       )
       const isFirstListingForPerfume = activeDestashes.length === 0
-
       if (isFirstListingForPerfume) {
         formData.append("action", "decant")
         formData.append("userPerfumeId", currentBottleId)
       } else {
         formData.append("action", "create-decant")
       }
-      formData.append("amount", data.amount)
-      if (data.price) formData.append("tradePrice", data.price)
-      appendListingFields(formData, data)
     } else {
-      // No current bottle context: standalone destash entry
       formData.append("action", "create-decant")
-      formData.append("amount", data.amount)
-      if (data.price) formData.append("tradePrice", data.price)
-      appendListingFields(formData, data)
     }
 
-    submitForm(formData)
+    try {
+      const result = await postDestash(formData)
+      if (result.success && result.userPerfume) {
+        applySuccessfulListing(result.userPerfume)
+        setIsCreating(false)
+        setEditingId(null)
+        setEditingSnapshot(null)
+        setFormError(null)
+        return
+      }
+
+      // Keep form open with entered values/photos (form state is local).
+      setFormError(resolveErrorMessage(result, t("saveFailed")))
+    } finally {
+      if (editingId) setListingPending(editingId, null)
+      formSubmitLockRef.current = false
+      setFormSubmitting(false)
+    }
   }
 
-  const editingDestash = editingId
-    ? userPerfumes.find(up => up.id === editingId)
-    : null
+  const anyListingBusy = Object.keys(pendingById).length > 0
+  const toolbarDisabled = formSubmitting || pauseAllBusy || anyListingBusy
+
+  const sourceBottle = currentBottleId
+    ? userPerfumes.find(up => up.id === currentBottleId)
+    : userPerfumes.find(
+        up => up.perfumeId === perfumeId && isCollectionBottle(up)
+      )
+
+  const createUserPerfume = buildCleanCreateUserPerfume({
+    perfumeId,
+    perfumeName:
+      sourceBottle?.perfume?.name ||
+      userPerfumes.find(up => up.perfume?.id === perfumeId)?.perfume?.name ||
+      "Unknown Perfume",
+    perfume: sourceBottle?.perfume,
+    ownedAmountHint: sourceBottle?.amount ?? "0",
+  })
+
+  const handleFormPause = async () => {
+    if (!editingId) return
+    const result = await pauseListing(editingId)
+    if (result.ok) {
+      setEditingId(null)
+      setEditingSnapshot(null)
+      setFormError(null)
+      return
+    }
+    if (result.error) setFormError(result.error)
+  }
 
   return (
     <div className="p-4 rounded-b-md bg-noir-dark/80">
       <div className="flex flex-col md:flex-row gap-3 md:gap-0 justify-between items-center">
-        <h3>
-          {t("title")}
-        </h3>
+        <h3>{t("title")}</h3>
         {!isCreating && !editingId && (
           <div className="flex flex-wrap gap-2">
             {destashes.length > 1 && (
               <Button
-                onClick={handlePauseAll}
+                onClick={() => void handlePauseAll()}
                 variant="secondary"
                 size="sm"
-                disabled={submitState === "submitting"}
+                disabled={toolbarDisabled}
               >
-                {t("pauseAll")}
+                {pauseAllBusy ? t("pausingAll") : t("pauseAll")}
               </Button>
             )}
             <Button
@@ -326,7 +480,7 @@ const DestashManager = ({
               variant="primary"
               size="sm"
               leftIcon={<MdAdd size={18} />}
-              disabled={submitState === "submitting"}
+              disabled={toolbarDisabled}
             >
               {t("addNew")}
             </Button>
@@ -336,7 +490,7 @@ const DestashManager = ({
                 variant="secondary"
                 size="sm"
                 leftIcon={<LuSplit size={18} />}
-                disabled={submitState === "submitting" || showSplitWizard}
+                disabled={toolbarDisabled || showSplitWizard}
               >
                 {tSplits("startGroupSplit")}
               </Button>
@@ -361,7 +515,12 @@ const DestashManager = ({
         {t("description")}
       </p>
 
-      {/* List of existing destashes */}
+      {pauseAllError && (
+        <p className="mb-3 text-sm text-red-400 bg-red-950/30 border border-red-500/40 rounded p-2">
+          {pauseAllError}
+        </p>
+      )}
+
       {!isCreating && !editingId && (
         <div className="space-y-3">
           {destashes.length === 0 && pausedDestashes.length === 0 ? (
@@ -370,33 +529,47 @@ const DestashManager = ({
             </p>
           ) : (
             <>
-              {destashes.map((destash) => (
-                <DestashItem
-                  key={destash.id}
-                  destash={destash}
-                  onEdit={() => handleEdit(destash.id)}
-                  onDelete={() => handleDelete(destash.id)}
-                />
+              {destashes.map(destash => (
+                <div key={destash.id} className="space-y-1">
+                  <DestashItem
+                    destash={destash}
+                    onEdit={() => handleEdit(destash.id)}
+                    onDelete={() => handleDelete(destash.id)}
+                    isBusy={pendingById[destash.id] === "pausing"}
+                  />
+                  {errorById[destash.id] && (
+                    <p className="text-sm text-red-400 px-1">
+                      {errorById[destash.id]}
+                    </p>
+                  )}
+                </div>
               ))}
               {pausedDestashes.length > 0 && (
                 <div className="space-y-2 border-t border-noir-gold/20 pt-4">
                   <h4 className="text-sm font-semibold text-noir-dark">
                     {t("pausedHeading")}
                   </h4>
-                  {pausedDestashes.map((destash) => (
-                    <PausedDestashItem
-                      key={destash.id}
-                      destash={destash}
-                      isResuming={resumeTargetId === destash.id}
-                      isRemoving={removeTargetId === destash.id}
-                      onResume={() =>
-                        resumeListing(
-                          destash.id,
-                          destash.pausedAvailable ?? String(getResumeListingMl(destash))
-                        )
-                      }
-                      onRemove={() => removePausedListing(destash.id)}
-                    />
+                  {pausedDestashes.map(destash => (
+                    <div key={destash.id} className="space-y-1">
+                      <PausedDestashItem
+                        destash={destash}
+                        isResuming={pendingById[destash.id] === "resuming"}
+                        isRemoving={pendingById[destash.id] === "removing"}
+                        onResume={() =>
+                          void resumeListing(
+                            destash.id,
+                            destash.pausedAvailable ??
+                              String(getResumeListingMl(destash))
+                          )
+                        }
+                        onRemove={() => void removePausedListing(destash.id)}
+                      />
+                      {errorById[destash.id] && (
+                        <p className="text-sm text-red-400 px-1">
+                          {errorById[destash.id]}
+                        </p>
+                      )}
+                    </div>
                   ))}
                 </div>
               )}
@@ -405,96 +578,48 @@ const DestashManager = ({
         </div>
       )}
 
-      {/* Create/Edit Form */}
-      {submitError && (
+      {formError && (
         <p className="text-sm text-red-400 bg-red-950/30 border border-red-500/40 rounded p-2">
-          {submitError}
+          {formError}
         </p>
       )}
 
       {(isCreating || editingId) && (
         <div className="noir-border p-4 bg-noir-black/50 rounded-md">
           <div className="flex justify-between items-center">
-            <h3>
-              {isCreating
-                ? t("createNew")
-                : t("editDestash")}
-            </h3>
-            <Button onClick={handleCancel} variant="secondary" size="sm">
+            <h3>{isCreating ? t("createNew") : t("editDestash")}</h3>
+            <Button
+              onClick={handleCancel}
+              variant="secondary"
+              size="sm"
+              disabled={formSubmitting}
+            >
               {t("cancel")}
             </Button>
           </div>
 
-          {editingDestash && (
+          {editingSnapshot && editingId && (
             <DestashForm
-              key={`edit-${editingDestash.id}`}
-              userPerfume={editingDestash}
+              key={`edit-${editingSnapshot.id}`}
+              perfumeId={perfumeId}
+              userPerfume={editingSnapshot}
               handleDecantConfirm={handleDecantConfirm}
               isEditing={true}
-              maxAvailable={totalOwned > 0
-                ? totalOwned - totalDestashed + parseFloat(editingDestash.available || "0")
-                : undefined}
+              isSubmitting={formSubmitting}
+              onPause={() => void handleFormPause()}
+              isPausing={pendingById[editingId] === "pausing"}
             />
           )}
-          {isCreating && (() => {
-            // Use current bottle when on single-bottle page; otherwise first entry for this perfume or fallback
-            const sourceBottle = currentBottleId
-              ? userPerfumes.find(up => up.id === currentBottleId)
-              : userPerfumes.find(
-                  up => up.perfumeId === perfumeId && isCollectionBottle(up)
-                )
-            const fallbackFirst = userPerfumes?.[0]
-            let finalUserPerfume = sourceBottle || fallbackFirst
-
-            if (!finalUserPerfume) {
-              const anyUserPerfume = userPerfumes?.find(up => up.perfume?.id === perfumeId) || userPerfumes?.[0]
-              const perfumeName = anyUserPerfume?.perfume?.name || "Unknown Perfume"
-              finalUserPerfume = {
-                id: `temp-${perfumeId}`,
-                userId: "",
-                perfumeId,
-                perfume: { id: perfumeId, name: perfumeName },
-                amount: "0",
-                available: "0",
-                price: undefined,
-                tradePrice: undefined,
-                tradePreference: "cash",
-                tradeOnly: false,
-              } as UserPerfumeI
-            }
-
-            let formMaxAvailable: number | undefined
-            if (currentBottleId && sourceBottle) {
-              const destashedFromBottle = getDestashedMlForBottle(
-                sourceBottle.id,
-                entriesForPerfume
-              )
-              const bottleRemaining = Math.max(
-                0,
-                parseMl(sourceBottle.amount) - destashedFromBottle
-              )
-              formMaxAvailable = Math.min(bottleRemaining, poolRemaining)
-            } else {
-              formMaxAvailable = poolRemaining > 0 ? poolRemaining : undefined
-            }
-
-            return (
-              <>
-                {currentBottleId && formMaxAvailable != null && (
-                  <p className="text-sm text-noir-gold-100">
-                    {t("bottleDestashHint", { max: formMaxAvailable })}
-                  </p>
-                )}
-                <DestashForm
-                  key={`create-new-${currentBottleId ?? "standalone"}`}
-                  userPerfume={finalUserPerfume}
-                  handleDecantConfirm={handleDecantConfirm}
-                  isCreating={true}
-                  maxAvailable={formMaxAvailable}
-                />
-              </>
-            )
-          })()}
+          {isCreating && (
+            <DestashForm
+              key={`create-new-${currentBottleId ?? "standalone"}`}
+              perfumeId={perfumeId}
+              userPerfume={createUserPerfume}
+              handleDecantConfirm={handleDecantConfirm}
+              isCreating={true}
+              isSubmitting={formSubmitting}
+            />
+          )}
         </div>
       )}
     </div>

@@ -45,7 +45,11 @@ export type PourableMlBudgetForClient = {
   ownedMl: number
   listedMl: number
   reservedMl: number
+  /** Completed-split poured ml that remains consumed after reservation release. */
+  consumedCompletedMl: number
   remainingPourableMl: number
+  ownership: "known" | "unknown" | "none"
+  mayAllocate: boolean
 }
 
 export type CreateDecantSplitInput = {

@@ -48,13 +48,12 @@ const listingId = "clzzzzzzzzzzzzzzzzzzzzzzzzz"
 const perfumeId = "claaaaaaaaaaaaaaaaaaaaaaaaa"
 
 const makePost = (formEntries: Record<string, string>) => {
-  const formData = new FormData()
-  for (const [key, value] of Object.entries(formEntries)) {
-    formData.append(key, value)
-  }
+  // NextRequest.formData() requires a urlencoded or multipart Content-Type.
+  const body = new URLSearchParams(formEntries).toString()
   return new NextRequest("http://localhost/api/user-perfumes", {
     method: "POST",
-    body: formData,
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
   })
 }
 

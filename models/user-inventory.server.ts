@@ -1,10 +1,27 @@
 import {
   type ListingCondition,
   type PerfumeType,
+  type Prisma,
   type TradePreference,
 } from "@prisma/client"
 import { prisma } from "@/lib/db"
+import {
+  canAcceptAllocationMl,
+  classifyStoredOwnedAmount,
+} from "@/lib/decant-split-ml"
+import { parseMl } from "@/lib/user-inventory"
+import {
+  AllocationValidationError,
+  allocationErrorFromAccept,
+  LISTING_ALLOCATION_ERROR_CODES,
+} from "@/lib/listing-allocation-errors"
 import { updateScentProfileFromBehavior } from "@/models/scent-profile.server"
+import {
+  budgetFromFragrancePool,
+  commitmentsExceedOwned,
+  withFragrancePoolTransaction,
+  type FragrancePoolTx,
+} from "@/models/fragrance-pool-lock.server"
 import {
   type ListingMetadataInput,
   deleteListingImagesFromR2,
@@ -15,10 +32,44 @@ import {
 import {
   attachPausedAvailable,
   fetchPausedAvailableByUser,
-  getPausedAvailable,
   setPausedAvailable,
 } from "./user-perfume-pause.server"
 import { userPerfumeListingSelect, userPerfumeNestedPerfumeSelect } from "./user-perfume-listing-fields"
+
+const userPerfumeDetailSelect = {
+  id: true,
+  userId: true,
+  perfumeId: true,
+  amount: true,
+  available: true,
+  price: true,
+  placeOfPurchase: true,
+  tradePrice: true,
+  tradePreference: true,
+  tradeOnly: true,
+  type: true,
+  createdAt: true,
+  ...userPerfumeListingSelect,
+  perfume: {
+    select: userPerfumeNestedPerfumeSelect,
+  },
+  _count: {
+    select: {
+      comments: true,
+    },
+  },
+} as const
+
+const toAllocationFailure = (error: unknown) => {
+  if (error instanceof AllocationValidationError) {
+    return {
+      success: false as const,
+      errorCode: error.errorCode,
+      error: error.message,
+    }
+  }
+  return null
+}
 
 
 export const getUserPerfumes = async (userId: string) => {
@@ -183,71 +234,44 @@ export const createDestashEntry = async ({
     if (!publishCheck.ok) {
       return { success: false, errorCode: publishCheck.errorCode }
     }
-    // Get all user's entries for this perfume to calculate totals
-    const existingEntries = await prisma.userPerfume.findMany({
-      where: { userId, perfumeId },
-      select: { amount: true, available: true },
-    })
 
-    // Calculate total owned (sum of all amount values > 0)
-    const totalOwned = existingEntries.reduce((sum, entry) => {
-      const amt = parseFloat(entry.amount?.replace(/[^0-9.]/g, "") || "0")
-      return sum + (isNaN(amt) ? 0 : amt)
-    }, 0)
-
-    // Calculate total already destashed (sum of all available values)
-    const totalDestashed = existingEntries.reduce((sum, entry) => {
-      const avail = parseFloat(entry.available?.replace(/[^0-9.]/g, "") || "0")
-      return sum + (isNaN(avail) ? 0 : avail)
-    }, 0)
-
-    // Parse the new destash amount
-    const newDestashAmount = parseFloat(available?.replace(/[^0-9.]/g, "") || "0")
-
-    // Validate: total destashed + new destash cannot exceed total owned
-    if (totalOwned > 0 && (totalDestashed + newDestashAmount) > totalOwned) {
-      const remainingAvailable = Math.max(0, totalOwned - totalDestashed)
-      return {
-        success: false,
-        error: `Cannot destash ${available}. You only have ${remainingAvailable.toFixed(1)} ml remaining (${totalOwned} ml owned - ${totalDestashed.toFixed(1)} ml already destashed).`,
-      }
-    }
-
-    const userPerfume = await prisma.userPerfume.create({
-      data: {
+    let userPerfume
+    try {
+      userPerfume = await withFragrancePoolTransaction(
         userId,
         perfumeId,
-        amount: "0",
-        available,
-        tradePrice: tradePrice || null,
-        tradePreference: (tradePreference === "trade" || tradePreference === "both" ? tradePreference : "cash") as TradePreference,
-        tradeOnly: tradeOnly || false,
-        ...listingMetadataToPrismaData(listingMeta),
-      },
-      select: {
-        id: true,
-        userId: true,
-        perfumeId: true,
-        amount: true,
-        available: true,
-        price: true,
-      placeOfPurchase: true,
-      tradePrice: true,
-      tradePreference: true,
-      tradeOnly: true,
-      type: true,
-      createdAt: true,
-      ...userPerfumeListingSelect,
-      perfume: {
-        select: userPerfumeNestedPerfumeSelect,
-      },
-      _count: {
-        select: {
-          comments: true,
-        },
-      },
-    },
-  })
+        async (tx, pool) => {
+          const budget = budgetFromFragrancePool(pool)
+          const accept = canAcceptAllocationMl(budget, available)
+          if (!accept.ok) {
+            const failure = allocationErrorFromAccept(accept)
+            throw new AllocationValidationError(failure.errorCode, failure.error)
+          }
+
+          const availableStr = String(accept.ml)
+          return tx.userPerfume.create({
+            data: {
+              userId,
+              perfumeId,
+              amount: "0",
+              available: availableStr,
+              tradePrice: tradePrice || null,
+              tradePreference: (tradePreference === "trade" ||
+              tradePreference === "both"
+                ? tradePreference
+                : "cash") as TradePreference,
+              tradeOnly: tradeOnly || false,
+              ...listingMetadataToPrismaData(listingMeta),
+            },
+            select: userPerfumeDetailSelect,
+          })
+        }
+      )
+    } catch (error) {
+      const allocationFailure = toAllocationFailure(error)
+      if (allocationFailure) return allocationFailure
+      throw error
+    }
 
     try {
       await updateScentProfileFromBehavior(userId, {
@@ -256,12 +280,13 @@ export const createDestashEntry = async ({
       })
     } catch (error) {
       console.error("Error updating scent profile from behavior:", error)
-      // Don't fail the operation if scent profile update fails
     }
 
-    const availMl = parseFloat(available?.replace(/[^0-9.]/g, "") || "0")
-    if (availMl > 0 && userPerfume.perfume) {
-      const { notifyFollowersOfNewListing } = await import("@/models/follow-alerts.server")
+    // Alerts only after a successful committed write (never inside retry loop).
+    if (parseMl(userPerfume.available) > 0 && userPerfume.perfume) {
+      const { notifyFollowersOfNewListing } = await import(
+        "@/models/follow-alerts.server"
+      )
       void notifyFollowersOfNewListing({
         actorUserId: userId,
         userPerfumeId: userPerfume.id,
@@ -271,7 +296,10 @@ export const createDestashEntry = async ({
       }).catch(err => console.error("[follow-alerts] listing notify failed:", err))
     }
 
-    return { success: true, userPerfume: { ...userPerfume, pausedAvailable: null } }
+    return {
+      success: true,
+      userPerfume: { ...userPerfume, pausedAvailable: null },
+    }
   } catch (error) {
     console.error("Error creating destash entry:", error)
     return { success: false, error: "Failed to create destash entry" }
@@ -280,7 +308,6 @@ export const createDestashEntry = async ({
 
 export const removeUserPerfume = async (userId: string, userPerfumeId: string) => {
   try {
-    // Check if the user perfume exists and belongs to the user
     const existingPerfume = await prisma.userPerfume.findFirst({
       where: {
         id: userPerfumeId,
@@ -292,20 +319,61 @@ export const removeUserPerfume = async (userId: string, userPerfumeId: string) =
       return { success: false, error: "Perfume not found in your collection" }
     }
 
-    if (existingPerfume.images?.length) {
-      await deleteListingImagesFromR2(existingPerfume.images)
+    const perfumeId = existingPerfume.perfumeId
+    const imagesToDelete = existingPerfume.images?.length
+      ? [...existingPerfume.images]
+      : []
+
+    try {
+      await withFragrancePoolTransaction(userId, perfumeId, async (tx, pool) => {
+        const row = pool.rows.find(r => r.id === userPerfumeId)
+        if (!row) {
+          throw new AllocationValidationError(
+            LISTING_ALLOCATION_ERROR_CODES.wouldInvalidateAllocations,
+            "Perfume not found in your collection"
+          )
+        }
+
+        const sourceInUse = pool.splits.some(
+          s =>
+            s.sourceUserPerfumeId === userPerfumeId &&
+            (s.status === "open" ||
+              s.status === "filling" ||
+              s.status === "shipped")
+        )
+        if (sourceInUse) {
+          throw new AllocationValidationError(
+            LISTING_ALLOCATION_ERROR_CODES.sourceBottleInUse
+          )
+        }
+
+        const remainingRows = pool.rows.filter(r => r.id !== userPerfumeId)
+        const simulatedBudget = budgetFromFragrancePool({
+          ...pool,
+          rows: remainingRows,
+        })
+        if (commitmentsExceedOwned(simulatedBudget)) {
+          throw new AllocationValidationError(
+            LISTING_ALLOCATION_ERROR_CODES.wouldInvalidateAllocations
+          )
+        }
+
+        await tx.userPerfumeComment.deleteMany({
+          where: { userPerfumeId },
+        })
+        await tx.userPerfume.delete({
+          where: { id: userPerfumeId },
+        })
+      })
+    } catch (error) {
+      const allocationFailure = toAllocationFailure(error)
+      if (allocationFailure) return allocationFailure
+      throw error
     }
 
-    // Delete only this specific bottle (and its comments)
-    await prisma.$transaction(async (transaction) => {
-      await transaction.userPerfumeComment.deleteMany({
-        where: { userPerfumeId },
-      })
-
-      await transaction.userPerfume.delete({
-        where: { id: userPerfumeId },
-      })
-    })
+    if (imagesToDelete.length) {
+      await deleteListingImagesFromR2(imagesToDelete)
+    }
 
     return { success: true }
   } catch (error) {
@@ -326,11 +394,16 @@ const prepareUpdateData = (
 ) => {
   const updateData: Record<string, unknown> = { available: availableAmount }
 
+  // Present (including "") means set/clear; omit (undefined/null) leaves unchanged.
   if (tradePrice !== undefined && tradePrice !== null) {
-    updateData.tradePrice = tradePrice
+    updateData.tradePrice = tradePrice.trim() === "" ? null : tradePrice.trim()
   }
 
-  if (tradePreference && typeof tradePreference === "string" && tradePreference.trim()) {
+  if (
+    tradePreference &&
+    typeof tradePreference === "string" &&
+    tradePreference.trim()
+  ) {
     updateData.tradePreference = tradePreference
   }
 
@@ -345,46 +418,16 @@ const prepareUpdateData = (
   return updateData
 }
 
-// Helper to update perfume in database
-// Use the same select structure as getUserPerfumes for consistency
-const updatePerfumeInDatabase = async (perfumeId: string, updateData: any) => await prisma.userPerfume.update({
+const updatePerfumeInTx = async (
+  tx: FragrancePoolTx,
+  perfumeId: string,
+  updateData: Prisma.UserPerfumeUpdateInput
+) =>
+  tx.userPerfume.update({
     where: { id: perfumeId },
     data: updateData,
-    select: {
-      id: true,
-      userId: true,
-      perfumeId: true,
-      amount: true,
-      available: true,
-      price: true,
-      placeOfPurchase: true,
-      tradePrice: true,
-      tradePreference: true,
-      tradeOnly: true,
-      type: true,
-      createdAt: true,
-      ...userPerfumeListingSelect,
-      perfume: {
-        select: userPerfumeNestedPerfumeSelect,
-      },
-      _count: {
-        select: {
-          comments: true,
-        },
-      },
-    },
+    select: userPerfumeDetailSelect,
   })
-
-// Helper to parse amount strings (e.g., "50", "50ml", "full") to numeric value
-// Returns null for "full" or unparseable values (treated as unlimited)
-const parseAmountToNumber = (amount: string | null): number | null => {
-  if (!amount || amount.toLowerCase() === "full") {
-    return null // "full" means unlimited
-  }
-  // Remove common units and parse the number
-  const numericValue = parseFloat(amount.replace(/[^0-9.]/g, ""))
-  return isNaN(numericValue) ? null : numericValue
-}
 
 export const updateAvailableAmount = async (params: {
   userId: string
@@ -408,7 +451,6 @@ export const updateAvailableAmount = async (params: {
       resumePaused = false,
     } = params
 
-    // Check if the user owns this user perfume entry
     const existingPerfume = await prisma.userPerfume.findFirst({
       where: {
         id: userPerfumeId,
@@ -420,146 +462,195 @@ export const updateAvailableAmount = async (params: {
       return { success: false, error: "Perfume not found in your collection" }
     }
 
-    const parseAvailMl = (value: string | null | undefined) =>
-      parseFloat((value ?? "").replace(/[^0-9.]/g, "") || "0") || 0
+    const perfumeId = existingPerfume.perfumeId
+    let imagesToDelete: string[] = []
 
-    const pausedStoredRaw = await getPausedAvailable(existingPerfume.id, userId)
-    const pausedStoredMl = parseAvailMl(pausedStoredRaw)
-    const newDestashAmount = parseAmountToNumber(availableAmount) || 0
-    const existingAvailableMl = parseAvailMl(existingPerfume.available)
-    const isResumingPausedListing =
-      newDestashAmount > 0 &&
-      existingAvailableMl <= 0 &&
-      (pausedStoredMl > 0 || resumePaused)
-
-    let listingMeta: ListingMetadataInput = listing ?? {
-      images: existingPerfume.images ?? [],
-      condition: existingPerfume.condition ?? null,
-      decantFormat: existingPerfume.decantFormat ?? null,
+    let result: {
+      userPerfume: Awaited<ReturnType<typeof updatePerfumeInTx>>
+      pausedAvailable: string | null
     }
 
-    if (isResumingPausedListing && listingMeta.images.length === 0) {
-      const perfume = await prisma.perfume.findUnique({
-        where: { id: existingPerfume.perfumeId },
-        select: { image: true },
-      })
-      const catalogImage = perfume?.image?.trim()
-      if (catalogImage) {
-        listingMeta = { ...listingMeta, images: [catalogImage] }
-      }
-    }
+    try {
+      result = await withFragrancePoolTransaction(
+        userId,
+        perfumeId,
+        async (tx, pool) => {
+          const lockedRow = pool.rows.find(r => r.id === userPerfumeId)
+          if (!lockedRow) {
+            throw new AllocationValidationError(
+              LISTING_ALLOCATION_ERROR_CODES.wouldInvalidateAllocations,
+              "Perfume not found in your collection"
+            )
+          }
 
-    const publishCheck = validateListingPublish(availableAmount, listingMeta, {
-      resumingPausedListing: isResumingPausedListing,
-    })
-    if (!publishCheck.ok) {
-      return { success: false, errorCode: publishCheck.errorCode }
-    }
+          const pausedStoredRaw = lockedRow.pausedAvailable ?? null
+          const pausedStoredMl = parseMl(pausedStoredRaw)
+          const existingAvailableMl = parseMl(lockedRow.available)
 
-    // Get all user's entries for this perfume to calculate totals
-    const allEntries = await prisma.userPerfume.findMany({
-      where: { userId, perfumeId: existingPerfume.perfumeId },
-      select: { id: true, amount: true, available: true },
-    })
+          const budget = budgetFromFragrancePool(pool, userPerfumeId)
+          const accept = canAcceptAllocationMl(budget, availableAmount)
+          if (!accept.ok) {
+            const failure = allocationErrorFromAccept(accept)
+            throw new AllocationValidationError(failure.errorCode, failure.error)
+          }
 
-    // Calculate total owned (sum of all amount values > 0)
-    const totalOwned = allEntries.reduce((sum, entry) => {
-      const amt = parseFloat(entry.amount?.replace(/[^0-9.]/g, "") || "0")
-      return sum + (isNaN(amt) ? 0 : amt)
-    }, 0)
+          const newDestashAmount = accept.ml
+          const availableStr = String(newDestashAmount)
+          const isResumingPausedListing =
+            newDestashAmount > 0 &&
+            existingAvailableMl <= 0 &&
+            (pausedStoredMl > 0 || resumePaused)
 
-    // Calculate total already destashed EXCLUDING current entry (we're updating it)
-    const totalDestashedOthers = allEntries
-      .filter(entry => entry.id !== userPerfumeId)
-      .reduce((sum, entry) => {
-        const avail = parseFloat(entry.available?.replace(/[^0-9.]/g, "") || "0")
-        return sum + (isNaN(avail) ? 0 : avail)
-      }, 0)
+          let listingMeta: ListingMetadataInput = listing ?? {
+            images: existingPerfume.images ?? [],
+            condition: existingPerfume.condition ?? null,
+            decantFormat: existingPerfume.decantFormat ?? null,
+          }
 
-    const isSoftPause = newDestashAmount <= 0 && existingAvailableMl > 0
+          if (isResumingPausedListing && listingMeta.images.length === 0) {
+            const perfume = await tx.perfume.findUnique({
+              where: { id: perfumeId },
+              select: { image: true },
+            })
+            const catalogImage = perfume?.image?.trim()
+            if (catalogImage) {
+              listingMeta = { ...listingMeta, images: [catalogImage] }
+            }
+          }
 
-    if (isSoftPause) {
-      const pausedSnapshot = existingPerfume.available ?? availableAmount
-      const pauseData: Record<string, unknown> = { available: "0" }
-      if (tradePrice !== undefined && tradePrice !== null) {
-        pauseData.tradePrice = tradePrice
-      }
-      if (tradePreference && typeof tradePreference === "string" && tradePreference.trim()) {
-        pauseData.tradePreference = tradePreference
-      }
-      if (typeof tradeOnly === "boolean") {
-        pauseData.tradeOnly = tradeOnly
-      }
-      const updatedPerfume = await updatePerfumeInDatabase(
-        existingPerfume.id,
-        pauseData
+          const publishCheck = validateListingPublish(availableStr, listingMeta, {
+            resumingPausedListing: isResumingPausedListing,
+          })
+          if (!publishCheck.ok) {
+            const publishErr = new Error("LISTING_PUBLISH_REJECTED") as Error & {
+              errorCode: string
+            }
+            publishErr.errorCode = publishCheck.errorCode
+            throw publishErr
+          }
+
+          const isSoftPause = newDestashAmount <= 0 && existingAvailableMl > 0
+          if (isSoftPause) {
+            const pausedSnapshot =
+              lockedRow.available ?? existingPerfume.available ?? availableStr
+            const pauseData: Prisma.UserPerfumeUpdateInput = { available: "0" }
+            if (tradePrice !== undefined && tradePrice !== null) {
+              pauseData.tradePrice =
+                tradePrice.trim() === "" ? null : tradePrice.trim()
+            }
+            if (
+              tradePreference &&
+              typeof tradePreference === "string" &&
+              tradePreference.trim()
+            ) {
+              pauseData.tradePreference = tradePreference as TradePreference
+            }
+            if (typeof tradeOnly === "boolean") {
+              pauseData.tradeOnly = tradeOnly
+            }
+            const updatedPerfume = await updatePerfumeInTx(
+              tx,
+              existingPerfume.id,
+              pauseData
+            )
+            await setPausedAvailable(
+              existingPerfume.id,
+              userId,
+              pausedSnapshot,
+              tx
+            )
+            return {
+              userPerfume: updatedPerfume,
+              pausedAvailable: pausedSnapshot,
+            }
+          }
+
+          const isClearingPausedListing =
+            newDestashAmount <= 0 &&
+            existingAvailableMl <= 0 &&
+            pausedStoredMl > 0
+
+          const isHardUnpublish =
+            newDestashAmount <= 0 &&
+            existingAvailableMl <= 0 &&
+            pausedStoredMl <= 0
+
+          if (
+            (isHardUnpublish || isClearingPausedListing) &&
+            existingPerfume.images?.length
+          ) {
+            imagesToDelete = [...existingPerfume.images]
+          }
+
+          const shouldApplyListingMeta =
+            listing !== undefined ||
+            (isResumingPausedListing && listingMeta.images.length > 0)
+
+          const updateData = prepareUpdateData(
+            availableStr,
+            tradePrice,
+            tradePreference,
+            tradeOnly,
+            isHardUnpublish || isClearingPausedListing
+              ? emptyListingMetadata()
+              : shouldApplyListingMeta
+                ? listingMeta
+                : undefined
+          )
+
+          if (isClearingPausedListing) {
+            updateData.available = "0"
+          }
+
+          const updatedPerfume = await updatePerfumeInTx(
+            tx,
+            existingPerfume.id,
+            updateData as Prisma.UserPerfumeUpdateInput
+          )
+
+          const nextPausedAvailable =
+            newDestashAmount > 0 || isClearingPausedListing
+              ? null
+              : pausedStoredRaw
+
+          if (newDestashAmount > 0 || isClearingPausedListing) {
+            await setPausedAvailable(existingPerfume.id, userId, null, tx)
+          }
+
+          return {
+            userPerfume: updatedPerfume,
+            pausedAvailable: nextPausedAvailable,
+          }
+        }
       )
-      await setPausedAvailable(existingPerfume.id, userId, pausedSnapshot)
-      return {
-        success: true,
-        userPerfume: { ...updatedPerfume, pausedAvailable: pausedSnapshot },
+    } catch (error) {
+      const allocationFailure = toAllocationFailure(error)
+      if (allocationFailure) return allocationFailure
+      if (
+        error instanceof Error &&
+        error.message === "LISTING_PUBLISH_REJECTED" &&
+        "errorCode" in error
+      ) {
+        return {
+          success: false as const,
+          errorCode: (error as Error & { errorCode: string }).errorCode,
+        }
       }
+      throw error
     }
 
-    // Validate: total destashed (others + new) cannot exceed total owned
-    if (totalOwned > 0 && (totalDestashedOthers + newDestashAmount) > totalOwned) {
-      const remainingAvailable = Math.max(0, totalOwned - totalDestashedOthers)
-      return {
-        success: false,
-        error: `Cannot destash ${availableAmount}. You only have ${remainingAvailable.toFixed(1)} ml remaining.`,
-      }
-    }
-
-    const isClearingPausedListing =
-      newDestashAmount <= 0 && existingAvailableMl <= 0 && pausedStoredMl > 0
-
-    const isHardUnpublish =
-      newDestashAmount <= 0 && existingAvailableMl <= 0 && pausedStoredMl <= 0
-
-    if ((isHardUnpublish || isClearingPausedListing) && existingPerfume.images?.length) {
-      await deleteListingImagesFromR2(existingPerfume.images)
-    }
-
-    // Prepare update data
-    const shouldApplyListingMeta =
-      listing !== undefined ||
-      (isResumingPausedListing && listingMeta.images.length > 0)
-
-    const updateData = prepareUpdateData(
-      availableAmount,
-      tradePrice,
-      tradePreference,
-      tradeOnly,
-      isHardUnpublish || isClearingPausedListing
-        ? emptyListingMetadata()
-        : shouldApplyListingMeta
-          ? listingMeta
-          : undefined
-    )
-
-    if (isClearingPausedListing) {
-      updateData.available = "0"
-    }
-
-    // Update the perfume with new data
-    const updatedPerfume = await updatePerfumeInDatabase(
-      existingPerfume.id,
-      updateData
-    )
-
-    const nextPausedAvailable =
-      newDestashAmount > 0 || isClearingPausedListing ? null : pausedStoredRaw
-
-    if (newDestashAmount > 0 || isClearingPausedListing) {
-      await setPausedAvailable(existingPerfume.id, userId, null)
+    if (imagesToDelete.length) {
+      await deleteListingImagesFromR2(imagesToDelete)
     }
 
     return {
       success: true,
-      userPerfume: { ...updatedPerfume, pausedAvailable: nextPausedAvailable },
+      userPerfume: {
+        ...result.userPerfume,
+        pausedAvailable: result.pausedAvailable,
+      },
     }
   } catch (error) {
-     
     console.error("Error updating available amount:", error)
     return { success: false, error: "Failed to update available amount" }
   }
@@ -593,33 +684,67 @@ export const updateUserPerfumeAmount = async ({
       return { success: false, error: "Amount is required" }
     }
 
-    const updateData: Record<string, unknown> = { amount: amount.trim() }
-    if (type) updateData.type = type as PerfumeType
-    if (price !== undefined) updateData.price = price.trim() || null
-    if (placeOfPurchase !== undefined) updateData.placeOfPurchase = placeOfPurchase.trim() || null
+    const trimmedAmount = amount.trim()
+    const perfumeId = existingPerfume.perfumeId
 
-    const updatedPerfume = await prisma.userPerfume.update({
-      where: { id: userPerfumeId },
-      data: updateData as Parameters<typeof prisma.userPerfume.update>[0]["data"],
-      select: {
-        id: true,
-        userId: true,
-        perfumeId: true,
-        amount: true,
-        available: true,
-        price: true,
-        placeOfPurchase: true,
-        tradePrice: true,
-        tradePreference: true,
-        tradeOnly: true,
-        type: true,
-        createdAt: true,
-        ...userPerfumeListingSelect,
-        perfume: {
-          select: userPerfumeNestedPerfumeSelect,
-        },
-      },
-    })
+    let updatedPerfume
+    try {
+      updatedPerfume = await withFragrancePoolTransaction(
+        userId,
+        perfumeId,
+        async (tx, pool) => {
+          const simulatedRows = pool.rows.map(r =>
+            r.id === userPerfumeId ? { ...r, amount: trimmedAmount } : r
+          )
+          const simulatedBudget = budgetFromFragrancePool({
+            ...pool,
+            rows: simulatedRows,
+          })
+          if (commitmentsExceedOwned(simulatedBudget)) {
+            const classified = classifyStoredOwnedAmount(trimmedAmount)
+            throw new AllocationValidationError(
+              classified.status === "unknown"
+                ? LISTING_ALLOCATION_ERROR_CODES.ownershipUnknown
+                : LISTING_ALLOCATION_ERROR_CODES.wouldInvalidateAllocations
+            )
+          }
+
+          const updateData: Record<string, unknown> = { amount: trimmedAmount }
+          if (type) updateData.type = type as PerfumeType
+          if (price !== undefined) updateData.price = price.trim() || null
+          if (placeOfPurchase !== undefined) {
+            updateData.placeOfPurchase = placeOfPurchase.trim() || null
+          }
+
+          return tx.userPerfume.update({
+            where: { id: userPerfumeId },
+            data: updateData as Prisma.UserPerfumeUpdateInput,
+            select: {
+              id: true,
+              userId: true,
+              perfumeId: true,
+              amount: true,
+              available: true,
+              price: true,
+              placeOfPurchase: true,
+              tradePrice: true,
+              tradePreference: true,
+              tradeOnly: true,
+              type: true,
+              createdAt: true,
+              ...userPerfumeListingSelect,
+              perfume: {
+                select: userPerfumeNestedPerfumeSelect,
+              },
+            },
+          })
+        }
+      )
+    } catch (error) {
+      const allocationFailure = toAllocationFailure(error)
+      if (allocationFailure) return allocationFailure
+      throw error
+    }
 
     return { success: true, userPerfume: updatedPerfume }
   } catch (error) {

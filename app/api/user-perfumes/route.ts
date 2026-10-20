@@ -67,11 +67,21 @@ export async function POST(request: NextRequest) {
     const comment = formData.get("comment") as string | undefined
     const isPublic = formData.get("isPublic") === "true"
     const commentId = (formData.get("commentId") as string)?.trim()
-    const tradePrice = formData.get("tradePrice") as string | undefined
-    const tradePreference = formData.get("tradePreference") as string | undefined
-    const tradeOnly = formData.get("tradeOnly") === "true"
+    // Omitted fields stay unchanged; present empty tradePrice clears.
+    const tradePrice = formData.has("tradePrice")
+      ? String(formData.get("tradePrice") ?? "")
+      : undefined
+    const tradePreference = formData.has("tradePreference")
+      ? String(formData.get("tradePreference") ?? "")
+      : undefined
+    const tradeOnly = formData.has("tradeOnly")
+      ? formData.get("tradeOnly") === "true"
+      : undefined
+    // Listing metadata only when the client sends `images` (create/edit).
+    // Pause/resume omit it so photos/condition/format are not cleared.
     const listing =
-      actionType === "decant" || actionType === "create-decant"
+      (actionType === "decant" || actionType === "create-decant") &&
+      formData.has("images")
         ? parseListingMetadataFromFormData(formData)
         : undefined
 

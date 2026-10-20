@@ -3,10 +3,17 @@ import { type DecantSplitStatus, type Prisma } from "@prisma/client"
 import { prisma } from "@/lib/db"
 import {
   ACTIVE_DECANT_SPLIT_STATUSES,
-  computePourableMlBudget,
-  sumListedMlForPerfume,
-  sumOwnedMlForPerfume,
+  canAcceptAllocationMl,
+  ML_COMPARISON_TOLERANCE,
 } from "@/lib/decant-split-ml"
+import {
+  AllocationValidationError,
+  allocationErrorFromAccept,
+} from "@/lib/listing-allocation-errors"
+import {
+  budgetFromFragrancePool,
+  withFragrancePoolTransaction,
+} from "@/models/fragrance-pool-lock.server"
 import {
   createUserAlert,
   dispatchPushForUserAlert,
@@ -113,37 +120,59 @@ const appendSplitEvent = async (
   })
 }
 
-const getReservedMlForPerfume = async (
-  userId: string,
-  perfumeId: string,
-  excludeSplitId?: string
-): Promise<number> => {
-  const splits = await prisma.decantSplit.findMany({
-    where: {
-      hostUserId: userId,
-      perfumeId,
-      status: { in: ACTIVE_DECANT_SPLIT_STATUSES },
-      ...(excludeSplitId ? { id: { not: excludeSplitId } } : {}),
-    },
-    select: { totalMl: true },
-  })
-  return splits.reduce((sum, s) => sum + s.totalMl, 0)
-}
-
 export const getPourableMlBudget = async (
   userId: string,
   perfumeId: string
 ): Promise<PourableMlBudgetForClient> => {
-  const rows = await prisma.userPerfume.findMany({
-    where: { userId, perfumeId },
-    select: { id: true, perfumeId: true, amount: true, available: true },
+  // Read-only snapshot (no lock). Writers re-validate under advisory lock.
+  const [rows, reservingSplits, completedSplits] = await Promise.all([
+    prisma.userPerfume.findMany({
+      where: { userId, perfumeId },
+      select: {
+        id: true,
+        perfumeId: true,
+        amount: true,
+        available: true,
+        pausedAvailable: true,
+      },
+    }),
+    prisma.decantSplit.findMany({
+      where: {
+        hostUserId: userId,
+        perfumeId,
+        status: { in: ACTIVE_DECANT_SPLIT_STATUSES },
+      },
+      select: { totalMl: true, status: true },
+    }),
+    prisma.decantSplit.findMany({
+      where: {
+        hostUserId: userId,
+        perfumeId,
+        status: "completed",
+      },
+      select: { totalMl: true, status: true },
+    }),
+  ])
+
+  const budget = budgetFromFragrancePool({
+    rows,
+    reservedSplitMl: reservingSplits.reduce((sum, s) => sum + s.totalMl, 0),
+    consumedCompletedSplitMl: completedSplits.reduce(
+      (sum, s) => sum + s.totalMl,
+      0
+    ),
+    splits: [],
   })
 
-  const ownedMl = sumOwnedMlForPerfume(rows)
-  const listedMl = sumListedMlForPerfume(rows)
-  const reservedMl = await getReservedMlForPerfume(userId, perfumeId)
-
-  return computePourableMlBudget({ ownedMl, listedMl, reservedMl })
+  return {
+    ownedMl: budget.knownOwnedMl,
+    listedMl: budget.activeDestashMl,
+    reservedMl: budget.reservedSplitMl,
+    consumedCompletedMl: budget.consumedCompletedSplitMl,
+    remainingPourableMl: budget.availableToAllocateMl,
+    ownership: budget.ownership,
+    mayAllocate: budget.mayAllocate,
+  }
 }
 
 const validateSourceUserPerfume = async (
@@ -268,7 +297,7 @@ export const createDecantSplit = async (
     throw new Error("Each slot must be greater than 0 ml")
   }
   const slotSum = slotMl.reduce((a, b) => a + b, 0)
-  if (Math.abs(slotSum - totalMl) > 0.01) {
+  if (Math.abs(slotSum - totalMl) > ML_COMPARISON_TOLERANCE) {
     throw new Error("Slot volumes must sum to total ml")
   }
   if (totalMl <= 0) {
@@ -281,39 +310,43 @@ export const createDecantSplit = async (
     input.sourceUserPerfumeId
   )
 
-  const budget = await getPourableMlBudget(hostUserId, perfumeId)
-  if (totalMl > budget.remainingPourableMl + 0.01) {
-    throw new Error(
-      `Cannot split ${totalMl} ml. Only ${budget.remainingPourableMl.toFixed(1)} ml available to pour (${budget.ownedMl} owned − ${budget.listedMl} listed − ${budget.reservedMl} reserved in active splits).`
-    )
-  }
+  const split = await withFragrancePoolTransaction(
+    hostUserId,
+    perfumeId,
+    async (tx, pool) => {
+      const budget = budgetFromFragrancePool(pool)
+      const accept = canAcceptAllocationMl(budget, String(totalMl))
+      if (!accept.ok) {
+        const failure = allocationErrorFromAccept(accept)
+        throw new AllocationValidationError(failure.errorCode, failure.error)
+      }
 
-  const split = await prisma.$transaction(async tx => {
-    const created = await tx.decantSplit.create({
-      data: {
-        hostUserId,
-        perfumeId,
-        sourceUserPerfumeId: input.sourceUserPerfumeId ?? null,
-        totalMl,
-        status: "open",
-        priceHint: input.priceHint ?? null,
-        notes: input.notes ?? null,
-        decantFormat: input.decantFormat ?? null,
-        condition: input.condition ?? null,
-        slots: {
-          create: slotMl.map(ml => ({ ml, status: "open" })),
+      const created = await tx.decantSplit.create({
+        data: {
+          hostUserId,
+          perfumeId,
+          sourceUserPerfumeId: input.sourceUserPerfumeId ?? null,
+          totalMl: accept.ml,
+          status: "open",
+          priceHint: input.priceHint ?? null,
+          notes: input.notes ?? null,
+          decantFormat: input.decantFormat ?? null,
+          condition: input.condition ?? null,
+          slots: {
+            create: slotMl.map(ml => ({ ml, status: "open" })),
+          },
         },
-      },
-      include: splitInclude,
-    })
+        include: splitInclude,
+      })
 
-    await appendSplitEvent(tx, created.id, "created", hostUserId, {
-      totalMl,
-      slotCount: slotMl.length,
-    })
+      await appendSplitEvent(tx, created.id, "created", hostUserId, {
+        totalMl: accept.ml,
+        slotCount: slotMl.length,
+      })
 
-    return created
-  })
+      return created
+    }
+  )
 
   return serializeSplit(split, hostUserId)
 }

@@ -47,6 +47,7 @@ Root [README.md](../README.md) stays short: product blurb + common commands + li
 | [seeking-redesign.md](./seeking-redesign.md) | Seeking (wishlist) redesign: dual groups, pagination, on-demand offers, staged checklist |
 | [MONETIZATION_PLAYBOOK.md](./MONETIZATION_PLAYBOOK.md) | Subscription / revenue experiments |
 | [user-guide-decants.md](./user-guide-decants.md) | Decants / inventory / splits (copy for Help/FAQ) |
+| [destash-improvements.md](./destash-improvements.md) | Destash / decant reliability: volume policy, pause, writers, staged checklist |
 
 ---
 
