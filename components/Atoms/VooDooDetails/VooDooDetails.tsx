@@ -43,8 +43,8 @@ const VooDooDetails = ({
       data-cy="VooDooDetails"
       data-name={name}
       ref={node => {
-        if (node && defaultOpen) {
-          node.open = true
+        if (node && defaultOpen !== undefined) {
+          node.open = Boolean(defaultOpen)
         }
       }}
       {...props}

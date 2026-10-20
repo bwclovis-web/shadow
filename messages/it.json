@@ -1034,7 +1034,9 @@
         "view": "Layout della collezione",
         "gridView": "Vista a griglia",
         "listView": "Vista a elenco",
-        "listViewPending": "Vista a elenco (in arrivo)"
+        "listViewPending": "Vista a elenco (in arrivo)",
+        "moreFilters": "Altri filtri",
+        "hideFilters": "Nascondi filtri"
       },
       "card": {
         "owned": "Posseduti {ml} ml",
@@ -1042,7 +1044,15 @@
         "listedFragrance": "In lista {ml} ml",
         "listedFragranceHint": "Totale millilitri listati per questa fragranza (non per flacone)",
         "listedFragranceAria": "Fragranza listata {ml} millilitri nella tua collezione",
+        "ownedListedInline": "Posseduti {owned} ml | In lista {listed} ml",
+        "ownedListedInlineUnknown": "Posseduti sconosciuto | In lista {listed} ml",
         "viewBottle": "Vedi flacone"
+      },
+      "listHeaders": {
+        "fragrance": "Fragranza",
+        "owned": "Posseduti",
+        "listed": "In lista",
+        "actions": "Azioni"
       },
       "empty": {
         "heading": "La tua collezione è vuota.",
@@ -1138,6 +1148,7 @@
       "pausing": "Pausa in corso…",
       "pauseListing": "Metti in pausa l'annuncio",
       "saving": "Salvataggio…",
+      "creating": "Creazione…",
       "budgetLoading": "Caricamento millilitri disponibili…",
       "budgetLoadFailed": "Impossibile caricare i millilitri disponibili.",
       "budgetRetry": "Riprova",
@@ -1148,6 +1159,10 @@
       "budgetListed": "In annuncio {ml} ml",
       "budgetReserved": "Riservato {ml} ml",
       "budgetAvailable": "Disponibile {ml} ml",
+      "budgetLabelOwned": "Posseduti",
+      "budgetLabelListed": "In lista",
+      "budgetLabelReserved": "Riservati",
+      "budgetLabelAvailable": "Disponibile",
       "budgetCompletedPours": "Versamenti completati {ml} ml",
       "positiveVolumeRequired": "Inserisci un volume positivo per creare un destash.",
       "availabilityChanged": "I millilitri disponibili sono cambiati. Regola la quantità e riprova — gli altri dati inseriti sono stati conservati.",
@@ -1162,6 +1177,15 @@
       "addNew": "Aggiungi destock",
       "createNew": "Crea nuovo destock",
       "editDestash": "Modifica destock",
+      "closeEditor": "Chiudi editor",
+      "openFullPage": "Apri pagina completa",
+      "discardHeading": "Scartare le modifiche non salvate?",
+      "discardDescription": "Hai modifiche destash non salvate. Scartarle e chiudere l'editor?",
+      "discardOpenFullPageDescription": "Hai modifiche destash non salvate. Scartarle e aprire l'editor a pagina intera?",
+      "keepEditing": "Continua a modificare",
+      "discardChanges": "Scarta modifiche",
+      "editListingGone": "Questo annuncio non è più disponibile. Potrebbe essere stato rimosso o azzerato.",
+      "editForbidden": "Non sei autorizzato a modificare questo annuncio.",
       "cancel": "Annulla",
       "saveChanges": "Salva modifiche",
       "createDestash": "Crea destock",

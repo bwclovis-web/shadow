@@ -1233,7 +1233,9 @@
         "view": "Collection layout",
         "gridView": "Grid view",
         "listView": "List view",
-        "listViewPending": "List view (coming soon)"
+        "listViewPending": "List view (coming soon)",
+        "moreFilters": "More filters",
+        "hideFilters": "Hide filters"
       },
       "card": {
         "owned": "Owned {ml} ml",
@@ -1241,7 +1243,15 @@
         "listedFragrance": "Listed {ml} ml",
         "listedFragranceHint": "Total millilitres listed for this fragrance (not bottle-specific)",
         "listedFragranceAria": "Fragrance listed {ml} millilitres across your collection",
+        "ownedListedInline": "Owned {owned} ml | Listed {listed} ml",
+        "ownedListedInlineUnknown": "Owned unknown | Listed {listed} ml",
         "viewBottle": "View bottle"
+      },
+      "listHeaders": {
+        "fragrance": "Fragrance",
+        "owned": "Owned",
+        "listed": "Listed",
+        "actions": "Actions"
       },
       "empty": {
         "heading": "Your collection is empty.",
@@ -1337,6 +1347,7 @@
       "pausing": "Pausing…",
       "pauseListing": "Pause listing",
       "saving": "Saving…",
+      "creating": "Creating…",
       "budgetLoading": "Loading available millilitres…",
       "budgetLoadFailed": "Could not load available millilitres.",
       "budgetRetry": "Retry",
@@ -1347,6 +1358,10 @@
       "budgetListed": "Listed {ml} ml",
       "budgetReserved": "Reserved {ml} ml",
       "budgetAvailable": "Available {ml} ml",
+      "budgetLabelOwned": "Owned",
+      "budgetLabelListed": "Listed",
+      "budgetLabelReserved": "Reserved",
+      "budgetLabelAvailable": "Available",
       "budgetCompletedPours": "Completed pours {ml} ml",
       "positiveVolumeRequired": "Enter a positive volume to create a destash.",
       "availabilityChanged": "Available millilitres changed. Adjust the amount and try again — your other entries were kept.",
@@ -1361,6 +1376,15 @@
       "addNew": "Create Destash",
       "createNew": "Create New Destash",
       "editDestash": "Edit Destash",
+      "closeEditor": "Close editor",
+      "openFullPage": "Open full page",
+      "discardHeading": "Discard unsaved changes?",
+      "discardDescription": "You have unsaved destash edits. Discard them and close the editor?",
+      "discardOpenFullPageDescription": "You have unsaved destash edits. Discard them and open the full page editor?",
+      "keepEditing": "Keep editing",
+      "discardChanges": "Discard changes",
+      "editListingGone": "This listing is no longer available to edit. It may have been removed or cleared.",
+      "editForbidden": "You are not allowed to edit this listing.",
       "cancel": "Cancel",
       "saveChanges": "Save Changes",
       "createDestash": "Create Destash",

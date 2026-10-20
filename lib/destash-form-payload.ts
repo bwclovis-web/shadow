@@ -63,9 +63,11 @@ export const buildCleanCreateUserPerfume = (params: {
   perfumeName: string
   perfume?: UserPerfumeI["perfume"]
   ownedAmountHint?: string
+  /** Stable draft id segment (e.g. source bottle id) so create rails remount per bottle. */
+  draftKey?: string
 }): UserPerfumeI =>
   ({
-    id: `create-${params.perfumeId}`,
+    id: `create-${params.draftKey ?? params.perfumeId}`,
     userId: "",
     perfumeId: params.perfumeId,
     perfume: params.perfume ?? {

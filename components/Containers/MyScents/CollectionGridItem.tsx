@@ -5,7 +5,7 @@ import Image from "next/image"
 import { useTranslations } from "next-intl"
 import { Link } from "next-view-transitions"
 
-import { VooDooLink } from "@/components/Atoms/Button"
+import { Button, VooDooLink } from "@/components/Atoms/Button"
 import ReviewStatusBadge from "@/components/Atoms/ReviewStatusBadge"
 import { getPerfumeTypeLabel } from "@/data/SelectTypes"
 import {
@@ -22,6 +22,9 @@ const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
 
 const focusRingClass =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-gold"
+
+const LIST_ROW_GRID =
+  "md:grid md:grid-cols-[minmax(0,1.6fr)_5.5rem_5.5rem_minmax(11rem,auto)] md:items-center md:gap-4"
 
 const buildBottleLabel = (up: UserPerfumeForClient, bottleCount: number): string | null => {
   if (bottleCount < 2) return null
@@ -42,6 +45,8 @@ export type CollectionGridItemProps = {
   listingStatusLabel: string
   /** Grid card or dense list row — same data and actions. */
   variant?: "grid" | "list"
+  /** Opens create-destash rail on the Collection page (preferred over full-page). */
+  onCreateDestash?: (bottle: UserPerfumeForClient) => void
 }
 
 export const CollectionGridItem = memo(({
@@ -53,6 +58,7 @@ export const CollectionGridItem = memo(({
   inReview,
   listingStatusLabel,
   variant = "grid",
+  onCreateDestash,
 }: CollectionGridItemProps) => {
   const t = useTranslations("myScents.collection.card")
   const tDestash = useTranslations("myScents.destashManager")
@@ -68,45 +74,69 @@ export const CollectionGridItem = memo(({
   const bottleHref = `${basePath}/${userPerfume.id}`
   const createDestashHref = `${basePath}/${userPerfume.id}?list=1`
   const houseName = perfume.perfumeHouse?.name
-  const ownedLabel =
-    owned.kind === "known" ? t("owned", { ml: owned.labelMl }) : t("ownedUnknown")
-  const listedLabel = t("listedFragrance", { ml: fragranceListed.labelMl })
-  const listedAria = t("listedFragranceAria", { ml: fragranceListed.labelMl })
+  const ownedMlLabel = owned.kind === "known" ? owned.labelMl : null
+  const listedMlLabel = fragranceListed.labelMl
+  const volumeInline =
+    owned.kind === "known"
+      ? t("ownedListedInline", { owned: ownedMlLabel!, listed: listedMlLabel })
+      : t("ownedListedInlineUnknown", { listed: listedMlLabel })
   const listedHint = t("listedFragranceHint")
+  const listedAria = t("listedFragranceAria", { ml: listedMlLabel })
+  const showStatusChip =
+    listingStatus === "listed" || listingStatus === "partiallyListed"
 
-  const statusBadge = (
+  const statusBadge = showStatusChip ? (
     <span
       className={styleMerge(
         "rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
         listingStatus === "listed"
           ? "bg-noir-gold/80 text-noir-black"
-          : listingStatus === "partiallyListed"
-            ? "bg-noir-gold-500/70 text-noir-black"
-            : "bg-noir-black/80 text-noir-gold-500"
+          : "bg-noir-gold-500/70 text-noir-black"
       )}
     >
       {listingStatusLabel}
     </span>
-  )
+  ) : null
 
   const actions = (
-    <div className="flex flex-wrap gap-2">
+    <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
       <VooDooLink
         url={bottleHref}
-        variant="secondary"
+        variant="primary"
         size="sm"
-        className="justify-center"
+        className={styleMerge(
+          "flex w-full items-center justify-center text-center md:w-full",
+          focusRingClass
+        )}
       >
         {t("viewBottle")}
       </VooDooLink>
-      <VooDooLink
-        url={createDestashHref}
-        variant="secondary"
-        size="sm"
-        className="justify-center"
-      >
-        {tDestash("createDestash")}
-      </VooDooLink>
+      {onCreateDestash ? (
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className={styleMerge(
+            "flex w-full items-center justify-center text-center md:w-full",
+            focusRingClass
+          )}
+          onClick={() => onCreateDestash(userPerfume)}
+        >
+          {tDestash("createDestash")}
+        </Button>
+      ) : (
+        <VooDooLink
+          url={createDestashHref}
+          variant="secondary"
+          size="sm"
+          className={styleMerge(
+            "flex w-full items-center justify-center text-center md:w-full",
+            focusRingClass
+          )}
+        >
+          {tDestash("createDestash")}
+        </VooDooLink>
+      )}
     </div>
   )
 
@@ -114,65 +144,75 @@ export const CollectionGridItem = memo(({
     return (
       <li
         data-collection-card
-        className="group relative border border-noir-gold/40 bg-noir-black/30 p-3 transition-colors duration-300 hover:border-noir-gold md:p-4"
+        className="group relative border-b border-noir-gold/25 bg-transparent px-1 py-3 transition-colors duration-300 last:border-b-0 hover:bg-noir-black/25 md:px-2"
       >
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
-          <Link
-            href={bottleHref}
-            className={styleMerge(
-              "relative h-20 w-20 shrink-0 overflow-hidden rounded-sm bg-noir-black/40 md:h-24 md:w-24",
-              focusRingClass
-            )}
-          >
-            <Image
-              src={imageSrc}
-              alt={perfume.name ?? "Perfume Bottle"}
-              fill
-              quality={75}
-              className={CARD_IMAGE_COLOR_HOVER_CLASS}
-              sizes="96px"
-              style={
-                {
-                  viewTransitionName: userBottleImageTransitionName(userPerfume.id),
-                } as React.CSSProperties
-              }
-            />
-          </Link>
-
-          <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex flex-wrap items-start gap-2">
-              {inReview && <ReviewStatusBadge />}
-              {statusBadge}
-            </div>
-            {houseName ? (
-              <p className="break-words text-sm text-noir-gold-100">{houseName}</p>
-            ) : null}
+        <div className={styleMerge("flex flex-col gap-3", LIST_ROW_GRID)}>
+          <div className="flex min-w-0 items-start gap-3">
             <Link
               href={bottleHref}
               className={styleMerge(
-                "block break-words font-semibold text-noir-gold hover:text-noir-gold-100",
+                "relative h-14 w-14 shrink-0 overflow-hidden rounded-sm border border-noir-gold/30 bg-noir-black/40",
                 focusRingClass
               )}
             >
-              {perfume.name}
+              <Image
+                src={imageSrc}
+                alt={perfume.name ?? "Perfume Bottle"}
+                fill
+                quality={75}
+                className={CARD_IMAGE_COLOR_HOVER_CLASS}
+                sizes="56px"
+                style={
+                  {
+                    viewTransitionName: userBottleImageTransitionName(userPerfume.id),
+                  } as React.CSSProperties
+                }
+              />
             </Link>
-            {bottleLabel && (
-              <p className="text-xs text-noir-gold-100">{bottleLabel}</p>
-            )}
+            <div className="min-w-0 flex-1 space-y-0.5">
+              <div className="flex flex-wrap items-center gap-2">
+                {inReview && <ReviewStatusBadge />}
+                {statusBadge}
+              </div>
+              {houseName ? (
+                <p className="break-words text-sm font-medium text-noir-gold-100">
+                  {houseName}
+                </p>
+              ) : null}
+              <Link
+                href={bottleHref}
+                className={styleMerge(
+                  "block break-words font-headline text-base font-semibold text-noir-gold hover:text-noir-gold-100",
+                  focusRingClass
+                )}
+              >
+                {perfume.name}
+              </Link>
+              {bottleLabel && (
+                <p className="text-xs text-noir-gold-100">{bottleLabel}</p>
+              )}
+              <p
+                className="text-sm text-noir-cream md:hidden"
+                title={listedHint}
+                aria-label={listedAria}
+              >
+                {volumeInline}
+              </p>
+            </div>
           </div>
 
-          <div className="flex min-w-0 flex-col gap-1 text-sm text-noir-cream md:w-44 md:shrink-0">
-            <p className="m-0 break-words">{ownedLabel}</p>
-            <p
-              className="m-0 break-words"
-              title={listedHint}
-              aria-label={listedAria}
-            >
-              {listedLabel}
-            </p>
-          </div>
+          <p className="hidden text-sm text-noir-cream md:block">
+            {owned.kind === "known" ? `${ownedMlLabel} ml` : "—"}
+          </p>
+          <p
+            className="hidden text-sm text-noir-cream md:block"
+            title={listedHint}
+            aria-label={listedAria}
+          >
+            {listedMlLabel} ml
+          </p>
 
-          <div className="md:shrink-0 md:self-center">{actions}</div>
+          <div className="md:justify-self-end md:w-auto">{actions}</div>
         </div>
       </li>
     )
@@ -181,18 +221,20 @@ export const CollectionGridItem = memo(({
   return (
     <li
       data-collection-card
-      className="group relative flex h-full w-full flex-col border border-noir-gold/50 bg-noir-black/30 p-3 transition-colors duration-300 hover:border-noir-gold"
+      className="group relative flex h-full w-full flex-col border border-noir-gold/40 bg-transparent p-3 transition-colors duration-300 hover:border-noir-gold"
     >
       {inReview && (
         <ReviewStatusBadge className="absolute left-2 top-2 z-10" />
       )}
-      <span className="absolute right-2 top-2 z-10">{statusBadge}</span>
+      {statusBadge ? (
+        <span className="absolute right-2 top-2 z-10">{statusBadge}</span>
+      ) : null}
 
       <Link
         href={bottleHref}
         className={styleMerge("block min-w-0", focusRingClass)}
       >
-        <div className="relative mx-auto mb-3 aspect-[3/4] w-full max-w-[11rem] overflow-hidden rounded-sm bg-noir-black/40">
+        <div className="relative mb-3 h-40 w-full overflow-hidden bg-noir-black/40 sm:h-44">
           <Image
             src={imageSrc}
             alt={perfume.name ?? "Perfume Bottle"}
@@ -209,22 +251,27 @@ export const CollectionGridItem = memo(({
           />
         </div>
         {houseName ? (
-          <p className="break-words text-sm text-noir-gold-100">{houseName}</p>
+          <p className="break-words text-sm font-semibold text-noir-gold-100">
+            {houseName}
+          </p>
         ) : null}
-        <p className="break-words font-semibold text-noir-gold">{perfume.name}</p>
+        <p className="mt-0.5 break-words font-headline text-xl font-semibold leading-snug text-noir-gold">
+          {perfume.name}
+        </p>
         {bottleLabel && (
           <p className="mt-1 text-xs text-noir-gold-100">{bottleLabel}</p>
         )}
       </Link>
 
-      <div className="mt-2 space-y-0.5 text-sm text-noir-cream">
-        <p className="m-0">{ownedLabel}</p>
-        <p className="m-0" title={listedHint} aria-label={listedAria}>
-          {listedLabel}
-        </p>
-      </div>
+      <p
+        className="mt-2 text-sm text-noir-cream"
+        title={listedHint}
+        aria-label={listedAria}
+      >
+        {volumeInline}
+      </p>
 
-      <div className="mt-auto pt-3">{actions}</div>
+      <div className="mt-auto pt-4">{actions}</div>
     </li>
   )
 })

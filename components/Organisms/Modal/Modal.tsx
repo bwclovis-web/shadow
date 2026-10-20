@@ -11,7 +11,7 @@ import { createPortal } from "react-dom"
 import { IoMdCloseCircle } from "react-icons/io"
 
 import { useSessionStore } from "@/hooks/sessionStore"
-import { useFocusTrap } from "@/hooks/useFocusTrap"
+import { FOCUS_TRAP_PORTAL_ATTR, useFocusTrap } from "@/hooks/useFocusTrap"
 import { styleMerge } from "@/utils/styleUtils"
 
 import { modalBackgroundVariant, modalContentVariant } from "./modal-variants"
@@ -115,6 +115,7 @@ const Modal = ({
         aria-label={
           dialogAriaLabelledBy ? undefined : (dialogAriaLabel ?? "Dialog")
         }
+        {...{ [FOCUS_TRAP_PORTAL_ATTR]: "" }}
         className={styleMerge(
           modalContentVariant({
             animate,

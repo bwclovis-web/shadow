@@ -1,15 +1,17 @@
 "use client"
 
-import { memo, useCallback, useRef, useState } from "react"
+import { memo, useCallback, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import { useTranslations } from "next-intl"
 import { Link } from "next-view-transitions"
 
 import { Button } from "@/components/Atoms/Button"
 import ReviewStatusBadge from "@/components/Atoms/ReviewStatusBadge"
+import DestashEditorRail from "@/components/Containers/MyScents/DestashEditorRail/DestashEditorRail"
 import type { UserPerfumeForClient } from "@/types/my-scents-client"
 import { useCSRF } from "@/hooks/useCSRF"
 import { useGsapStagger } from "@/hooks/useGsapStagger"
+import { isListingPresentInEditorScope } from "@/lib/destash-editor-interactions"
 import {
   getListingKind,
   getPausedListingKind,
@@ -38,16 +40,18 @@ type ListingCardProps = {
   resumingId: string | null
   onPause: (row: UserPerfumeForClient) => void
   onResume: (row: UserPerfumeForClient) => void
+  onEdit: (row: UserPerfumeForClient) => void
 }
 
 const ListingCard = memo(({
   row,
-  basePath,
+  basePath: _basePath,
   variant,
   pausingId,
   resumingId,
   onPause,
   onResume,
+  onEdit,
 }: ListingCardProps) => {
   const t = useTranslations("myScents.listings")
   const tKind = useTranslations("myScents.listingKind")
@@ -126,12 +130,6 @@ const ListingCard = memo(({
         </div>
       </div>
       <div className="mt-auto flex flex-wrap gap-2">
-        <Link
-          href={`${basePath}/${row.id}#destash`}
-          className="text-sm text-noir-gold underline hover:text-noir-gold-100"
-        >
-          {t("edit")}
-        </Link>
         {isPaused ? (
           <Button
             type="button"
@@ -153,6 +151,15 @@ const ListingCard = memo(({
             {pausingId === row.id ? t("pausing") : t("pause")}
           </Button>
         )}
+        <Button
+          type="button"
+          variant="link"
+          size="sm"
+          className="w-auto px-0 text-sm text-noir-gold underline hover:text-noir-gold-100"
+          onClick={() => onEdit(row)}
+        >
+          {t("edit")}
+        </Button>
       </div>
     </li>
   )
@@ -178,6 +185,38 @@ const MyListingsPanel = ({
   const [pausingId, setPausingId] = useState<string | null>(null)
   const [resumingId, setResumingId] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [editingListing, setEditingListing] = useState<UserPerfumeForClient | null>(
+    null
+  )
+
+  const handleEdit = useCallback((row: UserPerfumeForClient) => {
+    setEditingListing(row)
+  }, [])
+
+  const handleCloseEditor = useCallback(() => {
+    setEditingListing(null)
+  }, [])
+
+  const handleEditorListingChange = useCallback(
+    (updated: UserPerfumeForClient) => {
+      // Refresh cards / counts / listing rows in the parent collection.
+      onListingChange(updated)
+      // Keep the same listing id selected; draft snapshot is owned by the session.
+      setEditingListing(prev =>
+        prev && prev.id === updated.id ? { ...prev, ...updated } : prev
+      )
+    },
+    [onListingChange]
+  )
+
+  const listingStillPresent = useMemo(() => {
+    if (!editingListing) return true
+    return isListingPresentInEditorScope(
+      editingListing.id,
+      activeListings.map(row => row.id),
+      pausedListings.map(row => row.id)
+    )
+  }, [activeListings, editingListing, pausedListings])
   const activeListRef = useRef<HTMLUListElement>(null)
   const pausedListRef = useRef<HTMLUListElement>(null)
   const activeIds = activeListings.map(row => row.id).join(",")
@@ -349,6 +388,7 @@ const MyListingsPanel = ({
                 resumingId={resumingId}
                 onPause={handlePause}
                 onResume={handleResume}
+                onEdit={handleEdit}
               />
             ))}
           </ul>
@@ -372,11 +412,20 @@ const MyListingsPanel = ({
                 resumingId={resumingId}
                 onPause={handlePause}
                 onResume={handleResume}
+                onEdit={handleEdit}
               />
             ))}
           </ul>
         </section>
       )}
+      <DestashEditorRail
+        listing={editingListing}
+        createFromBottle={null}
+        listingStillPresent={listingStillPresent}
+        basePath={basePath}
+        onClose={handleCloseEditor}
+        onListingChange={handleEditorListingChange}
+      />
     </div>
   )
 }

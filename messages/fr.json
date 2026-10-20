@@ -1034,7 +1034,9 @@
         "view": "Disposition de la collection",
         "gridView": "Vue grille",
         "listView": "Vue liste",
-        "listViewPending": "Vue liste (bientôt)"
+        "listViewPending": "Vue liste (bientôt)",
+        "moreFilters": "Plus de filtres",
+        "hideFilters": "Masquer les filtres"
       },
       "card": {
         "owned": "Possédé {ml} ml",
@@ -1042,7 +1044,15 @@
         "listedFragrance": "En vente {ml} ml",
         "listedFragranceHint": "Total des millilitres listés pour cette fragrance (pas par flacon)",
         "listedFragranceAria": "Fragrance listée {ml} millilitres dans votre collection",
+        "ownedListedInline": "Possédé {owned} ml | En vente {listed} ml",
+        "ownedListedInlineUnknown": "Possédé inconnu | En vente {listed} ml",
         "viewBottle": "Voir le flacon"
+      },
+      "listHeaders": {
+        "fragrance": "Fragrance",
+        "owned": "Possédé",
+        "listed": "En vente",
+        "actions": "Actions"
       },
       "empty": {
         "heading": "Votre collection est vide.",
@@ -1138,6 +1148,7 @@
       "pausing": "Mise en pause…",
       "pauseListing": "Mettre l'annonce en pause",
       "saving": "Enregistrement…",
+      "creating": "Création…",
       "budgetLoading": "Chargement des millilitres disponibles…",
       "budgetLoadFailed": "Impossible de charger les millilitres disponibles.",
       "budgetRetry": "Réessayer",
@@ -1148,6 +1159,10 @@
       "budgetListed": "En annonce {ml} ml",
       "budgetReserved": "Réservé {ml} ml",
       "budgetAvailable": "Disponible {ml} ml",
+      "budgetLabelOwned": "Possédé",
+      "budgetLabelListed": "En vente",
+      "budgetLabelReserved": "Réservé",
+      "budgetLabelAvailable": "Disponible",
       "budgetCompletedPours": "Versements terminés {ml} ml",
       "positiveVolumeRequired": "Saisissez un volume positif pour créer un déstockage.",
       "availabilityChanged": "Les millilitres disponibles ont changé. Ajustez la quantité et réessayez — vos autres saisies ont été conservées.",
@@ -1162,6 +1177,15 @@
       "addNew": "Ajouter un déstockage",
       "createNew": "Créer un nouveau déstockage",
       "editDestash": "Modifier le déstockage",
+      "closeEditor": "Fermer l'éditeur",
+      "openFullPage": "Ouvrir la page complète",
+      "discardHeading": "Abandonner les modifications non enregistrées ?",
+      "discardDescription": "Vous avez des modifications de déstockage non enregistrées. Les abandonner et fermer l'éditeur ?",
+      "discardOpenFullPageDescription": "Vous avez des modifications de déstockage non enregistrées. Les abandonner et ouvrir l'éditeur en page complète ?",
+      "keepEditing": "Continuer l'édition",
+      "discardChanges": "Abandonner",
+      "editListingGone": "Cette annonce n'est plus disponible. Elle a peut-être été supprimée ou vidée.",
+      "editForbidden": "Vous n'êtes pas autorisé à modifier cette annonce.",
       "cancel": "Annuler",
       "saveChanges": "Enregistrer",
       "createDestash": "Créer le déstockage",

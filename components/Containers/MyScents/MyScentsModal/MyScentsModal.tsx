@@ -269,26 +269,28 @@ const MyScentsModal = ({
 
   return (
     <div className="w-full p-6">
-      <div className="flex flex-col items-start justify-between mb-4">
-        <div>
+      <div className="mb-4 flex w-full flex-col items-stretch">
+        <div className="w-full">
           <h2>{t("title")}</h2>
           <p className="text-xl text-noir-gold-100">{t("description")}</p>
         </div>
         {modalData?.action === "create" && !perfume && (
           <>
             {!manualMode && (
-              <>
+              <div className="mt-4 w-full min-w-0">
                 <SearchBar
-                  variant="animated"
+                  variant="default"
+                  size="standard"
                   searchType="perfume"
-                  className="mt-4"
+                  inputId="add-to-collection-search"
+                  className="w-full"
                   autoFocus={autoFocusSearch}
                   action={item => handleClick(item as unknown as UserPerfumeI)}
                   footerSlot={
                     <li className="border-t border-noir-gold/20 p-2" role="presentation">
                       <button
                         type="button"
-                        className="w-full rounded px-2 py-1 text-left text-sm text-noir-gold-100 hover:bg-noir-gold/50 hover:text-noir-black cursor-pointer"
+                        className="w-full cursor-pointer rounded px-2 py-1 text-left text-sm text-noir-gold-100 hover:bg-noir-gold/50 hover:text-noir-black"
                         onMouseDown={event => event.preventDefault()}
                         onClick={() => {
                           clearManualErrors()
@@ -300,7 +302,7 @@ const MyScentsModal = ({
                     </li>
                   }
                 />
-              </>
+              </div>
             )}
             {manualMode && (
               <form

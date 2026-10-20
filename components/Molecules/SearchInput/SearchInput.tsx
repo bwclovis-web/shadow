@@ -12,6 +12,8 @@ interface SearchInputProps {
   className?: string
   id?: string
   inputRef?: Ref<HTMLInputElement>
+  /** `filter` matches ResultsViewToggle / toolbar control height (~44px). */
+  size?: "standard" | "filter"
 }
 
 const SearchInput = ({
@@ -21,6 +23,7 @@ const SearchInput = ({
   className,
   id,
   inputRef,
+  size = "standard",
 }: SearchInputProps) => {
   const t = useTranslations("common")
 
@@ -46,7 +49,7 @@ const SearchInput = ({
         onChange={handleChange}
         placeholder={placeholder ?? t("search")}
         className={styleMerge(
-          searchbarVariants({ size: "standard" }),
+          searchbarVariants({ size }),
           "pl-10 pr-10 outline-none focus:ring-2 focus:ring-noir-gold/50 focus:bg-noir-dark"
         )}
         aria-label={t("search")}

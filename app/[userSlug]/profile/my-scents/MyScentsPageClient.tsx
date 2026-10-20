@@ -27,7 +27,12 @@ import {
 import { computeCollectionCounts } from "@/lib/user-inventory-stats"
 import type { UserInventoryStats } from "@/models/user-inventory-stats.server"
 import type { TraderWantingUserListingEnriched } from "@/services/trade-match"
+import type { ResultsView } from "@/components/Molecules/ResultsViewToggle"
 import type { MyScentsView, UserPerfumeForClient } from "@/types/my-scents-client"
+import {
+  MY_SCENTS_QUERY,
+  parseMyScentsLayout,
+} from "@/utils/my-scents-params"
 import type { SortOption } from "@/utils/sortUtils"
 import MyScentsViewTabs from "@/components/Containers/MyScents/MyScentsViewTabs"
 import PageWrapper from "@/components/Containers/PageWrapper/PageWrapper"
@@ -240,27 +245,47 @@ const MyScentsPageClient = ({
   const openModal = useSessionStore(s => s.openModal)
   const basePath = userSlug ? `/${userSlug}/profile/my-scents` : "/profile/my-scents"
   const activeView: MyScentsView =
-    searchParams.get("view") === "listings" ? "listings" : "inventory"
+    searchParams.get(MY_SCENTS_QUERY.tab) === "listings" ? "listings" : "inventory"
+  /** Grid/list presentation — URL `layout` (not `view`, which is the tab). */
+  const resultsView = parseMyScentsLayout(
+    searchParams.get(MY_SCENTS_QUERY.layout)
+  )
 
   const handleListingChange = useCallback((updated: UserPerfumeForClient) => {
-    setUserPerfumes((prev) =>
-      prev.map((up) => (up.id === updated.id ? { ...up, ...updated } : up))
-    )
+    const next = serializeUserPerfume(updated as unknown as Record<string, unknown>)
+    setUserPerfumes((prev) => {
+      const idx = prev.findIndex((up) => up.id === next.id)
+      if (idx >= 0) {
+        return prev.map((up) => (up.id === next.id ? { ...up, ...next } : up))
+      }
+      return [next, ...prev]
+    })
   }, [])
 
   const setActiveView = useCallback(
     (view: MyScentsView) => {
       const next = new URLSearchParams(searchParams.toString())
-      if (view === "inventory") next.delete("view")
-      else next.set("view", "listings")
-      next.delete("pg")
+      if (view === "inventory") next.delete(MY_SCENTS_QUERY.tab)
+      else next.set(MY_SCENTS_QUERY.tab, "listings")
+      next.delete(MY_SCENTS_QUERY.page)
       const qs = next.toString()
       router.replace(`${basePath}${qs ? `?${qs}` : ""}`, { scroll: false })
     },
     [basePath, router, searchParams]
   )
 
-  const [autoFocusAddSearch, setAutoFocusAddSearch] = useState(false)
+  const setResultsView = useCallback(
+    (layout: ResultsView) => {
+      const next = new URLSearchParams(searchParams.toString())
+      if (layout === "grid") next.delete(MY_SCENTS_QUERY.layout)
+      else next.set(MY_SCENTS_QUERY.layout, "list")
+      // Keep `pg` and filters — presentation-only change, no refetch/reset.
+      const qs = next.toString()
+      router.replace(`${basePath}${qs ? `?${qs}` : ""}`, { scroll: false })
+    },
+    [basePath, router, searchParams]
+  )
+
   const [bulkAddOpen, setBulkAddOpen] = useState(false)
   const [csvImportOpen, setCsvImportOpen] = useState(false)
 
@@ -276,7 +301,6 @@ const MyScentsPageClient = ({
 
   useEffect(() => {
     if (searchParams.get("onboarding") !== "add-bottle") return
-    setAutoFocusAddSearch(true)
     openModal("add-scent", { action: "create" })
     const next = new URLSearchParams(searchParams.toString())
     next.delete("onboarding")
@@ -411,9 +435,12 @@ const MyScentsPageClient = ({
                   onAddedToCollection={refreshCollection}
                   onOptimisticAddToCollection={handleOptimisticAdd}
                   onOptimisticAddRollback={handleOptimisticRollback}
-                  autoFocusSearch={autoFocusAddSearch}
+                  autoFocusSearch
                 />
               }
+              resultsView={resultsView}
+              onResultsViewChange={setResultsView}
+              onListingChange={handleListingChange}
             />
           }
         />

@@ -20,7 +20,7 @@ const MyScentsStatsHeader = ({ stats }: MyScentsStatsHeaderProps) => {
       background="dark"
       summary={t("inventory.atAGlance")}
       className="mb-4 w-full"
-      defaultOpen
+      defaultOpen={false}
     >
       <div className="px-3 pb-4 pt-2">
         <InventoryStatsStrip stats={stats} />

@@ -1034,7 +1034,9 @@
         "view": "Diseño de la colección",
         "gridView": "Vista de cuadrícula",
         "listView": "Vista de lista",
-        "listViewPending": "Vista de lista (próximamente)"
+        "listViewPending": "Vista de lista (próximamente)",
+        "moreFilters": "Más filtros",
+        "hideFilters": "Ocultar filtros"
       },
       "card": {
         "owned": "En posesión {ml} ml",
@@ -1042,7 +1044,15 @@
         "listedFragrance": "En anuncio {ml} ml",
         "listedFragranceHint": "Total de mililitros en anuncio para esta fragancia (no por botella)",
         "listedFragranceAria": "Fragancia en anuncio {ml} mililitros en tu colección",
+        "ownedListedInline": "En posesión {owned} ml | En anuncio {listed} ml",
+        "ownedListedInlineUnknown": "En posesión desconocido | En anuncio {listed} ml",
         "viewBottle": "Ver botella"
+      },
+      "listHeaders": {
+        "fragrance": "Fragancia",
+        "owned": "En posesión",
+        "listed": "En anuncio",
+        "actions": "Acciones"
       },
       "empty": {
         "heading": "Tu colección está vacía.",
@@ -1138,6 +1148,7 @@
       "pausing": "Pausando…",
       "pauseListing": "Pausar anuncio",
       "saving": "Guardando…",
+      "creating": "Creando…",
       "budgetLoading": "Cargando mililitros disponibles…",
       "budgetLoadFailed": "No se pudieron cargar los mililitros disponibles.",
       "budgetRetry": "Reintentar",
@@ -1148,6 +1159,10 @@
       "budgetListed": "En anuncio {ml} ml",
       "budgetReserved": "Reservado {ml} ml",
       "budgetAvailable": "Disponible {ml} ml",
+      "budgetLabelOwned": "En posesión",
+      "budgetLabelListed": "En anuncio",
+      "budgetLabelReserved": "Reservado",
+      "budgetLabelAvailable": "Disponible",
       "budgetCompletedPours": "Vertidos completados {ml} ml",
       "positiveVolumeRequired": "Introduce un volumen positivo para crear un destash.",
       "availabilityChanged": "Los mililitros disponibles cambiaron. Ajusta la cantidad e inténtalo de nuevo — se conservaron tus demás datos.",
@@ -1162,6 +1177,15 @@
       "addNew": "Agregar Nuevo Desocultado",
       "createNew": "Crear Nuevo Desocultado",
       "editDestash": "Editar Desocultado",
+      "closeEditor": "Cerrar editor",
+      "openFullPage": "Abrir página completa",
+      "discardHeading": "¿Descartar cambios sin guardar?",
+      "discardDescription": "Tienes ediciones de destash sin guardar. ¿Descartarlas y cerrar el editor?",
+      "discardOpenFullPageDescription": "Tienes ediciones de destash sin guardar. ¿Descartarlas y abrir el editor de página completa?",
+      "keepEditing": "Seguir editando",
+      "discardChanges": "Descartar cambios",
+      "editListingGone": "Este anuncio ya no está disponible para editar. Puede haberse eliminado o vaciado.",
+      "editForbidden": "No tienes permiso para editar este anuncio.",
       "cancel": "Cancelar",
       "saveChanges": "Guardar Cambios",
       "createDestash": "Crear Desocultado",

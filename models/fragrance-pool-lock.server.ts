@@ -46,7 +46,10 @@ export const acquireFragrancePoolLock = async (
   perfumeId: string
 ): Promise<void> => {
   const [k1, k2] = fragrancePoolLockKeys(userId, perfumeId)
-  await tx.$executeRaw`SELECT pg_advisory_xact_lock(${k1}, ${k2})`
+  // Prisma parameterizes JS numbers as bigint; Postgres two-arg advisory lock is int4.
+  await tx.$executeRaw`
+    SELECT pg_advisory_xact_lock(CAST(${k1} AS INTEGER), CAST(${k2} AS INTEGER))
+  `
 }
 
 type LockedInventoryRow = {
