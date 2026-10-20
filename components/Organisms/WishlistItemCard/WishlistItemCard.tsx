@@ -1,205 +1,236 @@
 "use client"
 
-import { memo, useEffect, useState } from "react"
-import { useTranslations } from "next-intl"
+import { memo } from "react"
 import Image from "next/image"
-import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
-import { IoMdCloseCircle } from "react-icons/io"
+import { useTranslations } from "next-intl"
 
+import Select from "@/components/Atoms/Select/Select"
+import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import VooDooCheck from "@/components/Atoms/VooDooCheck/VooDooCheck"
+import { OrnamentalFrame } from "@/components/Atoms/OrnamentalFrame"
+import DangerModal from "@/components/Organisms/DangerModal"
+import Modal from "@/components/Organisms/Modal"
+import { useWishlistItemControls } from "@/hooks/useWishlistItemControls"
 import {
-  useToggleWishlist,
   WISHLIST_BOTTLE_PREFERENCE_OPTIONS,
   type WishlistBottlePreference,
 } from "@/lib/mutations/wishlist"
-import { normalizeRemoteImageSrc, styleMerge } from "@/utils/styleUtils"
+import { CARD_IMAGE_HOVER_CLASS } from "@/utils/card-motion"
+import { normalizeRemoteImageSrc, styleMerge, validImageRegex } from "@/utils/styleUtils"
 
 import {
-  wishlistAddedVariants,
-  wishlistHouseVariants,
+  wishlistBadgeVariants,
+  wishlistBodyVariants,
   wishlistVariants,
-  wishlistVisibilityVariants,
 } from "./wishlist-variants"
-import WishListAvailabilityInfo from "./WishlistAvbalibilityInfo"
 
-interface WishlistItemCardProps {
-  item: any
+const FALLBACK_IMAGE = "/images/single-bottle.webp"
+
+const goldLinkClass =
+  "cursor-pointer text-sm font-medium text-noir-gold underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-noir-gold"
+
+export type WishlistItemCardPerfume = {
+  id: string
+  name: string
+  slug: string
+  image: string | null
+  perfumeHouse: { id: string; name: string; slug: string } | null
+}
+
+export type WishlistItemCardItem = {
+  id: string
+  perfumeId?: string
+  isPublic: boolean
+  bottlePreference?: WishlistBottlePreference | null
+  createdAt: Date | string
+  perfume: WishlistItemCardPerfume
+}
+
+export type WishlistItemCardProps = {
+  item: WishlistItemCardItem
   isAvailable: boolean
-  availableAmount: number
+  offerCount?: number
+  /** @deprecated Unused — ml is never inferred from ambiguous quantities. */
+  availableAmount?: number
   onRemove?: () => void
+  onVisibilityChange?: () => void
+  /** Opens on-demand offers (panel / sheet). Available cards only. */
+  onViewOffers?: (trigger: HTMLButtonElement | null) => void
+}
+
+const resolveImage = (image: string | null): string => {
+  const src = normalizeRemoteImageSrc(image)
+  if (src && !validImageRegex.test(src)) return src
+  return FALLBACK_IMAGE
 }
 
 const WishlistItemCard = memo(({
   item,
   isAvailable,
-  availableAmount,
+  offerCount = 0,
   onRemove,
+  onVisibilityChange,
+  onViewOffers,
 }: WishlistItemCardProps) => {
-  const [isPublic, setIsPublic] = useState(item.isPublic)
-  const [bottlePreference, setBottlePreference] = useState<WishlistBottlePreference>(
-    item.bottlePreference ?? "any"
-  )
   const t = useTranslations("wishlist.itemCard")
   const tBottle = useTranslations("wishlist.bottlePreference")
-  const toggleWishlist = useToggleWishlist()
+  const tCommon = useTranslations("common")
+  const controls = useWishlistItemControls(item, {
+    onRemove,
+    onVisibilityChange,
+    actionErrorFallback: t("actionError"),
+  })
 
-  useEffect(() => {
-    setBottlePreference(item.bottlePreference ?? "any")
-  }, [item.bottlePreference])
+  const houseName = item.perfume.perfumeHouse?.name
+  const addedLabel = new Date(item.createdAt).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  })
 
-  const handleRemove = () => {
-    toggleWishlist.mutate(
-      { perfumeId: item.perfume.id, action: "remove" },
-      { onSuccess: () => onRemove?.() }
-    )
-  }
-
-  const handleBottlePreferenceChange = (next: WishlistBottlePreference) => {
-    if (next === bottlePreference) return
-    toggleWishlist.mutate(
-      {
-        perfumeId: item.perfume.id,
-        action: "updateBottlePreference",
-        bottlePreference: next,
-      },
-      {
-        onSuccess: () => setBottlePreference(next),
-        onError: error =>
-          console.error("Error updating wishlist bottle preference:", error),
-      }
-    )
-  }
-
-  const handleVisibilityToggle = async () => {
-    const newVisibility = !isPublic
-    
-    toggleWishlist.mutate(
-      {
-        perfumeId: item.perfume.id,
-        action: "updateVisibility",
-        isPublic: newVisibility,
-      },
-      {
-        onSuccess: () => {
-          setIsPublic(newVisibility)
-        },
-        onError: error => {
-          console.error("Error updating wishlist visibility:", error)
-          // The mutation's optimistic update will rollback on error
-        },
-      }
-    )
-  }
+  const bottleOptions = WISHLIST_BOTTLE_PREFERENCE_OPTIONS.map(value => ({
+    id: value,
+    name: value,
+    label: tBottle(value),
+  }))
 
   return (
-    <div className={styleMerge(wishlistVariants({ isAvailable }))}>
-      <div className="absolute top-2 right-2 z-10">
-        <button
-          type="button"
-          onClick={handleRemove}
-          disabled={toggleWishlist.isPending}
-          className="group flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-white shadow-lg transition-colors duration-200 hover:bg-red-600 disabled:opacity-50"
-          title="Remove from wishlist"
+    <>
+      {controls.removeModalOpen ? (
+        <Modal innerType="dark" animateStart="top">
+          <DangerModal
+            heading={t("removeConfirmHeading")}
+            description={t("removeConfirmDescription", {
+              name: item.perfume.name,
+            })}
+            action={controls.handleConfirmRemove}
+          />
+        </Modal>
+      ) : null}
+
+      <OrnamentalFrame size="compact" className="h-full w-full max-w-md justify-self-start">
+        <article
+          className={styleMerge("group", wishlistVariants({ isAvailable }))}
+          data-seeking-card
+          aria-busy={controls.pending}
         >
-          <IoMdCloseCircle />
-        </button>
-      </div>
-
-      {isAvailable && (
-        <div className="bg-noir-light text-noir-dark text-xs font-bold px-3 py-1 text-center animate-pulse">
-          {t("available")}
-        </div>
-      )}
-      <Image
-        src={normalizeRemoteImageSrc(item.perfume.image) || "/placeholder-perfume.jpg"}
-        alt={item.perfume.name}
-        width={400}
-        height={192}
-        quality={75}
-        className="h-48 w-full object-cover"
-        sizes="(max-width: 640px) 100vw, 50vw"
-      />
-      <div>
-        <h3 className="text-lg font-semibold mb-2 bg-noir-dark p-2">
-          {item.perfume.name}
-        </h3>
-        <div className="px-4 pb-2">
-          <p className={styleMerge(wishlistHouseVariants({ isAvailable }))}>
-            by {item.perfume.perfumeHouse?.name || "Unknown House"}
-          </p>
-
-          {isAvailable && (
-            <WishListAvailabilityInfo
-              userPerfumes={item.perfume.userPerfume}
-              availableAmount={availableAmount}
+          <div className="relative aspect-[4/3] w-full overflow-hidden bg-noir-black">
+            <Image
+              src={resolveImage(item.perfume.image)}
+              alt={item.perfume.name}
+              fill
+              quality={75}
+              sizes="(min-width: 1024px) 22vw, (min-width: 768px) 40vw, 92vw"
+              className={CARD_IMAGE_HOVER_CLASS}
             />
-          )}
-
-          <div className="flex items-center justify-between mt-4">
-            <span className={styleMerge(wishlistAddedVariants({ isAvailable }))}>
-              Added on {new Date(item.createdAt).toLocaleDateString("en-US")}
+            <span className={styleMerge(wishlistBadgeVariants({ isAvailable }))}>
+              {isAvailable ? t("available") : t("stillSeeking")}
             </span>
-            <div className="flex items-center gap-2">
-              <PrefetchLink
-                href={`/perfume/${item.perfume.slug}`}
-                prefetch={false}
-                className="text-sm font-medium text-noir-blue/90 hover:text-noir-blue"
-              >
-                View Details
-              </PrefetchLink>
-            </div>
           </div>
 
-          <div className="mt-3 pt-3 border-t border-noir-gold-200">
-            <div className="pb-4">
-              <label
-                htmlFor={`wishlist-bottle-${item.id}`}
-                className={styleMerge(
-                  wishlistVisibilityVariants({ isAvailable })
-                )}
-              >
-                {t("bottlePreference")}
-              </label>
-              <select
-                id={`wishlist-bottle-${item.id}`}
-                value={bottlePreference}
-                onChange={e =>
-                  handleBottlePreferenceChange(
+          <div className={wishlistBodyVariants()}>
+            <div>
+              <h3 className="!text-lg font-serif leading-tight text-noir-gold md:!text-xl">
+                {item.perfume.name}
+              </h3>
+              <p className="mt-1 text-sm text-noir-gold-100">
+                {houseName
+                  ? t("byHouse", { house: houseName })
+                  : t("unknownHouse")}
+              </p>
+              <p className="mt-2 text-xs text-noir-gold-100/80">
+                {t("addedOn")} {addedLabel}
+              </p>
+            </div>
+
+            {isAvailable ? (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                <span className="text-noir-gold">
+                  {t("offerCount", { count: offerCount })}
+                </span>
+                <button
+                  type="button"
+                  className={styleMerge(goldLinkClass, "bg-transparent p-0")}
+                  onClick={e => onViewOffers?.(e.currentTarget)}
+                >
+                  {t("viewOffers")}
+                </button>
+              </div>
+            ) : null}
+
+            <div>
+              <Select
+                selectId={`wishlist-bottle-${item.id}`}
+                label={t("bottlePreference")}
+                selectData={bottleOptions}
+                value={controls.bottlePreference}
+                action={e =>
+                  controls.handleBottlePreferenceChange(
                     e.target.value as WishlistBottlePreference
                   )
                 }
-                disabled={toggleWishlist.isPending}
-                className="mt-1 w-full rounded border border-noir-gold bg-noir-dark px-2 py-1.5 text-sm text-noir-cream disabled:opacity-50"
-              >
-                {WISHLIST_BOTTLE_PREFERENCE_OPTIONS.map(v => (
-                  <option key={v} value={v}>
-                    {tBottle(v)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-center justify-between pb-4">
-              <span
-                className={styleMerge(wishlistVisibilityVariants({ isAvailable }))}
-              >
-                {t("visibility")}:
-              </span>
-              <VooDooCheck
-                checked={isPublic}
-                onChange={handleVisibilityToggle}
-                labelChecked={t("public")}
-                labelUnchecked={t("private")}
+                disabled={controls.pending}
+                size="compact"
+                className="w-full max-w-none md:w-full"
               />
             </div>
-            <p className={styleMerge(wishlistVisibilityVariants({ isAvailable }))}>
-              {isPublic
-                ? t("availableMessage")
-                : t("unavailableMessage")}
-            </p>
+
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-semibold text-noir-gold-100">
+                  {t("visibility")}
+                </span>
+                <VooDooCheck
+                  id={`wishlist-visibility-${item.id}`}
+                  checked={controls.isPublic}
+                  onChange={controls.handleVisibilityToggle}
+                  labelChecked={t("public")}
+                  labelUnchecked={t("private")}
+                  disabled={controls.pending}
+                />
+              </div>
+              <p className="text-xs text-noir-gold-100/80">{t("privacyHint")}</p>
+            </div>
+
+            <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-noir-gold/25 pt-3">
+              <PrefetchLink
+                href={`/perfume/${item.perfume.slug}`}
+                prefetch={false}
+                className={goldLinkClass}
+              >
+                {t("viewDetails")}
+              </PrefetchLink>
+              <span className="text-noir-gold/40" aria-hidden>
+                |
+              </span>
+              <button
+                type="button"
+                disabled={controls.pending}
+                className={styleMerge(
+                  goldLinkClass,
+                  "bg-transparent p-0 disabled:opacity-50"
+                )}
+                onClick={controls.openRemoveModal}
+              >
+                {t("remove")}
+              </button>
+            </div>
+
+            {controls.actionError ? (
+              <p className="text-xs text-red-300" role="alert">
+                {controls.actionError}
+              </p>
+            ) : null}
+
+            {controls.pending ? (
+              <p className="sr-only" aria-live="polite">
+                {tCommon("loading")}
+              </p>
+            ) : null}
           </div>
-        </div>
-      </div>
-    </div>
+        </article>
+      </OrnamentalFrame>
+    </>
   )
 })
 WishlistItemCard.displayName = "WishlistItemCard"

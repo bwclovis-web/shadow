@@ -6,6 +6,10 @@ import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import ReviewStatusBadge from "@/components/Atoms/ReviewStatusBadge"
 import { PerfumeCompareToggle } from "@/components/Molecules/PerfumeCompareToggle/PerfumeCompareToggle"
 import type { CompareItem } from "@/hooks/compareStore"
+import {
+  CARD_IMAGE_HOVER_CLASS,
+  CARD_THUMB_HOVER_CLASS,
+} from "@/utils/card-motion"
 import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
 
 export type CatalogItemDisplay = {
@@ -56,13 +60,13 @@ export const CatalogItemCard = ({
           priority={imagePriority}
           quality={75}
           sizes="(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 48vw"
-          className="object-cover grayscale-[0.6] transition-[filter,transform] duration-500 ease-out group-hover:scale-105 group-hover:grayscale-0 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+          className={CARD_IMAGE_HOVER_CLASS}
           style={transitionStyle(item.imageTransitionName)}
         />
       </div>
       <div className="flex flex-1 flex-col gap-1 border-t border-noir-gold/60 px-3 py-2.5 md:px-4 md:py-3">
         <h3
-          className="!text-base leading-tight wrap-break-word md:!text-lg"
+          className="!text-lg leading-tight wrap-break-word md:!text-xl"
           style={transitionStyle(item.titleTransitionName)}
         >
           {item.title}
@@ -108,14 +112,14 @@ export const CatalogItemRow = ({
           fill
           quality={70}
           sizes="64px"
-          className="object-cover grayscale-[0.6] transition-[filter] duration-500 group-hover:grayscale-0 motion-reduce:transition-none"
+          className={CARD_THUMB_HOVER_CLASS}
           style={transitionStyle(item.imageTransitionName)}
         />
       </div>
       <div className="min-w-0 flex-1 py-2 md:grid md:grid-cols-[minmax(0,1fr)_minmax(0,14rem)] md:items-center md:gap-6 md:py-0">
         <div className="min-w-0">
           <h3
-            className="!text-base leading-tight md:!text-xl"
+            className="!text-lg leading-tight md:!text-2xl"
             style={transitionStyle(item.titleTransitionName)}
           >
             {item.title}

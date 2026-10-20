@@ -44,6 +44,7 @@ Root [README.md](../README.md) stays short: product blurb + common commands + li
 | [homepage-gallery-walk.md](./homepage-gallery-walk.md) | “Gallery Walk” homepage implementation contract and checklist |
 | [catalog-redesign.md](./catalog-redesign.md) | Archive and Houses catalog redesign: reference priorities, URL contract, checklist |
 | [exchange-redesign.md](./exchange-redesign.md) | The Exchange redesign: workflow, layout/data/collectors contract, staged checklist |
+| [seeking-redesign.md](./seeking-redesign.md) | Seeking (wishlist) redesign: dual groups, pagination, on-demand offers, staged checklist |
 | [MONETIZATION_PLAYBOOK.md](./MONETIZATION_PLAYBOOK.md) | Subscription / revenue experiments |
 | [user-guide-decants.md](./user-guide-decants.md) | Decants / inventory / splits (copy for Help/FAQ) |
 

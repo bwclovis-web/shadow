@@ -114,6 +114,11 @@ export type PublicWishlistItem = {
   }
 }
 
+/**
+ * Unpaginated public wishlist rows (legacy callers).
+ * Prefer {@link getPublicSeekingPage} from `wishlist-seeking.server` for the
+ * shared Seeking route — that path paginates and returns a narrower DTO.
+ */
 export const getPublicWishlistForUser = async (
   userId: string
 ): Promise<PublicWishlistItem[]> => {

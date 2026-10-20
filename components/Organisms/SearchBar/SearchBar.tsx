@@ -2,6 +2,7 @@
 
 import { type VariantProps } from "class-variance-authority"
 import {
+  type FormEvent,
   type HTMLProps,
   type ReactNode,
   useCallback,
@@ -27,6 +28,18 @@ interface SearchBarProps
   action?: (item: SearchBarItem) => void
   autoFocus?: boolean
   footerSlot?: ReactNode | ((ctx: { clearList: () => void }) => ReactNode)
+  /** Defaults to `"search"`. Use a unique id when multiple search bars share a page. */
+  inputId?: string
+  inputValue?: string
+  onInputChange?: (value: string) => void
+  defaultInputValue?: string
+  clearInputOnSelect?: boolean
+  disabled?: boolean
+  /**
+   * Commit free-text query on Enter (when no typeahead row is highlighted).
+   * Used by filter surfaces (Seeking); Archive/Houses leave this unset and navigate via links.
+   */
+  onQueryCommit?: (query: string) => void
 }
 
 export default function SearchBar({
@@ -37,6 +50,13 @@ export default function SearchBar({
   variant,
   autoFocus,
   footerSlot,
+  inputId = "search",
+  inputValue,
+  onInputChange,
+  defaultInputValue,
+  clearInputOnSelect,
+  disabled,
+  onQueryCommit,
 }: SearchBarProps) {
   const tCommon = useTranslations("common")
   const tHome = useTranslations("home")
@@ -63,11 +83,19 @@ export default function SearchBar({
     [searchType]
   )
 
+  const handleSubmit = (evt: FormEvent) => {
+    evt.preventDefault()
+    if (!onQueryCommit) return
+    const form = evt.currentTarget
+    const input = form.querySelector<HTMLInputElement>(`#${CSS.escape(inputId)}`)
+    onQueryCommit(input?.value ?? "")
+  }
+
   return (
     <div className="relative w-full">
-      <form className="flex gap-2" onSubmit={evt => evt.preventDefault()}>
+      <form className="flex gap-2" onSubmit={handleSubmit}>
         <SearchTypeahead<SearchBarItem>
-          inputId="search"
+          inputId={inputId}
           label={mounted ? tCommon("search") : "Search"}
           labelClassName="sr-only"
           placeholder={
@@ -79,6 +107,11 @@ export default function SearchBar({
           searchFn={searchFunction}
           minLength={2}
           delay={300}
+          inputValue={inputValue}
+          onInputChange={onInputChange}
+          defaultInputValue={defaultInputValue}
+          clearInputOnSelect={clearInputOnSelect}
+          disabled={disabled}
           inputClassName={styleMerge(searchbarVariants({ className, variant }))}
           onSelect={action}
           getOptionHref={action ? undefined : getOptionHref}

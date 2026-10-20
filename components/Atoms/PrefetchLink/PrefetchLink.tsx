@@ -9,6 +9,7 @@ import {
   type RouteTransitionVariant,
   prepareRouteTransition,
 } from "@/utils/route-transitions"
+import { styleMerge } from "@/utils/styleUtils"
 
 type NextLinkProps = ComponentProps<typeof Link>
 
@@ -29,7 +30,14 @@ const getPrefetchPath = (href: NextLinkProps["href"]): string | null => {
 const PrefetchLink = (props: PrefetchLinkProps) => {
   const router = useTransitionRouter()
   const path = getPrefetchPath(props.href)
-  const { onClick, onMouseEnter, onTouchStart, transitionVariant, ...rest } = props
+  const {
+    onClick,
+    onMouseEnter,
+    onTouchStart,
+    transitionVariant,
+    className,
+    ...rest
+  } = props
 
   const prefetchFullRoute = () => {
     if (!path) return
@@ -39,17 +47,18 @@ const PrefetchLink = (props: PrefetchLinkProps) => {
   return (
     <Link
       {...rest}
-      onClick={(e) => {
+      className={styleMerge("cursor-pointer", className)}
+      onClick={e => {
         if (path) {
           prepareRouteTransition(path, transitionVariant)
         }
         onClick?.(e)
       }}
-      onMouseEnter={(e) => {
+      onMouseEnter={e => {
         prefetchFullRoute()
         onMouseEnter?.(e)
       }}
-      onTouchStart={(e) => {
+      onTouchStart={e => {
         prefetchFullRoute()
         onTouchStart?.(e)
       }}

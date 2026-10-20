@@ -1,6 +1,6 @@
 "use client"
 
-import { type ChangeEvent } from "react"
+import { type ChangeEvent, useRef } from "react"
 import { useTranslations } from "next-intl"
 
 import { Button, VooDooLink } from "@/components/Atoms/Button"
@@ -10,10 +10,12 @@ import { PaginationBar } from "@/components/Molecules/PaginationBar"
 import SearchInput from "@/components/Molecules/SearchInput/SearchInput"
 import { CollectionGridItem } from "@/components/Containers/MyScents/CollectionGridItem"
 import MyScentsStatsHeader from "@/components/Containers/MyScents/MyScentsStatsHeader"
+import { useGsapStagger } from "@/hooks/useGsapStagger"
 import { getInventoryListingStatus } from "@/lib/user-inventory"
 import { isCollectionItemInReview } from "@/lib/collection-review-status"
 import type { UserInventoryStats } from "@/models/user-inventory-stats.server"
 import type { UserPerfumeForClient } from "@/types/my-scents-client"
+import { CARD_STAGGER_DEFAULT } from "@/utils/card-motion"
 import type { SortOption } from "@/utils/sortUtils"
 import { THE_ARCHIVE_PATH, THE_COLLECTORS_GUIDE_PATH } from "@/constants/routes"
 
@@ -72,6 +74,15 @@ const CollectionTab = ({
 }: CollectionTabProps) => {
   const t = useTranslations("myScents")
   const tStatus = useTranslations("myScents.listingStatus")
+  const gridRef = useRef<HTMLUListElement>(null)
+  const pageIds = paginatedPerfumes.map(item => item.id).join(",")
+
+  useGsapStagger(gridRef, {
+    selector: "[data-collection-card]",
+    deps: [pageIds, currentPage],
+    enabled: paginatedPerfumes.length > 0,
+    ...CARD_STAGGER_DEFAULT,
+  })
 
   return (
     <>
@@ -189,9 +200,12 @@ const CollectionTab = ({
           </p>
         </div>
       ) : (
-        <div className="animate-fade-in">
-          <ul className="w-full animate-fade-in grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {paginatedPerfumes.map((userPerfume) => {
+        <div>
+          <ul
+            ref={gridRef}
+            className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          >
+            {paginatedPerfumes.map(userPerfume => {
               const listingStatus = getInventoryListingStatus(
                 userPerfume,
                 userPerfumes

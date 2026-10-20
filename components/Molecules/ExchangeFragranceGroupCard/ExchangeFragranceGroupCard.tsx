@@ -16,6 +16,7 @@ import {
   resolveExchangeGroupImages,
   type ExchangeGroupImageSlot,
 } from "@/utils/exchange-group-images"
+import { CARD_IMAGE_HOVER_CLASS } from "@/utils/card-motion"
 import { styleMerge } from "@/utils/styleUtils"
 
 const LIGHTBOX_ID = "exchange-group-card-lightbox"
@@ -63,7 +64,9 @@ const GroupPhoto = ({
       priority={priority}
       loading={priority ? undefined : "lazy"}
       className={
-        fit === "cover" ? "object-cover" : "object-contain p-2"
+        fit === "cover"
+          ? CARD_IMAGE_HOVER_CLASS
+          : "object-contain p-2 transition-transform duration-500 ease-out group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
       }
       sizes={sizes}
     />
@@ -110,7 +113,7 @@ export const ExchangeFragranceGroupCard = ({
     <OrnamentalFrame
       size="compact"
       as="article"
-      className={styleMerge("h-full min-w-0 bg-noir-dark/80", className)}
+      className={styleMerge("group h-full min-w-0 bg-noir-dark/80", className)}
     >
       <div className="flex h-full min-w-0 flex-col">
         <div className="relative isolate overflow-hidden">

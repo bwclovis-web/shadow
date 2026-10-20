@@ -10,6 +10,7 @@ import {
 import { PaginationBar } from "@/components/Molecules/PaginationBar"
 import { useGsapStagger } from "@/hooks/useGsapStagger"
 import { CATALOG_RESULTS_ID, type CatalogView } from "@/utils/catalog-params"
+import { CARD_STAGGER_DEFAULT } from "@/utils/card-motion"
 import { styleMerge } from "@/utils/styleUtils"
 
 export type CatalogResultsProps = {
@@ -46,9 +47,7 @@ const CatalogResults = ({
     selector: "[data-catalog-item]",
     deps: [view, items.map(item => item.id).join(",")],
     enabled: items.length > 0,
-    stagger: 0.035,
-    from: { opacity: 0, y: 12 },
-    to: { opacity: 1, y: 0, duration: 0.4, ease: "power2.out", clearProps: "transform,opacity" },
+    ...CARD_STAGGER_DEFAULT,
   })
 
   return (

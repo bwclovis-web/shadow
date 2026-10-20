@@ -1,11 +1,11 @@
 "use client"
 
 import { FiFilter } from "react-icons/fi"
-import { LuLayoutGrid, LuList } from "react-icons/lu"
 
 import { Button } from "@/components/Atoms/Button/Button"
 import { OrnamentalFrame } from "@/components/Atoms/OrnamentalFrame"
 import Select from "@/components/Atoms/Select/Select"
+import { ResultsViewToggle } from "@/components/Molecules/ResultsViewToggle"
 import AlphabeticalNav from "@/components/Organisms/AlphabeticalNav"
 import SearchBar from "@/components/Organisms/SearchBar/SearchBar"
 import type { CatalogView } from "@/utils/catalog-params"
@@ -58,26 +58,6 @@ const CatalogToolbar = ({
   hideRefinements = false,
   className,
 }: CatalogToolbarProps) => {
-  const viewButton = (value: CatalogView, label: string, icon: React.ReactNode) => (
-    <Button
-      type="button"
-      variant={null}
-      size={null}
-      aria-pressed={view === value}
-      aria-label={label}
-      title={label}
-      onClick={() => onViewChange(value)}
-      className={styleMerge(
-        `${controlHeight} flex w-11 md:w-11 items-center justify-center rounded-none border-0 transition-colors`,
-        view === value
-          ? "bg-noir-gold text-noir-black"
-          : "bg-noir-black/60 text-noir-gold hover:bg-noir-gold/20"
-      )}
-    >
-      {icon}
-    </Button>
-  )
-
   return (
     <OrnamentalFrame
       size="standard"
@@ -127,14 +107,16 @@ const CatalogToolbar = ({
               </Button>
             </div>
           )}
-          <div
-            role="group"
-            aria-label={labels.view}
-            className="col-start-2 row-start-1 flex shrink-0 overflow-hidden rounded-sm border border-noir-gold"
-          >
-            {viewButton("grid", labels.gridView, <LuLayoutGrid className="h-5 w-5" aria-hidden />)}
-            {viewButton("list", labels.listView, <LuList className="h-5 w-5" aria-hidden />)}
-          </div>
+          <ResultsViewToggle
+            view={view}
+            onViewChange={onViewChange}
+            labels={{
+              view: labels.view,
+              gridView: labels.gridView,
+              listView: labels.listView,
+            }}
+            className="col-start-2 row-start-1"
+          />
         </div>
         <AlphabeticalNav
           variant="compact"

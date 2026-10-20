@@ -14,6 +14,7 @@ import { PerfumeCompareToggle } from "@/components/Molecules/PerfumeCompareToggl
 import type { ExchangeOffersStatus } from "@/hooks/useExchangeOffers"
 import type { ExchangeOfferDto } from "@/types/exchange-discovery"
 import { resolveExchangeGroupImages } from "@/utils/exchange-group-images"
+import { CARD_THUMB_HOVER_CLASS } from "@/utils/card-motion"
 import { styleMerge } from "@/utils/styleUtils"
 
 const FALLBACK = "/images/single-bottle.webp"
@@ -68,14 +69,18 @@ export const ExchangeFragranceGroupRow = ({
   }
 
   return (
-    <OrnamentalFrame size="compact" as="article" className="bg-noir-dark/80">
+    <OrnamentalFrame
+      size="compact"
+      as="article"
+      className="group bg-noir-dark/80"
+    >
       <div className="flex flex-col gap-3 p-3 md:flex-row md:items-center md:gap-4 md:p-4">
         <div className="relative h-20 w-20 shrink-0 overflow-hidden bg-noir-black md:h-24 md:w-24">
           <Image
             src={thumb}
             alt=""
             fill
-            className="object-cover"
+            className={CARD_THUMB_HOVER_CLASS}
             sizes="96px"
             loading="lazy"
           />

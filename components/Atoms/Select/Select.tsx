@@ -63,7 +63,12 @@ const Select = ({
     >
       {!ariaLabel && (
         <label
-          className=" text-lg lg:text-xl mb-1 capitalize text-noir-gold text-shadow-lg text-shadow-noir-black/60 tracking-wide"
+          className={styleMerge(
+            "mb-1 capitalize tracking-wide text-noir-gold text-shadow-lg text-shadow-noir-black/60",
+            size === "compact"
+              ? "text-xs font-semibold lg:text-sm"
+              : "text-lg lg:text-xl"
+          )}
           htmlFor={selectId}
         >
           {label}

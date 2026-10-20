@@ -45,6 +45,7 @@ import { useDebouncedSearch } from "@/hooks/useDebouncedSearch"
 import { useExchangeOffers } from "@/hooks/useExchangeOffers"
 import { useGsapStagger } from "@/hooks/useGsapStagger"
 import { useMediaQuery } from "@/hooks/useMediaQuery"
+import { CARD_STAGGER_DEFAULT } from "@/utils/card-motion"
 import { useTradeComposerModal } from "@/hooks/useTradeComposerModal"
 import type { ExchangeOfferDto } from "@/types/exchange-discovery"
 import { tradeListingSeedFromExchangeRow } from "@/types/trade"
@@ -314,6 +315,7 @@ const TheExchangeClient = ({
     selector: "[data-exchange-card]",
     deps: [availablePerfumes.map(p => p.id).join(",")],
     enabled: availablePerfumes.length > 0,
+    ...CARD_STAGGER_DEFAULT,
   })
 
   const handleDiscoveryChange = useCallback(

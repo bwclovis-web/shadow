@@ -4,15 +4,17 @@ import { getTranslations } from "next-intl/server"
 import { notFound } from "next/navigation"
 
 import { brandPageTitle } from "@/lib/seo/metadata"
-import { getPublicWishlistForUser } from "@/models/wishlist.server"
+import { getPublicSeekingPage } from "@/models/wishlist-seeking.server"
 import { getTraderById } from "@/models/user.server"
 import { publicAssetUrl } from "@/utils/public-asset-url.server"
+import { parseSeekingPublicState } from "@/utils/seeking-params"
 import { getTraderDisplayName } from "@/utils/user"
 
 import PublicWishlistClient from "./PublicWishlistClient"
 
 type Props = {
   params: Promise<{ userId: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
 const BANNER_IMAGE = publicAssetUrl("/images/wishlist.png")
@@ -46,6 +48,7 @@ export const generateMetadata = async ({ params }: Props): Promise<Metadata> => 
 
 export default async function PublicWishlistPage({
   params,
+  searchParams,
 }: Props): Promise<React.ReactElement> {
   const { userId } = await params
   if (!userId) notFound()
@@ -53,7 +56,12 @@ export default async function PublicWishlistPage({
   const trader = await getTraderById(userId)
   if (!trader) notFound()
 
-  const items = await getPublicWishlistForUser(userId)
+  const rawParams = await searchParams
+  const urlState = parseSeekingPublicState(rawParams)
+  const seeking = await getPublicSeekingPage({
+    ownerUserId: userId,
+    page: urlState.page,
+  })
 
   const traderName = getTraderDisplayName(trader)
 
@@ -62,7 +70,8 @@ export default async function PublicWishlistPage({
       traderId={trader.id}
       traderName={traderName}
       traderRegion={trader.region}
-      items={items}
+      seeking={seeking}
+      urlState={urlState}
       bannerImage={BANNER_IMAGE}
     />
   )

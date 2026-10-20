@@ -2,6 +2,12 @@ import path from "node:path"
 import { defineConfig } from "vitest/config"
 
 export default defineConfig({
+  // Avoid loading postcss.config.mjs (@tailwindcss/postcss tuple) which Vite rejects.
+  css: {
+    postcss: {
+      plugins: [],
+    },
+  },
   test: {
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],

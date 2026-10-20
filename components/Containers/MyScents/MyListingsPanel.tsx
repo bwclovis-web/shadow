@@ -1,6 +1,6 @@
 "use client"
 
-import { memo, useCallback, useState } from "react"
+import { memo, useCallback, useRef, useState } from "react"
 import Image from "next/image"
 import { useTranslations } from "next-intl"
 import { Link } from "next-view-transitions"
@@ -9,6 +9,7 @@ import { Button } from "@/components/Atoms/Button"
 import ReviewStatusBadge from "@/components/Atoms/ReviewStatusBadge"
 import type { UserPerfumeForClient } from "@/types/my-scents-client"
 import { useCSRF } from "@/hooks/useCSRF"
+import { useGsapStagger } from "@/hooks/useGsapStagger"
 import {
   getListingKind,
   getPausedListingKind,
@@ -21,6 +22,10 @@ import { resolveListingApiError } from "@/lib/resolve-listing-api-error"
 import { isCollectionItemInReview } from "@/lib/collection-review-status"
 import { postDecantListingAmount } from "@/lib/user-perfume-listing-actions"
 import { getPrimaryListingImage, tradePreferenceChipLabel } from "@/utils/listing-display"
+import {
+  CARD_STAGGER_DEFAULT,
+  CARD_THUMB_HOVER_CLASS,
+} from "@/utils/card-motion"
 import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
 
 const BOTTLE_PLACEHOLDER = "/images/single-bottle.webp"
@@ -63,21 +68,23 @@ const ListingCard = memo(({
 
   return (
     <li
+      data-listing-card
       className={
         isPaused
-          ? "noir-border flex flex-col gap-3 rounded-lg border border-dashed border-noir-gold/30 bg-noir-black/20 p-4 text-left opacity-90"
-          : "noir-border flex flex-col gap-3 rounded-lg border border-noir-gold/40 bg-noir-black/30 p-4 text-left"
+          ? "group noir-border flex flex-col gap-3 rounded-lg border border-dashed border-noir-gold/30 bg-noir-black/20 p-4 text-left opacity-90 transition-colors duration-300 hover:border-noir-gold/60"
+          : "group noir-border flex flex-col gap-3 rounded-lg border border-noir-gold/40 bg-noir-black/30 p-4 text-left transition-colors duration-300 hover:border-noir-gold"
       }
     >
       <div className="flex gap-3">
-        <Image
-          src={imageSrc}
-          alt={perfume.name ?? "Perfume"}
-          width={80}
-          height={80}
-          className="h-20 w-20 shrink-0 rounded object-cover"
-          sizes="80px"
-        />
+        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded bg-noir-black">
+          <Image
+            src={imageSrc}
+            alt={perfume.name ?? "Perfume"}
+            fill
+            className={CARD_THUMB_HOVER_CLASS}
+            sizes="80px"
+          />
+        </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-semibold text-noir-gold">{perfume.name}</h3>
@@ -171,6 +178,23 @@ const MyListingsPanel = ({
   const [pausingId, setPausingId] = useState<string | null>(null)
   const [resumingId, setResumingId] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
+  const activeListRef = useRef<HTMLUListElement>(null)
+  const pausedListRef = useRef<HTMLUListElement>(null)
+  const activeIds = activeListings.map(row => row.id).join(",")
+  const pausedIds = pausedListings.map(row => row.id).join(",")
+
+  useGsapStagger(activeListRef, {
+    selector: "[data-listing-card]",
+    deps: [activeIds],
+    enabled: activeListings.length > 0,
+    ...CARD_STAGGER_DEFAULT,
+  })
+  useGsapStagger(pausedListRef, {
+    selector: "[data-listing-card]",
+    deps: [pausedIds],
+    enabled: pausedListings.length > 0,
+    ...CARD_STAGGER_DEFAULT,
+  })
 
   const applyListingFromApi = useCallback(
     (
@@ -311,8 +335,11 @@ const MyListingsPanel = ({
       )}
       {activeListings.length > 0 && (
         <section>
-          <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {activeListings.map((row) => (
+          <ul
+            ref={activeListRef}
+            className="grid grid-cols-1 gap-4 md:grid-cols-2"
+          >
+            {activeListings.map(row => (
               <ListingCard
                 key={row.id}
                 row={row}
@@ -331,8 +358,11 @@ const MyListingsPanel = ({
         <section>
           <h2 className="mb-3 text-center">{t("pausedHeading")}</h2>
           <p className="mb-4 text-center text-sm text-noir-gold-500">{t("pausedSubheading")}</p>
-          <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {pausedListings.map((row) => (
+          <ul
+            ref={pausedListRef}
+            className="grid grid-cols-1 gap-4 md:grid-cols-2"
+          >
+            {pausedListings.map(row => (
               <ListingCard
                 key={row.id}
                 row={row}

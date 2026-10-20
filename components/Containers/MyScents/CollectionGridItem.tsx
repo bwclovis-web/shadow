@@ -8,6 +8,7 @@ import ReviewStatusBadge from "@/components/Atoms/ReviewStatusBadge"
 import { getPerfumeTypeLabel } from "@/data/SelectTypes"
 import { getInventoryListingStatus } from "@/lib/user-inventory"
 import type { UserPerfumeForClient } from "@/types/my-scents-client"
+import { CARD_IMAGE_HOVER_CLASS } from "@/utils/card-motion"
 import { normalizeRemoteImageSrc, styleMerge, validImageRegex } from "@/utils/styleUtils"
 import { userBottleImageTransitionName } from "@/utils/view-transition-names"
 
@@ -48,7 +49,10 @@ export const CollectionGridItem = memo(({
   const bottleLabel = buildBottleLabel(userPerfume, bottleCount)
 
   return (
-    <li className="relative flex flex-col items-center justify-center border-4 border-double border-noir-gold p-1">
+    <li
+      data-collection-card
+      className="group relative flex flex-col items-center justify-center border-4 border-double border-noir-gold p-1 transition-colors duration-300 hover:border-noir-gold"
+    >
       {inReview && (
         <ReviewStatusBadge className="absolute left-1 top-1 z-10" />
       )}
@@ -64,28 +68,28 @@ export const CollectionGridItem = memo(({
       >
         {listingStatusLabel}
       </span>
-      <Link
-        href={`${basePath}/${userPerfume.id}`}
-        className="block"
-      >
-        <Image
-          src={imageSrc}
-          alt={perfume.name ?? "Perfume Bottle"}
-          priority={false}
-          width={192}
-          height={192}
-          quality={75}
-          className="w-48 h-48 object-cover rounded-lg mb-2 mx-auto dark:brightness-90"
-          sizes="(max-width: 768px) 50vw, 33vw"
-          style={
-            {
-              viewTransitionName: userBottleImageTransitionName(userPerfume.id),
-            } as React.CSSProperties
-          }
-        />
+      <Link href={`${basePath}/${userPerfume.id}`} className="block">
+        <div className="relative mx-auto mb-2 h-48 w-48 overflow-hidden rounded-lg">
+          <Image
+            src={imageSrc}
+            alt={perfume.name ?? "Perfume Bottle"}
+            priority={false}
+            fill
+            quality={75}
+            className={CARD_IMAGE_HOVER_CLASS}
+            sizes="(max-width: 768px) 50vw, 33vw"
+            style={
+              {
+                viewTransitionName: userBottleImageTransitionName(userPerfume.id),
+              } as React.CSSProperties
+            }
+          />
+        </div>
         <span className="text-noir-gold">{perfume.name}</span>
         {bottleLabel && (
-          <span className="block text-xs text-noir-gold-100 mt-1">{bottleLabel}</span>
+          <span className="mt-1 block text-xs text-noir-gold-100">
+            {bottleLabel}
+          </span>
         )}
       </Link>
     </li>

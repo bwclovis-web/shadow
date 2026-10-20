@@ -3,9 +3,13 @@
 import { revalidatePath } from "next/cache"
 
 /**
- * Revalidates the wishlist page so server components refetch fresh data.
- * Call after wishlist mutations (e.g. remove item) so the page shows the updated list.
+ * Revalidates owned Seeking and the public shared list so visibility /
+ * remove / preference changes refresh both surfaces.
  */
-export async function revalidateWishlistPage(userSlug: string): Promise<void> {
+export const revalidateWishlistPage = async (
+  userSlug: string,
+  userId: string
+): Promise<void> => {
   revalidatePath(`/${userSlug}/profile/wishlist`)
+  revalidatePath(`/wishlist/${userId}`)
 }

@@ -3,9 +3,14 @@
 import Image from "next/image"
 import { PrefetchLink } from "@/components/Atoms/PrefetchLink"
 import { useTranslations } from "next-intl"
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 
+import { useGsapStagger } from "@/hooks/useGsapStagger"
 import type { RecommendationPerfume } from "@/services/recommendations"
+import {
+  CARD_IMAGE_HOVER_CLASS,
+  CARD_STAGGER_DEFAULT,
+} from "@/utils/card-motion"
 import { normalizeRemoteImageSrc, validImageRegex } from "@/utils/styleUtils"
 import { perfumeImageTransitionName } from "@/utils/view-transition-names"
 
@@ -41,6 +46,16 @@ const RecommendedForYou = ({
   const list = (perfumes ?? [])
     .filter(p => !hiddenIds.has(p.id))
     .slice(0, limit)
+
+  const listRef = useRef<HTMLUListElement>(null)
+  const listIds = list.map(item => item.id).join(",")
+
+  useGsapStagger(listRef, {
+    selector: "[data-rec-card]",
+    deps: [listIds],
+    enabled: list.length > 0,
+    ...CARD_STAGGER_DEFAULT,
+  })
 
   const sharedListReason = useMemo(() => {
     const first = list[0]?.reason
@@ -97,7 +112,10 @@ const RecommendedForYou = ({
           />
         </div>
       )}
-      <ul className="grid grid-cols-1 md:grid-cols-3 gap-4 p-2">
+      <ul
+        ref={listRef}
+        className="grid grid-cols-1 gap-4 p-2 md:grid-cols-3"
+      >
         {list.map((similar, index) => {
           const recSrc = normalizeRemoteImageSrc(similar.image)
           const recImageSrc =
@@ -105,7 +123,8 @@ const RecommendedForYou = ({
           return (
             <li
               key={similar.id}
-              className="relative flex h-full w-full flex-col overflow-hidden border border-noir-gold/70 bg-noir-dark/40 transition-colors duration-300 ease-in-out hover:border-noir-gold hover:bg-white/5"
+              data-rec-card
+              className="group relative flex h-full w-full flex-col overflow-hidden border border-noir-gold/70 bg-noir-dark/40 transition-colors duration-300 ease-in-out hover:border-noir-gold hover:bg-white/5"
             >
               <PrefetchLink
                 href={`/perfume/${similar.slug}`}
@@ -115,25 +134,26 @@ const RecommendedForYou = ({
                 <h3 className="line-clamp-2 block py-2 text-center text-sm font-semibold capitalize leading-tight tracking-wide text-noir-gold">
                   {similar.name}
                 </h3>
-                <Image
-                  src={recImageSrc}
-                  alt={tSingleHouse("perfumeBottleAltText", {
-                    name: similar.name,
-                  })}
-                  priority={index < 3}
-                  width={128}
-                  height={128}
-                  quality={75}
-                  className="mx-auto mb-2 h-24 w-24 rounded-lg object-cover sm:h-28 sm:w-28 dark:brightness-90"
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
-                  style={
-                    {
-                      viewTransitionName: perfumeImageTransitionName(
-                        similar.id
-                      ),
-                    } as React.CSSProperties
-                  }
-                />
+                <div className="relative mx-auto mb-2 h-24 w-24 overflow-hidden rounded-lg sm:h-28 sm:w-28">
+                  <Image
+                    src={recImageSrc}
+                    alt={tSingleHouse("perfumeBottleAltText", {
+                      name: similar.name,
+                    })}
+                    priority={index < 3}
+                    fill
+                    quality={75}
+                    className={CARD_IMAGE_HOVER_CLASS}
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                    style={
+                      {
+                        viewTransitionName: perfumeImageTransitionName(
+                          similar.id
+                        ),
+                      } as React.CSSProperties
+                    }
+                  />
+                </div>
                 {similar.perfumeHouse ? (
                   <p className="truncate text-center text-xs text-noir-gold-500/80">
                     {similar.perfumeHouse.name}
